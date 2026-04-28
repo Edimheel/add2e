@@ -1,0 +1,55 @@
+{
+  "name": "Bâton de Magius",
+  "type": "arme",
+  "img": "icons/weapons/staves/staff-simple.webp",
+  "system": {
+    "description": "<p>Un bâton de bois simple en apparence, mais imprégné d'une puissante magie.</p><p><strong>Propriétés :</strong></p><ul><li><strong>Protection :</strong> +3 à la CA (si équipé)</li><li><strong>Combat :</strong> +2 au toucher, Dégâts 1d8</li><li><strong>Pouvoirs (1/jour) :</strong> Lumière éternelle, Chute de plume.</li></ul>",
+    "equipee": false,
+    "type": "melee",
+    "categorie": "melee",
+    "bonus_hit": 2,
+    "bonus_dom": 0,
+    "dégâts": {
+      "contre_moyen": "1d8",
+      "contre_grand": "1d8"
+    },
+    "type_degats": "contondant",
+    "facteur_rapidité": 4,
+    "poids": 4,
+    "deuxMains": true,
+    "pouvoirs": [
+      {
+        "name": "Lumière éternelle",
+        "img": "icons/magic/light/explosion-star-glow-yellow.webp",
+        "niveau": 3,
+        "ecole": "Altération",
+        "cout": 1,
+        "max": 1,
+        "description": "Illumine une zone de 18m de rayon de façon permanente."
+      },
+      {
+        "name": "Chute de plume",
+        "img": "icons/magic/air/wind-feather-falling-purple.webp",
+        "niveau": 1,
+        "ecole": "Altération",
+        "cout": 1,
+        "max": 1,
+        "description": "Ralentit la chute. Durée 1 round/niveau."
+      }
+    ]
+  },
+  "effects": [
+    {
+      "name": "Protection du Magius (+3 CA)",
+      "icon": "icons/magic/defensive/shield-barrier-blue.webp",
+      "origin": "",
+      "disabled": false,
+      "flags": {
+        "add2e": {
+          "tags": ["bonus_ca:3"]
+        }
+      },
+      "transfer": true
+    }
+  ]
+}
