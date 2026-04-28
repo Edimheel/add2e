@@ -1,0 +1,81 @@
+{
+  "id": "add2e",
+  "title": "AD&D 2e (Descartes)",
+  "version": "0.1.12",
+  "socket" : true,
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "authors": [
+    { "name": "Ton Nom" }
+  ],
+  "esmodules": [
+    "scripts/add2e-active-effects-expire.js",
+    "scripts/effects-engine.mjs",
+    "scripts/add2e.mjs",
+    "scripts/add2e-item.mjs",
+    "scripts/add2e-attack.mjs",
+    "scripts/resolveActiveEffectsOnTarget.mjs",
+    "scripts/monster-sheet.mjs"
+  ],
+  "styles": [
+    "styles/add2e.css"
+  ],
+ "documentTypes": {
+  "Actor": {
+    "personnage": {
+      "template": "systems/add2e/templates/actor/template.json"
+    },
+    "monster": {
+      "template": "systems/add2e/templates/actor/monster-template.json"
+    }
+  },
+  "Item": {
+    "classe": {},
+    "race": {},
+    "arme": {},
+    "armure": {},
+    "sort": {},
+    "objet": {}
+  }
+},
+  "packs": [
+    {
+      "name": "classes",
+      "label": "Classes",
+      "path": "packs/classes",
+      "type": "Item"
+    },
+    {
+      "name": "monstres",
+      "label": "Monstres",
+      "path": "packs/monstres",
+      "type": "Actor"
+    },
+    {
+      "name": "races",
+      "label": "Races",
+      "path": "packs/races",
+      "type": "Item"
+    },
+    {
+      "name": "armes",
+      "label": "Armes",
+      "path": "packs/armes",
+      "type": "Item"
+    },
+    {
+      "name": "sorts",
+      "label": "Sorts",
+      "path": "packs/sorts",
+      "type": "Item"
+    },
+    {
+      "name": "armures",
+      "label": "Armures",
+      "path": "packs/armures",
+      "type": "Item"
+    }
+  ]
+}
