@@ -1,0 +1,121 @@
+<section class="spell-sheet">
+    <style>
+        .spell-sheet {
+  max-width: 600px;
+  margin: auto;
+  padding: 1em;
+  font-size: 1em;
+}
+.spell-sheet header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-bottom: 1px solid #999;
+  margin-bottom: 1em;
+}
+.spell-sheet .school {
+  font-size: 0.95em;
+  color: #4867c0;
+  margin-top: 0.2em;
+}
+.spell-sheet .level {
+  font-size: 0.95em;
+  color: #2b9a7b;
+}
+.spell-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.2em 1em;
+  margin-bottom: 1em;
+}
+.spell-meta div {
+  padding: 0.15em 0;
+}
+.spell-description {
+  margin-top: 1.2em;
+  background: #f7f7ff;
+  border-radius: 0.5em;
+  padding: 1em;
+}
+.spell-description h2 {
+  margin-top: 0;
+  font-size: 1.1em;
+  color: #4867c0;
+}
+.item-header .header-flex {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.item-header .image-preview img {
+  border: 1px solid #888;
+  border-radius: 6px;
+  object-fit: cover;
+  max-width: 100px;
+  max-height: 100px;
+}
+
+.item-header .item-title {
+  font-size: 1.5em;
+  margin: 0;
+}
+
+
+
+    </style>
+ <form class="sheet sort-sheet">
+  <header>
+  <div class="header-flex">
+<img src="{{img}}" alt="Image du sort"
+  width="256" height="256"
+  style="object-fit: contain; border-radius: 8px; border: 1px solid #666; background: #222; display: block; margin: auto; cursor:pointer;" 
+  data-edit="img" />
+</div>
+    <h1 class="item-title">{{item.name}}</h1>
+  </div>
+
+
+    <span class="school">{{system.école}}</span>
+    <span class="level">Niveau {{system.niveau}}</span>
+  </header>
+<div class="spell-meta">
+  <div><strong>Classe :</strong> {{system.classe}}</div>
+  <div><strong>Portée :</strong> {{formatSortChamp system.portée}}</div>
+  <div><strong>Durée :</strong> {{formatSortChamp system.durée}}</div>
+  <div><strong>Zone d'effet :</strong> {{formatSortChamp system.zone_effet}}</div>
+  <div><strong>Jet de sauvegarde :</strong> {{system.jet_sauvegarde}}</div>
+  <div><strong>Composantes :</strong> {{system.composantes}}</div>
+  <div><strong>Temps d'incantation :</strong> {{formatSortChamp system.temps_incantation}}</div>
+  <div><strong>Script lié :</strong> {{system.onuse}}</div>
+</div>
+  <section class="spell-description">
+    <h2>Description</h2>
+    <div>{{{system.description}}}</div>
+  </section>
+  {{#if item.effects.contents.length}}
+  <section class="spell-effects">
+    <h2>Effets actifs embarqués</h2>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="border-bottom:1px solid #aaa;">Nom</th>
+          <th style="border-bottom:1px solid #aaa;">Transféré</th>
+          <th style="border-bottom:1px solid #aaa;">Actif par défaut</th>
+          <th style="border-bottom:1px solid #aaa;">Durée (rounds)</th>
+        </tr>
+      </thead>
+      <tbody>
+      {{#each item.effects.contents as |eff|}}
+        <tr>
+          <td>{{eff.name}}</td>
+          <td style="text-align:center;">{{#if eff.transfer}}<span style="color:green;">Oui</span>{{else}}<span style="color:red;">Non</span>{{/if}}</td>
+          <td style="text-align:center;">{{#unless eff.disabled}}<span style="color:green;">Oui</span>{{else}}<span style="color:red;">Non</span>{{/unless}}</td>
+          <td style="text-align:center;">{{eff.duration?.rounds}}</td>
+        </tr>
+      {{/each}}
+      </tbody>
+    </table>
+  </section>
+{{/if}}
+</form>

@@ -1,0 +1,57 @@
+<form class="add2e armure-sheet" autocomplete="off">
+<header>
+  <h2>{{item.name}}</h2>
+  <div class="form-group image-selector">
+      <div class="header-flex">
+<img src="{{img}}" alt="Image du sort"
+  width="256" height="256"
+  style="object-fit: contain; border-radius: 8px; border: 1px solid #666; background: #222; display: block; margin: auto; cursor:pointer;" 
+  data-edit="img" />
+</div>
+  </div>
+  <div class="form-group">
+    <label>Équipée</label>
+    <input type="checkbox" name="system.equipee" {{checked system.equipee}} class="toggle-equip"/>
+  </div>
+</header>
+
+
+  <div class="sheet-body">
+    <div class="form-group">
+      <label>Classe d’armure (CA de base)</label>
+      <input type="number" name="system.ac" value="{{system.ac}}" />
+    </div>
+    <div class="form-group">
+      <label>Bonus de CA</label>
+      <input type="number" name="system.bonus_ac" value="{{system.bonus_ac}}" />
+    </div>
+    <div class="form-group">
+      <label>Bonus au toucher</label>
+      <input type="number" name="system.bonus_toucher" value="{{system.bonus_toucher}}" />
+    </div>
+    <div class="form-group">
+      <label>Bonus aux dégâts</label>
+      <input type="number" name="system.bonus_degats" value="{{system.bonus_degats}}" />
+    </div>
+    <div class="form-group">
+      <label>Poids</label>
+      <input type="number" name="system.poids" value="{{system.poids}}" /> <span>kg</span>
+    </div>
+    <div class="form-group">
+      <label>Prix</label>
+      <input type="text" name="system.prix" value="{{system.prix}}" />
+    </div>
+    <div class="form-group">
+      <label>Catégorie</label>
+      <input type="text" name="system.categorie" value="{{system.categorie}}" />
+    </div>
+    <div class="form-group">
+      <label>Matériau</label>
+      <input type="text" name="system.materiau" value="{{system.materiau}}" />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea name="system.description">{{system.description}}</textarea>
+    </div>
+  </div>
+</form>

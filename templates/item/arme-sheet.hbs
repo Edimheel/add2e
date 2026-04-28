@@ -1,0 +1,136 @@
+<form class="sheet item arme-sheet">
+   <div class="header-flex">
+<img src="{{img}}" alt="Image du sort"
+  width="256" height="256"
+  style="object-fit: contain; border-radius: 8px; border: 1px solid #666; background: #222; display: block; margin: auto; cursor:pointer;" 
+  data-edit="img" />
+</div>
+
+  <div class="arme-sheet-title">
+    <input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'arme" style="font-size:1.2em; width:70%; font-weight:bold; text-align:center;">
+  </div>
+  <table class="arme-sheet-table" style="width:100%">
+    <tr>
+      <th>Type</th>
+      <td>
+        <input type="text" name="system.type" value="{{item.system.type}}" placeholder="épée, massue...">
+      </td>
+      <th>Catégorie</th>
+      <td>
+        <input type="text" name="system.categorie" value="{{item.system.categorie}}" placeholder="épée, masse, marteau, fléau, bâton, arc...">
+      </td>
+    </tr>
+    <tr>
+      <th>Dégâts (Moyen)</th>
+      <td>
+        <input type="text" name="system.dégâts.contre_moyen" value="{{item.system.dégâts.contre_moyen}}" placeholder="ex: 1d8">
+      </td>
+      <th>Dégâts (Grand)</th>
+      <td>
+        <input type="text" name="system.dégâts.contre_grand" value="{{item.system.dégâts.contre_grand}}" placeholder="ex: 1d12">
+      </td>
+    </tr>
+    <tr>
+      <th>Bonus toucher<br>(bonus_hit)</th>
+      <td>
+        <input type="number" name="system.bonus_hit" value="{{item.system.bonus_hit}}" placeholder="ex: 1">
+      </td>
+      <th>Bonus dégâts<br>(bonus_dom)</th>
+      <td>
+        <input type="number" name="system.bonus_dom" value="{{item.system.bonus_dom}}" placeholder="ex: 2">
+      </td>
+    </tr>
+    <tr>
+      <th>Facteur vitesse</th>
+      <td>
+        <input type="number" name="system.facteur_rapidité" value="{{item.system.facteur_rapidité}}" placeholder="ex: 5">
+      </td>
+      <th>Longueur (m)</th>
+      <td>
+        <input type="text" name="system.longueur" value="{{item.system.longueur}}" placeholder="ex: 1.50">
+      </td>
+    </tr>
+    <tr>
+      <th>Équipée</th>
+      <td>
+        <input type="checkbox" name="system.equipee" {{#if item.system.equipee}}checked{{/if}}>
+      </td>
+      <th>Type de dégâts</th>
+      <td>
+        <input type="text" name="system.type_degats" value="{{item.system.type_degats}}" placeholder="tranchant, perforant, contondant...">
+      </td>
+    </tr>
+    <tr>
+      <th>Ajustement CA<br>(9 valeurs)</th>
+      <td colspan="3">
+        <input type="text" name="system.ajustement_ca" value="{{item.system.ajustement_ca}}" placeholder="-2,-1,0,0,1,1,2,2,3" style="width:90%;">
+        <span title="Tableau de 9 valeurs selon la CA de la cible">?</span>
+      </td>
+    </tr>
+    <tr>
+      <th>Poids</th>
+      <td>
+        <input type="number" name="system.poids" value="{{item.system.poids}}" placeholder="ex: 125">
+      </td>
+      <th>Espace</th>
+      <td>
+        <input type="text" name="system.espace" value="{{item.system.espace}}" placeholder="ex: 1.5m">
+      </td>
+    </tr>
+    <tr>
+      <th colspan="4">Caractéristiques de l’arme</th>
+    </tr>
+    <tr>
+      <td>
+        <label><input type="checkbox" name="system.tranchante" {{#if item.system.tranchante}}checked{{/if}}> Tranchante</label>
+      </td>
+      <td>
+        <label><input type="checkbox" name="system.perforante" {{#if item.system.perforante}}checked{{/if}}> Perforante</label>
+      </td>
+      <td>
+        <label><input type="checkbox" name="system.contondante" {{#if item.system.contondante}}checked{{/if}}> Contondante</label>
+      </td>
+      <td>
+        <label><input type="checkbox" name="system.metal" {{#if item.system.metal}}checked{{/if}}> Métal</label>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label><input type="checkbox" name="system.encombrante" {{#if item.system.encombrante}}checked{{/if}}> Encombrante</label>
+      </td>
+      <td>
+        <label><input type="checkbox" name="system.deuxMains" {{#if item.system.deuxMains}}checked{{/if}}> Deux mains</label>
+      </td>
+      <td>
+        <label><input type="checkbox" name="system.arme_de_jet" {{#if item.system.arme_de_jet}}checked{{/if}}> Arme de jet</label>
+      </td>
+      <td>
+        <label><input type="checkbox" name="system.base" {{#if item.system.base}}checked{{/if}}> Arme de base</label>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label><input type="checkbox" name="system.bois_ou_os" {{#if item.system.bois_ou_os}}checked{{/if}}> Bois ou os</label>
+      </td>
+      <td colspan="3"></td>
+    </tr>
+    <tr>
+      <th>Portées (si arme de jet ou arc/arbalète)</th>
+      <td>
+        <input type="text" name="system.portee_courte" value="{{item.system.portee_courte}}" placeholder="ex: 15">
+      </td>
+      <td>
+        <input type="text" name="system.portee_moyenne" value="{{item.system.portee_moyenne}}" placeholder="ex: 30">
+      </td>
+      <td>
+        <input type="text" name="system.portee_longue" value="{{item.system.portee_longue}}" placeholder="ex: 60">
+      </td>
+    </tr>
+    <tr>
+      <th>Description</th>
+      <td colspan="3">
+        <textarea name="system.description" rows="2" style="width:98%;">{{item.system.description}}</textarea>
+      </td>
+    </tr>
+  </table>
+</form>

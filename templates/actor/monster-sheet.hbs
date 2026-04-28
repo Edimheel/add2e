@@ -1,0 +1,472 @@
+<form class="add2e sheet monster-sheet" autocomplete="off">
+
+  <style>
+    .add2e.sheet.monster .window-content {
+      background: #fdfaf5 url("systems/add2e/assets/parchment_texture.jpg") repeat; /* Texture optionnelle */
+      color: #2c1b12;
+      font-family: "Signika", sans-serif;
+    }
+    
+    /* HEADER */
+    .monster-header {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 15px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .profile-img img {
+      border: 3px solid #4a3b2a;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    .profile-img img:hover { transform: scale(1.02); }
+
+    .header-info h1 input {
+      font-family: "Modesto Condensed", "Signika", serif;
+      font-size: 2em;
+      border: none;
+      border-bottom: 2px solid #7a2828;
+      background: transparent;
+      width: 100%;
+      color: #7a2828;
+    }
+
+    /* META DATA GRID */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .meta-box {
+      background: rgba(0,0,0,0.05);
+      border-radius: 4px;
+      padding: 2px 5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 1px solid #ccc;
+    }
+    .meta-box label { font-size: 0.75em; text-transform: uppercase; color: #666; font-weight: bold; }
+    .meta-box input { text-align: center; background: transparent; border: none; font-weight: bold; }
+
+    /* KEY STATS (AC, THAC0, HP) */
+    .key-stats {
+      display: flex;
+      justify-content: space-around;
+      background: #4a3b2a;
+      color: #fff;
+      padding: 8px;
+      border-radius: 8px;
+      margin-top: 10px;
+      box-shadow: inset 0 0 10px #000;
+    }
+    .key-stat { text-align: center; position: relative; width: 60px;}
+    .key-stat label { display: block; font-size: 0.7em; opacity: 0.8; text-transform: uppercase; }
+    .key-stat input { 
+      color: #fff; 
+      border: none; 
+      background: transparent; 
+      text-align: center; 
+      font-size: 1.4em; 
+      font-weight: bold; 
+      width: 100%;
+    }
+
+    /* SAVES */
+    .saves-section {
+      background: #e6e2d8;
+      border-top: 2px solid #4a3b2a;
+      border-bottom: 2px solid #4a3b2a;
+      padding: 5px;
+      min-height: 70px; /* Fixe la hauteur pour éviter le saut */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .save-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 70px;
+      height: 55px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.2);
+      color: #fff;
+      font-size: 0.8em;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: all 0.2s;
+      text-shadow: 0 1px 2px #000;
+    }
+    .save-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+    .save-btn span.val { font-size: 1.4em; font-weight: bold; line-height: 1; }
+    
+    /* COLORS FOR SAVES */
+    .sv-paralysie { background: #16a085; }
+    .sv-baguette { background: #f39c12; }
+    .sv-petrif { background: #8e44ad; }
+    .sv-souffle { background: #d35400; }
+    .sv-sorts { background: #c0392b; }
+
+    /* TABS */
+    .sheet-tabs {
+      margin: 10px 0;
+      border-bottom: 2px solid #7a2828;
+    }
+    .sheet-tabs .item {
+      padding: 8px 15px;
+      font-weight: bold;
+      color: #4a3b2a;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 5px 5px 0 0;
+    }
+    .sheet-tabs .item.active {
+      background: #7a2828;
+      color: #fff;
+      border-color: #7a2828;
+    }
+    .sheet-tabs .item:hover:not(.active) { background: rgba(122, 40, 40, 0.1); }
+
+    /* COMBAT GRID */
+    .combat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .form-group {
+      background: rgba(255,255,255,0.5);
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+    }
+    .form-group label { flex: 1; font-weight: bold; font-size: 0.9em; color: #444; }
+    .form-group input { flex: 1.5; text-align: right; background: transparent; border: none; border-bottom: 1px dotted #aaa; }
+
+    /* ITEM LISTS */
+    .item-list-header {
+      background: #4a3b2a;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 4px 4px 0 0;
+      font-weight: bold;
+      font-size: 0.9em;
+      margin-top: 10px;
+    }
+    .add2e-table { width: 100%; border-collapse: collapse; font-size: 0.9em; background: rgba(255,255,255,0.4); }
+    .add2e-table th { text-align: left; padding: 5px; background: rgba(0,0,0,0.05); border-bottom: 1px solid #ccc;}
+    .add2e-table td { padding: 4px 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
+    .add2e-table tr:hover { background: rgba(0,0,0,0.05); }
+    
+    .action-icons a { margin-left: 5px; color: #555; transition: color 0.2s; }
+    .action-icons a:hover { color: #000; }
+    .item-name-img { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #2c1b12; }
+    .item-name-img img { border-radius: 4px; border: 1px solid #999; }
+
+    /* SPELL SECTION */
+    .spell-level-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(90deg, #6a3c99 0%, transparent 100%);
+      color: #fff;
+      padding: 5px 10px;
+      margin-top: 15px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+  </style>
+
+  <header class="monster-header">
+    <div class="profile-img">
+      <img src="{{img}}" data-edit="img" title="{{actor.name}}" height="110" width="110"/>
+    </div>
+    
+    <div class="header-info">
+      <h1><input name="name" type="text" value="{{actor.name}}" placeholder="Nom du Monstre"/></h1>
+      
+      <div class="meta-grid">
+        <div class="meta-box">
+          <label>Type</label>
+          <input type="text" name="system.type" value="{{system.type}}"/>
+        </div>
+        <div class="meta-box">
+          <label>Taille</label>
+          <input type="text" name="system.size" value="{{system.size}}"/>
+        </div>
+        <div class="meta-box" style="grid-column: span 2;">
+          <label>Alignement</label>
+          <input type="text" name="system.alignment" value="{{system.alignment}}"/>
+        </div>
+        <div class="meta-box">
+          <label>XP</label>
+          <input type="number" name="system.xp" value="{{system.xp}}"/>
+        </div>
+      </div>
+
+      <div class="key-stats">
+        <div class="key-stat">
+          <label>CA</label>
+          <input type="number" name="system.armorClass" value="{{system.armorClass}}"/>
+        </div>
+        <div class="key-stat">
+          <label>THAC0</label>
+          <input type="number" name="system.thac0" value="{{system.thac0}}"/>
+        </div>
+        <div class="key-stat">
+          <label>PV</label>
+          <input type="number" name="system.pdv" value="{{system.pdv}}" style="color:#e74c3c;"/>
+        </div>
+        <div class="key-stat">
+          <label>DV</label>
+          <input type="text" name="system.hitDice" value="{{system.hitDice}}"/>
+        </div>
+        <div class="key-stat">
+          <label>Init</label>
+          <input type="number" name="system.initiative" value="{{system.initiative}}"/>
+        </div>
+        <div class="key-stat">
+          <label>Moral</label>
+          <input type="number" name="system.morale" value="{{system.morale}}"/>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="saves-section">
+    {{#if isSavingThrowString}}
+      <div style="flex:1; text-align:center;">
+         <label style="font-weight:bold; margin-right:10px;">Sauvegardes comme :</label>
+         <input type="text" name="system.savingThrows" value="{{system.savingThrows}}" style="border:none; border-bottom:1px dotted #333; background:transparent; width:50%; font-weight:bold;"/>
+      </div>
+    {{else}}
+      <a class="save-btn sv-paralysie roll-save" data-save-index="0" data-save-val="{{calculatedSaves.paralysie}}" title="Paralysie / Poison / Mort">
+        <i class="fas fa-skull"></i> <span class="val">{{calculatedSaves.paralysie}}</span>
+      </a>
+      <a class="save-btn sv-baguette roll-save" data-save-index="1" data-save-val="{{calculatedSaves.baguettes}}" title="Baguettes / Bâtons">
+        <i class="fas fa-magic"></i> <span class="val">{{calculatedSaves.baguettes}}</span>
+      </a>
+      <a class="save-btn sv-petrif roll-save" data-save-index="2" data-save-val="{{calculatedSaves.petrification}}" title="Pétrification / Polymorphose">
+        <i class="fas fa-mountain"></i> <span class="val">{{calculatedSaves.petrification}}</span>
+      </a>
+      <a class="save-btn sv-souffle roll-save" data-save-index="3" data-save-val="{{calculatedSaves.souffle}}" title="Souffles">
+        <i class="fas fa-wind"></i> <span class="val">{{calculatedSaves.souffle}}</span>
+      </a>
+      <a class="save-btn sv-sorts roll-save" data-save-index="4" data-save-val="{{calculatedSaves.sorts}}" title="Sorts">
+        <i class="fas fa-scroll"></i> <span class="val">{{calculatedSaves.sorts}}</span>
+      </a>
+    {{/if}}
+  </section>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="combat"><i class="fas fa-fist-raised"></i> Combat</a>
+    <a class="item" data-tab="magie"><i class="fas fa-magic"></i> Magie</a>
+    <a class="item" data-tab="description"><i class="fas fa-book-open"></i> Détails</a>
+    <a class="item" data-tab="effets"><i class="fas fa-bolt"></i> Effets</a>
+  </nav>
+
+  <section class="sheet-body">
+
+    <div class="tab" data-group="primary" data-tab="combat">
+      
+      <div class="combat-grid">
+        <div class="form-group">
+          <label>Nb Attaques</label>
+          <input type="text" name="system.attacksCount" value="{{system.attacksCount}}"/>
+        </div>
+        <div class="form-group">
+          <label>Dégâts</label>
+          <input type="text" name="system.damage" value="{{system.damage}}"/>
+        </div>
+        <div class="form-group" style="grid-column: span 2;">
+          <label>Attaques Spéciales</label>
+          <input type="text" name="system.specialAttacks" value="{{system.specialAttacks}}"/>
+        </div>
+        <div class="form-group" style="grid-column: span 2;">
+          <label>Défenses Spéciales</label>
+          <input type="text" name="system.specialDefenses" value="{{system.specialDefenses}}"/>
+        </div>
+        <div class="form-group">
+          <label>Résistance Magique</label>
+          <input type="text" name="system.magicResistance" value="{{system.magicResistance}}"/>
+        </div>
+        <div class="form-group">
+          <label>Mouvement</label>
+          <input type="text" name="system.movement" value="{{system.movement}}"/>
+        </div>
+      </div>
+
+      <div class="item-list-header"><i class="fas fa-swords"></i> Armes & Attaques</div>
+      <table class="add2e-table">
+        {{#each listeArmes as |arme|}}
+        <tr>
+          <td>
+            <div class="item-name-img arme-img-attack" data-item-id="{{arme._id}}" style="cursor:pointer;">
+              <img src="{{arme.img}}" width="28" height="28"/>
+              {{arme.name}}
+            </div>
+          </td>
+<td style="text-align:center;">
+  {{#with (lookup arme.system "dégâts") as |deg|}}
+    {{#if deg}}
+      Dmg: {{deg.contre_moyen}} / {{deg.contre_grand}}
+    {{else}}
+      —
+    {{/if}}
+  {{/with}}
+</td>
+
+
+          <td class="action-icons" style="text-align:right;">
+            <a class="item-equip" data-item-id="{{arme._id}}" title="Équiper/Déséquiper">
+               <i class="fas fa-shield-alt" style="{{#if arme.system.equipee}}color:#27ae60;{{else}}color:#ccc;{{/if}}"></i>
+            </a>
+            <a class="arme-edit" data-item-id="{{arme._id}}"><i class="fas fa-edit"></i></a>
+            <a class="arme-delete" data-item-id="{{arme._id}}"><i class="fas fa-trash"></i></a>
+          </td>
+        </tr>
+        {{/each}}
+      </table>
+      
+      <div class="item-list-header" style="margin-top:10px;"><i class="fas fa-shield-alt"></i> Armure & Protection</div>
+      <table class="add2e-table">
+        {{#each listeArmures as |item|}}
+        <tr>
+          <td>
+            <div class="item-name-img">
+              <img src="{{item.img}}" width="28" height="28"/>
+              {{item.name}}
+            </div>
+          </td>
+          <td style="text-align:center;">CA: {{item.system.ac}}</td>
+          <td class="action-icons" style="text-align:right;">
+            <a class="item-equip" data-item-id="{{item._id}}">
+               <i class="fas fa-tshirt" style="{{#if item.system.equipee}}color:#27ae60;{{else}}color:#ccc;{{/if}}"></i>
+            </a>
+            <a class="armure-edit" data-item-id="{{item._id}}"><i class="fas fa-edit"></i></a>
+            <a class="armure-delete" data-item-id="{{item._id}}"><i class="fas fa-trash"></i></a>
+          </td>
+        </tr>
+        {{/each}}
+      </table>
+
+      <div class="item-list-header" style="margin-top:10px;"><i class="fas fa-sack"></i> Inventaire / Trésor</div>
+      <table class="add2e-table">
+        {{#each listeObjets as |item|}}
+        <tr>
+          <td>
+            <div class="item-name-img">
+              <img src="{{item.img}}" width="28" height="28"/>
+              {{item.name}}
+            </div>
+          </td>
+          <td class="action-icons" style="text-align:right;">
+            <a class="objet-edit" data-item-id="{{item._id}}"><i class="fas fa-edit"></i></a>
+            <a class="objet-delete" data-item-id="{{item._id}}"><i class="fas fa-trash"></i></a>
+          </td>
+        </tr>
+        {{/each}}
+      </table>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="magie">
+      {{#if niveauxSorts.length}}
+        {{#each niveauxSorts as |niv|}}
+          <div class="spell-level-header">
+             <span>Niveau {{niv}}</span>
+             {{#with (lookup ../sortsMemorizedByLevel niv) as |memo|}}
+               <span style="font-size:0.8em; font-weight:normal; opacity:0.9;">Mémorisé: {{memo.count}}</span>
+             {{/with}}
+          </div>
+          <table class="add2e-table">
+             <thead>
+               <tr>
+                 <th>Sort</th>
+                 <th style="text-align:center;">Portée</th>
+                 <th style="text-align:center;">Durée</th>
+                 <th style="text-align:center;">Incant.</th>
+                 <th style="text-align:center;">Slots</th>
+                 <th></th>
+               </tr>
+             </thead>
+             <tbody>
+               {{#each (lookup ../sortsParNiveau niv) as |sort|}}
+               <tr>
+                 <td>
+                   <div class="item-name-img">
+                      <img src="{{sort.img}}" class="sort-cast-img" data-sort-id="{{sort._id}}" width="24" height="24" style="cursor:pointer;"/>
+                      <span class="toggle-sort-desc-chat" data-sort-id="{{sort._id}}" style="cursor:pointer; color:#4a2372;">{{sort.name}}</span>
+                   </div>
+                 </td>
+                 <td style="text-align:center;">{{formatSortChamp sort.system.portee}}</td>
+                 <td style="text-align:center;">{{formatSortChamp sort.system.duree}}</td>
+                 <td style="text-align:center;">{{formatSortChamp sort.system.temps_incantation}}</td>
+                 <td style="text-align:center; font-weight:bold; color:purple;">
+                    <a class="sort-memorize-minus" data-sort-id="{{sort._id}}"><i class="fas fa-minus-circle" style="color:#c0392b; font-size:0.8em;"></i></a>
+                    {{getFlag sort 'add2e.memorizedCount'}}
+                    <a class="sort-memorize-plus" data-sort-id="{{sort._id}}"><i class="fas fa-plus-circle" style="color:#27ae60; font-size:0.8em;"></i></a>
+                 </td>
+                 <td class="action-icons" style="text-align:right;">
+                    <a class="sort-edit" data-item-id="{{sort._id}}"><i class="fas fa-edit"></i></a>
+                    <a class="sort-delete" data-item-id="{{sort._id}}"><i class="fas fa-trash"></i></a>
+                 </td>
+               </tr>
+               <tr id="desc-chat-{{sort._id}}" style="display:none; background:#f9f9f9;">
+                  <td colspan="6" style="padding:10px; font-style:italic; font-size:0.9em; color:#555;">
+                     {{{sort.system.description}}}
+                  </td>
+               </tr>
+               {{/each}}
+             </tbody>
+          </table>
+        {{/each}}
+      {{else}}
+        <div style="text-align:center; padding:30px; color:#888; border:2px dashed #ccc; border-radius:10px; margin-top:20px;">
+          <i class="fas fa-book-dead" style="font-size:3em; margin-bottom:10px; opacity:0.5;"></i>
+          <p>Ce monstre ne connaît aucun sort pour le moment.</p>
+        </div>
+      {{/if}}
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="description">
+      <div class="combat-grid">
+         <div class="form-group"><label>Habitat</label><input type="text" name="system.habitat" value="{{system.habitat}}"/></div>
+         <div class="form-group"><label>Trésor</label><input type="text" name="system.treasure" value="{{system.treasure}}"/></div>
+         <div class="form-group"><label>Intelligence</label><input type="text" name="system.intelligence" value="{{system.intelligence}}"/></div>
+      </div>
+      
+      <div class="item-list-header">Notes & Description</div>
+      <textarea name="system.description" style="width:100%; height:300px; border:none; background:rgba(255,255,255,0.3); padding:10px; resize:none;">{{system.description}}</textarea>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="effets">
+       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <h3><i class="fas fa-bolt"></i> Effets Temporaires</h3>
+          <a class="effect-control" data-action="create" style="background:#27ae60; color:#fff; padding:5px 10px; border-radius:4px; font-size:0.8em;"><i class="fas fa-plus"></i> Ajouter</a>
+       </div>
+       <table class="add2e-table">
+          {{#each activeEffectsList as |eff|}}
+          <tr style="{{#if eff.disabled}}opacity:0.5; background:#eee;{{else}}background:rgba(46, 204, 113, 0.1);{{/if}}">
+             <td><img src="{{eff.img}}" width="24" height="24" style="vertical-align:middle;"/> <b>{{eff.name}}</b></td>
+             <td>{{eff.duration}}</td>
+             <td><small>{{eff.description}}</small></td>
+             <td class="action-icons" style="text-align:right;">
+                <a class="effect-control" data-action="toggle" data-effect-id="{{eff.id}}"><i class="fas {{#if eff.disabled}}fa-toggle-off{{else}}fa-toggle-on{{/if}}"></i></a>
+                <a class="effect-control" data-action="edit" data-effect-id="{{eff.id}}"><i class="fas fa-edit"></i></a>
+                <a class="effect-control" data-action="delete" data-effect-id="{{eff.id}}" style="color:red;"><i class="fas fa-trash"></i></a>
+             </td>
+          </tr>
+          {{/each}}
+       </table>
+    </div>
+
+  </section>
+</form>

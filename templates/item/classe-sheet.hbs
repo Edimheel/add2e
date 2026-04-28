@@ -1,0 +1,209 @@
+<form class="item-sheet classe-sheet" autocomplete="off">
+  <header class="sheet-header">
+    <div style="text-align:center;">
+      <img
+        src="{{item.img}}"
+        alt="Image de la classe"
+        width="256"
+        height="256"
+        style="object-fit: contain; border-radius: 8px; border: 1px solid #666; background: #222; display: block; margin: auto; {{#if editable}}cursor:pointer;{{/if}}"
+        {{#if editable}}data-edit="img"{{/if}}
+      />
+    </div>
+
+    <h1 style="text-align:center; margin-top: .5rem;">
+      {{#if editable}}
+        <input name="name" type="text" value="{{item.name}}" style="text-align:center; width: 100%;" />
+      {{else}}
+        {{#if system.label}}{{system.label}}{{else}}{{item.name}}{{/if}}
+      {{/if}}
+    </h1>
+  </header>
+
+  <nav class="tabs">
+    <a class="item active" data-tab="description">Description</a>
+    <a class="item"        data-tab="stats">Stats</a>
+    <a class="item"        data-tab="tables">Tables</a>
+  </nav>
+
+  <div class="sheet-body">
+
+    {{!-- =======================
+         DESCRIPTION
+         ======================= --}}
+    <section class="section description content" data-tab="description">
+      <div class="grid-two">
+        <div>
+          <label><strong>Label</strong></label>
+          {{#if editable}}
+            <input name="system.label" type="text" value="{{system.label}}" />
+          {{else}}
+            <p>{{system.label}}</p>
+          {{/if}}
+
+          <label><strong>Dés de vie (Hit Die)</strong></label>
+          {{#if editable}}
+            <input name="system.hitDie" type="number" value="{{system.hitDie}}" data-dtype="Number" />
+          {{else}}
+            <p>{{system.hitDie}}</p>
+          {{/if}}
+
+          <label><strong>Formule PV</strong></label>
+          {{#if editable}}
+            <input name="system.hpFormula" type="text" value="{{system.hpFormula}}" />
+          {{else}}
+            <p>{{system.hpFormula}}</p>
+          {{/if}}
+        </div>
+
+        <div>
+          <label><strong>Bouclier autorisé</strong></label>
+          {{#if editable}}
+            <input name="system.shieldAllowed" type="checkbox" {{checked system.shieldAllowed}} />
+          {{else}}
+            <p>{{#if system.shieldAllowed}}Oui{{else}}Non{{/if}}</p>
+          {{/if}}
+
+          <label><strong>Notes</strong></label>
+          {{#if editable}}
+            {{editor system.notes target="system.notes" button=true owner=owner editable=editable}}
+          {{else}}
+            {{#if system.notes}}<div class="prose">{{{system.notes}}}</div>{{else}}<p>—</p>{{/if}}
+          {{/if}}
+        </div>
+      </div>
+
+      <hr />
+
+      <label><strong>Description</strong></label>
+      {{#if editable}}
+        {{editor system.description target="system.description" button=true owner=owner editable=editable}}
+      {{else}}
+        {{#if system.description}}<div class="prose">{{{system.description}}}</div>{{else}}<p>—</p>{{/if}}
+      {{/if}}
+    </section>
+
+    {{!-- =======================
+         STATS (listes simples)
+         ======================= --}}
+    <section class="section stats content hidden" data-tab="stats">
+      <div class="grid-two">
+        <div>
+          <label><strong>Armures autorisées</strong> (tableau JSON)</label>
+          {{#if editable}}
+            <textarea name="system.armorAllowed" class="json-textarea" rows="4" data-json="true">{{system.armorAllowed}}</textarea>
+            <p class="hint">Ex: ["tissu","cuir"]</p>
+          {{else}}
+            {{#if system.armorAllowed}}
+              <p>
+                {{#each system.armorAllowed}}
+                  {{this}}{{#unless @last}}, {{/unless}}
+                {{/each}}
+              </p>
+            {{else}}<p>—</p>{{/if}}
+          {{/if}}
+
+          <label><strong>Armes autorisées</strong> (tableau JSON)</label>
+          {{#if editable}}
+            <textarea name="system.weaponsAllowed" class="json-textarea" rows="4" data-json="true">{{system.weaponsAllowed}}</textarea>
+            <p class="hint">Ex: ["dague","bâton","orbe"]</p>
+          {{else}}
+            {{#if system.weaponsAllowed}}
+              <p>
+                {{#each system.weaponsAllowed}}
+                  {{this}}{{#unless @last}}, {{/unless}}
+                {{/each}}
+              </p>
+            {{else}}<p>—</p>{{/if}}
+          {{/if}}
+        </div>
+
+        <div>
+          <label><strong>Sauvegardes</strong> (tableau JSON)</label>
+          {{#if editable}}
+            <textarea name="system.savingThrows" class="json-textarea" rows="5" data-json="true">{{system.savingThrows}}</textarea>
+            <p class="hint">Ex: ["sauvegarde_paralysie", ...]</p>
+          {{else}}
+            {{#if system.savingThrows}}
+              <p>
+                {{#each system.savingThrows}}
+                  {{this}}{{#unless @last}}, {{/unless}}
+                {{/each}}
+              </p>
+            {{else}}<p>—</p>{{/if}}
+          {{/if}}
+
+          <label><strong>Capacités spéciales</strong> (tableau JSON)</label>
+          {{#if editable}}
+            <textarea name="system.specialAbilities" class="json-textarea" rows="5" data-json="true">{{system.specialAbilities}}</textarea>
+            <p class="hint">Ex: ["Lancer de sorts","École de magie"]</p>
+          {{else}}
+            {{#if system.specialAbilities}}
+              <ul>
+                {{#each system.specialAbilities}}
+                  <li>{{this}}</li>
+                {{/each}}
+              </ul>
+            {{else}}<p>—</p>{{/if}}
+          {{/if}}
+        </div>
+      </div>
+    </section>
+
+    {{!-- =======================
+         TABLES (objets complexes)
+         ======================= --}}
+    <section class="section tables content hidden" data-tab="tables">
+      <label><strong>Attaques par round</strong> (tableau d’objets JSON)</label>
+      {{#if editable}}
+        <textarea name="system.attacksPerRound" class="json-textarea" rows="6" data-json="true">{{system.attacksPerRound}}</textarea>
+        <p class="hint">Ex: [{"minLevel":1,"maxLevel":20,"attacks":1}]</p>
+      {{else}}
+        {{#if system.attacksPerRound}}
+          <table>
+            <thead><tr><th>Min</th><th>Max</th><th>Attaques</th></tr></thead>
+            <tbody>
+              {{#each system.attacksPerRound}}
+                <tr>
+                  <td>{{minLevel}}</td>
+                  <td>{{maxLevel}}</td>
+                  <td>{{attacks}}</td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        {{else}}<p>—</p>{{/if}}
+      {{/if}}
+
+      <hr />
+
+      <label><strong>Ajustements de Force</strong> (tableau d’objets JSON)</label>
+      {{#if editable}}
+        <textarea name="system.strengthAdjustments" class="json-textarea" rows="10" data-json="true">{{system.strengthAdjustments}}</textarea>
+      {{else}}
+        {{#if system.strengthAdjustments}}
+          <table>
+            <thead>
+              <tr>
+                <th>Score</th><th>Toucher</th><th>Dégâts</th><th>Poids</th><th>Portes</th><th>Barres</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each system.strengthAdjustments}}
+                <tr>
+                  <td>{{score}}</td>
+                  <td>{{toHit}}</td>
+                  <td>{{damage}}</td>
+                  <td>{{weight}}</td>
+                  <td>{{openDoors}}</td>
+                  <td>{{bendBars}}</td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        {{else}}<p>—</p>{{/if}}
+      {{/if}}
+    </section>
+
+  </div>
+</form>

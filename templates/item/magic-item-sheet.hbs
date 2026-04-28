@@ -1,0 +1,113 @@
+<form class="{{cssClass}}" autocomplete="off">
+    <header class="sheet-header">
+        <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" style="flex:0 0 64px; height:64px; margin-right:10px;"/>
+        <div class="header-fields">
+            <h1 class="charname">
+                <input name="name" type="text" value="{{item.name}}" placeholder="Nom de l'objet" {{#unless isGM}}disabled{{/unless}}/>
+            </h1>
+            <div class="grid grid-3col">
+                <div class="form-group">
+                    <label>Type</label>
+                    <select name="type" {{#unless isGM}}disabled{{/unless}}>
+                        {{#select item.type}}
+                        <option value="objet">Objet</option>
+                        <option value="arme">Arme</option>
+                        <option value="armure">Armure</option>
+                        <option value="consommable">Consommable</option>
+                        {{/select}}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Catégorie</label>
+                    <input type="text" name="system.categorie" value="{{system.categorie}}" placeholder="ex: magique, tissu..." {{#unless isGM}}disabled{{/unless}}/>
+                </div>
+                <div class="form-group">
+                    <label>Prix</label>
+                    <input type="text" name="system.prix" value="{{system.prix}}" {{#unless isGM}}disabled{{/unless}}/>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="sheet-tabs tabs" data-group="primary">
+        <a class="item" data-tab="description">Description</a>
+        <a class="item" data-tab="details">Détails & Stats</a>
+        <a class="item" data-tab="pouvoirs">Pouvoirs & Scripts</a>
+    </nav>
+
+    <section class="sheet-body">
+        
+        <div class="tab" data-group="primary" data-tab="description">
+            {{#if isGM}}
+                {{editor system.description target="system.description" button=true owner=owner editable=true}}
+            {{else}}
+                <div class="description-view">
+                    {{{system.description}}}
+                </div>
+            {{/if}}
+        </div>
+
+        <div class="tab" data-group="primary" data-tab="details">
+            <div class="form-group">
+                <label>Quantité</label>
+                <input type="number" name="system.quantite" value="{{system.quantite}}" {{#unless isGM}}disabled{{/unless}}/>
+            </div>
+            <div class="form-group">
+                <label>Poids</label>
+                <input type="number" name="system.poids" value="{{system.poids}}" {{#unless isGM}}disabled{{/unless}}/>
+            </div>
+            
+            {{#if (eq item.type "armure")}}
+            <div class="form-group">
+                <label>Classe d'Armure (CA)</label>
+                <input type="number" name="system.ac" value="{{system.ac}}" {{#unless isGM}}disabled{{/unless}}/>
+            </div>
+            {{/if}}
+
+            <div class="form-group">
+                <label>Script Principal (onUse)</label>
+                <input type="text" name="system.onUse" value="{{system.onUse}}" style="width:100%" {{#unless isGM}}disabled{{/unless}}/>
+                <p class="notes">Chemin du script déclenché au clic ou à l'équipement.</p>
+            </div>
+        </div>
+
+        <div class="tab" data-group="primary" data-tab="pouvoirs">
+            <div class="form-group">
+                <label>Charges Globales Max</label>
+                <input type="number" name="system.max_charges" value="{{system.max_charges}}" {{#unless isGM}}disabled{{/unless}}/>
+            </div>
+
+            <hr>
+            <h3>
+                Liste des Pouvoirs
+                {{#if isGM}}
+                <a class="item-create" title="Ajouter un pouvoir" style="font-size:0.6em; float:right;">
+                    <i class="fas fa-plus"></i> Ajouter
+                </a>
+                {{/if}}
+            </h3>
+
+            <div class="pouvoirs-list">
+                {{#each system.pouvoirs as |pouvoir idx|}}
+                <div class="pouvoir-item" style="border:1px solid #ccc; padding:5px; margin-bottom:5px; border-radius:5px;">
+                    <div style="display:flex; gap:5px; margin-bottom:5px;">
+                        <img src="{{pouvoir.img}}" width="24" height="24"/>
+                        <input type="text" name="system.pouvoirs.{{idx}}.name" value="{{pouvoir.name}}" placeholder="Nom" style="font-weight:bold;" {{#unless ../isGM}}disabled{{/unless}}/>
+                        
+                        {{#if ../isGM}}
+                        <a class="pouvoir-delete" data-index="{{idx}}" style="color:red;"><i class="fas fa-trash"></i></a>
+                        {{/if}}
+                    </div>
+                    
+                    <div class="grid grid-3col">
+                        <input type="text" name="system.pouvoirs.{{idx}}.cout" value="{{pouvoir.cout}}" placeholder="Coût" title="Coût en charges" {{#unless ../isGM}}disabled{{/unless}}/>
+                        <input type="text" name="system.pouvoirs.{{idx}}.onUse" value="{{pouvoir.onUse}}" placeholder="Script Path" title="Chemin du script" {{#unless ../isGM}}disabled{{/unless}}/>
+                    </div>
+                    <textarea name="system.pouvoirs.{{idx}}.description" rows="2" placeholder="Description courte" {{#unless ../isGM}}disabled{{/unless}}>{{pouvoir.description}}</textarea>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+
+    </section>
+</form>
