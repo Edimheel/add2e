@@ -1,0 +1,254 @@
+[
+  {
+    "name": "Massue",
+    "type": "arme",
+    "data": {
+      "nom": "Massue",
+      "degats": "1d6",
+      "poids": 4,
+      "proprietes": "Contondant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Dague",
+    "type": "arme",
+    "data": {
+      "nom": "Dague",
+      "degats": "1d4",
+      "poids": 1,
+      "proprietes": "Lancer, Corps à corps",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Bâton",
+    "type": "arme",
+    "data": {
+      "nom": "Bâton",
+      "degats": "1d6",
+      "poids": 3,
+      "proprietes": "Corps à corps",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Lance",
+    "type": "arme",
+    "data": {
+      "nom": "Lance",
+      "degats": "1d8",
+      "poids": 6,
+      "proprietes": "Perforant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Épée courte",
+    "type": "arme",
+    "data": {
+      "nom": "Épée courte",
+      "degats": "1d6",
+      "poids": 2,
+      "proprietes": "Tranchant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Épée longue",
+    "type": "arme",
+    "data": {
+      "nom": "Épée longue",
+      "degats": "1d8",
+      "poids": 3,
+      "proprietes": "Tranchant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Épée bâtarde",
+    "type": "arme",
+    "data": {
+      "nom": "Épée bâtarde",
+      "degats": "1d10",
+      "poids": 4,
+      "proprietes": "Tranchant, Polyvalent",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Hache d'arme",
+    "type": "arme",
+    "data": {
+      "nom": "Hache d'arme",
+      "degats": "1d8",
+      "poids": 5,
+      "proprietes": "Tranchant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Hachette",
+    "type": "arme",
+    "data": {
+      "nom": "Hachette",
+      "degats": "1d6",
+      "poids": 2,
+      "proprietes": "Tranchant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Masse d'armes",
+    "type": "arme",
+    "data": {
+      "nom": "Masse d'armes",
+      "degats": "1d8",
+      "poids": 6,
+      "proprietes": "Contondant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Marteau de guerre",
+    "type": "arme",
+    "data": {
+      "nom": "Marteau de guerre",
+      "degats": "1d8",
+      "poids": 5,
+      "proprietes": "Contondant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Fléau",
+    "type": "arme",
+    "data": {
+      "nom": "Fléau",
+      "degats": "1d8",
+      "poids": 4,
+      "proprietes": "Contondant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Morgenstern",
+    "type": "arme",
+    "data": {
+      "nom": "Morgenstern",
+      "degats": "1d8",
+      "poids": 4,
+      "proprietes": "Contondant",
+      "portee_short": null,
+      "portee_long": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Arc court",
+    "type": "arme",
+    "data": {
+      "nom": "Arc court",
+      "degats": "1d6",
+      "poids": 2,
+      "proprietes": "Distance",
+      "portee_short": 30,
+      "portee_long": 120,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Arc long",
+    "type": "arme",
+    "data": {
+      "nom": "Arc long",
+      "degats": "1d8",
+      "poids": 3,
+      "proprietes": "Distance",
+      "portee_short": 40,
+      "portee_long": 160,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Arbalète légère",
+    "type": "arme",
+    "data": {
+      "nom": "Arbalète légère",
+      "degats": "1d6",
+      "poids": 4,
+      "proprietes": "Distance, Deux mains",
+      "portee_short": 50,
+      "portee_long": 200,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Fronde",
+    "type": "arme",
+    "data": {
+      "nom": "Fronde",
+      "degats": "1d4",
+      "poids": 1,
+      "proprietes": "Distance",
+      "portee_short": 20,
+      "portee_long": 60,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  },
+  {
+    "name": "Javeline",
+    "type": "arme",
+    "data": {
+      "nom": "Javeline",
+      "degats": "1d6",
+      "poids": 2,
+      "proprietes": "Lancer",
+      "portee_short": 15,
+      "portee_long": 60,
+      "bonus_toucher": 0,
+      "bonus_degats": 0
+    }
+  }
+]

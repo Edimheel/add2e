@@ -1,0 +1,276 @@
+[
+  {
+    "name": "Humain",
+    "type": "race",
+    "data": {
+      "abilityAdjustments": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "speed": "9m",
+      "languages": [
+        "commun"
+      ],
+      "specialAbilities": [],
+      "classLimits": {},
+      "description": "Aucune modification, norme de base"
+    }
+  },
+  {
+    "name": "Nain",
+    "type": "race",
+    "data": {
+      "abilityAdjustments": {
+        "str": 0,
+        "dex": 0,
+        "con": 1,
+        "int": 0,
+        "wis": 0,
+        "cha": -1
+      },
+      "speed": "6m",
+      "languages": [
+        "nain",
+        "gnome",
+        "gobelin",
+        "kobold",
+        "orque",
+        "commun"
+      ],
+      "specialAbilities": [
+        "Infravision (18m)",
+        "Bonus sauvegarde sort/baguettes: +1 par 3.5 CON"
+      ],
+      "classLimits": {
+        "guerrier": 9,
+        "voleur": 9,
+        "assassin": 9
+      },
+      "description": "Résistance aux poisons et magie, bonus sauvegarde sorts."
+    }
+  },
+  {
+    "name": "Elfe",
+    "type": "race",
+    "data": {
+      "abilityAdjustments": {
+        "str": 0,
+        "dex": 1,
+        "con": -1,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "speed": "9m",
+      "languages": [
+        "elfe",
+        "commun",
+        "gnome",
+        "petite-gens",
+        "gobelin",
+        "hobgobelin",
+        "orque",
+        "gnoll"
+      ],
+      "specialAbilities": [
+        "Infravision (18m)",
+        "+1 to-hit w/ swords/bows",
+        "90% resistance charme/sommeil",
+        "Detect secret doors +1/6 passif"
+      ],
+      "classLimits": {
+        "guerrier": null,
+        "magicien": null,
+        "voleur": null
+      },
+      "description": "Ami des bois, vision nocturne."
+    }
+  },
+  {
+    "name": "Gnome",
+    "type": "race",
+    "data": {
+      "abilityAdjustments": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "speed": "6m",
+      "languages": [
+        "gnome",
+        "commun"
+      ],
+      "specialAbilities": [
+        "Infravision (18m)",
+        "Détection traps建"
+      ],
+      "classLimits": {
+        "voleur": null,
+        "guerrier": 5
+      },
+      "description": "Petits et furtifs."
+    }
+  },
+  {
+    "name": "Petite-gens",
+    "type": "race",
+    "data": {
+      "abilityAdjustments": {
+        "str": -1,
+        "dex": 1,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "speed": "6m",
+      "languages": [
+        "commun",
+        "petite-gens",
+        "gnome",
+        "elfe"
+      ],
+      "specialAbilities": [
+        "Infravision (18m)",
+        "+1 surprise passive"
+      ],
+      "classLimits": {
+        "guerrier": 6,
+        "voleur": null
+      },
+      "description": "Agile et furtif."
+    }
+  },
+  {
+    "name": "Demi-elfe",
+    "type": "race",
+    "data": {
+      "abilityAdjustments": {
+        "str": 0,
+        "dex": 0,
+        "con": 0,
+        "int": 0,
+        "wis": 0,
+        "cha": 0
+      },
+      "speed": "9m",
+      "languages": [
+        "commun",
+        "elfe",
+        "gnome",
+        "petite-gens",
+        "gobelin",
+        "hobgobelin",
+        "orque",
+        "gnoll"
+      ],
+      "specialAbilities": [
+        "Infravision (18m)",
+        "30% résistance charme/sommeil"
+      ],
+      "classLimits": {
+        "clerc": 5,
+        "druide": null,
+        "guerrier": 8,
+        "ranger": 8,
+        "magicien": 8,
+        "voleur": null,
+        "assassin": 11
+      },
+      "description": "Traits mixtes humain/elfe."
+    }
+  },
+  {
+    "name": "Demi-orque",
+    "type": "race",
+    "data": {
+      "abilityAdjustments": {
+        "str": 1,
+        "dex": 0,
+        "con": 1,
+        "int": 0,
+        "wis": 0,
+        "cha": -2
+      },
+      "speed": "9m",
+      "languages": [
+        "commun",
+        "orque"
+      ],
+      "specialAbilities": [
+        "Infravision (18m)"
+      ],
+      "classLimits": {
+        "clerc": 4,
+        "guerrier": 10,
+        "voleur": 8,
+        "assassin": null
+      },
+      "description": "Puissant mais maléfique."
+    }
+  },
+   {
+    "name": "Kender",
+    "type": "race",
+    "img": "icons/creatures/mammals/humanoid-halfling-green.webp",
+    "system": {
+      "description": "Petits, curieux et intrépides, les Kenders parcourent Krynn poussés par une envie irrépressible d'explorer (et de 'manipuler' des objets).",
+      "bonus_caracteristiques": {
+        "force": -1,
+        "dexterite": 2,
+        "constitution": 0,
+        "intelligence": 0,
+        "sagesse": -1,
+        "charisme": 0
+      },
+      "capacites": [
+        "Intrépidité (Immunisé à la peur non-magique)",
+        "Insulte (Provoque la rage des ennemis)",
+        "Voleur né (+Thief Skills)",
+        "Hoopak (Arme spécialisée)"
+      ],
+      "langues": ["Commun", "Kenderspeak", "Régional"],
+      "movement": 6,
+      "taille": "P",
+      "vision": "Normale",
+      "thief_adjustments": {
+        "pick_pockets": 5,
+        "open_locks": 5,
+        "find_remove_traps": 0,
+        "move_silently": 10,
+        "hide_in_shadows": 10,
+        "detect_noise": 5,
+        "climb_walls": 5,
+        "read_languages": -5
+      },
+      "limites_classes": {
+        "guerrier": 6,
+        "ranger": 6,
+        "clerc": 12,
+        "voleur": 99,
+        "magicien": 0,
+        "paladin": 0
+      },
+      "effects": [
+        {
+          "label": "Traits Kender",
+          "icon": "icons/svg/target.svg",
+          "changes": [],
+          "flags": {
+            "add2e": {
+              "tags": ["immunite:peur", "bonus_save_vs:peur:4", "resistance:poison:1"] 
+            }
+          }
+        }
+      ],
+      "onUse": "scripts/kender.js"
+    }
+  }
+]

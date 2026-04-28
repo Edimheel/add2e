@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Armure rembourrée",
+    "type": "armure",
+    "data": {
+      "nom": "Armure rembourrée",
+      "ac": 8,
+      "weight": 10,
+      "properties": "Légère",
+      "cost": "5 po"
+    }
+  },
+  {
+    "name": "Cuir",
+    "type": "armure",
+    "data": {
+      "nom": "Cuir",
+      "ac": 7,
+      "weight": 15,
+      "properties": "Légère",
+      "cost": "10 po"
+    }
+  },
+  {
+    "name": "Cuir clouté",
+    "type": "armure",
+    "data": {
+      "nom": "Cuir clouté",
+      "ac": 6,
+      "weight": 20,
+      "properties": "Légère",
+      "cost": "12 po"
+    }
+  },
+  {
+    "name": "Cotte de mailles",
+    "type": "armure",
+    "data": {
+      "nom": "Cotte de mailles",
+      "ac": 5,
+      "weight": 25,
+      "properties": "Moyenne",
+      "cost": "15 po"
+    }
+  },
+  {
+    "name": "Tunique métallique",
+    "type": "armure",
+    "data": {
+      "nom": "Tunique métallique",
+      "ac": 5,
+      "weight": 30,
+      "properties": "Moyenne",
+      "cost": "20 po"
+    }
+  },
+  {
+    "name": "Torse blindé",
+    "type": "armure",
+    "data": {
+      "nom": "Torse blindé",
+      "ac": 4,
+      "weight": 40,
+      "properties": "Lourde",
+      "cost": "35 po"
+    }
+  },
+  {
+    "name": "Armure de plaques",
+    "type": "armure",
+    "data": {
+      "nom": "Armure de plaques",
+      "ac": 3,
+      "weight": 50,
+      "properties": "Lourde",
+      "cost": "50 po"
+    }
+  },
+  {
+    "name": "Bouclier rond",
+    "type": "armure",
+    "data": {
+      "nom": "Bouclier rond",
+      "ac": 1,
+      "weight": 5,
+      "properties": "Bouclier",
+      "cost": "5 po"
+    }
+  },
+  {
+    "name": "Bouclier lourd",
+    "type": "armure",
+    "data": {
+      "nom": "Bouclier lourd",
+      "ac": 2,
+      "weight": 10,
+      "properties": "Bouclier",
+      "cost": "15 po"
+    }
+  },
+  {
+    "name": "Bouclier de tour",
+    "type": "armure",
+    "data": {
+      "nom": "Bouclier de tour",
+      "ac": 3,
+      "weight": 15,
+      "properties": "Bouclier",
+      "cost": "20 po"
+    }
+  }
+]
