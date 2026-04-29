@@ -1,0 +1,229 @@
+.sheet.actor.add2e.personnage section {
+  border: 1px solid #aaa;
+  margin-bottom: 1.2em;
+  border-radius: 8px;
+  padding: 1em;
+}
+
+.sheet.actor.add2e.personnage h2 {
+  font-size: 1.1em;
+  color: #333366;
+  margin-bottom: 0.5em;
+}
+
+.sheet.actor.add2e.personnage label {
+  font-weight: bold;
+  margin-right: 0.5em;
+}
+
+.sheet.actor.add2e.personnage input,
+.sheet.actor.add2e.personnage textarea {
+  width: 98%;
+  margin-bottom: 0.3em;
+}
+
+.sheet.actor.add2e.personnage table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sheet.actor.add2e.personnage th,
+.sheet.actor.add2e.personnage td {
+  border: 1px solid #bbb;
+  padding: 0.2em 0.4em;
+  font-size: 0.95em;
+}
+/* Bouton D6 pour initiative dans le tracker ADD2e */
+.add2e-d6-initiative-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  cursor: pointer;
+}
+.add2e-d6-initiative-btn i {
+  color: #8e44ad;
+  font-size: 1.4em;
+  vertical-align: middle;
+}
+.add2e-d6-initiative-btn:hover i {
+  color: #d35400;
+  text-shadow: 0 0 4px #fff8;
+}
+.combatant .token-initiative {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.3em;
+  min-width: 44px; /* Assez large pour 2 chiffres et un dé */
+  max-width: 80px; /* Laisse respirer selon la largeur tracker */
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.combatant .token-initiative span {
+  margin-right: 0.3em;
+  font-size: 1.09em;
+  font-weight: bold;
+  min-width: 20px;
+  display: inline-block;
+  text-align: left;
+}
+
+.combatant .token-initiative img,
+.combatant .token-initiative .fa-dice-d20 {
+  /* AUCUNE modification de taille ici ! */
+  height: 32px !important;
+  width: 32px !important;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 32px;
+  max-height: 32px;
+  margin-left: -0.9em;
+  margin-right: 0;
+  vertical-align: middle;
+  object-fit: contain;
+}
+/* Ajoute dans ton CSS (style.css ou add2e.css) */
+.scene-control.add2e-dice-btn .control-icon {
+  background-image: url("systems/add2e/assets/icones/d20_3d.png");
+  background-size: 80% 80%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.scene-control.add2e-dice-btn .control-icon i {
+  opacity: 0 !important;
+}
+/* --- GESTION DES ONGLETS MONSTRE --- */
+
+/* 1. S'assurer que le corps de la page prend toute la place restante */
+.monster-sheet .sheet-body {
+    flex: 1;
+    overflow: hidden; /* Pour gérer le scroll interne aux onglets */
+    height: 100%;
+}
+
+/* 2. Comportement des onglets (Caché par défaut / Affiché si actif) */
+.monster-sheet .tab {
+    display: none;       /* Caché par défaut */
+    height: 100%;        /* Prend toute la hauteur du parent */
+    overflow-y: auto;    /* Scroll si le contenu est trop long */
+    padding: 5px;
+}
+
+.monster-sheet .tab.active {
+    display: block;      /* Affiché SEULEMENT si la classe .active est là */
+}
+
+/* 3. Style de la barre de navigation */
+.monster-sheet .sheet-tabs {
+    flex: 0 0 32px;
+    border-bottom: 2px solid #7c39c3;
+    margin-bottom: 5px;
+    display: flex;
+    gap: 5px;
+}
+
+.monster-sheet .sheet-tabs .item {
+    padding: 5px 10px;
+    border-radius: 5px 5px 0 0;
+    background: #ccc;
+    color: #444;
+    font-weight: bold;
+    cursor: pointer;
+    border: 1px solid #999;
+    border-bottom: none;
+}
+
+.monster-sheet .sheet-tabs .item.active {
+    background: #fff;
+    color: #7c39c3;
+    border-bottom: 1px solid #fff; /* Fusion visuelle */
+    margin-bottom: -2px;
+    z-index: 10;
+}
+/* --- JETS DE SAUVEGARDE (Style Carte "Image") --- */
+.saves-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0 0 5px 0; /* Marge basse réduite pour coller aux onglets */
+    padding: 0;
+}
+
+/* La boîte globale du JS */
+.monster-sheet .save-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    border: 2px solid #ccc; /* Bordure épaisse */
+    border-radius: 8px;
+    padding: 6px 2px;
+    background: #fff;
+    cursor: pointer;
+    transition: transform 0.1s;
+    height: 65px; /* Hauteur fixe pour uniformité */
+}
+
+.monster-sheet .save-box:hover {
+    transform: translateY(-2px);
+    filter: brightness(0.95);
+}
+
+/* Icône en haut */
+.monster-sheet .save-box i {
+    font-size: 1.4em;
+    margin-bottom: 2px;
+}
+
+/* Titre au milieu */
+.monster-sheet .save-box .save-label {
+    font-size: 0.7em;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+/* Valeur (La "pilule" noire) */
+.monster-sheet .save-box .save-value {
+    background: #222;
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.1em;
+    padding: 1px 12px;
+    border-radius: 12px;
+    line-height: 1.2;
+}
+
+/* --- COULEURS SPÉCIFIQUES (Bordure + Fond léger + Icône) --- */
+
+/* Paralysie (Vert) */
+.save-box.paralysie { border-color: #1abc9c; background: #e8f8f5; }
+.save-box.paralysie i { color: #16a085; }
+
+/* Baguettes (Jaune) */
+.save-box.baguettes { border-color: #f1c40f; background: #fcf3cf; }
+.save-box.baguettes i { color: #f39c12; }
+
+/* Pétrification (Violet) */
+.save-box.petrification { border-color: #9b59b6; background: #f4ecf7; }
+.save-box.petrification i { color: #8e44ad; }
+
+/* Souffle (Orange) */
+.save-box.souffle { border-color: #e67e22; background: #fdebd0; }
+.save-box.souffle i { color: #d35400; }
+
+/* Sorts (Rouge) */
+.save-box.sorts { border-color: #e74c3c; background: #fadbd8; }
+.save-box.sorts i { color: #c0392b; }
+
+
+/* --- AJUSTEMENT BARRE ONGLETS (Pour coller au-dessus) --- */
+.monster-sheet .sheet-tabs {
+    margin-top: 0 !important; /* Force le collage vers le haut */
+    padding-top: 0 !important;
+    border-top: none;
+}
