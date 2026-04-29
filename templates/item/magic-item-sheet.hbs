@@ -1,113 +1,526 @@
-<form class="{{cssClass}}" autocomplete="off">
-    <header class="sheet-header">
-        <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" style="flex:0 0 64px; height:64px; margin-right:10px;"/>
-        <div class="header-fields">
-            <h1 class="charname">
-                <input name="name" type="text" value="{{item.name}}" placeholder="Nom de l'objet" {{#unless isGM}}disabled{{/unless}}/>
-            </h1>
-            <div class="grid grid-3col">
-                <div class="form-group">
-                    <label>Type</label>
-                    <select name="type" {{#unless isGM}}disabled{{/unless}}>
-                        {{#select item.type}}
-                        <option value="objet">Objet</option>
-                        <option value="arme">Arme</option>
-                        <option value="armure">Armure</option>
-                        <option value="consommable">Consommable</option>
-                        {{/select}}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Catégorie</label>
-                    <input type="text" name="system.categorie" value="{{system.categorie}}" placeholder="ex: magique, tissu..." {{#unless isGM}}disabled{{/unless}}/>
-                </div>
-                <div class="form-group">
-                    <label>Prix</label>
-                    <input type="text" name="system.prix" value="{{system.prix}}" {{#unless isGM}}disabled{{/unless}}/>
-                </div>
-            </div>
+<form class="{{cssClass}} add2e-item-sheet" autocomplete="off">
+  <style>
+    .add2e-item-sheet {
+      --a2-bg: rgba(245, 239, 224, 0.92);
+      --a2-card: rgba(255, 252, 245, 0.95);
+      --a2-border: #8b5e34;
+      --a2-soft-border: rgba(96, 65, 35, 0.25);
+      --a2-title: #3b2414;
+      --a2-text: #2f241c;
+      --a2-muted: #6f6258;
+      --a2-accent: #7c2d12;
+      --a2-gold: #b9822b;
+      color: var(--a2-text);
+    }
+
+    .add2e-item-sheet input,
+    .add2e-item-sheet textarea,
+    .add2e-item-sheet select {
+      color: #1f1a16;
+      background: rgba(255,255,255,0.8);
+      border: 1px solid var(--a2-soft-border);
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+
+    .add2e-item-hero {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 12px;
+      align-items: stretch;
+      padding: 12px;
+      border: 2px solid var(--a2-border);
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255,248,228,0.98), rgba(232,216,184,0.9));
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      margin-bottom: 10px;
+    }
+
+    .add2e-item-img {
+      width: 96px;
+      height: 96px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid rgba(75,47,24,0.5);
+      background: #eee2c7;
+      cursor: pointer;
+    }
+
+    .add2e-item-title input {
+      width: 100%;
+      font-size: 1.65em;
+      font-weight: 800;
+      color: var(--a2-title);
+      background: rgba(255,255,255,0.35);
+      border: 0;
+      border-bottom: 2px solid rgba(124,45,18,0.35);
+      border-radius: 0;
+      padding: 2px 4px;
+    }
+
+    .add2e-item-subgrid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .add2e-field label {
+      display: block;
+      font-size: 0.78em;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--a2-muted);
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .add2e-field input,
+    .add2e-field select,
+    .add2e-field textarea {
+      width: 100%;
+    }
+
+    .add2e-tabs {
+      display: flex;
+      gap: 6px;
+      margin: 8px 0 10px;
+      border-bottom: 2px solid rgba(91,52,25,0.35);
+      padding-bottom: 6px;
+    }
+
+    .add2e-tabs .item {
+      padding: 6px 10px;
+      border: 1px solid rgba(91,52,25,0.35);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.45);
+      color: var(--a2-title);
+      font-weight: 700;
+    }
+
+    .add2e-tabs .item.active {
+      background: var(--a2-accent);
+      color: #fff8ec;
+      border-color: var(--a2-accent);
+    }
+
+    .add2e-panel {
+      border: 1px solid var(--a2-soft-border);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--a2-card);
+      margin-bottom: 10px;
+    }
+
+    .add2e-section-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 0 8px;
+      color: var(--a2-title);
+      font-size: 1.15em;
+      font-weight: 800;
+      border-bottom: 1px solid rgba(91,52,25,0.25);
+      padding-bottom: 5px;
+    }
+
+    .add2e-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .add2e-stat {
+      background: rgba(251,246,234,0.95);
+      border: 1px solid rgba(124,45,18,0.18);
+      border-radius: 8px;
+      padding: 7px;
+    }
+
+    .add2e-stat label {
+      display: block;
+      font-size: 0.75em;
+      text-transform: uppercase;
+      color: var(--a2-muted);
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
+    .add2e-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-height: 28px;
+      align-items: center;
+    }
+
+    .add2e-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(124,45,18,0.1);
+      border: 1px solid rgba(124,45,18,0.22);
+      font-size: 0.86em;
+      font-weight: 700;
+      color: var(--a2-accent);
+    }
+
+    .add2e-pouvoir {
+      border: 1px solid rgba(91,52,25,0.25);
+      background: rgba(255,255,255,0.55);
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+
+    .add2e-pouvoir-head {
+      display: grid;
+      grid-template-columns: 32px 1fr 42px;
+      gap: 7px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .add2e-pouvoir-head img {
+      width: 32px;
+      height: 32px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid rgba(91,52,25,0.25);
+    }
+
+    .add2e-description-view {
+      min-height: 220px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.45);
+      border: 1px solid rgba(91,52,25,0.2);
+      line-height: 1.45;
+    }
+
+    .add2e-note {
+      color: var(--a2-muted);
+      font-size: 0.86em;
+      margin-top: 4px;
+    }
+
+    .add2e-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+  </style>
+
+  <header class="add2e-item-hero">
+    <img class="add2e-item-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" />
+
+    <div>
+      <div class="add2e-item-title">
+        <input name="name" type="text" value="{{item.name}}" placeholder="Nom de l'objet" {{#unless isGM}}disabled{{/unless}} />
+      </div>
+
+      <div class="add2e-item-subgrid">
+        <div class="add2e-field">
+          <label>Type</label>
+          <select name="type" {{#unless isGM}}disabled{{/unless}}>
+            {{#select item.type}}
+              <option value="objet">Objet</option>
+              <option value="arme">Arme</option>
+              <option value="armure">Armure</option>
+              <option value="consommable">Consommable</option>
+            {{/select}}
+          </select>
         </div>
-    </header>
 
-    <nav class="sheet-tabs tabs" data-group="primary">
-        <a class="item" data-tab="description">Description</a>
-        <a class="item" data-tab="details">Détails & Stats</a>
-        <a class="item" data-tab="pouvoirs">Pouvoirs & Scripts</a>
-    </nav>
-
-    <section class="sheet-body">
-        
-        <div class="tab" data-group="primary" data-tab="description">
-            {{#if isGM}}
-                {{editor system.description target="system.description" button=true owner=owner editable=true}}
-            {{else}}
-                <div class="description-view">
-                    {{{system.description}}}
-                </div>
-            {{/if}}
+        <div class="add2e-field">
+          <label>Catégorie</label>
+          <input type="text" name="system.categorie" value="{{system.categorie}}" placeholder="melee, projectile..." {{#unless isGM}}disabled{{/unless}} />
         </div>
 
-        <div class="tab" data-group="primary" data-tab="details">
-            <div class="form-group">
-                <label>Quantité</label>
-                <input type="number" name="system.quantite" value="{{system.quantite}}" {{#unless isGM}}disabled{{/unless}}/>
-            </div>
-            <div class="form-group">
-                <label>Poids</label>
-                <input type="number" name="system.poids" value="{{system.poids}}" {{#unless isGM}}disabled{{/unless}}/>
-            </div>
-            
-            {{#if (eq item.type "armure")}}
-            <div class="form-group">
-                <label>Classe d'Armure (CA)</label>
-                <input type="number" name="system.ac" value="{{system.ac}}" {{#unless isGM}}disabled{{/unless}}/>
-            </div>
-            {{/if}}
+        <div class="add2e-field">
+          <label>Équipé</label>
+          <select name="system.equipee" {{#unless isGM}}disabled{{/unless}}>
+            {{#select system.equipee}}
+              <option value="false">Non</option>
+              <option value="true">Oui</option>
+            {{/select}}
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
 
-            <div class="form-group">
-                <label>Script Principal (onUse)</label>
-                <input type="text" name="system.onUse" value="{{system.onUse}}" style="width:100%" {{#unless isGM}}disabled{{/unless}}/>
-                <p class="notes">Chemin du script déclenché au clic ou à l'équipement.</p>
-            </div>
+  <nav class="sheet-tabs tabs add2e-tabs" data-group="primary">
+    <a class="item" data-tab="description">Description</a>
+    <a class="item" data-tab="details">Détails</a>
+    {{#if (eq item.type "arme")}}<a class="item" data-tab="combat">Combat</a>{{/if}}
+    {{#if (eq item.type "armure")}}<a class="item" data-tab="protection">Protection</a>{{/if}}
+    <a class="item" data-tab="effets">Effets</a>
+    <a class="item" data-tab="pouvoirs">Pouvoirs</a>
+  </nav>
+
+  <section class="sheet-body">
+
+    <div class="tab" data-group="primary" data-tab="description">
+      <div class="add2e-panel">
+        <h3 class="add2e-section-title"><i class="fas fa-scroll"></i> Description</h3>
+        {{#if isGM}}
+          {{editor system.description target="system.description" button=true owner=owner editable=true}}
+        {{else}}
+          <div class="add2e-description-view">{{{system.description}}}</div>
+        {{/if}}
+      </div>
+    </div>
+
+    <div class="tab" data-group="primary" data-tab="details">
+      <div class="add2e-panel">
+        <h3 class="add2e-section-title"><i class="fas fa-circle-info"></i> Informations générales</h3>
+
+        <div class="add2e-stat-grid">
+          <div class="add2e-stat">
+            <label>Nom interne</label>
+            <input type="text" name="system.nom" value="{{system.nom}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Poids</label>
+            <input type="number" name="system.poids" value="{{system.poids}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Quantité</label>
+            <input type="number" name="system.quantite" value="{{system.quantite}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Prix</label>
+            <input type="text" name="system.prix" value="{{system.prix}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
         </div>
 
-        <div class="tab" data-group="primary" data-tab="pouvoirs">
-            <div class="form-group">
-                <label>Charges Globales Max</label>
-                <input type="number" name="system.max_charges" value="{{system.max_charges}}" {{#unless isGM}}disabled{{/unless}}/>
-            </div>
+        <div class="add2e-field" style="margin-top:8px;">
+          <label>Propriétés</label>
+          <input type="text" name="system.proprietes" value="{{system.proprietes}}" placeholder="Tranchant, Magique, Distance..." {{#unless isGM}}disabled{{/unless}} />
+        </div>
 
-            <hr>
-            <h3>
-                Liste des Pouvoirs
-                {{#if isGM}}
-                <a class="item-create" title="Ajouter un pouvoir" style="font-size:0.6em; float:right;">
-                    <i class="fas fa-plus"></i> Ajouter
-                </a>
+        <div class="add2e-field" style="margin-top:8px;">
+          <label>Tags d’effets</label>
+          <input type="text" name="system.effectTags" value="{{system.effectTags}}" placeholder="arc, epee_longue, hache..." {{#unless isGM}}disabled{{/unless}} />
+          <div class="add2e-note">Ces tags servent à faire correspondre les bonus raciaux et effets actifs avec cet objet.</div>
+        </div>
+      </div>
+    </div>
+
+    {{#if (eq item.type "arme")}}
+    <div class="tab" data-group="primary" data-tab="combat">
+      <div class="add2e-panel">
+        <h3 class="add2e-section-title"><i class="fas fa-sword"></i> Combat</h3>
+
+        <div class="add2e-stat-grid">
+          <div class="add2e-stat">
+            <label>Type</label>
+            <input type="text" name="system.type" value="{{system.type}}" placeholder="melee" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Catégorie</label>
+            <input type="text" name="system.categorie" value="{{system.categorie}}" placeholder="melee / projectile_propulse" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Bonus toucher</label>
+            <input type="number" name="system.bonus_hit" value="{{system.bonus_hit}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Bonus dégâts</label>
+            <input type="number" name="system.bonus_dom" value="{{system.bonus_dom}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+        </div>
+
+        <div class="add2e-two" style="margin-top:8px;">
+          <div class="add2e-stat">
+            <label>Dégâts contre taille M</label>
+            <input type="text" name="system.degats.contre_moyen" value="{{system.degats.contre_moyen}}" placeholder="1d8" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Dégâts contre taille G</label>
+            <input type="text" name="system.degats.contre_grand" value="{{system.degats.contre_grand}}" placeholder="1d12" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+        </div>
+
+        <div class="add2e-stat-grid" style="margin-top:8px;">
+          <div class="add2e-stat">
+            <label>Portée courte</label>
+            <input type="number" name="system.portee_courte" value="{{system.portee_courte}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Portée moyenne</label>
+            <input type="number" name="system.portee_moyenne" value="{{system.portee_moyenne}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Portée longue</label>
+            <input type="number" name="system.portee_longue" value="{{system.portee_longue}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Facteur rapidité</label>
+            <input type="number" name="system.facteur_rapidité" value="{{system.facteur_rapidité}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+        </div>
+
+        <div class="add2e-field" style="margin-top:8px;">
+          <label>Ajustement CA</label>
+          <input type="text" name="system.ajustement_ca" value="{{system.ajustement_ca}}" placeholder="ex: 0,0,0,0,0,0,0,0,0" {{#unless isGM}}disabled{{/unless}} />
+        </div>
+
+        <div class="add2e-field" style="margin-top:8px;">
+          <label>Deux mains</label>
+          <select name="system.deuxMains" {{#unless isGM}}disabled{{/unless}}>
+            {{#select system.deuxMains}}
+              <option value="false">Non</option>
+              <option value="true">Oui</option>
+            {{/select}}
+          </select>
+        </div>
+      </div>
+    </div>
+    {{/if}}
+
+    {{#if (eq item.type "armure")}}
+    <div class="tab" data-group="primary" data-tab="protection">
+      <div class="add2e-panel">
+        <h3 class="add2e-section-title"><i class="fas fa-shield-halved"></i> Protection</h3>
+
+        <div class="add2e-stat-grid">
+          <div class="add2e-stat">
+            <label>Classe d’armure</label>
+            <input type="number" name="system.ac" value="{{system.ac}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Catégorie</label>
+            <input type="text" name="system.properties" value="{{system.properties}}" placeholder="Légère, Moyenne, Lourde, Bouclier" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Coût</label>
+            <input type="text" name="system.cost" value="{{system.cost}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+
+          <div class="add2e-stat">
+            <label>Poids</label>
+            <input type="number" name="system.weight" value="{{system.weight}}" {{#unless isGM}}disabled{{/unless}} />
+          </div>
+        </div>
+      </div>
+    </div>
+    {{/if}}
+
+    <div class="tab" data-group="primary" data-tab="effets">
+      <div class="add2e-panel">
+        <h3 class="add2e-section-title"><i class="fas fa-sparkles"></i> Effets et tags</h3>
+
+        <div class="add2e-field">
+          <label>Tags de l’objet</label>
+          <input type="text" name="system.effectTags" value="{{system.effectTags}}" placeholder="arc, hache, baton..." {{#unless isGM}}disabled{{/unless}} />
+        </div>
+
+        <div class="add2e-note">
+          Les tags doivent correspondre aux tags des effets : par exemple <b>bonus_touche:arc:1</b> fonctionne avec une arme qui possède <b>arc</b>.
+        </div>
+
+        <hr>
+
+        <h4>Effets actifs embarqués</h4>
+        {{#if item.effects.size}}
+          <ul>
+            {{#each item.effects as |effect|}}
+              <li>
+                <b>{{effect.name}}</b>
+                {{#if effect.flags.add2e.tags}}
+                  <div class="add2e-tags">
+                    {{#each effect.flags.add2e.tags as |tag|}}
+                      <span class="add2e-tag">{{tag}}</span>
+                    {{/each}}
+                  </div>
                 {{/if}}
-            </h3>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p class="add2e-note">Aucun effet actif embarqué.</p>
+        {{/if}}
+      </div>
+    </div>
 
-            <div class="pouvoirs-list">
-                {{#each system.pouvoirs as |pouvoir idx|}}
-                <div class="pouvoir-item" style="border:1px solid #ccc; padding:5px; margin-bottom:5px; border-radius:5px;">
-                    <div style="display:flex; gap:5px; margin-bottom:5px;">
-                        <img src="{{pouvoir.img}}" width="24" height="24"/>
-                        <input type="text" name="system.pouvoirs.{{idx}}.name" value="{{pouvoir.name}}" placeholder="Nom" style="font-weight:bold;" {{#unless ../isGM}}disabled{{/unless}}/>
-                        
-                        {{#if ../isGM}}
-                        <a class="pouvoir-delete" data-index="{{idx}}" style="color:red;"><i class="fas fa-trash"></i></a>
-                        {{/if}}
-                    </div>
-                    
-                    <div class="grid grid-3col">
-                        <input type="text" name="system.pouvoirs.{{idx}}.cout" value="{{pouvoir.cout}}" placeholder="Coût" title="Coût en charges" {{#unless ../isGM}}disabled{{/unless}}/>
-                        <input type="text" name="system.pouvoirs.{{idx}}.onUse" value="{{pouvoir.onUse}}" placeholder="Script Path" title="Chemin du script" {{#unless ../isGM}}disabled{{/unless}}/>
-                    </div>
-                    <textarea name="system.pouvoirs.{{idx}}.description" rows="2" placeholder="Description courte" {{#unless ../isGM}}disabled{{/unless}}>{{pouvoir.description}}</textarea>
-                </div>
-                {{/each}}
-            </div>
+    <div class="tab" data-group="primary" data-tab="pouvoirs">
+      <div class="add2e-panel">
+        <h3 class="add2e-section-title">
+          <i class="fas fa-wand-magic-sparkles"></i> Pouvoirs
+          {{#if isGM}}
+            <a class="item-create" title="Ajouter un pouvoir" style="margin-left:auto; font-size:0.8em;">
+              <i class="fas fa-plus"></i> Ajouter
+            </a>
+          {{/if}}
+        </h3>
+
+        <div class="add2e-stat" style="margin-bottom:8px;">
+          <label>Charges globales max</label>
+          <input type="number" name="system.max_charges" value="{{system.max_charges}}" {{#unless isGM}}disabled{{/unless}} />
         </div>
 
-    </section>
+        <div class="pouvoirs-list">
+          {{#each system.pouvoirs as |pouvoir idx|}}
+            <div class="add2e-pouvoir">
+              <div class="add2e-pouvoir-head">
+                <img src="{{pouvoir.img}}" />
+                <input type="text" name="system.pouvoirs.{{idx}}.name" value="{{pouvoir.name}}" placeholder="Nom du pouvoir" {{#unless ../isGM}}disabled{{/unless}} />
+                {{#if ../isGM}}
+                  <a class="pouvoir-delete" data-index="{{idx}}" style="color:#b91c1c; text-align:center;"><i class="fas fa-trash"></i></a>
+                {{/if}}
+              </div>
+
+              <div class="add2e-stat-grid">
+                <div class="add2e-stat">
+                  <label>Coût</label>
+                  <input type="number" name="system.pouvoirs.{{idx}}.cout" value="{{pouvoir.cout}}" {{#unless ../isGM}}disabled{{/unless}} />
+                </div>
+
+                <div class="add2e-stat">
+                  <label>Max</label>
+                  <input type="number" name="system.pouvoirs.{{idx}}.max" value="{{pouvoir.max}}" {{#unless ../isGM}}disabled{{/unless}} />
+                </div>
+
+                <div class="add2e-stat">
+                  <label>Niveau</label>
+                  <input type="number" name="system.pouvoirs.{{idx}}.niveau" value="{{pouvoir.niveau}}" {{#unless ../isGM}}disabled{{/unless}} />
+                </div>
+
+                <div class="add2e-stat">
+                  <label>École</label>
+                  <input type="text" name="system.pouvoirs.{{idx}}.ecole" value="{{pouvoir.ecole}}" {{#unless ../isGM}}disabled{{/unless}} />
+                </div>
+              </div>
+
+              <div class="add2e-field" style="margin-top:6px;">
+                <label>Script</label>
+                <input type="text" name="system.pouvoirs.{{idx}}.onUse" value="{{pouvoir.onUse}}" placeholder="scripts/spells/..." {{#unless ../isGM}}disabled{{/unless}} />
+              </div>
+
+              <div class="add2e-field" style="margin-top:6px;">
+                <label>Description</label>
+                <textarea name="system.pouvoirs.{{idx}}.description" rows="2" {{#unless ../isGM}}disabled{{/unless}}>{{pouvoir.description}}</textarea>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+    </div>
+
+  </section>
 </form>
