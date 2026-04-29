@@ -188,15 +188,34 @@ function getEffetTypeByNom(arme, mappingTable) {
 
 function plageToRollFormula(plage) {
   if (typeof plage !== "string") return plage;
-  if (plage.includes("d")) return plage;
-  const match = plage.match(/^(\d+)\s*-\s*(\d+)$/);
-  if (!match) return plage;
-  const min = Number(match[1]);
-  const max = Number(match[2]);
-  if (isNaN(min) || isNaN(max) || max <= min) return plage;
-  const faces = max - min + 1;
-  const bonus = min - 1;
-  return `1d${faces}` + (bonus > 0 ? `+${bonus}` : "");
+
+  const v = plage.trim().toLowerCase();
+
+  // Si c'est déjà une formule Foundry, on ne touche pas.
+  if (v.includes("d")) return plage;
+
+  // Conversion AD&D correcte des plages de dégâts.
+  const table = {
+    "1-2": "1d2",
+    "1-3": "1d3",
+    "1-4": "1d4",
+    "1-6": "1d6",
+    "1-8": "1d8",
+    "1-10": "1d10",
+    "1-12": "1d12",
+
+    "2-5": "1d4+1",
+    "2-7": "1d6+1",
+    "2-8": "2d4",
+    "2-12": "2d6",
+    "2-16": "2d8",
+
+    "3-9": "3d3",
+    "3-12": "3d4",
+    "3-18": "3d6"
+  };
+
+  return table[v] || plage;
 }
 
 /**
@@ -216,7 +235,59 @@ async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   const cibleToken = Array.from(game.user.targets)[0];
   const cible = cibleToken ? cibleToken.actor : null;
   if (!cibleToken) return ui.notifications.warn("Aucune cible sélectionnée !");
+// =======================
+// CONTRÔLE DISTANCE AVANT DIALOGUE
+// =======================
+const isDistanceWeapon = (arme.system.portee_courte ?? 0) > 0;
 
+let distanceCible = 0;
+
+try {
+  if (srcToken && cibleToken) {
+    distanceCible = canvas.grid.measureDistances(
+      [{ ray: new Ray(srcToken.center, cibleToken.center) }],
+      { gridSpaces: true }
+    )[0];
+  }
+} catch (e) {
+  console.warn("ADD2E | Erreur mesure distance :", e);
+  distanceCible = 0;
+}
+
+// Arme de contact : bloquée au-delà du contact
+if (!isDistanceWeapon) {
+  const gridSize = canvas.grid.size;
+
+  const sLeft = srcToken.document.x / gridSize;
+  const sTop = srcToken.document.y / gridSize;
+  const sRight = sLeft + (srcToken.document.width || 1);
+  const sBottom = sTop + (srcToken.document.height || 1);
+
+  const tLeft = cibleToken.document.x / gridSize;
+  const tTop = cibleToken.document.y / gridSize;
+  const tRight = tLeft + (cibleToken.document.width || 1);
+  const tBottom = tTop + (cibleToken.document.height || 1);
+
+  const gapX = Math.max(0, tLeft - sRight, sLeft - tRight);
+  const gapY = Math.max(0, tTop - sBottom, sTop - tBottom);
+
+  const auContact = gapX <= 0.01 && gapY <= 0.01;
+
+  if (!auContact) {
+    ui.notifications.error("Cible trop éloignée pour une arme de contact.");
+    return;
+  }
+}
+
+// Arme à distance : bloquée hors portée longue
+if (isDistanceWeapon) {
+  const porteeLongue = Number(arme.system.portee_longue) || 0;
+
+  if (porteeLongue > 0 && distanceCible > porteeLongue) {
+    ui.notifications.error("Cible hors de portée.");
+    return;
+  }
+}
   return new Promise((resolve) => {
     new Dialog({
       title: "Bonus/Malus d’attaque",
@@ -311,8 +382,43 @@ async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
               bonusToucheEffets = Add2eEffectsEngine.getBonusTouche(actor, typeArmeEffet);
             }
 
-            let totalBonusToucher = modCaracToucher + bonusHit + malusPortee + userBonus + bonusToucheEffets + bonusRacialVs;
-            let totalBonusDegats = modCaracDegats + bonusDom;
+// =======================
+// DETAIL BONUS TOUCHER
+// =======================
+let bonusDetails = [];
+
+if (modCaracToucher !== 0) {
+  bonusDetails.push({ label: "Caractéristique", value: modCaracToucher });
+}
+
+if (bonusHit !== 0) {
+  bonusDetails.push({ label: "Arme", value: bonusHit });
+}
+
+if (malusPortee !== 0) {
+  bonusDetails.push({ label: "Portée", value: malusPortee });
+}
+
+if (userBonus !== 0) {
+  bonusDetails.push({ label: "Bonus temporaire", value: userBonus });
+}
+
+if (bonusToucheEffets !== 0) {
+  bonusDetails.push({ label: "Effets actifs", value: bonusToucheEffets });
+}
+
+if (bonusRacialVs !== 0) {
+  bonusDetails.push({ label: "Bonus racial / ennemi", value: bonusRacialVs });
+}
+
+let totalBonusToucher =
+  modCaracToucher +
+  bonusHit +
+  malusPortee +
+  userBonus +
+  bonusToucheEffets +
+  bonusRacialVs;
+  let totalBonusDegats = modCaracDegats + bonusDom;
 
             // --- 3. CA CIBLE ---
             let sysCible = cible.system || {};
@@ -388,7 +494,10 @@ async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
             const totalAuToucher = d20 + totalBonusToucher;
 
             // Logique de touche (20 touche toujours, 1 rate toujours)
-            const estTouche = (d20 === 20) || (d20 !== 1 && totalAuToucher >= valeurPourToucher);
+            const seuilFinalD20 = valeurPourToucher - totalBonusToucher;
+
+            // 20 touche toujours, 1 rate toujours
+            const estTouche = (d20 === 20) || (d20 !== 1 && d20 >= seuilFinalD20);
 
             const finalResult = estTouche;
 
@@ -464,7 +573,7 @@ async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
                </div>
 
                <div style="text-align:center; margin-bottom:10px;">
-                   Seuil à atteindre : <span style="font-weight:bold; color:#d35400;">${valeurPourToucher}</span>
+                   Seuil à atteindre au d20 : <span style="font-weight:bold; color:#d35400;">${seuilFinalD20}</span>
                </div>
 
                <div style="text-align:center; margin-bottom:10px; font-size:1.4em; font-weight:bold; color:${colorResult};">
@@ -477,17 +586,44 @@ async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
                    <div style="font-size:0.8em; color:#7f8c8d;">(${formulaDegats} -> ${detailsDegats})</div>
                </div>` : ''}
 
-               <details style="margin-top:5px; font-size:0.8em; color:#666;">
-                  <summary>Détails du calcul</summary>
-                  <ul>
-                     <li><b>THAC0 - CA :</b> <span style="color:blue;">${thaco} - ${caFinaleCible} = ${thaco - caFinaleCible}</span></li>
-                     <li><b>Mod. caractéristique :</b> <span style="color:#d35400;">${modCaracToucher >= 0 ? "+" : ""}${modCaracToucher}</span></li>
-                     <li><b>Mod. portée :</b> ${malusPortee} (${descPortee})</li>
-                     <li><b>Bonus temporaire :</b> <span style="color:#d35400;">${userBonus >= 0 ? "+" : ""}${userBonus}</span></li>
-                     <li><b>Mod. armure :</b> <span style="color:#c0392b;">${txtAjust}</span></li>
-                     <li><b>Valeur pour toucher finale :</b> <span style="color:green; font-weight:bold;">${valeurPourToucher}</span></li>
-                  </ul>
-               </details>
+               <details style="margin-top:8px; font-size:1.05em; color:#333;">
+  <summary style="cursor:pointer; font-weight:bold; font-size:1.1em;">
+    Détails simples du jet
+  </summary>
+
+  <div style="margin-top:8px; line-height:1.55; background:#f8fafc; border:1px solid #d0d7de; border-radius:6px; padding:8px;">
+
+    <div><b>Base THAC0 :</b> ${thaco}</div>
+    <div><b>Classe d’armure cible :</b> ${caFinaleCible}</div>
+    <div><b>Seuil sans modificateur :</b> ${valeurPourToucher}</div>
+
+    <hr style="margin:6px 0;">
+
+    <div><b>Modificateur FOR :</b> ${modCaracToucher >= 0 ? "+" : ""}${modCaracToucher}</div>
+    <div><b>Modificateur magique arme :</b> ${bonusHit >= 0 ? "+" : ""}${bonusHit}</div>
+    <div><b>Modificateur effets actifs :</b> ${bonusToucheEffets >= 0 ? "+" : ""}${bonusToucheEffets}</div>
+    <div><b>Modificateur portée :</b> ${malusPortee >= 0 ? "+" : ""}${malusPortee} (${descPortee})</div>
+    <div><b>Modificateur temporaire :</b> ${userBonus >= 0 ? "+" : ""}${userBonus}</div>
+    <div><b>Modificateur armure / arme :</b> ${ajustementCA >= 0 ? "+" : ""}${ajustementCA}</div>
+
+    <hr style="margin:6px 0;">
+
+    <div style="font-size:1.15em;">
+      <b>Total modificateur :</b>
+      <span style="font-weight:bold; color:#2563eb;">
+        ${totalBonusToucher >= 0 ? "+" : ""}${totalBonusToucher}
+      </span>
+    </div>
+
+    <div style="font-size:1.15em;">
+      <b>Seuil final au d20 :</b>
+      <span style="font-weight:bold; color:#15803d;">
+        ${seuilFinalD20}
+      </span>
+    </div>
+
+  </div>
+</details>
             </div>
             `;
 

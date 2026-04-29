@@ -2553,9 +2553,33 @@ html.find('.armure-equip').off().on('click', async ev => {
   const estArmure = !estBouclier && !estHeaume;
 
   const classe = this.actor.system.details_classe || {};
-  const armorsAllowed = (classe.armorAllowed || classe.armures_autorisees || []).map(a =>
-    a.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, '').trim()
-  );
+const toStrArraySafe = (v) => {
+  if (Array.isArray(v)) return v;
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return [];
+    return s.split(/[,;]+/).map(x => x.trim()).filter(Boolean);
+  }
+  if (v && typeof v === "object") {
+    if (Array.isArray(v.value)) return v.value;
+    if (Array.isArray(v.list)) return v.list;
+    if (Array.isArray(v.items)) return v.items;
+    if (typeof v.value === "string") return toStrArraySafe(v.value);
+    if (typeof v.list === "string") return toStrArraySafe(v.list);
+    if (typeof v.items === "string") return toStrArraySafe(v.items);
+  }
+  return [];
+};
+
+const armorsAllowed = toStrArraySafe(
+  classe.armorAllowed ?? classe.armures_autorisees ?? []
+).map(a =>
+  String(a)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f’']/g, "")
+    .trim()
+);
   const peutBouclier = classe.shieldAllowed === true;
 
   // PATCH Moine : ne peut jamais porter d’armure
@@ -3147,6 +3171,14 @@ if (itemData.type === "sort") {
 // --- Vérifie stats minimales pour la classe
   if (itemData.type === "classe") {
     if (typeof checkClassStatMin === "function") {
+      // 🔥 CORRECTION : reset ancienne classe
+await this.actor.update({ "system.-=details_classe": null });
+
+// 🔥 applique la nouvelle classe correctement
+await this.actor.update({
+  "system.classe": itemData.name,
+  "system.details_classe": foundry.utils.deepClone(itemData.system)
+});
       const ok = checkClassStatMin(this.actor, itemData);
       if (!ok) {
         console.warn("[ADD2e] Blocage prise de classe (stats minimales NON atteintes)");
@@ -3199,20 +3231,68 @@ if (itemData.type === "sort") {
     await this.actor.update({ "system.bonus_caracteristiques": {} });
   }
 
-  // --- Remplace ancienne classe (et ses effets)
-  if (itemData.type === "classe") {
-    const existingClasses = this.actor.items.filter(i => i.type === "classe");
-    for (const oldClass of existingClasses) {
-      const classEffects = this.actor.effects.filter(eff => eff.origin === oldClass.uuid);
-      if (classEffects.length) {
-        const ids = classEffects.map(e => e.id).filter(id => this.actor.effects.has(id));
-        if (ids.length) {
-          await this.actor.deleteEmbeddedDocuments("ActiveEffect", ids);
-        }
-      }
-      await oldClass.delete();
-    }
+
+// --- Changement de classe : purge ancienne classe + sorts + armes + armures
+// Important : on ne supprime PAS la race.
+// Important : suppression item par item, plus fiable sur token non lié / acteur synthétique.
+if (itemData.type === "classe") {
+  console.log("=== [ADD2E][DROP CLASSE][PURGE] ===", {
+    actor: this.actor.name,
+    nouvelleClasse: itemData.name,
+    actorIsToken: this.actor.isToken ?? false,
+    tokenId: this.actor.token?.id ?? null
+  });
+
+  const typesToDelete = ["classe", "sort", "arme", "armure", "spell", "weapon", "armor"];
+
+  const itemsToDelete = this.actor.items.filter(i =>
+    typesToDelete.includes(String(i.type || "").toLowerCase())
+  );
+
+  console.log("[ADD2E][DROP CLASSE][PURGE] items à supprimer :", itemsToDelete.map(i => ({
+    id: i.id,
+    name: i.name,
+    type: i.type,
+    uuid: i.uuid
+  })));
+
+  // Effets liés aux items supprimés.
+  // On cible l'origine exacte et, par sécurité, les origins qui finissent par l'id d'item.
+  const itemUuidsToDelete = itemsToDelete.map(i => i.uuid).filter(Boolean);
+  const itemIdsToDelete = itemsToDelete.map(i => i.id).filter(Boolean);
+
+  const effectsToDelete = this.actor.effects.filter(eff => {
+    const origin = String(eff.origin || "");
+    return itemUuidsToDelete.includes(origin)
+      || itemIdsToDelete.some(id => origin.endsWith(`.${id}`));
+  });
+
+  console.log("[ADD2E][DROP CLASSE][PURGE] effets liés à supprimer :", effectsToDelete.map(e => ({
+    id: e.id,
+    name: e.name,
+    origin: e.origin
+  })));
+
+  for (const eff of effectsToDelete) {
+    await eff.delete({ render: false });
   }
+
+  for (const it of itemsToDelete) {
+    console.log("[ADD2E][DROP CLASSE][PURGE] suppression item :", {
+      id: it.id,
+      name: it.name,
+      type: it.type
+    });
+
+    await it.delete({ render: false });
+  }
+
+  console.log("[ADD2E][DROP CLASSE][PURGE] items restants après purge :", this.actor.items.map(i => ({
+    id: i.id,
+    name: i.name,
+    type: i.type
+  })));
+}
 
   // --- Anti-doublon (évite d'ajouter deux fois le même item)
   if (["arme", "armure", "sort"].includes(itemData.type)) {
@@ -3632,4 +3712,239 @@ Hooks.on("deleteItem", async (item, options, userId) => {
     ui.notifications.info(`Les effets de ${item.name} se sont dissipés.`);
   }
   
+});
+// =========================================================
+// ADD2E — RELAIS MJ GÉNÉRIQUE POUR LES SCRIPTS DE SORTS
+// À placer tout en bas de scripts/add2e.mjs
+// Ne contient aucune logique spécifique à un sort.
+// =========================================================
+Hooks.once("ready", () => {
+  if (globalThis.ADD2E_GM_OPERATION_RELAY_REGISTERED) return;
+  globalThis.ADD2E_GM_OPERATION_RELAY_REGISTERED = true;
+
+  console.log("%c[ADD2E][GM-RELAY] Relais MJ générique chargé", "color:#27ae60;font-weight:bold;");
+
+  function isResponsibleGM() {
+    if (!game.user.isGM) return false;
+    if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+    return game.users.activeGM?.id === game.user.id;
+  }
+
+  function resolveScene(sceneId) {
+    return game.scenes.get(sceneId) || canvas.scene || game.scenes.active || null;
+  }
+
+  async function resolveActor(payload) {
+    if (payload.actorUuid) {
+      try {
+        const doc = await fromUuid(payload.actorUuid);
+        if (doc) return doc;
+      } catch (e) {
+        console.warn("[ADD2E][GM-RELAY] actorUuid non résolu :", payload.actorUuid, e);
+      }
+    }
+
+    if (payload.sceneId && payload.tokenId) {
+      const scene = resolveScene(payload.sceneId);
+      const tokenDoc = scene?.tokens?.get(payload.tokenId);
+      if (tokenDoc?.actor) return tokenDoc.actor;
+    }
+
+    if (payload.actorId) {
+      return game.actors.get(payload.actorId) ?? null;
+    }
+
+    return null;
+  }
+
+  function findAmbientLight(scene, payload) {
+    if (!scene) return null;
+
+    if (payload.lightId) {
+      const byId = scene.lights.get(payload.lightId);
+      if (byId) return byId;
+    }
+
+    if (payload.requestId) {
+      const byRequest = scene.lights.find(l =>
+        l.flags?.add2e?.requestId === payload.requestId ||
+        l.getFlag?.("add2e", "requestId") === payload.requestId
+      );
+
+      if (byRequest) return byRequest;
+    }
+
+    if (
+      Number.isFinite(Number(payload.x)) &&
+      Number.isFinite(Number(payload.y))
+    ) {
+      const px = Number(payload.x);
+      const py = Number(payload.y);
+
+      return scene.lights.find(l => {
+        const lx = Number(l.x);
+        const ly = Number(l.y);
+
+        const samePos =
+          Number.isFinite(lx) &&
+          Number.isFinite(ly) &&
+          Math.abs(lx - px) < 4 &&
+          Math.abs(ly - py) < 4;
+
+        const sameSpell =
+          !payload.spellName ||
+          l.flags?.add2e?.spellName === payload.spellName ||
+          l.getFlag?.("add2e", "spellName") === payload.spellName;
+
+        const sameActor =
+          !payload.actorId ||
+          l.flags?.add2e?.actorId === payload.actorId ||
+          l.flags?.add2e?.actorUuid === payload.actorUuid ||
+          l.getFlag?.("add2e", "actorId") === payload.actorId ||
+          l.getFlag?.("add2e", "actorUuid") === payload.actorUuid;
+
+        return samePos && sameSpell && sameActor;
+      }) ?? null;
+    }
+
+    return null;
+  }
+
+  game.socket.on("system.add2e", async data => {
+    if (!data || data.type !== "ADD2E_GM_OPERATION") return;
+    if (!isResponsibleGM()) return;
+
+    const operation = data.operation;
+    const payload = data.payload ?? {};
+
+    console.log("[ADD2E][GM-RELAY] opération reçue :", {
+      operation,
+      payload
+    });
+
+    // -----------------------------------------------------
+    // Créer une lumière ambiante
+    // -----------------------------------------------------
+    if (operation === "createAmbientLight") {
+      const scene = resolveScene(payload.sceneId);
+
+      if (!scene) {
+        console.warn("[ADD2E][GM-RELAY][createAmbientLight] scène introuvable :", payload);
+        return;
+      }
+
+      const lightData = {
+        x: Number(payload.x ?? 0),
+        y: Number(payload.y ?? 0),
+        rotation: Number(payload.rotation ?? 0),
+        walls: payload.walls !== false,
+        vision: payload.vision === true,
+        config: {
+          dim: Number(payload.dim ?? 6),
+          bright: Number(payload.bright ?? 3),
+          angle: Number(payload.angle ?? 360),
+          color: payload.color ?? "#fffec4",
+          alpha: Number(payload.alpha ?? 0.5),
+          coloration: Number(payload.coloration ?? 1),
+          luminosity: Number(payload.luminosity ?? 0.5),
+          attenuation: Number(payload.attenuation ?? 0.5),
+          animation: payload.animation ?? {
+            type: "torch",
+            speed: 2,
+            intensity: 2,
+            reverse: false
+          }
+        },
+        flags: {
+          add2e: foundry.utils.duplicate(payload.flags?.add2e ?? {})
+        }
+      };
+
+      const created = await scene.createEmbeddedDocuments("AmbientLight", [lightData]);
+      const lightDoc = created?.[0];
+
+      console.log("[ADD2E][GM-RELAY][createAmbientLight] créée :", {
+        scene: scene.name,
+        lightId: lightDoc?.id,
+        requestId: payload.flags?.add2e?.requestId
+      });
+
+      return;
+    }
+
+    // -----------------------------------------------------
+    // Supprimer une lumière ambiante
+    // -----------------------------------------------------
+    if (operation === "deleteAmbientLight") {
+      const scene = resolveScene(payload.sceneId);
+
+      if (!scene) {
+        console.warn("[ADD2E][GM-RELAY][deleteAmbientLight] scène introuvable :", payload);
+        return;
+      }
+
+      const lightDoc = findAmbientLight(scene, payload);
+
+      if (!lightDoc) {
+        console.warn("[ADD2E][GM-RELAY][deleteAmbientLight] lumière introuvable :", payload);
+        return;
+      }
+
+      console.log("[ADD2E][GM-RELAY][deleteAmbientLight] suppression :", {
+        scene: scene.name,
+        lightId: lightDoc.id
+      });
+
+      await lightDoc.delete();
+      return;
+    }
+
+    // -----------------------------------------------------
+    // Mettre à jour un token
+    // -----------------------------------------------------
+    if (operation === "updateToken") {
+      const scene = resolveScene(payload.sceneId);
+      const tokenDoc = scene?.tokens?.get(payload.tokenId);
+
+      if (!scene || !tokenDoc) {
+        console.warn("[ADD2E][GM-RELAY][updateToken] scène/token introuvable :", payload);
+        return;
+      }
+
+      console.log("[ADD2E][GM-RELAY][updateToken] update :", {
+        scene: scene.name,
+        token: tokenDoc.name,
+        updateData: payload.updateData
+      });
+
+      await tokenDoc.update(payload.updateData ?? {});
+      return;
+    }
+
+    // -----------------------------------------------------
+    // Créer un ActiveEffect
+    // -----------------------------------------------------
+    if (operation === "createActiveEffect") {
+      const targetActor = await resolveActor(payload);
+
+      if (!targetActor) {
+        console.warn("[ADD2E][GM-RELAY][createActiveEffect] acteur introuvable :", payload);
+        return;
+      }
+
+      const effectData = foundry.utils.duplicate(payload.effectData ?? {});
+      delete effectData._id;
+
+      console.log("[ADD2E][GM-RELAY][createActiveEffect] création :", {
+        actor: targetActor.name,
+        actorUuid: targetActor.uuid,
+        effectData
+      });
+
+      await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      return;
+    }
+
+    console.warn("[ADD2E][GM-RELAY] opération inconnue :", operation, payload);
+  });
 });
