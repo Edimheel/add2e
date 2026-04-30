@@ -3,7 +3,107 @@
 const { ActorSheetV2 } = foundry.applications.sheets;
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 
-// Déclaration de la feuille custom pour les acteurs
+// =====================================================
+// OUTILS
+// =====================================================
+
+function add2eRaceAbilityValue(adjustments, shortKey, longKey) {
+  return Number(adjustments?.[shortKey] ?? adjustments?.[longKey] ?? 0);
+}
+
+function add2eToTextList(value) {
+  if (!value) return "";
+
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).join(", ");
+  }
+
+  if (typeof value === "object") {
+    return Object.values(value).filter(Boolean).join(", ");
+  }
+
+  return String(value);
+}
+
+function add2eToMultilineText(value) {
+  if (!value) return "";
+
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).join("\n");
+  }
+
+  if (typeof value === "object") {
+    return Object.values(value).filter(Boolean).join("\n");
+  }
+
+  return String(value);
+}
+
+function add2eNormalizeTags(raw) {
+  const result = [];
+
+  const add = (v) => {
+    if (!v) return;
+
+    if (Array.isArray(v)) {
+      for (const x of v) add(x);
+      return;
+    }
+
+    if (v instanceof Set) {
+      for (const x of Array.from(v)) add(x);
+      return;
+    }
+
+    if (typeof v === "object") {
+      if (Array.isArray(v.value)) add(v.value);
+      else if (Array.isArray(v.tags)) add(v.tags);
+      else if (Array.isArray(v.list)) add(v.list);
+      else if (typeof v.value === "string") add(v.value);
+      return;
+    }
+
+    String(v)
+      .split(/[,;]+/)
+      .map(t => t.trim())
+      .filter(Boolean)
+      .forEach(t => result.push(t));
+  };
+
+  add(raw);
+
+  return [...new Set(result)];
+}
+
+async function add2eUpdateFinalCaracsLocal(actor) {
+  if (!actor) return;
+
+  const CARACS = [
+    "force",
+    "dexterite",
+    "constitution",
+    "intelligence",
+    "sagesse",
+    "charisme"
+  ];
+
+  const updates = {};
+
+  for (const c of CARACS) {
+    const base = Number(getProperty(actor.system, `${c}_base`) ?? 10);
+    const bonusRace = Number(getProperty(actor.system, `bonus_caracteristiques.${c}`) ?? 0);
+    const bonusDivers = Number(getProperty(actor.system, `bonus_divers_caracteristiques.${c}`) ?? 0);
+
+    updates[`system.${c}`] = base + bonusRace + bonusDivers;
+  }
+
+  await actor.update(updates);
+}
+
+// =====================================================
+// FEUILLE ACTEUR ADD2E
+// =====================================================
+
 export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
@@ -15,204 +115,176 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   }
 
   async getData(opts) {
-    if (this.actor.type !== "personnage") return super.getData(opts);
     const ctx = await super.getData(opts);
+
+    ctx.actor = this.actor;
+    ctx.system = this.actor.system;
+    ctx.items = this.actor.items?.contents ?? [];
+    ctx.isGM = game.user.isGM;
+
     return ctx;
   }
 
-async _onDropItem(event, item) {
-  console.log("=== [ADD2E][_onDropItem] ===");
-  console.log("[ADD2E][_onDropItem] item reçu :", item ? {
-    id: item.id,
-    name: item.name,
-    type: item.type,
-    parent: item.parent?.name ?? null,
-    uuid: item.uuid
-  } : null);
+  async _onDropItem(event, data) {
+    console.log("[add2e] DROP ITEM :", data);
 
-  if (!item) return null;
+    let item = null;
 
-  // =====================================================
-  // DROP CLASSE
-  // La nouvelle classe déclenche elle-même :
-  // - suppression ancienne classe
-  // - suppression sorts / armes / armures
-  // - création nouvelle classe
-  // - synchro actor.system
-  // =====================================================
-  if (item.type === "classe") {
-    console.log("=== [ADD2E][DROP CLASSE - RESET ÉQUIPEMENT/SORTS] ===");
-
-    const actor = this.actor;
-
-    console.log("[DROP CLASSE] acteur cible :", {
-      name: actor.name,
-      id: actor.id,
-      isToken: actor.isToken,
-      tokenId: actor.token?.id ?? null
-    });
-
-    const classData = foundry.utils.duplicate(item.toObject());
-    delete classData._id;
-
-    // -------------------------------------------------
-    // 1) Supprimer ancienne classe + sorts + armes + armures
-    // -------------------------------------------------
-    const typesToDelete = ["classe", "sort", "arme", "armure"];
-
-    const itemsToDelete = actor.items.filter(i =>
-      typesToDelete.includes(i.type)
-    );
-
-    console.log("[DROP CLASSE] items à supprimer :", itemsToDelete.map(i => ({
-      id: i.id,
-      name: i.name,
-      type: i.type,
-      uuid: i.uuid
-    })));
-
-    // Supprimer les effets liés à ces items
-    const itemUuidsToDelete = itemsToDelete.map(i => i.uuid);
-
-    const effectsToDelete = actor.effects.filter(e =>
-      itemUuidsToDelete.includes(e.origin)
-    );
-
-    console.log("[DROP CLASSE] effets liés à supprimer :", effectsToDelete.map(e => ({
-      id: e.id,
-      name: e.name,
-      origin: e.origin
-    })));
-
-    if (effectsToDelete.length) {
-      await actor.deleteEmbeddedDocuments(
-        "ActiveEffect",
-        effectsToDelete.map(e => e.id)
-      );
+    if (data?.uuid) {
+      item = await fromUuid(data.uuid);
     }
 
-    if (itemsToDelete.length) {
-      await actor.deleteEmbeddedDocuments(
-        "Item",
-        itemsToDelete.map(i => i.id)
-      );
+    if (!item) {
+      ui.notifications.warn("Objet déposé introuvable.");
+      return;
     }
 
-    console.log("[DROP CLASSE] après suppression :", actor.items.map(i => ({
-      id: i.id,
-      name: i.name,
-      type: i.type
-    })));
+    // =====================================================
+    // DROP RACE
+    // =====================================================
+    if (item.type === "race") {
+      const raceName = item.name;
 
-    // -------------------------------------------------
-    // 2) Créer la nouvelle classe
-    // -------------------------------------------------
-    const [classDoc] = await actor.createEmbeddedDocuments("Item", [classData]);
+      const adjustments =
+        item.system?.abilityAdjustments ||
+        item.system?.data?.abilityAdjustments ||
+        item.system?.bonus_caracteristiques ||
+        {};
 
-    if (!classDoc) {
-      console.error("[DROP CLASSE] ERREUR : impossible de créer la nouvelle classe.");
-      return null;
-    }
+      const engineTags =
+        globalThis.Add2eEffectsEngine?.getRacialTagsForRace?.(raceName) ?? [];
 
-    console.log("[DROP CLASSE] nouvelle classe créée :", {
-      id: classDoc.id,
-      name: classDoc.name,
-      spellcasting: foundry.utils.duplicate(classDoc.system?.spellcasting ?? null)
-    });
+      const itemTags = [
+        ...add2eNormalizeTags(item.system?.tags),
+        ...add2eNormalizeTags(item.system?.effectTags),
+        ...add2eNormalizeTags(item.flags?.add2e?.tags)
+      ];
 
-    // -------------------------------------------------
-    // 3) Appliquer les effets embarqués de la nouvelle classe
-    // -------------------------------------------------
-    if (classDoc.effects?.contents?.length) {
-      const actorEffects = classDoc.effects.contents.map(eff => {
-        const e = foundry.utils.duplicate(eff.toObject());
-        e.origin = classDoc.uuid;
-        e.disabled = false;
-        e.transfer = false;
-        delete e._id;
-        return e;
+      const racialTags = [...new Set([...engineTags, ...itemTags])];
+
+      const maj = {
+        "system.race": raceName,
+
+        "system.bonus_caracteristiques.force":
+          add2eRaceAbilityValue(adjustments, "str", "force"),
+
+        "system.bonus_caracteristiques.dexterite":
+          add2eRaceAbilityValue(adjustments, "dex", "dexterite"),
+
+        "system.bonus_caracteristiques.constitution":
+          add2eRaceAbilityValue(adjustments, "con", "constitution"),
+
+        "system.bonus_caracteristiques.intelligence":
+          add2eRaceAbilityValue(adjustments, "int", "intelligence"),
+
+        "system.bonus_caracteristiques.sagesse":
+          add2eRaceAbilityValue(adjustments, "wis", "sagesse"),
+
+        "system.bonus_caracteristiques.charisme":
+          add2eRaceAbilityValue(adjustments, "cha", "charisme"),
+
+        "system.langues":
+          add2eToTextList(item.system?.languages ?? item.system?.langues),
+
+        "system.special_racial":
+          add2eToMultilineText(item.system?.specialAbilities ?? item.system?.special_racial)
+      };
+
+      console.log("[add2e] Application race :", {
+        race: raceName,
+        maj,
+        racialTags
       });
 
-      console.log("[DROP CLASSE] effets de classe à créer :", actorEffects.map(e => ({
-        name: e.name,
-        origin: e.origin
-      })));
+      await this.actor.update(maj);
+      await this.actor.setFlag("add2e", "racialTags", racialTags);
 
-      await actor.createEmbeddedDocuments("ActiveEffect", actorEffects);
+      await add2eUpdateFinalCaracsLocal(this.actor);
+
+      ui.notifications.info(`Race "${raceName}" appliquée au personnage avec ses effets raciaux.`);
+      return;
     }
 
-    // -------------------------------------------------
-    // 4) Synchroniser l'acteur depuis la classe
-    // -------------------------------------------------
-    const patch = {
-      "system.classe": classDoc.name,
-      "system.details_classe": foundry.utils.duplicate(classDoc.system ?? {}),
-      "system.spellcasting": foundry.utils.duplicate(classDoc.system?.spellcasting ?? null),
-      "system.alignements_autorises": foundry.utils.duplicate(
-        classDoc.system?.alignements_autorises
-        ?? classDoc.system?.alignment
-        ?? []
-      )
+    // =====================================================
+    // DROP CLASSE
+    // =====================================================
+    if (item.type !== "classe") {
+      return;
+    }
+
+    const classeSystem = foundry.utils.deepClone(item.system ?? {});
+
+    const maj = {
+      "system.classe": item.name,
+      "system.nom": this.actor.name,
+      "system.niveau": 1,
+
+      "system.points_de_coup":
+        Number(item.system?.hitDie ?? item.system?.dv ?? 8),
+
+      "system.special":
+        add2eToMultilineText(item.system?.specialAbilities ?? item.system?.special),
+
+      "system.alignement":
+        Array.isArray(item.system?.alignment)
+          ? item.system.alignment[0]
+          : (item.system?.alignment ?? ""),
+
+      "system.armure_portee":
+        add2eToTextList(item.system?.armorAllowed ?? item.system?.armures_autorisees),
+
+      "system.bouclier":
+        item.system?.shieldAllowed ? "Oui" : "Non",
+
+      "system.pv_par_niveau":
+        item.system?.hdPerLevel ?? "",
+
+      "system.principale":
+        item.system?.primaryAbility ?? "",
+
+      "system.xp_progression":
+        item.system?.progression ? JSON.stringify(item.system.progression) : "",
+
+      // Données complètes de classe conservées pour les moteurs :
+      // sauvegardes, progression, sorts, armes autorisées, armures, etc.
+      "system.details_classe": {
+        ...classeSystem,
+        name: item.name,
+        label: item.name
+      }
     };
 
-    console.log("[DROP CLASSE] patch acteur :", foundry.utils.duplicate(patch));
-
-    await actor.update(patch);
-
-    // -------------------------------------------------
-    // 5) Recalculs existants
-    // -------------------------------------------------
-    if (typeof this.autoSetCaracAjustements === "function") {
-      await this.autoSetCaracAjustements();
-    }
-
-    if (typeof this.autoSetPointsDeCoup === "function") {
-      await this.autoSetPointsDeCoup({
-        syncCurrent: true,
-        force: true,
-        reason: "class-drop"
-      });
-    }
-
-    console.log("✅ [DROP CLASSE] terminé :", {
-      actor: actor.name,
-      systemClasse: actor.system?.classe,
-      systemSpellcasting: foundry.utils.duplicate(actor.system?.spellcasting ?? null),
-      itemsRestants: actor.items.map(i => ({
-        id: i.id,
-        name: i.name,
-        type: i.type,
-        spellcasting: foundry.utils.duplicate(i.system?.spellcasting ?? null)
-      })),
-      effetsRestants: actor.effects.map(e => ({
-        id: e.id,
-        name: e.name,
-        origin: e.origin
-      }))
+    console.log("[add2e] Application classe :", {
+      classe: item.name,
+      maj
     });
 
-    ui.notifications.info(`Classe "${classDoc.name}" appliquée. Ancienne classe, sorts, armes et armures supprimés.`);
+    await this.actor.update(maj);
 
-    this.render(false);
-    return classDoc;
+    ui.notifications.info(`Classe "${item.name}" appliquée au personnage.`);
   }
-
-  // Tous les autres drops gardent le comportement natif Foundry.
-  return super._onDropItem(event, item);
 }
 
-}
 globalThis.Add2eActorSheet = Add2eActorSheet;
 
-// Hook d'initialisation, registration de la feuille custom
+// =====================================================
+// ENREGISTREMENT FEUILLE ACTEUR
+// =====================================================
+
 Hooks.once("init", () => {
   console.log("[add2e] Hook init : override ActorSheet");
 
-  // Désenregistre la core sheet et enregistre la tienne pour tous les types souhaités
-  Actors.unregisterSheet("core", ActorSheet);
+  try {
+    Actors.unregisterSheet("core", ActorSheet);
+  } catch (e) {
+    console.warn("[add2e] Impossible de désenregistrer la feuille core ActorSheet :", e);
+  }
+
   Actors.registerSheet("add2e", Add2eActorSheet, {
     types: ["personnage", "monster"],
     makeDefault: true,
     label: "ADD2e Descartes (FR)"
   });
+
+  console.log("[add2e] Feuille acteur ADD2E enregistrée.");
 });

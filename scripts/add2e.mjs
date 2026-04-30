@@ -3811,6 +3811,131 @@ Hooks.once("ready", () => {
   }
 
   game.socket.on("system.add2e", async data => {
+    console.log("[ADD2E SOCKET][RECU]", {
+  user: game.user.name,
+  isGM: game.user.isGM,
+  data
+});
+    // -----------------------------------------------------
+    // Appliquer un ActiveEffect sur un acteur cible
+    // IMPORTANT : ce bloc doit rester tout en haut du socket,
+    // juste après le log [ADD2E SOCKET][RECU].
+    // -----------------------------------------------------
+    if (data.type === "applyActiveEffect") {
+      if (!game.user.isGM) return;
+
+      console.log("[ADD2E SOCKET][applyActiveEffect][START]", data);
+
+      let targetActor = null;
+
+      // 1. UUID complet Actor / ActorDelta / Token Actor
+      if (data.actorUuid) {
+        try {
+          const doc = await fromUuid(data.actorUuid);
+
+          console.log("[ADD2E SOCKET][applyActiveEffect][fromUuid]", {
+            actorUuid: data.actorUuid,
+            documentName: doc?.documentName,
+            name: doc?.name,
+            uuid: doc?.uuid,
+            doc
+          });
+
+          if (doc?.documentName === "Actor") {
+            targetActor = doc;
+          }
+          else if (doc?.documentName === "ActorDelta") {
+            targetActor = doc.parent?.actor ?? null;
+          }
+        } catch (e) {
+          console.warn("[ADD2E SOCKET][applyActiveEffect] actorUuid invalide :", data.actorUuid, e);
+        }
+      }
+
+      // 2. Scène + token
+      if (!targetActor && data.sceneId && data.tokenId) {
+        const scene = game.scenes.get(data.sceneId);
+        const tokenDoc = scene?.tokens?.get(data.tokenId);
+
+        console.log("[ADD2E SOCKET][applyActiveEffect][sceneToken]", {
+          sceneId: data.sceneId,
+          tokenId: data.tokenId,
+          sceneName: scene?.name,
+          tokenName: tokenDoc?.name,
+          tokenActor: tokenDoc?.actor
+        });
+
+        if (tokenDoc?.actor) {
+          targetActor = tokenDoc.actor;
+        }
+      }
+
+      // 3. Token actif sur canvas
+      if (!targetActor && data.tokenId && canvas?.tokens) {
+        const token = canvas.tokens.get(data.tokenId);
+
+        console.log("[ADD2E SOCKET][applyActiveEffect][canvasToken]", {
+          tokenId: data.tokenId,
+          tokenName: token?.name,
+          tokenActor: token?.actor
+        });
+
+        if (token?.actor) {
+          targetActor = token.actor;
+        }
+      }
+
+      // 4. Acteur monde lié
+      if (!targetActor && data.actorId) {
+        targetActor = game.actors.get(data.actorId);
+
+        console.log("[ADD2E SOCKET][applyActiveEffect][worldActor]", {
+          actorId: data.actorId,
+          actor: targetActor
+        });
+      }
+
+      if (!targetActor) {
+        console.warn("[ADD2E SOCKET][applyActiveEffect] ACTEUR CIBLE INTROUVABLE", data);
+        return;
+      }
+
+      const effectData = foundry.utils.deepClone(data.effectData || {});
+
+      if (!effectData.name && effectData.label) effectData.name = effectData.label;
+      if (!effectData.label && effectData.name) effectData.label = effectData.name;
+
+      effectData.flags ??= {};
+      effectData.flags.add2e ??= {};
+      effectData.flags.add2e.appliedBySocket = true;
+      effectData.flags.add2e.appliedByGM = game.user.id;
+      effectData.flags.add2e.appliedAt = Date.now();
+
+      console.log("[ADD2E SOCKET][applyActiveEffect] APPLICATION SUR ACTEUR", {
+        actorName: targetActor.name,
+        actorId: targetActor.id,
+        actorUuid: targetActor.uuid,
+        actorDocumentName: targetActor.documentName,
+        effectData
+      });
+
+      try {
+        const created = await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+
+        console.log("[ADD2E SOCKET][applyActiveEffect] EFFET CRÉÉ", {
+          actor: targetActor.name,
+          created
+        });
+      } catch (e) {
+        console.error("[ADD2E SOCKET][applyActiveEffect] ERREUR CREATE ActiveEffect", {
+          actor: targetActor,
+          effectData,
+          error: e
+        });
+      }
+
+      return;
+    }
     if (!data || data.type !== "ADD2E_GM_OPERATION") return;
     if (!isResponsibleGM()) return;
 
