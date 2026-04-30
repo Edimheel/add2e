@@ -6,6 +6,121 @@
 
 return await (async () => {
 
+  console.log("%c[ADD2E][SOINS MINEURS] SCRIPT CUSTOM", "color:#b88924;font-weight:bold;");
+
+  // ======================================================
+  // 0. STYLE CHAT — SORTS DE CLERC
+  // ======================================================
+  const ADD2E_CLERIC_CHAT = {
+    main: "#b88924",
+    dark: "#6f4b12",
+    pale: "#fff7df",
+    pale2: "#fffaf0",
+    border: "#e2bc63",
+    borderDark: "#8a611d",
+    success: "#2f8f46",
+    fail: "#b33a2e",
+    muted: "#6b5a35"
+  };
+
+  function add2eEscapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function add2eSpellImg(src, fallback = "icons/magic/life/cross-flared-green.webp") {
+    return add2eEscapeHtml(src || fallback);
+  }
+
+  function add2eClercCard({ caster, sourceItem, targetActor, resultHtml }) {
+    const casterName = add2eEscapeHtml(caster?.name ?? "Lanceur");
+    const targetName = add2eEscapeHtml(targetActor?.name ?? "Cible");
+    const spellName = add2eEscapeHtml(sourceItem?.name ?? "Soins mineurs");
+
+    return `
+      <div class="add2e-spell-card add2e-spell-card-clerc" style="
+        border-radius:12px;
+        box-shadow:0 4px 10px #0002;
+        background:linear-gradient(135deg,${ADD2E_CLERIC_CHAT.pale2} 0%,${ADD2E_CLERIC_CHAT.pale} 100%);
+        border:1.5px solid ${ADD2E_CLERIC_CHAT.border};
+        overflow:hidden;
+        padding:0;
+        font-family:var(--font-primary);
+      ">
+        <div style="
+          background:linear-gradient(90deg,${ADD2E_CLERIC_CHAT.dark} 0%,${ADD2E_CLERIC_CHAT.main} 100%);
+          padding:8px 12px;
+          color:white;
+          display:flex;
+          align-items:center;
+          gap:10px;
+          border-bottom:2px solid ${ADD2E_CLERIC_CHAT.borderDark};
+        ">
+          <img src="${add2eSpellImg(caster?.img, "icons/svg/mystery-man.svg")}" style="
+            width:36px;
+            height:36px;
+            border-radius:50%;
+            border:2px solid #fff;
+            object-fit:cover;
+          ">
+
+          <div style="line-height:1.2;flex:1;">
+            <div style="font-weight:bold;font-size:1.05em;">${casterName}</div>
+            <div style="font-size:0.85em;opacity:0.95;">
+              lance <b>${spellName}</b>
+            </div>
+          </div>
+
+          <img src="${add2eSpellImg(sourceItem?.img)}" style="
+            width:32px;
+            height:32px;
+            border-radius:4px;
+            background:#fff;
+          ">
+        </div>
+
+        <div style="padding:10px;">
+          <div style="margin-bottom:6px;font-size:0.95em;color:${ADD2E_CLERIC_CHAT.dark};">
+            <b>Cible :</b> ${targetName}
+          </div>
+
+          ${resultHtml}
+
+          <details style="
+            margin-top:8px;
+            background:white;
+            border:1px solid ${ADD2E_CLERIC_CHAT.border};
+            border-radius:6px;
+          ">
+            <summary style="
+              cursor:pointer;
+              color:${ADD2E_CLERIC_CHAT.dark};
+              font-weight:600;
+              padding:6px;
+            ">
+              Règle appliquée
+            </summary>
+
+            <div style="
+              padding:8px;
+              font-size:0.85em;
+              line-height:1.45;
+              color:${ADD2E_CLERIC_CHAT.dark};
+            ">
+              <div><b>Soins mineurs</b> — Clerc niveau 1, nécromancie.</div>
+              <div>Portée : au toucher ; durée : permanente ; jet de protection : aucun.</div>
+              <div>Effet automatisé : rend <b>1d8 points de vie</b>, sans dépasser les PV maximum.</div>
+            </div>
+          </details>
+        </div>
+      </div>
+    `;
+  }
+
   // ======================================================
   // 1. INITIALISATION ROBUSTE
   // ======================================================
@@ -13,7 +128,7 @@ return await (async () => {
 
   if (typeof sort !== "undefined" && sort) sourceItem = sort;
   else if (typeof item !== "undefined" && item) sourceItem = item;
-  else if (typeof this !== "undefined" && this.documentName === "Item") sourceItem = this;
+  else if (typeof this !== "undefined" && this?.documentName === "Item") sourceItem = this;
 
   if (
     !sourceItem &&
@@ -116,32 +231,41 @@ return await (async () => {
     currentHP = Number(currentHP) || 0;
   }
 
-  // Le sort ne ressuscite pas un mort.
+  // ======================================================
+  // 5. CAS MORT : MESSAGE PERSONNALISÉ ET RETURN TRUE
+  // ======================================================
   if (currentHP <= -11) {
-    ChatMessage.create({
+    const resultHtml = `
+      <div style="
+        border:1px solid ${ADD2E_CLERIC_CHAT.fail};
+        background:#fff5f2;
+        border-radius:6px;
+        padding:8px;
+        text-align:center;
+      ">
+        <div style="font-weight:bold;color:${ADD2E_CLERIC_CHAT.fail};">Échec</div>
+        <div style="color:${ADD2E_CLERIC_CHAT.dark};">
+          <b>${add2eEscapeHtml(targetActor.name)}</b> est mort : Soins mineurs ne ressuscite pas.
+        </div>
+      </div>
+    `;
+
+    await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: caster }),
-      content: `
-      <div class="add2e-spell-card" style="border-radius:12px;box-shadow:0 4px 10px #2ecc7144;background:#f3fff6;border:1.5px solid #27ae60;overflow:hidden;padding:0;">
-        <div style="background:linear-gradient(90deg,#1f8f3a 0%,#27ae60 100%);padding:8px;color:white;display:flex;align-items:center;gap:10px;">
-          <img src="${caster.img}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
-          <div style="line-height:1.2;flex:1;">
-            <div style="font-weight:bold;">${caster.name}</div>
-            <div style="font-size:0.85em;opacity:0.9;">lance ${sourceItem.name}</div>
-          </div>
-          <img src="${sourceItem.img || "icons/magic/life/cross-green-white.webp"}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
-        </div>
-        <div style="padding:10px;text-align:center;">
-          <div style="font-weight:bold;color:#b42318;">Échec</div>
-          <div><b>${targetActor.name}</b> est mort : Soins mineurs ne ressuscite pas.</div>
-        </div>
-      </div>`
+      content: add2eClercCard({
+        caster,
+        sourceItem,
+        targetActor,
+        resultHtml
+      }),
+      type: CONST.CHAT_MESSAGE_TYPES.OTHER
     });
 
-    return false;
+    return true;
   }
 
   // ======================================================
-  // 5. JET DE SOINS : 1d8
+  // 6. JET DE SOINS : 1d8
   // ======================================================
   const roll = await new Roll("1d8").evaluate({ async: true });
 
@@ -155,22 +279,21 @@ return await (async () => {
   const newHP = Math.min(maxHP, currentHP + soinEffectif);
 
   // ======================================================
-  // 6. APPLICATION DU SOIN
+  // 7. APPLICATION DU SOIN
   // ======================================================
   if (soinEffectif > 0) {
     if (typeof add2eApplyDamage === "function") {
-      // Le moteur existant gère déjà :
-      // - MJ : application directe
-      // - joueur : demande au MJ via socket
-      // montant négatif = soin
       await add2eApplyDamage({
         cible: targetToken,
         montant: -soinEffectif,
         type: "soin",
-        details: `Soins mineurs : ${soinEffectif} PV rendus`
+        details: `Soins mineurs : ${soinEffectif} PV rendus`,
+        source: sourceItem.name,
+        lanceur: caster,
+        silent: true,
+        noChat: true
       });
     } else {
-      // Fallback MJ uniquement
       if (!game.user.isGM) {
         ui.notifications.error("Soins mineurs : add2eApplyDamage indisponible côté joueur.");
         return false;
@@ -183,67 +306,74 @@ return await (async () => {
   }
 
   // ======================================================
-  // 7. MESSAGE CHAT UNIQUE
+  // 8. MESSAGE CHAT UNIQUE PERSONNALISÉ
   // ======================================================
-  let resultText = "";
+  let resultHtml = "";
 
   if (soinEffectif <= 0) {
-    resultText = `
-      <div style="border:1px solid #2980b9;background:#eef6ff;border-radius:6px;padding:7px;text-align:center;">
-        <div style="font-weight:bold;color:#2980b9;">Aucun soin nécessaire</div>
-        <div>${targetActor.name} est déjà au maximum de ses points de vie.</div>
-      </div>`;
+    resultHtml = `
+      <div style="
+        border:1px solid ${ADD2E_CLERIC_CHAT.border};
+        background:#fffdf4;
+        border-radius:6px;
+        padding:8px;
+        text-align:center;
+      ">
+        <div style="font-weight:bold;color:${ADD2E_CLERIC_CHAT.main};">
+          Aucun soin nécessaire
+        </div>
+        <div style="color:${ADD2E_CLERIC_CHAT.dark};">
+          ${add2eEscapeHtml(targetActor.name)} est déjà au maximum de ses points de vie.
+        </div>
+      </div>
+    `;
   } else {
-    resultText = `
-      <div style="border:1px solid #27ae60;background:#eafaf1;border-radius:6px;padding:7px;text-align:center;">
-        <div style="font-weight:bold;color:#1f8f3a;">SOINS APPLIQUÉS</div>
-        <div style="font-size:1.05em;margin-top:4px;">
-          Jet : <b>${roll.result}</b> = <b>${soinBrut}</b>
+    resultHtml = `
+      <div style="
+        border:1px solid ${ADD2E_CLERIC_CHAT.border};
+        background:#fffdf4;
+        border-radius:6px;
+        padding:8px;
+        text-align:center;
+      ">
+        <div style="font-weight:bold;color:${ADD2E_CLERIC_CHAT.success};">
+          SOINS APPLIQUÉS
         </div>
-        <div style="margin-top:4px;">
-          PV rendus : <b>${soinEffectif}</b>
-          ${soinEffectif < soinBrut ? `<span style="color:#777;">(limité par les PV maximum)</span>` : ""}
+
+        <div style="font-size:1.05em;margin-top:4px;color:${ADD2E_CLERIC_CHAT.dark};">
+          Jet : <b>${add2eEscapeHtml(roll.result)}</b> = <b>${soinBrut}</b>
         </div>
-        <div style="margin-top:4px;">
+
+        <div style="margin-top:4px;color:${ADD2E_CLERIC_CHAT.dark};">
+          PV rendus :
+          <b style="color:${ADD2E_CLERIC_CHAT.success};">${soinEffectif}</b>
+          ${
+            soinEffectif < soinBrut
+              ? `<span style="color:${ADD2E_CLERIC_CHAT.muted};"> (limité par les PV maximum)</span>`
+              : ""
+          }
+        </div>
+
+        <div style="margin-top:4px;color:${ADD2E_CLERIC_CHAT.dark};">
           ${currentHP} → <b>${newHP}</b> / ${maxHP}
         </div>
-      </div>`;
+      </div>
+    `;
   }
 
-  ChatMessage.create({
+  await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
-    content: `
-    <div class="add2e-spell-card" style="border-radius:12px;box-shadow:0 4px 10px #2ecc7144;background:linear-gradient(135deg,#f8fff9 0%,#eafaf1 100%);border:1.5px solid #27ae60;overflow:hidden;padding:0;font-family:var(--font-primary);">
-      <div style="background:linear-gradient(90deg,#1f8f3a 0%,#27ae60 100%);padding:8px 12px;color:white;display:flex;align-items:center;gap:10px;border-bottom:2px solid #166534;">
-        <img src="${caster.img}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
-        <div style="line-height:1.2;flex:1;">
-          <div style="font-weight:bold;font-size:1.05em;">${caster.name}</div>
-          <div style="font-size:0.85em;opacity:0.9;">lance <b>${sourceItem.name}</b></div>
-        </div>
-        <img src="${sourceItem.img || "icons/magic/life/cross-green-white.webp"}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
-      </div>
-
-      <div style="padding:10px;">
-        <div style="margin-bottom:6px;font-size:0.95em;color:#14532d;">
-          <b>Cible :</b> ${targetActor.name}
-        </div>
-
-        ${resultText}
-
-        <details style="margin-top:8px;background:#fff;border:1px solid #bbf7d0;border-radius:6px;">
-          <summary style="cursor:pointer;color:#166534;font-weight:600;padding:6px;">Règle appliquée</summary>
-          <div style="padding:8px;font-size:0.85em;line-height:1.45;">
-            <div><b>Soins mineurs</b> — Clerc niveau 1, nécromancie.</div>
-            <div>Portée : au toucher ; temps d’incantation : 5 segments ; durée : permanente ; jet de protection : aucun.</div>
-            <div>Effet automatisé : rend <b>1d8 points de vie</b>, sans dépasser les PV maximum.</div>
-          </div>
-        </details>
-      </div>
-    </div>`
+    content: add2eClercCard({
+      caster,
+      sourceItem,
+      targetActor,
+      resultHtml
+    }),
+    type: CONST.CHAT_MESSAGE_TYPES.OTHER
   });
 
   // ======================================================
-  // 8. VFX OPTIONNEL
+  // 9. VFX OPTIONNEL
   // ======================================================
   if (typeof Sequence !== "undefined" && targetToken) {
     try {
@@ -261,5 +391,8 @@ return await (async () => {
     }
   }
 
+  // IMPORTANT :
+  // Lumière retourne true après avoir créé son message personnalisé.
+  // Soins mineurs doit faire pareil pour éviter le fallback générique du moteur.
   return true;
 })();

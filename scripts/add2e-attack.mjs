@@ -371,16 +371,50 @@ if (isDistanceWeapon) {
             }
 
             let bonusToucheEffets = 0;
-            let bonusRacialVs = 0;
-            if (typeof Add2eEffectsEngine !== "undefined") {
-              const typeCible = cible.system.type_monstre || cible.system.race || "";
-              bonusRacialVs = Add2eEffectsEngine.getBonusToucheVs(actor, typeCible);
-              const typeArmeEffet = getEffetTypeByNom(arme, [
-                { patterns: ["épée", "epee"], type: "epee" },
-                { patterns: ["arc"], type: "arc" }
-              ]);
-              bonusToucheEffets = Add2eEffectsEngine.getBonusTouche(actor, typeArmeEffet);
-            }
+let bonusRacialVs = 0;
+
+if (typeof Add2eEffectsEngine !== "undefined") {
+  const typeCible = cible.system.type_monstre || cible.system.race || "";
+  bonusRacialVs = Add2eEffectsEngine.getBonusToucheVs(actor, typeCible);
+
+  const tags = Add2eEffectsEngine.getActiveTags(actor);
+
+  const weaponTags = new Set();
+
+  for (const tag of tags) {
+    const t = String(tag || "");
+
+    if (t.startsWith("arme:")) {
+      weaponTags.add(t.split(":")[1]);
+    }
+
+    if (t.startsWith("type_arme:")) {
+      weaponTags.add(t.split(":")[1]);
+    }
+  }
+
+  for (const tag of tags) {
+    const t = String(tag || "");
+
+    // Bonus global : Bénédiction / Malédiction
+    if (t.startsWith("bonus_attaque:")) {
+      bonusToucheEffets += Number(t.split(":")[1]) || 0;
+      continue;
+    }
+
+    // Bonus conditionnel selon tag d’arme :
+    // exemple : bonus_touche:epee:1
+    if (t.startsWith("bonus_touche:")) {
+      const parts = t.split(":");
+      const armeTag = parts[1];
+      const valeur = Number(parts[2]) || 0;
+
+      if (armeTag && weaponTags.has(armeTag)) {
+        bonusToucheEffets += valeur;
+      }
+    }
+  }
+}
 
 // =======================
 // DETAIL BONUS TOUCHER
