@@ -4,7 +4,7 @@
 // dans les exports Foundry d'items classe.
 // Elle garde l'export Add2eItemSheet attendu par add2e.mjs.
 
-export const ADD2E_ITEM_SHEET_VERSION = "2026-05-01-class-export-keys-v3";
+export const ADD2E_ITEM_SHEET_VERSION = "2026-05-01-class-export-keys-v6-no-submit-on-close";
 globalThis.ADD2E_ITEM_SHEET_VERSION = ADD2E_ITEM_SHEET_VERSION;
 globalThis.ADD2E_CLASS_SHEET_VERSION = ADD2E_ITEM_SHEET_VERSION;
 
@@ -420,6 +420,13 @@ export class Add2eClassSheet extends ItemSheet {
       width: 980,
       height: 820,
       resizable: true,
+
+      // Cette fiche est principalement une fiche de lecture.
+      // Ne pas auto-submit à la fermeture : Foundry v13 déclenche sinon
+      // un update incomplet pouvant envoyer name: undefined.
+      submitOnClose: false,
+      submitOnChange: false,
+
       tabs: [{ navSelector: ".tabs", contentSelector: ".sheet-body", initial: "resume" }]
     });
   }
@@ -433,6 +440,13 @@ export class Add2eClassSheet extends ItemSheet {
     Object.assign(data, add2eClassData(this.object, data.editable));
 
     return data;
+  }
+
+  async close(options = {}) {
+    // Sécurité : cette fiche ne doit pas tenter de sauvegarder automatiquement
+    // à la fermeture. Les validations Item de Foundry exigent un name valide,
+    // et un submit automatique incomplet peut provoquer name: undefined.
+    return super.close({ ...options, submit: false });
   }
 
   activateListeners(html) {
@@ -452,7 +466,85 @@ export class Add2eClassSheet extends ItemSheet {
   }
 
   async _updateObject(event, formData) {
-    await this.object.update(formData);
+    // Sécurité Foundry :
+    // ne jamais envoyer à Item.update() un objet contenant name: undefined.
+    // On reconstruit un objet plat propre, sans prototype ni getters parasites.
+    const source = formData ?? {};
+    const flat = foundry.utils.flattenObject(source);
+    const updateData = {};
+
+    for (const [key, value] of Object.entries(flat)) {
+      if (!key) continue;
+      if (value === undefined) continue;
+
+      // Le nom d'un Item est obligatoire dans Foundry.
+      // Si le formulaire n'a pas fourni de nom valide, on remet le nom actuel.
+      if (key === "name") {
+        const cleanName = String(value ?? "").trim();
+        updateData.name = cleanName || this.object.name || "Classe";
+        continue;
+      }
+
+      updateData[key] = value;
+    }
+
+    // Si le formulaire n'a pas de champ name, on force le nom actuel.
+    // C'est volontaire : cela empêche Foundry de recevoir name: undefined
+    // lors d'une fermeture automatique ou d'un submit incomplet.
+    if (!updateData.name || String(updateData.name).trim() === "") {
+      updateData.name = this.object.name || "Classe";
+    }
+
+    // Deuxième nettoyage défensif, y compris après expandObject.
+    const expanded = foundry.utils.expandObject(updateData);
+
+    function pruneUndefined(obj) {
+      if (!obj || typeof obj !== "object") return obj;
+
+      for (const key of Object.keys(obj)) {
+        if (obj[key] === undefined) {
+          delete obj[key];
+          continue;
+        }
+
+        if (obj[key] && typeof obj[key] === "object") {
+          pruneUndefined(obj[key]);
+
+          if (
+            !Array.isArray(obj[key]) &&
+            Object.keys(obj[key]).length === 0
+          ) {
+            delete obj[key];
+          }
+        }
+      }
+
+      return obj;
+    }
+
+    pruneUndefined(expanded);
+
+    if (!expanded.name || String(expanded.name).trim() === "") {
+      expanded.name = this.object.name || "Classe";
+    }
+
+    console.log("[ADD2E][CLASS SHEET][UPDATE]", {
+      item: this.object.name,
+      id: this.object.id,
+      updateData: expanded
+    });
+
+    try {
+      await this.object.update(expanded);
+    } catch (err) {
+      console.error("[ADD2E][CLASS SHEET][UPDATE][ERROR]", {
+        item: this.object?.name,
+        id: this.object?.id,
+        expanded,
+        err
+      });
+      throw err;
+    }
   }
 }
 

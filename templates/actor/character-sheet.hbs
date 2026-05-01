@@ -1,1270 +1,1272 @@
 <style>
-  .sort-table th, .sort-table td {
-  padding: 0.2em 0.5em;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-.sort-row td {
-  vertical-align: top;
-}
-.toggle-sort-desc:hover {
-  text-decoration: underline;
-  color: #b865e6 !important;
-}
-.sort-description {
-  animation: fadeIn 0.18s;
-}
-@keyframes fadeIn {
-  from { opacity:0; }
-  to   { opacity:1; }
-}
-.sort-desc-close {
-  position: absolute;
-  top: 0.1em;
-  right: 0.6em;
-  color: #c0392b;
-  font-size: 1.7em;
-  font-weight: bold;
-  cursor: pointer;
-  user-select: none;
-  z-index: 10;
-  opacity: 0.65;
-  transition: opacity 0.16s;
-}
-.sort-desc-close:hover { opacity: 1; color: #f56; }
-.sort-row { position: relative; }
-.sort-memorize.memorized {
-  color: #52cb2a !important;
-  filter: drop-shadow(0 0 2px #e6d000);
-}
-.sort-cast-img img {
-  transition: box-shadow 0.16s, filter 0.18s;
-}
-.sort-cast-img:hover img {
-  box-shadow: 0 0 0 3px #7c39c388, 0 2px 6px #7c39c344;
-  filter: brightness(1.11);
-}
-.carac-label-td {
-  padding: 0.2em 0.1em;
-  vertical-align: middle !important;
-}
-.carac-flex {
-  display: flex;
-  align-items: center;
-  gap: 0.65em;
-  justify-content: flex-start;
-}
-.carac-short {
-  background: #fff;
-  border-radius: 10px;
-  min-width: 3.5em;
-  min-height: 3.0em;
-  font-size: 2.1em;
-  line-height: 1.0em;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #222;
-  box-shadow: 0 1px 4px #aaa6;
-  border: 1px solid #ddd;
-  text-shadow: 0 1px 0 #fff6;
-  letter-spacing: 0.04em;
-  text-align: center;
-}
-.carac-label-td i.roll-stat {
-  font-size: 2.0em !important;
-  margin-left: 0.1em;
-  margin-right: 0.1em;
-  vertical-align: middle;
-  cursor: pointer;
-  filter: drop-shadow(0 1px 1px #0003);
-}
-.carac-value {
-  min-width: 3.2em;
-  min-height: 2.8em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.1em;
-  font-weight: bold;
-  color: #222;
-  background: #fff;
-  border: 2px solid #80e790;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px #aaa6;
-  text-shadow: 0 1px 0 #fff6;
-  text-align: center;
-}
-.carac-control-group {
-  display: flex;
-  align-items: center;
-  gap: 0.2em;
-  justify-content: center;
-}
-.carac-btn {
-  background: #f8f8f8;
-  border: 1.5px solid #aac;
-  border-radius: 8px;
-  width: 2.2em;
-  height: 2.2em;
-  font-weight: bold;
-  font-size: 1.7em;
-  cursor: pointer;
-  padding: 0;
-  color: #444;
-  user-select: none;
-  transition: background 0.1s, box-shadow 0.1s;
-  box-shadow: 0 1px 2px #aaa3;
-}
-.carac-assigned {
-  background: #a5ffd4 !important;
-  color: #164a1b !important;
-  font-weight: bold;
-  border: 2px solid #00b170 !important;
-  box-shadow: 0 2px 10px #00b17044;
-}
-.add2e-carac-value .assigned-label {
-  font-size: 0.85em;
-  color: #164a1b;
-  margin-top: 0.3em;
-  display: block;
-  font-weight: 500;
-}
-
-.carac-btn:hover { background: #c9f7c0; }
-
-
-  .comp-table {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 1em;
+  .add2e-character-v3 {
+    --a2e-bg: #f4ead0;
+    --a2e-panel: rgba(255,252,239,0.96);
+    --a2e-panel-soft: rgba(255,248,224,0.95);
+    --a2e-border: #d9bf73;
+    --a2e-gold: #b88924;
+    --a2e-gold-dark: #6f4b12;
+    --a2e-text: #2f250c;
+    --a2e-muted: #7f704d;
+    min-width: 990px;
+    color: var(--a2e-text);
   }
-  .comp-table li {
+
+  .add2e-character-v3 * {
+    box-sizing: border-box;
+  }
+
+  .add2e-character-v3 .a2e-shell {
+    padding: 8px;
+    background:
+      radial-gradient(circle at top left, rgba(255,255,255,0.65), transparent 28%),
+      linear-gradient(135deg, #f7eed3 0%, #efe0b8 100%);
+    border-radius: 12px;
+  }
+
+  .add2e-character-v3 input,
+  .add2e-character-v3 select,
+  .add2e-character-v3 textarea {
+    width: 100%;
+    background: #fffaf0;
+    border: 1px solid #b9a15d;
+    border-radius: 5px;
+    padding: 4px 6px;
+    color: #1d1606;
+  }
+
+  .add2e-character-v3 input[readonly] {
+    background: #f4ead0;
+    border-color: #d8c78d;
+    color: #4d3a14;
+  }
+
+  .add2e-character-v3 .a2e-header {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 10px;
+    padding: 8px;
+    border: 1px solid var(--a2e-border);
+    border-radius: 12px;
+    background: rgba(255, 248, 220, 0.78);
+    box-shadow: 0 2px 8px rgba(80, 58, 10, 0.16);
+  }
+
+  .add2e-character-v3 .a2e-portrait {
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
+    border: 2px solid #6e5c2b;
+    object-fit: cover;
+    background: #222;
+    box-shadow: 0 2px 7px rgba(0,0,0,0.32);
+    cursor: pointer;
+  }
+
+  .add2e-character-v3 .a2e-name {
+    border: 0;
+    border-bottom: 2px solid var(--a2e-gold);
+    background: transparent;
+    color: #43260d;
+    font-size: 2.0em;
+    font-weight: 800;
+    padding: 0 4px 4px;
+    outline: none;
+  }
+
+  .add2e-character-v3 .a2e-name-line {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .add2e-character-v3 .a2e-player-top {
+    min-height: 48px;
+  }
+
+  .add2e-character-v3 .a2e-player-top label {
+    display: block;
+    color: var(--a2e-gold-dark);
+    font-weight: 800;
+    font-size: 0.8em;
+    margin-bottom: 2px;
+  }
+
+  .add2e-character-v3 .a2e-id-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(105px, 1fr));
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .add2e-character-v3 .a2e-field,
+  .add2e-character-v3 .a2e-stat-tile {
+    background: var(--a2e-panel);
+    border: 1px solid var(--a2e-border);
+    border-radius: 8px;
+    padding: 6px;
+  }
+
+  .add2e-character-v3 .a2e-field label,
+  .add2e-character-v3 .a2e-mini-label {
+    display: block;
+    color: var(--a2e-gold-dark);
+    font-weight: 800;
+    font-size: 0.8em;
+    margin-bottom: 2px;
+  }
+
+  .add2e-character-v3 .a2e-stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .add2e-character-v3 .a2e-stat-tile {
+    text-align: center;
+  }
+
+  .add2e-character-v3 .a2e-stat-tile strong {
+    display: block;
+    color: #261b05;
+    font-size: 1.22em;
+    line-height: 1.1;
+  }
+
+  /* Onglets classiques ADD2E — fonctionnement direct dans le HBS + sauvegarde par actor-sheet.mjs */
+  .add2e-character-v3 .a2e-tabs.sheet-tabs.tabs {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-end;
+    gap: 0;
+    margin: 8px 0 10px 0;
+    padding: 0;
+    border-bottom: 1px solid var(--a2e-border);
+    background: rgba(250, 242, 216, 0.65);
+    overflow-x: auto;
+  }
+
+  .add2e-character-v3 .a2e-tabs.sheet-tabs.tabs .item {
+    flex: 0 0 auto;
+    width: auto !important;
+    min-width: 0;
+    height: auto;
+    margin: 0 2px -1px 0;
+    padding: 7px 12px;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: 6px 6px 0 0;
+    background: transparent;
+    color: var(--a2e-gold-dark);
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+    box-shadow: none;
+  }
+
+  .add2e-character-v3 .a2e-tabs.sheet-tabs.tabs .item.active {
+    color: #ffffff;
+    background: linear-gradient(180deg, #d8952f, #b66f13);
+    border-color: #8a611d;
+  }
+
+  .add2e-character-v3 .a2e-tabs.sheet-tabs.tabs .item:hover {
+    text-shadow: 0 0 4px rgba(255,255,255,0.7);
+  }
+
+  .add2e-character-v3 .sheet-body .a2e-tab-content {
+    display: none;
+  }
+
+  .add2e-character-v3 .sheet-body .a2e-tab-content.active {
+    display: block;
+  }
+
+  .add2e-character-v3 .a2e-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+
+  .add2e-character-v3 .a2e-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    align-items: start;
+  }
+
+  .add2e-character-v3 .a2e-panel {
+    background: var(--a2e-panel);
+    border: 1px solid var(--a2e-border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 5px rgba(80, 58, 10, 0.12);
+  }
+
+  .add2e-character-v3 .a2e-panel > h2,
+  .add2e-character-v3 .a2e-panel > h3 {
+    margin: 0;
+    padding: 7px 9px;
+    background: rgba(240, 224, 169, 0.68);
+    border-bottom: 1px solid var(--a2e-border);
+    color: var(--a2e-gold-dark);
+    font-size: 1.03em;
+    font-weight: 900;
+  }
+
+  .add2e-character-v3 .a2e-panel-body {
+    padding: 8px;
+  }
+
+  .add2e-character-v3 table.a2e-table,
+  .add2e-character-v3 .a2e-carac-table,
+  .add2e-character-v3 .sort-table,
+  .add2e-character-v3 .arme-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fffdf6;
+  }
+
+  .add2e-character-v3 .a2e-table th,
+  .add2e-character-v3 .a2e-table td,
+  .add2e-character-v3 .a2e-carac-table th,
+  .add2e-character-v3 .a2e-carac-table td,
+  .add2e-character-v3 .sort-table th,
+  .add2e-character-v3 .sort-table td,
+  .add2e-character-v3 .arme-table th,
+  .add2e-character-v3 .arme-table td {
+    border: 1px solid #dac276;
+    padding: 4px 5px;
+    vertical-align: middle;
+    color: #2f250c;
+  }
+
+  .add2e-character-v3 .a2e-table th,
+  .add2e-character-v3 .a2e-carac-table th,
+  .add2e-character-v3 .sort-table th,
+  .add2e-character-v3 .arme-table th {
+    background: #ead99d;
+    color: #55390d;
+    font-weight: 900;
+    text-align: left;
+  }
+
+  .add2e-character-v3 .a2e-small {
+    font-size: 0.9em;
+    line-height: 1.32;
+  }
+
+  .add2e-character-v3 .a2e-muted {
+    color: var(--a2e-muted);
+    font-style: italic;
+  }
+
+  .add2e-character-v3 .a2e-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  .add2e-character-v3 .a2e-action-icon,
+  .add2e-character-v3 .item-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 1.05em;
+  }
+
+  .add2e-character-v3 .a2e-action-icon:hover,
+  .add2e-character-v3 .item-control:hover {
+    transform: scale(1.13);
+    filter: brightness(1.1);
+  }
+
+  .add2e-character-v3 .a2e-action-add { color: #27ae60; }
+  .add2e-character-v3 .a2e-action-remove { color: #c0392b; }
+  .add2e-character-v3 .a2e-action-edit { color: #8e44ad; }
+  .add2e-character-v3 .a2e-action-delete { color: #e74c3c; }
+  .add2e-character-v3 .a2e-action-roll { color: #2980b9; }
+  .add2e-character-v3 .a2e-action-info { color: #7c39c3; }
+  .add2e-character-v3 .a2e-action-equip { color: #27ae60; }
+  .add2e-character-v3 .a2e-action-unequip { color: #c0392b; }
+
+  .add2e-character-v3 .a2e-icon-btn,
+  .add2e-character-v3 .a2e-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 27px;
+    height: 27px;
+    padding: 3px 7px;
+    border: 1px solid #9f7a24;
+    background: #fff3c4;
+    color: #3d2b0a;
+    border-radius: 7px;
+    font-weight: 800;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .add2e-character-v3 .a2e-icon-btn:hover,
+  .add2e-character-v3 .a2e-btn:hover {
+    filter: brightness(1.05);
+  }
+
+  .add2e-character-v3 .a2e-icon-btn.danger,
+  .add2e-character-v3 .a2e-btn.danger {
+    background: #ffe9e6;
+    border-color: #c27a70;
+    color: #8a1f18;
+  }
+
+  .add2e-character-v3 .a2e-icon-btn.blue,
+  .add2e-character-v3 .a2e-btn.blue {
+    background: #e7f0ff;
+    border-color: #7b9ed0;
+    color: #184a82;
+  }
+
+  .add2e-character-v3 .a2e-carac-table th {
+    padding: 5px 6px;
+  }
+
+  .add2e-character-v3 .a2e-carac-table td {
+    padding: 3px 5px;
+  }
+
+  .add2e-character-v3 .carac-label-td {
+    width: 125px;
+    vertical-align: middle !important;
+  }
+
+  .add2e-character-v3 .carac-flex {
     display: flex;
     align-items: center;
-    gap: 0.5em;
+    gap: 0.45em;
+    justify-content: flex-start;
   }
-  .comp-table i.roll-skill {
-    font-size: 1.2em;
-    color: #8e44ad;
+
+  .add2e-character-v3 .carac-short {
+    background: #fff;
+    border-radius: 9px;
+    min-width: 3.0em;
+    min-height: 2.35em;
+    font-size: 1.65em;
+    line-height: 1em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #222;
+    box-shadow: 0 1px 4px #aaa6;
+    border: 1px solid #ddd;
+    text-align: center;
   }
-  .saving-throws-row {
-  display: flex;
-  gap: 1.2em;
-  align-items: center;
-  justify-content: flex-start;
-  margin-bottom: 1em;
-}
-.saving-throw-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: #262f36;
-  border-radius: 1em;
-  box-shadow: 0 2px 8px #0004;
-  padding: 0.5em 1em;
-  min-width: 84px;
-  transition: box-shadow 0.2s;
-}
-.saving-throw-group-0 { background: #1abc9c11; border: 2px solid #1abc9c; }
-.saving-throw-group-1 { background: #8e44ad11; border: 2px solid #8e44ad; }
-.saving-throw-group-2 { background: #f1c40f11; border: 2px solid #f1c40f; }
-.saving-throw-group-3 { background: #e67e2211; border: 2px solid #e67e22; }
-.saving-throw-group-4 { background: #e74c3c11; border: 2px solid #e74c3c; }
-.saving-throw-group .fa-shield-alt,
-.saving-throw-group .fa-dice-d20 {
-  font-size: 1.8em;
-  margin-bottom: 0.1em;
-  margin-top: 0.15em;
-  cursor: pointer;
-  transition: color 0.15s, filter 0.15s;
-  filter: drop-shadow(0 1px 2px #0009);
-}
-.saving-throw-group-0 .fa-shield-alt { color: #1abc9c; }
-.saving-throw-group-1 .fa-shield-alt { color: #8e44ad; }
-.saving-throw-group-2 .fa-shield-alt { color: #f1c40f; }
-.saving-throw-group-3 .fa-shield-alt { color: #e67e22; }
-.saving-throw-group-4 .fa-shield-alt { color: #e74c3c; }
-.save-label {
-  font-size: 1.1em;
-  font-weight: 600;
-  color: #191414;
-  margin-bottom: 0.2em;
-}
-.save-value {
-  width: 2.8em;
-  font-size: 1.25em;
-  font-weight: bold;
-  color: #fff;
-  text-align: center;
-  background: #1e252b;
-  border: 1.5px solid #888;
-  border-radius: 0.6em;
-  box-shadow: 0 1px 2px #0002;
-  margin-top: 0.15em;
-  margin-bottom: 0.2em;
-}
-.saving-throw-group .fa-shield-alt:hover {
-  filter: brightness(1.15) drop-shadow(0 1px 4px #fff5);
-  transform: scale(1.12) rotate(-8deg);
-}
 
-  .niveau-pdv-group label {
-  font-size: 0.95em;
-  margin-right: 0.2em;
-}
-.niveau-pdv-group input[readonly] {
-  background: #faf3e3;
-  border: 1px solid #e1c699;
-}
-.equip-green { color: #27ae60; }
-.equip-red   { color: #c0392b; }
-.arme-table td, .arme-table th { padding: 0.2em 0.4em; text-align: center; }
-.equip-green { color: #27ae60; }
-.equip-red   { color: #e74c3c; }
-.add2e-char-topline {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 0.4em;
-  gap: 1.3em;
-}
-.add2e-char-nomperso {
-  flex: 1 1 60%;
-}
-.add2e-nom-acteur {
-  font-size: 2.7em;
-  font-weight: bold;
-  color: #6b33a2;
-  text-shadow: 0 2px 6px #efe9f5;
-  letter-spacing: 0.02em;
-  line-height: 1.07em;
-}
-.add2e-char-joueurdate {
-  flex: 1 1 50%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  gap: 0.7em;
-}
-.add2e-char-joueurdate .add2e-label {
-  font-size: 1em;
-  color: #888;
-  margin-right: 0.13em;
-}
+  .add2e-character-v3 .carac-label-td i.roll-stat {
+    font-size: 1.55em !important;
+    cursor: pointer;
+    filter: drop-shadow(0 1px 1px #0003);
+  }
 
-.add2e-char-header2 {
-  display: flex;
-  gap: 2em;
-  margin-bottom: 1.2em;
-  min-height: 206px;
-}
-.portrait-container {
-  flex: 1 1 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.add2e-char-identite-bloc {
-  flex: 1 1 55%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 0.55em;
-  padding-top: 0.2em;
-    align-items: right;
-}
-.pv-max { font-weight:bold; color:#c0392b; width:4em; text-align:center;}
-.pv-courant { font-weight:bold; color:#27ae60; width:4em; text-align:center;}
-.sort-memorize-badge {
-  display: inline-block;
-  min-width: 2.4em;
-  padding: 0.1em 0.4em;
-  font-size: 1em;
-  font-weight: 600;
-  text-align: center;
-  color: #fff;
-  background: #7c39c3;
-  border-radius: 999px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  margin-left: 0.4em;
-  vertical-align: middle;
-  line-height: 1.5em;
-}
-.sort-memorize-badge:hover {
-  background: #652d90;
-  cursor: default;
-}
-.sort-table .sort-row > td.sort-drag {
-  display: flex;
-  align-items: center;
-  gap: 0.35em;    /* espace entre éléments */
-  white-space: nowrap; /* pas de retour à la ligne */
-}
-.carac-value {
-  /* garde tes styles existants pour le carré */
-  min-width: 70px; /* ou ce qui correspond à ta grille */
-  min-height: 56px;
-  border-radius: 10px;
-  border: 2px solid #bde6ca;
-  background: #fafefb;
-  box-shadow: 0 0 0 2px #bde6ca44 inset;
-  padding: 0.2em 0.3em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-.carac-racial-bonus-inline {
-  font-size: 0.5em;
-  color: #388fa4;
-  font-weight: 500;
-  opacity: 0.90;
-  margin-top: 1px;
-  line-height: 1;
-}
-.carac-btn.plus, .carac-btn.moins {
-  min-width: 24px;
-  min-height: 24px;
-  font-size: 1.4em;
-}
-.carac-ex-square {
-  width: 38px;
-  height: 38px;
-  margin: 0 4px;
-  text-align: center;
-  font-size: 0.95em;
-  font-weight: 700;
-  border-radius: 8px;
-  border: 1px solid #666;
-  background: #222;
-  color: #eee;
-  box-sizing: border-box;
-}
+  .add2e-character-v3 .carac-control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.15em;
+    justify-content: center;
+  }
 
-.carac-ex-square--readonly {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .add2e-character-v3 .carac-value {
+    min-width: 58px;
+    min-height: 42px;
+    border-radius: 9px;
+    border: 2px solid #bde6ca;
+    background: #fafefb;
+    box-shadow: 0 0 0 2px #bde6ca44 inset;
+    padding: 0.12em 0.22em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 
+  .add2e-character-v3 .carac-racial-bonus-inline {
+    font-size: 0.48em;
+    color: #388fa4;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-top: 0;
+    line-height: 1;
+  }
+
+  .add2e-character-v3 .carac-btn {
+    background: #f8f8f8;
+    border: 1.5px solid #aac;
+    border-radius: 8px;
+    min-width: 22px;
+    min-height: 22px;
+    font-size: 1.25em;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    color: #444;
+    box-shadow: 0 1px 2px #aaa3;
+  }
+
+  .add2e-character-v3 .carac-btn:hover {
+    background: #c9f7c0;
+  }
+
+  .add2e-character-v3 .carac-ex-square {
+    width: 34px;
+    height: 34px;
+    margin: 0 3px;
+    text-align: center;
+    font-size: 0.9em;
+    font-weight: 700;
+    border-radius: 8px;
+    border: 1px solid #666;
+    background: #222;
+    color: #eee;
+  }
+
+  .add2e-character-v3 .carac-adjustments-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 7px;
+    align-items: center;
+  }
+
+  .add2e-character-v3 .carac-adjustments-line label {
+    color: #6f4b12;
+    font-weight: 700;
+    font-size: 0.78em;
+  }
+
+  .add2e-character-v3 .carac-adjustments-line input {
+    width: 42px;
+    height: 25px;
+    text-align: center;
+    font-weight: 700;
+    padding: 2px 4px;
+  }
+
+  .add2e-character-v3 .saving-throws-row {
+    display: flex;
+    gap: 0.7em;
+    align-items: stretch;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .add2e-character-v3 .saving-throw-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fffdf4;
+    border: 1px solid var(--a2e-border);
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(80, 58, 10, 0.12);
+    padding: 0.45em 0.8em;
+    min-width: 80px;
+  }
+
+  .add2e-character-v3 .saving-throw-group .fa-shield-alt,
+  .add2e-character-v3 .saving-throw-group .fa-dice-d20 {
+    font-size: 1.55em;
+    margin-bottom: 0.1em;
+    margin-top: 0.1em;
+    cursor: pointer;
+    color: var(--a2e-gold-dark);
+    filter: drop-shadow(0 1px 1px #0002);
+  }
+
+  .add2e-character-v3 .save-label {
+    font-size: 0.95em;
+    font-weight: 800;
+    color: #3d2b0a;
+    margin-bottom: 0.1em;
+  }
+
+  .add2e-character-v3 .save-value {
+    width: 2.6em;
+    font-size: 1.12em;
+    font-weight: bold;
+    color: #2f250c;
+    text-align: center;
+    background: #fffaf0;
+    border: 1.5px solid var(--a2e-border);
+    border-radius: 0.6em;
+    box-shadow: 0 1px 2px #0001;
+    margin-top: 0.1em;
+    margin-bottom: 0.1em;
+  }
+
+  .add2e-character-v3 .roll-save:hover,
+  .add2e-character-v3 .roll-stat:hover,
+  .add2e-character-v3 .roll-caracs-btn:hover,
+  .add2e-character-v3 .arme-img-attack:hover,
+  .add2e-character-v3 .sort-cast-img:hover {
+    filter: brightness(1.12) drop-shadow(0 1px 4px #0004);
+    transform: scale(1.03);
+  }
+
+  .add2e-character-v3 .sort-description {
+    display: none;
+    background: #fff8df;
+  }
+
+  .add2e-character-v3 .sort-memorize-badge {
+    display: inline-block;
+    min-width: 2.4em;
+    padding: 0.1em 0.4em;
+    font-size: 0.95em;
+    font-weight: 800;
+    text-align: center;
+    color: #fff;
+    background: #7c39c3;
+    border-radius: 999px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    margin: 0 0.25em;
+    vertical-align: middle;
+    line-height: 1.5em;
+  }
+
+  .add2e-character-v3 .equip-green { color: #27ae60; }
+  .add2e-character-v3 .equip-red { color: #c0392b; }
+
+  @media (max-width: 900px) {
+    .add2e-character-v3 {
+      min-width: unset;
+    }
+
+    .add2e-character-v3 .a2e-header,
+    .add2e-character-v3 .a2e-grid-2,
+    .add2e-character-v3 .a2e-grid-3,
+    .add2e-character-v3 .a2e-id-grid {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 
-<form class="sheet actor add2e personnage">
-  
-<!-- Ligne 1 : Nom à gauche, joueur+date à droite -->
-<div class="add2e-char-topline">
-<div class="add2e-char-nomperso">
-  <input
-    type="text"
-    name="name"
-    value="{{actor.name}}"
-    class="add2e-nom-acteur"
-    style="font-size:2.7em;font-weight:bold;color:#6b33a2;text-shadow:0 2px 6px #efe9f5;letter-spacing:0.02em;line-height:1.07em;border:none;background:transparent;width:100%;outline:none;"
-    aria-label="Nom du personnage"
-  >
-</div>
-  <div class="add2e-char-joueurdate">
-    <span class="add2e-label">Joueur</span>
-    <input type="text" name="system.nom_joueur" value="{{actor.system.nom_joueur}}" style="width:7em;">
-    <span class="add2e-label">Créé le</span>
-    <input type="date" name="system.date_creation" value="{{actor.system.date_creation}}" style="width:8em;">
-  </div>
-</div>
-
-<!-- Ligne 2 : Portrait à gauche, bloc identité à droite -->
-<div class="add2e-char-header2">
-  <div class="portrait-container">
-    <img src="{{actor.img}}" alt="Portrait du personnage"
-         width="512" height="512" data-edit="img"
-         style="border-radius:10px; box-shadow:0 1px 8px #0006; cursor:pointer; object-fit:cover; width:196px; height:196px;">
-    <div style="text-align:center; font-size:0.97em; color:#888; margin-top:0.15em;">Portrait</div>
-  </div>
-  <div class="add2e-char-identite-bloc">
-    <div class="form-group">
-      <label>Classe</label>
-      <input type="text" name="system.classe" value="{{actor.system.classe}}">
-    </div>
-    <div class="form-group">
-      <label>Race</label>
-      <input type="text" name="system.race" value="{{actor.system.race}}">
-    </div>
-    <div class="form-group">
-      <label>Niveau</label>
-      <input type="number" name="system.niveau" value="{{actor.system.niveau}}" style="width:4em;">
-    </div>
-      <div class="form-group">
-    <label>Titre</label>
-    <input type="text" value="{{progressionCourante.title}}" readonly>
-  </div>
-    <div style="display:flex; gap:0.8em;">
+<form class="sheet actor add2e personnage add2e-character-v3">
+  <input type="hidden" class="a2e-active-tab-input" name="flags.add2e.activeSheetTab" value="{{activeTab}}">
+  <div class="a2e-shell">
+    <header class="a2e-header">
       <div>
-        <label>PV max</label>
-        <input type="text" value="{{actor.system.points_de_coup}}" readonly class="pv-max">
+        <img class="a2e-portrait" src="{{actor.img}}" alt="Portrait du personnage" data-edit="img">
       </div>
+
       <div>
-        <label>PV courant</label>
-        <input type="number" name="system.pdv" value="{{actor.system.pdv}}" class="pv-courant">
-      </div>
-    </div>
-  </div>
-</div>
-<div class="form-group">
-  <label>Alignement</label>
-  <select name="system.alignement">
-    {{#each alignementsDisponibles as |algn|}}
-      <option value="{{algn}}" {{#if (eq ../actor.system.alignement algn)}}selected{{/if}}>{{algn}}</option>
-    {{/each}}
-  </select>
-</div>
-<div class="stat-block">
-  <b>Mouvement :</b>
-  <span>
-    {{#if system.movement}}
-      {{system.movement}} m
-    {{else if actor.system.movement}}
-      {{actor.system.movement}} m
-    {{else}}
-      — m
-    {{/if}}
-  </span>
-</div>
-    <!-- Caractéristiques -->
-<section>
-<h2>Caractéristiques
-  <i class="fas fa-dice roll-caracs-btn" style="margin-left:0.35em;font-size:1.1em;color:#8e44ad;cursor:pointer;" title="Tirer les caractéristiques"></i>
-</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Caractéristique</th>
-        <th>Valeur</th>
-        <th>Ajustements</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- FORCE -->
-      <tr>
-        <td class="carac-label-td">
-          <div class="carac-flex">
-            <i class="fas fa-dice-d20 roll-stat" data-stat="force" title="Jet de Force" style="color:#27ce46;"></i>
-            <span class="carac-short">FOR</span>
-            </div>
-            </td>
-            <td>
-<div class="carac-control-group">
+        <div class="a2e-name-line">
+          <input class="a2e-name" type="text" name="name" value="{{actor.name}}" aria-label="Nom du personnage">
 
-  <button type="button" class="carac-btn moins" data-carac="force" tabindex="-1">−</button>
-
-  <div class="carac-value carac-drop-target"
-       data-carac="force"
-       style="display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;"
-       title="Base : {{actor.system.force_base}}
-Bonus racial : {{actor.system.bonus_caracteristiques.force}}
-Total : {{add actor.system.force_base actor.system.bonus_caracteristiques.force}}">
-    <span style="font-size:1.8em; font-weight:600; line-height:1;">
-      {{add actor.system.force_base actor.system.bonus_caracteristiques.force}}
-    </span>
-    {{#if actor.system.bonus_caracteristiques.force}}
-      <span class="carac-racial-bonus-inline">
-        (race {{#if (gt actor.system.bonus_caracteristiques.force 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.force}})
-      </span>
-    {{/if}}
-  </div>
-
-  {{#if canExceptionalStrength}}
-    {{#if editable}}
-      <input type="number"
-             name="system.force_ex"
-             value="{{actor.system.force_ex}}"
-             min="0" max="100" step="1"
-             class="carac-ex-square"
-             title="Force exceptionnelle (18/xx)"
-             placeholder="xx" />
-    {{else}}
-      <div class="carac-ex-square carac-ex-square--readonly" title="Force exceptionnelle (18/xx)">
-        {{actor.system.force_ex}}
-      </div>
-    {{/if}}
-  {{/if}}
-
-  <button type="button" class="carac-btn plus" data-carac="force" tabindex="-1">+</button>
-
-</div>
-
-        </td>
-        <td>
-          <label>Bonus toucher</label>
-          <input type="text" name="system.force_bonus_toucher" value="{{actor.system.force_bonus_toucher}}" style="width:40px;" readonly>
-          <label>Bonus dégâts</label>
-          <input type="text" name="system.force_bonus_degats" value="{{actor.system.force_bonus_degats}}" style="width:40px;" readonly>
-          <label>Poids levé</label>
-          <input type="text" name="system.force_poids" value="{{actor.system.force_poids}}" style="width:60px;" readonly>
-          <label>Ouvrir portes</label>
-          <input type="text" name="system.force_ouvrir" value="{{actor.system.force_ouvrir}}" style="width:40px;" readonly>
-          <label>Tordre barreaux</label>
-          <input type="text" name="system.force_tordre" value="{{actor.system.force_tordre}}" style="width:40px;" readonly>
-        </td>
-      </tr>
-<!-- DEXTÉRITÉ -->
-<tr>
-  <td class="carac-label-td">
-    <div class="carac-flex">
-      <i class="fas fa-dice-d20 roll-stat" data-stat="dexterite" title="Jet de Dextérité" style="color:#ffae2f;"></i>
-      <span class="carac-short">DEX</span>
-    </div>
-  </td>
-  <td>
-    <div class="carac-control-group">
-      <button type="button" class="carac-btn moins" data-carac="dexterite" tabindex="-1">−</button>
-      <div class="carac-value carac-drop-target" data-carac="dexterite"
-        style="display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;"
-        title="Base : {{actor.system.dexterite_base}}
-Bonus racial : {{actor.system.bonus_caracteristiques.dexterite}}
-Total : {{add actor.system.dexterite_base actor.system.bonus_caracteristiques.dexterite}}">
-        <span style="font-size:1.6em; font-weight:600; line-height:1;">
-          {{add actor.system.dexterite_base actor.system.bonus_caracteristiques.dexterite}}
-        </span>
-        {{#if actor.system.bonus_caracteristiques.dexterite}}
-          <span class="carac-racial-bonus-inline">
-            (race {{#if (gt actor.system.bonus_caracteristiques.dexterite 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.dexterite}})
-          </span>
-        {{/if}}
-      </div>
-      <button type="button" class="carac-btn plus" data-carac="dexterite" tabindex="-1">+</button>
-    </div>
-  </td>
-  <td>
-    <label for="add2e-dex_att">Bonus réaction</label>
-    <input id="add2e-dex_att" type="text" name="system.dex_att" value="{{actor.system.dex_att}}" style="width:40px;" readonly>
-    <label for="add2e-dex_def">CA (défense)</label>
-    <input id="add2e-dex_def" type="text" name="system.dex_def" value="{{actor.system.dex_def}}" style="width:40px;" readonly>
-  </td>
-</tr>
-<!-- CONSTITUTION -->
-<tr>
-  <td class="carac-label-td">
-    <div class="carac-flex">
-      <i class="fas fa-dice-d20 roll-stat" data-stat="constitution" title="Jet de Constitution" style="color:#e74c3c;"></i>
-      <span class="carac-short">CON</span>
-    </div>
-  </td>
-  <td>
-    <div class="carac-control-group">
-      <button type="button" class="carac-btn moins" data-carac="constitution" tabindex="-1">−</button>
-      <div class="carac-value carac-drop-target" data-carac="constitution"
-        style="display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;"
-        title="Base : {{actor.system.constitution_base}}
-Bonus racial : {{actor.system.bonus_caracteristiques.constitution}}
-Total : {{add actor.system.constitution_base actor.system.bonus_caracteristiques.constitution}}">
-        <span style="font-size:1.6em; font-weight:600; line-height:1;">
-          {{add actor.system.constitution_base actor.system.bonus_caracteristiques.constitution}}
-        </span>
-        {{#if actor.system.bonus_caracteristiques.constitution}}
-          <span class="carac-racial-bonus-inline">
-            (race {{#if (gt actor.system.bonus_caracteristiques.constitution 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.constitution}})
-          </span>
-        {{/if}}
-      </div>
-      <button type="button" class="carac-btn plus" data-carac="constitution" tabindex="-1">+</button>
-    </div>
-  </td>
-  <td>
-    <label for="add2e-con_pv">PV / niveau</label>
-    <input id="add2e-con_pv" type="text" name="system.con_pv" value="{{actor.system.con_pv}}" style="width:40px;" readonly>
-    <label for="add2e-con_trauma">Choc</label>
-    <input id="add2e-con_trauma" type="text" name="system.con_trauma" value="{{actor.system.con_trauma}}" style="width:40px;" readonly>
-    <label for="add2e-con_resu">Résurrection</label>
-    <input id="add2e-con_resu" type="text" name="system.con_resu" value="{{actor.system.con_resu}}" style="width:40px;" readonly>
-  </td>
-</tr>
-<!-- INTELLIGENCE -->
-<tr>
-  <td class="carac-label-td">
-    <div class="carac-flex">
-      <i class="fas fa-dice-d20 roll-stat" data-stat="intelligence" title="Jet d’Intelligence" style="color:#2980b9;"></i>
-      <span class="carac-short">INT</span>
-    </div>
-  </td>
-  <td>
-    <div class="carac-control-group">
-      <button type="button" class="carac-btn moins" data-carac="intelligence" tabindex="-1">−</button>
-      <div class="carac-value carac-drop-target" data-carac="intelligence"
-        style="display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;"
-        title="Base : {{actor.system.intelligence_base}}
-Bonus racial : {{actor.system.bonus_caracteristiques.intelligence}}
-Total : {{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}">
-        <span style="font-size:1.6em; font-weight:600; line-height:1;">
-          {{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}
-        </span>
-        {{#if actor.system.bonus_caracteristiques.intelligence}}
-          <span class="carac-racial-bonus-inline">
-            (race {{#if (gt actor.system.bonus_caracteristiques.intelligence 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.intelligence}})
-          </span>
-        {{/if}}
-      </div>
-      <button type="button" class="carac-btn plus" data-carac="intelligence" tabindex="-1">+</button>
-    </div>
-  </td>
-  <td>
-    <label for="add2e-int_langues">Langues</label>
-    <input id="add2e-int_langues" type="text" name="system.int_langues" value="{{actor.system.int_langues}}" style="width:40px;" readonly>
-    <label for="add2e-int_chance_sort">% Appr. sort</label>
-    <input id="add2e-int_chance_sort" type="text" name="system.int_chance_sort" value="{{actor.system.int_chance_sort}}" style="width:40px;" readonly>
-    <label for="add2e-int_sort_min">Sorts mini</label>
-    <input id="add2e-int_sort_min" type="text" name="system.int_sort_min" value="{{actor.system.int_sort_min}}" style="width:40px;" readonly>
-    <label for="add2e-int_sort_max">Sorts maxi</label>
-    <input id="add2e-int_sort_max" type="text" name="system.int_sort_max" value="{{actor.system.int_sort_max}}" style="width:40px;" readonly>
-    <label for="add2e-int_sort_par_niveau">Sorts / Niv</label>
-    <input id="add2e-int_sort_par_niveau" type="text" name="system.int_sort_par_niveau" value="{{actor.system.int_sort_par_niveau}}" style="width:40px;" readonly>
-  </td>
-</tr>
-<!-- SAGESSE -->
-<tr>
-  <td class="carac-label-td">
-    <div class="carac-flex">
-      <i class="fas fa-dice-d20 roll-stat" data-stat="sagesse" title="Jet de Sagesse" style="color:#9b59b6;"></i>
-      <span class="carac-short">SAG</span>
-    </div>
-  </td>
-  <td>
-    <div class="carac-control-group">
-      <button type="button" class="carac-btn moins" data-carac="sagesse" tabindex="-1">−</button>
-      <div class="carac-value carac-drop-target" data-carac="sagesse"
-        style="display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;"
-        title="Base : {{actor.system.sagesse_base}}
-Bonus racial : {{actor.system.bonus_caracteristiques.sagesse}}
-Total : {{add actor.system.sagesse_base actor.system.bonus_caracteristiques.sagesse}}">
-        <span style="font-size:1.6em; font-weight:600; line-height:1;">
-          {{add actor.system.sagesse_base actor.system.bonus_caracteristiques.sagesse}}
-        </span>
-        {{#if actor.system.bonus_caracteristiques.sagesse}}
-          <span class="carac-racial-bonus-inline">
-            (race {{#if (gt actor.system.bonus_caracteristiques.sagesse 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.sagesse}})
-          </span>
-        {{/if}}
-      </div>
-      <button type="button" class="carac-btn plus" data-carac="sagesse" tabindex="-1">+</button>
-    </div>
-  </td>
-  <td>
-    <label for="add2e-sag_bm_magie">Bonus magie</label>
-    <input id="add2e-sag_bm_magie" type="text" name="system.sag_bm_magie" value="{{actor.system.sag_bm_magie}}" style="width:40px;" readonly>
-    <label for="add2e-sag_sort_suppl">Sorts bonus</label>
-    <input id="add2e-sag_sort_suppl" type="text" name="system.sag_sort_suppl" value="{{actor.system.sag_sort_suppl}}" style="width:40px;" readonly>
-    <label for="add2e-sag_echec">% Échec sort</label>
-    <input id="add2e-sag_echec" type="text" name="system.sag_echec" value="{{actor.system.sag_echec}}" style="width:40px;" readonly>
-  </td>
-</tr>
-<!-- CHARISME -->
-<tr>
-  <td class="carac-label-td">
-    <div class="carac-flex">
-      <i class="fas fa-dice-d20 roll-stat" data-stat="charisme" title="Jet de Charisme" style="color:#e056fd;"></i>
-      <span class="carac-short">CHA</span>
-    </div>
-  </td>
-  <td>
-    <div class="carac-control-group">
-      <button type="button" class="carac-btn moins" data-carac="charisme" tabindex="-1">−</button>
-      <div class="carac-value carac-drop-target" data-carac="charisme"
-        style="display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;"
-        title="Base : {{actor.system.charisme_base}}
-Bonus racial : {{actor.system.bonus_caracteristiques.charisme}}
-Total : {{add actor.system.charisme_base actor.system.bonus_caracteristiques.charisme}}">
-        <span style="font-size:1.6em; font-weight:600; line-height:1;">
-          {{add actor.system.charisme_base actor.system.bonus_caracteristiques.charisme}}
-        </span>
-        {{#if actor.system.bonus_caracteristiques.charisme}}
-          <span class="carac-racial-bonus-inline">
-            (race {{#if (gt actor.system.bonus_caracteristiques.charisme 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.charisme}})
-          </span>
-        {{/if}}
-      </div>
-      <button type="button" class="carac-btn plus" data-carac="charisme" tabindex="-1">+</button>
-    </div>
-  </td>
-  <td>
-    <label for="add2e-cha_compagnons">Suivants max</label>
-    <input id="add2e-cha_compagnons" type="text" name="system.cha_compagnons" value="{{actor.system.cha_compagnons}}" style="width:40px;" readonly>
-    <label for="add2e-cha_loyaute">Loyauté</label>
-    <input id="add2e-cha_loyaute" type="text" name="system.cha_loyaute" value="{{actor.system.cha_loyaute}}" style="width:40px;" readonly>
-    <label for="add2e-cha_react">Réaction</label>
-    <input id="add2e-cha_react" type="text" name="system.cha_react" value="{{actor.system.cha_react}}" style="width:40px;" readonly>
-  </td>
-</tr>
-
-    </tbody>
-  </table>
-</section>
-
-
-
-    <!-- Jets de protection -->
-    <section>
-  <h2>Jets de protection</h2>
-  {{#if progressionCourante.savingThrows.length}}
-    <div class="saving-throws-row">
-      {{#each progressionCourante.savingThrows as |val idx|}}
-        <div class="saving-throw-group saving-throw-group-{{idx}}">
-          <i class="fas fa-shield-alt roll-save save-{{idx}}" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>
-          <span class="save-label">{{lookup ../saveShortLabels idx}}</span>
-          <input type="number" class="save-value" value="{{val}}" readonly>
+          <div class="a2e-field a2e-player-top">
+            <label>Joueur</label>
+            <input type="text" name="system.nom_joueur" value="{{actor.system.nom_joueur}}">
+          </div>
         </div>
-      {{/each}}
-    </div>
-  {{/if}}
-</section>
-    <!-- Compétences de Voleur / Assassin -->
-    <section>
-      <h2>Compétences de Voleur / Assassin</h2>
-      {{#if progressionCourante.skills.length}}
-        <ul class="comp-table">
-          {{#each progressionCourante.skills as |val idx|}}
-        <li>
-          <i class="fas fa-dice-d20 roll-skill" data-skill-index="{{@index}}" title="Test de {{lookup ../actor.system.details_classe.skillLabels @index}}"></i>
-          {{lookup ../actor.system.details_classe.skillLabels @index}} : {{this}} %
-        </li>
-          {{/each}}
-        </ul>
-      {{else}}
-        <p>Aucune compétence disponible.</p>
-      {{/if}}
-    </section>
-<section>
-  <h2 style="display: flex; align-items: center; gap: 0.8em;">
-    Combat & Défense
-    <span class="roll-initiative-btn" title="Lancer l'initiative"
-      style="margin-left:0.6em; background: #8e44ad; color: #fff; border:none; border-radius:6px; padding:0.2em 0.8em; font-size:1em; cursor:pointer; display:flex; align-items:center;">
-      <i class="fas fa-dice-six" style="margin-right:0.4em;"></i>
-      Initiative
-    </span>
-    <span class="initiative-value" style="margin-left:0.8em; color:#61349b; font-weight:bold;">
-      {{actor.system.initiative}}
-    </span>
-  </h2>
 
-  <div class="combat-defense-block" style="display: grid; grid-template-columns: repeat(2, 1fr); gap:1.1em 1.8em; margin-top:0.6em; font-size:1.06em; background: #f7f4ff; border-radius: 11px; box-shadow: 0 1px 6px #d1cbe2aa; padding: 1em 1.4em;">
+        <div class="a2e-id-grid">
+          <div class="a2e-field">
+            <label>Classe</label>
+            <input type="text" name="system.classe" value="{{actor.system.classe}}">
+          </div>
 
-    <!-- ARMURE ET BOUCLIER -->
-    <div>
-      <b>Armure portée :</b> {{{combatDefense.armure}}}<br>
-      <b>Bouclier :</b> {{{combatDefense.bouclier}}}
-    </div>
+          <div class="a2e-field">
+            <label>Race</label>
+            <input type="text" name="system.race" value="{{actor.system.race}}">
+          </div>
 
-    <!-- CA (Armure & Défense) -->
-    <div>
-      <b>CA de base :</b> {{combatDefense.ac_naturelle}}<br>
-      <b>CA modifiée :</b> <span style="color:#2867a6;">{{combatDefense.ac_totale}}</span><br>
-    </div>
+          <div class="a2e-field">
+            <label>Niveau</label>
+            <input type="number" name="system.niveau" value="{{actor.system.niveau}}" min="1">
+          </div>
 
-    <!-- ARMES ÉQUIPÉES -->
-    <div>
-      <b>Armes équipées :</b>
-      {{#if armesEquipees.length}}
-        {{#each armesEquipees as |arme idx|}}
-          {{#if arme.img}}
-            <img src="{{arme.img}}" width="22" style="vertical-align:middle;margin-right:0.1em;border-radius:4px;box-shadow:0 1px 4px #0001;">
-          {{/if}}
-          <span>{{arme.name}}</span>{{#unless @last}}, {{/unless}}
-        {{/each}}
-      {{else}}
-        <em>Aucune</em>
-      {{/if}}
-    </div>
+          <div class="a2e-field">
+            <label>Titre</label>
+            <input type="text" value="{{progressionCourante.title}}" readonly>
+          </div>
 
-    <!-- THAC0, DÉGÂTS, BONUS -->
-    <div>
-  <b>THAC0 :</b> <span>{{combatDefense.thaco}}</span><br>
-  <b>Dégâts :</b> <span>{{combatDefense.degats}}</span>
-  <br>
-  <b>Bonus toucher :</b> <span style="color:#1abc9c;">{{actor.system.force_bonus_toucher}}</span>
-  <br>
-  <b>Bonus dégâts :</b> <span style="color:#e67e22;">{{actor.system.force_bonus_degats}}</span>
-</div>
-</section>
+          <div class="a2e-field">
+            <label>Alignement</label>
+            <select name="system.alignement">
+              {{#each alignementsDisponibles as |algn|}}
+                <option value="{{algn}}" {{#if (eq ../actor.system.alignement algn)}}selected{{/if}}>{{algn}}</option>
+              {{/each}}
+            </select>
+          </div>
 
+          <div class="a2e-field">
+            <label>Mouvement</label>
+            <input type="text" value="{{#if system.movement}}{{system.movement}}{{else}}{{actor.system.movement}}{{/if}} m" readonly>
+          </div>
 
-<section>
- <h2>
-  Armes
-  <i class="fa fa-info-circle"
-     style="color:#9373c7; margin-left:0.4em; font-size:1em;"
-     title="Armures autorisées : 
-{{#if actor.system.details_classe.armes_autorisees.length}}
-  {{#each actor.system.details_classe.armes_autorisees as |a|}}{{a}}{{#unless @last}}, {{/unless}}{{/each}}
-{{else}}
-  Aucune
-{{/if}}">
-  </i>
-</h2>
-  {{#if listeArmes.length}}
-    <table class="arme-table" style="width:100%;">
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Bonus toucher</th>
-          <th>Bonus dégâts</th>
-          <th>THAC0</th>
-          <th>Dégâts (M/G)</th>
-          <th>Type</th>
-          <th>Facteur</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each listeArmes as |arme|}}
-          <tr>
-            <td draggable="true"
-                class="arme-drag arme-img-attack"
-                data-item-id="{{arme._id}}"
-                data-item-name="{{arme.name}}"
-                style="cursor:pointer;"
-                title="Attaquer avec {{arme.name}}">
-              {{#if arme.img}}
-                <img src="{{arme.img}}" alt="img" width="26" height="26"
-                     style="vertical-align:middle;margin-right:0.4em;border-radius:6px;box-shadow:0 1px 4px #0001;">
-              {{/if}}
-              {{arme.name}}
-            </td>
-            <td>{{#if arme.system.bonus_hit}}+{{arme.system.bonus_hit}}{{else}}0{{/if}}</td>
-            <td>{{#if arme.system.bonus_dom}}+{{arme.system.bonus_dom}}{{else}}0{{/if}}</td>
-            <td>{{../combatDefense.thaco}}</td>
-            <td>{{arme.system.dégâts.contre_moyen}} / {{arme.system.dégâts.contre_grand}}</td>
-            <td>{{arme.system.type_degats}}</td>
-            <td>{{arme.system.facteur_rapidité}}</td>
-            <td style="text-align:center;">
-              <i class="fas fa-shield-alt arme-equip"
-                 data-action="equip"
-                 data-item-id="{{arme._id}}"
-                 title="(Dé)séquiper"
-                 style="cursor:pointer; margin-right:0.23em; font-size:1.1em; {{#if arme.system.equipee}}color:#2ecc40;{{else}}color:#e74c3c;{{/if}}">
-              </i>
-              <i class="fas fa-bolt arme-degat-roll"
-                 data-action="degat"
-                 data-item-id="{{arme._id}}"
-                 title="Jet de dégâts"
-                 style="cursor:pointer; margin-right:0.22em;">
-              </i>
-              <i class="fas fa-edit arme-edit"
-                 data-action="edit"
-                 data-item-id="{{arme._id}}"
-                 title="Éditer"
-                 style="cursor:pointer; margin-right:0.22em;">
-              </i>
-              <i class="fas fa-trash arme-delete"
-                 data-action="delete"
-                 data-item-id="{{arme._id}}"
-                 title="Supprimer"
-                 style="cursor:pointer; color:#c0392b;">
-              </i>
-            </td>
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  {{else}}
-    <p>Aucune arme équipée.</p>
-  {{/if}}
-</section>
+          <div class="a2e-field">
+            <label>PV max</label>
+            <input type="text" value="{{actor.system.points_de_coup}}" readonly>
+          </div>
 
+          <div class="a2e-field">
+            <label>PV courant</label>
+            <input type="number" name="system.pdv" value="{{actor.system.pdv}}" class="pv-courant">
+          </div>
 
-<section>
- <h2>
-  Armures
-  <i class="fa fa-info-circle"
-     style="color:#9373c7; margin-left:0.4em; font-size:1em;"
-     title="Armures autorisées : 
-{{#if actor.system.details_classe.armures_autorisees.length}}
-  {{#each actor.system.details_classe.armures_autorisees as |a|}}{{a}}{{#unless @last}}, {{/unless}}{{/each}}
-{{else}}
-  Aucune
-{{/if}}">
-  </i>
-</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Nom</th>
-        <th>Type</th>
-        <th>AC</th>
-        <th>Prix</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each actor.items as |item|}}
-        {{#if (eq item.type "armure")}}
-        <tr>
-          <td>
-            {{#if item.img}}
-              <img src="{{item.img}}" alt="img" width="26" height="26" style="vertical-align:middle;margin-right:0.4em;border-radius:6px;box-shadow:0 1px 4px #0001;">
-            {{/if}}
-            {{item.name}}
-          </td>
-          <td>{{item.system.type_armure}}</td>
-          <td>{{item.system.ac}}</td>
-          <td>{{item.system.prix}}</td>
-          <td style="text-align:center;">
-            <i class="fa-solid fa-shield-halved armure-equip"
-               data-action="equip"
-               data-item-id="{{item._id}}"
-               style="cursor:pointer; margin-right:0.27em; font-size:1.13em; {{#if item.system.equipee}}color:#2ecc40;{{else}}color:#e74c3c;{{/if}}"
-               title="(Dé)séquiper">
-            </i>
-            <i class="fa-solid fa-pen-to-square armure-edit"
-               data-action="edit"
-               data-item-id="{{item._id}}"
-               style="cursor:pointer; margin-right:0.22em;"
-               title="Éditer">
-            </i>
-            <i class="fa-solid fa-trash armure-delete"
-               data-action="delete"
-               data-item-id="{{item._id}}"
-               style="cursor:pointer; color:#c0392b;"
-               title="Supprimer">
-            </i>
-          </td>
-        </tr>
-        {{/if}}
-      {{/each}}
-    </tbody>
-  </table>
-  
-</section>
-<section>
+          <div class="a2e-field">
+            <label>CA</label>
+            <input type="text" value="{{actor.system.ca_total}}" readonly>
+          </div>
 
-  <h2 class="form-header flexrow">
-    Équipement & Objets
-    <a class="item-control objet-create" title="Ajouter un objet" style="font-size:0.8em; margin-left:auto; cursor:pointer;">
-      <i class="fas fa-plus"></i> Ajouter
-    </a>
-  </h2>
-  
-  <table class="add2e-items-list" style="width:100%; border-collapse:collapse;">
-    <thead>
-      <tr style="background: rgba(0,0,0,0.05);">
-        <th style="text-align:left; padding:5px;">Nom</th>
-        <th width="50" style="text-align:center;">Qté</th>
-        <th width="50" style="text-align:center;">Poids</th>
-        <th width="80" style="text-align:center;">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#each listeObjets as |item|}}
-      <tr class="item" data-item-id="{{item._id}}" style="border-bottom:1px solid #eee;">
-        
-        <td style="text-align:left; padding:5px; display:flex; align-items:center; gap:8px;">
-          <img src="{{item.img}}" width="24" height="24" style="border:none; border-radius:4px; object-fit:cover;"/>
-          <span class="item-name" style="font-weight:bold;">{{item.name}}</span>
-        </td>
+          <div class="a2e-field">
+            <label>THAC0</label>
+            <input type="text" value="{{combatDefense.thaco}}" readonly>
+          </div>
 
-        <td style="text-align:center;">{{item.system.quantite}}</td>
+        </div>
+      </div>
+    </header>
 
-        <td style="text-align:center;">{{item.system.poids}}</td>
+    <section class="a2e-panel a2e-characteristics-always">
+      <h2>
+        Caractéristiques
+        <i class="fas fa-dice roll-caracs-btn" style="margin-left:0.35em;color:#8e44ad;cursor:pointer;" title="Tirer les caractéristiques"></i>
+      </h2>
 
-        <td style="text-align:center;">
-          
-          <a class="item-control objet-equip" title="{{#if item.system.equipee}}Déséquiper{{else}}Équiper{{/if}}" style="margin-right: 8px; cursor:pointer;">
-             <i class="fas {{#if item.system.equipee}}fa-check-circle{{else}}fa-times-circle{{/if}}" 
-                style="font-size:1.1em; {{#if item.system.equipee}}color:#2ecc71;{{else}}color:#e74c3c;{{/if}}"></i>
-          </a>
-
-          <a class="item-control objet-edit" title="Éditer" style="margin-right: 8px; cursor:pointer; color:#444;">
-            <i class="fas fa-edit"></i>
-          </a>
-
-          <a class="item-control objet-delete" title="Supprimer" style="color:#c0392b; cursor:pointer;">
-            <i class="fas fa-trash"></i>
-          </a>
-        </td>
-      </tr>
-      {{/each}}
-
-      {{#unless listeObjets}}
-      <tr>
-         <td colspan="4" style="text-align:center; font-style:italic; color:#777; padding:10px;">Aucun équipement</td>
-      </tr>
-      {{/unless}}
-    </tbody>
-  </table>
-
-</section>
-<section>
-  {{!-- ===================================================== --}}
-{{!-- RÉCAP SORTS (mémorisés / dispo) PAR NIVEAU --}}
-{{!-- ===================================================== --}}
-{{#if niveauxSorts.length}}
-  <div class="sort-recap"
-       style="margin:0.35em 0 0.9em; padding:0.55em 0.8em; border-radius:10px;
-              background:#f7f4ff; box-shadow:0 1px 6px #d1cbe2aa;">
-
-    <div style="font-weight:700; color:#6a3c99; margin-bottom:0.35em;">
-      Récapitulatif des sorts (mémorisés / disponibles)
-    </div>
-
-    <div style="display:flex; flex-wrap:wrap; gap:0.5em 0.7em; align-items:center;">
-      {{#each niveauxSorts as |niv|}}
-        {{#with (lookup ../sortsMemorizedByLevel niv) as |memo|}}
-          <span style="display:inline-flex; align-items:center; gap:0.35em;
-                       background:#fff; border:1px solid #e3ddf2; border-radius:999px;
-                       padding:0.2em 0.55em; font-size:0.95em;">
-            <span style="color:#7c39c3; font-weight:800;">N{{niv}}</span>
-
-            {{!-- Cas multi-sources (Ranger / multiclass Druide+Magicien) --}}
-            <span style="color:#2c3e50;">
-  <b>{{memo.count}}</b>/<b>{{memo.max}}</b>
-</span>
-
-          </span>
-        {{/with}}
-      {{/each}}
-    </div>
-  </div>
-{{/if}}
-
-  <h2>Sorts connus / mémorisés</h2>
-  {{#if niveauxSorts.length}}
-    {{#each niveauxSorts as |niv|}}
-      <div class="sort-niveau-block">
-        <h3 style="margin-top:0.5em; margin-bottom:0.2em; color:#7c39c3;">
-          Niveau {{niv}}
-          {{#with (lookup ../sortsMemorizedByLevel niv) as |memo|}}
-            <span style="font-size:0.95em; color:#888; margin-left:1.2em;">
-  ({{memo.count}} / {{memo.max}} mémorisés)
-</span>
-
-          {{/with}}
-        </h3>
-        <table class="sort-table" style="width:100%; margin-bottom:0.8em;">
+      <div class="a2e-panel-body">
+        <table class="a2e-carac-table">
           <thead>
             <tr>
-              <th>Nom</th><th>École</th><th>Portée</th><th>Durée</th>
-              <th>Zone Effet</th><th>Jet Sauve</th><th>Composantes</th>
-              <th>Incant.</th><th style="width:100px;">Actions</th>
+              <th>Caractéristique</th>
+              <th>Valeur</th>
+              <th>Capacités liées</th>
             </tr>
           </thead>
           <tbody>
-            {{#each (lookup ../sortsParNiveau niv) as |sort|}}
-              <tr class="sort-row" data-sort-id="{{sort._id}}">
-                <td draggable="true"
-                    class="sort-drag sort-cast-img"
-                    data-sort-id="{{sort._id}}"
-                    data-item-id="{{sort._id}}"
-                    data-item-name="{{sort.name}}"
-                    style="cursor:pointer; white-space:nowrap;"
-                    title="Lancer / Glisser ce sort dans la barre de macro">
-
-                  <!-- + / – -->
-                  <i class="fas fa-plus-circle sort-memorize-plus"
-                     data-sort-id="{{sort._id}}"
-                     title="Ajouter une mémorisation"
-                     style="color:#27ae60; margin-right:0.12em; cursor:pointer; font-size:1.08em; vertical-align:middle;"></i>
-                  <i class="fas fa-minus-circle sort-memorize-minus"
-                     data-sort-id="{{sort._id}}"
-                     title="Retirer une mémorisation"
-                     style="color:#e74c3c; margin-right:0.2em; cursor:pointer; font-size:1.08em; vertical-align:middle;"></i>
-<span class="sort-memorize-badge"
-      title="{{#if (getFlag sort 'add2e.memorizedCount')}}
-               {{getFlag sort 'add2e.memorizedCount'}}
-             {{else}}0{{/if}}
-             mémorisé{{#unless (eq (getFlag sort 'add2e.memorizedCount') 1)}}s{{/unless}}">
-  {{#if (getFlag sort 'add2e.memorizedCount')}}
-    {{getFlag sort 'add2e.memorizedCount'}}
-  {{else}}0{{/if}}
-</span>
-
-                  <!-- Icône -->
-                  {{#if sort.img}}
-                    <img src="{{sort.img}}"
-                         alt="{{sort.name}}"
-                         style="width:24px; height:24px; object-fit:cover; border-radius:4px; box-shadow:0 1px 3px #0002; background:#eaeaff; border:1px solid #bbb; margin-left:0.1em;">
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="force" title="Jet de Force" style="color:#27ce46;"></i>
+                  <span class="carac-short">FOR</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="force" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="force"
+                       title="Base : {{actor.system.force_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.force}}&#10;Total : {{add actor.system.force_base actor.system.bonus_caracteristiques.force}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.force_base actor.system.bonus_caracteristiques.force}}</span>
+                    {{#if actor.system.bonus_caracteristiques.force}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.force 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.force}})</span>
+                    {{/if}}
+                  </div>
+                  {{#if canExceptionalStrength}}
+                    {{#if editable}}
+                      <input type="number" name="system.force_ex" value="{{actor.system.force_ex}}" min="0" max="100" step="1" class="carac-ex-square" title="Force exceptionnelle (18/xx)" placeholder="xx">
+                    {{else}}
+                      <div class="carac-ex-square carac-ex-square--readonly" title="Force exceptionnelle (18/xx)">{{actor.system.force_ex}}</div>
+                    {{/if}}
                   {{/if}}
+                  <button type="button" class="carac-btn plus" data-carac="force" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <label>Toucher</label><input type="text" name="system.force_bonus_toucher" value="{{actor.system.force_bonus_toucher}}" readonly>
+                  <label>Dégâts</label><input type="text" name="system.force_bonus_degats" value="{{actor.system.force_bonus_degats}}" readonly>
+                  <label>Poids</label><input type="text" name="system.force_poids" value="{{actor.system.force_poids}}" readonly>
+                  <label>Portes</label><input type="text" name="system.force_ouvrir" value="{{actor.system.force_ouvrir}}" readonly>
+                  <label>Barreaux</label><input type="text" name="system.force_tordre" value="{{actor.system.force_tordre}}" readonly>
+                </div>
+              </td>
+            </tr>
 
-                  <!-- Nom -->
-                  <span class="toggle-sort-desc-chat"
-                        data-sort-id="{{sort._id}}"
-                        style="margin-left:0.35em; font-weight:bold; color:#6a3c99; cursor:pointer;">
-                    {{sort.name}}
-                  </span>
- 
-                </td>
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="dexterite" title="Jet de Dextérité" style="color:#ffae2f;"></i>
+                  <span class="carac-short">DEX</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="dexterite" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="dexterite"
+                       title="Base : {{actor.system.dexterite_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.dexterite}}&#10;Total : {{add actor.system.dexterite_base actor.system.bonus_caracteristiques.dexterite}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.dexterite_base actor.system.bonus_caracteristiques.dexterite}}</span>
+                    {{#if actor.system.bonus_caracteristiques.dexterite}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.dexterite 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.dexterite}})</span>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="dexterite" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <label>Réaction</label><input type="text" name="system.dex_att" value="{{actor.system.dex_att}}" readonly>
+                  <label>CA défense</label><input type="text" name="system.dex_def" value="{{actor.system.dex_def}}" readonly>
+                </div>
+              </td>
+            </tr>
 
-                <td>{{sort.system.école}}</td>
-                <td>{{formatSortChamp sort.system.portee}}</td>
-                <td>{{formatSortChamp sort.system.duree}}</td>
-                <td>{{formatSortChamp sort.system.zone_effet}}</td>
-                <td>{{sort.system.jet_sauvegarde}}</td>
-                <!-- Actions (éditer/supprimer) -->
-                <td style="text-align:center;">
-                  <i class="fas fa-edit sort-edit"
-                     data-sort-id="{{sort._id}}"
-                     title="Éditer"
-                     style="color:#7b4c9a; margin-right:0.22em; cursor:pointer;"></i>
-                  <i class="fas fa-trash sort-delete"
-                     data-sort-id="{{sort._id}}"
-                     title="Supprimer"
-                     style="color:#c0392b; cursor:pointer;"></i>
-                </td>
-              </tr>
-              <tr class="sort-desc-row"
-                  id="desc-chat-{{sort._id}}"
-                  style="display:none;">
-                <td colspan="9"
-                    style="background:#f5f1fa; color:#48307a; font-size:0.98em; border-top:1px solid #d6d6ee;">
-                  {{{sort.system.description}}}
-                </td>
-              </tr>
-            {{/each}}
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="constitution" title="Jet de Constitution" style="color:#e74c3c;"></i>
+                  <span class="carac-short">CON</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="constitution" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="constitution"
+                       title="Base : {{actor.system.constitution_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.constitution}}&#10;Total : {{add actor.system.constitution_base actor.system.bonus_caracteristiques.constitution}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.constitution_base actor.system.bonus_caracteristiques.constitution}}</span>
+                    {{#if actor.system.bonus_caracteristiques.constitution}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.constitution 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.constitution}})</span>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="constitution" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <label>PV / niv.</label><input type="text" name="system.con_pv" value="{{actor.system.con_pv}}" readonly>
+                  <label>Choc</label><input type="text" name="system.con_trauma" value="{{actor.system.con_trauma}}" readonly>
+                  <label>Résurrection</label><input type="text" name="system.con_resu" value="{{actor.system.con_resu}}" readonly>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="intelligence" title="Jet d’Intelligence" style="color:#2980b9;"></i>
+                  <span class="carac-short">INT</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="intelligence" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="intelligence"
+                       title="Base : {{actor.system.intelligence_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.intelligence}}&#10;Total : {{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}</span>
+                    {{#if actor.system.bonus_caracteristiques.intelligence}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.intelligence 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.intelligence}})</span>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="intelligence" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <label>Langues</label><input type="text" name="system.int_langues" value="{{actor.system.int_langues}}" readonly>
+                  <label>% sort</label><input type="text" name="system.int_chance_sort" value="{{actor.system.int_chance_sort}}" readonly>
+                  <label>Sorts min</label><input type="text" name="system.int_sort_min" value="{{actor.system.int_sort_min}}" readonly>
+                  <label>Sorts max</label><input type="text" name="system.int_sort_max" value="{{actor.system.int_sort_max}}" readonly>
+                  <label>/ niveau</label><input type="text" name="system.int_sort_par_niveau" value="{{actor.system.int_sort_par_niveau}}" readonly>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="sagesse" title="Jet de Sagesse" style="color:#9b59b6;"></i>
+                  <span class="carac-short">SAG</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="sagesse" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="sagesse"
+                       title="Base : {{actor.system.sagesse_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.sagesse}}&#10;Total : {{add actor.system.sagesse_base actor.system.bonus_caracteristiques.sagesse}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.sagesse_base actor.system.bonus_caracteristiques.sagesse}}</span>
+                    {{#if actor.system.bonus_caracteristiques.sagesse}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.sagesse 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.sagesse}})</span>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="sagesse" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <label>Bonus magie</label><input type="text" name="system.sag_bm_magie" value="{{actor.system.sag_bm_magie}}" readonly>
+                  <label>Sorts bonus</label><input type="text" name="system.sag_sort_suppl" value="{{actor.system.sag_sort_suppl}}" readonly>
+                  <label>% échec</label><input type="text" name="system.sag_echec" value="{{actor.system.sag_echec}}" readonly>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="charisme" title="Jet de Charisme" style="color:#e056fd;"></i>
+                  <span class="carac-short">CHA</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="charisme" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="charisme"
+                       title="Base : {{actor.system.charisme_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.charisme}}&#10;Total : {{add actor.system.charisme_base actor.system.bonus_caracteristiques.charisme}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.charisme_base actor.system.bonus_caracteristiques.charisme}}</span>
+                    {{#if actor.system.bonus_caracteristiques.charisme}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.charisme 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.charisme}})</span>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="charisme" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <label>Compagnons</label><input type="text" name="system.cha_compagnons" value="{{actor.system.cha_compagnons}}" readonly>
+                  <label>Loyauté</label><input type="text" name="system.cha_loy" value="{{actor.system.cha_loy}}" readonly>
+                  <label>Réaction</label><input type="text" name="system.cha_react" value="{{actor.system.cha_react}}" readonly>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
-    {{/each}}
-  {{else}}
-    <p>Aucun sort mémorisé ou connu.</p>
-  {{/if}}
-</section>
+    </section>
 
-<section>
-  <h2>Effets actifs</h2>
-  {{#if activeEffectsList.length}}
-    <table class="sort-table" style="width:100%; margin-bottom:1em;">
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Description</th>
-          <th>Durée</th>
-          <th style="width:70px;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each activeEffectsList as |effet|}}
-          <tr class="effect-row" data-effect-id="{{effet.id}}">
-            <td>
-              {{#if effet.img}}
-                <img src="{{effet.img}}" width="22" height="22"
-                  style="vertical-align:middle; margin-right:0.3em; border-radius:4px; box-shadow:0 1px 3px #0002;">
+    <nav class="a2e-tabs sheet-tabs tabs" data-group="primary">
+      <a class='item {{#if (eq activeTab "resume")}}active{{/if}}' data-tab="resume" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-id-card"></i> Résumé</a>
+      <a class='item {{#if (eq activeTab "combat")}}active{{/if}}' data-tab="combat" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-shield-alt"></i> Combat</a>
+      <a class='item {{#if (eq activeTab "capacites")}}active{{/if}}' data-tab="capacites" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-bolt"></i> Capacités</a>
+      <a class='item {{#if (eq activeTab "sorts")}}active{{/if}}' data-tab="sorts" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-magic"></i> Sorts</a>
+      <a class='item {{#if (eq activeTab "equipement")}}active{{/if}}' data-tab="equipement" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-suitcase"></i> Équipement</a>
+      <a class='item {{#if (eq activeTab "notes")}}active{{/if}}' data-tab="notes" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-feather-alt"></i> Notes</a>
+    </nav>
+
+    <main class="sheet-body">
+      <section class='a2e-tab-content tab tab-resume {{#if (eq activeTab "resume")}}active{{/if}}' data-group="primary" data-tab="resume">
+        <div class="a2e-grid-2">
+          <div class="a2e-panel">
+            <h2>Jets de sauvegarde</h2>
+            <div class="a2e-panel-body">
+              <div class="saving-throws-row">
+                {{#each saveShortLabels as |saveLabel idx|}}
+                  <div class="saving-throw-group saving-throw-group-{{idx}}">
+                    <i class="fas fa-shield-alt roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>
+                    <div class="save-label">{{saveLabel}}</div>
+                    <div class="save-value">
+                      {{#if ../progressionCourante}}
+                        {{lookup ../progressionCourante.savingThrows idx}}
+                      {{else}}
+                        —
+                      {{/if}}
+                    </div>
+                  </div>
+                {{/each}}
+              </div>
+            </div>
+          </div>
+
+          <div class="a2e-panel">
+            <h2>Résumé classe / race</h2>
+            <div class="a2e-panel-body a2e-small">
+              {{#if actor.system.details_race.capacites.length}}
+                <h3>Race</h3>
+                <ul>
+                  {{#each actor.system.details_race.capacites}}
+                    <li>{{this}}</li>
+                  {{/each}}
+                </ul>
               {{/if}}
-              <strong>{{effet.name}}</strong>
-            </td>
-            <td>{{{effet.description}}}</td>
-            <td>{{effet.duration}}</td>
-            <td style="text-align:center;">
-              <i class="fas fa-edit effect-edit"
-                data-effect-id="{{effet.id}}"
-                title="Éditer"
-                style="color:#6b33a2; cursor:pointer; margin-right:0.4em;"></i>
-              <i class="fas fa-trash effect-delete"
-                data-effect-id="{{effet.id}}"
-                title="Supprimer"
-                style="color:#c0392b; cursor:pointer;"></i>
-            </td>
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  {{else}}
-    <p style="margin-top:1.5em; color:#888;">Aucun effet actif.</p>
-  {{/if}}
-</section>
 
+              {{#if actor.system.details_classe.specialAbilities.length}}
+                <h3>Classe</h3>
+                <ul>
+                  {{#each actor.system.details_classe.specialAbilities}}
+                    <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class="a2e-muted">Aucune capacité spéciale renseignée.</p>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </section>
 
+      <section class='a2e-tab-content tab tab-combat {{#if (eq activeTab "combat")}}active{{/if}}' data-group="primary" data-tab="combat">
+        <div class="a2e-grid-2">
+          <div class="a2e-panel">
+            <h2>Défense</h2>
+            <div class="a2e-panel-body">
+              <table class="a2e-table">
+                <tbody>
+                  <tr><th>CA naturelle / physique</th><td>{{combatDefense.ac_naturelle}}</td></tr>
+                  <tr><th>CA totale</th><td><b>{{combatDefense.ac_totale}}</b></td></tr>
+                  <tr><th>Armure</th><td>{{{combatDefense.armure}}}</td></tr>
+                  <tr><th>Bouclier</th><td>{{{combatDefense.bouclier}}}</td></tr>
+                  <tr><th>Heaume</th><td>{{{combatDefense.heaume}}}</td></tr>
+                  <tr><th>Mod. DEX défense</th><td>{{actor.system.dex_def}}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-<!-- Capacités spéciales de Classe -->
-<h3>Classe</h3>
-{{#if (length actor.system.details_classe.specialAbilities)}}
-  <ul>
-    {{#each actor.system.details_classe.specialAbilities as |abil|}}
-      {{#if abil.nom}}
-        <li><strong>{{abil.nom}}</strong> : {{abil.description}}</li>
-      {{else}}
-        <li>{{abil}}</li>
-      {{/if}}
-    {{/each}}
-  </ul>
-{{else}}
-  <p>Aucune capacité spéciale de classe.</p>
-{{/if}}
+          <div class="a2e-panel">
+            <h2>Arme équipée</h2>
+            <div class="a2e-panel-body">
+              <table class="a2e-table">
+                <tbody>
+                  <tr><th>Arme</th><td>{{{combatDefense.arme}}}</td></tr>
+                  <tr><th>Dégâts</th><td>{{combatDefense.degats}}</td></tr>
+                  <tr><th>Bonus toucher</th><td>{{combatDefense.bonus_toucher}}</td></tr>
+                  <tr><th>Bonus dégâts</th><td>{{combatDefense.bonus_degats}}</td></tr>
+                  <tr><th>THAC0</th><td>{{combatDefense.thaco}}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
-<!-- Capacités raciales -->
-<h3>Race</h3>
-{{#if (length actor.system.details_race.capacites)}}
-  <ul>
-    {{#each actor.system.details_race.capacites as |cap|}}
-      <li>{{cap}}</li>
-    {{/each}}
-  </ul>
-{{else}}
-  <p>Aucune capacité raciale définie.</p>
-{{/if}}
+        <div class="a2e-panel">
+          <h2>Armes</h2>
+          <div class="a2e-panel-body">
+            {{#if listeArmes.length}}
+              <table class="a2e-table arme-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Arme</th>
+                    <th>Équipée</th>
+                    <th>Dégâts</th>
+                    <th>Type</th>
+                    <th>Bonus toucher</th>
+                    <th>Bonus dégâts</th>
+                    <th>Facteur</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each listeArmes as |arme|}}
+                    <tr class="item" data-item-id="{{arme._id}}">
+                      <td>
+                        <img class="arme-img-attack" data-item-id="{{arme._id}}" src="{{arme.img}}" title="Attaquer avec {{arme.name}}" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                      </td>
+                      <td><b>{{arme.name}}</b></td>
+                      <td>
+                        {{#if arme.system.equipee}}
+                          <i class="fas fa-check-circle equip-green"></i>
+                        {{else}}
+                          <i class="fas fa-times-circle equip-red"></i>
+                        {{/if}}
+                      </td>
+                      <td>{{arme.system.dégâts.contre_moyen}} / {{arme.system.dégâts.contre_grand}}</td>
+                      <td>{{arme.system.type_degats}}</td>
+                      <td>{{arme.system.bonus_hit}}</td>
+                      <td>{{arme.system.bonus_dom}}</td>
+                      <td>{{arme.system.facteur_rapidité}}</td>
+                      <td>
+                        <div class="a2e-actions">
+                          <a class="a2e-action-icon a2e-action-roll arme-thaco-roll" data-item-id="{{arme._id}}" title="Attaquer"><i class="fas fa-dice-d20"></i></a>
+                          <a class="item-control item-equip a2e-action-icon {{#if arme.system.equipee}}a2e-action-unequip{{else}}a2e-action-equip{{/if}}" data-action="equip" data-item-id="{{arme._id}}" title="{{#if arme.system.equipee}}Retirer{{else}}Équiper{{/if}}">
+                            {{#if arme.system.equipee}}<i class="fas fa-minus-circle"></i>{{else}}<i class="fas fa-plus-circle"></i>{{/if}}
+                          </a>
+                          <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{arme._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                          <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{arme._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="a2e-muted">Aucune arme.</p>
+            {{/if}}
+          </div>
+        </div>
+      
+          <div class="a2e-panel">
+            <h2>Armures, boucliers et heaumes</h2>
+            <div class="a2e-panel-body">
+              {{#if listeArmures.length}}
+                <table class="a2e-table">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>CA</th>
+                      <th>Bonus CA</th>
+                      <th>Équipée</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each listeArmures as |armure|}}
+                      <tr class="item" data-item-id="{{armure._id}}">
+                        <td><b>{{armure.name}}</b></td>
+                        <td>{{armure.system.ac}}</td>
+                        <td>{{armure.system.bonus_ac}}</td>
+                        <td>
+                          {{#if armure.system.equipee}}
+                            <i class="fas fa-check-circle equip-green"></i>
+                          {{else}}
+                            <i class="fas fa-times-circle equip-red"></i>
+                          {{/if}}
+                        </td>
+                        <td>
+                          <div class="a2e-actions">
+                            <a class="item-control item-equip a2e-action-icon {{#if armure.system.equipee}}a2e-action-unequip{{else}}a2e-action-equip{{/if}}" data-action="equip" data-item-id="{{armure._id}}" title="{{#if armure.system.equipee}}Retirer{{else}}Équiper{{/if}}">
+                              {{#if armure.system.equipee}}<i class="fas fa-minus-circle"></i>{{else}}<i class="fas fa-plus-circle"></i>{{/if}}
+                            </a>
+                            <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{armure._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                            <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{armure._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                          </div>
+                        </td>
+                      </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+              {{else}}
+                <p class="a2e-muted">Aucune armure.</p>
+              {{/if}}
+            </div>
+          </div>
+      </section>
 
+      <section class='a2e-tab-content tab tab-capacites {{#if (eq activeTab "capacites")}}active{{/if}}' data-group="primary" data-tab="capacites">
+        <div class="a2e-grid-2">
+          <div class="a2e-panel">
+            <h2>Capacités activables</h2>
+            <div class="a2e-panel-body">
+              {{#if actor.system.details_classe.classFeatures.length}}
+                {{#each actor.system.details_classe.classFeatures as |feature idx|}}
+                  {{#if feature.activable}}
+                    <div class="a2e-panel" style="box-shadow:none;">
+                      <h3>
+                        {{feature.name}}
+                        {{#if (gt feature.minLevel ../actor.system.niveau)}}
+                          <span class="a2e-muted" style="float:right;">Niveau {{feature.minLevel}}</span>
+                        {{else}}
+                          <span style="float:right;">{{feature.uses.label}}</span>
+                        {{/if}}
+                      </h3>
+                      <div class="a2e-panel-body a2e-small">
+                        {{{feature.description}}}
+                        <div class="a2e-actions" style="justify-content:flex-start;margin-top:8px;">
+                          <button type="button"
+                                  class="a2e-btn blue add2e-feature-use"
+                                  data-feature-index="{{idx}}"
+                                  data-on-use="{{feature.on_use}}">
+                            <i class="fas fa-bolt"></i>&nbsp;Utiliser
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  {{/if}}
+                {{/each}}
+              {{else}}
+                <p class="a2e-muted">Aucune capacité de classe renseignée.</p>
+              {{/if}}
+            </div>
+          </div>
 
-<!-- Points d'expérience & Niveau -->
-<section>
-  <h2>Points d'expérience et Niveau</h2>
-  <div class="form-group split">
-    <div>
-      <label>Points d'expérience</label>
-      <input type="number" name="system.xp" value="{{actor.system.xp}}">
-    </div>
-  </div>
-  <div class="form-group">
-    <label>XP palier actuel</label>
-    <input type="number" value="{{progressionCourante.xp}}" readonly>
-  </div>
-  <div class="form-group">
-    <label>Dés de vie</label>
-    <input type="text" value="{{progressionCourante.hd}}" readonly>
-  </div>
+          <div class="a2e-panel">
+            <h2>Capacités passives</h2>
+            <div class="a2e-panel-body">
+              {{#if actor.system.details_classe.classFeatures.length}}
+                {{#each actor.system.details_classe.classFeatures as |feature|}}
+                  {{#unless feature.activable}}
+                    <div class="a2e-panel" style="box-shadow:none;">
+                      <h3>
+                        {{feature.name}}
+                        {{#if (gt feature.minLevel ../actor.system.niveau)}}
+                          <span class="a2e-muted" style="float:right;">Niveau {{feature.minLevel}}</span>
+                        {{else}}
+                          <span style="float:right;">Actif</span>
+                        {{/if}}
+                      </h3>
+                      <div class="a2e-panel-body a2e-small">
+                        {{{feature.description}}}
+                      </div>
+                    </div>
+                  {{/unless}}
+                {{/each}}
+              {{else}}
+                <p class="a2e-muted">Aucune capacité passive.</p>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </section>
 
-</section>
+      <section class='a2e-tab-content tab tab-sorts {{#if (eq activeTab "sorts")}}active{{/if}}' data-group="primary" data-tab="sorts">
+        <div class="a2e-panel">
+          <h2>Sorts</h2>
+          <div class="a2e-panel-body">
+            {{#if niveauxSorts.length}}
+              {{#each niveauxSorts as |niv|}}
+                <div class="a2e-panel" style="box-shadow:none;">
+                  <h3>
+                    Niveau {{niv}}
+                    {{#with (lookup ../sortsMemorizedByLevel niv)}}
+                      <span class="sort-memorize-badge" style="float:right;">{{count}} / {{max}}</span>
+                    {{/with}}
+                  </h3>
+                  <div class="a2e-panel-body">
+                    <table class="sort-table">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th>Sort</th>
+                          <th>École</th>
+                          <th>Mémorisation</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {{#each (lookup ../sortsParNiveau niv) as |sort|}}
+                          <tr class="sort-row">
+                            <td class="sort-drag">
+                              <img class="sort-cast-img" data-sort-id="{{sort._id}}" src="{{sort.img}}" title="Lancer {{sort.name}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                            </td>
+                            <td>
+                              <b class="sort-cast" data-sort-id="{{sort._id}}" style="cursor:pointer;">{{sort.name}}</b>
+                              <a class="a2e-action-icon a2e-action-info toggle-sort-desc-chat" data-sort-id="{{sort._id}}" title="Description"><i class="fas fa-book-open"></i></a>
+                            </td>
+                            <td>{{sort.system.école}}</td>
+                            <td>
+                              <a class="a2e-action-icon a2e-action-remove sort-memorize-minus" data-sort-id="{{sort._id}}" title="Retirer une mémorisation"><i class="fas fa-minus-circle"></i></a>
+                              <span class="sort-memorize-badge">{{getFlag sort "add2e.memorizedCount"}}</span>
+                              <a class="a2e-action-icon a2e-action-add sort-memorize-plus" data-sort-id="{{sort._id}}" title="Ajouter une mémorisation"><i class="fas fa-plus-circle"></i></a>
+                            </td>
+                            <td>
+                              <div class="a2e-actions">
+                                <a class="a2e-action-icon a2e-action-roll sort-cast" data-sort-id="{{sort._id}}" title="Lancer"><i class="fas fa-magic"></i></a>
+                                <a class="a2e-action-icon a2e-action-edit sort-edit" data-sort-id="{{sort._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                                <a class="a2e-action-icon a2e-action-delete sort-delete" data-sort-id="{{sort._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr id="desc-chat-{{sort._id}}" class="sort-description">
+                            <td colspan="5">
+                              <div class="a2e-small">
+                                {{{sort.system.description}}}
+                                {{#if sort.system.composantes}}<div><b>Composantes :</b> {{sort.system.composantes}}</div>{{/if}}
+                                {{#if sort.system.temps_incantation}}<div><b>Incantation :</b> {{sort.system.temps_incantation}}</div>{{/if}}
+                                {{#if sort.system.portée}}<div><b>Portée :</b> {{formatSortChamp sort.system.portée}}</div>{{/if}}
+                                {{#if sort.system.durée}}<div><b>Durée :</b> {{formatSortChamp sort.system.durée}}</div>{{/if}}
+                              </div>
+                            </td>
+                          </tr>
+                        {{/each}}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              {{/each}}
+            {{else}}
+              <p class="a2e-muted">Aucun sort disponible.</p>
+            {{/if}}
+          </div>
+        </div>
+      </section>
 
-    <!-- Facultés psioniques -->
-    <section>
-      <h2>Facultés psioniques</h2>
-      <!-- Psioniques -->
-    </section>
+      <section class='a2e-tab-content tab tab-equipement {{#if (eq activeTab "equipement")}}active{{/if}}' data-group="primary" data-tab="equipement">
+        <div class="a2e-grid-2">
+          <div class="a2e-panel">
+            <h2>Objets</h2>
+            <div class="a2e-panel-body">
+              <a class="a2e-action-icon a2e-action-add objet-create" title="Créer un objet" style="margin-bottom:8px;font-size:1.2em;"><i class="fas fa-plus-circle"></i></a>
 
-    <!-- Objets magiques -->
-    <section>
-      <h2>Objets magiques</h2>
-      <textarea name="system.objets_magiques">{{actor.system.objets_magiques}}</textarea>
-    </section>
+              {{#if listeObjets.length}}
+                <table class="a2e-table">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Qté</th>
+                      <th>Poids</th>
+                      <th>Équipé</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each listeObjets as |objet|}}
+                      <tr class="item" data-item-id="{{objet._id}}" data-itemId="{{objet._id}}">
+                        <td><b>{{objet.name}}</b></td>
+                        <td>{{objet.system.quantite}}</td>
+                        <td>{{objet.system.poids}}</td>
+                        <td>
+                          {{#if objet.system.equipee}}
+                            <i class="fas fa-check-circle equip-green"></i>
+                          {{else}}
+                            <i class="fas fa-times-circle equip-red"></i>
+                          {{/if}}
+                        </td>
+                        <td>
+                          <div class="a2e-actions">
+                            <a class="item-control item-equip a2e-action-icon {{#if objet.system.equipee}}a2e-action-unequip{{else}}a2e-action-equip{{/if}}" data-action="equip" data-item-id="{{objet._id}}" title="{{#if objet.system.equipee}}Retirer{{else}}Équiper{{/if}}">
+                              {{#if objet.system.equipee}}<i class="fas fa-minus-circle"></i>{{else}}<i class="fas fa-plus-circle"></i>{{/if}}
+                            </a>
+                            <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{objet._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                            <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{objet._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                          </div>
+                        </td>
+                      </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+                <p class="a2e-small"><b>Poids total objets :</b> {{poidsTotalObjets}}</p>
+              {{else}}
+                <p class="a2e-muted">Aucun objet.</p>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <!-- Possessions & Notes -->
-    <section>
-      <h2>Possessions & Notes</h2>
-      <div class="form-group"><label>Possessions</label><textarea name="system.possessions">{{actor.system.possessions}}</textarea></div>
-      <div class="form-group"><label>Notes - Divers</label><textarea name="system.notes">{{actor.system.notes}}</textarea></div>
-    </section>
+      <section class='a2e-tab-content tab tab-notes {{#if (eq activeTab "notes")}}active{{/if}}' data-group="primary" data-tab="notes">
+        <div class="a2e-grid-2">
+          <div class="a2e-panel">
+            <h2>Description de race</h2>
+            <div class="a2e-panel-body a2e-small">
+              {{#if actor.system.details_race.description_longue}}
+                {{{actor.system.details_race.description_longue}}}
+              {{else}}
+                {{{actor.system.details_race.description}}}
+              {{/if}}
+            </div>
+          </div>
 
-      <div class="form-group split">
-        <div><label for="add2e-sexe">Sexe</label>
-<input id="add2e-sexe" type="text" name="system.sexe" value="{{actor.system.sexe}}"></div>
-        <div><label for="add2e-age">Âge</label>
-<input id="add2e-age" type="number" name="system.age" value="{{actor.system.age}}"></div>
-        <div><label for="add2e-taille">Taille</label>
-<input id="add2e-taille" type="text" name="system.taille" value="{{actor.system.taille}}"></div>
-        <div><label for="add2e-poids">Poids</label>
-<input id="add2e-poids" type="text" name="system.poids" value="{{actor.system.poids}}"></div>
-      </div>
-      <div class="form-group split">
-        <div><label for="add2e-couleur_peau">Couleur peau</label>
-<input id="add2e-couleur_peau" type="text" name="system.couleur_peau" value="{{actor.system.couleur_peau}}"></div>
-        <div><label for="add2e-couleur_yeux">Couleur yeux</label>
-<input id="add2e-couleur_yeux" type="text" name="system.couleur_yeux" value="{{actor.system.couleur_yeux}}"></div>
-        <div><label for="add2e-couleur_cheveux">Couleur cheveux</label>
-<input id="add2e-couleur_cheveux" type="text" name="system.couleur_cheveux" value="{{actor.system.couleur_cheveux}}"></div>
-        <div><label for="add2e-classe_sociale">Classe sociale</label>
-<input id="add2e-classe_sociale" type="text" name="system.classe_sociale" value="{{actor.system.classe_sociale}}"></div>
-      </div>
-      <div class="form-group"><label for="add2e-talents_acquis">Talents acquis / compétences secondaires</label>
-<input id="add2e-talents_acquis" type="text" name="system.talents_acquis" value="{{actor.system.talents_acquis}}"></div>
-      <div class="form-group"><label for="add2e-signe_particulier">Signes particuliers</label>
-<input id="add2e-signe_particulier" type="text" name="system.signe_particulier" value="{{actor.system.signe_particulier}}"></div>
-                  <div class="form-group"><label for="add2e-dieu">Dieu</label>
-<input id="add2e-dieu" type="text" name="system.dieu" value="{{actor.system.dieu}}"></div>
+          <div class="a2e-panel">
+            <h2>Description de classe</h2>
+            <div class="a2e-panel-body a2e-small">
+              {{{actor.system.details_classe.description}}}
+              {{#if actor.system.details_classe.ruleNotes.length}}
+                <ul>
+                  {{#each actor.system.details_classe.ruleNotes}}
+                    <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+
+        <div class="a2e-panel">
+          <h2>Notes du personnage</h2>
+          <div class="a2e-panel-body">
+            <textarea name="system.notes" rows="8">{{actor.system.notes}}</textarea>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 </form>

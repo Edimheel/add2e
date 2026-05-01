@@ -3,18 +3,25 @@
     .add2e-class-readable-sheet {
       --gold-dark: #6f4b12;
       --gold-border: #d9bf73;
-      --panel: rgba(255, 252, 239, 0.95);
+      --panel: rgba(255, 252, 239, 0.96);
+      --panel-soft: rgba(255, 248, 224, 0.92);
       --text: #3e2d0b;
       color: var(--text);
+      background: linear-gradient(135deg, #f7eed3 0%, #efe0b8 100%);
+      min-width: 900px;
+    }
+
+    .add2e-class-readable-sheet * {
+      box-sizing: border-box;
     }
 
     .add2e-class-readable-sheet .sheet-header {
       display: grid;
       grid-template-columns: 150px 1fr;
-      gap: 16px;
+      gap: 14px;
       align-items: start;
       padding: 10px;
-      background: rgba(255, 248, 220, 0.70);
+      background: rgba(255, 248, 220, 0.72);
       border-bottom: 1px solid var(--gold-border);
     }
 
@@ -28,15 +35,15 @@
     }
 
     .add2e-class-readable-sheet .class-name {
-      font-size: 2.1rem;
+      font-size: 2rem;
       font-weight: 800;
       margin: 0 0 8px 0;
       color: #1d1606;
       width: 100%;
       border: 1px solid var(--gold-border);
       border-radius: 6px;
-      background: rgba(255,252,239,0.9);
-      padding: 2px 8px;
+      background: rgba(255,252,239,0.94);
+      padding: 4px 8px;
     }
 
     .add2e-class-readable-sheet .header-grid {
@@ -55,13 +62,14 @@
 
     .add2e-class-readable-sheet .field-card label {
       display: block;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--gold-dark);
       margin-bottom: 3px;
+      font-size: 0.86rem;
     }
 
     .add2e-class-readable-sheet .field-value {
-      font-weight: 600;
+      font-weight: 700;
       color: #2b2108;
     }
 
@@ -70,28 +78,34 @@
       background: #fffaf0;
       border: 1px solid #b9a15d;
       border-radius: 4px;
-      padding: 4px;
+      padding: 4px 6px;
       color: #1d1606;
     }
 
     .add2e-class-readable-sheet .tabs {
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      padding: 10px 12px;
+      flex-wrap: nowrap;
+      gap: 3px;
+      padding: 8px 10px 0 10px;
       background: rgba(250, 242, 216, 0.85);
       border-bottom: 1px solid var(--gold-border);
+      overflow-x: auto;
     }
 
     .add2e-class-readable-sheet .tabs a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 7px 12px;
       border: 1px solid var(--gold-border);
-      border-radius: 8px;
+      border-bottom: 0;
+      border-radius: 7px 7px 0 0;
       background: #fffdf4;
       color: var(--gold-dark);
-      font-weight: 700;
+      font-weight: 800;
       text-decoration: none;
       cursor: pointer;
+      white-space: nowrap;
     }
 
     .add2e-class-readable-sheet .tabs a.active {
@@ -100,8 +114,13 @@
       border-color: #8a611d;
     }
 
-    .add2e-class-readable-sheet .sheet-body { padding: 12px; }
-    .add2e-class-readable-sheet .content.hidden { display: none; }
+    .add2e-class-readable-sheet .sheet-body {
+      padding: 12px;
+    }
+
+    .add2e-class-readable-sheet .content.hidden {
+      display: none;
+    }
 
     .add2e-class-readable-sheet .two-col {
       display: grid;
@@ -126,9 +145,12 @@
       border-bottom: 1px solid var(--gold-border);
       color: var(--gold-dark);
       font-size: 1.05rem;
+      font-weight: 900;
     }
 
-    .add2e-class-readable-sheet .panel-body { padding: 10px; }
+    .add2e-class-readable-sheet .panel-body {
+      padding: 10px;
+    }
 
     .add2e-class-readable-sheet .badge-list {
       display: flex;
@@ -145,7 +167,7 @@
       border: 1px solid #d6bd70;
       background: #fff8df;
       color: #55390d;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.86rem;
     }
 
@@ -190,14 +212,14 @@
     }
 
     .add2e-class-readable-sheet .feature-name {
-      font-weight: 800;
+      font-weight: 900;
       color: #3d2b0a;
     }
 
     .add2e-class-readable-sheet .feature-level {
       font-size: 0.85rem;
       color: #6f4b12;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .add2e-class-readable-sheet table {
@@ -217,18 +239,31 @@
     .add2e-class-readable-sheet th {
       background: #ead99d;
       color: #55390d;
-      font-weight: 800;
+      font-weight: 900;
       text-align: left;
     }
 
-    .add2e-class-readable-sheet .mini-list { margin: 0; padding-left: 18px; }
-    .add2e-class-readable-sheet .muted { color: #7f704d; font-style: italic; }
-    .add2e-class-readable-sheet .compact { font-size: 0.92rem; line-height: 1.35; }
+    .add2e-class-readable-sheet .mini-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .add2e-class-readable-sheet .muted {
+      color: #7f704d;
+      font-style: italic;
+    }
+
+    .add2e-class-readable-sheet .compact {
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
 
     @media (max-width: 780px) {
+      .add2e-class-readable-sheet,
       .add2e-class-readable-sheet .sheet-header,
       .add2e-class-readable-sheet .two-col,
       .add2e-class-readable-sheet .header-grid {
+        min-width: unset;
         grid-template-columns: 1fr;
       }
     }
@@ -236,21 +271,21 @@
 
   <header class="sheet-header">
     <div>
-      <img class="portrait" src="{{item.img}}" alt="{{item.name}}" {{#if canEditClass}}data-edit="img"{{/if}} />
+      <img class="portrait" src="{{item.img}}" alt="{{item.name}}" {{#if canEditClass}}data-edit="img"{{/if}}>
     </div>
 
     <div>
       {{#if canEditClass}}
-        <input class="class-name" name="name" type="text" value="{{item.name}}" />
+        <input class="class-name" name="name" type="text" value="{{item.name}}">
       {{else}}
         <h1 class="class-name">{{item.name}}</h1>
       {{/if}}
 
       <div class="header-grid">
         <div class="field-card">
-          <label>Label</label>
+          <label>Nom affiché</label>
           {{#if canEditClass}}
-            <input name="system.label" type="text" value="{{system.label}}" />
+            <input name="system.label" type="text" value="{{system.label}}">
           {{else}}
             <div class="field-value">{{summary.label}}</div>
           {{/if}}
@@ -259,7 +294,7 @@
         <div class="field-card">
           <label>Dés de vie</label>
           {{#if canEditClass}}
-            <input name="system.hitDie" type="number" value="{{system.hitDie}}" data-dtype="Number" />
+            <input name="system.hitDie" type="number" value="{{system.hitDie}}" data-dtype="Number">
           {{else}}
             <div class="field-value">d{{summary.hitDie}}</div>
           {{/if}}
@@ -273,7 +308,7 @@
         <div class="field-card">
           <label>Formule PV</label>
           {{#if canEditClass}}
-            <input name="system.hpFormula" type="text" value="{{system.hpFormula}}" />
+            <input name="system.hpFormula" type="text" value="{{system.hpFormula}}">
           {{else}}
             <div class="field-value">{{summary.hpFormula}}</div>
           {{/if}}
@@ -282,7 +317,7 @@
         <div class="field-card">
           <label>Capacité principale</label>
           {{#if canEditClass}}
-            <input name="system.primaryAbility" type="text" value="{{system.primaryAbility}}" />
+            <input name="system.primaryAbility" type="text" value="{{system.primaryAbility}}">
           {{else}}
             <div class="field-value">{{summary.primaryAbility}}</div>
           {{/if}}
@@ -312,7 +347,7 @@
               {{/if}}
 
               {{#if summary.notes}}
-                <hr />
+                <hr>
                 {{{summary.notes}}}
               {{/if}}
 
@@ -325,7 +360,7 @@
               {{/if}}
 
               {{#if summary.classFeatureNote}}
-                <hr />
+                <hr>
                 <p>{{summary.classFeatureNote}}</p>
               {{/if}}
             {{else}}
