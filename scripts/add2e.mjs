@@ -9,15 +9,11 @@ import { Add2eItemSheet } from "./add2e-item-sheet.mjs";
 Hooks.once("init", function() {
   console.log("ADD2e | Initialisation du système...");
 
-  // Désinscription de la feuille d'objet par défaut "Core"
-  Items.unregisterSheet("core", ItemSheet);
-
-  // Enregistrement de la feuille d'objet Magique/Sécurisée
   Items.registerSheet("add2e", Add2eItemSheet, {
+    types: ["classe"],
     makeDefault: true,
-    label: "Fiche Objet ADD2e (MJ)"
+    label: "ADD2E | Fiche Classe"
   });
-
 });
 async function createAdd2eMacro(data, slot) {
   let item = null;

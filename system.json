@@ -10,15 +10,14 @@
   "authors": [
     { "name": "Ton Nom" }
   ],
-  "esmodules": [
-    "scripts/add2e-active-effects-expire.js",
-    "scripts/effects-engine.mjs",
-    "scripts/add2e.mjs",
-    "scripts/add2e-item.mjs",
-    "scripts/add2e-attack.mjs",
-    "scripts/resolveActiveEffectsOnTarget.mjs",
-    "scripts/monster-sheet.mjs"
-  ],
+"esmodules": [
+  "scripts/add2e-active-effects-expire.js",
+  "scripts/effects-engine.mjs",
+  "scripts/add2e.mjs",
+  "scripts/add2e-attack.mjs",
+  "scripts/resolveActiveEffectsOnTarget.mjs",
+  "scripts/monster-sheet.mjs"
+],
   "styles": [
     "styles/add2e.css"
   ],

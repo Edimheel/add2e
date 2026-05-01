@@ -1,209 +1,662 @@
-<form class="item-sheet classe-sheet" autocomplete="off">
+<form class="item-sheet classe-sheet add2e-class-readable-sheet" autocomplete="off">
+  <style>
+    .add2e-class-readable-sheet {
+      --gold-dark: #6f4b12;
+      --gold-border: #d9bf73;
+      --panel: rgba(255, 252, 239, 0.95);
+      --text: #3e2d0b;
+      color: var(--text);
+    }
+
+    .add2e-class-readable-sheet .sheet-header {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 10px;
+      background: rgba(255, 248, 220, 0.70);
+      border-bottom: 1px solid var(--gold-border);
+    }
+
+    .add2e-class-readable-sheet .portrait {
+      width: 140px;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #6e5c2b;
+      background: #222;
+    }
+
+    .add2e-class-readable-sheet .class-name {
+      font-size: 2.1rem;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+      color: #1d1606;
+      width: 100%;
+      border: 1px solid var(--gold-border);
+      border-radius: 6px;
+      background: rgba(255,252,239,0.9);
+      padding: 2px 8px;
+    }
+
+    .add2e-class-readable-sheet .header-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(110px, 1fr));
+      gap: 8px;
+    }
+
+    .add2e-class-readable-sheet .field-card {
+      background: var(--panel);
+      border: 1px solid var(--gold-border);
+      border-radius: 8px;
+      padding: 8px;
+      min-height: 54px;
+    }
+
+    .add2e-class-readable-sheet .field-card label {
+      display: block;
+      font-weight: 700;
+      color: var(--gold-dark);
+      margin-bottom: 3px;
+    }
+
+    .add2e-class-readable-sheet .field-value {
+      font-weight: 600;
+      color: #2b2108;
+    }
+
+    .add2e-class-readable-sheet input {
+      width: 100%;
+      background: #fffaf0;
+      border: 1px solid #b9a15d;
+      border-radius: 4px;
+      padding: 4px;
+      color: #1d1606;
+    }
+
+    .add2e-class-readable-sheet .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(250, 242, 216, 0.85);
+      border-bottom: 1px solid var(--gold-border);
+    }
+
+    .add2e-class-readable-sheet .tabs a {
+      padding: 7px 12px;
+      border: 1px solid var(--gold-border);
+      border-radius: 8px;
+      background: #fffdf4;
+      color: var(--gold-dark);
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .add2e-class-readable-sheet .tabs a.active {
+      background: linear-gradient(180deg, #d8952f, #b66f13);
+      color: #fff;
+      border-color: #8a611d;
+    }
+
+    .add2e-class-readable-sheet .sheet-body { padding: 12px; }
+    .add2e-class-readable-sheet .content.hidden { display: none; }
+
+    .add2e-class-readable-sheet .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .add2e-class-readable-sheet .panel {
+      background: var(--panel);
+      border: 1px solid var(--gold-border);
+      border-radius: 9px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .add2e-class-readable-sheet .panel > h2,
+    .add2e-class-readable-sheet .panel > h3 {
+      margin: 0;
+      padding: 8px 10px;
+      background: rgba(240, 224, 169, 0.65);
+      border-bottom: 1px solid var(--gold-border);
+      color: var(--gold-dark);
+      font-size: 1.05rem;
+    }
+
+    .add2e-class-readable-sheet .panel-body { padding: 10px; }
+
+    .add2e-class-readable-sheet .badge-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 4px 0;
+    }
+
+    .add2e-class-readable-sheet .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 7px;
+      border-radius: 999px;
+      border: 1px solid #d6bd70;
+      background: #fff8df;
+      color: #55390d;
+      font-weight: 600;
+      font-size: 0.86rem;
+    }
+
+    .add2e-class-readable-sheet .badge.good {
+      border-color: #83b06a;
+      background: #edf8e9;
+      color: #245c26;
+    }
+
+    .add2e-class-readable-sheet .badge.bad {
+      border-color: #ca8a8a;
+      background: #fff0ec;
+      color: #8a1f18;
+    }
+
+    .add2e-class-readable-sheet .badge.active {
+      border-color: #83b06a;
+      background: #eaf7e8;
+      color: #215c28;
+    }
+
+    .add2e-class-readable-sheet .badge.locked {
+      border-color: #b9a6c9;
+      background: #f4eef9;
+      color: #654074;
+    }
+
+    .add2e-class-readable-sheet .feature-card {
+      border: 1px solid #dcc782;
+      border-radius: 8px;
+      background: #fffdf4;
+      padding: 9px;
+      margin-bottom: 8px;
+    }
+
+    .add2e-class-readable-sheet .feature-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .add2e-class-readable-sheet .feature-name {
+      font-weight: 800;
+      color: #3d2b0a;
+    }
+
+    .add2e-class-readable-sheet .feature-level {
+      font-size: 0.85rem;
+      color: #6f4b12;
+      font-weight: 700;
+    }
+
+    .add2e-class-readable-sheet table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fffdf6;
+    }
+
+    .add2e-class-readable-sheet th,
+    .add2e-class-readable-sheet td {
+      border: 1px solid #dac276;
+      padding: 5px 6px;
+      vertical-align: top;
+      color: #2f250c;
+    }
+
+    .add2e-class-readable-sheet th {
+      background: #ead99d;
+      color: #55390d;
+      font-weight: 800;
+      text-align: left;
+    }
+
+    .add2e-class-readable-sheet .mini-list { margin: 0; padding-left: 18px; }
+    .add2e-class-readable-sheet .muted { color: #7f704d; font-style: italic; }
+    .add2e-class-readable-sheet .compact { font-size: 0.92rem; line-height: 1.35; }
+
+    @media (max-width: 780px) {
+      .add2e-class-readable-sheet .sheet-header,
+      .add2e-class-readable-sheet .two-col,
+      .add2e-class-readable-sheet .header-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
   <header class="sheet-header">
-    <div style="text-align:center;">
-      <img
-        src="{{item.img}}"
-        alt="Image de la classe"
-        width="256"
-        height="256"
-        style="object-fit: contain; border-radius: 8px; border: 1px solid #666; background: #222; display: block; margin: auto; {{#if editable}}cursor:pointer;{{/if}}"
-        {{#if editable}}data-edit="img"{{/if}}
-      />
+    <div>
+      <img class="portrait" src="{{item.img}}" alt="{{item.name}}" {{#if canEditClass}}data-edit="img"{{/if}} />
     </div>
 
-    <h1 style="text-align:center; margin-top: .5rem;">
-      {{#if editable}}
-        <input name="name" type="text" value="{{item.name}}" style="text-align:center; width: 100%;" />
+    <div>
+      {{#if canEditClass}}
+        <input class="class-name" name="name" type="text" value="{{item.name}}" />
       {{else}}
-        {{#if system.label}}{{system.label}}{{else}}{{item.name}}{{/if}}
+        <h1 class="class-name">{{item.name}}</h1>
       {{/if}}
-    </h1>
+
+      <div class="header-grid">
+        <div class="field-card">
+          <label>Label</label>
+          {{#if canEditClass}}
+            <input name="system.label" type="text" value="{{system.label}}" />
+          {{else}}
+            <div class="field-value">{{summary.label}}</div>
+          {{/if}}
+        </div>
+
+        <div class="field-card">
+          <label>Dés de vie</label>
+          {{#if canEditClass}}
+            <input name="system.hitDie" type="number" value="{{system.hitDie}}" data-dtype="Number" />
+          {{else}}
+            <div class="field-value">d{{summary.hitDie}}</div>
+          {{/if}}
+        </div>
+
+        <div class="field-card">
+          <label>DV par niveau</label>
+          <div class="field-value">{{#if summary.hdPerLevel}}{{summary.hdPerLevel}}{{else}}—{{/if}}</div>
+        </div>
+
+        <div class="field-card">
+          <label>Formule PV</label>
+          {{#if canEditClass}}
+            <input name="system.hpFormula" type="text" value="{{system.hpFormula}}" />
+          {{else}}
+            <div class="field-value">{{summary.hpFormula}}</div>
+          {{/if}}
+        </div>
+
+        <div class="field-card">
+          <label>Capacité principale</label>
+          {{#if canEditClass}}
+            <input name="system.primaryAbility" type="text" value="{{system.primaryAbility}}" />
+          {{else}}
+            <div class="field-value">{{summary.primaryAbility}}</div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
   </header>
 
   <nav class="tabs">
-    <a class="item active" data-tab="description">Description</a>
-    <a class="item"        data-tab="stats">Stats</a>
-    <a class="item"        data-tab="tables">Tables</a>
+    <a class="item active" data-tab="resume">Résumé</a>
+    <a class="item" data-tab="restrictions">Restrictions</a>
+    <a class="item" data-tab="sorts">Sorts</a>
+    <a class="item" data-tab="features">Capacités</a>
+    <a class="item" data-tab="progression">Progression</a>
+    <a class="item" data-tab="tables">Tables</a>
   </nav>
 
   <div class="sheet-body">
+    <section class="content" data-tab="resume">
+      <div class="two-col">
+        <div class="panel">
+          <h2>Description et notes</h2>
+          <div class="panel-body compact">
+            {{#if summary.hasAnyNotes}}
+              {{#if summary.description}}
+                {{{summary.description}}}
+              {{/if}}
 
-    {{!-- =======================
-         DESCRIPTION
-         ======================= --}}
-    <section class="section description content" data-tab="description">
-      <div class="grid-two">
-        <div>
-          <label><strong>Label</strong></label>
-          {{#if editable}}
-            <input name="system.label" type="text" value="{{system.label}}" />
-          {{else}}
-            <p>{{system.label}}</p>
-          {{/if}}
+              {{#if summary.notes}}
+                <hr />
+                {{{summary.notes}}}
+              {{/if}}
 
-          <label><strong>Dés de vie (Hit Die)</strong></label>
-          {{#if editable}}
-            <input name="system.hitDie" type="number" value="{{system.hitDie}}" data-dtype="Number" />
-          {{else}}
-            <p>{{system.hitDie}}</p>
-          {{/if}}
+              {{#if summary.ruleNotes.length}}
+                <ul class="mini-list">
+                  {{#each summary.ruleNotes}}
+                    <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              {{/if}}
 
-          <label><strong>Formule PV</strong></label>
-          {{#if editable}}
-            <input name="system.hpFormula" type="text" value="{{system.hpFormula}}" />
-          {{else}}
-            <p>{{system.hpFormula}}</p>
-          {{/if}}
+              {{#if summary.classFeatureNote}}
+                <hr />
+                <p>{{summary.classFeatureNote}}</p>
+              {{/if}}
+            {{else}}
+              <p class="muted">Aucune description renseignée.</p>
+            {{/if}}
+          </div>
         </div>
 
         <div>
-          <label><strong>Bouclier autorisé</strong></label>
-          {{#if editable}}
-            <input name="system.shieldAllowed" type="checkbox" {{checked system.shieldAllowed}} />
-          {{else}}
-            <p>{{#if system.shieldAllowed}}Oui{{else}}Non{{/if}}</p>
-          {{/if}}
+          <div class="panel">
+            <h2>Capacités spéciales</h2>
+            <div class="panel-body">
+              {{#if specialAbilities.length}}
+                <ul class="mini-list">
+                  {{#each specialAbilities}}
+                    <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class="muted">Aucune capacité spéciale renseignée.</p>
+              {{/if}}
+            </div>
+          </div>
 
-          <label><strong>Notes</strong></label>
-          {{#if editable}}
-            {{editor system.notes target="system.notes" button=true owner=owner editable=editable}}
+          <div class="panel">
+            <h2>Aptitudes permanentes</h2>
+            <div class="panel-body">
+              {{#if permanentFeatures.length}}
+                <div class="badge-list">
+                  {{#each permanentFeatures}}
+                    <span class="badge">{{label}}</span>
+                  {{/each}}
+                </div>
+              {{else}}
+                <p class="muted">Aucune aptitude permanente particulière.</p>
+              {{/if}}
+
+              {{#if effectTags.length}}
+                <h3>Effets actifs</h3>
+                <div class="badge-list">
+                  {{#each effectTags}}
+                    <span class="badge">{{label}}</span>
+                  {{/each}}
+                </div>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content hidden" data-tab="restrictions">
+      <div class="two-col">
+        <div class="panel">
+          <h2>Armes autorisées</h2>
+          <div class="panel-body">
+            {{#if restrictions.weaponAllowed.length}}
+              <div class="badge-list">
+                {{#each restrictions.weaponAllowed}}
+                  <span class="badge good">{{label}}</span>
+                {{/each}}
+              </div>
+            {{else}}
+              {{#if restrictions.weaponLegacyAllowed.length}}
+                <div class="badge-list">
+                  {{#each restrictions.weaponLegacyAllowed}}
+                    <span class="badge good">{{this}}</span>
+                  {{/each}}
+                </div>
+              {{else}}
+                <p class="muted">Non renseigné dans cet item.</p>
+              {{/if}}
+            {{/if}}
+
+            {{#if restrictions.weaponForbidden.length}}
+              <h3>Armes interdites</h3>
+              <div class="badge-list">
+                {{#each restrictions.weaponForbidden}}
+                  <span class="badge bad">{{label}}</span>
+                {{/each}}
+              </div>
+            {{/if}}
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Armures et boucliers autorisés</h2>
+          <div class="panel-body">
+            {{#if restrictions.armorAllowed.length}}
+              <div class="badge-list">
+                {{#each restrictions.armorAllowed}}
+                  <span class="badge good">{{label}}</span>
+                {{/each}}
+              </div>
+            {{else}}
+              {{#if restrictions.armorLegacyAllowed.length}}
+                <div class="badge-list">
+                  {{#each restrictions.armorLegacyAllowed}}
+                    <span class="badge good">{{this}}</span>
+                  {{/each}}
+                </div>
+              {{else}}
+                <p class="muted">Non renseigné dans cet item.</p>
+              {{/if}}
+            {{/if}}
+
+            {{#if restrictions.shieldLegacyAllowed}}
+              <h3>Bouclier</h3>
+              <span class="badge good">Autorisé</span>
+            {{/if}}
+
+            {{#if restrictions.armorForbidden.length}}
+              <h3>Armures interdites</h3>
+              <div class="badge-list">
+                {{#each restrictions.armorForbidden}}
+                  <span class="badge bad">{{label}}</span>
+                {{/each}}
+              </div>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content hidden" data-tab="sorts">
+      <div class="two-col">
+        <div class="panel">
+          <h2>Moteur de sorts</h2>
+          <div class="panel-body">
+            <table>
+              <tbody>
+                <tr><th>Lanceur de sorts</th><td>{{spellcasting.enabledLabel}}</td></tr>
+                <tr><th>Mode</th><td>{{spellcasting.mode}}</td></tr>
+                <tr><th>Type</th><td>{{spellcasting.type}}</td></tr>
+                <tr><th>Caractéristique</th><td>{{spellcasting.ability}}</td></tr>
+                <tr><th>Début</th><td>{{spellcasting.startsAt}}</td></tr>
+                <tr><th>Niveau de sort maximum</th><td>{{spellcasting.maxSpellLevel}}</td></tr>
+                <tr><th>Emplacements</th><td>{{#if spellcasting.usesSlots}}Oui{{else}}Non{{/if}}</td></tr>
+                <tr><th>Préparation</th><td>{{#if spellcasting.usesPreparation}}Oui{{else}}Non{{/if}}</td></tr>
+                <tr><th>Source</th><td>{{spellcasting.preparationSource}}</td></tr>
+              </tbody>
+            </table>
+
+            {{#if summary.spellcastingNote}}
+              <p class="compact">{{summary.spellcastingNote}}</p>
+            {{/if}}
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Listes et prérequis</h2>
+          <div class="panel-body">
+            <h3>Listes de sorts</h3>
+            {{#if spellLists.length}}
+              <div class="badge-list">
+                {{#each spellLists}}
+                  <span class="badge">{{this}}</span>
+                {{/each}}
+              </div>
+            {{else}}
+              <p class="muted">Aucune liste de sorts renseignée.</p>
+            {{/if}}
+
+            <h3>Prérequis d’accès aux niveaux de sort</h3>
+            {{#if spellAccessRequirements.length}}
+              <table>
+                <thead>
+                  <tr><th>Niveau de sort</th><th>Caractéristique</th><th>Minimum</th></tr>
+                </thead>
+                <tbody>
+                  {{#each spellAccessRequirements}}
+                    <tr>
+                      <td>{{spellLevel}}</td>
+                      <td>{{ability}}</td>
+                      <td>{{min}}</td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="muted">Aucun prérequis particulier renseigné.</p>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content hidden" data-tab="features">
+      <div class="panel">
+        <h2>Capacités par niveau</h2>
+        <div class="panel-body">
+          {{#if classFeatures.length}}
+            {{#each classFeatures}}
+              <div class="feature-card">
+                <div class="feature-head">
+                  <div>
+                    <span class="feature-name">{{name}}</span>
+                    <span class="feature-level"> — niveau {{minLevel}}</span>
+                  </div>
+                  <span class="badge {{statusClass}}">{{statusLabel}}</span>
+                </div>
+
+                {{#if description}}
+                  <div class="compact">{{{description}}}</div>
+                {{/if}}
+
+                {{#if tags.length}}
+                  <div class="badge-list">
+                    {{#each tags}}
+                      <span class="badge">{{label}}</span>
+                    {{/each}}
+                  </div>
+                {{/if}}
+
+                {{#if uses}}
+                  <div class="compact muted">Utilisations : {{uses.max}} / {{uses.per}}</div>
+                {{/if}}
+              </div>
+            {{/each}}
           {{else}}
-            {{#if system.notes}}<div class="prose">{{{system.notes}}}</div>{{else}}<p>—</p>{{/if}}
+            <p class="muted">Aucune capacité par niveau renseignée.</p>
           {{/if}}
         </div>
       </div>
-
-      <hr />
-
-      <label><strong>Description</strong></label>
-      {{#if editable}}
-        {{editor system.description target="system.description" button=true owner=owner editable=editable}}
-      {{else}}
-        {{#if system.description}}<div class="prose">{{{system.description}}}</div>{{else}}<p>—</p>{{/if}}
-      {{/if}}
     </section>
 
-    {{!-- =======================
-         STATS (listes simples)
-         ======================= --}}
-    <section class="section stats content hidden" data-tab="stats">
-      <div class="grid-two">
-        <div>
-          <label><strong>Armures autorisées</strong> (tableau JSON)</label>
-          {{#if editable}}
-            <textarea name="system.armorAllowed" class="json-textarea" rows="4" data-json="true">{{system.armorAllowed}}</textarea>
-            <p class="hint">Ex: ["tissu","cuir"]</p>
-          {{else}}
-            {{#if system.armorAllowed}}
-              <p>
-                {{#each system.armorAllowed}}
-                  {{this}}{{#unless @last}}, {{/unless}}
+    <section class="content hidden" data-tab="progression">
+      <div class="panel">
+        <h2>Progression</h2>
+        <div class="panel-body">
+          {{#if progressionRows.length}}
+            <table>
+              <thead>
+                <tr>
+                  <th>Niveau</th>
+                  <th>XP</th>
+                  <th>THAC0</th>
+                  <th>Sauvegardes</th>
+                  <th>Sorts par niveau</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each progressionRows}}
+                  <tr>
+                    <td>{{niveau}}</td>
+                    <td>{{xp}}</td>
+                    <td>{{thac0}}</td>
+                    <td>
+                      {{#if saves.length}}
+                        {{#each saves}}
+                          <div>{{label}} : <b>{{value}}</b></div>
+                        {{/each}}
+                      {{else}}
+                        —
+                      {{/if}}
+                    </td>
+                    <td>
+                      {{#if spells.length}}
+                        {{#each spells}}
+                          <span class="badge">N{{level}} : {{value}}</span>
+                        {{/each}}
+                      {{else}}
+                        —
+                      {{/if}}
+                    </td>
+                  </tr>
                 {{/each}}
-              </p>
-            {{else}}<p>—</p>{{/if}}
-          {{/if}}
-
-          <label><strong>Armes autorisées</strong> (tableau JSON)</label>
-          {{#if editable}}
-            <textarea name="system.weaponsAllowed" class="json-textarea" rows="4" data-json="true">{{system.weaponsAllowed}}</textarea>
-            <p class="hint">Ex: ["dague","bâton","orbe"]</p>
+              </tbody>
+            </table>
           {{else}}
-            {{#if system.weaponsAllowed}}
-              <p>
-                {{#each system.weaponsAllowed}}
-                  {{this}}{{#unless @last}}, {{/unless}}
-                {{/each}}
-              </p>
-            {{else}}<p>—</p>{{/if}}
+            <p class="muted">Aucune progression renseignée.</p>
           {{/if}}
         </div>
+      </div>
+    </section>
 
-        <div>
-          <label><strong>Sauvegardes</strong> (tableau JSON)</label>
-          {{#if editable}}
-            <textarea name="system.savingThrows" class="json-textarea" rows="5" data-json="true">{{system.savingThrows}}</textarea>
-            <p class="hint">Ex: ["sauvegarde_paralysie", ...]</p>
-          {{else}}
-            {{#if system.savingThrows}}
-              <p>
-                {{#each system.savingThrows}}
-                  {{this}}{{#unless @last}}, {{/unless}}
-                {{/each}}
-              </p>
-            {{else}}<p>—</p>{{/if}}
-          {{/if}}
+    <section class="content hidden" data-tab="tables">
+      <div class="two-col">
+        <div class="panel">
+          <h2>Titres par niveau</h2>
+          <div class="panel-body">
+            {{#if titleRows.length}}
+              <table>
+                <thead><tr><th>Niveau min.</th><th>Niveau max.</th><th>Titre</th></tr></thead>
+                <tbody>
+                  {{#each titleRows}}
+                    <tr>
+                      <td>{{minLevel}}</td>
+                      <td>{{maxLevel}}</td>
+                      <td>{{title}}</td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="muted">Aucun titre renseigné.</p>
+            {{/if}}
+          </div>
+        </div>
 
-          <label><strong>Capacités spéciales</strong> (tableau JSON)</label>
-          {{#if editable}}
-            <textarea name="system.specialAbilities" class="json-textarea" rows="5" data-json="true">{{system.specialAbilities}}</textarea>
-            <p class="hint">Ex: ["Lancer de sorts","École de magie"]</p>
-          {{else}}
-            {{#if system.specialAbilities}}
-              <ul>
-                {{#each system.specialAbilities}}
+        <div class="panel">
+          <h2>Attaques par round</h2>
+          <div class="panel-body">
+            {{#if attackRows.length}}
+              <table>
+                <thead><tr><th>Niveau min.</th><th>Niveau max.</th><th>Attaques</th></tr></thead>
+                <tbody>
+                  {{#each attackRows}}
+                    <tr>
+                      <td>{{minLevel}}</td>
+                      <td>{{maxLevel}}</td>
+                      <td>{{attacks}}</td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="muted">Aucune table d’attaques renseignée.</p>
+            {{/if}}
+
+            {{#if savingThrows.length}}
+              <h3>Jets de sauvegarde</h3>
+              <ul class="mini-list">
+                {{#each savingThrows}}
                   <li>{{this}}</li>
                 {{/each}}
               </ul>
-            {{else}}<p>—</p>{{/if}}
-          {{/if}}
+            {{/if}}
+          </div>
         </div>
       </div>
     </section>
-
-    {{!-- =======================
-         TABLES (objets complexes)
-         ======================= --}}
-    <section class="section tables content hidden" data-tab="tables">
-      <label><strong>Attaques par round</strong> (tableau d’objets JSON)</label>
-      {{#if editable}}
-        <textarea name="system.attacksPerRound" class="json-textarea" rows="6" data-json="true">{{system.attacksPerRound}}</textarea>
-        <p class="hint">Ex: [{"minLevel":1,"maxLevel":20,"attacks":1}]</p>
-      {{else}}
-        {{#if system.attacksPerRound}}
-          <table>
-            <thead><tr><th>Min</th><th>Max</th><th>Attaques</th></tr></thead>
-            <tbody>
-              {{#each system.attacksPerRound}}
-                <tr>
-                  <td>{{minLevel}}</td>
-                  <td>{{maxLevel}}</td>
-                  <td>{{attacks}}</td>
-                </tr>
-              {{/each}}
-            </tbody>
-          </table>
-        {{else}}<p>—</p>{{/if}}
-      {{/if}}
-
-      <hr />
-
-      <label><strong>Ajustements de Force</strong> (tableau d’objets JSON)</label>
-      {{#if editable}}
-        <textarea name="system.strengthAdjustments" class="json-textarea" rows="10" data-json="true">{{system.strengthAdjustments}}</textarea>
-      {{else}}
-        {{#if system.strengthAdjustments}}
-          <table>
-            <thead>
-              <tr>
-                <th>Score</th><th>Toucher</th><th>Dégâts</th><th>Poids</th><th>Portes</th><th>Barres</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each system.strengthAdjustments}}
-                <tr>
-                  <td>{{score}}</td>
-                  <td>{{toHit}}</td>
-                  <td>{{damage}}</td>
-                  <td>{{weight}}</td>
-                  <td>{{openDoors}}</td>
-                  <td>{{bendBars}}</td>
-                </tr>
-              {{/each}}
-            </tbody>
-          </table>
-        {{else}}<p>—</p>{{/if}}
-      {{/if}}
-    </section>
-
   </div>
 </form>
