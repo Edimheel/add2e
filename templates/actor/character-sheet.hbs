@@ -545,8 +545,624 @@
     line-height: 1.5em;
   }
 
+
+
+  /* Bloc sauvegardes compact, sorti de l'onglet Résumé */
+  .add2e-character-v3 .a2e-saves-strip {
+    margin: 8px 0 10px 0;
+    padding: 7px 8px;
+    border: 1px solid #b88924;
+    border-radius: 10px;
+    background:
+      linear-gradient(135deg, rgba(255,252,239,0.98), rgba(244,225,174,0.92));
+    box-shadow: 0 1px 6px rgba(80,58,10,0.18);
+  }
+
+  .add2e-character-v3 .a2e-saves-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: #6f4b12;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .add2e-character-v3 .a2e-saves-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.98em;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .add2e-character-v3 .a2e-saves-title i {
+    color: #b66f13;
+    font-size: 1.05em;
+  }
+
+  .add2e-character-v3 .a2e-saves-hint {
+    color: #8a611d;
+    font-size: 0.78em;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+
+  .add2e-character-v3 .a2e-saves-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(120px, 1fr));
+    gap: 6px;
+  }
+
+  .add2e-character-v3 .a2e-save-chip {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    align-items: center;
+    gap: 5px;
+    min-height: 34px;
+    padding: 4px 7px;
+    border: 1px solid #d2a84a;
+    border-left-width: 5px;
+    border-radius: 9px;
+    background: linear-gradient(180deg, #fffdf7, #fff1c8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(80,58,10,0.12);
+  }
+
+  .add2e-character-v3 .a2e-save-chip-0 { border-left-color: #9b5d26; }
+  .add2e-character-v3 .a2e-save-chip-1 { border-left-color: #7b68b8; }
+  .add2e-character-v3 .a2e-save-chip-2 { border-left-color: #2d8f9f; }
+  .add2e-character-v3 .a2e-save-chip-3 { border-left-color: #d67525; }
+  .add2e-character-v3 .a2e-save-chip-4 { border-left-color: #8e44ad; }
+
+  .add2e-character-v3 .a2e-save-chip .roll-save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #fff7dc;
+    border: 1px solid #d6b05a;
+    color: #6f4b12;
+    cursor: pointer;
+    font-size: 1.0em;
+    filter: drop-shadow(0 1px 1px #0002);
+  }
+
+  .add2e-character-v3 .a2e-save-chip .roll-save:hover {
+    transform: scale(1.10);
+    filter: brightness(1.1) drop-shadow(0 1px 3px #0003);
+  }
+
+  .add2e-character-v3 .a2e-save-chip-label {
+    min-width: 0;
+    color: #3d2b0a;
+    font-size: 0.86em;
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .add2e-character-v3 .a2e-save-chip-value {
+    min-width: 30px;
+    padding: 2px 7px;
+    border: 1px solid #d6b05a;
+    border-radius: 999px;
+    background: #fffaf0;
+    color: #2f250c;
+    font-size: 1.02em;
+    font-weight: 900;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(80,58,10,0.12);
+  }
+
+
+
+  /* Sauvegardes compactes en carrés, découplées des caractéristiques */
+  .add2e-character-v3 .a2e-saves-square-strip {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: stretch;
+    gap: 6px;
+    margin: 6px 0 8px 0;
+    padding: 6px;
+    border: 1px solid #b88924;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(255,252,239,0.98), rgba(244,225,174,0.90));
+    box-shadow: 0 1px 5px rgba(80,58,10,0.16);
+  }
+
+  .add2e-character-v3 .a2e-saves-square-title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+    min-width: 48px;
+    padding: 4px 6px;
+    border-right: 1px solid rgba(184,137,36,0.35);
+    color: #6f4b12;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-title i {
+    color: #b66f13;
+    font-size: 1.15em;
+  }
+
+  .add2e-character-v3 .a2e-save-square-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(100px, 1fr));
+    gap: 6px;
+  }
+
+  .add2e-character-v3 .a2e-save-square {
+    display: grid;
+    grid-template-rows: 22px minmax(24px, auto) 24px;
+    align-items: center;
+    justify-items: center;
+    min-height: 72px;
+    padding: 4px 5px;
+    border: 1px solid #d2a84a;
+    border-top-width: 4px;
+    border-radius: 9px;
+    background: linear-gradient(180deg, #fffdf7, #fff1c8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 1px 3px rgba(80,58,10,0.12);
+    text-align: center;
+  }
+
+  .add2e-character-v3 .a2e-save-square-0 { border-top-color: #9b5d26; }
+  .add2e-character-v3 .a2e-save-square-1 { border-top-color: #7b68b8; }
+  .add2e-character-v3 .a2e-save-square-2 { border-top-color: #2d8f9f; }
+  .add2e-character-v3 .a2e-save-square-3 { border-top-color: #d67525; }
+  .add2e-character-v3 .a2e-save-square-4 { border-top-color: #8e44ad; }
+
+  .add2e-character-v3 .a2e-save-square .roll-save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #fff7dc;
+    border: 1px solid #d6b05a;
+    color: #6f4b12;
+    cursor: pointer;
+    font-size: 1em;
+    filter: drop-shadow(0 1px 1px #0002);
+  }
+
+  .add2e-character-v3 .a2e-save-square .roll-save:hover {
+    transform: scale(1.10);
+    filter: brightness(1.1) drop-shadow(0 1px 3px #0003);
+  }
+
+  .add2e-character-v3 .a2e-save-square-label {
+    color: #3d2b0a;
+    font-size: 0.78em;
+    font-weight: 900;
+    line-height: 1.08;
+  }
+
+  .add2e-character-v3 .a2e-save-square-value {
+    min-width: 32px;
+    padding: 2px 8px;
+    border: 1px solid #d6b05a;
+    border-radius: 999px;
+    background: #fffaf0;
+    color: #2f250c;
+    font-size: 1.04em;
+    font-weight: 900;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(80,58,10,0.12);
+  }
+
+  /* Sauvegardes intégrées dans la table des caractéristiques */
+  .add2e-character-v3 .a2e-carac-table-with-saves {
+    table-layout: fixed;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-with-saves th:nth-child(1) { width: 140px; }
+  .add2e-character-v3 .a2e-carac-table-with-saves th:nth-child(2) { width: 175px; }
+  .add2e-character-v3 .a2e-carac-table-with-saves th:nth-child(4) { width: 255px; }
+
+  .add2e-character-v3 .a2e-carac-table-with-saves .carac-adjustments-line {
+    gap: 4px 6px;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-with-saves .carac-adjustments-line label {
+    font-size: 0.74em;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-with-saves .carac-adjustments-line input {
+    width: 42px;
+    height: 24px;
+  }
+
+  .add2e-character-v3 .a2e-saves-side-cell {
+    width: 255px;
+    padding: 6px !important;
+    vertical-align: top !important;
+    background: linear-gradient(180deg, rgba(255,250,236,0.98), rgba(246,231,189,0.90));
+  }
+
+  .add2e-character-v3 .a2e-saves-side {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+  }
+
+  .add2e-character-v3 .a2e-saves-side-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 3px 5px 5px;
+    border-bottom: 1px solid rgba(184,137,36,0.45);
+    color: #6f4b12;
+    font-size: 0.82em;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .add2e-character-v3 .a2e-saves-side-header i {
+    color: #b66f13;
+    margin-right: 4px;
+  }
+
+  .add2e-character-v3 .a2e-saves-side-header small {
+    color: #8a611d;
+    font-size: 0.78em;
+    font-weight: 800;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  .add2e-character-v3 .a2e-saves-side-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .add2e-character-v3 .a2e-save-chip-side {
+    grid-template-columns: 22px minmax(0, 1fr) 32px;
+    min-height: 31px;
+    padding: 3px 6px;
+  }
+
+  .add2e-character-v3 .a2e-save-chip-side .a2e-save-chip-label {
+    font-size: 0.82em;
+  }
+
+  .add2e-character-v3 .a2e-save-chip-side .a2e-save-chip-value {
+    min-width: 28px;
+    padding: 1px 6px;
+    font-size: 0.96em;
+  }
+
   .add2e-character-v3 .equip-green { color: #27ae60; }
   .add2e-character-v3 .equip-red { color: #c0392b; }
+
+
+  .add2e-character-v3 .a2e-spell-capacity-summary {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .add2e-character-v3 .a2e-spell-capacity-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #fff4c9;
+    border: 1px solid #c59b35;
+    color: #6f4b12;
+    font-size: 0.82em;
+    font-weight: 900;
+    line-height: 1.5;
+  }
+
+  .add2e-character-v3 .sort-name-link {
+    color: #4d2584;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 900;
+  }
+
+  .add2e-character-v3 .sort-name-link:hover {
+    color: #7c39c3;
+  }
+
+  .add2e-character-v3 .sort-description td {
+    padding: 0 !important;
+    width: 100%;
+  }
+
+  .add2e-character-v3 .sort-description-content {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    background: #fff8df;
+    border-left: 4px solid #b88924;
+  }
+
+  /* jQuery slideToggle peut forcer display:block sur un <tr>, ce qui casse colspan. */
+  .add2e-character-v3 .sort-table tr.sort-description {
+    display: none;
+  }
+
+  .add2e-character-v3 .sort-table tr.sort-description[style*="display: block"],
+  .add2e-character-v3 .sort-table tr.sort-description[style*="display: table-row"] {
+    display: table-row !important;
+  }
+
+  .add2e-character-v3 .sort-table tr.sort-description[style*="display: none"] {
+    display: none !important;
+  }
+
+  .add2e-character-v3 .sort-table tr.sort-description > td.sort-description-fullcell {
+    display: table-cell !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .add2e-character-v3 .a2e-equip-state-icon {
+    font-size: 1.15em;
+  }
+
+  .add2e-character-v3 .a2e-effects-table .effect-description {
+    max-width: 520px;
+  }
+
+
+  /* Résumé utile : lecture rapide + actions directes */
+  .add2e-character-v3 .a2e-summary-dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+    gap: 10px;
+    align-items: start;
+  }
+
+  .add2e-character-v3 .a2e-summary-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(115px, 1fr));
+    gap: 7px;
+    margin-bottom: 9px;
+  }
+
+  .add2e-character-v3 .a2e-summary-card {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 7px;
+    align-items: center;
+    min-height: 54px;
+    padding: 7px 8px;
+    border: 1px solid #d6b05a;
+    border-left: 5px solid #b88924;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #fffaf0, #f4e7bd);
+    box-shadow: 0 1px 4px rgba(80,58,10,0.13);
+  }
+
+  .add2e-character-v3 .a2e-summary-card i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 29px;
+    height: 29px;
+    border-radius: 999px;
+    background: #fff6d7;
+    border: 1px solid #d6b05a;
+    color: #8a611d;
+    font-size: 1.05em;
+  }
+
+  .add2e-character-v3 .a2e-summary-card label {
+    display: block;
+    font-size: 0.78em;
+    font-weight: 900;
+    color: #6f4b12;
+    text-transform: uppercase;
+    line-height: 1.05;
+  }
+
+  .add2e-character-v3 .a2e-summary-card strong {
+    display: block;
+    color: #2f250c;
+    font-size: 1.12em;
+    font-weight: 950;
+    line-height: 1.15;
+  }
+
+  .add2e-character-v3 .a2e-summary-card small {
+    display: block;
+    color: #7f704d;
+    font-size: 0.78em;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .add2e-character-v3 .a2e-summary-attack-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .add2e-character-v3 .a2e-summary-weapon {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    padding: 7px;
+    border: 1px solid #d6b05a;
+    border-radius: 10px;
+    background: #fffdf6;
+  }
+
+  .add2e-character-v3 .a2e-summary-weapon img {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 7px !important;
+    object-fit: cover;
+    border: 1px solid #b88924;
+    background: #fffaf0;
+  }
+
+  .add2e-character-v3 .a2e-summary-weapon-name {
+    font-weight: 950;
+    color: #2f250c;
+    font-size: 1.02em;
+    line-height: 1.1;
+  }
+
+  .add2e-character-v3 .a2e-summary-weapon-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    color: #6f4b12;
+    font-size: 0.82em;
+    font-weight: 800;
+    margin-top: 3px;
+  }
+
+  .add2e-character-v3 .a2e-summary-attack-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 64px;
+    height: 32px;
+    padding: 0 9px;
+    border-radius: 8px;
+    border: 1px solid #1f7c4d;
+    background: #e7fbef;
+    color: #176b3e;
+    font-size: 0.88em;
+    font-weight: 950;
+    cursor: pointer;
+  }
+
+  .add2e-character-v3 .a2e-summary-attack-button:hover {
+    filter: brightness(1.04);
+    transform: scale(1.02);
+  }
+
+  .add2e-character-v3 .a2e-summary-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .add2e-character-v3 .a2e-summary-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 25px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid #c59b35;
+    background: #fff4c9;
+    color: #6f4b12;
+    font-size: 0.82em;
+    font-weight: 950;
+    white-space: nowrap;
+  }
+
+
+
+  .add2e-character-v3 .a2e-prep-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  .add2e-character-v3 .a2e-prep-pill {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 5px 7px;
+    border-radius: 9px;
+    line-height: 1.08;
+  }
+
+  .add2e-character-v3 .a2e-prep-pill b {
+    display: block;
+    font-size: 0.92em;
+    color: #5b3506;
+  }
+
+  .add2e-character-v3 .a2e-prep-pill span {
+    display: block;
+    margin-top: 2px;
+    font-size: 1.05em;
+    color: #2f250c;
+  }
+
+  .add2e-character-v3 .a2e-summary-effects {
+    display: grid;
+    gap: 5px;
+  }
+
+  .add2e-character-v3 .a2e-summary-effect {
+    display: grid;
+    grid-template-columns: 25px minmax(0, 1fr);
+    gap: 6px;
+    align-items: center;
+    padding: 5px 7px;
+    border-radius: 8px;
+    border: 1px solid #dac276;
+    background: #fffdf6;
+  }
+
+  .add2e-character-v3 .a2e-summary-effect img {
+    width: 23px;
+    height: 23px;
+    border-radius: 5px;
+    object-fit: cover;
+  }
+
+  .add2e-character-v3 .a2e-summary-effect strong {
+    color: #2f250c;
+    font-size: 0.88em;
+  }
+
+  .add2e-character-v3 .a2e-summary-effect small {
+    color: #7f704d;
+    font-size: 0.76em;
+  }
+
+  .add2e-character-v3 .a2e-summary-simple-list {
+    margin: 0;
+    padding-left: 1.1em;
+  }
+
+  .add2e-character-v3 .a2e-summary-simple-list li {
+    margin-bottom: 2px;
+  }
+
+  @media (max-width: 1050px) {
+    .add2e-character-v3 .a2e-summary-dashboard {
+      grid-template-columns: 1fr;
+    }
+    .add2e-character-v3 .a2e-summary-metrics {
+      grid-template-columns: repeat(2, minmax(115px, 1fr));
+    }
+  }
 
   @media (max-width: 900px) {
     .add2e-character-v3 {
@@ -560,6 +1176,714 @@
       grid-template-columns: 1fr;
     }
   }
+
+
+  @media (max-width: 900px) {
+    .add2e-character-v3 .a2e-saves-grid {
+      grid-template-columns: repeat(2, minmax(130px, 1fr));
+    }
+  }
+
+  @media (max-width: 520px) {
+    .add2e-character-v3 .a2e-saves-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+
+
+  @media (max-width: 900px) {
+    .add2e-character-v3 .a2e-saves-square-strip {
+      grid-template-columns: 1fr;
+    }
+    .add2e-character-v3 .a2e-saves-square-title {
+      flex-direction: row;
+      border-right: 0;
+      border-bottom: 1px solid rgba(184,137,36,0.35);
+    }
+    .add2e-character-v3 .a2e-save-square-grid {
+      grid-template-columns: repeat(2, minmax(120px, 1fr));
+    }
+  }
+
+
+  /* Sauvegardes en colonne à droite des caractéristiques */
+  .add2e-character-v3 .a2e-character-saves-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 210px;
+    gap: 8px;
+    align-items: stretch;
+    margin-bottom: 8px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-characteristics-always {
+    margin-bottom: 0;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table {
+    table-layout: fixed;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table th:nth-child(1) { width: 140px; }
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table th:nth-child(2) { width: 175px; }
+
+  .add2e-character-v3 .a2e-character-saves-layout .carac-adjustments-line {
+    gap: 4px 6px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .carac-adjustments-line label {
+    font-size: 0.72em;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .carac-adjustments-line input {
+    width: 40px;
+    height: 24px;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-strip.a2e-saves-square-side {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    align-self: stretch;
+    margin: 0;
+    padding: 7px;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-saves-square-title {
+    flex-direction: row;
+    justify-content: center;
+    min-width: 0;
+    padding: 4px 5px 7px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(184,137,36,0.35);
+    margin-bottom: 6px;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    align-content: stretch;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square {
+    min-height: 76px;
+    grid-template-rows: 23px minmax(24px, auto) 24px;
+    padding: 5px 6px;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square .roll-save {
+    background: #fffdf6;
+    font-size: 1.05em;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-0 .roll-save { color: #9b2f26; }
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-1 .roll-save { color: #6c5a9f; }
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-2 .roll-save { color: #2d8f9f; }
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-3 .roll-save { color: #d67525; }
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-4 .roll-save { color: #8e44ad; }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-label {
+    font-size: 0.72em;
+    line-height: 1.05;
+  }
+
+  @media (max-width: 1050px) {
+    .add2e-character-v3 .a2e-character-saves-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-grid {
+      grid-template-columns: repeat(5, minmax(100px, 1fr));
+    }
+  }
+
+
+  /* V9 — Harmonisation caractéristiques / sauvegardes */
+  .add2e-character-v3 .a2e-character-saves-layout {
+    grid-template-columns: minmax(0, 1fr) 218px;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table th:nth-child(1) { width: 140px; }
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table th:nth-child(2) { width: 190px; }
+
+  .add2e-character-v3 .a2e-character-saves-layout .carac-adjustments-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px 8px;
+  }
+
+  .add2e-character-v3 .a2e-adjustment-item {
+    display: grid;
+    grid-template-rows: 13px 24px;
+    align-items: center;
+    justify-items: center;
+    min-width: 43px;
+    max-width: 72px;
+    gap: 1px;
+  }
+
+  .add2e-character-v3 .a2e-adjustment-item label {
+    display: block;
+    width: 100%;
+    margin: 0;
+    color: #6f4b12;
+    font-weight: 900;
+    font-size: 0.64em;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .add2e-character-v3 .a2e-adjustment-item input {
+    width: 42px;
+    height: 23px;
+    padding: 1px 3px;
+    text-align: center;
+    font-size: 0.88em;
+    font-weight: 900;
+    border-radius: 6px;
+  }
+
+
+  .add2e-character-v3 .a2e-saves-square-strip.a2e-saves-square-side {
+    background: var(--a2e-panel);
+    border: 1px solid var(--a2e-border);
+    border-radius: 10px;
+    box-shadow: 0 1px 5px rgba(80, 58, 10, 0.12);
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-saves-square-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin: 0;
+    padding: 7px 8px;
+    min-height: 36px;
+    background: rgba(240, 224, 169, 0.68);
+    border-bottom: 1px solid var(--a2e-border);
+    color: var(--a2e-gold-dark);
+    font-size: 1.03em;
+    font-weight: 900;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-saves-square-title i {
+    color: #b88924;
+    font-size: 1em;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-grid {
+    padding: 7px;
+    gap: 6px;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square {
+    background: #fffdf6;
+    border: 1px solid #dac276;
+    border-top-width: 4px;
+    border-radius: 9px;
+    box-shadow: 0 1px 4px rgba(80, 58, 10, 0.10);
+    min-height: 83px;
+    grid-template-rows: 22px minmax(25px, auto) 23px;
+    padding: 5px 7px;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-label {
+    font-size: 0.78em;
+    line-height: 1.08;
+    font-weight: 900;
+    color: #4d3510;
+  }
+
+  .add2e-character-v3 .a2e-saves-square-side .a2e-save-square-value {
+    min-width: 32px;
+    height: 22px;
+    line-height: 20px;
+    font-size: 1em;
+    font-weight: 900;
+    background: #fffdf6;
+    border: 1px solid #d3a147;
+    color: #2f250c;
+  }
+
+
+  /* V10 — Caractéristiques plus lisibles : suppression entêtes et pleine largeur utile */
+  .add2e-character-v3 .a2e-character-saves-layout {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) 218px;
+    gap: 8px;
+  }
+
+  .add2e-character-v3 .a2e-characteristics-always {
+    min-width: 0;
+  }
+
+  .add2e-character-v3 .a2e-characteristics-always .a2e-panel-body {
+    padding: 8px 10px 10px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td {
+    padding: 5px 7px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(1) {
+    width: 145px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(2) {
+    width: 210px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(3) {
+    width: auto;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-flex {
+    gap: 0.42em;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-control-group {
+    justify-content: center;
+    gap: 0.26em;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .carac-adjustments-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 5px 12px;
+    width: 100%;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item {
+    min-width: 52px;
+    max-width: 86px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item label {
+    font-size: 0.68em;
+    line-height: 1.05;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item input {
+    width: 46px;
+    height: 23px;
+  }
+
+  @media (max-width: 1100px) {
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(1) { width: 132px; }
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(2) { width: 188px; }
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .carac-adjustments-line { gap: 4px 8px; }
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item { min-width: 47px; }
+  }
+
+
+  /* V11 — Réduction espace bas + labels capacités plus lisibles */
+  .add2e-character-v3 .a2e-character-saves-layout {
+    align-items: start;
+    margin-bottom: 6px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-characteristics-always,
+  .add2e-character-v3 .a2e-saves-square-strip.a2e-saves-square-side {
+    align-self: start;
+  }
+
+  .add2e-character-v3 .a2e-characteristics-always .a2e-panel-body {
+    padding-bottom: 7px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean {
+    margin-bottom: 0;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .carac-adjustments-line {
+    gap: 4px 13px;
+    align-items: center;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item {
+    grid-template-rows: 15px 23px;
+    min-width: 55px;
+    max-width: 92px;
+    gap: 1px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item label,
+  .add2e-character-v3 .a2e-adjustment-item label {
+    font-size: 0.78em;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item input {
+    width: 44px;
+    height: 22px;
+    font-size: 0.9em;
+  }
+
+  @media (max-width: 1100px) {
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item label,
+    .add2e-character-v3 .a2e-adjustment-item label {
+      font-size: 0.74em;
+    }
+  }
+
+
+  /* V12 — remplissage vertical du bloc Caractéristiques jusqu'à la ligne des onglets */
+  .add2e-character-v3 .a2e-character-saves-layout {
+    align-items: stretch;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-characteristics-always {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-characteristics-always > h2 {
+    flex: 0 0 auto;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-characteristics-always .a2e-panel-body {
+    flex: 1 1 auto;
+    display: flex;
+    padding: 8px 10px 10px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean {
+    height: 100%;
+    min-height: 100%;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean tbody {
+    height: 100%;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean tr {
+    height: calc(100% / 6);
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .carac-adjustments-line {
+    min-height: 100%;
+    align-content: center;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item label,
+  .add2e-character-v3 .a2e-adjustment-item label {
+    font-size: 0.84em;
+  }
+
+
+  /* V13 — les éléments internes remplissent l’espace agrandi sans ajouter de marges/gaps */
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-characteristics-always .a2e-panel-body {
+    padding: 6px 10px 8px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean {
+    border-spacing: 0;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td {
+    padding: 0;
+    height: calc(100% / 6);
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(1) {
+    width: 160px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(2) {
+    width: 235px;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-flex {
+    height: 100%;
+    gap: 0;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-label-td i.roll-stat {
+    font-size: 1.95em !important;
+    margin: 0;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-short {
+    min-width: 76px;
+    min-height: 54px;
+    font-size: 1.95em;
+    margin: 0;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-control-group {
+    height: 100%;
+    gap: 0;
+    justify-content: space-evenly;
+    align-items: center;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-btn {
+    min-width: 58px;
+    min-height: 38px;
+    font-size: 1.35em;
+    margin: 0;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-value {
+    min-width: 72px;
+    min-height: 50px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-value > span:first-child {
+    font-size: 1.72em !important;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-racial-bonus-inline {
+    font-size: 0.58em;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .carac-adjustments-line {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+    gap: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    align-items: stretch;
+    align-content: stretch;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 3px 5px;
+    display: grid;
+    grid-template-rows: 1fr 1.35fr;
+    align-items: center;
+    justify-items: center;
+    border-left: 1px solid rgba(217, 191, 115, 0.55);
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item:first-child {
+    border-left: 0;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item label,
+  .add2e-character-v3 .a2e-adjustment-item label {
+    font-size: 0.92em;
+    line-height: 1.05;
+    margin: 0;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item input {
+    width: min(78px, 100%);
+    height: 31px;
+    font-size: 1.02em;
+    margin: 0;
+    padding: 0 4px;
+    text-align: center;
+  }
+
+  @media (max-width: 1100px) {
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(1) { width: 145px; }
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(2) { width: 210px; }
+    .add2e-character-v3 .a2e-carac-table-clean .carac-short { min-width: 68px; min-height: 50px; font-size: 1.75em; }
+    .add2e-character-v3 .a2e-carac-table-clean .carac-btn { min-width: 50px; }
+    .add2e-character-v3 .a2e-carac-table-clean .carac-value { min-width: 66px; }
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .carac-adjustments-line { grid-template-columns: repeat(auto-fit, minmax(82px, 1fr)); }
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item label,
+    .add2e-character-v3 .a2e-adjustment-item label { font-size: 0.84em; }
+  }
+
+
+  /* =====================================================
+     V14 — Caractéristiques : capacités liées sur UNE ligne
+     - On conserve les boutons +/- à une taille normale.
+     - L'espace est utilisé par la valeur centrale, les libellés et les champs.
+     ===================================================== */
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean {
+    width: 100%;
+    height: 100%;
+    table-layout: fixed;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean tr {
+    height: calc(100% / 6);
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td {
+    padding: 0;
+    vertical-align: middle;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(1) {
+    width: 150px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(2) {
+    width: 210px;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(3) {
+    width: auto;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-flex {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-label-td i.roll-stat {
+    font-size: 1.85em !important;
+    margin: 0;
+    flex: 0 0 auto;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-short {
+    min-width: 78px;
+    min-height: 56px;
+    font-size: 1.95em;
+    margin: 0;
+    flex: 0 0 auto;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-control-group {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 0 6px;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-btn {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    font-size: 1.08em;
+    padding: 0;
+    margin: 0;
+    flex: 0 0 36px;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-value {
+    min-width: 80px;
+    min-height: 56px;
+    margin: 0;
+    padding: 2px 4px;
+    flex: 0 0 auto;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-value > span:first-child {
+    font-size: 1.82em !important;
+  }
+
+  .add2e-character-v3 .a2e-carac-table-clean .carac-racial-bonus-inline {
+    font-size: 0.62em;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .carac-adjustments-line {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    gap: 0 !important;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+    width: auto;
+    height: 100%;
+    margin: 0;
+    padding: 4px 4px;
+    display: grid;
+    grid-template-rows: 1fr 1.25fr;
+    align-items: center;
+    justify-items: center;
+    border-left: 1px solid rgba(217, 191, 115, 0.55);
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item:first-child {
+    border-left: 0;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item label,
+  .add2e-character-v3 .a2e-adjustment-item label {
+    font-size: 0.92em;
+    line-height: 1.05;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item input {
+    width: 86%;
+    max-width: 98px;
+    min-width: 48px;
+    height: 34px;
+    font-size: 1.08em;
+    margin: 0;
+    padding: 0 4px;
+    text-align: center;
+  }
+
+  @media (max-width: 1100px) {
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(1) { width: 140px; }
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean td:nth-child(2) { width: 198px; }
+    .add2e-character-v3 .a2e-carac-table-clean .carac-short { min-width: 70px; min-height: 52px; font-size: 1.78em; }
+    .add2e-character-v3 .a2e-carac-table-clean .carac-value { min-width: 72px; min-height: 52px; }
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item label,
+    .add2e-character-v3 .a2e-adjustment-item label { font-size: 0.84em; }
+    .add2e-character-v3 .a2e-character-saves-layout .a2e-carac-table-clean .a2e-adjustment-item input { height: 31px; font-size: 1em; }
+  }
+
 </style>
 
 <form class="sheet actor add2e personnage add2e-character-v3">
@@ -639,21 +1963,15 @@
       </div>
     </header>
 
-    <section class="a2e-panel a2e-characteristics-always">
+    <div class="a2e-character-saves-layout">
+      <section class="a2e-panel a2e-characteristics-always">
       <h2>
         Caractéristiques
         <i class="fas fa-dice roll-caracs-btn" style="margin-left:0.35em;color:#8e44ad;cursor:pointer;" title="Tirer les caractéristiques"></i>
       </h2>
 
       <div class="a2e-panel-body">
-        <table class="a2e-carac-table">
-          <thead>
-            <tr>
-              <th>Caractéristique</th>
-              <th>Valeur</th>
-              <th>Capacités liées</th>
-            </tr>
-          </thead>
+        <table class="a2e-carac-table a2e-carac-table-clean">
           <tbody>
             <tr>
               <td class="carac-label-td">
@@ -684,11 +2002,11 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <label>Toucher</label><input type="text" name="system.force_bonus_toucher" value="{{actor.system.force_bonus_toucher}}" readonly>
-                  <label>Dégâts</label><input type="text" name="system.force_bonus_degats" value="{{actor.system.force_bonus_degats}}" readonly>
-                  <label>Poids</label><input type="text" name="system.force_poids" value="{{actor.system.force_poids}}" readonly>
-                  <label>Portes</label><input type="text" name="system.force_ouvrir" value="{{actor.system.force_ouvrir}}" readonly>
-                  <label>Barreaux</label><input type="text" name="system.force_tordre" value="{{actor.system.force_tordre}}" readonly>
+                  <div class="a2e-adjustment-item"><label>Toucher</label><input type="text" name="system.force_bonus_toucher" value="{{actor.system.force_bonus_toucher}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Dégâts</label><input type="text" name="system.force_bonus_degats" value="{{actor.system.force_bonus_degats}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Poids</label><input type="text" name="system.force_poids" value="{{actor.system.force_poids}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Portes</label><input type="text" name="system.force_ouvrir" value="{{actor.system.force_ouvrir}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Barreaux</label><input type="text" name="system.force_tordre" value="{{actor.system.force_tordre}}" readonly></div>
                 </div>
               </td>
             </tr>
@@ -715,8 +2033,8 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <label>Réaction</label><input type="text" name="system.dex_att" value="{{actor.system.dex_att}}" readonly>
-                  <label>CA défense</label><input type="text" name="system.dex_def" value="{{actor.system.dex_def}}" readonly>
+                  <div class="a2e-adjustment-item"><label>Réaction</label><input type="text" name="system.dex_att" value="{{actor.system.dex_att}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>CA défense</label><input type="text" name="system.dex_def" value="{{actor.system.dex_def}}" readonly></div>
                 </div>
               </td>
             </tr>
@@ -743,9 +2061,9 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <label>PV / niv.</label><input type="text" name="system.con_pv" value="{{actor.system.con_pv}}" readonly>
-                  <label>Choc</label><input type="text" name="system.con_trauma" value="{{actor.system.con_trauma}}" readonly>
-                  <label>Résurrection</label><input type="text" name="system.con_resu" value="{{actor.system.con_resu}}" readonly>
+                  <div class="a2e-adjustment-item"><label>PV / niv.</label><input type="text" name="system.con_pv" value="{{actor.system.con_pv}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Choc</label><input type="text" name="system.con_trauma" value="{{actor.system.con_trauma}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Résurrection</label><input type="text" name="system.con_resu" value="{{actor.system.con_resu}}" readonly></div>
                 </div>
               </td>
             </tr>
@@ -772,11 +2090,11 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <label>Langues</label><input type="text" name="system.int_langues" value="{{actor.system.int_langues}}" readonly>
-                  <label>% sort</label><input type="text" name="system.int_chance_sort" value="{{actor.system.int_chance_sort}}" readonly>
-                  <label>Sorts min</label><input type="text" name="system.int_sort_min" value="{{actor.system.int_sort_min}}" readonly>
-                  <label>Sorts max</label><input type="text" name="system.int_sort_max" value="{{actor.system.int_sort_max}}" readonly>
-                  <label>/ niveau</label><input type="text" name="system.int_sort_par_niveau" value="{{actor.system.int_sort_par_niveau}}" readonly>
+                  <div class="a2e-adjustment-item"><label>Langues</label><input type="text" name="system.int_langues" value="{{actor.system.int_langues}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>% sort</label><input type="text" name="system.int_chance_sort" value="{{actor.system.int_chance_sort}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Sorts min</label><input type="text" name="system.int_sort_min" value="{{actor.system.int_sort_min}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Sorts max</label><input type="text" name="system.int_sort_max" value="{{actor.system.int_sort_max}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>/ niveau</label><input type="text" name="system.int_sort_par_niveau" value="{{actor.system.int_sort_par_niveau}}" readonly></div>
                 </div>
               </td>
             </tr>
@@ -803,9 +2121,9 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <label>Bonus magie</label><input type="text" name="system.sag_bm_magie" value="{{actor.system.sag_bm_magie}}" readonly>
-                  <label>Sorts bonus</label><input type="text" name="system.sag_sort_suppl" value="{{actor.system.sag_sort_suppl}}" readonly>
-                  <label>% échec</label><input type="text" name="system.sag_echec" value="{{actor.system.sag_echec}}" readonly>
+                  <div class="a2e-adjustment-item"><label>Bonus magie</label><input type="text" name="system.sag_bm_magie" value="{{actor.system.sag_bm_magie}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Sorts bonus</label><input type="text" name="system.sag_sort_suppl" value="{{actor.system.sag_sort_suppl}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>% échec</label><input type="text" name="system.sag_echec" value="{{actor.system.sag_echec}}" readonly></div>
                 </div>
               </td>
             </tr>
@@ -832,9 +2150,9 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <label>Compagnons</label><input type="text" name="system.cha_compagnons" value="{{actor.system.cha_compagnons}}" readonly>
-                  <label>Loyauté</label><input type="text" name="system.cha_loy" value="{{actor.system.cha_loy}}" readonly>
-                  <label>Réaction</label><input type="text" name="system.cha_react" value="{{actor.system.cha_react}}" readonly>
+                  <div class="a2e-adjustment-item"><label>Compagnons</label><input type="text" name="system.cha_compagnons" value="{{actor.system.cha_compagnons}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Loyauté</label><input type="text" name="system.cha_loy" value="{{actor.system.cha_loy}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Réaction</label><input type="text" name="system.cha_react" value="{{actor.system.cha_react}}" readonly></div>
                 </div>
               </td>
             </tr>
@@ -843,61 +2161,205 @@
       </div>
     </section>
 
+      <aside class="a2e-saves-square-strip a2e-saves-square-side" aria-label="Jets de sauvegarde">
+        <div class="a2e-saves-square-title">
+          <i class="fas fa-dice-d20"></i>
+          <span>Sauv.</span>
+        </div>
+      <div class="a2e-save-square-grid">
+        {{#each saveShortLabels as |saveLabel idx|}}
+          <div class="a2e-save-square a2e-save-square-{{idx}}">
+            {{#if (eq idx 0)}}<i class="fas fa-skull-crossbones roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            {{#if (eq idx 1)}}<i class="fas fa-gem roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            {{#if (eq idx 2)}}<i class="fas fa-magic roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            {{#if (eq idx 3)}}<i class="fas fa-fire roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            {{#if (eq idx 4)}}<i class="fas fa-scroll roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            <div class="a2e-save-square-label">
+              {{#if (eq idx 0)}}Paralysie / poison / mort magique{{/if}}
+              {{#if (eq idx 1)}}Pétrification / polymorphose{{/if}}
+              {{#if (eq idx 2)}}Baguettes et badines{{/if}}
+              {{#if (eq idx 3)}}Souffles{{/if}}
+              {{#if (eq idx 4)}}Sortilèges{{/if}}
+            </div>
+            <div class="a2e-save-square-value">
+              {{#if ../progressionCourante}}
+                {{lookup ../progressionCourante.savingThrows idx}}
+              {{else}}
+                —
+              {{/if}}
+            </div>
+          </div>
+        {{/each}}
+      </div>
+      </aside>
+    </div>
+
     <nav class="a2e-tabs sheet-tabs tabs" data-group="primary">
       <a class='item {{#if (eq activeTab "resume")}}active{{/if}}' data-tab="resume" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-id-card"></i> Résumé</a>
       <a class='item {{#if (eq activeTab "combat")}}active{{/if}}' data-tab="combat" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-shield-alt"></i> Combat</a>
       <a class='item {{#if (eq activeTab "capacites")}}active{{/if}}' data-tab="capacites" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-bolt"></i> Capacités</a>
       <a class='item {{#if (eq activeTab "sorts")}}active{{/if}}' data-tab="sorts" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-magic"></i> Sorts</a>
+      <a class='item {{#if (eq activeTab "effets")}}active{{/if}}' data-tab="effets" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-sparkles"></i> Effets</a>
       <a class='item {{#if (eq activeTab "equipement")}}active{{/if}}' data-tab="equipement" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-suitcase"></i> Équipement</a>
       <a class='item {{#if (eq activeTab "notes")}}active{{/if}}' data-tab="notes" data-group="primary" onclick="event.preventDefault();const r=this.closest('.add2e-character-v3');const t=this.dataset.tab;const h=r.querySelector('.a2e-active-tab-input');if(h)h.value=t;r.querySelectorAll('.a2e-tabs .item[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));r.querySelectorAll('.sheet-body .a2e-tab-content[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));"><i class="fas fa-feather-alt"></i> Notes</a>
     </nav>
 
     <main class="sheet-body">
       <section class='a2e-tab-content tab tab-resume {{#if (eq activeTab "resume")}}active{{/if}}' data-group="primary" data-tab="resume">
-        <div class="a2e-grid-2">
-          <div class="a2e-panel">
-            <h2>Jets de sauvegarde</h2>
-            <div class="a2e-panel-body">
-              <div class="saving-throws-row">
-                {{#each saveShortLabels as |saveLabel idx|}}
-                  <div class="saving-throw-group saving-throw-group-{{idx}}">
-                    <i class="fas fa-shield-alt roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>
-                    <div class="save-label">{{saveLabel}}</div>
-                    <div class="save-value">
-                      {{#if ../progressionCourante}}
-                        {{lookup ../progressionCourante.savingThrows idx}}
-                      {{else}}
-                        —
+        <div class="a2e-summary-dashboard">
+          <div>
+            <div class="a2e-summary-metrics">
+              <div class="a2e-summary-card">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                  <label>CA</label>
+                  <strong>{{combatDefense.ac_totale}}</strong>
+                  <small>physique {{combatDefense.ac_naturelle}}</small>
+                </div>
+              </div>
+
+              <div class="a2e-summary-card">
+                <i class="fas fa-crosshairs"></i>
+                <div>
+                  <label>THAC0</label>
+                  <strong>{{combatDefense.thaco}}</strong>
+                  <small>attaque de base</small>
+                </div>
+              </div>
+
+              <div class="a2e-summary-card">
+                <i class="fas fa-running"></i>
+                <div>
+                  <label>Mouvement</label>
+                  <strong>{{#if system.movement}}{{system.movement}}{{else}}{{actor.system.movement}}{{/if}} m</strong>
+                  <small>déplacement</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="a2e-panel">
+              <h2><i class="fas fa-swords"></i> Attaque rapide</h2>
+              <div class="a2e-panel-body">
+                {{#if actor.system.arme_equipee}}
+                  <div class="a2e-summary-attack-list">
+                    {{#each listeArmes as |arme|}}
+                      {{#if arme.system.equipee}}
+                        <div class="a2e-summary-weapon item" data-item-id="{{arme._id}}">
+                          <img class="arme-img-attack" data-item-id="{{arme._id}}" src="{{arme.img}}" title="Attaquer avec {{arme.name}}">
+                          <div>
+                            <div class="a2e-summary-weapon-name">{{arme.name}}</div>
+                            <div class="a2e-summary-weapon-meta">
+                              <span><b>Dégâts</b> {{arme.system.dégâts.contre_moyen}} / {{arme.system.dégâts.contre_grand}}</span>
+                              <span><b>Type</b> {{arme.system.type_degats}}</span>
+                              <span><b>Toucher</b> {{../combatDefense.bonus_toucher}}</span>
+                              <span><b>Dégâts bonus</b> {{../combatDefense.bonus_degats}}</span>
+                            </div>
+                          </div>
+                          <button type="button" class="a2e-summary-attack-button arme-img-attack" data-item-id="{{arme._id}}">
+                            <i class="fas fa-dice-d20"></i>&nbsp;Attaquer
+                          </button>
+                        </div>
                       {{/if}}
-                    </div>
+                    {{/each}}
                   </div>
-                {{/each}}
+                {{else}}
+                  <p class="a2e-muted">Aucune arme équipée.</p>
+                {{/if}}
+              </div>
+            </div>
+
+            <div class="a2e-grid-2">
+              <div class="a2e-panel">
+                <h2><i class="fas fa-shield-alt"></i> Défense équipée</h2>
+                <div class="a2e-panel-body">
+                  <div class="a2e-summary-pills">
+                    <span class="a2e-summary-pill">Armure : {{{combatDefense.armure}}}</span>
+                    <span class="a2e-summary-pill">Bouclier : {{{combatDefense.bouclier}}}</span>
+                    <span class="a2e-summary-pill">Heaume : {{{combatDefense.heaume}}}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="a2e-panel">
+                <h2><i class="fas fa-magic"></i> Préparations</h2>
+                <div class="a2e-panel-body">
+                  {{#if progressionCourante.spellsPerLevel}}
+                    <div class="a2e-summary-pills a2e-prep-summary">
+                      {{#each progressionCourante.spellsPerLevel as |slots idx|}}
+                        {{#if slots}}
+                          {{#with (lookup ../sortsMemorizedByLevel (add idx 1))}}
+                            <span class="a2e-summary-pill a2e-prep-pill">
+                              <b>N{{add idx 1}}</b>
+                              <span>{{count}} / {{max}}</span>
+                            </span>
+                          {{else}}
+                            <span class="a2e-summary-pill a2e-prep-pill">
+                              <b>N{{add idx 1}}</b>
+                              <span>0 / {{slots}}</span>
+                            </span>
+                          {{/with}}
+                        {{/if}}
+                      {{/each}}
+                    </div>
+                  {{else}}
+                    <p class="a2e-muted">Aucun emplacement de sort.</p>
+                  {{/if}}
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="a2e-panel">
-            <h2>Résumé classe / race</h2>
-            <div class="a2e-panel-body a2e-small">
-              {{#if actor.system.details_race.capacites.length}}
-                <h3>Race</h3>
-                <ul>
-                  {{#each actor.system.details_race.capacites}}
-                    <li>{{this}}</li>
-                  {{/each}}
-                </ul>
-              {{/if}}
+          <div>
+            <div class="a2e-panel">
+              <h2><i class="fas fa-id-card"></i> Classe / race</h2>
+              <div class="a2e-panel-body a2e-small">
+                <div class="a2e-summary-pills" style="margin-bottom:8px;">
+                  <span class="a2e-summary-pill">{{actor.system.race}}</span>
+                  <span class="a2e-summary-pill">{{actor.system.classe}} niv. {{actor.system.niveau}}</span>
+                  <span class="a2e-summary-pill">{{actor.system.alignement}}</span>
+                </div>
 
-              {{#if actor.system.details_classe.specialAbilities.length}}
-                <h3>Classe</h3>
-                <ul>
-                  {{#each actor.system.details_classe.specialAbilities}}
-                    <li>{{this}}</li>
-                  {{/each}}
-                </ul>
-              {{else}}
-                <p class="a2e-muted">Aucune capacité spéciale renseignée.</p>
-              {{/if}}
+                {{#if actor.system.details_race.capacites.length}}
+                  <h3>Race</h3>
+                  <ul class="a2e-summary-simple-list">
+                    {{#each actor.system.details_race.capacites}}
+                      <li>{{this}}</li>
+                    {{/each}}
+                  </ul>
+                {{/if}}
+
+                {{#if actor.system.details_classe.specialAbilities.length}}
+                  <h3>Classe</h3>
+                  <ul class="a2e-summary-simple-list">
+                    {{#each actor.system.details_classe.specialAbilities}}
+                      <li>{{this}}</li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class="a2e-muted">Aucune capacité spéciale renseignée.</p>
+                {{/if}}
+              </div>
+            </div>
+
+            <div class="a2e-panel">
+              <h2><i class="fas fa-sparkles"></i> Effets actifs</h2>
+              <div class="a2e-panel-body">
+                {{#if activeEffectsList.length}}
+                  <div class="a2e-summary-effects">
+                    {{#each activeEffectsList as |eff|}}
+                      <div class="a2e-summary-effect">
+                        <img src="{{eff.img}}" alt="{{eff.name}}">
+                        <div>
+                          <strong>{{eff.name}}</strong><br>
+                          <small>{{#if eff.duration}}{{eff.duration}}{{else}}Durée permanente ou non renseignée{{/if}}</small>
+                        </div>
+                      </div>
+                    {{/each}}
+                  </div>
+                {{else}}
+                  <p class="a2e-muted">Aucun effet actif.</p>
+                {{/if}}
+              </div>
             </div>
           </div>
         </div>
@@ -976,9 +2438,8 @@
                       <td>{{arme.system.facteur_rapidité}}</td>
                       <td>
                         <div class="a2e-actions">
-                          <a class="a2e-action-icon a2e-action-roll arme-thaco-roll" data-item-id="{{arme._id}}" title="Attaquer"><i class="fas fa-dice-d20"></i></a>
-                          <a class="item-control item-equip a2e-action-icon {{#if arme.system.equipee}}a2e-action-unequip{{else}}a2e-action-equip{{/if}}" data-action="equip" data-item-id="{{arme._id}}" title="{{#if arme.system.equipee}}Retirer{{else}}Équiper{{/if}}">
-                            {{#if arme.system.equipee}}<i class="fas fa-minus-circle"></i>{{else}}<i class="fas fa-plus-circle"></i>{{/if}}
+                          <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if arme.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{arme._id}}" title="{{#if arme.system.equipee}}Équipée — cliquer pour retirer{{else}}Non équipée — cliquer pour équiper{{/if}}">
+                            <i class="fas fa-swords"></i>
                           </a>
                           <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{arme._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
                           <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{arme._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
@@ -1004,7 +2465,6 @@
                       <th>Nom</th>
                       <th>CA</th>
                       <th>Bonus CA</th>
-                      <th>Équipée</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -1015,16 +2475,9 @@
                         <td>{{armure.system.ac}}</td>
                         <td>{{armure.system.bonus_ac}}</td>
                         <td>
-                          {{#if armure.system.equipee}}
-                            <i class="fas fa-check-circle equip-green"></i>
-                          {{else}}
-                            <i class="fas fa-times-circle equip-red"></i>
-                          {{/if}}
-                        </td>
-                        <td>
                           <div class="a2e-actions">
-                            <a class="item-control item-equip a2e-action-icon {{#if armure.system.equipee}}a2e-action-unequip{{else}}a2e-action-equip{{/if}}" data-action="equip" data-item-id="{{armure._id}}" title="{{#if armure.system.equipee}}Retirer{{else}}Équiper{{/if}}">
-                              {{#if armure.system.equipee}}<i class="fas fa-minus-circle"></i>{{else}}<i class="fas fa-plus-circle"></i>{{/if}}
+                            <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if armure.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{armure._id}}" title="{{#if armure.system.equipee}}Équipée — cliquer pour retirer{{else}}Non équipée — cliquer pour équiper{{/if}}">
+                              <i class="fas fa-shield-alt"></i>
                             </a>
                             <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{armure._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
                             <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{armure._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
@@ -1109,7 +2562,18 @@
 
       <section class='a2e-tab-content tab tab-sorts {{#if (eq activeTab "sorts")}}active{{/if}}' data-group="primary" data-tab="sorts">
         <div class="a2e-panel">
-          <h2>Sorts</h2>
+          <h2>
+            Sorts
+            {{#if progressionCourante.spellsPerLevel}}
+              <span class="a2e-spell-capacity-summary" title="Emplacements de sorts disponibles par niveau">
+                {{#each progressionCourante.spellsPerLevel as |slots idx|}}
+                  {{#if slots}}
+                    <span class="a2e-spell-capacity-pill">N{{add idx 1}} {{slots}}</span>
+                  {{/if}}
+                {{/each}}
+              </span>
+            {{/if}}
+          </h2>
           <div class="a2e-panel-body">
             {{#if niveauxSorts.length}}
               {{#each niveauxSorts as |niv|}}
@@ -1117,47 +2581,45 @@
                   <h3>
                     Niveau {{niv}}
                     {{#with (lookup ../sortsMemorizedByLevel niv)}}
-                      <span class="sort-memorize-badge" style="float:right;">{{count}} / {{max}}</span>
+                      <span class="sort-memorize-badge">Sorts : {{count}} / {{max}}</span>
                     {{/with}}
                   </h3>
                   <div class="a2e-panel-body">
                     <table class="sort-table">
                       <thead>
                         <tr>
-                          <th></th>
+                          <th style="width:130px;">Préparer</th>
+                          <th style="width:42px;"></th>
                           <th>Sort</th>
                           <th>École</th>
-                          <th>Mémorisation</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {{#each (lookup ../sortsParNiveau niv) as |sort|}}
                           <tr class="sort-row">
+                            <td>
+                              <a class="a2e-action-icon a2e-action-remove sort-memorize-minus" data-sort-id="{{sort._id}}" title="Retirer une préparation"><i class="fas fa-minus-circle"></i></a>
+                              <span class="sort-memorize-badge">{{getFlag sort "add2e.memorizedCount"}}</span>
+                              <a class="a2e-action-icon a2e-action-add sort-memorize-plus" data-sort-id="{{sort._id}}" title="Ajouter une préparation"><i class="fas fa-plus-circle"></i></a>
+                            </td>
                             <td class="sort-drag">
                               <img class="sort-cast-img" data-sort-id="{{sort._id}}" src="{{sort.img}}" title="Lancer {{sort.name}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
                             </td>
                             <td>
-                              <b class="sort-cast" data-sort-id="{{sort._id}}" style="cursor:pointer;">{{sort.name}}</b>
-                              <a class="a2e-action-icon a2e-action-info toggle-sort-desc-chat" data-sort-id="{{sort._id}}" title="Description"><i class="fas fa-book-open"></i></a>
+                              <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{sort._id}}" title="Afficher / masquer la description">{{sort.name}}</a>
                             </td>
                             <td>{{sort.system.école}}</td>
                             <td>
-                              <a class="a2e-action-icon a2e-action-remove sort-memorize-minus" data-sort-id="{{sort._id}}" title="Retirer une mémorisation"><i class="fas fa-minus-circle"></i></a>
-                              <span class="sort-memorize-badge">{{getFlag sort "add2e.memorizedCount"}}</span>
-                              <a class="a2e-action-icon a2e-action-add sort-memorize-plus" data-sort-id="{{sort._id}}" title="Ajouter une mémorisation"><i class="fas fa-plus-circle"></i></a>
-                            </td>
-                            <td>
                               <div class="a2e-actions">
-                                <a class="a2e-action-icon a2e-action-roll sort-cast" data-sort-id="{{sort._id}}" title="Lancer"><i class="fas fa-magic"></i></a>
                                 <a class="a2e-action-icon a2e-action-edit sort-edit" data-sort-id="{{sort._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
                                 <a class="a2e-action-icon a2e-action-delete sort-delete" data-sort-id="{{sort._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
                               </div>
                             </td>
                           </tr>
                           <tr id="desc-chat-{{sort._id}}" class="sort-description">
-                            <td colspan="5">
-                              <div class="a2e-small">
+                            <td colspan="5" class="sort-description-fullcell">
+                              <div class="a2e-small sort-description-content">
                                 {{{sort.system.description}}}
                                 {{#if sort.system.composantes}}<div><b>Composantes :</b> {{sort.system.composantes}}</div>{{/if}}
                                 {{#if sort.system.temps_incantation}}<div><b>Incantation :</b> {{sort.system.temps_incantation}}</div>{{/if}}
@@ -1174,6 +2636,47 @@
               {{/each}}
             {{else}}
               <p class="a2e-muted">Aucun sort disponible.</p>
+            {{/if}}
+          </div>
+        </div>
+      </section>
+
+      <section class='a2e-tab-content tab tab-effets {{#if (eq activeTab "effets")}}active{{/if}}' data-group="primary" data-tab="effets">
+        <div class="a2e-panel">
+          <h2>Effets actifs</h2>
+          <div class="a2e-panel-body">
+            {{#if activeEffectsList.length}}
+              <table class="a2e-table a2e-effects-table">
+                <thead>
+                  <tr>
+                    <th style="width:42px;"></th>
+                    <th>Effet</th>
+                    <th>Source</th>
+                    <th>Durée</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each activeEffectsList as |eff|}}
+                    <tr>
+                      <td><img src="{{eff.img}}" alt="{{eff.name}}" style="width:30px;height:30px;border-radius:5px;object-fit:cover;"></td>
+                      <td><b>{{eff.name}}</b></td>
+                      <td>{{eff.sourceName}}</td>
+                      <td>{{eff.duration}}</td>
+                      <td class="effect-description a2e-small">{{{eff.description}}}</td>
+                      <td>
+                        <div class="a2e-actions">
+                          <a class="a2e-action-icon a2e-action-edit effect-edit" data-effect-id="{{eff.id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                          <a class="a2e-action-icon a2e-action-delete effect-delete" data-effect-id="{{eff.id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="a2e-muted">Aucun effet actif.</p>
             {{/if}}
           </div>
         </div>
