@@ -222,6 +222,492 @@ async function add2e_saveBaseCaracs(actor) {
  * - itemType: 'arme', 'armure', 'sort', 'objet', etc. (optionnel)
  * - sheet: la fiche active (this) pour render si besoin
  */
+
+// ============================================================
+// ADD2E — Restrictions équipement génériques par tags
+// Source principale : Item "classe" embarqué sur l'acteur.
+// Ne code aucune classe en dur dans add2e.mjs.
+// ============================================================
+function add2eDeepClone(value) {
+  if (value === undefined || value === null) return value;
+  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
+  if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
+  return JSON.parse(JSON.stringify(value));
+}
+
+function add2eNormalizeEquipTag(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[\s\-]+/g, "_")
+    .replace(/_+/g, "_");
+}
+
+function add2eToEquipArray(value) {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value
+      .flatMap(v => add2eToEquipArray(v))
+      .filter(v => v !== null && v !== undefined && String(v).trim() !== "");
+  }
+
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s) return [];
+    return s.split(/[,;\n|]+/).map(x => x.trim()).filter(Boolean);
+  }
+
+  if (value && typeof value === "object") {
+    for (const key of [
+      "value",
+      "list",
+      "lists",
+      "items",
+      "tags",
+      "effectTags",
+      "allowedTags",
+      "forbiddenTags",
+      "armorAllowed",
+      "armures_autorisees",
+      "weaponsAllowed",
+      "armes_autorisees"
+    ]) {
+      if (value[key] !== undefined && value[key] !== null) return add2eToEquipArray(value[key]);
+    }
+  }
+
+  return [];
+}
+
+function add2ePushEquipTag(target, rawTag) {
+  const tag = add2eNormalizeEquipTag(rawTag);
+  if (!tag) return;
+
+  target.add(tag);
+
+  // Compat effectTags avec underscores, ex: categorie_armure_moyenne.
+  const variants = [
+    ["categorie_armure_", "categorie_armure:"],
+    ["type_armure_exact_", "type_armure_exact:"],
+    ["type_armure_", "type_armure:"],
+    ["type_arme_", "type_arme:"],
+    ["famille_arme_", "famille_arme:"],
+    ["degat_", "degat:"],
+    ["usage_", "usage:"],
+    ["armure_", "armure:"],
+    ["arme_", "arme:"]
+  ];
+
+  for (const [prefix, replacement] of variants) {
+    if (tag.startsWith(prefix) && tag.length > prefix.length) {
+      target.add(replacement + tag.slice(prefix.length));
+    }
+  }
+}
+
+function add2ePushEquipTags(target, raw) {
+  for (const tag of add2eToEquipArray(raw)) add2ePushEquipTag(target, tag);
+}
+
+function add2eHasUsefulValue(value) {
+  if (value === true || value === false) return true;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "string") return value.trim() !== "";
+  if (value && typeof value === "object") return Object.keys(value).length > 0;
+  return false;
+}
+
+function add2eGetActorClassItem(actor) {
+  const classItems = actor?.items?.filter?.(i => String(i?.type ?? "").toLowerCase() === "classe") ?? [];
+  if (!classItems.length) return null;
+
+  const details = actor?.system?.details_classe ?? {};
+  const wanted = add2eNormalizeEquipTag(
+    actor?.system?.classe ||
+    details.label ||
+    details.nom ||
+    details.name ||
+    details.classe ||
+    ""
+  );
+
+  if (wanted) {
+    const found = classItems.find(i => {
+      const sys = i.system ?? {};
+      const names = [
+        i.name,
+        sys.label,
+        sys.nom,
+        sys.name,
+        sys.classe
+      ].map(add2eNormalizeEquipTag).filter(Boolean);
+
+      return names.includes(wanted);
+    });
+    if (found) return found;
+  }
+
+  return classItems[0] ?? null;
+}
+
+function add2eGetActorClassSystem(actor) {
+  const details = add2eDeepClone(actor?.system?.details_classe ?? {}) || {};
+  const classItem = add2eGetActorClassItem(actor);
+  const itemSystem = add2eDeepClone(classItem?.system ?? {}) || {};
+
+  // Base : details_classe pour conserver les données déjà calculées.
+  // Priorité : item Classe embarqué pour les règles source de restrictions.
+  let merged;
+  if (foundry?.utils?.mergeObject) {
+    merged = foundry.utils.mergeObject(details, itemSystem, {
+      inplace: false,
+      recursive: true
+    });
+  } else {
+    merged = { ...details, ...itemSystem };
+  }
+
+  const ruleFields = [
+    "weaponRestriction",
+    "armorRestriction",
+    "armorAllowed",
+    "armures_autorisees",
+    "weaponsAllowed",
+    "armes_autorisees",
+    "shieldAllowed",
+    "tags"
+  ];
+
+  for (const field of ruleFields) {
+    if (add2eHasUsefulValue(itemSystem[field])) {
+      merged[field] = add2eDeepClone(itemSystem[field]);
+    }
+  }
+
+  merged.__classItemId = classItem?.id ?? null;
+  merged.__classItemName = classItem?.name ?? null;
+
+  return merged;
+}
+
+function add2eGetItemEquipTags(item) {
+  const tags = new Set();
+  const sys = item?.system ?? {};
+  const type = String(item?.type ?? "").toLowerCase();
+
+  add2ePushEquipTags(tags, sys.tags);
+  add2ePushEquipTags(tags, sys.tag);
+  add2ePushEquipTags(tags, sys.effectTags);
+  add2ePushEquipTags(tags, sys.effecttags);
+  add2ePushEquipTags(tags, sys.effets);
+  add2ePushEquipTags(tags, sys.effects);
+  add2ePushEquipTags(tags, item?.flags?.add2e?.tags);
+
+  const nameNorm = add2eNormalizeEquipTag(item?.name ?? sys.nom ?? "");
+  const catNorm = add2eNormalizeEquipTag(sys.categorie ?? sys.category ?? "");
+  const typeNorm = add2eNormalizeEquipTag(sys.type ?? sys.type_arme ?? sys.type_armure ?? "");
+  const familleNorm = add2eNormalizeEquipTag(sys.famille ?? sys.famille_arme ?? "");
+  const props = add2eToEquipArray(sys.proprietes ?? sys.properties ?? sys.type_degats ?? sys["type_dégâts"] ?? sys.degats ?? sys["dégâts"]);
+
+  if (type === "arme" || type === "weapon") {
+    tags.add("arme");
+    if (nameNorm) {
+      tags.add(`arme:${nameNorm}`);
+      tags.add(`type_arme:${nameNorm}`);
+    }
+    if (typeNorm) tags.add(`type_arme:${typeNorm}`);
+    if (familleNorm) tags.add(`famille_arme:${familleNorm}`);
+
+    for (const p of props) {
+      const prop = add2eNormalizeEquipTag(p);
+      if (!prop) continue;
+
+      tags.add(prop);
+      tags.add(`arme:${prop}`);
+
+      if (prop.includes("contondant")) tags.add("degat:contondant");
+      if (prop.includes("tranchant")) tags.add("degat:tranchant");
+      if (prop.includes("perforant") || prop.includes("pointu")) tags.add("degat:perforant");
+      if (prop.includes("distance") || prop.includes("projectile")) tags.add("usage:distance");
+      if (prop.includes("lancer") || prop.includes("jet")) tags.add("usage:lancer");
+      if (prop.includes("deux_mains") || prop.includes("2_mains")) tags.add("usage:deux_mains");
+      if (prop.includes("corps_a_corps") || prop.includes("melee") || prop.includes("melee")) tags.add("usage:corps_a_corps");
+    }
+
+    const damageText = add2eNormalizeEquipTag(sys.type_degats ?? sys["type_dégâts"] ?? "");
+    if (damageText.includes("contondant")) tags.add("degat:contondant");
+    if (damageText.includes("tranchant")) tags.add("degat:tranchant");
+    if (damageText.includes("perforant") || damageText.includes("pointu")) tags.add("degat:perforant");
+
+    if (sys.deuxMains === true) tags.add("usage:deux_mains");
+    if (sys.arme_de_jet === true || sys.portee_courte || sys.portee_moyenne || sys.portee_longue) tags.add("usage:distance");
+  }
+
+  if (type === "armure" || type === "armor") {
+    tags.add("armure");
+    if (nameNorm) {
+      tags.add(`armure:${nameNorm}`);
+      tags.add(`type_armure:${nameNorm}`);
+    }
+    if (catNorm) {
+      tags.add(`armure:${catNorm}`);
+      tags.add(`categorie_armure:${catNorm}`);
+    }
+    if (typeNorm) tags.add(`type_armure:${typeNorm}`);
+
+    if (nameNorm.includes("bouclier") || catNorm.includes("bouclier")) {
+      tags.add("bouclier");
+      tags.add("armure:bouclier");
+      tags.add("categorie_armure:bouclier");
+    }
+
+    if (
+      nameNorm.includes("heaume") ||
+      nameNorm.includes("casque") ||
+      catNorm.includes("heaume") ||
+      catNorm.includes("casque")
+    ) {
+      tags.add("heaume");
+      tags.add("casque");
+    }
+
+    for (const p of props) {
+      const prop = add2eNormalizeEquipTag(p);
+      if (!prop) continue;
+
+      tags.add(prop);
+      tags.add(`armure:${prop}`);
+
+      if (prop.includes("legere")) tags.add("categorie_armure:legere");
+      if (prop.includes("moyenne")) tags.add("categorie_armure:moyenne");
+      if (prop.includes("lourde")) tags.add("categorie_armure:lourde");
+      if (prop.includes("bouclier")) {
+        tags.add("bouclier");
+        tags.add("categorie_armure:bouclier");
+      }
+    }
+  }
+
+  return [...tags].filter(Boolean);
+}
+
+function add2eHasTagRestriction(restriction) {
+  return !!restriction && (
+    add2eToEquipArray(restriction.allowedTags).length > 0 ||
+    add2eToEquipArray(restriction.forbiddenTags).length > 0 ||
+    String(restriction.mode ?? "").toLowerCase().includes("tag")
+  );
+}
+
+function add2eCheckItemTagRestriction(item, restriction = {}) {
+  const itemTags = add2eGetItemEquipTags(item);
+  const itemSet = new Set(itemTags);
+
+  const allowedTags = add2eToEquipArray(restriction.allowedTags)
+    .map(add2eNormalizeEquipTag)
+    .filter(Boolean);
+
+  const forbiddenTags = add2eToEquipArray(restriction.forbiddenTags)
+    .map(add2eNormalizeEquipTag)
+    .filter(Boolean);
+
+  // Tags d'exception : permettent d'autoriser un type précis même s'il
+  // appartient à une famille ou à un type de dégâts normalement interdit.
+  // Exemple : forbiddenTags ["degat:perforant"] + overrideForbiddenTags ["type_arme:dague"].
+  const overrideForbiddenTags = [
+    ...add2eToEquipArray(restriction.overrideForbiddenTags),
+    ...add2eToEquipArray(restriction.exceptionTags),
+    ...add2eToEquipArray(restriction.alwaysAllowedTags),
+    ...add2eToEquipArray(restriction.allowEvenIfForbiddenTags)
+  ]
+    .map(add2eNormalizeEquipTag)
+    .filter(Boolean);
+
+  const matchedOverride = overrideForbiddenTags.find(t => itemSet.has(t));
+  const matchedAllowed = allowedTags.find(t => itemSet.has(t));
+  const matchedForbidden = forbiddenTags.find(t => itemSet.has(t));
+
+  if (matchedOverride) {
+    return {
+      ok: true,
+      reason: "override-forbidden",
+      matchedForbidden: matchedForbidden ?? null,
+      matchedAllowed: matchedOverride,
+      matchedOverride,
+      itemTags,
+      allowedTags,
+      forbiddenTags,
+      overrideForbiddenTags
+    };
+  }
+
+  // Règle importante pour les armes à dégâts mixtes :
+  // si au moins un tag autorisé correspond, l'item est autorisé même s'il
+  // possède aussi un tag interdit. Exemple : Morgenstern = degat:contondant
+  // + degat:perforant ; le clerc peut l'utiliser grâce au dégât contondant.
+  if (matchedAllowed) {
+    return {
+      ok: true,
+      reason: matchedForbidden ? "allowed-despite-forbidden-tag" : "allowed",
+      matchedForbidden: matchedForbidden ?? null,
+      matchedAllowed,
+      matchedOverride: null,
+      itemTags,
+      allowedTags,
+      forbiddenTags,
+      overrideForbiddenTags
+    };
+  }
+
+  if (matchedForbidden) {
+    return {
+      ok: false,
+      reason: "forbidden",
+      matchedForbidden,
+      matchedAllowed: null,
+      matchedOverride: null,
+      itemTags,
+      allowedTags,
+      forbiddenTags,
+      overrideForbiddenTags
+    };
+  }
+
+  if (!allowedTags.length) {
+    return {
+      ok: true,
+      reason: "no-allowed-tags",
+      matchedForbidden: null,
+      matchedAllowed: null,
+      matchedOverride: null,
+      itemTags,
+      allowedTags,
+      forbiddenTags,
+      overrideForbiddenTags
+    };
+  }
+
+  return {
+    ok: false,
+    reason: "no-match",
+    matchedForbidden: null,
+    matchedAllowed: null,
+    matchedOverride: null,
+    itemTags,
+    allowedTags,
+    forbiddenTags,
+    overrideForbiddenTags
+  };
+}
+
+function add2eItemNameNorm(item) {
+  return add2eNormalizeEquipTag(item?.name ?? item?.system?.nom ?? "");
+}
+
+function add2eIsShield(item) {
+  const tags = new Set(add2eGetItemEquipTags(item));
+  const name = add2eItemNameNorm(item);
+  return tags.has("bouclier") || tags.has("categorie_armure:bouclier") || name.includes("bouclier");
+}
+
+function add2eIsHelmet(item) {
+  const tags = new Set(add2eGetItemEquipTags(item));
+  const name = add2eItemNameNorm(item);
+  return tags.has("heaume") || tags.has("casque") || name.includes("heaume") || name.includes("casque");
+}
+
+function add2eLegacyAllowsItemByNameOrTag(item, allowedRaw, kind) {
+  const allowed = add2eToEquipArray(allowedRaw).map(add2eNormalizeEquipTag).filter(Boolean);
+  const itemTags = new Set(add2eGetItemEquipTags(item));
+  const itemName = add2eItemNameNorm(item);
+  const cat = add2eNormalizeEquipTag(item?.system?.categorie ?? item?.system?.category ?? "");
+
+  if (!allowed.length) return { ok: true, reason: "legacy-empty-allow" };
+  if (allowed.includes("toutes") || allowed.includes("toute") || allowed.includes("all")) return { ok: true, reason: "legacy-all" };
+  if (allowed.includes("aucune") || allowed.includes("aucun") || allowed.includes("none")) return { ok: false, reason: "legacy-none" };
+
+  const matched = allowed.find(a =>
+    itemTags.has(a) ||
+    itemTags.has(`${kind}:${a}`) ||
+    itemTags.has(`type_${kind}:${a}`) ||
+    itemTags.has(`categorie_${kind}:${a}`) ||
+    itemTags.has(`categorie_armure:${a}`) ||
+    itemTags.has(`type_arme:${a}`) ||
+    itemTags.has(`famille_arme:${a}`) ||
+    itemName.includes(a) ||
+    (cat && cat.includes(a))
+  );
+
+  return matched
+    ? { ok: true, reason: "legacy-match", matchedAllowed: matched }
+    : { ok: false, reason: "legacy-no-match", allowed, itemTags: [...itemTags] };
+}
+
+function add2eCheckEquipmentAllowedForClass(actor, item, kind) {
+  const classe = add2eGetActorClassSystem(actor);
+  const classeLabel = classe.label || classe.nom || classe.name || classe.__classItemName || "classe inconnue";
+
+  if (kind === "arme") {
+    const restriction = classe.weaponRestriction ?? {};
+    if (add2eHasTagRestriction(restriction)) {
+      const check = add2eCheckItemTagRestriction(item, restriction);
+      return { ...check, classe, classeLabel, mode: "weaponRestriction" };
+    }
+
+    const legacy = add2eLegacyAllowsItemByNameOrTag(
+      item,
+      classe.armes_autorisees ?? classe.weaponsAllowed ?? [],
+      "arme"
+    );
+
+    return { ...legacy, classe, classeLabel, mode: "legacy-weapon" };
+  }
+
+  if (kind === "armure") {
+    const restriction = classe.armorRestriction ?? {};
+    if (add2eHasTagRestriction(restriction)) {
+      const check = add2eCheckItemTagRestriction(item, restriction);
+      return { ...check, classe, classeLabel, mode: "armorRestriction" };
+    }
+
+    if (add2eIsShield(item)) {
+      const shieldAllowed =
+        classe.shieldAllowed === true ||
+        add2eToEquipArray(classe.armorAllowed ?? classe.armures_autorisees ?? [])
+          .map(add2eNormalizeEquipTag)
+          .some(v => ["toutes", "toute", "all", "bouclier", "boucliers"].includes(v));
+
+      return {
+        ok: !!shieldAllowed,
+        reason: shieldAllowed ? "legacy-shield-allowed" : "legacy-shield-forbidden",
+        classe,
+        classeLabel,
+        mode: "legacy-armor"
+      };
+    }
+
+    const legacy = add2eLegacyAllowsItemByNameOrTag(
+      item,
+      classe.armorAllowed ?? classe.armures_autorisees ?? [],
+      "armure"
+    );
+
+    return { ...legacy, classe, classeLabel, mode: "legacy-armor" };
+  }
+
+  return { ok: true, reason: "no-kind", classe, classeLabel, mode: "none" };
+}
+
+globalThis.add2eNormalizeEquipTag = add2eNormalizeEquipTag;
+globalThis.add2eToEquipArray = add2eToEquipArray;
+globalThis.add2eGetActorClassSystem = add2eGetActorClassSystem;
+globalThis.add2eGetItemEquipTags = add2eGetItemEquipTags;
+globalThis.add2eCheckEquipmentAllowedForClass = add2eCheckEquipmentAllowedForClass;
+
+
 async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
   if (!actor || !action || !itemId) return;
 
@@ -234,27 +720,6 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
     if (t === "armor") return "armure";
     return t;
   })();
-
-  // Normalise une valeur (array|string|objet) en tableau de strings
-  const toStrArray = (v) => {
-    if (Array.isArray(v)) return v;
-    if (typeof v === "string") {
-      const s = v.trim();
-      if (!s) return [];
-      // accepte "a,b,c" ou "a; b; c"
-      return s.split(/[,;]+/).map(x => x.trim()).filter(Boolean);
-    }
-    if (v && typeof v === "object") {
-      // patterns fréquents: {value: [...]}, {list:[...]}, {items:[...]}
-      if (Array.isArray(v.value)) return v.value;
-      if (Array.isArray(v.list)) return v.list;
-      if (Array.isArray(v.items)) return v.items;
-      if (typeof v.value === "string") return toStrArray(v.value);
-      if (typeof v.list === "string") return toStrArray(v.list);
-      if (typeof v.items === "string") return toStrArray(v.items);
-    }
-    return [];
-  };
 
   // EDIT
   if (action === "edit") {
@@ -278,7 +743,7 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
     if (effectiveType === "objet") {
       await item.update({ "system.equipee": !item.system.equipee });
       sheet?._add2eRememberActiveTab?.();
-    sheet?.render(false);
+      sheet?.render(false);
       return;
     }
 
@@ -286,53 +751,59 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
     // ----- ARMES -----------
     // =======================
     if (effectiveType === "arme") {
-      const classe = actor.system.details_classe || {};
+      const check = add2eCheckEquipmentAllowedForClass(actor, item, "arme");
 
-      const armesAutoriseesRaw = (classe.armes_autorisees ?? classe.weaponsAllowed ?? []);
-      const armesAutorisees = toStrArray(armesAutoriseesRaw).map(a =>
-        a.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, "").trim()
-      );
+      console.log("[ADD2E][EQUIPEMENT][ARME][CHECK]", {
+        actor: actor.name,
+        classe: check.classeLabel,
+        classItem: check.classe?.__classItemName ?? null,
+        item: item.name,
+        mode: check.mode,
+        reason: check.reason,
+        ok: check.ok,
+        matchedAllowed: check.matchedAllowed ?? null,
+        matchedForbidden: check.matchedForbidden ?? null,
+        itemTags: check.itemTags ?? add2eGetItemEquipTags(item),
+        allowedTags: check.allowedTags ?? null,
+        forbiddenTags: check.forbiddenTags ?? null
+      });
 
-      const nomArme = (item.name || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f’']/g, "")
-        .trim();
+      if (!check.ok) {
+        const reason = check.reason === "forbidden"
+          ? `tag interdit : ${check.matchedForbidden}`
+          : "arme non autorisée par les restrictions de classe";
 
-      if (
-        armesAutorisees.length &&
-        !armesAutorisees.includes("toutes") &&
-        !armesAutorisees.some(a => nomArme.includes(a))
-      ) {
         ui.notifications.error(
-          `⚠️ Cette arme (« ${item.name} ») est interdite pour votre classe (${classe.label || "classe inconnue"}).`
+          `⚠️ Cette arme (« ${item.name} ») est interdite pour votre classe (${check.classeLabel}) — ${reason}.`
         );
         return;
       }
 
       const dejaEquipee = item.system.equipee === true;
-      const estDeuxMains = !!item.system.deuxMains;
+      const estDeuxMains = !!item.system.deuxMains || add2eGetItemEquipTags(item).includes("usage:deux_mains");
 
       const isJet = !!item.system.arme_de_jet ||
         !!item.system.portee_courte ||
         !!item.system.portee_moyenne ||
-        !!item.system.portee_longue;
+        !!item.system.portee_longue ||
+        add2eGetItemEquipTags(item).includes("usage:distance") ||
+        add2eGetItemEquipTags(item).includes("usage:lancer");
 
       const isContact = !isJet;
 
       if (dejaEquipee) {
         await item.update({ "system.equipee": false });
         sheet?._add2eRememberActiveTab?.();
-    sheet?.render(false);
+        sheet?.render(false);
         return;
       }
 
       if (estDeuxMains) {
-        const bouclierEquipe = actor.items.find(i =>
-          ((i.type || "").toLowerCase() === "armure" || (i.type || "").toLowerCase() === "armor") &&
-          i.system.equipee &&
-          (i.name || "").toLowerCase().includes("bouclier")
-        );
+        const bouclierEquipe = actor.items.find(i => {
+          const t = (i.type || "").toLowerCase();
+          return (t === "armure" || t === "armor") && i.system.equipee && add2eIsShield(i);
+        });
+
         if (bouclierEquipe) {
           ui.notifications.error(
             `⚠️ Impossible d'équiper une arme à deux mains si un bouclier est équipé (${bouclierEquipe.name}).`
@@ -345,10 +816,13 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
         const t = (i.type || "").toLowerCase();
         return (t === "arme" || t === "weapon") && i.id !== item.id;
       })) {
+        const aTags = add2eGetItemEquipTags(a);
         const aIsJet = !!a.system.arme_de_jet ||
           !!a.system.portee_courte ||
           !!a.system.portee_moyenne ||
-          !!a.system.portee_longue;
+          !!a.system.portee_longue ||
+          aTags.includes("usage:distance") ||
+          aTags.includes("usage:lancer");
 
         const aIsContact = !aIsJet;
 
@@ -359,7 +833,7 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
 
       await item.update({ "system.equipee": true });
       sheet?._add2eRememberActiveTab?.();
-    sheet?.render(false);
+      sheet?.render(false);
       return;
     }
 
@@ -369,36 +843,37 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
     if (effectiveType === "armure") {
       const estDejaEquipee = item.system.equipee === true;
 
-      const nomItem = (item.name || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f’']/g, "");
-
-      const catItem = (item.system.categorie || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f’']/g, "");
-
-      const estBouclier = nomItem.includes("bouclier");
-      const estHeaume = nomItem.includes("heaume") || nomItem.includes("casque");
+      const estBouclier = add2eIsShield(item);
+      const estHeaume = add2eIsHelmet(item);
       const estArmure = !estBouclier && !estHeaume;
 
-      const classe = actor.system.details_classe || {};
+      const check = add2eCheckEquipmentAllowedForClass(actor, item, "armure");
 
-      const armorsAllowedRaw = (classe.armorAllowed ?? classe.armures_autorisees ?? []);
-      const armorsAllowed = toStrArray(armorsAllowedRaw).map(a =>
-        a.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, "").trim()
-      );
+      console.log("[ADD2E][EQUIPEMENT][ARMURE][CHECK]", {
+        actor: actor.name,
+        classe: check.classeLabel,
+        classItem: check.classe?.__classItemName ?? null,
+        item: item.name,
+        mode: check.mode,
+        reason: check.reason,
+        ok: check.ok,
+        matchedAllowed: check.matchedAllowed ?? null,
+        matchedForbidden: check.matchedForbidden ?? null,
+        itemTags: check.itemTags ?? add2eGetItemEquipTags(item),
+        allowedTags: check.allowedTags ?? null,
+        forbiddenTags: check.forbiddenTags ?? null
+      });
 
-      const peutBouclier = classe.shieldAllowed === true;
-
-      const isMonk = ((classe.label || classe.nom || classe.name || "")
+      const isMonk = ((check.classe?.label || check.classe?.nom || check.classe?.name || check.classeLabel || "")
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f’']/g, "")
         .includes("moine"));
 
-      if (isMonk && armorsAllowed.includes("aucune")) {
+      const armorsAllowed = add2eToEquipArray(check.classe?.armorAllowed ?? check.classe?.armures_autorisees ?? [])
+        .map(add2eNormalizeEquipTag);
+
+      if (!add2eHasTagRestriction(check.classe?.armorRestriction) && isMonk && armorsAllowed.includes("aucune")) {
         ui.notifications.error(`⚠️ Les Moines ne peuvent jamais porter d’armure !`);
         return;
       }
@@ -406,8 +881,10 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
       if (estBouclier) {
         const armeDeuxMains = actor.items.find(i => {
           const t = (i.type || "").toLowerCase();
-          return (t === "arme" || t === "weapon") && i.system.equipee && i.system.deuxMains;
+          const tags = add2eGetItemEquipTags(i);
+          return (t === "arme" || t === "weapon") && i.system.equipee && (!!i.system.deuxMains || tags.includes("usage:deux_mains"));
         });
+
         if (armeDeuxMains) {
           ui.notifications.error(
             `⚠️ Impossible d'équiper un bouclier avec une arme à deux mains (${armeDeuxMains.name}) déjà équipée.`
@@ -416,36 +893,29 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
         }
       }
 
+      // Si déjà équipé → déséquipe sans contrôle de restriction.
       if (estDejaEquipee) {
         await item.update({ "system.equipee": false });
       } else {
-        if (estBouclier && !peutBouclier) {
-          ui.notifications.error(`⚠️ Bouclier interdit pour la classe ${classe.label || "(inconnue)"}`);
-          return;
-        }
+        if (!check.ok) {
+          const reason = check.reason === "forbidden"
+            ? `tag interdit : ${check.matchedForbidden}`
+            : "protection non autorisée par les restrictions de classe";
 
-        if (estArmure && !armorsAllowed.includes("toutes")) {
-          if (armorsAllowed.includes("aucune")) {
-            ui.notifications.error(`⚠️ Aucune armure n’est autorisée pour la classe ${classe.label || "(inconnue)"} !`);
-            return;
-          }
-          const autorisee = armorsAllowed.includes(catItem) || armorsAllowed.includes(nomItem);
-          if (!autorisee) {
-            ui.notifications.error(
-              `⚠️ Cette armure (« ${item.name} ») est interdite pour votre classe (${classe.label || "classe inconnue"}).`
-            );
-            return;
-          }
+          const typeLabel = estBouclier ? "Ce bouclier" : estHeaume ? "Ce heaume" : "Cette armure";
+          ui.notifications.error(
+            `⚠️ ${typeLabel} (« ${item.name} ») est interdit pour votre classe (${check.classeLabel}) — ${reason}.`
+          );
+          return;
         }
 
         for (const i of actor.items) {
           const t = (i.type || "").toLowerCase();
           if ((t === "armure" || t === "armor") && i.id !== item.id) {
-            const n = (i.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, "");
             if (
-              (estArmure && !n.includes("bouclier") && !n.includes("casque") && !n.includes("heaume")) ||
-              (estBouclier && n.includes("bouclier")) ||
-              (estHeaume && (n.includes("heaume") || n.includes("casque")))
+              (estArmure && !add2eIsShield(i) && !add2eIsHelmet(i)) ||
+              (estBouclier && add2eIsShield(i)) ||
+              (estHeaume && add2eIsHelmet(i))
             ) {
               await i.update({ "system.equipee": false });
             }
@@ -455,7 +925,8 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
         if (estBouclier) {
           for (const arme of actor.items.filter(a => {
             const t = (a.type || "").toLowerCase();
-            return (t === "arme" || t === "weapon") && a.system.equipee && a.system.deuxMains;
+            const tags = add2eGetItemEquipTags(a);
+            return (t === "arme" || t === "weapon") && a.system.equipee && (!!a.system.deuxMains || tags.includes("usage:deux_mains"));
           })) {
             await arme.update({ "system.equipee": false });
             ui.notifications.warn(`Arme à deux mains déséquipée car un bouclier est équipé.`);
@@ -470,9 +941,9 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
         return (t === "armure" || t === "armor") && i.system.equipee;
       });
 
-      const armure = itemsEquipes.find(i => !/(bouclier|casque|heaume)/i.test(i.name));
-      const bouclier = itemsEquipes.find(i => /bouclier/i.test(i.name));
-      const heaume = itemsEquipes.find(i => /(casque|heaume)/i.test(i.name));
+      const armure = itemsEquipes.find(i => !add2eIsShield(i) && !add2eIsHelmet(i));
+      const bouclier = itemsEquipes.find(i => add2eIsShield(i));
+      const heaume = itemsEquipes.find(i => add2eIsHelmet(i));
 
       let ca_total = actor.system.ca_naturel || 10;
 
@@ -485,11 +956,12 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
       await actor.update({ "system.ca_total": ca_total });
 
       sheet?._add2eRememberActiveTab?.();
-    sheet?.render(false);
+      sheet?.render(false);
       return;
     }
   }
 }
+
 
 function showAdd2eDiceRollerDialog() {
   let html = `
@@ -568,6 +1040,346 @@ function evalFormuleValeur(valeur, niveau) {
     return valeur;
   }
 }
+
+// ============================================================
+// ADD2E — Améliorations UI feuille personnage
+// - Onglet Effets injecté automatiquement
+// - Onglet Sorts : préparation déplacée au début de ligne
+// - Onglet Sorts : nombre mémorisé / maximum affiché à côté de "Sort"
+// - Onglet Sorts : nom du sort cliquable au lieu du petit livre
+// - Onglet Sorts : suppression de l'action "lancer" dans la colonne Actions
+// ============================================================
+function add2eUiEscapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function add2eUiNormalizeText(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function add2eUiGetSpellSlotsByLevel(actor) {
+  const actorLevel = Math.max(1, Number(actor?.system?.niveau) || 1);
+  const classItem = actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") || null;
+  const details = classItem?.system || actor?.system?.details_classe || {};
+  const progression = Array.isArray(details.progression) ? details.progression : [];
+  const row = progression[actorLevel - 1] || {};
+  const rawSlots = Array.isArray(row.spellsPerLevel)
+    ? row.spellsPerLevel
+    : (Array.isArray(row.sortsParNiveau) ? row.sortsParNiveau : []);
+
+  const slotsByLevel = {};
+  for (let i = 0; i < rawSlots.length; i++) {
+    slotsByLevel[i + 1] = Number(rawSlots[i]) || 0;
+  }
+
+  return slotsByLevel;
+}
+
+function add2eUiGetMemorizedSpellsByLevel(actor) {
+  const countByLevel = {};
+  for (const sort of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
+    const niv = Number(sort.system?.niveau || sort.system?.level || 1) || 1;
+    const count = Number(sort.getFlag?.("add2e", "memorizedCount") ?? 0) || 0;
+    countByLevel[niv] = (countByLevel[niv] || 0) + count;
+  }
+  return countByLevel;
+}
+
+function add2eUiFormatDuration(effect) {
+  if (typeof effect?.duration?.remaining !== "undefined") return `${effect.duration.remaining} rounds`;
+  if (typeof effect?.duration?.rounds !== "undefined") return `${effect.duration.rounds} rounds`;
+  if (typeof effect?.duration?.seconds !== "undefined") return `${effect.duration.seconds} sec`;
+  return "—";
+}
+
+function add2eUiBuildEffectsTab(sheet) {
+  const actor = sheet?.actor;
+  const effects = Array.from(actor?.effects ?? []);
+
+  const rows = effects.length ? effects.map(eff => {
+    const desc = eff.getFlag?.("core", "description")
+      || eff.flags?.add2e?.desc
+      || eff.description
+      || (Array.isArray(eff.flags?.add2e?.tags) ? `<small>${add2eUiEscapeHtml(eff.flags.add2e.tags.join(", "))}</small>` : "");
+    const sourceName = eff.parent?.name || eff.origin || "—";
+
+    return `
+      <tr>
+        <td style="width:42px;text-align:center;">
+          <img src="${add2eUiEscapeHtml(eff.img || "icons/svg/aura.svg")}" alt="" style="width:28px;height:28px;border:0;object-fit:cover;">
+        </td>
+        <td><strong>${add2eUiEscapeHtml(eff.name || eff.label || "Effet")}</strong></td>
+        <td>${add2eUiEscapeHtml(sourceName)}</td>
+        <td>${add2eUiEscapeHtml(add2eUiFormatDuration(eff))}</td>
+        <td class="a2e-small">${desc}</td>
+        <td style="white-space:nowrap;text-align:center;">
+          <a class="effect-edit add2e-effect-edit a2e-action-icon a2e-action-edit" data-effect-id="${add2eUiEscapeHtml(eff.id)}" title="Éditer l’effet">
+            <i class="fas fa-edit"></i>
+          </a>
+          <a class="effect-delete add2e-effect-delete a2e-action-icon a2e-action-delete" data-effect-id="${add2eUiEscapeHtml(eff.id)}" title="Supprimer l’effet">
+            <i class="fas fa-trash"></i>
+          </a>
+        </td>
+      </tr>`;
+  }).join("") : `
+      <tr>
+        <td colspan="6" class="a2e-muted" style="text-align:center;padding:0.8em;">Aucun effet actif.</td>
+      </tr>`;
+
+  return `
+    <section class="a2e-panel add2e-effects-panel">
+      <h2><i class="fas fa-sparkles"></i> Effets actifs</h2>
+      <div class="a2e-panel-body">
+        <table class="a2e-table add2e-effects-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Effet</th>
+              <th>Source</th>
+              <th>Durée</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </section>`;
+}
+
+function add2eEnhanceCharacterSheetUi(sheet, html) {
+  const actor = sheet?.actor;
+  if (!actor) return;
+
+  const root = html?.jquery ? html[0] : html;
+  if (!root) return;
+
+  const sheetRoot = root.matches?.(".add2e-character-v3")
+    ? root
+    : root.querySelector?.(".add2e-character-v3") || root;
+
+  if (!sheetRoot) return;
+
+  // ------------------------------------------------------------
+  // 1. Onglet Effets
+  // ------------------------------------------------------------
+  const tabs = sheetRoot.querySelector(".a2e-tabs.sheet-tabs.tabs, .sheet-tabs.tabs, .a2e-tabs");
+  const body = sheetRoot.querySelector(".sheet-body");
+
+  if (tabs && body && !tabs.querySelector('[data-tab="effets"]')) {
+    const effectsTab = document.createElement("a");
+    effectsTab.className = "item";
+    effectsTab.dataset.tab = "effets";
+    effectsTab.innerHTML = '<i class="fas fa-sparkles"></i> Effets';
+    tabs.appendChild(effectsTab);
+  }
+
+  if (body && !body.querySelector('[data-tab="effets"]')) {
+    const effectsContent = document.createElement("div");
+    effectsContent.className = "tab a2e-tab-content";
+    effectsContent.dataset.tab = "effets";
+    effectsContent.innerHTML = add2eUiBuildEffectsTab(sheet);
+    body.appendChild(effectsContent);
+  } else {
+    const effectsContent = body?.querySelector('[data-tab="effets"]');
+    const effectsPanel = effectsContent?.querySelector(".add2e-effects-panel");
+    if (effectsPanel) effectsPanel.outerHTML = add2eUiBuildEffectsTab(sheet);
+  }
+
+  $(sheetRoot).find('[data-tab="effets"]')
+    .off("click.add2e-effects-tab")
+    .on("click.add2e-effects-tab", ev => {
+      ev.preventDefault();
+      sheet._add2eActivateTab?.("effets", sheetRoot);
+    });
+
+  $(sheetRoot).find(".add2e-effect-edit, .effect-edit")
+    .off("click.add2e-effects")
+    .on("click.add2e-effects", ev => {
+      ev.preventDefault();
+      const effectId = $(ev.currentTarget).data("effect-id");
+      const effect = actor.effects.get(effectId);
+      if (effect) effect.sheet.render(true);
+    });
+
+  $(sheetRoot).find(".add2e-effect-delete, .effect-delete")
+    .off("click.add2e-effects")
+    .on("click.add2e-effects", async ev => {
+      ev.preventDefault();
+      sheet._add2eRememberActiveTab?.(sheetRoot);
+      const effectId = $(ev.currentTarget).data("effect-id");
+      if (effectId) {
+        await actor.deleteEmbeddedDocuments("ActiveEffect", [effectId]);
+        sheet.render(false);
+      }
+    });
+
+  // ------------------------------------------------------------
+  // 2. Onglet Sorts : affichage des slots à côté de la colonne Sort
+  // ------------------------------------------------------------
+  const slotsByLevel = add2eUiGetSpellSlotsByLevel(actor);
+  const memorizedByLevel = add2eUiGetMemorizedSpellsByLevel(actor);
+
+  for (const table of sheetRoot.querySelectorAll("table.sort-table")) {
+    const panel = table.closest(".a2e-panel") || table.parentElement;
+    const panelText = panel?.querySelector?.("h2, h3")?.textContent || panel?.textContent || "";
+    const levelMatch = panelText.match(/niveau\s*(\d+)/i);
+    const spellLevel = levelMatch ? Number(levelMatch[1]) : null;
+    const max = spellLevel ? Number(slotsByLevel[spellLevel] || 0) : null;
+    const count = spellLevel ? Number(memorizedByLevel[spellLevel] || 0) : null;
+
+    const headers = Array.from(table.querySelectorAll("thead th"));
+    const sortHeader = headers.find(th => add2eUiNormalizeText(th.textContent) === "sort");
+    if (sortHeader && spellLevel && !sortHeader.querySelector(".a2e-sort-slot-label")) {
+      sortHeader.innerHTML = `Sort <span class="a2e-sort-slot-label" title="Sorts préparés / lançables pour le niveau ${spellLevel}">${count} / ${max}</span>`;
+    }
+
+    const memIndex = headers.findIndex(th => add2eUiNormalizeText(th.textContent).includes("memorisation"));
+    if (memIndex >= 0) {
+      headers[memIndex].style.display = "none";
+      for (const row of table.querySelectorAll("tbody tr")) {
+        const cells = Array.from(row.children).filter(el => el.tagName === "TD" || el.tagName === "TH");
+        if (cells[memIndex]) cells[memIndex].style.display = "none";
+      }
+    }
+  }
+
+  // Supprime le badge global déjà affiché à droite du titre de niveau,
+  // puisqu'il est maintenant affiché à côté de "Sort" dans l'en-tête.
+  for (const badge of sheetRoot.querySelectorAll(".sort-memorize-badge")) {
+    if (!badge.closest("tbody tr")) badge.remove();
+  }
+
+  // ------------------------------------------------------------
+  // 3. Onglet Sorts : préparation +/- au début de la ligne
+  // ------------------------------------------------------------
+  for (const row of sheetRoot.querySelectorAll("table.sort-table tbody tr")) {
+    const controls = Array.from(row.querySelectorAll(".sort-memorize-minus, .sort-memorize-plus, .sort-memorize-badge"));
+    if (!controls.length) continue;
+
+    const firstCell = row.querySelector("td");
+    if (!firstCell || firstCell.querySelector(".a2e-sort-prep-controls")) continue;
+
+    const wrap = document.createElement("div");
+    wrap.className = "a2e-sort-prep-controls";
+    wrap.title = "Préparer / retirer un sort préparé";
+
+    const ordered = [
+      row.querySelector(".sort-memorize-minus"),
+      row.querySelector(".sort-memorize-badge"),
+      row.querySelector(".sort-memorize-plus")
+    ].filter(Boolean);
+
+    for (const el of ordered) wrap.appendChild(el);
+    firstCell.prepend(wrap);
+  }
+
+  // ------------------------------------------------------------
+  // 4. Onglet Sorts : nom cliquable au lieu du petit livre
+  // ------------------------------------------------------------
+  for (const toggle of Array.from(sheetRoot.querySelectorAll(".toggle-sort-desc-chat"))) {
+    const sortId = toggle.dataset?.sortId || toggle.getAttribute("data-sort-id");
+    const row = toggle.closest("tr");
+    if (!row || !sortId) continue;
+
+    const cells = Array.from(row.children).filter(el => el.tagName === "TD" || el.tagName === "TH");
+    const nameCell = cells.find(td => td.textContent?.trim() && !td.querySelector(".sort-memorize-badge") && !td.querySelector("img")) || cells[1] || cells[0];
+
+    if (nameCell && !nameCell.querySelector(".a2e-sort-name-link")) {
+      const iconClone = nameCell.querySelector("i.toggle-sort-desc-chat");
+      if (iconClone) iconClone.remove();
+
+      const rawName = nameCell.textContent.trim();
+      const link = document.createElement("a");
+      link.href = "#";
+      link.className = "a2e-sort-name-link";
+      link.dataset.sortId = sortId;
+      link.textContent = rawName || "Détail du sort";
+
+      nameCell.textContent = "";
+      nameCell.appendChild(link);
+    }
+
+    toggle.remove();
+  }
+
+  $(sheetRoot).find(".a2e-sort-name-link")
+    .off("click.add2e-sort-desc")
+    .on("click.add2e-sort-desc", function(ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const sortId = $(this).data("sort-id");
+      const descRow = $(sheetRoot).find(`#desc-chat-${sortId}`);
+      descRow.slideToggle(160);
+      return false;
+    });
+
+  // ------------------------------------------------------------
+  // 5. Onglet Sorts : retirer l'action Lancer de la colonne Actions
+  // ------------------------------------------------------------
+  for (const el of Array.from(sheetRoot.querySelectorAll(".sort-cast"))) {
+    if (!el.classList.contains("sort-cast-img")) el.remove();
+  }
+
+  // Styles injectés une seule fois dans la feuille.
+  if (!sheetRoot.querySelector("style[data-add2e-ui-enhance='1']")) {
+    const style = document.createElement("style");
+    style.dataset.add2eUiEnhance = "1";
+    style.textContent = `
+      .add2e-character-v3 .a2e-sort-slot-label {
+        display:inline-block;
+        margin-left:0.45em;
+        padding:0.08em 0.45em;
+        border-radius:999px;
+        background:#7c39c3;
+        color:#fff;
+        font-weight:900;
+        font-size:0.9em;
+        line-height:1.45em;
+      }
+      .add2e-character-v3 .a2e-sort-prep-controls {
+        display:inline-flex;
+        align-items:center;
+        gap:0.25em;
+        margin-right:0.45em;
+        vertical-align:middle;
+      }
+      .add2e-character-v3 .a2e-sort-prep-controls .sort-memorize-badge {
+        margin:0;
+      }
+      .add2e-character-v3 .a2e-sort-name-link {
+        color:#2f250c;
+        font-weight:900;
+        text-decoration:none;
+        border-bottom:1px dotted #7c39c3;
+        cursor:pointer;
+      }
+      .add2e-character-v3 .a2e-sort-name-link:hover {
+        color:#7c39c3;
+        text-shadow:0 0 3px rgba(124,57,195,0.18);
+      }
+      .add2e-character-v3 .add2e-effects-table td,
+      .add2e-character-v3 .add2e-effects-table th {
+        vertical-align:middle;
+      }
+    `;
+    sheetRoot.prepend(style);
+  }
+
+  sheet._add2eActivateTab?.(sheet._add2eActiveTab || sheet._add2eReadStoredTab?.() || "resume", sheetRoot);
+}
+
 /**
  * Ajoute la gestion universelle du clic image avec data-edit="img" ou data-edit="img_portrait"
  * Utilise majImageToken pour les acteurs (img), .update pour les items,
@@ -2476,6 +3288,7 @@ async autoSetCaracAjustements() {
     const self = this;
 add2eRegisterImgPicker(html, this);
 this._add2eBindPersistentTabs(html);
+add2eEnhanceCharacterSheetUi(this, html);
 
 // -- Gestion des effets actifs (édition et suppression) --
  html.find('.effect-edit').off().on('click', ev => {
@@ -2731,121 +3544,18 @@ html.find('.arme-thaco-roll').off().on('click', async ev => {
     });
 
 html.find('.armure-equip').off().on('click', async ev => {
+  ev.preventDefault();
+  ev.stopPropagation();
+  this._add2eRememberActiveTab(html);
+
   const itemId = $(ev.currentTarget).data("item-id");
-  const item = this.actor.items.get(itemId);
-  if (!item) return;
-
-  const estDejaEquipee = item.system.equipee === true;
-  const nomItem = (item.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, '');
-  const catItem = (item.system.categorie || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, '');
-
-  const estBouclier = nomItem.includes("bouclier");
-  const estHeaume = nomItem.includes("heaume") || nomItem.includes("casque");
-  const estArmure = !estBouclier && !estHeaume;
-
-  const classe = this.actor.system.details_classe || {};
-const toStrArraySafe = (v) => {
-  if (Array.isArray(v)) return v;
-  if (typeof v === "string") {
-    const s = v.trim();
-    if (!s) return [];
-    return s.split(/[,;]+/).map(x => x.trim()).filter(Boolean);
-  }
-  if (v && typeof v === "object") {
-    if (Array.isArray(v.value)) return v.value;
-    if (Array.isArray(v.list)) return v.list;
-    if (Array.isArray(v.items)) return v.items;
-    if (typeof v.value === "string") return toStrArraySafe(v.value);
-    if (typeof v.list === "string") return toStrArraySafe(v.list);
-    if (typeof v.items === "string") return toStrArraySafe(v.items);
-  }
-  return [];
-};
-
-const armorsAllowed = toStrArraySafe(
-  classe.armorAllowed ?? classe.armures_autorisees ?? []
-).map(a =>
-  String(a)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f’']/g, "")
-    .trim()
-);
-  const peutBouclier = classe.shieldAllowed === true;
-
-  // PATCH Moine : ne peut jamais porter d’armure
-  const isMonk = ((classe.label || classe.nom || classe.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, '').includes("moine"));
-  if (isMonk && armorsAllowed.includes("aucune")) {
-    ui.notifications.error(`⚠️ Les Moines ne peuvent jamais porter d’armure !`);
-    return;
-  }
-
-  // Règle AD&D2e : Arme à deux mains = pas de bouclier possible
-  if (estBouclier) {
-    const armeDeuxMains = this.actor.items.find(i => i.type === "arme" && i.system.equipee && i.system.deuxMains);
-    if (armeDeuxMains) {
-      ui.notifications.error(`⚠️ Impossible d'équiper un bouclier avec une arme à deux mains (${armeDeuxMains.name}) déjà équipée.`);
-      return;
-    }
-  }
-
-  // ✅ Si déjà équipé → déséquipe sans contrôle
-  if (estDejaEquipee) {
-    await item.update({ "system.equipee": false });
-    this.render(false);
-    return;
-  }
-
-  // Gestion des restrictions classiques
-  if (estBouclier && !peutBouclier) {
-    ui.notifications.error(`⚠️ Bouclier interdit pour la classe ${classe.label || "(inconnue)"}`);
-    console.warn(`[ADD2e] Bouclier "${item.name}" interdit`);
-    return;
-  }
-
-  if (estArmure) {
-    if (!armorsAllowed.includes("toutes")) {
-      if (armorsAllowed.includes("aucune")) {
-        ui.notifications.error(`⚠️ Aucune armure n’est autorisée pour la classe ${classe.label || "(inconnue)"} !`);
-        return;
-      }
-      const autorisee = armorsAllowed.includes(catItem) || armorsAllowed.includes(nomItem);
-      if (!autorisee) {
-        ui.notifications.error(`⚠️ Cette armure (« ${item.name} ») est interdite pour votre classe (${classe.label || "classe inconnue"}).`);
-        console.warn(`[ADD2e] Armure "${item.name}" NON AUTORISÉE pour la classe "${classe.label}"`);
-        return;
-      }
-    }
-  }
-
-  // Déséquipe toutes les autres du même type
-  for (const i of this.actor.items) {
-    if (i.type === "armure" && i.id !== item.id) {
-      const n = (i.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, '');
-      if ((estArmure && !n.includes("bouclier") && !n.includes("casque") && !n.includes("heaume")) ||
-          (estBouclier && n.includes("bouclier")) ||
-          (estHeaume && (n.includes("heaume") || n.includes("casque")))) {
-        await i.update({ "system.equipee": false });
-      }
-    }
-  }
-
-  // Si on équipe un bouclier, déséquipe toute arme à deux mains
-  if (estBouclier && item.system.equipee !== true) {
-    for (const arme of this.actor.items) {
-      if (
-        arme.type === "arme" &&
-        arme.system.equipee &&
-        arme.system.deuxMains
-      ) {
-        await arme.update({ "system.equipee": false });
-        ui.notifications.warn(`Arme à deux mains déséquipée car un bouclier est équipé.`);
-      }
-    }
-  }
-
-  await item.update({ "system.equipee": true });
-  await this.render(false);
+  await handleItemAction({
+    actor: this.actor,
+    action: "equip",
+    itemId,
+    itemType: "armure",
+    sheet: this
+  });
 });
 
 // Édition d'une armure
