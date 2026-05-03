@@ -1,0 +1,261 @@
+<form class="sheet item arme-sheet add2e-pretty-item" autocomplete="off">
+  <style>
+    .add2e-pretty-item {
+      --bg: #f8f1df;
+      --card: #fffaf0;
+      --border: #8b5e34;
+      --soft: rgba(91, 52, 25, 0.22);
+      --title: #3b2414;
+      --accent: #7c2d12;
+      --blue: #2563eb;
+      color: #2f241c;
+    }
+
+    .add2e-pretty-item input,
+    .add2e-pretty-item textarea,
+    .add2e-pretty-item select {
+      width: 100%;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid var(--soft);
+      border-radius: 6px;
+      padding: 4px 6px;
+      color: #1f1a16;
+    }
+
+    .add2e-hero {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 12px;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #fff3d6, #ead9b7);
+      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+      margin-bottom: 10px;
+    }
+
+    .add2e-hero img {
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      border-radius: 10px;
+      border: 2px solid rgba(75,47,24,.5);
+      background: #1f1a16;
+      cursor: pointer;
+    }
+
+    .add2e-title input {
+      font-size: 1.7em;
+      font-weight: 800;
+      color: var(--title);
+      border: 0;
+      border-bottom: 2px solid rgba(124,45,18,.35);
+      border-radius: 0;
+      background: rgba(255,255,255,.35);
+    }
+
+    .add2e-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .add2e-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .add2e-card {
+      background: var(--card);
+      border: 1px solid var(--soft);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .add2e-card h3 {
+      margin: 0 0 8px;
+      color: var(--title);
+      border-bottom: 1px solid var(--soft);
+      padding-bottom: 5px;
+      font-size: 1.15em;
+      font-weight: 800;
+    }
+
+    .add2e-field label,
+    .add2e-stat label {
+      display: block;
+      font-size: .78em;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #6f6258;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
+    .add2e-stat {
+      background: rgba(251,246,234,.95);
+      border: 1px solid rgba(124,45,18,.18);
+      border-radius: 8px;
+      padding: 7px;
+    }
+
+    .add2e-checks {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .add2e-checks label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px;
+      border: 1px solid var(--soft);
+      border-radius: 8px;
+      background: rgba(255,255,255,.5);
+      font-weight: 700;
+    }
+
+    .add2e-checks input {
+      width: auto;
+    }
+
+    .add2e-note {
+      font-size: .86em;
+      color: #6f6258;
+      margin-top: 4px;
+    }
+  </style>
+
+  <header class="add2e-hero">
+    <img src="{{img}}" alt="Image de l'arme" data-edit="img" />
+
+    <div>
+      <div class="add2e-title">
+        <input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'arme">
+      </div>
+
+      <div class="add2e-grid-3">
+        <div class="add2e-field">
+          <label>Type</label>
+          <input type="text" name="system.type" value="{{item.system.type}}" placeholder="melee">
+        </div>
+
+        <div class="add2e-field">
+          <label>Catégorie</label>
+          <input type="text" name="system.categorie" value="{{item.system.categorie}}" placeholder="melee, projectile_propulse...">
+        </div>
+
+        <div class="add2e-field">
+          <label>Équipée</label>
+          <input type="checkbox" name="system.equipee" {{#if item.system.equipee}}checked{{/if}}>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="add2e-card">
+    <h3><i class="fas fa-sword"></i> Combat</h3>
+
+    <div class="add2e-grid-4">
+      <div class="add2e-stat">
+        <label>Bonus toucher</label>
+        <input type="number" name="system.bonus_hit" value="{{item.system.bonus_hit}}">
+      </div>
+
+      <div class="add2e-stat">
+        <label>Bonus dégâts</label>
+        <input type="number" name="system.bonus_dom" value="{{item.system.bonus_dom}}">
+      </div>
+
+      <div class="add2e-stat">
+        <label>Facteur rapidité</label>
+        <input type="number" name="system.facteur_rapidité" value="{{item.system.facteur_rapidité}}">
+      </div>
+
+      <div class="add2e-stat">
+        <label>Type dégâts</label>
+        <input type="text" name="system.type_degats" value="{{item.system.type_degats}}" placeholder="tranchant, contondant...">
+      </div>
+    </div>
+
+    <div class="add2e-grid-3" style="margin-top:8px;">
+      <div class="add2e-stat">
+        <label>Dégâts taille M</label>
+        <input type="text" name="system.degats.contre_moyen" value="{{item.system.degats.contre_moyen}}" placeholder="1d8">
+      </div>
+
+      <div class="add2e-stat">
+        <label>Dégâts taille G</label>
+        <input type="text" name="system.degats.contre_grand" value="{{item.system.degats.contre_grand}}" placeholder="1d12">
+      </div>
+
+      <div class="add2e-stat">
+        <label>Ajustement CA</label>
+        <input type="text" name="system.ajustement_ca" value="{{item.system.ajustement_ca}}" placeholder="0,0,0,0,0,0,0,0,0">
+      </div>
+    </div>
+  </section>
+
+  <section class="add2e-card">
+    <h3><i class="fas fa-bullseye"></i> Portée et maniement</h3>
+
+    <div class="add2e-grid-4">
+      <div class="add2e-stat">
+        <label>Portée courte</label>
+        <input type="number" name="system.portee_courte" value="{{item.system.portee_courte}}">
+      </div>
+
+      <div class="add2e-stat">
+        <label>Portée moyenne</label>
+        <input type="number" name="system.portee_moyenne" value="{{item.system.portee_moyenne}}">
+      </div>
+
+      <div class="add2e-stat">
+        <label>Portée longue</label>
+        <input type="number" name="system.portee_longue" value="{{item.system.portee_longue}}">
+      </div>
+
+      <div class="add2e-stat">
+        <label>Poids</label>
+        <input type="number" name="system.poids" value="{{item.system.poids}}">
+      </div>
+    </div>
+
+    <div class="add2e-checks" style="margin-top:8px;">
+      <label><input type="checkbox" name="system.deuxMains" {{#if item.system.deuxMains}}checked{{/if}}> Deux mains</label>
+      <label><input type="checkbox" name="system.arme_de_jet" {{#if item.system.arme_de_jet}}checked{{/if}}> Arme de jet</label>
+      <label><input type="checkbox" name="system.encombrante" {{#if item.system.encombrante}}checked{{/if}}> Encombrante</label>
+      <label><input type="checkbox" name="system.base" {{#if item.system.base}}checked{{/if}}> Arme de base</label>
+    </div>
+  </section>
+
+  <section class="add2e-card">
+    <h3><i class="fas fa-tags"></i> Tags d’effets</h3>
+
+    <div class="add2e-field">
+      <label>Tags</label>
+      <input type="text" name="system.effectTags" value="{{item.system.effectTags}}" placeholder="arc, epee_longue, hache, baton...">
+      <div class="add2e-note">
+        Ces tags permettent aux effets raciaux de reconnaître l’arme. Exemple : <b>bonus_touche:hache:1</b> fonctionne avec une arme dont le tag est <b>hache</b>.
+      </div>
+    </div>
+  </section>
+
+  <section class="add2e-card">
+    <h3><i class="fas fa-scroll"></i> Description</h3>
+
+    <div class="add2e-field">
+      <label>Propriétés</label>
+      <input type="text" name="system.proprietes" value="{{item.system.proprietes}}" placeholder="Tranchant, Magique, Distance...">
+    </div>
+
+    <div class="add2e-field" style="margin-top:8px;">
+      <label>Description</label>
+      <textarea name="system.description" rows="4">{{item.system.description}}</textarea>
+    </div>
+  </section>
+</form>

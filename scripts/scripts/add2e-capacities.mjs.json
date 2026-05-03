@@ -1,0 +1,531 @@
+// scripts/add2e-capacities.mjs
+// ADD2E — Moteur de capacités activables
+// Objectif : gérer les capacités de classe comme les sorts : bouton dans la feuille,
+// script on_use réutilisable, consommation uniquement si le script retourne true.
+// Compatible Foundry VTT v13/v14.
+
+const ADD2E_CAPACITIES_VERSION = "2026-05-01-capacites-activables-v1";
+globalThis.ADD2E_CAPACITIES_VERSION = ADD2E_CAPACITIES_VERSION;
+
+function add2eCapNormalize(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function add2eCapToArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+
+  if (Array.isArray(value)) {
+    return value
+      .flatMap(v => add2eCapToArray(v))
+      .filter(v => v !== undefined && v !== null && String(v).trim() !== "");
+  }
+
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s || s === "[object Object]") return [];
+
+    if (
+      (s.startsWith("[") && s.endsWith("]")) ||
+      (s.startsWith("{") && s.endsWith("}"))
+    ) {
+      try {
+        return add2eCapToArray(JSON.parse(s));
+      } catch (e) {
+        // continue as plain text list
+      }
+    }
+
+    return s.split(/[,;\n|]+/).map(v => v.trim()).filter(Boolean);
+  }
+
+  if (typeof value === "object") {
+    for (const key of ["value", "values", "items", "list", "tags", "tag", "effectTags", "effects", "effets"]) {
+      if (key in value) return add2eCapToArray(value[key]);
+    }
+  }
+
+  return [];
+}
+
+function add2eCapToObjectArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+
+  if (Array.isArray(value)) return value.filter(v => v && typeof v === "object");
+
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s || s === "[object Object]") return [];
+
+    try {
+      return add2eCapToObjectArray(JSON.parse(s));
+    } catch (e) {
+      return [];
+    }
+  }
+
+  if (typeof value === "object") {
+    if (Array.isArray(value.items)) return add2eCapToObjectArray(value.items);
+    if (Array.isArray(value.values)) return add2eCapToObjectArray(value.values);
+    if (Array.isArray(value.value)) return add2eCapToObjectArray(value.value);
+
+    const numericValues = Object.keys(value)
+      .filter(k => /^\d+$/.test(k))
+      .sort((a, b) => Number(a) - Number(b))
+      .map(k => value[k]);
+
+    if (numericValues.length) return add2eCapToObjectArray(numericValues);
+
+    return [value];
+  }
+
+  return [];
+}
+
+function add2eCapGetUses(capacity) {
+  const uses = capacity.uses && typeof capacity.uses === "object" ? capacity.uses : {};
+
+  const max = Number(uses.max ?? capacity.maxUses ?? capacity.usesMax ?? 0) || 0;
+
+  return {
+    max,
+    per: String(uses.per ?? capacity.usesPer ?? capacity.recharge ?? "at_will"),
+    consumeOnSuccess: uses.consumeOnSuccess !== false,
+    label: uses.label ?? "",
+    reset: uses.reset ?? uses.per ?? capacity.recharge ?? "at_will"
+  };
+}
+
+function add2eCapPeriodKey(capacity) {
+  const uses = add2eCapGetUses(capacity);
+  const per = add2eCapNormalize(uses.per);
+
+  if (!uses.max || per === "at_will" || per === "illimite" || per === "illimitee") return "at_will";
+
+  if (per === "round") {
+    return game.combat
+      ? `combat:${game.combat.id}:round:${game.combat.round}`
+      : `scene:${canvas?.scene?.id ?? "no-scene"}:roundless`;
+  }
+
+  if (per === "combat" || per === "rencontre" || per === "encounter") {
+    return game.combat
+      ? `combat:${game.combat.id}`
+      : `scene:${canvas?.scene?.id ?? "no-scene"}:no-combat`;
+  }
+
+  if (per === "jour" || per === "day" || per === "daily") {
+    const day = Math.floor(Number(game.time?.worldTime ?? 0) / 86400);
+    return `world-day:${day}`;
+  }
+
+  if (per === "repos" || per === "rest") {
+    return "rest";
+  }
+
+  return per || "custom";
+}
+
+function add2eCapStorageKey(capacity) {
+  return `${capacity.key}::${add2eCapPeriodKey(capacity)}`;
+}
+
+function add2eCapReadSpent(actor) {
+  return foundry.utils.deepClone(actor.getFlag?.("add2e", "capacitySpent") ?? {});
+}
+
+async function add2eCapWriteSpent(actor, spent) {
+  await actor.setFlag("add2e", "capacitySpent", spent);
+}
+
+function add2eCapRemaining(actor, capacity) {
+  const uses = add2eCapGetUses(capacity);
+  if (!uses.max) return null;
+
+  const spent = add2eCapReadSpent(actor);
+  const key = add2eCapStorageKey(capacity);
+  const used = Number(spent[key] ?? 0) || 0;
+
+  return Math.max(0, uses.max - used);
+}
+
+async function add2eCapConsume(actor, capacity) {
+  const uses = add2eCapGetUses(capacity);
+  if (!uses.max) return true;
+
+  const spent = add2eCapReadSpent(actor);
+  const key = add2eCapStorageKey(capacity);
+  spent[key] = (Number(spent[key] ?? 0) || 0) + 1;
+  await add2eCapWriteSpent(actor, spent);
+  return true;
+}
+
+function add2eCapFeatureIsActive(actor, feature) {
+  const level = Number(actor?.system?.niveau ?? 1) || 1;
+  const min = Number(feature.minLevel ?? feature.level ?? feature.niveau ?? 1) || 1;
+  return level >= min;
+}
+
+function add2eCapFeatureIsActivable(feature) {
+  if (!feature || typeof feature !== "object") return false;
+
+  return (
+    feature.activable === true ||
+    feature.active === true ||
+    feature.isActivable === true ||
+    !!feature.on_use ||
+    !!feature.onUse ||
+    !!feature.script ||
+    !!feature.scriptName ||
+    !!feature.uses ||
+    !!feature.actionType
+  );
+}
+
+function add2eCapBuildFromFeature(actor, feature, sourceItem = null) {
+  const min = Number(feature.minLevel ?? feature.level ?? feature.niveau ?? 1) || 1;
+  const name = String(feature.name ?? feature.label ?? feature.titre ?? "Capacité");
+  const sourceId = sourceItem?.id ?? "details_classe";
+  const key = `feature:${sourceId}:${min}:${add2eCapNormalize(name)}`;
+
+  return {
+    key,
+    source: "classFeature",
+    sourceItemId: sourceItem?.id ?? null,
+    name,
+    img: feature.img || feature.icon || sourceItem?.img || "icons/svg/aura.svg",
+    minLevel: min,
+    description: feature.description ?? feature.desc ?? "",
+    tags: [
+      ...add2eCapToArray(feature.tags),
+      ...add2eCapToArray(feature.tag),
+      ...add2eCapToArray(feature.effectTags),
+      ...add2eCapToArray(feature.effects),
+      ...add2eCapToArray(feature.effets)
+    ],
+    on_use: feature.on_use ?? feature.onUse ?? feature.script ?? feature.scriptName ?? "",
+    uses: feature.uses ?? null,
+    consumeOnSuccess: feature.uses?.consumeOnSuccess !== false,
+    raw: feature
+  };
+}
+
+function add2eCapBuildFromItem(actor, item) {
+  const sys = item.system ?? {};
+  return {
+    key: `item:${item.id}`,
+    source: "item",
+    itemId: item.id,
+    name: item.name,
+    img: item.img || "icons/svg/aura.svg",
+    minLevel: Number(sys.minLevel ?? sys.niveau ?? 1) || 1,
+    description: sys.description ?? sys.desc ?? "",
+    tags: [
+      ...add2eCapToArray(sys.tags),
+      ...add2eCapToArray(sys.tag),
+      ...add2eCapToArray(sys.effectTags),
+      ...add2eCapToArray(sys.effects),
+      ...add2eCapToArray(sys.effets)
+    ],
+    on_use: sys.on_use ?? sys.onUse ?? sys.script ?? sys.scriptName ?? "",
+    uses: sys.uses ?? null,
+    consumeOnSuccess: sys.uses?.consumeOnSuccess !== false,
+    raw: sys
+  };
+}
+
+function add2eCapGetClassItems(actor) {
+  return Array.from(actor?.items ?? []).filter(i => i.type === "classe");
+}
+
+function add2eCapGetActivableCapacities(actor) {
+  const result = [];
+  const seen = new Set();
+
+  if (!actor) return result;
+
+  // 1. Capacités sous forme d'items si le type existe un jour.
+  for (const item of actor.items ?? []) {
+    if (!["capacite", "capacité", "ability", "feature"].includes(String(item.type ?? "").toLowerCase())) continue;
+    const cap = add2eCapBuildFromItem(actor, item);
+    if (!add2eCapFeatureIsActive(actor, cap)) continue;
+
+    seen.add(cap.key);
+    result.push(cap);
+  }
+
+  // 2. Features embarquées dans actor.system.details_classe.
+  const details = actor.system?.details_classe ?? {};
+  for (const feature of add2eCapToObjectArray(details.classFeatures)) {
+    if (!add2eCapFeatureIsActivable(feature)) continue;
+    if (!add2eCapFeatureIsActive(actor, feature)) continue;
+
+    const cap = add2eCapBuildFromFeature(actor, feature, null);
+    if (seen.has(cap.key)) continue;
+
+    seen.add(cap.key);
+    result.push(cap);
+  }
+
+  // 3. Features embarquées dans l'item classe.
+  for (const classItem of add2eCapGetClassItems(actor)) {
+    for (const feature of add2eCapToObjectArray(classItem.system?.classFeatures)) {
+      if (!add2eCapFeatureIsActivable(feature)) continue;
+      if (!add2eCapFeatureIsActive(actor, feature)) continue;
+
+      const cap = add2eCapBuildFromFeature(actor, feature, classItem);
+      if (seen.has(cap.key)) continue;
+
+      seen.add(cap.key);
+      result.push(cap);
+    }
+  }
+
+  return result
+    .sort((a, b) => (a.minLevel - b.minLevel) || String(a.name).localeCompare(String(b.name), "fr"));
+}
+
+function add2eCapScriptPath(scriptName) {
+  let name = String(scriptName ?? "").trim();
+  if (!name) return "";
+
+  name = name.replace(/^systems\/add2e\//, "");
+  if (name.endsWith(".js")) return `systems/add2e/${name}`.replace("systems/add2e/scripts/", "systems/add2e/scripts/");
+
+  const normalized = add2eCapNormalize(name).replace(/_/g, "-");
+  return `systems/add2e/scripts/onuse/capacites/${normalized}.js`;
+}
+
+async function add2eCapExecuteOnUse(actor, capacity) {
+  const scriptName = capacity.on_use || capacity.onUse || capacity.script || capacity.scriptName;
+
+  if (!scriptName) {
+    ui.notifications.warn(`Capacité « ${capacity.name} » : aucun script on_use renseigné.`);
+    return false;
+  }
+
+  const normalized = add2eCapNormalize(scriptName);
+
+  // Raccourcis globaux réutilisables.
+  if (["vade_retro", "vade_retro_js", "repousser_morts_vivants"].includes(normalized)) {
+    if (typeof globalThis.add2eTurnUndead !== "function") {
+      ui.notifications.error("Vade-rétro : le moteur add2e-turn-undead.mjs n’est pas chargé.");
+      return false;
+    }
+
+    return await globalThis.add2eTurnUndead({ actor });
+  }
+
+  // Appel par nom de fonction globale.
+  if (typeof globalThis[scriptName] === "function") {
+    return await globalThis[scriptName]({ actor, capacity });
+  }
+
+  // Appel par script JS, comme les scripts on_use des sorts.
+  const path = add2eCapScriptPath(scriptName);
+
+  let code = "";
+  try {
+    const response = await fetch(path + "?cb=" + Date.now());
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    code = await response.text();
+  } catch (e) {
+    ui.notifications.error(`Capacité « ${capacity.name} » : script on_use introuvable (${path}).`);
+    console.error("[ADD2E][CAPACITE][ON_USE][FETCH]", { capacity, path, error: e });
+    return false;
+  }
+
+  try {
+    const fn = new AsyncFunction(
+      "actor",
+      "capacity",
+      "feature",
+      "item",
+      "token",
+      "targets",
+      "Roll",
+      "ChatMessage",
+      "game",
+      "canvas",
+      "ui",
+      code
+    );
+
+    const sourceItem = capacity.itemId ? actor.items.get(capacity.itemId) : null;
+    const token = canvas.tokens.controlled.find(t => t.actor?.id === actor.id) ?? actor.getActiveTokens?.()[0] ?? null;
+    const targets = Array.from(game.user.targets ?? []);
+
+    return await fn.call(sourceItem ?? actor, actor, capacity, capacity.raw, sourceItem, token, targets, Roll, ChatMessage, game, canvas, ui);
+  } catch (e) {
+    ui.notifications.error(`Erreur dans le script on_use de « ${capacity.name} ».`);
+    console.error("[ADD2E][CAPACITE][ON_USE][EXEC]", { capacity, path, error: e });
+    return false;
+  }
+}
+
+async function add2eUseCapacity(actor, key) {
+  if (!actor) {
+    ui.notifications.warn("Capacité : acteur introuvable.");
+    return false;
+  }
+
+  const capacities = add2eCapGetActivableCapacities(actor);
+  const capacity = capacities.find(c => c.key === key);
+
+  if (!capacity) {
+    ui.notifications.warn("Capacité introuvable ou non disponible.");
+    return false;
+  }
+
+  const remaining = add2eCapRemaining(actor, capacity);
+  if (remaining !== null && remaining <= 0) {
+    ui.notifications.warn(`Capacité « ${capacity.name} » : aucune utilisation restante.`);
+    return false;
+  }
+
+  const ok = await add2eCapExecuteOnUse(actor, capacity);
+
+  // Même principe que les sorts : true = lancement réel validé, donc consommation.
+  if (ok === true && capacity.consumeOnSuccess !== false) {
+    await add2eCapConsume(actor, capacity);
+  }
+
+  return ok === true;
+}
+
+function add2eCapEscape(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function add2eCapUsesLabel(actor, cap) {
+  const uses = add2eCapGetUses(cap);
+  if (!uses.max) return "À volonté";
+
+  const remaining = add2eCapRemaining(actor, cap);
+  const per = {
+    combat: "combat",
+    rencontre: "rencontre",
+    encounter: "rencontre",
+    jour: "jour",
+    day: "jour",
+    daily: "jour",
+    round: "round",
+    repos: "repos",
+    rest: "repos"
+  }[add2eCapNormalize(uses.per)] ?? uses.per;
+
+  return `${remaining}/${uses.max} par ${per}`;
+}
+
+function add2eCapRenderPanel(actor) {
+  const capacities = add2eCapGetActivableCapacities(actor);
+
+  const rows = capacities.length
+    ? capacities.map(cap => {
+      const remaining = add2eCapRemaining(actor, cap);
+      const disabled = remaining !== null && remaining <= 0;
+
+      return `
+        <tr>
+          <td style="width:42px;text-align:center;">
+            <img src="${add2eCapEscape(cap.img)}" style="width:32px;height:32px;border-radius:5px;object-fit:cover;border:1px solid #a7772b;">
+          </td>
+          <td>
+            <div style="font-weight:700;color:#3b2a0c;">${add2eCapEscape(cap.name)}</div>
+            ${cap.description ? `<div style="font-size:0.86em;color:#6b5b31;line-height:1.25;">${cap.description}</div>` : ""}
+          </td>
+          <td style="white-space:nowrap;text-align:center;">${add2eCapEscape(add2eCapUsesLabel(actor, cap))}</td>
+          <td style="width:95px;text-align:center;">
+            <button type="button"
+                    class="add2e-use-capacity"
+                    data-cap-key="${add2eCapEscape(cap.key)}"
+                    ${disabled ? "disabled" : ""}
+                    style="padding:4px 8px;border-radius:6px;border:1px solid #9f7a24;background:${disabled ? "#ddd" : "#fff3c4"};font-weight:700;cursor:${disabled ? "not-allowed" : "pointer"};">
+              Utiliser
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join("")
+    : `
+      <tr>
+        <td colspan="4" style="padding:8px;color:#7a6a45;font-style:italic;">
+          Aucune capacité activable disponible.
+        </td>
+      </tr>
+    `;
+
+  return `
+    <section class="add2e-activable-capacities-panel" style="margin:12px 0;padding:10px;border:1px solid #d9bf73;border-radius:10px;background:#fffaf0;">
+      <h2 style="margin:0 0 8px 0;color:#6f4b12;border-bottom:1px solid #d9bf73;padding-bottom:4px;">
+        Capacités activables
+      </h2>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th></th>
+            <th style="text-align:left;">Capacité</th>
+            <th style="text-align:center;">Utilisations</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </section>
+  `;
+}
+
+function add2eCapInjectSheet(app, html) {
+  const actor = app?.actor ?? app?.object;
+  if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage") return;
+
+  const root = html instanceof jQuery ? html : $(html);
+  if (root.find(".add2e-activable-capacities-panel").length) return;
+
+  const panel = $(add2eCapRenderPanel(actor));
+
+  // Placement prioritaire : après la table de sorts, sinon avant les armes, sinon en bas du formulaire.
+  const sortTable = root.find(".sort-table").last();
+  if (sortTable.length) {
+    const section = sortTable.closest("section, .tab, div").first();
+    if (section.length) section.after(panel);
+    else sortTable.after(panel);
+  } else {
+    const weaponTable = root.find(".arme-table").first();
+    if (weaponTable.length) weaponTable.closest("section, .tab, div").first().before(panel);
+    else root.find("form").append(panel);
+  }
+
+  panel.find(".add2e-use-capacity").on("click", async ev => {
+    ev.preventDefault();
+    const key = ev.currentTarget.dataset.capKey;
+    await add2eUseCapacity(actor, key);
+    app.render(false);
+  });
+}
+
+// Nom exact de ta feuille custom + fallback générique.
+Hooks.on("renderAdd2eActorSheet", add2eCapInjectSheet);
+Hooks.on("renderActorSheet", add2eCapInjectSheet);
+
+globalThis.add2eGetActivableCapacities = add2eCapGetActivableCapacities;
+globalThis.add2eUseCapacity = add2eUseCapacity;
+globalThis.add2eResetCapacityUses = async function(actor) {
+  actor = actor ?? canvas.tokens.controlled[0]?.actor ?? game.user.character;
+  if (!actor) return false;
+  await actor.unsetFlag("add2e", "capacitySpent");
+  ui.notifications.info(`Utilisations de capacités réinitialisées pour ${actor.name}.`);
+  return true;
+};
+
+console.log(`[ADD2E][CAPACITES] Module chargé ${ADD2E_CAPACITIES_VERSION}`);

@@ -1,0 +1,124 @@
+<form class="race-sheet-modern relative min-h-[80vh] p-0">
+  <!-- Background SVG, centré, flou -->
+  <div class="absolute inset-0 pointer-events-none z-0"
+       style="background: url('assets/race-bg.svg') center/cover no-repeat; opacity: 0.5;"></div>
+
+  <div class="relative z-10 max-w-3xl mx-auto py-8 flex flex-col gap-8">
+    <!-- Header (icône + nom) -->
+    <div class="flex items-center gap-6 bg-white/50 dark:bg-neutral-900/70 rounded-2xl shadow-lg p-6 backdrop-blur-md">
+<img src="{{item.img}}" alt="Icône {{item.name}}" data-edit="img" class="w-24 h-24 rounded-full shadow border-4 border-white dark:border-neutral-700 object-cover cursor-pointer"/>
+<div class="flex-1">
+  <input type="text" name="name" value="{{item.name}}" class="block w-full text-3xl font-extrabold bg-transparent border-none focus:ring-0 focus:outline-none text-neutral-900 dark:text-white"/>
+  <div class="text-sm text-neutral-500 dark:text-neutral-400">Type : {{item.type}}</div>
+  <textarea name="system.description" placeholder="Brève description..." class="w-full bg-transparent text-neutral-600 dark:text-neutral-200 border-none mt-2 min-h-[2.2rem] font-medium resize-none">{{system.description}}</textarea>
+</div>
+
+    </div>
+
+    <!-- Bonus/malus de caractéristiques -->
+    <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
+      <h3 class="font-semibold text-xl mb-2">Bonus/Malus de caractéristiques</h3>
+      <div class="grid grid-cols-2 gap-3">
+        {{#each system.bonus_caracteristiques}}
+          <label class="flex items-center gap-2">
+            <span class="capitalize text-neutral-600 dark:text-neutral-300">{{@key}}</span>
+            <input type="number" name="system.bonus_caracteristiques.{{@key}}" value="{{this}}" class="w-12 bg-neutral-100 dark:bg-neutral-700/70 rounded text-right text-neutral-800 dark:text-white border-none"/>
+          </label>
+        {{/each}}
+      </div>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Colonne 1 : Capacités, Limites, Langues -->
+      <div class="flex flex-col gap-6">
+
+        <!-- Capacités raciales -->
+        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
+          <h3 class="font-semibold text-xl mb-2">Capacités raciales</h3>
+          <ul class="flex flex-col gap-2">
+            {{#each system.capacites}}
+              <li>
+                <input type="text" name="system.capacites.{{@index}}" value="{{this}}" class="w-full bg-neutral-100 dark:bg-neutral-700/70 text-neutral-800 dark:text-white rounded px-2 py-1 border-none"/>
+              </li>
+            {{/each}}
+            <li>
+              <input type="text" name="system.capacites.NEW" value="" class="w-full bg-neutral-200 dark:bg-neutral-700/60 text-neutral-800 dark:text-white rounded px-2 py-1 border-none" placeholder="+ Ajouter une capacité"/>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Limites de classe -->
+        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
+          <h3 class="font-semibold text-xl mb-2">Limites de classes</h3>
+          <div class="flex flex-col gap-2">
+            {{#each system.limites_classes}}
+              <label class="flex items-center gap-3">
+                <span class="w-28 capitalize text-neutral-600 dark:text-neutral-300">{{@key}}</span>
+                <input type="text" name="system.limites_classes.{{@key}}" value="{{this}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 border-none text-neutral-800 dark:text-white"/>
+              </label>
+            {{/each}}
+          </div>
+        </section>
+
+        <!-- Langues -->
+        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
+          <h3 class="font-semibold text-xl mb-2">Langues connues</h3>
+          <textarea name="system.langues" class="w-full bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 min-h-[2.5rem] text-neutral-800 dark:text-white" placeholder="Langues séparées par une virgule">{{system.langues}}</textarea>
+        </section>
+
+      </div>
+
+      <!-- Colonne 2 : Caractéristiques, Autres infos -->
+      <div class="flex flex-col gap-6">
+
+        <!-- Caractéristiques min/max -->
+        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
+          <h3 class="font-semibold text-xl mb-2">Caractéristiques min/max</h3>
+          <div class="flex flex-col gap-2">
+            {{#each system.min_caracteristiques}}
+              <label class="flex items-center gap-2">
+                <span class="capitalize w-20 text-neutral-600 dark:text-neutral-300">{{@key}}</span>
+                <input type="number" name="system.min_caracteristiques.{{@key}}" value="{{this}}" class="w-12 bg-neutral-100 dark:bg-neutral-700/70 rounded text-right text-neutral-800 dark:text-white border-none"/>
+                <span class="text-neutral-400">/</span>
+                <input type="number" name="system.max_caracteristiques.{{@key}}" value="{{lookup ../system.max_caracteristiques @key}}" class="w-12 bg-neutral-100 dark:bg-neutral-700/70 rounded text-right text-neutral-800 dark:text-white border-none"/>
+              </label>
+            {{/each}}
+          </div>
+        </section>
+
+        <!-- Infos techniques -->
+        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="w-32 text-neutral-600 dark:text-neutral-300">Mouvement</span>
+            <input type="text" name="system.movement" value="{{system.movement}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 text-neutral-800 dark:text-white border-none"/>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-32 text-neutral-600 dark:text-neutral-300">Taille</span>
+            <input type="text" name="system.taille" value="{{system.taille}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 text-neutral-800 dark:text-white border-none"/>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-32 text-neutral-600 dark:text-neutral-300">Âge départ</span>
+            <input type="text" name="system.âge_debut" value="{{system.âge_debut}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 text-neutral-800 dark:text-white border-none"/>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-32 text-neutral-600 dark:text-neutral-300">Esp. de vie</span>
+            <input type="text" name="system.espérance_vie" value="{{system.espérance_vie}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 text-neutral-800 dark:text-white border-none"/>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Description longue & notes MJ -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section class="bg-white/80 dark:bg-neutral-800/80 rounded-2xl shadow p-5 flex flex-col">
+        <h3 class="font-semibold text-xl mb-2">Description détaillée</h3>
+        <textarea name="system.description_longue" class="w-full min-h-[6rem] bg-transparent text-neutral-700 dark:text-neutral-200 border-none rounded p-2 resize-vertical" placeholder="Description détaillée...">{{system.description_longue}}</textarea>
+      </section>
+
+      <section class="bg-white/80 dark:bg-neutral-800/80 rounded-2xl shadow p-5 flex flex-col">
+        <h3 class="font-semibold text-xl mb-2">Notes MJ / Références</h3>
+        <textarea name="system.note_md" class="w-full min-h-[4rem] bg-transparent text-neutral-500 dark:text-neutral-400 border-none rounded p-2 resize-vertical" placeholder="Zone MJ, sources, errata...">{{system.note_md}}</textarea>
+      </section>
+    </div>
+  </div>
+</form>

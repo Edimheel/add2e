@@ -1,0 +1,368 @@
+<form class="{{cssClass}} spell-sheet sort-sheet" autocomplete="off">
+  <style>
+    .spell-sheet {
+      max-width: 600px;
+      margin: auto;
+      padding: 1em;
+      font-size: 1em;
+    }
+
+    .spell-sheet header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      border-bottom: 1px solid #999;
+      margin-bottom: 1em;
+    }
+
+    .spell-sheet .school {
+      font-size: 0.95em;
+      color: #4867c0;
+      margin-top: 0.2em;
+    }
+
+    .spell-sheet .level {
+      font-size: 0.95em;
+      color: #2b9a7b;
+    }
+
+    .item-header .header-flex,
+    .spell-sheet .header-flex {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 0.8em;
+    }
+
+    .spell-sheet .spell-image {
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid #666;
+      background: #222;
+      display: block;
+      margin: auto;
+      cursor: pointer;
+      max-width: 180px;
+      max-height: 180px;
+    }
+
+    .item-header .image-preview img {
+      border: 1px solid #888;
+      border-radius: 6px;
+      object-fit: cover;
+      max-width: 100px;
+      max-height: 100px;
+    }
+
+    .item-header .item-title,
+    .spell-sheet .item-title {
+      font-size: 1.5em;
+      margin: 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    .spell-sheet input,
+    .spell-sheet textarea,
+    .spell-sheet select {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+      padding: 0.25em 0.4em;
+      background: #fff;
+      color: #222;
+    }
+
+    .spell-sheet textarea {
+      min-height: 90px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .spell-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45em 1em;
+      margin-bottom: 1em;
+    }
+
+    .spell-meta div {
+      padding: 0.15em 0;
+    }
+
+    .spell-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2em;
+    }
+
+    .spell-field strong,
+    .spell-script-field strong {
+      font-size: 0.9em;
+      color: #333;
+    }
+
+    .spell-script {
+      margin-top: 1em;
+      background: #f4f7ff;
+      border: 1px solid #b9c7ee;
+      border-radius: 0.5em;
+      padding: 1em;
+    }
+
+    .spell-script h2 {
+      margin-top: 0;
+      font-size: 1.1em;
+      color: #4867c0;
+    }
+
+    .spell-script-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.7em;
+    }
+
+    .spell-script-note {
+      font-size: 0.85em;
+      color: #666;
+      margin-top: 0.25em;
+      line-height: 1.35;
+    }
+
+    .spell-description {
+      margin-top: 1.2em;
+      background: #f7f7ff;
+      border-radius: 0.5em;
+      padding: 1em;
+    }
+
+    .spell-description h2 {
+      margin-top: 0;
+      font-size: 1.1em;
+      color: #4867c0;
+    }
+
+    .spell-effects {
+      margin-top: 1.2em;
+      background: #fff;
+      border-radius: 0.5em;
+      padding: 1em;
+      border: 1px solid #ddd;
+    }
+
+    .spell-effects h2 {
+      margin-top: 0;
+      font-size: 1.1em;
+      color: #4867c0;
+    }
+
+    .spell-effects table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .spell-effects th {
+      border-bottom: 1px solid #aaa;
+      text-align: left;
+      padding: 0.3em;
+    }
+
+    .spell-effects td {
+      border-bottom: 1px solid #eee;
+      padding: 0.3em;
+    }
+  </style>
+
+  <header>
+    <div class="header-flex">
+      <img
+        class="spell-image"
+        src="{{item.img}}"
+        alt="Image du sort"
+        width="180"
+        height="180"
+        data-edit="img"
+        title="Modifier l'image du sort"
+      />
+    </div>
+
+    <h1 class="item-title">
+      <input
+        type="text"
+        name="name"
+        value="{{item.name}}"
+        placeholder="Nom du sort"
+      />
+    </h1>
+
+    <span class="school">{{system.école}}</span>
+    <span class="level">Niveau {{system.niveau}}</span>
+  </header>
+
+  <div class="spell-meta">
+    <div class="spell-field">
+      <strong>Classe :</strong>
+      <input type="text" name="system.classe" value="{{system.classe}}" />
+    </div>
+
+    <div class="spell-field">
+      <strong>École :</strong>
+      <input type="text" name="system.école" value="{{system.école}}" />
+    </div>
+
+    <div class="spell-field">
+      <strong>Niveau :</strong>
+      <input type="number" name="system.niveau" value="{{system.niveau}}" />
+    </div>
+
+    <div class="spell-field">
+      <strong>Portée :</strong>
+      <input type="text" name="system.portée.valeur" value="{{system.portée.valeur}}" placeholder="ex : 0, 30, toucher" />
+    </div>
+
+    <div class="spell-field">
+      <strong>Unité portée :</strong>
+      <input type="text" name="system.portée.unite" value="{{system.portée.unite}}" placeholder="m, cases, toucher..." />
+    </div>
+
+    <div class="spell-field">
+      <strong>Durée :</strong>
+      <input type="text" name="system.durée.valeur" value="{{system.durée.valeur}}" placeholder="ex : permanent, 1 tour..." />
+    </div>
+
+    <div class="spell-field">
+      <strong>Unité durée :</strong>
+      <input type="text" name="system.durée.unite" value="{{system.durée.unite}}" placeholder="rounds, tours, permanent..." />
+    </div>
+
+    <div class="spell-field">
+      <strong>Zone d'effet :</strong>
+      <input type="text" name="system.zone_effet.valeur" value="{{system.zone_effet.valeur}}" />
+    </div>
+
+    <div class="spell-field">
+      <strong>Unité zone :</strong>
+      <input type="text" name="system.zone_effet.unite" value="{{system.zone_effet.unite}}" />
+    </div>
+
+    <div class="spell-field">
+      <strong>Jet de sauvegarde :</strong>
+      <input type="text" name="system.jet_sauvegarde" value="{{system.jet_sauvegarde}}" />
+    </div>
+
+    <div class="spell-field">
+      <strong>Composantes :</strong>
+      <input type="text" name="system.composantes" value="{{system.composantes}}" />
+    </div>
+
+    <div class="spell-field">
+      <strong>Temps d'incantation :</strong>
+      <input type="text" name="system.temps_incantation.valeur" value="{{system.temps_incantation.valeur}}" />
+    </div>
+
+    <div class="spell-field">
+      <strong>Unité incantation :</strong>
+      <input type="text" name="system.temps_incantation.unite" value="{{system.temps_incantation.unite}}" />
+    </div>
+  </div>
+
+  <section class="spell-script">
+    <h2>Script On Use</h2>
+
+    <div class="spell-script-grid">
+      <div class="spell-script-field">
+        <strong>Champ principal : system.onuse</strong>
+        <input
+          type="text"
+          name="system.onuse"
+          value="{{system.onuse}}"
+          placeholder="scripts/sorts/soins_mineurs.js"
+        />
+        <div class="spell-script-note">
+          Champ demandé pour l'automatisation du sort. Exemple : <b>scripts/sorts/soins_mineurs.js</b>
+        </div>
+      </div>
+
+      <div class="spell-script-field">
+        <strong>Compatibilité : system.onuse</strong>
+        <input
+          type="text"
+          name="system.onuse"
+          value="{{system.onuse}}"
+          placeholder="scripts/sorts/soins_mineurs.js"
+        />
+        <div class="spell-script-note">
+          Ancien champ déjà affiché dans ta fiche. Garde-le si ton moteur actuel lit encore <b>system.onuse</b>.
+        </div>
+      </div>
+
+      <div class="spell-script-field">
+        <strong>Compatibilité : system.onUse</strong>
+        <input
+          type="text"
+          name="system.onUse"
+          value="{{system.onUse}}"
+          placeholder="scripts/sorts/soins_mineurs.js"
+        />
+        <div class="spell-script-note">
+          Variante camelCase utile si certains objets ou pouvoirs utilisent déjà <b>onUse</b>.
+        </div>
+      </div>
+
+      <div class="spell-script-field">
+        <strong>Code direct optionnel : system.onUseCode</strong>
+        <textarea
+          name="system.onUseCode"
+          rows="8"
+          placeholder="// Code JavaScript direct optionnel"
+        >{{system.onUseCode}}</textarea>
+      </div>
+    </div>
+  </section>
+
+  <section class="spell-description">
+    <h2>Description</h2>
+    <textarea name="system.description" rows="10">{{system.description}}</textarea>
+  </section>
+
+  {{#if item.effects.contents.length}}
+  <section class="spell-effects">
+    <h2>Effets actifs embarqués</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th style="text-align:center;">Transféré</th>
+          <th style="text-align:center;">Actif par défaut</th>
+          <th style="text-align:center;">Durée rounds</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each item.effects.contents as |eff|}}
+        <tr>
+          <td>{{eff.name}}</td>
+          <td style="text-align:center;">
+            {{#if eff.transfer}}
+              <span style="color:green;">Oui</span>
+            {{else}}
+              <span style="color:red;">Non</span>
+            {{/if}}
+          </td>
+          <td style="text-align:center;">
+            {{#unless eff.disabled}}
+              <span style="color:green;">Oui</span>
+            {{else}}
+              <span style="color:red;">Non</span>
+            {{/unless}}
+          </td>
+          <td style="text-align:center;">{{eff.duration.rounds}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </section>
+  {{/if}}
+</form>
