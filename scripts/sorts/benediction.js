@@ -14,7 +14,7 @@
  * return true  = le sort est réellement lancé.
  */
 
-return await (async () => {
+const __add2eOnUseResult = await (async () => {
 
   console.log("%c[ADD2E][BENEDICTION] SCRIPT CUSTOM", "color:#b88924;font-weight:bold;");
 
@@ -378,9 +378,29 @@ return await (async () => {
     startTime: game.time.worldTime
   };
 
+
+  function add2eAEAddChange(key, value, priority = 20) {
+    if (CONST.ACTIVE_EFFECT_CHANGE_TYPES) {
+      return {
+        key,
+        type: "add",
+        phase: "final",
+        value: String(value),
+        priority
+      };
+    }
+
+    return {
+      key,
+      mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+      value: String(value),
+      priority
+    };
+  }
+
   const effectData = {
     name: effectName,
-    icon,
+    img: icon,
     origin: sourceItem.uuid,
     disabled: false,
     transfer: false,
@@ -409,18 +429,8 @@ return await (async () => {
       }
     },
     changes: [
-      {
-        key: "system.bonus_attaque",
-        mode: CONST.ACTIVE_EFFECT_MODES.ADD,
-        value: String(bonusValue),
-        priority: 20
-      },
-      {
-        key: "system.bonus_moral",
-        mode: CONST.ACTIVE_EFFECT_MODES.ADD,
-        value: String(bonusValue),
-        priority: 20
-      }
+      add2eAEAddChange("system.bonus_attaque", bonusValue),
+      add2eAEAddChange("system.bonus_moral", bonusValue)
     ]
   };
 
@@ -479,6 +489,8 @@ return await (async () => {
     </div>
   `;
 
+  if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(casterTokenObj ?? casterToken ?? caster, "divine");
+
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
     content: add2eClercCard({
@@ -488,8 +500,19 @@ return await (async () => {
       targetsLabel: applied.map(t => add2eEscapeHtml(t.name)).join(", "),
       resultHtml
     }),
-    type: CONST.CHAT_MESSAGE_TYPES.OTHER
-  });
+      ...(CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })});
 
+  console.log("[ADD2E][benediction.js][ONUSE_RESULT]", true);
   return true;
 })();
+
+if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
+  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", {
+    script: "benediction.js",
+    result: __add2eOnUseResult
+  });
+  ui.notifications?.error?.(`${sourceItem?.name ?? item?.name ?? sort?.name ?? "Sort"} : le script onUse n'a pas retourné true/false.`);
+  return false;
+}
+
+return __add2eOnUseResult;

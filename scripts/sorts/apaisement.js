@@ -14,7 +14,7 @@
 
 console.log("%c[ADD2E][APAISEMENT] V13/V14-GM-RELAY", "color:#b88924;font-weight:bold;");
 
-return await (async () => {
+const __add2eOnUseResult = await (async () => {
   const DialogV2 = foundry.applications?.api?.DialogV2;
 
   if (!DialogV2) {
@@ -451,7 +451,7 @@ return await (async () => {
 
     const effectData = {
       name: "Apaisement",
-      icon: sourceItem.img || "icons/magic/holy/barrier-shield-winged-blue.webp",
+      img: sourceItem.img || "icons/magic/holy/barrier-shield-winged-blue.webp",
       origin: sourceItem.uuid,
       disabled: false,
       transfer: false,
@@ -501,7 +501,7 @@ return await (async () => {
 
     const effectData = {
       name: "Épouvante",
-      icon: sourceItem.img || "icons/magic/control/fear-fright-monster-red.webp",
+      img: sourceItem.img || "icons/magic/control/fear-fright-monster-red.webp",
       origin: sourceItem.uuid,
       disabled: false,
       transfer: false,
@@ -547,6 +547,8 @@ return await (async () => {
   // ======================================================
   // 4. MESSAGE CHAT
   // ======================================================
+  if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(casterTokenObj ?? casterToken ?? caster, "divine");
+
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
     content: add2eClercCard({
@@ -557,8 +559,19 @@ return await (async () => {
       resultHtml,
       mode
     }),
-    type: CONST.CHAT_MESSAGE_TYPES.OTHER
-  });
+      ...(CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })});
 
+  console.log("[ADD2E][apaisement.js][ONUSE_RESULT]", true);
   return true;
 })();
+
+if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
+  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", {
+    script: "apaisement.js",
+    result: __add2eOnUseResult
+  });
+  ui.notifications?.error?.(`${sourceItem?.name ?? item?.name ?? sort?.name ?? "Sort"} : le script onUse n'a pas retourné true/false.`);
+  return false;
+}
+
+return __add2eOnUseResult;
