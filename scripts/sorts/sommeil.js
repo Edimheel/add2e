@@ -1,129 +1,176 @@
-// Sommeil.js - AD&D2
-// Correctif : résistance raciale / magique intégrée dans le message du sort.
-// Ne modifie pas la mécanique d'application existante des effets.
+// Sommeil.js — ADD2E corrigé
+// Version : 2026-05-05-v2-safe-onuse
+// Retour attendu : true = consommé, false = non consommé.
 
-function getDV(actor) {
-  if (actor.system?.hitDice) {
-    const match = String(actor.system.hitDice).match(/^(\d+)/);
-    if (match) return parseInt(match[1], 10);
-  }
+return await (async () => {
+  const TAG = "[ADD2E][SORT_ONUSE][SOMMEIL]";
 
-  if (["personnage", "pj", "pnj"].includes((actor.type || "").toLowerCase())) {
-    let niveau = 0;
-
-    if (actor.system?.details_classe) {
-      for (let k in actor.system.details_classe) {
-        let niv = Number(actor.system.details_classe[k]?.niveau || 0);
-        if (niv > niveau) niveau = niv;
-      }
+  function getDV(actor) {
+    if (actor?.system?.hitDice) {
+      const match = String(actor.system.hitDice).match(/^(\d+)/);
+      if (match) return parseInt(match[1], 10);
     }
 
-    niveau = niveau || Number(actor.system.niveau || 0);
-    if (niveau > 0) return niveau;
+    if (["personnage", "pj", "pnj"].includes(String(actor?.type || "").toLowerCase())) {
+      let niveau = 0;
+      if (actor?.system?.details_classe) {
+        for (const k in actor.system.details_classe) {
+          const niv = Number(actor.system.details_classe[k]?.niveau || 0);
+          if (niv > niveau) niveau = niv;
+        }
+      }
+      niveau = niveau || Number(actor?.system?.niveau || actor?.system?.level || 0);
+      if (niveau > 0) return niveau;
+    }
+
+    return 0;
   }
 
-  return 0;
-}
+  function getDVCategorie(dv, hitDiceStr) {
+    let add = 0;
+    if (typeof hitDiceStr === "string") {
+      if (hitDiceStr.includes("+1")) add = 0.25;
+      if (hitDiceStr.includes("+2")) add = 0.5;
+      if (hitDiceStr.includes("+3")) add = 0.75;
+      if (hitDiceStr.includes("+4")) add = 0.99;
+    }
 
-function getDVCategorie(dv, hitDiceStr) {
-  let add = 0;
-
-  if (typeof hitDiceStr === "string") {
-    if (hitDiceStr.includes("+1")) add = 0.25;
-    if (hitDiceStr.includes("+2")) add = 0.5;
-    if (hitDiceStr.includes("+3")) add = 0.75;
-    if (hitDiceStr.includes("+4")) add = 0.99;
+    const dvEff = dv + add;
+    if (dvEff <= 1) return "1";
+    if (dvEff <= 2) return "2";
+    if (dvEff <= 3) return "3";
+    if (dvEff <= 4) return "4";
+    if (dvEff < 5) return "4+";
+    return "HIGH";
   }
 
-  let dvEff = dv + add;
+  function htmlEscape(value) {
+    const div = document.createElement("div");
+    div.innerText = String(value ?? "");
+    return div.innerHTML;
+  }
 
-  if (dvEff <= 1) return "1";
-  if (dvEff <= 2) return "2";
-  if (dvEff <= 3) return "3";
-  if (dvEff <= 4) return "4";
-  if (dvEff < 5) return "4+";
+  function getSourceItem() {
+    if (typeof sort !== "undefined" && sort) return sort;
+    if (typeof item !== "undefined" && item) return item;
+    if (typeof spell !== "undefined" && spell) return spell;
+    if (typeof this !== "undefined" && this?.documentName === "Item") return this;
+    return null;
+  }
 
-  return "HIGH";
-}
+  function registerSleepHooks() {
+    if (game.add2eSleepHooksRegistered) return;
+    game.add2eSleepHooksRegistered = true;
 
-function registerSleepHooks() {
-  if (game.add2eSleepHooksRegistered) return;
+    const endSleepVfx = (effect) => {
+      if (!String(effect?.label || effect?.name || "").toLowerCase().includes("sommeil")) return;
+      const tokens = effect?.parent?.getActiveTokens?.() || [];
+      for (const token of tokens) {
+        try {
+          if (typeof Sequencer !== "undefined") {
+            Sequencer.EffectManager.endEffects({ name: `sleep-effect-${token.id}`, object: token });
+          }
+        } catch (e) {
+          console.warn(`${TAG}[VFX_END_FAILED]`, e);
+        }
+      }
+    };
 
-  game.add2eSleepHooksRegistered = true;
+    Hooks.on("deleteActiveEffect", endSleepVfx);
+    Hooks.on("updateActiveEffect", (effect, changes) => {
+      if (changes?.disabled === true) endSleepVfx(effect);
+    });
+  }
 
-  const endSleepVfx = (effect) => {
-    if (!(effect.label || effect.name || "").toLowerCase().includes("sommeil")) return;
+  async function createOrSocketEffect(targetToken, effectData) {
+    const targetActor = targetToken.actor;
+    if (!targetActor) return false;
 
-    const effActor = effect.parent;
-    if (!effActor) return;
+    if (game.user.isGM) {
+      await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      return true;
+    }
 
-    const tokens = effActor.getActiveTokens?.() || [];
+    if (game.socket) {
+      game.socket.emit("system.add2e", {
+        type: "applyActiveEffect",
+        actorId: targetActor.id,
+        actorUuid: targetActor.uuid,
+        sceneId: canvas.scene?.id,
+        tokenId: targetToken.id,
+        effectData
+      });
+      return true;
+    }
 
-    for (const token of tokens) {
-      const visName = `sleep-effect-${token.id}`;
+    return false;
+  }
 
-      if (typeof Sequencer !== "undefined") {
-        Sequencer.EffectManager.endEffects({
-          name: visName,
-          object: token
-        });
+  async function playSleepVfx(t) {
+    if (typeof Sequence === "undefined") return;
+
+    const candidates = [];
+    if (game.modules.get("jb2a_patreon")?.active) {
+      candidates.push("modules/jb2a_patreon/Library/1st_Level/Sleep/Cloud01_01_Dark_OrangePurple_400x400.webm");
+    }
+    if (game.modules.get("jb2a_free")?.active) {
+      candidates.push("modules/jb2a_free/Library/1st_Level/Sleep/Cloud01_01_Dark_OrangePurple_400x400.webm");
+    }
+    candidates.push("jb2a.sleep.01.dark_purple");
+
+    for (const file of candidates) {
+      try {
+        await new Sequence()
+          .effect()
+          .file(file)
+          .attachTo(t)
+          .persist(true)
+          .name(`sleep-effect-${t.id}`)
+          .belowTokens(true)
+          .scale(0.5)
+          .opacity(0.6)
+          .play();
+        return;
+      } catch (e) {
+        console.warn(`${TAG}[VFX_FAILED]`, { file, error: e });
       }
     }
-  };
+  }
 
-  Hooks.on("deleteActiveEffect", endSleepVfx);
-  Hooks.on("updateActiveEffect", (e, c) => {
-    if (c.disabled) endSleepVfx(e);
-  });
-}
+  console.log(`${TAG}[START]`);
 
-(async () => {
-  console.log("[ADD2E][SLEEP] Lancement (Mode Socket Restauré)");
-
-  // ==============================================================
-  // 1. INITIALISATION
-  // ==============================================================
-  let sourceItem = null;
-
-  if (typeof sort !== "undefined" && sort) sourceItem = sort;
-  else if (typeof item !== "undefined" && item) sourceItem = item;
-  else if (typeof this !== "undefined" && this.documentName === "Item") sourceItem = this;
-  if (!sourceItem && typeof spell !== "undefined") sourceItem = spell;
-
+  const sourceItem = getSourceItem();
   if (!sourceItem) {
-    ui.notifications.error("Sort introuvable.");
-    return;
+    ui.notifications.error("Sommeil : sort introuvable.");
+    return false;
   }
 
   const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
-
   if (!caster) {
-    ui.notifications.error("Lanceur introuvable.");
-    return;
+    ui.notifications.error("Sommeil : lanceur introuvable.");
+    return false;
   }
 
   registerSleepHooks();
 
   const refund = async (raison = "") => {
     if (raison) ui.notifications.warn(raison);
-
-    if (sourceItem.type !== "sort") {
-      const currentGlobal = sourceItem.getFlag("add2e", "global_charges");
-
-      if (currentGlobal !== undefined) {
-        await sourceItem.setFlag("add2e", "global_charges", currentGlobal + 1);
+    try {
+      if (sourceItem.type !== "sort") {
+        const currentGlobal = await sourceItem.getFlag?.("add2e", "global_charges");
+        if (currentGlobal !== undefined) await sourceItem.setFlag("add2e", "global_charges", Number(currentGlobal) + 1);
       }
+    } catch (e) {
+      console.warn(`${TAG}[REFUND_FAILED]`, e);
     }
   };
 
-  // ==============================================================
-  // 2. ZONE WARPGATE
-  // ==============================================================
-  const hasWarpGate = game.modules.get("warpgate")?.active && warpgate?.crosshairs?.show;
+  const wg = globalThis.warpgate;
+  const hasWarpGate = !!(game.modules.get("warpgate")?.active && wg?.crosshairs?.show);
   let center = null;
 
   if (hasWarpGate) {
-    const cross = await warpgate.crosshairs.show({
+    const cross = await wg.crosshairs.show({
       size: 3,
       icon: sourceItem.img || "icons/svg/sleep.svg",
       label: "Sommeil (3\" diam.)",
@@ -134,247 +181,134 @@ function registerSleepHooks() {
 
     if (!cross || cross.cancelled) {
       await refund("Annulé.");
-      return;
+      return false;
     }
 
-    center = {
-      x: cross.x,
-      y: cross.y
-    };
+    center = { x: cross.x, y: cross.y };
   }
 
-  // ==============================================================
-  // 3. CIBLES
-  // ==============================================================
   let targets = [];
-
   if (center) {
-    const gridSize = canvas.grid.size || 1;
-    const radiusSquares = 1.5;
-    const maxDistPixels = radiusSquares * gridSize;
-
+    const gridSize = canvas.grid?.size || 1;
+    const maxDistPixels = 1.5 * gridSize;
     targets = canvas.tokens.placeables.filter(t => {
       if (!t.actor) return false;
-
       const dist = Math.hypot(t.center.x - center.x, t.center.y - center.y);
       return dist <= (maxDistPixels + (t.w / 4));
     });
   } else {
-    targets = Array.from(game.user.targets);
+    targets = Array.from(game.user.targets ?? []);
   }
 
   if (!targets.length) {
-    await refund("Personne dans la zone.");
-    return;
+    await refund("Personne dans la zone ou aucune cible sélectionnée.");
+    return false;
   }
 
-  // ==============================================================
-  // 4. TRI DV
-  // ==============================================================
-  let ordered = targets.map(t => {
-    let dv = getDV(t.actor);
-    let hdStr = t.actor?.system?.hitDice || "";
-
-    return {
-      token: t,
-      actor: t.actor,
-      dv,
-      cat: getDVCategorie(dv, hdStr)
-    };
-  })
-  .filter(o => o.dv > 0)
-  .sort((a, b) => a.dv - b.dv);
+  const ordered = targets.map(t => {
+    const dv = getDV(t.actor);
+    const hdStr = t.actor?.system?.hitDice || "";
+    return { token: t, actor: t.actor, dv, cat: getDVCategorie(dv, hdStr) };
+  }).filter(o => o.dv > 0).sort((a, b) => a.dv - b.dv);
 
   if (!ordered.length) {
-    ui.notifications.warn("Aucune cible valide.");
-    return;
+    await refund("Aucune cible valide.");
+    return false;
   }
 
-  // ==============================================================
-  // 5. JETS DU SORT
-  // ==============================================================
-  let n1 = (await new Roll("4d4").evaluate()).total;
-  let n2 = (await new Roll("2d4").evaluate()).total;
-  let n3 = (await new Roll("1d4").evaluate()).total;
-  let n4 = Math.ceil((await new Roll("1d4").evaluate()).total / 2);
+  const n1 = (await new Roll("4d4").evaluate()).total;
+  const n2 = (await new Roll("2d4").evaluate()).total;
+  const n3 = (await new Roll("1d4").evaluate()).total;
+  const n4 = Math.ceil((await new Roll("1d4").evaluate()).total / 2);
 
-  let maxByCat = {
-    "1": n1,
-    "2": n2,
-    "3": n3,
-    "4": n4,
-    "4+": 1,
-    "HIGH": 0
-  };
+  const maxByCat = { "1": n1, "2": n2, "3": n3, "4": n4, "4+": 1, HIGH: 0 };
+  const count = { "1": 0, "2": 0, "3": 0, "4": 0, "4+": 0, HIGH: 0 };
+  const affectedTokens = [];
+  const listResults = [];
 
-  let count = {
-    "1": 0,
-    "2": 0,
-    "3": 0,
-    "4": 0,
-    "4+": 0,
-    "HIGH": 0
-  };
-
-  let affectedTokens = [];
-  let listResults = [];
-
-  // ==============================================================
-  // 6. RÉSOLUTION DES CIBLES
-  // ==============================================================
-  for (let entry of ordered) {
-    const { token, actor: cible, cat, dv } = entry;
-
+  for (const entry of ordered) {
+    const { token: targetToken, actor: cible, cat, dv } = entry;
     let status = "Endormi";
     let color = "#c0392b";
 
-    let isImmune = cible.effects.some(e =>
-      (e.label || e.name || "").toLowerCase().includes("immunité")
-    );
+    const isImmune = cible.effects?.some(e => {
+      const label = String(e.label || e.name || "").toLowerCase();
+      const tags = e.flags?.add2e?.tags || [];
+      return label.includes("immunité") || label.includes("sommeil") || tags.includes("immunite:sommeil");
+    });
 
-    // --------------------------------------------------------------
-    // Résistance raciale / magique au sommeil
-    // Le test est silencieux : aucun message séparé.
-    // Le résultat est intégré dans le message principal du sort.
-    // --------------------------------------------------------------
     let resistanceSommeil = null;
-
-    if (
-      typeof Add2eEffectsEngine !== "undefined" &&
-      typeof Add2eEffectsEngine.checkResistanceDetails === "function"
-    ) {
-      resistanceSommeil = Add2eEffectsEngine.checkResistanceDetails(cible, "sommeil", {
-        chat: false
-      });
+    if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.checkResistanceDetails === "function") {
+      resistanceSommeil = Add2eEffectsEngine.checkResistanceDetails(cible, "sommeil", { chat: false });
     }
 
     if (resistanceSommeil?.resiste) {
       status = `Résistance raciale (${resistanceSommeil.jet}/${resistanceSommeil.pct}%)`;
       color = "#1f8f3a";
-    }
-    else if (cat === "HIGH") {
-      status = `Trop Puissant (${dv} DV)`;
+    } else if (cat === "HIGH") {
+      status = `Trop puissant (${dv} DV)`;
       color = "#7f8c8d";
-    }
-    else if (isImmune) {
+    } else if (isImmune) {
       status = "Immunisé";
       color = "#7f8c8d";
-    }
-    else if (count[cat] >= maxByCat[cat]) {
-      status = "Épargné (Quota)";
+    } else if (count[cat] >= maxByCat[cat]) {
+      status = "Épargné (quota)";
       color = "#2980b9";
-    }
-    else {
+    } else {
       count[cat]++;
-      affectedTokens.push(token);
+      affectedTokens.push(targetToken);
     }
 
-    listResults.push({
-      name: cible.name,
-      status,
-      color
-    });
+    listResults.push({ name: cible.name, status, color });
   }
 
-  // ==============================================================
-  // 7. MESSAGE CHAT UNIQUE
-  // ==============================================================
   const rows = listResults.map(r => `
     <div style="display:flex;justify-content:space-between;border-bottom:1px dashed #eee;font-size:0.9em;">
-      <span>${r.name}</span>
-      <span style="font-weight:bold;color:${r.color};">${r.status}</span>
-    </div>
-  `).join("");
+      <span>${htmlEscape(r.name)}</span>
+      <span style="font-weight:bold;color:${r.color};">${htmlEscape(r.status)}</span>
+    </div>`).join("");
 
-  const chatHtml = `
-  <div class="add2e-spell-card" style="border-radius:12px;box-shadow:0 4px 10px #715aab44;background:linear-gradient(135deg,#fdfbfd 0%,#f4efff 100%);border:1.5px solid #9373c7;overflow:hidden;padding:0;">
-    <div style="background:linear-gradient(90deg,#6a3c99 0%,#8e44ad 100%);padding:8px;color:white;display:flex;align-items:center;gap:10px;">
-      <img src="${caster.img}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;">
-      <div style="line-height:1.2;flex:1;">
-        <div style="font-weight:bold;">${caster.name}</div>
-        <div style="font-size:0.8em;opacity:0.9;">lance ${sourceItem.name}</div>
-      </div>
-      <img src="${sourceItem.img}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
-    </div>
-
-    <div style="padding:10px;">
-      <div style="background:#fff;border:1px solid #e0d4fc;border-radius:6px;padding:6px;margin-bottom:8px;">
-        <div style="text-align:center;color:#6a3c99;font-weight:bold;border-bottom:1px solid #eee;margin-bottom:4px;">Résultat</div>
-        ${rows || "<i>Aucune cible</i>"}
-      </div>
-
-      <details style="background:#fff;border:1px solid #e0d4fc;border-radius:6px;">
-        <summary style="cursor:pointer;color:#6a3c99;font-weight:600;padding:6px;">Détails</summary>
-        <div style="padding:8px;font-size:0.85em;">
-          ${sourceItem.system?.description || "Description..."}
-        </div>
-      </details>
-    </div>
-  </div>`;
-
-  ChatMessage.create({
+  await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
-    content: chatHtml
+    content: `
+    <div class="add2e-spell-card" style="border-radius:12px;box-shadow:0 4px 10px #715aab44;background:linear-gradient(135deg,#fdfbfd 0%,#f4efff 100%);border:1.5px solid #9373c7;overflow:hidden;padding:0;">
+      <div style="background:linear-gradient(90deg,#6a3c99 0%,#8e44ad 100%);padding:8px;color:white;display:flex;align-items:center;gap:10px;">
+        <img src="${htmlEscape(caster.img || 'icons/svg/mystery-man.svg')}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;">
+        <div style="line-height:1.2;flex:1;">
+          <div style="font-weight:bold;">${htmlEscape(caster.name)}</div>
+          <div style="font-size:0.8em;opacity:0.9;">lance ${htmlEscape(sourceItem.name)}</div>
+        </div>
+        <img src="${htmlEscape(sourceItem.img || 'icons/svg/sleep.svg')}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
+      </div>
+      <div style="padding:10px;">
+        <div style="background:#fff;border:1px solid #e0d4fc;border-radius:6px;padding:6px;margin-bottom:8px;">
+          <div style="text-align:center;color:#6a3c99;font-weight:bold;border-bottom:1px solid #eee;margin-bottom:4px;">Résultat</div>
+          ${rows || "<i>Aucune cible</i>"}
+        </div>
+        <details style="background:#fff;border:1px solid #e0d4fc;border-radius:6px;">
+          <summary style="cursor:pointer;color:#6a3c99;font-weight:600;padding:6px;">Détails</summary>
+          <div style="padding:8px;font-size:0.85em;">${sourceItem.system?.description || "Description..."}</div>
+        </details>
+      </div>
+    </div>`
   });
 
-  // ==============================================================
-  // 8. APPLICATION DES EFFETS
-  // Mécanique conservée : socket système existant.
-  // ==============================================================
-  let jb2aPath = null;
-
-  if (game.modules.get("jb2a_patreon")?.active) {
-    jb2aPath = "modules/jb2a_patreon/Library/1st_Level/Sleep/Cloud01_01_Dark_OrangePurple_400x400.webm";
-  }
-  else if (game.modules.get("jb2a_free")?.active) {
-    jb2aPath = "modules/jb2a_free/Library/1st_Level/Sleep/Cloud01_01_Dark_OrangePurple_400x400.webm";
-  }
-
-  for (let t of affectedTokens) {
+  for (const t of affectedTokens) {
     if (!t.actor) continue;
 
     const effectData = {
       name: "Sommeil",
+      img: "icons/svg/sleep.svg",
       icon: "icons/svg/sleep.svg",
       duration: { rounds: 5 },
-      flags: {
-        add2e: {
-          tags: ["etat:sommeil"]
-        }
-      },
+      flags: { add2e: { tags: ["etat:sommeil", "sommeil"] } },
       origin: sourceItem.uuid
     };
 
-    // On conserve le fonctionnement existant :
-    // le socket système applique l'effet côté MJ.
-    if (game.socket) {
-      console.log("[ADD2E] Emission socket pour", t.actor.name);
-
-      game.socket.emit("system.add2e", {
-        type: "applyActiveEffect",
-        actorId: t.actor.id,
-        effectData: effectData
-      });
-    } else {
-      // Fallback GM
-      await t.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
-    }
-
-    // VFX
-    if (jb2aPath && typeof Sequence !== "undefined") {
-      new Sequence()
-        .effect()
-        .file(jb2aPath)
-        .attachTo(t)
-        .persist(true)
-        .name(`sleep-effect-${t.id}`)
-        .belowTokens(true)
-        .scale(0.5)
-        .opacity(0.6)
-        .play()
-        .catch(e => {});
-    }
+    await createOrSocketEffect(t, effectData);
+    await playSleepVfx(t);
   }
 
-  console.log("[ADD2E][SLEEP] Terminé.");
+  console.log(`${TAG}[END]`, { affected: affectedTokens.map(t => t.name) });
+  return true;
 })();
