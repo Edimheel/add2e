@@ -1,3 +1,6 @@
+globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-05-02-monk-activable-features-v5";
+// ADD2E — Effects engine sans règle raciale codée en dur.
+// Les tags actifs viennent des objets race/classe/équipement et de leurs effets.
 class Add2eEffectsEngine {
   // =====================================================
   // OUTILS GENERAUX
@@ -57,6 +60,28 @@ class Add2eEffectsEngine {
     }
   }
 
+  static addEffectTagsInto(target, effect) {
+    if (!effect) return;
+
+    this.addTagsInto(target, effect.flags?.add2e?.tags);
+    this.addTagsInto(target, effect.flags?.add2e?.effectTags);
+
+    if (effect.getFlag) {
+      try { this.addTagsInto(target, effect.getFlag("add2e", "tags")); } catch (e) {}
+      try { this.addTagsInto(target, effect.getFlag("add2e", "effectTags")); } catch (e) {}
+    }
+  }
+
+  static addEmbeddedItemEffectTagsInto(target, item) {
+    if (!item?.effects) return;
+
+    const effects = item.effects.contents ?? item.effects ?? [];
+    for (const effect of effects) {
+      if (effect?.disabled) continue;
+      this.addEffectTagsInto(target, effect);
+    }
+  }
+
   static getActorLevel(actor) {
     if (!actor) return 1;
 
@@ -105,6 +130,90 @@ class Add2eEffectsEngine {
     }
   }
 
+
+  static classFeatureMinLevel(feature) {
+    const n = Number(
+      feature?.minLevel ??
+      feature?.minimumLevel ??
+      feature?.niveauMin ??
+      feature?.level ??
+      feature?.niveau ??
+      1
+    );
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }
+
+  static classFeatureMaxLevel(feature) {
+    const raw = feature?.maxLevel ?? feature?.maximumLevel ?? feature?.niveauMax ?? feature?.max;
+    if (raw === undefined || raw === null || raw === "") return null;
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  static isClassFeatureUnlocked(feature, level) {
+    if (!feature || typeof feature !== "object") return false;
+    const min = this.classFeatureMinLevel(feature);
+    const max = this.classFeatureMaxLevel(feature);
+    if (level < min) return false;
+    if (max !== null && level > max) return false;
+    return true;
+  }
+
+  static normalizeClassFeature(feature) {
+    return {
+      ...foundry.utils.deepClone(feature),
+      minLevel: this.classFeatureMinLevel(feature),
+      maxLevel: this.classFeatureMaxLevel(feature),
+      available: true,
+      activable: feature?.activable === true
+    };
+  }
+
+  static isClassFeatureActivable(feature) {
+    return feature?.activable === true;
+  }
+
+  static getUnlockedClassFeatures(actor) {
+    if (!actor) return [];
+    const level = this.getActorLevel(actor);
+    const out = [];
+    const pushFeatures = raw => {
+      const features = Array.isArray(raw)
+        ? raw
+        : (raw && typeof raw === "object" ? Object.values(raw) : []);
+
+      for (const feature of features) {
+        if (!this.isClassFeatureUnlocked(feature, level)) continue;
+        out.push(this.normalizeClassFeature(feature));
+      }
+    };
+
+    pushFeatures(actor.system?.classFeatures);
+    pushFeatures(actor.system?.details_classe?.classFeaturesDebloquees);
+    pushFeatures(actor.system?.details_classe?.classFeatures);
+
+    if (actor.items) {
+      for (const item of actor.items) {
+        if (String(item.type || "").toLowerCase() === "classe") pushFeatures(item.system?.classFeatures);
+      }
+    }
+
+    const seen = new Set();
+    return out.filter(f => {
+      const key = `${f.minLevel}|${f.name ?? f.label ?? f.title ?? f.nom ?? JSON.stringify(f.tags ?? [])}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  static getActiveClassFeatures(actor) {
+    // Par convention ADD2E : "active" = activable/clicable.
+    // Les passifs restent traités par getActiveTags() mais ne doivent
+    // pas polluer l’onglet Capacités.
+    return this.getUnlockedClassFeatures(actor).filter(f => this.isClassFeatureActivable(f));
+  }
+
   static getConstitutionTotal(actor) {
     if (!actor) return 0;
 
@@ -134,8 +243,16 @@ class Add2eEffectsEngine {
   }
 
   // =====================================================
-  // TAGS RACIAUX NATIFS
+  // TAGS RACIAUX
   // =====================================================
+  // Cette fonction reste présente pour compatibilité avec les anciens appels,
+  // mais elle ne contient plus aucune règle raciale en dur.
+  // Les tags doivent venir de l'objet race : system.tags, system.effectTags,
+  // flags.add2e.tags/effectTags ou effets embarqués de l'item race.
+  static getRacialTagsForRace(raceName) {
+    return [];
+  }
+
   static getRaceSlug(actor) {
     if (!actor) return "";
 
@@ -147,7 +264,7 @@ class Add2eEffectsEngine {
       raw = raceField.value ?? raceField.name ?? raceField.label ?? "";
     }
 
-    raw = raw || actor.system?.details?.race || actor.system?.race_nom || "";
+    raw = raw || actor.system?.details_race?.slug || actor.system?.details_race?.name || actor.system?.details_race?.label || actor.system?.details?.race || actor.system?.race_nom || "";
 
     if (!raw && actor.items) {
       raw = actor.items.find(i => String(i.type).toLowerCase() === "race")?.name || "";
@@ -161,68 +278,14 @@ class Add2eEffectsEngine {
       .trim();
   }
 
-  static getRacialTagsForRace(raceName) {
-    const race = String(raceName ?? "")
-      .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[’']/g, "")
-      .replace(/\s+/g, "-")
-      .trim();
-
-    const map = {
-      "humain": [],
-
-      "nain": [
-        "infravision:18",
-        "bonus_save_vs:poison:const",
-        "bonus_save_vs:magie:const",
-        "bonus_save_vs:sort:const",
-        "bonus_save_vs:baguette:const"
-      ],
-
-      "elfe": [
-        "infravision:18",
-        "bonus_touche:epee:1",
-        "bonus_touche:arc:1",
-        "resistance:charme_sommeil:90",
-        "detection:portes_secretes:1"
-      ],
-
-      "demi-elfe": [
-        "infravision:18",
-        "resistance:charme_sommeil:30",
-        "detection:portes_secretes:1"
-      ],
-
-      "gnome": [
-        "infravision:18",
-        "detection:pieges_pierre:2"
-      ],
-
-      "petite-gens": [
-        "infravision:18",
-        "bonus_save_vs:poison:const",
-        "bonus_save_vs:magie:const",
-        "bonus_save_vs:sort:const",
-        "bonus_save_vs:baguette:const",
-        "surprise:passive:1"
-      ],
-
-      "demi-orque": [
-        "infravision:18"
-      ]
-    };
-
-    return map[race] ?? [];
-  }
-
   // =====================================================
   // TAGS ACTIFS
   // Lit :
-  // - tags raciaux automatiques
-  // - flags raciaux
+  // - flags raciaux posés par le drop race
+  // - flags de classe posés par le drop classe
   // - ActiveEffects actifs
   // - tags des items actifs / équipés
+  // - effets embarqués dans les items race/classe/équipés
   // - classFeatures avec minLevel <= niveau acteur
   // =====================================================
   static getActiveTags(actor) {
@@ -231,21 +294,23 @@ class Add2eEffectsEngine {
     const tags = [];
     const actorLevel = this.getActorLevel(actor);
 
-    // 1. Tags raciaux automatiques depuis system.race ou item race.
+    // 1. Compatibilité ancienne : ne retourne plus rien, mais évite de casser les appels.
     const raceSlug = this.getRaceSlug(actor);
     this.addTagsInto(tags, this.getRacialTagsForRace(raceSlug));
 
-    // 2. Tags raciaux éventuellement stockés sur l'acteur.
+    // 2. Tags stockés directement sur l'acteur.
     this.addTagsInto(tags, actor.flags?.add2e?.racialTags);
+    this.addTagsInto(tags, actor.flags?.add2e?.classTags);
     if (actor.getFlag) {
       try { this.addTagsInto(tags, actor.getFlag("add2e", "racialTags")); } catch (e) {}
+      try { this.addTagsInto(tags, actor.getFlag("add2e", "classTags")); } catch (e) {}
     }
 
     // 2b. ClassFeatures stockées directement sur l'acteur ou sur details_classe.
     this.addClassFeatureTagsInto(tags, actor.system?.classFeatures, actorLevel);
     this.addClassFeatureTagsInto(tags, actor.system?.details_classe?.classFeatures, actorLevel);
 
-    // 3. ActiveEffects.
+    // 3. ActiveEffects de l'acteur.
     if (actor.effects) {
       for (const eff of actor.effects) {
         if (eff.disabled) continue;
@@ -267,12 +332,7 @@ class Add2eEffectsEngine {
           }
         }
 
-        this.addTagsInto(tags, eff.flags?.add2e?.tags);
-        this.addTagsInto(tags, eff.flags?.add2e?.effectTags);
-        if (eff.getFlag) {
-          try { this.addTagsInto(tags, eff.getFlag("add2e", "tags")); } catch (e) {}
-          try { this.addTagsInto(tags, eff.getFlag("add2e", "effectTags")); } catch (e) {}
-        }
+        this.addEffectTagsInto(tags, eff);
       }
     }
 
@@ -295,6 +355,8 @@ class Add2eEffectsEngine {
         this.addTagsInto(tags, item.flags?.add2e?.tags);
         this.addTagsInto(tags, item.flags?.add2e?.effectTags);
 
+        this.addEmbeddedItemEffectTagsInto(tags, item);
+
         if (alwaysActive) {
           this.addClassFeatureTagsInto(tags, item.system?.classFeatures, actorLevel);
         }
@@ -303,6 +365,30 @@ class Add2eEffectsEngine {
           try { this.addTagsInto(tags, item.getFlag("add2e", "tags")); } catch (e) {}
           try { this.addTagsInto(tags, item.getFlag("add2e", "effectTags")); } catch (e) {}
         }
+      }
+    }
+
+
+    // 4b. Moine : ajoute uniquement les tags de la ligne de progression active.
+    // Cela évite d'activer toutes les valeurs de tous les niveaux à la fois.
+    if (actor.items) {
+      const monkClass = actor.items.find(i => {
+        if (String(i.type || "").toLowerCase() !== "classe") return false;
+        const label = this.normalizeKey(i.system?.label || i.name || "");
+        return label.includes("moine") || this.toArray(i.system?.tags).map(t => this.normalizeTag(t)).includes("classe:moine");
+      });
+
+      if (monkClass) {
+        const level = this.getActorLevel(actor);
+        const progression = Array.isArray(monkClass.system?.monkProgression) && monkClass.system.monkProgression.length
+          ? monkClass.system.monkProgression
+          : Array.isArray(monkClass.system?.progression) ? monkClass.system.progression : [];
+
+        const row = progression.find(p => Number(p?.niveau ?? p?.level) === level)
+          ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
+          ?? null;
+
+        this.addTagsInto(tags, row?.tags);
       }
     }
 
@@ -340,10 +426,22 @@ class Add2eEffectsEngine {
 
     const aliases = new Set([raw]);
 
-    if (["charme", "charm", "sommeil", "sleep"].includes(raw)) {
+    if (["charme", "charm", "sommeil", "sleep", "suggestion", "charme_suggestion"].includes(raw)) {
       aliases.add("charme_sommeil");
       aliases.add("charme");
       aliases.add("sommeil");
+      aliases.add("suggestion");
+      aliases.add("charme_suggestion");
+    }
+
+    if (["esp", "perception_extrasensorielle", "pensee", "pensees"].includes(raw)) {
+      aliases.add("esp");
+      aliases.add("perception_extrasensorielle");
+    }
+
+    if (["maladie", "disease"].includes(raw)) {
+      aliases.add("maladie");
+      aliases.add("disease");
     }
 
     return [...aliases].filter(Boolean);
@@ -626,6 +724,152 @@ class Add2eEffectsEngine {
     return bonus;
   }
 
+
+
+  // =====================================================
+  // MOINE — progression spéciale pilotée par tags + données de classe
+  // =====================================================
+  static getActorClassSystem(actor) {
+    if (!actor) return null;
+
+    const classItem = actor.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null;
+    return classItem?.system ?? actor.system?.details_classe ?? null;
+  }
+
+  static isMonk(actor) {
+    const cls = this.getActorClassSystem(actor);
+    const label = this.normalizeKey(cls?.label || cls?.name || cls?.nom || actor?.system?.classe || "");
+    return label.includes("moine") || this.hasTag(actor, "classe:moine");
+  }
+
+  static getClassProgressionEntry(actor, progressionField = "progression") {
+    const cls = this.getActorClassSystem(actor);
+    const level = this.getActorLevel(actor);
+    const progression = cls?.[progressionField] ?? cls?.progression ?? [];
+
+    if (!Array.isArray(progression) || !progression.length) return null;
+
+    return progression.find(p => Number(p?.niveau ?? p?.level) === level)
+      ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
+      ?? null;
+  }
+
+  static getMonkProgression(actor) {
+    if (!this.isMonk(actor)) return null;
+    return this.getClassProgressionEntry(actor, "monkProgression")
+      ?? this.getClassProgressionEntry(actor, "progression");
+  }
+
+  static getMonkArmorClass(actor) {
+    const p = this.getMonkProgression(actor);
+    const v = Number(p?.monkAC ?? p?.caMoine ?? p?.ca_moine);
+    return Number.isFinite(v) ? v : null;
+  }
+
+  static getMonkMove(actor) {
+    const p = this.getMonkProgression(actor);
+    const v = Number(p?.move ?? p?.movement ?? p?.mouvement);
+    return Number.isFinite(v) ? v : null;
+  }
+
+  static getMonkOpenDoors(actor) {
+    const p = this.getMonkProgression(actor);
+    const v = Number(p?.openDoors ?? p?.ouvrir_portes);
+    return Number.isFinite(v) ? v : null;
+  }
+
+  static getMonkUnarmedDamage(actor) {
+    const p = this.getMonkProgression(actor);
+    return String(p?.unarmedDamage ?? p?.main_nue ?? p?.damage ?? "").trim();
+  }
+
+  static getMonkAttacksPerRound(actor) {
+    const p = this.getMonkProgression(actor);
+    return String(p?.attacksPerRound ?? p?.attaquesParRound ?? "").trim();
+  }
+
+  static getMonkStunParalyze(actor) {
+    const p = this.getMonkProgression(actor);
+    const v = Number(p?.stunParalyze ?? p?.etourdissement ?? p?.paralysie);
+    return Number.isFinite(v) ? v : 0;
+  }
+
+  static getMonkSlowFall(actor) {
+    const p = this.getMonkProgression(actor);
+    const v = Number(p?.slowFall ?? p?.chute_ralentie);
+    return Number.isFinite(v) ? v : 0;
+  }
+
+  static getMonkSelfHealPerDay(actor) {
+    const p = this.getMonkProgression(actor);
+    const v = Number(p?.selfHealPerDay ?? p?.auto_soin);
+    return Number.isFinite(v) ? v : 0;
+  }
+
+  static getMonkWeaponDamageBonus(actor) {
+    const p = this.getMonkProgression(actor);
+    const explicit = Number(p?.monkWeaponDamageBonus ?? p?.bonusDegatsArme ?? p?.bonus_degats_arme);
+    if (Number.isFinite(explicit)) return explicit;
+    if (!this.isMonk(actor)) return 0;
+    return Math.floor(this.getActorLevel(actor) / 2);
+  }
+
+  static hasMonkDiseaseImmunity(actor) {
+    return this.hasImmunity(actor, "maladie");
+  }
+
+  static getMonkProgressionTags(actor) {
+    const p = this.getMonkProgression(actor);
+    if (!p) return [];
+    return this.toArray(p.tags).map(t => this.normalizeTag(t)).filter(Boolean);
+  }
+
+  static getMonkResistCharmSuggestion(actor) {
+    const p = this.getMonkProgression(actor);
+    const v = Number(p?.resistCharmSuggestion ?? p?.resistance_charme_suggestion);
+    return Number.isFinite(v) ? v : 0;
+  }
+
+  static getMonkResistESP(actor) {
+    const p = this.getMonkProgression(actor);
+    const v = Number(p?.resistESP ?? p?.resistance_esp);
+    return Number.isFinite(v) ? v : 0;
+  }
+
+  static hasMonkQuiveringPalm(actor) {
+    const p = this.getMonkProgression(actor);
+    return !!p?.quiveringPalm || this.hasTag(actor, "moine:paume_palpitante") || this.hasTag(actor, "paume_palpitante");
+  }
+
+  static getMonkSummary(actor) {
+    const p = this.getMonkProgression(actor);
+    if (!p) return null;
+
+    return {
+      level: this.getActorLevel(actor),
+      title: p.title ?? "",
+      armorClass: this.getMonkArmorClass(actor),
+      move: this.getMonkMove(actor),
+      openDoors: this.getMonkOpenDoors(actor),
+      unarmedDamage: this.getMonkUnarmedDamage(actor),
+      weaponDamageBonus: this.getMonkWeaponDamageBonus(actor),
+      attacksPerRound: this.getMonkAttacksPerRound(actor),
+      stunParalyze: this.getMonkStunParalyze(actor),
+      slowFall: this.getMonkSlowFall(actor),
+      selfHealPerDay: this.getMonkSelfHealPerDay(actor),
+      resistCharmSuggestion: this.getMonkResistCharmSuggestion(actor),
+      resistESP: this.getMonkResistESP(actor),
+      quiveringPalm: this.hasMonkQuiveringPalm(actor),
+      activeCapabilities: this.getActiveClassFeatures(actor)
+        .filter(f => {
+          const tags = this.toArray(f.tags).map(t => this.normalizeTag(t));
+          const name = this.normalizeKey(f.name ?? f.label ?? f.title ?? f.nom ?? "");
+          return tags.some(t => t.startsWith("moine:") || t.startsWith("immunite:") || t.startsWith("resistance:")) || name.includes("moine") || name.includes("chute") || name.includes("auto") || name.includes("paume");
+        })
+    };
+  }
+
+
   // =====================================================
   // ANALYSE GENERIQUE
   // =====================================================
@@ -655,6 +899,8 @@ class Add2eEffectsEngine {
 
       if (bonus !== 0) out.bonus_save = (out.bonus_save || 0) + bonus;
     }
+
+    if (action.type === "moine" || action.type === "monk") out.moine = this.getMonkSummary(actor);
 
     if (tags.includes("camouflage")) out.camouflage = true;
 

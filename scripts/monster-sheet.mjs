@@ -20,6 +20,368 @@ const FIGHTER_SAVES = [
   { level: 17, saves: [3,  5,  4,  4,  6]  }  // 17+ DV
 ];
 
+/* ========================================================== */
+/* ADD2E — OUTILS MONSTRES : TAGS, POUVOIRS, HYDRATATION       */
+/* ========================================================== */
+
+const ADD2E_LINKED_PACKS = {
+  weapons: "add2e.armes",
+  armors: "add2e.armures",
+  spells: "add2e.sorts",
+  objects: ""
+};
+
+const ADD2E_LINKED_TYPES = {
+  weapons: "arme",
+  armors: "armure",
+  spells: "sort",
+  objects: "objet"
+};
+
+const ADD2E_LINKED_GROUP_ALIASES = {
+  weapons: ["weapons", "weapon", "armes", "arme"],
+  armors: ["armors", "armor", "armures", "armure"],
+  spells: ["spells", "spell", "sorts", "sort"],
+  objects: ["objects", "object", "objets", "objet", "magicItems", "magic_items", "objetsMagiques", "objets_magiques"]
+};
+
+const ADD2E_EQUIPPABLE_POWER_TYPES = new Set(["arme", "armure", "objet", "equipement", "consommable", "loot", "conteneur"]);
+const ADD2E_LINKED_INDEX_CACHE = new Map();
+
+// Noms qui apparaissent dans les statblocks mais qui ne doivent PAS être cherchés dans le compendium armes.
+const ADD2E_NATURAL_ATTACKS = new Set([
+  "griffe", "griffes", "morsure", "bec", "serres", "serre", "dard", "queue", "coup_de_queue",
+  "tentacule", "tentacules", "corne", "cornes", "sabot", "sabots", "poing", "poings", "pince", "pinces",
+  "piquants", "epines", "spores", "regard", "souffle", "contact", "toucher", "constriction", "ecrasement"
+]);
+
+function __add2eNormalize(str) {
+  return (str ?? "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_");
+}
+
+function __add2eDisplayName(value) {
+  return String(value ?? "").trim();
+}
+
+function __add2eToArray(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    return raw.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+  }
+  if (typeof raw === "object") {
+    if (Array.isArray(raw.items)) return raw.items;
+    if (Array.isArray(raw.value)) return raw.value;
+    if (Array.isArray(raw.values)) return raw.values;
+    if (raw.name || raw.uuid || raw.pack) return [raw];
+
+    const numericValues = Object.keys(raw)
+      .filter(k => /^\d+$/.test(k))
+      .sort((a, b) => Number(a) - Number(b))
+      .map(k => raw[k]);
+    if (numericValues.length) return numericValues;
+  }
+  return [];
+}
+
+function __add2eGetFlagObject(actor, key) {
+  try {
+    return actor?.getFlag?.("add2e", key) || actor?.flags?.add2e?.[key] || null;
+  } catch (e) {
+    return actor?.flags?.add2e?.[key] || null;
+  }
+}
+
+function __add2eGetLinkedRoot(actor) {
+  return (
+    __add2eGetFlagObject(actor, "linkedItems") ||
+    __add2eGetFlagObject(actor, "importLinks") ||
+    {}
+  );
+}
+
+function __add2eGetLinkedEntries(actor, group) {
+  const root = __add2eGetLinkedRoot(actor);
+  const aliases = ADD2E_LINKED_GROUP_ALIASES[group] || [group];
+
+  for (const alias of aliases) {
+    if (root?.[alias]) {
+      return __add2eToArray(root[alias]).map(entry => {
+        if (typeof entry === "string") return { name: entry };
+        return entry;
+      }).filter(e => e && (e.name || e.uuid));
+    }
+  }
+
+  return [];
+}
+
+function __add2eAlreadyHasItem(actor, name, type) {
+  const wanted = __add2eNormalize(name);
+  return actor.items.find(i => i.type === type && __add2eNormalize(i.name) === wanted);
+}
+
+function __add2eFindWorldItem(name, type) {
+  const wanted = __add2eNormalize(name);
+  return game.items?.find(i => i.type === type && __add2eNormalize(i.name) === wanted) || null;
+}
+
+async function __add2eGetPackIndex(packId) {
+  if (!packId) return [];
+  if (ADD2E_LINKED_INDEX_CACHE.has(packId)) return ADD2E_LINKED_INDEX_CACHE.get(packId);
+
+  const pack = game.packs.get(packId);
+  if (!pack) {
+    console.warn(`[ADD2E][MONSTER][LINK] Pack introuvable: ${packId}`);
+    ADD2E_LINKED_INDEX_CACHE.set(packId, []);
+    return [];
+  }
+
+  const idx = Array.from(await pack.getIndex({ fields: ["name", "type"] }) ?? []);
+  ADD2E_LINKED_INDEX_CACHE.set(packId, idx);
+  return idx;
+}
+
+async function __add2eFindPackItem(name, type, packId) {
+  if (!packId) return null;
+  const pack = game.packs.get(packId);
+  if (!pack) return null;
+
+  const wanted = __add2eNormalize(name);
+  const idx = await __add2eGetPackIndex(packId);
+  const entry =
+    idx.find(e => __add2eNormalize(e.name) === wanted && (!e.type || e.type === type)) ||
+    idx.find(e => __add2eNormalize(e.name) === wanted);
+
+  if (!entry) return null;
+
+  const doc = await pack.getDocument(entry._id);
+  if (!doc) return null;
+  if (type && doc.type !== type) {
+    console.warn(`[ADD2E][MONSTER][LINK] Document trouvé mais mauvais type: ${doc.name} (${doc.type}) attendu ${type}`);
+    return null;
+  }
+  return doc;
+}
+
+async function __add2eFindAnyPackItem(name, type) {
+  for (const pack of game.packs) {
+    if (pack.documentName !== "Item") continue;
+    const doc = await __add2eFindPackItem(name, type, pack.collection);
+    if (doc) return doc;
+  }
+  return null;
+}
+
+async function __add2eResolveLinkedItem(entry, group) {
+  const type = ADD2E_LINKED_TYPES[group];
+  const defaultPack = ADD2E_LINKED_PACKS[group];
+
+  if (entry.uuid) {
+    try {
+      const doc = await fromUuid(entry.uuid);
+      if (doc && doc.documentName === "Item" && (!type || doc.type === type)) return doc;
+    } catch (e) {
+      console.warn(`[ADD2E][MONSTER][LINK] UUID introuvable: ${entry.uuid}`, e);
+    }
+  }
+
+  const name = __add2eDisplayName(entry.name);
+  if (!name) return null;
+
+  const source = String(entry.source || entry.scope || "").toLowerCase();
+  const packId = entry.pack || entry.compendium || defaultPack;
+
+  if (source === "world") return __add2eFindWorldItem(name, type);
+  if (source === "pack" || source === "compendium") return __add2eFindPackItem(name, type, packId);
+
+  // Par défaut : monde d'abord, puis pack indiqué/défaut, puis autres compendiums Item.
+  return (
+    __add2eFindWorldItem(name, type) ||
+    await __add2eFindPackItem(name, type, packId) ||
+    await __add2eFindAnyPackItem(name, type)
+  );
+}
+
+function __add2ePrepareEmbeddedItemData(doc, entry, group) {
+  const data = doc.toObject();
+  delete data._id;
+
+  data.system = data.system || {};
+  data.flags = data.flags || {};
+  data.flags.add2e = data.flags.add2e || {};
+  data.flags.add2e.linkedFromMonster = true;
+  data.flags.add2e.linkedSource = {
+    name: doc.name,
+    type: doc.type,
+    uuid: doc.uuid || entry.uuid || "",
+    pack: entry.pack || entry.compendium || ""
+  };
+
+  if (entry.equip === true || entry.equipee === true || entry.equipped === true) {
+    data.system.equipee = true;
+  }
+
+  if (group === "spells") {
+    const memorized = Number(entry.memorized ?? entry.memorizedCount ?? entry.prepared ?? entry.count ?? 1);
+    data.flags.add2e.memorizedCount = Math.max(0, Number.isFinite(memorized) ? memorized : 1);
+  }
+
+  return data;
+}
+
+async function __add2eImportLinkedGroup(actor, group) {
+  const entries = __add2eGetLinkedEntries(actor, group);
+  const type = ADD2E_LINKED_TYPES[group];
+  let imported = 0;
+  let skipped = 0;
+  let missing = [];
+
+  for (const entry of entries) {
+    const name = __add2eDisplayName(entry.name || entry.uuid);
+    if (!name) continue;
+
+    if (entry.name && __add2eAlreadyHasItem(actor, entry.name, type)) {
+      skipped++;
+      continue;
+    }
+
+    const doc = await __add2eResolveLinkedItem(entry, group);
+    if (!doc) {
+      missing.push(name);
+      continue;
+    }
+
+    if (__add2eAlreadyHasItem(actor, doc.name, doc.type)) {
+      skipped++;
+      continue;
+    }
+
+    const data = __add2ePrepareEmbeddedItemData(doc, entry, group);
+    await actor.createEmbeddedDocuments("Item", [data]);
+    imported++;
+  }
+
+  return { group, imported, skipped, missing };
+}
+
+async function __add2eImportLegacyAttackTypes(actor) {
+  // Compatibilité ancienne optionnelle : ne s'active que si le flag est explicitement vrai.
+  const useLegacy = __add2eGetFlagObject(actor, "useAttackTypesImport") === true;
+  if (!useLegacy) return { group: "legacyAttackTypes", imported: 0, skipped: 0, missing: [] };
+
+  const raw = actor.system?.attackTypes;
+  if (!raw || typeof raw !== "string") return { group: "legacyAttackTypes", imported: 0, skipped: 0, missing: [] };
+
+  const entries = raw.split(/[,;]+/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .filter(name => !ADD2E_NATURAL_ATTACKS.has(__add2eNormalize(name)))
+    .map(name => ({ name, pack: ADD2E_LINKED_PACKS.weapons, equip: true }));
+
+  const root = __add2eGetLinkedRoot(actor);
+  root.weapons = [...__add2eToArray(root.weapons), ...entries];
+  await actor.setFlag("add2e", "linkedItems", root);
+  return __add2eImportLinkedGroup(actor, "weapons");
+}
+
+async function __add2eHydrateMonsterLinkedItems(actor, options = {}) {
+  try {
+    if (!actor || actor.type !== "monster") return null;
+
+    const results = [];
+    for (const group of ["weapons", "armors", "spells", "objects"]) {
+      results.push(await __add2eImportLinkedGroup(actor, group));
+    }
+    results.push(await __add2eImportLegacyAttackTypes(actor));
+
+    const imported = results.reduce((n, r) => n + (r.imported || 0), 0);
+    const missing = results.flatMap(r => r.missing || []);
+
+    await actor.setFlag("add2e", "linkedItemsHydrated", true);
+    await actor.setFlag("add2e", "linkedItemsHydratedAt", Date.now());
+
+    console.log(`[ADD2E][MONSTER][LINK] ${actor.name}: hydratation terminée`, { imported, missing, results });
+
+    if (options.notify !== false) {
+      if (imported > 0) ui.notifications.info(`${actor.name} : ${imported} item(s) importé(s).`);
+      else ui.notifications.info(`${actor.name} : aucun nouvel item à importer.`);
+      if (missing.length) ui.notifications.warn(`${actor.name} : item(s) introuvable(s) : ${missing.join(", ")}`);
+    }
+
+    return { imported, missing, results };
+  } catch (e) {
+    console.error("[ADD2E][MONSTER][LINK] Hydratation impossible", e);
+    ui.notifications.error("Hydratation des items du monstre impossible. Voir console.");
+    return null;
+  }
+}
+
+function __add2eGetEquippedPowerItems(actor) {
+  return actor.items.filter(i =>
+    ADD2E_EQUIPPABLE_POWER_TYPES.has(i.type) &&
+    i.system?.equipee === true &&
+    Array.isArray(i.system?.pouvoirs)
+  );
+}
+
+function __add2eBuildVirtualPowerSpell(actor, sourceItem, idx, p) {
+  const validFakeId = sourceItem.id.substring(0, 14) + idx.toString().padStart(2, "0");
+  const fakeSpellData = {
+    _id: validFakeId,
+    name: `${p.name}`,
+    type: "sort",
+    img: p.img || sourceItem.img,
+    system: {
+      niveau: p.niveau || 1,
+      école: p.ecole || p.école || "Magique",
+      description: p.description || "",
+      composantes: "Objet",
+      temps_incantation: p.temps_incantation || { valeur: "1", unite: "" },
+      portee: p.portee || { valeur: "Obj", unite: "" },
+      duree: p.duree || { valeur: "Spec", unite: "" },
+      isPower: true,
+      sourceItemId: sourceItem.id,
+      sourceWeaponId: sourceItem.id,
+      powerIndex: idx,
+      cost: p.cout || p.cost || 1,
+      max: p.max || 1,
+      onUse: p.onUse || ""
+    }
+  };
+
+  const virtualSpell = new Item(fakeSpellData, { parent: actor });
+  virtualSpell.getFlag = (scope, key) => {
+    if (scope === "add2e" && key === "memorizedCount") {
+      const charges = sourceItem.getFlag("add2e", `charges_${idx}`);
+      return (charges !== undefined) ? charges : (p.max ?? 1);
+    }
+    return null;
+  };
+  return virtualSpell;
+}
+
+function __add2eFindVirtualPowerSpell(actor, fakeId) {
+  for (const sourceItem of __add2eGetEquippedPowerItems(actor)) {
+    for (let [idx, p] of sourceItem.system.pouvoirs.entries()) {
+      const candidateId = sourceItem.id.substring(0, 14) + idx.toString().padStart(2, "0");
+      if (candidateId === fakeId) return __add2eBuildVirtualPowerSpell(actor, sourceItem, idx, p);
+    }
+  }
+  return null;
+}
+
+globalThis.add2eHydrateMonsterLinkedItems = __add2eHydrateMonsterLinkedItems;
+
+
 export class Add2eMonsterSheet extends ActorSheet {
   
   static get defaultOptions() {
@@ -77,41 +439,10 @@ export class Add2eMonsterSheet extends ActorSheet {
 
     const sorts = this.actor.items.filter(i => i.type === "sort");
 
-    // 3. INJECTION POUVOIRS (ARMES MAGIQUES)
-    const armesEquipees = this.actor.items.filter(i => i.type === "arme" && i.system.equipee);
-    for (const arme of armesEquipees) {
-      if (Array.isArray(arme.system.pouvoirs)) {
-        for (let [idx, p] of arme.system.pouvoirs.entries()) {
-          const validFakeId = arme.id.substring(0, 14) + idx.toString().padStart(2, "0");
-          const fakeSpellData = {
-            _id: validFakeId, 
-            name: `${p.name}`,
-            type: "sort",
-            img: p.img || arme.img,
-            system: {
-              niveau: p.niveau || 1,
-              école: p.ecole || "Magique",
-              description: p.description || "",
-              composantes: "Objet",
-              temps_incantation: "1",
-              isPower: true,
-              sourceWeaponId: arme.id,
-              powerIndex: idx,
-              cost: p.cout || 1,
-              max: p.max || 1,
-              onUse: p.onUse || ""
-            }
-          };
-          const virtualSpell = new Item(fakeSpellData, { parent: this.actor });
-          virtualSpell.getFlag = (scope, key) => {
-            if (key === "memorizedCount") {
-               const charges = arme.getFlag("add2e", `charges_${idx}`);
-               return (charges !== undefined) ? charges : p.max;
-            }
-            return null;
-          };
-          sorts.push(virtualSpell);
-        }
+    // 3. INJECTION POUVOIRS (ARMES / ARMURES / OBJETS MAGIQUES ÉQUIPÉS)
+    for (const sourceItem of __add2eGetEquippedPowerItems(this.actor)) {
+      for (let [idx, p] of sourceItem.system.pouvoirs.entries()) {
+        sorts.push(__add2eBuildVirtualPowerSpell(this.actor, sourceItem, idx, p));
       }
     }
 
@@ -243,6 +574,11 @@ export class Add2eMonsterSheet extends ActorSheet {
       const item = this.actor.items.get(id);
       if (item) await this._onEquipItem(item);
     });
+    html.find('.hydrate-linked-items').click(async ev => {
+      ev.preventDefault();
+      await __add2eHydrateMonsterLinkedItems(this.actor, { notify: true });
+      this.render(false);
+    });
     html.find('.item-edit, .arme-edit, .armure-edit, .sort-edit, .objet-edit').click(ev => {
       const id = $(ev.currentTarget).data("itemId") || $(ev.currentTarget).data("sortId");
       const item = this.actor.items.get(id);
@@ -266,45 +602,8 @@ export class Add2eMonsterSheet extends ActorSheet {
       const sortId = $(ev.currentTarget).data("sortId");
       let item = this.actor.items.get(sortId);
 
-      // Objets Magiques Virtuels
-      if (!item) {
-          const armesEquipees = this.actor.items.filter(i => i.type === "arme" && i.system.equipee && Array.isArray(i.system.pouvoirs));
-          for (const arme of armesEquipees) {
-              for (let [idx, p] of arme.system.pouvoirs.entries()) {
-                  const fakeId = arme.id.substring(0, 14) + idx.toString().padStart(2, "0");
-                  if (fakeId === sortId) {
-                      const fakeSpellData = {
-                          _id: fakeId,
-                          name: `${p.name}`,
-                          type: "sort",
-                          img: p.img || arme.img,
-                          system: {
-                              niveau: p.niveau || 1,
-                              isPower: true,
-                              sourceWeaponId: arme.id,
-                              powerIndex: idx,
-                              cost: p.cout || 1,
-                              max: p.max || 1,
-                              onUse: p.onUse || "",
-                              portee: { valeur: "Obj", unite: "" },
-                              duree: { valeur: "Spec", unite: "" },
-                              temps_incantation: { valeur: "1", unite: "" }
-                          }
-                      };
-                      item = new Item(fakeSpellData, { parent: this.actor });
-                      item.getFlag = (scope, key) => {
-                          if (key === "memorizedCount") {
-                             const charges = arme.getFlag("add2e", `charges_${idx}`);
-                             return (charges !== undefined) ? charges : p.max;
-                          }
-                          return null;
-                      };
-                      break;
-                  }
-              }
-              if (item) break;
-          }
-      }
+      // Pouvoirs virtuels d'objets équipés (armes, armures, objets magiques...)
+      if (!item) item = __add2eFindVirtualPowerSpell(this.actor, sortId);
       if (item && globalThis.add2eCastSpell) {
           globalThis.add2eCastSpell({ actor: this.actor, sort: item });
           this.render(false);
@@ -380,8 +679,10 @@ export class Add2eMonsterSheet extends ActorSheet {
         if (bouclier) { ui.notifications.warn(`Impossible : Bouclier équipé.`); return; }
       }
       await item.update({ "system.equipee": true });
+      return;
     }
-    else if (item.type === "armure") {
+
+    if (item.type === "armure") {
       if (dejaEquipee) {
         await item.update({ "system.equipee": false });
         await this._recalculerCA();
@@ -389,6 +690,12 @@ export class Add2eMonsterSheet extends ActorSheet {
       }
       await item.update({ "system.equipee": true });
       await this._recalculerCA();
+      return;
+    }
+
+    if (["objet", "equipement", "consommable", "loot", "conteneur"].includes(item.type)) {
+      await item.update({ "system.equipee": !dejaEquipee });
+      return;
     }
   }
 
@@ -451,142 +758,16 @@ Hooks.on("deleteActiveEffect", async (effect, options, userId) => {
     }
 });
 /* ========================================================== */
-/* ADD2E — AUTO-LINK ARMES MONSTRES AU DROP (TOKEN CREATE)     */
-/* - Ignore system.damage du JSON monster                     */
-/* - Utilise system.attackTypes pour importer depuis compendium */
+/* ADD2E — HYDRATATION ITEMS MONSTRES AU DROP                  */
+/* - N'utilise plus system.attackTypes par défaut              */
+/* - Utilise flags.add2e.linkedItems / importLinks             */
+/* - Importe armes, armures, sorts, objets depuis monde/pack   */
 /* ========================================================== */
 
-const ADD2E_WEAPON_PACK = "add2e.armes";
-let __add2eWeaponIndexCache = null;
-
-function __add2eNormalize(str) {
-  return (str ?? "")
-    .toString()
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")          // enlève accents
-    .replace(/[’']/g, "'")                   // homogénéise apostrophes
-    .replace(/\s+/g, " ");                   // espaces multiples
-}
-
-async function __add2eGetWeaponPack() {
-  const pack = game.packs.get(ADD2E_WEAPON_PACK); // <-- IMPORTANT (pas "Compendium.xxx")
-  if (!pack) {
-    console.warn(`[ADD2E][WEAP] Pack introuvable: ${ADD2E_WEAPON_PACK}`);
-    return null;
-  }
-  return pack;
-}
-
-async function __add2eGetWeaponPackIndex() {
-  if (__add2eWeaponIndexCache) return __add2eWeaponIndexCache;
-
-  const pack = await __add2eGetWeaponPack();
-  if (!pack) {
-    __add2eWeaponIndexCache = [];
-    return __add2eWeaponIndexCache;
-  }
-
-  const idx = await pack.getIndex({ fields: ["name", "type"] });
-  __add2eWeaponIndexCache = Array.from(idx ?? []);
-  console.log(`[ADD2E][WEAP] Index chargé (${ADD2E_WEAPON_PACK}):`, __add2eWeaponIndexCache.length);
-  return __add2eWeaponIndexCache;
-}
-
-async function __add2eImportWeaponToActorByName(actor, weaponName) {
-  const wantedRaw = (weaponName ?? "").toString().trim();
-  const wanted = __add2eNormalize(wantedRaw);
-  if (!wanted) return false;
-
-  // Déjà présent ?
-  const already = actor.items.find(i => i.type === "arme" && __add2eNormalize(i.name) === wanted);
-  if (already) return false;
-
-  const pack = await __add2eGetWeaponPack();
-  if (!pack) return false;
-
-  const idx = await __add2eGetWeaponPackIndex();
-
-  // Debug : montre ce qu'on cherche
-  console.log(`[ADD2E][WEAP] Recherche arme: "${wantedRaw}" -> "${wanted}"`);
-
-  // Filtre type "arme" si type est présent dans l'index
-  const entry =
-    idx.find(e => __add2eNormalize(e.name) === wanted && (!e.type || e.type === "arme")) ||
-    idx.find(e => __add2eNormalize(e.name) === wanted); // fallback
-
-  if (!entry) {
-    console.warn(`[ADD2E][WEAP] Arme non trouvée: "${wantedRaw}" (clé "${wanted}") dans ${ADD2E_WEAPON_PACK}`);
-    // Debug : suggestion proche (contient le token)
-    const suggestions = idx
-      .map(e => e.name)
-      .filter(n => __add2eNormalize(n).includes(wanted) || wanted.includes(__add2eNormalize(n)))
-      .slice(0, 10);
-    if (suggestions.length) console.warn(`[ADD2E][WEAP] Suggestions:`, suggestions);
-    return false;
-  }
-
-  const doc = await pack.getDocument(entry._id);
-  if (!doc) return false;
-  if (doc.type !== "arme") {
-    console.warn(`[ADD2E][WEAP] Doc trouvé mais type != "arme":`, doc.name, doc.type);
-    return false;
-  }
-
-  const data = doc.toObject();
-  delete data._id;
-
-  await actor.createEmbeddedDocuments("Item", [data]);
-  console.log(`[ADD2E][WEAP] Import OK: "${doc.name}" -> ${actor.name}`);
-  return true;
-}
-
-
-async function __add2eEnsureMonsterWeapons(actor) {
-try {
-    if (!actor) return;
-    if (actor.type !== "monster") return;
-
-    const attackTypes = actor.system?.attackTypes; // ✅ OBLIGATOIRE
-
-    console.log(`[ADD2E][WEAP] ${actor.name} attackTypes=`, attackTypes);
-
-    if (!attackTypes || typeof attackTypes !== "string") {
-      await actor.setFlag("add2e", "weaponsLinkedFromPack", true);
-      return;
-    }
-
-    // "Épée courte, dague, arc court" -> ["Épée courte", "dague", "arc court"]
-    const names = attackTypes
-      .split(",")
-      .map(s => s.trim())
-      .filter(Boolean);
-
-    let imported = 0;
-    for (const n of names) {
-      const ok = await __add2eImportWeaponToActorByName(actor, n);
-      if (ok) imported++;
-    }
-
-    await actor.setFlag("add2e", "weaponsLinkedFromPack", true);
-    console.log(`[ADD2E][WEAP] ${actor.name}: ${imported} arme(s) importée(s) depuis ${ADD2E_WEAPON_PACK}`);
-  } catch (e) {
-    console.error("[ADD2E][WEAP] EnsureMonsterWeapons failed", e);
-  }
-}
-
-/**
- * Point d'accroche demandé: "au moment du drop du monstre sur la scène"
- * => createToken
- */
 Hooks.on("createToken", async (tokenDoc) => {
   const actor = tokenDoc?.actor;
-  if (!actor) return;
+  if (!actor || actor.type !== "monster") return;
 
-  // On ne fait rien pour les PJ/NPC non-monstres
-  if (actor.type !== "monster") return;
-
-  // Au drop, on injecte les armes depuis compendium
-  await __add2eEnsureMonsterWeapons(actor);
+  // Au drop, on hydrate les références déclarées dans flags.add2e.linkedItems.
+  await __add2eHydrateMonsterLinkedItems(actor, { notify: false });
 });

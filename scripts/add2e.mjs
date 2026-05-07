@@ -211,7 +211,918 @@ async function add2e_saveBaseCaracs(actor) {
   }
  await actor.setFlag("add2e", "base_caracs", baseCaracs);
 }
+// ============================================================
+// ADD2E — Synchronisation automatique des sorts au drop de classe
+// Fonctionne dans add2e.mjs, sans actor-sheet.mjs
+// ============================================================
 
+function add2eSpellSyncClone(value) {
+  if (value === undefined || value === null) return value;
+  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
+  if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
+  return JSON.parse(JSON.stringify(value));
+}
+
+function add2eSpellSyncMaybeJson(value) {
+  if (typeof value !== "string") return value;
+
+  const s = value.trim();
+  if (!s) return value;
+
+  if (
+    (s.startsWith("{") && s.endsWith("}")) ||
+    (s.startsWith("[") && s.endsWith("]"))
+  ) {
+    try {
+      return JSON.parse(s);
+    } catch (e) {
+      return value;
+    }
+  }
+
+  return value;
+}
+
+function add2eSpellSyncNormalize(value) {
+  const s = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[\s\-]+/g, "_")
+    .replace(/_+/g, "_");
+
+  const aliases = {
+    cleric: "clerc",
+    clerical: "clerc",
+    clercs: "clerc",
+    priest: "clerc",
+    priests: "clerc",
+    pretre: "clerc",
+    pretres: "clerc",
+
+    druid: "druide",
+    druids: "druide",
+    druides: "druide",
+    druidique: "druide"
+  };
+
+  return aliases[s] ?? s;
+}
+
+function add2eSpellSyncArray(value) {
+  value = add2eSpellSyncMaybeJson(value);
+
+  if (value === undefined || value === null || value === "") return [];
+
+  if (Array.isArray(value)) {
+    return value.flatMap(v => add2eSpellSyncArray(v));
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(/[,;|\n]+/)
+      .map(v => v.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value === "object") {
+    for (const key of [
+      "lists",
+      "spellLists",
+      "classes",
+      "classe",
+      "class",
+      "value",
+      "values",
+      "list",
+      "tags",
+      "items"
+    ]) {
+      if (value[key] !== undefined) return add2eSpellSyncArray(value[key]);
+    }
+
+    const numericValues = Object.keys(value)
+      .filter(k => /^\d+$/.test(k))
+      .sort((a, b) => Number(a) - Number(b))
+      .map(k => value[k]);
+
+    if (numericValues.length) return add2eSpellSyncArray(numericValues);
+  }
+
+  return [value];
+}
+
+function add2eSpellSyncClassLists(classItem) {
+  const sys = classItem?.system ?? {};
+  const sc = add2eSpellSyncMaybeJson(sys.spellcasting);
+
+  const raw = [
+    ...add2eSpellSyncArray(sys.spellLists),
+    ...add2eSpellSyncArray(sys.sorts),
+    ...add2eSpellSyncArray(sys.tags),
+    ...add2eSpellSyncArray(sc?.lists),
+    ...add2eSpellSyncArray(sc?.spellLists)
+  ];
+
+  const lists = raw
+    .map(add2eSpellSyncNormalize)
+    .filter(Boolean);
+
+  // Fallback si une ancienne classe n'a pas encore spellcasting.lists.
+  const className = add2eSpellSyncNormalize(classItem?.name ?? "");
+  if (className.includes("clerc")) lists.push("clerc");
+  if (className.includes("druide")) lists.push("druide");
+
+  return [...new Set(lists)].filter(v => ["clerc", "druide"].includes(v));
+}
+
+function add2eSpellSyncSpellLevel(system = {}) {
+  const raw =
+    system.niveau ??
+    system.niveau_sort ??
+    system.spellLevel ??
+    system.level ??
+    system.lvl ??
+    0;
+
+  const match = String(raw).match(/\d+/);
+  return match ? Number(match[0]) || 0 : 0;
+}
+
+function add2eSpellSyncSpellLists(system = {}) {
+  const raw = [
+    ...add2eSpellSyncArray(system.spellLists),
+    ...add2eSpellSyncArray(system.lists),
+    ...add2eSpellSyncArray(system.classes),
+    ...add2eSpellSyncArray(system.classe),
+    ...add2eSpellSyncArray(system.class),
+    ...add2eSpellSyncArray(system.tags),
+    ...add2eSpellSyncArray(system.effectTags)
+  ];
+
+  return [...new Set(raw.map(add2eSpellSyncNormalize).filter(Boolean))];
+}
+
+function add2eSpellSyncNumber(value) {
+  value = add2eSpellSyncMaybeJson(value);
+
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "boolean") return value ? 1 : 0;
+
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s || s === "—" || s === "-" || /^n[\/ ]?a$/i.test(s)) return 0;
+    const m = s.match(/-?\d+/);
+    return m ? Number(m[0]) || 0 : 0;
+  }
+
+  if (value && typeof value === "object") {
+    for (const key of ["value", "valeur", "slots", "slot", "count", "nombre", "nb", "max"]) {
+      if (value[key] !== undefined && value[key] !== null && typeof value[key] !== "object") {
+        return add2eSpellSyncNumber(value[key]);
+      }
+    }
+  }
+
+  return 0;
+}
+
+function add2eSpellSyncSlotsArray(value) {
+  value = add2eSpellSyncMaybeJson(value);
+
+  if (!value) return [];
+
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s) return [];
+    if (/[,;|/\s]+/.test(s) && /\d/.test(s)) {
+      return s
+        .split(/[,;|/\s]+/)
+        .map(v => v.trim())
+        .filter(v => v !== "");
+    }
+    return [];
+  }
+
+  if (typeof value === "object") {
+    for (const key of ["slots", "slot", "value", "values", "spellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "spellSlots"]) {
+      if (Array.isArray(value[key]) || typeof value[key] === "string") return add2eSpellSyncSlotsArray(value[key]);
+    }
+
+    return Object.keys(value)
+      .filter(k => /^\d+$/.test(k))
+      .sort((a, b) => Number(a) - Number(b))
+      .map(k => value[k]);
+  }
+
+  return [];
+}
+
+function add2eSpellSyncReadSlotValue(raw, spellLevelOrIndex, listKey = "") {
+  raw = add2eSpellSyncMaybeJson(raw);
+  if (raw === undefined || raw === null || raw === "") return null;
+
+  const numeric = Number(spellLevelOrIndex);
+  const idx = numeric >= 1 ? numeric - 1 : 0;
+  const oneBased = idx + 1;
+  const wantedList = add2eSpellSyncNormalize(listKey);
+
+  const arr = add2eSpellSyncSlotsArray(raw);
+  if (arr.length) {
+    if (idx >= 0 && idx < arr.length) return add2eSpellSyncNumber(arr[idx]);
+    return 0;
+  }
+
+  if (typeof raw !== "object") return null;
+
+  if (wantedList) {
+    for (const [rawKey, value] of Object.entries(raw)) {
+      if (add2eSpellSyncNormalize(rawKey) !== wantedList) continue;
+      const v = add2eSpellSyncReadSlotValue(value, oneBased, "");
+      if (v !== null) return v;
+    }
+  }
+
+  for (const key of ["slots", "slot", "value", "values", "spellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "spellSlots"]) {
+    if (raw[key] === undefined) continue;
+    const v = add2eSpellSyncReadSlotValue(raw[key], oneBased, wantedList);
+    if (v !== null) return v;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(raw, String(oneBased))) {
+    return add2eSpellSyncNumber(raw[String(oneBased)]);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(raw, String(idx))) {
+    return add2eSpellSyncNumber(raw[String(idx)]);
+  }
+
+  return null;
+}
+
+function add2eSpellSyncMaxSpellLevel(classItem, actorLevel) {
+  const sys = classItem?.system ?? {};
+  const sc = add2eSpellSyncMaybeJson(sys.spellcasting);
+
+  const level = Math.max(1, Number(actorLevel) || 1);
+  const startsAt = Math.max(1, Number(sc?.startsAt ?? sys.startsAt ?? 1) || 1);
+  const hardMax = Math.max(1, Number(sc?.maxSpellLevel ?? sys.maxSpellLevel ?? 9) || 9);
+
+  if (level < startsAt) return 0;
+
+  const progression = add2eSpellSyncMaybeJson(sys.progression);
+  const rows = Array.isArray(progression) ? progression : [];
+
+  const row =
+    rows.find(r => Number(r?.niveau ?? r?.level) === level) ??
+    rows[level - 1] ??
+    null;
+
+  const maxFromArray = (raw) => {
+    const arr = add2eSpellSyncSlotsArray(raw);
+    let max = 0;
+    arr.forEach((value, index) => {
+      const n = add2eSpellSyncNumber(value);
+      if (n > 0) max = Math.max(max, index + 1);
+    });
+    return max;
+  };
+
+  const maxFromContainer = (raw) => {
+    raw = add2eSpellSyncMaybeJson(raw);
+    if (!raw || typeof raw !== "object") return 0;
+
+    let max = 0;
+
+    if (Array.isArray(raw)) return maxFromArray(raw);
+
+    for (const value of Object.values(raw)) {
+      if (Array.isArray(value)) {
+        max = Math.max(max, maxFromArray(value));
+        continue;
+      }
+
+      if (value && typeof value === "object") {
+        max = Math.max(
+          max,
+          maxFromArray(value),
+          maxFromArray(value.slots),
+          maxFromArray(value.value),
+          maxFromArray(value.values),
+          maxFromArray(value.spellsPerLevel),
+          maxFromArray(value.sortsParNiveau)
+        );
+      }
+    }
+
+    return max;
+  };
+
+  let maxFromSlots = 0;
+
+  if (row && typeof row === "object") {
+    // Ligne simple : Clerc/Druide/Magicien classique.
+    for (const field of [
+      "spellsPerLevel",
+      "sortsParNiveau",
+      "sorts_par_niveau",
+      "spells",
+      "slots",
+      "spellSlots"
+    ]) {
+      maxFromSlots = Math.max(maxFromSlots, maxFromArray(row[field]));
+    }
+
+    // Lignes multiples : Ranger, classes mixtes, ou progression séparée par liste.
+    for (const container of [
+      "spellSlotsByList",
+      "spellsByList",
+      "spellsPerLevelByList",
+      "sortsParListe"
+    ]) {
+      maxFromSlots = Math.max(maxFromSlots, maxFromContainer(row[container]));
+    }
+
+    // Champs directs nommés : spellsPerLevelClerc, spellsPerLevelDruide, etc.
+    for (const [key, value] of Object.entries(row)) {
+      if (!/^spellsPerLevel|^sortsParNiveau|^spellSlots/i.test(key)) continue;
+      maxFromSlots = Math.max(maxFromSlots, maxFromArray(value), maxFromContainer(value));
+    }
+  }
+
+  if (maxFromSlots > 0) return Math.min(maxFromSlots, hardMax);
+
+  // Si aucune progression n'est exploitable, on évite d'importer tous les niveaux.
+  // Niveau 1 reste le fallback sûr pour les classes divines simples.
+  return Math.min(1, hardMax);
+}
+
+function add2eSpellSyncGetProgressionRow(actor, actorLevel = null) {
+  const level = Math.max(1, Number(actorLevel ?? actor?.system?.niveau) || 1);
+  const classItem = actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null;
+  const details = classItem?.system ?? actor?.system?.details_classe ?? {};
+  const progression = add2eSpellSyncMaybeJson(details?.progression);
+  const rows = Array.isArray(progression) ? progression : [];
+
+  return rows.find(r => Number(r?.niveau ?? r?.level) === level) ?? rows[level - 1] ?? null;
+}
+
+function add2eSpellSyncSlotProbe(actor, classLists, spellLevel) {
+  const lvl = Number(spellLevel) || 0;
+  const row = add2eSpellSyncGetProgressionRow(actor);
+  const wanted = (classLists ?? []).map(add2eSpellSyncNormalize).filter(Boolean);
+
+  if (!row || typeof row !== "object" || lvl < 1) {
+    return { found: false, count: 0, source: "no-row" };
+  }
+
+  let found = false;
+  let count = 0;
+
+  const read = (raw, listKey = "", source = "") => {
+    if (raw === undefined || raw === null || raw === "") return;
+    const v = add2eSpellSyncReadSlotValue(raw, lvl, listKey);
+    if (v === null) return;
+    found = true;
+    count = Math.max(count, Number(v) || 0);
+  };
+
+  // Champs simples : Clerc/Druide/Magicien classique.
+  for (const field of [
+    "spellsPerLevel",
+    "sortsParNiveau",
+    "sorts_par_niveau",
+    "spells",
+    "slots",
+    "spellSlots"
+  ]) {
+    read(row[field], "", field);
+  }
+
+  // Conteneurs séparés par liste : { Clerc: [..], Druide: [..] }.
+  for (const containerName of [
+    "spellSlotsByList",
+    "spellsByList",
+    "spellsPerLevelByList",
+    "sortsParListe"
+  ]) {
+    const c = row[containerName];
+    if (!c || typeof c !== "object") continue;
+
+    for (const [rawKey, value] of Object.entries(c)) {
+      const key = add2eSpellSyncNormalize(rawKey);
+      if (wanted.length && !wanted.includes(key)) continue;
+      read(value, key, `${containerName}.${rawKey}`);
+    }
+  }
+
+  // Champs nommés : spellsPerLevelClerc, spellsPerLevel_clerc, spellSlotsDruide, etc.
+  for (const [rawField, value] of Object.entries(row)) {
+    const field = add2eSpellSyncNormalize(rawField);
+    if (!/^(spellsperlevel|sortsparniveau|spellslots|slots)/i.test(field)) continue;
+
+    const matchesNamedList = !wanted.length || wanted.some(list => field.includes(list));
+    if (!matchesNamedList) continue;
+
+    read(value, "", rawField);
+  }
+
+  return { found, count, source: found ? "progression" : "no-slot-source" };
+}
+
+function add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, fallbackMaxSpellLevel) {
+  const lvl = Number(spellLevel) || 0;
+  if (lvl < 1) return false;
+
+  // Source prioritaire : progression de classe au niveau ACTUEL.
+  // Cette lecture est plus robuste que l'affichage UI : elle accepte tableaux,
+  // objets à clés numériques et chaînes du type "6, 6, 5, 4, 3, 2, 1".
+  const probe = add2eSpellSyncSlotProbe(actor, classLists, lvl);
+  if (probe.found) return probe.count > 0;
+
+  // Fallback UI existant, conservé pour compatibilité.
+  try {
+    if (typeof add2eGetSpellSlotPoolsByLevel === "function") {
+      const pools = add2eGetSpellSlotPoolsByLevel(actor) ?? {};
+      let sawMatchingPool = false;
+
+      for (const rawList of classLists ?? []) {
+        const key = add2eSpellSyncNormalize(rawList);
+        const pool = pools[key];
+        if (!pool) continue;
+
+        sawMatchingPool = true;
+        const slots = Number(pool.slotsByLevel?.[lvl] ?? 0) || 0;
+        if (slots > 0) return true;
+      }
+
+      if (sawMatchingPool) return false;
+    }
+  } catch (e) {
+    console.warn("[ADD2E][CLASS_DROP_SPELLS] Fallback maxSpellLevel utilisé.", e);
+  }
+
+  // Fallback uniquement si aucune progression exploitable n'a été trouvée.
+  return lvl <= (Number(fallbackMaxSpellLevel) || 0);
+}
+
+function add2eSpellSyncStableKey(name, system = {}) {
+  const spellName = add2eSpellSyncNormalize(name ?? system.nom ?? system.name ?? "");
+  const spellLevel = add2eSpellSyncSpellLevel(system ?? {});
+  return `${spellLevel}|${spellName}`;
+}
+
+function add2eSpellSyncExistingKeys(actor) {
+  const keys = new Set();
+
+  for (const item of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
+    const key = add2eSpellSyncStableKey(item.name, item.system ?? {});
+    if (key && key !== "0|") keys.add(key);
+  }
+
+  return keys;
+}
+
+function add2eSpellSyncMaxExistingLevel(actor, classLists = []) {
+  const wantedLists = new Set((classLists ?? []).map(add2eSpellSyncNormalize).filter(Boolean));
+  let max = 0;
+
+  for (const item of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
+    const itemLists = add2eSpellSyncSpellLists(item.system ?? {});
+    if (wantedLists.size && itemLists.length && !itemLists.some(l => wantedLists.has(l))) continue;
+
+    const lvl = add2eSpellSyncSpellLevel(item.system ?? {});
+    if (lvl > max) max = lvl;
+  }
+
+  return max;
+}
+
+function add2eSpellSyncGetLastMax(actor) {
+  return Number(actor?.getFlag?.("add2e", "autoSpellSyncMaxLevel") ?? 0) || 0;
+}
+
+async function add2eSpellSyncSetLastMax(actor, value) {
+  if (!actor?.setFlag) return;
+  const n = Math.max(0, Number(value) || 0);
+  await actor.setFlag("add2e", "autoSpellSyncMaxLevel", n);
+}
+
+function add2eSpellSyncOpenWaitMessage({ actor, classItem, mode, minSpellLevel, maxSpellLevel } = {}) {
+  const title = mode === "missing" ? "Import des nouveaux sorts" : "Import des sorts de classe";
+  const range = mode === "missing" && minSpellLevel > 0
+    ? `Niveaux de sort ${minSpellLevel} à ${maxSpellLevel}`
+    : `Jusqu’au niveau de sort ${maxSpellLevel}`;
+
+  const content = `
+    <div class="add2e-spell-sync-wait" style="padding:0.8em 0.9em;line-height:1.45;">
+      <p style="margin:0 0 0.55em 0;"><b>${title}</b></p>
+      <p style="margin:0 0 0.35em 0;">Personnage : <b>${actor?.name ?? "—"}</b></p>
+      <p style="margin:0 0 0.35em 0;">Classe : <b>${classItem?.name ?? "—"}</b></p>
+      <p style="margin:0 0 0.7em 0;">${range}</p>
+      <div style="display:flex;align-items:center;gap:0.55em;color:#6f4b12;font-weight:700;">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Synchronisation en cours, ne fermez pas la fiche...</span>
+      </div>
+    </div>
+  `;
+
+  try {
+    const dialog = new Dialog({
+      title,
+      content,
+      buttons: {},
+      close: () => {}
+    }, { width: 420, height: "auto" });
+
+    dialog.render(true);
+    return dialog;
+  } catch (e) {
+    ui.notifications.info(`${title} en cours...`);
+    return null;
+  }
+}
+
+function add2eSpellSyncCloseWaitMessage(dialog) {
+  try {
+    dialog?.close?.({ submit: false });
+  } catch (e) {}
+}
+
+
+function add2eSpellSyncIndexEntryData(entry) {
+  if (Array.isArray(entry)) return entry[1] ?? { _id: entry[0], id: entry[0] };
+  return entry ?? {};
+}
+
+function add2eSpellSyncIndexEntryId(entry) {
+  if (Array.isArray(entry)) {
+    const data = entry[1] ?? {};
+    return data._id ?? data.id ?? entry[0] ?? null;
+  }
+
+  return entry?._id ?? entry?.id ?? entry?.uuid?.split?.(".")?.at?.(-1) ?? null;
+}
+
+function add2eSpellSyncMatchesClassLists(sortOrSystem, classLists = []) {
+  const system = sortOrSystem?.system ?? sortOrSystem ?? {};
+  const wantedLists = new Set((classLists ?? []).map(add2eSpellSyncNormalize).filter(Boolean));
+  if (!wantedLists.size) return false;
+
+  const spellLists = add2eSpellSyncSpellLists(system);
+  return spellLists.some(list => wantedLists.has(list));
+}
+
+async function add2ePruneActorSpellsForClassLevel(actor, classItem, actorLevel, options = {}) {
+  if (!actor || !classItem || classItem.type !== "classe") {
+    return { handled: false, deleted: 0, maxSpellLevel: 0 };
+  }
+
+  const classLists = add2eSpellSyncClassLists(classItem);
+  if (!classLists.length) return { handled: false, deleted: 0, maxSpellLevel: 0 };
+
+  const level = Math.max(1, Number(actorLevel ?? actor.system?.niveau) || 1);
+  const maxSpellLevel = add2eSpellSyncMaxSpellLevel(classItem, level);
+  const idsToDelete = [];
+
+  for (const sort of actor.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
+    const sys = sort.system ?? {};
+    const spellLevel = add2eSpellSyncSpellLevel(sys);
+    const matchesClass = add2eSpellSyncMatchesClassLists(sys, classLists);
+    if (!matchesClass) continue;
+
+    const canStillUse = maxSpellLevel >= 1 && add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, maxSpellLevel);
+    if (canStillUse) continue;
+
+    idsToDelete.push(sort.id);
+  }
+
+  if (idsToDelete.length) {
+    console.log("[ADD2E][LEVEL_SPELL_SYNC][PRUNE] Suppression des sorts non accessibles", {
+      actor: actor.name,
+      classe: classItem.name,
+      actorLevel: level,
+      maxSpellLevel,
+      idsToDelete
+    });
+
+    await actor.deleteEmbeddedDocuments("Item", idsToDelete, { add2eInternal: true });
+  }
+
+  await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
+
+  if (options.notify !== false && idsToDelete.length) {
+    ui.notifications.info(`Sorts non accessibles retirés : ${idsToDelete.length}.`);
+  }
+
+  return {
+    handled: true,
+    deleted: idsToDelete.length,
+    maxSpellLevel,
+    actorLevel: level
+  };
+}
+
+async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
+  if (!actor || !classItem || classItem.type !== "classe") {
+    return { handled: false, imported: 0, deleted: 0 };
+  }
+
+  const mode = options.mode === "missing" ? "missing" : "replace";
+  const showWait = options.showWait !== false;
+  const classLists = add2eSpellSyncClassLists(classItem);
+
+  if (!classLists.length) {
+    return { handled: false, imported: 0, deleted: 0, reason: "no-cleric-druid-list" };
+  }
+
+  const actorLevel = Math.max(1, Number(options.actorLevel ?? actor.system?.niveau) || 1);
+  const maxSpellLevel = add2eSpellSyncMaxSpellLevel(classItem, actorLevel);
+  const minSpellLevel = Math.max(1, Number(options.minSpellLevel ?? 1) || 1);
+
+  console.log("[ADD2E][CLASS_DROP_SPELLS][START]", {
+    actor: actor.name,
+    classe: classItem.name,
+    actorLevel,
+    classLists,
+    maxSpellLevel,
+    minSpellLevel,
+    mode
+  });
+
+  const waitDialog = showWait
+    ? await add2eSpellSyncOpenWaitMessage({ actor, classItem, mode, minSpellLevel, maxSpellLevel })
+    : null;
+
+  try {
+    const existingSpellIds = actor.items
+      .filter(i => i.type === "sort")
+      .map(i => i.id);
+
+    // Drop de classe : remise à zéro complète demandée.
+    // Changement de niveau : surtout ne pas supprimer les sorts déjà présents.
+    if (mode === "replace" && existingSpellIds.length) {
+      await actor.deleteEmbeddedDocuments("Item", existingSpellIds);
+    }
+
+    if (maxSpellLevel < 1 || minSpellLevel > maxSpellLevel) {
+      await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
+      return {
+        handled: true,
+        imported: 0,
+        deleted: mode === "replace" ? existingSpellIds.length : 0,
+        maxSpellLevel,
+        mode
+      };
+    }
+
+    const pack = game.packs.get("add2e.sorts");
+
+    if (!pack) {
+      ui.notifications.error("Compendium de sorts introuvable : add2e.sorts");
+      console.error("[ADD2E][CLASS_DROP_SPELLS][ERROR] Compendium introuvable add2e.sorts");
+      return {
+        handled: true,
+        imported: 0,
+        deleted: mode === "replace" ? existingSpellIds.length : 0,
+        maxSpellLevel,
+        error: "missing-pack",
+        mode
+      };
+    }
+
+    await pack.getIndex();
+
+    const existingKeys = mode === "missing" ? add2eSpellSyncExistingKeys(actor) : new Set();
+    const docsToImport = [];
+    const scanStatsByLevel = {};
+    const addScanStat = (level, reason) => {
+      const lvl = Number(level) || 0;
+      if (!scanStatsByLevel[lvl]) scanStatsByLevel[lvl] = {};
+      scanStatsByLevel[lvl][reason] = (scanStatsByLevel[lvl][reason] || 0) + 1;
+    };
+
+    for (const entry of Array.from(pack.index ?? [])) {
+      const entryData = add2eSpellSyncIndexEntryData(entry);
+      const entryId = add2eSpellSyncIndexEntryId(entry);
+
+      if (entryData.type && entryData.type !== "sort") continue;
+      if (!entryId) {
+        console.warn("[ADD2E][CLASS_DROP_SPELLS][SKIP] Entrée de compendium sans id", entry);
+        continue;
+      }
+
+      let spell = null;
+      try {
+        spell = await pack.getDocument(entryId);
+      } catch (err) {
+        console.warn("[ADD2E][CLASS_DROP_SPELLS][SKIP] Sort de compendium illisible", {
+          pack: pack.collection,
+          entryId,
+          entry: entryData,
+          err
+        });
+        continue;
+      }
+
+      if (!spell || spell.type !== "sort") continue;
+
+      const spellLevel = add2eSpellSyncSpellLevel(spell.system ?? {});
+      if (spellLevel < minSpellLevel) {
+        addScanStat(spellLevel, "skip-below-min");
+        continue;
+      }
+      if (!add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, maxSpellLevel)) {
+        addScanStat(spellLevel, "skip-level-not-accessible");
+        continue;
+      }
+
+      const spellLists = add2eSpellSyncSpellLists(spell.system ?? {});
+      const usable = spellLists.some(list => classLists.includes(list));
+      if (!usable) {
+        addScanStat(spellLevel, `skip-list:${spellLists.join("/") || "none"}`);
+        continue;
+      }
+
+      const stableKey = add2eSpellSyncStableKey(spell.name, spell.system ?? {});
+      if (mode === "missing" && existingKeys.has(stableKey)) {
+        addScanStat(spellLevel, "skip-already-present");
+        continue;
+      }
+      existingKeys.add(stableKey);
+
+      addScanStat(spellLevel, "import");
+      docsToImport.push(spell);
+    }
+
+    docsToImport.sort((a, b) => {
+      const la = add2eSpellSyncSpellLevel(a.system ?? {});
+      const lb = add2eSpellSyncSpellLevel(b.system ?? {});
+      return la - lb || String(a.name).localeCompare(String(b.name), "fr");
+    });
+
+    const createData = docsToImport.map(spell => {
+      const data = spell.toObject();
+
+      delete data._id;
+      data.folder = null;
+
+      foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClass", classItem.name);
+      foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClassId", classItem.id);
+      foundry.utils.setProperty(data, "flags.add2e.autoGrantedSpellSync", true);
+      foundry.utils.setProperty(data, "flags.add2e.autoGrantedAtActorLevel", actorLevel);
+
+      return data;
+    });
+
+    if (createData.length) {
+      await actor.createEmbeddedDocuments("Item", createData);
+    }
+
+    await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
+
+    console.log("[ADD2E][CLASS_DROP_SPELLS][DONE]", {
+      actor: actor.name,
+      classe: classItem.name,
+      actorLevel,
+      classLists,
+      maxSpellLevel,
+      minSpellLevel,
+      deleted: mode === "replace" ? existingSpellIds.length : 0,
+      imported: createData.length,
+      mode,
+      scanStatsByLevel,
+      importedNames: docsToImport.map(s => s.name)
+    });
+
+    return {
+      handled: true,
+      imported: createData.length,
+      deleted: mode === "replace" ? existingSpellIds.length : 0,
+      maxSpellLevel,
+      minSpellLevel,
+      mode
+    };
+  } finally {
+    add2eSpellSyncCloseWaitMessage(waitDialog);
+  }
+}
+
+async function add2eSyncNewSpellLevelsAfterActorLevelChange(actor, newLevel) {
+  if (!actor || actor.type !== "personnage") return null;
+
+  console.log("[ADD2E][LEVEL_SPELL_SYNC][START]", {
+    actor: actor?.name,
+    newLevel,
+    currentLevel: actor?.system?.niveau
+  });
+
+  const classItem = actor.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null;
+  if (!classItem) return null;
+
+  const classLists = add2eSpellSyncClassLists(classItem);
+  if (!classLists.length) return null;
+
+  const level = Math.max(1, Number(newLevel ?? actor.system?.niveau) || 1);
+  const maxSpellLevel = add2eSpellSyncMaxSpellLevel(classItem, level);
+  const lastFlagMax = add2eSpellSyncGetLastMax(actor);
+  const existingMaxBeforePrune = add2eSpellSyncMaxExistingLevel(actor, classLists);
+  const knownBeforePrune = Math.max(lastFlagMax, existingMaxBeforePrune);
+
+  // Important : en cas de baisse de niveau, on retire les sorts de classe
+  // qui ne sont plus accessibles. Sinon le HBS garde une section pour ces niveaux.
+  const prune = await add2ePruneActorSpellsForClassLevel(actor, classItem, level, { notify: true });
+  const existingMaxAfterPrune = add2eSpellSyncMaxExistingLevel(actor, classLists);
+
+  if (maxSpellLevel < knownBeforePrune) {
+    console.log("[ADD2E][LEVEL_SPELL_SYNC][LEVEL_DOWN_OR_CAP_DOWN]", {
+      actor: actor.name,
+      classe: classItem.name,
+      newLevel: level,
+      knownBeforePrune,
+      existingMaxBeforePrune,
+      existingMaxAfterPrune,
+      maxSpellLevel,
+      deleted: prune?.deleted ?? 0
+    });
+
+    add2eRerenderActorSheet(actor, false);
+    return {
+      handled: true,
+      imported: 0,
+      deleted: prune?.deleted ?? 0,
+      skipped: true,
+      reason: "level-down-or-cap-down",
+      previousKnownMax: knownBeforePrune,
+      maxSpellLevel
+    };
+  }
+
+  const previousKnownMax = Math.max(lastFlagMax, existingMaxAfterPrune);
+
+  if (maxSpellLevel <= previousKnownMax) {
+    // Sécurité : même si le flag indique déjà ce niveau, on vérifie les sorts manquants.
+    // Cela corrige les anciens essais où le flag était monté mais où les sorts de niveau 7 n'avaient pas été copiés.
+    const missing = await add2eSyncActorSpellsFromClass(actor, classItem, {
+      mode: "missing",
+      actorLevel: level,
+      minSpellLevel: 1,
+      showWait: false
+    });
+
+    await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
+    console.log("[ADD2E][LEVEL_SPELL_SYNC][NO_NEW_LEVEL_CHECK_MISSING]", {
+      actor: actor.name,
+      classe: classItem.name,
+      newLevel: level,
+      previousKnownMax,
+      maxSpellLevel,
+      importedMissing: missing?.imported ?? 0,
+      deleted: prune?.deleted ?? 0
+    });
+
+    if ((prune?.deleted ?? 0) > 0 || (missing?.imported ?? 0) > 0) add2eRerenderActorSheet(actor, false);
+    return {
+      handled: true,
+      imported: missing?.imported ?? 0,
+      deleted: prune?.deleted ?? 0,
+      skipped: true,
+      previousKnownMax,
+      maxSpellLevel
+    };
+  }
+
+  ui.notifications.info(`Nouveau niveau de sorts atteint : import des sorts de niveau ${previousKnownMax + 1} à ${maxSpellLevel}.`);
+
+  const result = await add2eSyncActorSpellsFromClass(actor, classItem, {
+    mode: "missing",
+    actorLevel: level,
+    minSpellLevel: previousKnownMax + 1,
+    showWait: true
+  });
+
+  if (result?.handled && result.imported > 0) {
+    ui.notifications.info(`Nouveaux sorts importés : ${result.imported}.`);
+  } else if (result?.handled) {
+    ui.notifications.info("Aucun nouveau sort manquant à importer.");
+  }
+
+  if ((result?.imported ?? 0) > 0 || (prune?.deleted ?? 0) > 0) {
+    add2eRerenderActorSheet(actor, false);
+  }
+
+  return {
+    ...(result ?? {}),
+    deleted: (result?.deleted ?? 0) + (prune?.deleted ?? 0)
+  };
+}
+// La synchronisation des sorts de classe est appelée directement dans Add2eActorSheet._onDrop,
+// après validation des prérequis, création réelle de l’item classe et mise à jour de l’acteur.
+// Ne pas utiliser de Hooks.on("createItem") ici : ce hook se déclenche trop tôt dans le flux de drop
+// et peut aussi se déclencher lors d’imports/macros qui ne sont pas un vrai changement de classe.
 
 /**
  * Handler factorisé pour toutes les actions sur items (arme, armure, sort, objet, etc.)
@@ -708,6 +1619,1131 @@ globalThis.add2eGetItemEquipTags = add2eGetItemEquipTags;
 globalThis.add2eCheckEquipmentAllowedForClass = add2eCheckEquipmentAllowedForClass;
 
 
+// ============================================================
+// ADD2E — Capacités activables de classe : exécution on_use
+// ============================================================
+function add2eToClassFeatureArray(value) {
+  if (Array.isArray(value)) return value.filter(v => v && typeof v === "object");
+  if (value && typeof value === "object") return Object.values(value).filter(v => v && typeof v === "object");
+  return [];
+}
+
+function add2eFeatureMinLevel(feature) {
+  return Number(feature?.minLevel ?? feature?.minimumLevel ?? feature?.niveauMin ?? feature?.level ?? feature?.niveau ?? 1) || 1;
+}
+
+function add2eFeatureMaxLevel(feature) {
+  const raw = feature?.maxLevel ?? feature?.maximumLevel ?? feature?.niveauMax ?? feature?.max;
+  if (raw === undefined || raw === null || raw === "") return 999;
+  return Number(raw) || 999;
+}
+
+function add2eGetActorClassFeatures(actor) {
+  const sys = actor?.system ?? {};
+  const details = sys.details_classe ?? {};
+  const candidates =
+    details.classFeatures ??
+    details.capacitesClasse ??
+    sys.classFeatures ??
+    sys.capacitesClasse ??
+    [];
+  return add2eToClassFeatureArray(candidates);
+}
+
+function add2eGetActorActivableClassFeatures(actor, { includeLocked = true } = {}) {
+  const level = Number(actor?.system?.niveau ?? 1) || 1;
+  return add2eGetActorClassFeatures(actor).filter(f => {
+    if (f?.activable !== true) return false;
+    if (includeLocked) return true;
+    return level >= add2eFeatureMinLevel(f) && level <= add2eFeatureMaxLevel(f);
+  });
+}
+
+function add2eDatasetValue(dataset, keys) {
+  if (!dataset) return undefined;
+  for (const k of keys) {
+    if (dataset[k] !== undefined && dataset[k] !== null && String(dataset[k]).trim() !== "") return dataset[k];
+  }
+  return undefined;
+}
+
+function add2eFeatureName(feature) {
+  return String(feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "").trim();
+}
+
+function add2eFeatureOnUse(feature) {
+  return String(feature?.on_use ?? feature?.onUse ?? feature?.script ?? feature?.macro ?? "").trim();
+}
+
+function add2eFindClassFeatureFromElement(actor, element) {
+  const allFeatures = add2eGetActorClassFeatures(actor);
+  const activeFeatures = add2eGetActorActivableClassFeatures(actor);
+  const el = element instanceof HTMLElement ? element : element?.[0];
+  if (!el) return null;
+
+  const holder = el.closest?.("[data-feature-index], [data-feature-name], [data-feature-id], [data-feature-key], [data-on-use]") ?? el;
+  const ds = holder?.dataset ?? el?.dataset ?? {};
+
+  const rawIndex = add2eDatasetValue(ds, ["featureIndex", "index", "idx"]);
+  if (rawIndex !== undefined) {
+    const idx = Number(rawIndex);
+    if (Number.isInteger(idx)) {
+      const byOriginalIndex = allFeatures[idx];
+      if (byOriginalIndex?.activable === true) return byOriginalIndex;
+      const byActiveIndex = activeFeatures[idx];
+      if (byActiveIndex) return byActiveIndex;
+    }
+  }
+
+  const rawOnUse = add2eDatasetValue(ds, ["onUse", "onuse", "on_use"]);
+  if (rawOnUse !== undefined) {
+    const wanted = String(rawOnUse).trim();
+    const byScript = activeFeatures.find(f => add2eFeatureOnUse(f) === wanted);
+    if (byScript) return byScript;
+  }
+
+  const rawId = add2eDatasetValue(ds, ["featureId", "featureKey", "id", "key"]);
+  if (rawId !== undefined) {
+    const wanted = add2eNormalizeEquipTag(rawId);
+    const byId = activeFeatures.find(f => {
+      const values = [f.id, f._id, f.key, f.slug, f.name, f.label, f.title, f.nom]
+        .map(add2eNormalizeEquipTag)
+        .filter(Boolean);
+      return values.includes(wanted);
+    });
+    if (byId) return byId;
+  }
+
+  const rawName = add2eDatasetValue(ds, ["featureName", "name", "feature", "nom"]);
+  if (rawName !== undefined) {
+    const wanted = add2eNormalizeEquipTag(rawName);
+    const byName = activeFeatures.find(f => add2eNormalizeEquipTag(add2eFeatureName(f)) === wanted);
+    if (byName) return byName;
+  }
+
+  let cursor = el;
+  for (let depth = 0; cursor && depth < 8; depth++, cursor = cursor.parentElement) {
+    const text = add2eNormalizeEquipTag(cursor.textContent ?? "");
+    if (!text || text === "utiliser") continue;
+
+    const matches = activeFeatures.filter(f => {
+      const n = add2eNormalizeEquipTag(add2eFeatureName(f));
+      return n && text.includes(n);
+    });
+
+    if (matches.length === 1) return matches[0];
+  }
+
+  if (activeFeatures.length === 1) return activeFeatures[0];
+  return null;
+}
+
+async function add2eExecuteClassFeatureOnUse(actor, feature, sheet = null) {
+  if (!actor) {
+    ui.notifications.error("Capacité de classe : acteur introuvable.");
+    return false;
+  }
+
+  if (!feature) {
+    ui.notifications.error("Capacité de classe introuvable dans les données de l'acteur.");
+    return false;
+  }
+
+  const level = Number(actor.system?.niveau ?? 1) || 1;
+  const min = add2eFeatureMinLevel(feature);
+  const max = add2eFeatureMaxLevel(feature);
+  const name = add2eFeatureName(feature) || "Capacité";
+
+  if (level < min || level > max) {
+    ui.notifications.warn(`La capacité « ${name} » n'est pas disponible au niveau ${level}.`);
+    return false;
+  }
+
+  const onUse = add2eFeatureOnUse(feature);
+  if (!onUse) {
+    ui.notifications.warn(`La capacité « ${name} » n'a pas de script on_use.`);
+    return false;
+  }
+
+  try {
+    const url = onUse.includes("?") ? `${onUse}&cb=${Date.now()}` : `${onUse}?cb=${Date.now()}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+
+    const code = await response.text();
+    const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+    const runner = new AsyncFunction(
+      "actor",
+      "feature",
+      "item",
+      "sort",
+      "game",
+      "ui",
+      "ChatMessage",
+      "Roll",
+      "foundry",
+      "canvas",
+      code
+    );
+
+    const result = await runner(actor, feature, feature, null, game, ui, ChatMessage, Roll, foundry, canvas);
+
+    console.log("[ADD2E][CAPACITE][ON_USE]", {
+      actor: actor.name,
+      feature: name,
+      onUse,
+      result
+    });
+
+    sheet?._add2eRememberActiveTab?.();
+    sheet?.render?.(false);
+    return result !== false;
+  } catch (err) {
+    console.error("[ADD2E][CAPACITE][ON_USE][ERREUR]", { actor: actor.name, feature: name, onUse, err });
+    ui.notifications.error(`Erreur pendant l'utilisation de « ${name} » : ${err.message}`);
+    return false;
+  }
+}
+
+async function add2eUseClassFeatureFromElement(actor, element, sheet = null) {
+  const feature = add2eFindClassFeatureFromElement(actor, element);
+  return add2eExecuteClassFeatureOnUse(actor, feature, sheet);
+}
+
+globalThis.add2eGetActorClassFeatures = add2eGetActorClassFeatures;
+globalThis.add2eGetActorActivableClassFeatures = add2eGetActorActivableClassFeatures;
+globalThis.add2eUseClassFeatureFromElement = add2eUseClassFeatureFromElement;
+
+globalThis.add2eExecuteClassFeatureOnUse = add2eExecuteClassFeatureOnUse;
+
+
+// ============================================================
+// ADD2E — Exécution directe des pouvoirs d'objets magiques
+// Important : un pouvoir d'objet n'est pas un vrai Item sort de l'acteur.
+// On exécute donc son onUse directement, avec un contexte compatible
+// avec les scripts de sorts existants.
+// ============================================================
+function add2eObjectPowerOnUsePath(power) {
+  return String(power?.onUse ?? power?.onuse ?? power?.on_use ?? power?.script ?? power?.macro ?? "").trim();
+}
+
+function add2eObjectPowerCost(power) {
+  return Math.max(0, Number(power?.cout ?? power?.cost ?? power?.chargeCost ?? 0) || 0);
+}
+
+function add2eObjectPowerMaxCharges(itemSource, power, idx) {
+  const sys = itemSource?.system ?? {};
+  const globalMax = Number(sys?.charges?.max ?? sys?.max_charges ?? sys?.maxCharges ?? sys?.chargesMax ?? 0) || 0;
+  if (globalMax > 0) return globalMax;
+  return Number(power?.max ?? power?.chargesMax ?? power?.maxCharges ?? power?.charges?.max ?? power?.charges ?? 1) || 1;
+}
+
+function add2eObjectPowerCurrentCharges(itemSource, power, idx) {
+  const sys = itemSource?.system ?? {};
+  const cost = add2eObjectPowerCost(power);
+
+  // Un pouvoir permanent / gratuit doit rester lançable même si l'objet n'a pas de réserve de charges.
+  // Exemple : Anneau d'invisibilité. La mécanique existante passe par add2eCastSpell,
+  // qui vérifie le flag memorizedCount ; on renvoie donc 1 pour les pouvoirs à coût 0.
+  if (cost <= 0) return 1;
+
+  const globalMax = Number(sys?.charges?.max ?? sys?.max_charges ?? sys?.maxCharges ?? sys?.chargesMax ?? 0) || 0;
+
+  if (globalMax > 0) {
+    const flag = itemSource.getFlag?.("add2e", "global_charges");
+    if (flag !== undefined && flag !== null && flag !== "") return Number(flag) || 0;
+    return Number(sys?.charges?.value ?? sys?.chargesValeur ?? sys?.charges_value ?? globalMax) || 0;
+  }
+
+  const flag = itemSource.getFlag?.("add2e", `charges_${idx}`);
+  if (flag !== undefined && flag !== null && flag !== "") return Number(flag) || 0;
+  return Number(power?.charges?.value ?? power?.charges ?? power?.value ?? power?.max ?? 1) || 0;
+}
+
+async function add2eObjectPowerSetCharges(itemSource, power, idx, value) {
+  const sys = itemSource?.system ?? {};
+  const globalMax = Number(sys?.charges?.max ?? sys?.max_charges ?? sys?.maxCharges ?? sys?.chargesMax ?? 0) || 0;
+  const next = Math.max(0, Number(value) || 0);
+
+  if (globalMax > 0) {
+    await itemSource.setFlag?.("add2e", "global_charges", next);
+    if (sys?.charges && typeof sys.charges === "object") {
+      await itemSource.update({ "system.charges.value": next });
+    }
+    return;
+  }
+
+  await itemSource.setFlag?.("add2e", `charges_${idx}`, next);
+}
+
+function add2eBuildVirtualObjectPowerSort(actor, itemSource, power, idx) {
+  const generatedId = typeof add2eMagicPowerGeneratedId === "function"
+    ? add2eMagicPowerGeneratedId(itemSource, idx)
+    : itemSource.id.substring(0, 14) + idx.toString().padStart(2, "0");
+
+  const onUse = add2eObjectPowerOnUsePath(power);
+  const cost = add2eObjectPowerCost(power);
+  const max = cost <= 0 ? Math.max(1, add2eObjectPowerMaxCharges(itemSource, power, idx)) : add2eObjectPowerMaxCharges(itemSource, power, idx);
+  const current = cost <= 0 ? 1 : add2eObjectPowerCurrentCharges(itemSource, power, idx);
+
+  const fakeData = {
+    _id: generatedId,
+    name: String(power?.name ?? power?.nom ?? itemSource?.name ?? "Pouvoir").trim() || "Pouvoir",
+    type: "sort",
+    img: power?.img || itemSource?.img || "icons/svg/aura.svg",
+    system: {
+      niveau: Number(power?.niveau ?? power?.level ?? 1) || 1,
+      école: power?.ecole || power?.["école"] || "Magique",
+      description: power?.description || power?.desc || itemSource?.system?.description || "",
+      composantes: "Objet",
+      temps_incantation: power?.activation || power?.temps_incantation || "Objet magique",
+      isPower: true,
+      isObjectPower: true,
+      sourceItemId: itemSource.id,
+      sourceWeaponId: itemSource.id,
+      sourceItemName: itemSource.name,
+      powerIndex: idx,
+      cost,
+      cout: cost,
+      max,
+      isGlobalCharge: Number(itemSource?.system?.charges?.max ?? itemSource?.system?.max_charges ?? 0) > 0,
+      onUse,
+      onuse: onUse,
+      on_use: onUse,
+      objetMagicOnUse: power?.objetMagicOnUse || power?.fallbackOnUse || "",
+      linkedSpell: power?.linkedSpell || null
+    },
+    flags: {
+      add2e: {
+        memorizedCount: current,
+        originalOnUse: onUse,
+        sourceType: "objet_magique",
+        sourceItemId: itemSource.id,
+        sourceItemName: itemSource.name,
+        powerIndex: idx
+      }
+    }
+  };
+
+  const sort = new Item(fakeData, { parent: actor });
+  sort.getFlag = (scope, key) => {
+    if (scope !== "add2e") return null;
+    if (key === "memorizedCount") return cost <= 0 ? 1 : add2eObjectPowerCurrentCharges(itemSource, power, idx);
+    if (key === "originalOnUse") return onUse;
+    return fakeData.flags?.add2e?.[key] ?? null;
+  };
+  return sort;
+}
+
+async function add2eExecuteObjectMagicPower(actor, itemSource, power, idx, sheet = null) {
+  if (!actor || !itemSource || !power) {
+    ui.notifications.error("Pouvoir d'objet magique introuvable.");
+    return false;
+  }
+
+  const powerName = String(power?.name ?? power?.nom ?? itemSource.name ?? "Pouvoir").trim() || "Pouvoir";
+  const onUse = add2eObjectPowerOnUsePath(power);
+  const cost = add2eObjectPowerCost(power);
+  const current = add2eObjectPowerCurrentCharges(itemSource, power, idx);
+
+  if (cost > 0 && current < cost) {
+    ui.notifications.warn(`${itemSource.name} n'a pas assez de charges pour utiliser ${powerName}.`);
+    return false;
+  }
+
+  const sort = add2eBuildVirtualObjectPowerSort(actor, itemSource, power, idx);
+
+  try {
+    let result = true;
+
+    if (onUse) {
+      const url = onUse.includes("?") ? `${onUse}&cb=${Date.now()}` : `${onUse}?cb=${Date.now()}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+
+      const code = await response.text();
+      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+      const scope = {
+        actor,
+        item: itemSource,
+        sourceItem: itemSource,
+        sort,
+        power,
+        pouvoir: power,
+        powerIndex: idx,
+        isObjectPower: true
+      };
+      const args = [{ actor, item: itemSource, sourceItem: itemSource, sort, power, pouvoir: power, powerIndex: idx, scope }];
+
+      const runner = new AsyncFunction(
+        "actor",
+        "item",
+        "sourceItem",
+        "sort",
+        "power",
+        "pouvoir",
+        "powerIndex",
+        "scope",
+        "args",
+        "game",
+        "ui",
+        "ChatMessage",
+        "Roll",
+        "foundry",
+        "canvas",
+        code
+      );
+
+      result = await runner(actor, itemSource, itemSource, sort, power, power, idx, scope, args, game, ui, ChatMessage, Roll, foundry, canvas);
+    } else {
+      await ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor }),
+        content: `<div class="add2e chat-card"><h3>${powerName}</h3><p>${power?.description || itemSource?.system?.description || "Pouvoir d'objet magique utilisé."}</p></div>`
+      });
+    }
+
+    // Convention ADD2E : un script peut retourner false pour ne pas consommer la ressource.
+    if (result !== false && cost > 0) {
+      await add2eObjectPowerSetCharges(itemSource, power, idx, current - cost);
+    }
+
+    if (result !== false) {
+      console.log("[ADD2E][OBJET_MAGIQUE][POUVOIR_OK]", { actor: actor.name, item: itemSource.name, power: powerName, onUse, cost });
+      sheet?._add2eRememberActiveTab?.();
+      sheet?.render?.(false);
+      return true;
+    }
+
+    console.log("[ADD2E][OBJET_MAGIQUE][POUVOIR_ANNULE]", { actor: actor.name, item: itemSource.name, power: powerName, onUse });
+    return false;
+  } catch (err) {
+    console.error("[ADD2E][OBJET_MAGIQUE][POUVOIR_ERREUR]", { actor: actor.name, item: itemSource.name, power: powerName, onUse, err });
+    ui.notifications.error(`Erreur pendant l'utilisation de ${powerName} : ${err.message}`);
+    return false;
+  }
+}
+
+globalThis.add2eExecuteObjectMagicPower = add2eExecuteObjectMagicPower;
+
+// ============================================================
+// ADD2E — Nettoyage effets de classe + compétences de voleur
+// ============================================================
+function add2eClassEffectKey(value) {
+  return add2eNormalizeEquipTag(value);
+}
+
+function add2eEffectFlagValue(effect, keys = []) {
+  const flags = effect?.flags?.add2e ?? {};
+  for (const key of keys) {
+    const value = flags?.[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+  }
+  return null;
+}
+
+function add2eShouldDeleteEffectForClassPurge(effect, itemsToDelete = []) {
+  const origin = String(effect?.origin || "");
+  const itemUuids = itemsToDelete.map(i => i.uuid).filter(Boolean);
+  const itemIds = itemsToDelete.map(i => i.id).filter(Boolean);
+
+  if (itemUuids.includes(origin)) return true;
+  if (itemIds.some(id => origin.endsWith(`.${id}`))) return true;
+
+  const oldClassItems = itemsToDelete.filter(i => String(i.type || "").toLowerCase() === "classe");
+  if (!oldClassItems.length) return false;
+
+  const oldClassKeys = new Set();
+  for (const cls of oldClassItems) {
+    const sys = cls.system ?? {};
+    for (const value of [cls.name, sys.label, sys.nom, sys.name, sys.classe, sys.slug]) {
+      const key = add2eClassEffectKey(value);
+      if (key) oldClassKeys.add(key);
+    }
+    if (cls.id) oldClassKeys.add(add2eClassEffectKey(cls.id));
+    if (cls.uuid) oldClassKeys.add(add2eClassEffectKey(cls.uuid));
+  }
+
+  const flags = effect?.flags?.add2e ?? {};
+  const sourceType = add2eClassEffectKey(flags.sourceType ?? flags.type ?? flags.kind ?? "");
+  const sourceClass = add2eClassEffectKey(
+    flags.sourceClasse ?? flags.sourceClass ?? flags.className ?? flags.classe ?? flags.classKey ?? ""
+  );
+  const sourceId = add2eClassEffectKey(flags.sourceItemId ?? flags.sourceClassId ?? flags.classId ?? "");
+  const effectName = add2eClassEffectKey(effect?.name ?? effect?.label ?? "");
+
+  if (["classe", "class", "class_feature", "capacite_classe", "classfeature"].includes(sourceType)) return true;
+  if (sourceClass && oldClassKeys.has(sourceClass)) return true;
+  if (sourceId && oldClassKeys.has(sourceId)) return true;
+
+  // Compatibilité avec les anciens effets non tagués, ex. "Moine — capacités niveau X".
+  if (effectName && [...oldClassKeys].some(k => k && effectName.includes(k))) return true;
+
+  return false;
+}
+
+
+function add2eCollectUnlockedClassEffectTags(actor, classItem = null) {
+  const tags = new Set();
+  const level = Math.max(1, Number(actor?.system?.niveau) || 1);
+  const cls = classItem ?? actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null;
+  const systems = [actor?.system?.details_classe, cls?.system].filter(Boolean);
+
+  const push = (value) => {
+    for (const raw of add2eToEquipArray(value)) {
+      const tag = add2eNormalizeEquipTag(raw);
+      if (tag) tags.add(tag);
+    }
+  };
+
+  const pushFeatures = (features) => {
+    const list = Array.isArray(features)
+      ? features
+      : (features && typeof features === "object" ? Object.values(features) : []);
+
+    for (const feature of list) {
+      if (!feature || typeof feature !== "object") continue;
+      const min = Number(feature.minLevel ?? feature.minimumLevel ?? feature.level ?? feature.niveau ?? 1) || 1;
+      const maxRaw = feature.maxLevel ?? feature.maximumLevel ?? feature.maxNiveau;
+      const max = maxRaw === undefined || maxRaw === null || maxRaw === "" ? 999 : Number(maxRaw) || 999;
+      if (level < min || level > max) continue;
+
+      push(feature.tags);
+      push(feature.tag);
+      push(feature.effectTags);
+      push(feature.effets);
+      push(feature.effects);
+      push(feature.flags?.add2e?.tags);
+      push(feature.flags?.add2e?.effectTags);
+    }
+  };
+
+  for (const sys of systems) {
+    push(sys.tags);
+    push(sys.tag);
+    push(sys.effectTags);
+    push(sys.effets);
+    push(sys.effects);
+    push(sys.flags?.add2e?.tags);
+    pushFeatures(sys.classFeatures);
+    pushFeatures(sys.classFeaturesDebloquees);
+  }
+
+  return [...tags].filter(Boolean);
+}
+
+async function add2eSyncClassPassiveEffect(actor) {
+  if (!actor) return null;
+
+  const classItem = actor.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null;
+  const existing = actor.effects?.filter?.(eff => eff.flags?.add2e?.autoClassPassiveEffect === true) ?? [];
+
+  if (!classItem) {
+    const ids = existing.map(e => e.id).filter(Boolean);
+    if (ids.length) await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
+    return null;
+  }
+
+  const tags = add2eCollectUnlockedClassEffectTags(actor, classItem);
+  const label = `${classItem.name} — effets de classe`;
+
+  if (!tags.length) {
+    const ids = existing.map(e => e.id).filter(Boolean);
+    if (ids.length) await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
+    return null;
+  }
+
+  const data = {
+    name: label,
+    label,
+    icon: classItem.img || "icons/svg/aura.svg",
+    origin: classItem.uuid,
+    disabled: false,
+    transfer: false,
+    changes: [],
+    flags: {
+      add2e: {
+        autoClassPassiveEffect: true,
+        sourceType: "classe",
+        sourceClasse: classItem.name,
+        sourceItemId: classItem.id,
+        sourceItemUuid: classItem.uuid,
+        tags,
+        effectTags: tags
+      }
+    }
+  };
+
+  const current = existing[0] ?? null;
+  const oldIds = existing.slice(1).map(e => e.id).filter(Boolean);
+  if (oldIds.length) await actor.deleteEmbeddedDocuments("ActiveEffect", oldIds);
+
+  if (current) {
+    await current.update(data, { render: false });
+    return current;
+  }
+
+  const [created] = await actor.createEmbeddedDocuments("ActiveEffect", [data]);
+  return created ?? null;
+}
+
+globalThis.add2eSyncClassPassiveEffect = add2eSyncClassPassiveEffect;
+
+function add2eNormalizeThiefSkillKey(value) {
+  const key = add2eNormalizeEquipTag(value)
+    .replace(/^competence_voleur:/, "")
+    .replace(/^competences_voleur:/, "")
+    .replace(/^thief_skill:/, "")
+    .replace(/^voleur:/, "");
+
+  const aliases = {
+    pick_pockets: "pickpocket",
+    pick_pocket: "pickpocket",
+    pickpockets: "pickpocket",
+    pickpocket: "pickpocket",
+    vol_a_la_tire: "pickpocket",
+    tire_laine: "pickpocket",
+
+    open_locks: "crochetage_serrures",
+    open_lock: "crochetage_serrures",
+    crochetage: "crochetage_serrures",
+    crochetage_de_serrures: "crochetage_serrures",
+    crochetage_serrure: "crochetage_serrures",
+    crochetage_serrures: "crochetage_serrures",
+    ouverture_de_serrures: "crochetage_serrures",
+    ouverture_serrures: "crochetage_serrures",
+    ouvrir_serrures: "crochetage_serrures",
+
+    find_remove_traps: "detection_pieges",
+    find_traps: "detection_pieges",
+    remove_traps: "detection_pieges",
+    detect_traps: "detection_pieges",
+    detection_desamorcage_des_pieges: "detection_pieges",
+    detection_desamorcage_pieges: "detection_pieges",
+    detection_pieges: "detection_pieges",
+    detection_de_pieges: "detection_pieges",
+    desamorcage_pieges: "detection_pieges",
+    desamorcage_de_pieges: "detection_pieges",
+    pieges: "detection_pieges",
+
+    move_silently: "deplacement_silencieux",
+    deplacement_silencieux: "deplacement_silencieux",
+    deplacement_en_silence: "deplacement_silencieux",
+    silence: "deplacement_silencieux",
+
+    hide_in_shadows: "dissimulation",
+    dissimulation_dans_l_ombre: "dissimulation",
+    dissimulation_dans_lombre: "dissimulation",
+    dissimulation: "dissimulation",
+    ombre: "dissimulation",
+
+    detect_noise: "ecoute",
+    acuite_auditive: "ecoute",
+    ecoute: "ecoute",
+    ecouter: "ecoute",
+
+    climb_walls: "escalade",
+    escalade: "escalade",
+    grimper: "escalade",
+
+    backstab: "frappe_dans_le_dos",
+    attaque_dans_le_dos: "frappe_dans_le_dos",
+    frappe_dans_le_dos: "frappe_dans_le_dos",
+    dos: "frappe_dans_le_dos",
+
+    read_languages: "lecture_langues",
+    read_language: "lecture_langues",
+    lecture_des_langues: "lecture_langues",
+    lecture_langues: "lecture_langues",
+    langues: "lecture_langues",
+
+    assassination: "assassinat",
+    assassinate: "assassinat",
+    assassiner: "assassinat",
+    assassinat: "assassinat",
+    comp_assassin: "assassinat",
+    competence_assassin: "assassinat"
+  };
+
+  return aliases[key] ?? key;
+}
+
+function add2eThiefToArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.flatMap(v => add2eThiefToArray(v));
+  if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
+  return [value];
+}
+
+function add2eReadThiefBonusValue(rawValue) {
+  if (typeof rawValue === "number") return rawValue;
+  if (typeof rawValue === "string" && rawValue.trim() !== "") return Number(rawValue) || 0;
+  if (rawValue && typeof rawValue === "object") {
+    const v = rawValue.value ?? rawValue.bonus ?? rawValue.mod ?? rawValue.adjustment ?? rawValue.valeur ?? rawValue.malus;
+    return Number(v) || 0;
+  }
+  return 0;
+}
+
+function add2eGetThiefBonusFromMap(map, key) {
+  if (!map) return 0;
+  const wanted = add2eNormalizeThiefSkillKey(key);
+  let total = 0;
+
+  const accepts = rawKey => {
+    const normKey = add2eNormalizeThiefSkillKey(rawKey);
+    return [wanted, "all", "toutes", "global", "*"].includes(normKey);
+  };
+
+  if (Array.isArray(map)) {
+    for (const entry of map) {
+      if (!entry) continue;
+      if (typeof entry === "string") {
+        // Format accepté : bonus_voleur:crochetage_serrures:10
+        const parsed = add2eParseThiefBonusTag(entry);
+        if (parsed && accepts(parsed.key)) total += parsed.value;
+        continue;
+      }
+      if (typeof entry === "object") {
+        const rawKey = entry.key ?? entry.skill ?? entry.competence ?? entry.compétence ?? entry.name ?? entry.label ?? entry.id ?? "all";
+        if (accepts(rawKey)) total += add2eReadThiefBonusValue(entry);
+      }
+    }
+    return total;
+  }
+
+  if (typeof map === "string") {
+    for (const token of map.split(/[,;|\n]+/).map(x => x.trim()).filter(Boolean)) {
+      const parsed = add2eParseThiefBonusTag(token);
+      if (parsed && accepts(parsed.key)) total += parsed.value;
+    }
+    return total;
+  }
+
+  if (typeof map !== "object") return 0;
+
+  for (const [rawKey, rawValue] of Object.entries(map)) {
+    if (!accepts(rawKey)) continue;
+    total += add2eReadThiefBonusValue(rawValue);
+  }
+
+  return total;
+}
+
+function add2ePushThiefBonus(out, label, map, key) {
+  const value = add2eGetThiefBonusFromMap(map, key);
+  if (value !== 0) out.push({ label, value });
+}
+
+function add2eGetActorRaceSystem(actor) {
+  const details = add2eDeepClone(actor?.system?.details_race ?? {}) || {};
+  const raceItem = actor?.items?.find?.(i => String(i?.type || "").toLowerCase() === "race") ?? null;
+  const itemSystem = add2eDeepClone(raceItem?.system ?? {}) || {};
+
+  if (foundry?.utils?.mergeObject) {
+    return foundry.utils.mergeObject(details, itemSystem, { inplace: false, recursive: true });
+  }
+  return { ...details, ...itemSystem };
+}
+
+function add2eGetThiefClassSystem(actor) {
+  try {
+    const merged = add2eGetActorClassSystem(actor);
+    if (merged && typeof merged === "object") return merged;
+  } catch (err) {
+    console.warn("[ADD2E][VOLEUR][CLASSE] Fallback details_classe.", err);
+  }
+  return actor?.system?.details_classe ?? {};
+}
+
+function add2eGetEquippedThiefBonusMaps(actor) {
+  const maps = [];
+  for (const item of actor?.items ?? []) {
+    const sys = item.system ?? {};
+    const equipped = sys.equipee === true || sys.equipped === true || sys.portee === true || sys.active === true;
+    if (!equipped) continue;
+
+    const sources = [
+      sys.thiefSkillAdjustments,
+      sys.thiefSkillBonuses,
+      sys.thief_adjustments,
+      sys.thief_bonuses,
+      sys.voleurSkillAdjustments,
+      sys.voleurSkillBonuses,
+      sys.bonus_competences_voleur,
+      sys.malus_competences_voleur,
+      sys.skillBonuses?.voleur,
+      sys.skillAdjustments?.voleur,
+      item.flags?.add2e?.thiefSkillAdjustments,
+      item.flags?.add2e?.thiefSkillBonuses
+    ];
+
+    for (const map of sources) {
+      if (map && typeof map === "object") maps.push({ label: item.name, map });
+    }
+  }
+  return maps;
+}
+
+function add2eGetThiefDexBonus(actor, key) {
+  const details = add2eGetThiefClassSystem(actor);
+  const dex = Number(
+    actor?.system?.dex_aff ??
+    actor?.system?.dexterite ??
+    actor?.system?.dexterite_base ??
+    0
+  ) || 0;
+
+  const sources = [
+    details.thiefSkillDexAdjustments,
+    details.thiefDexAdjustments,
+    actor?.system?.thiefSkillDexAdjustments,
+    actor?.system?.thiefDexAdjustments
+  ];
+
+  for (const table of sources) {
+    if (!table || typeof table !== "object") continue;
+    const row = table[String(dex)] ?? table[dex];
+    const value = add2eGetThiefBonusFromMap(row, key);
+    if (value !== 0) return { value, label: `Dextérité ${dex}` };
+  }
+
+  return { value: 0, label: `Dextérité ${dex}` };
+}
+
+function add2eParseThiefBonusTag(raw) {
+  const norm = add2eNormalizeEquipTag(raw);
+  if (!norm) return null;
+
+  const prefixes = [
+    "bonus_voleur",
+    "bonus_competence_voleur",
+    "bonus_competences_voleur",
+    "bonus_thief_skill",
+    "thief_skill_bonus",
+    "malus_voleur",
+    "malus_competence_voleur",
+    "malus_competences_voleur",
+    "malus_thief_skill",
+    "thief_skill_malus"
+  ];
+
+  for (const prefix of prefixes) {
+    if (norm === prefix) continue;
+    if (!norm.startsWith(prefix + ":") && !norm.startsWith(prefix + "_")) continue;
+
+    const isMalus = prefix.startsWith("malus") || prefix.endsWith("malus");
+    const rest = norm.slice(prefix.length + 1);
+    const sep = norm[prefix.length];
+    let skillKey = "all";
+    let value = 0;
+
+    if (sep === ":") {
+      const parts = rest.split(":").filter(Boolean);
+      if (parts.length === 1) value = Number(parts[0]) || 0;
+      else {
+        skillKey = parts.slice(0, -1).join(":");
+        value = Number(parts.at(-1)) || 0;
+      }
+    } else {
+      const m = rest.match(/^(.*)_(-?\d+)$/);
+      if (!m) continue;
+      skillKey = m[1] || "all";
+      value = Number(m[2]) || 0;
+    }
+
+    if (isMalus) value = -Math.abs(value);
+    return { key: add2eNormalizeThiefSkillKey(skillKey), value };
+  }
+
+  return null;
+}
+
+function add2eGetActiveTagThiefBonuses(actor, key) {
+  const out = [];
+  const wanted = add2eNormalizeThiefSkillKey(key);
+  let tags = [];
+
+  try {
+    if (typeof Add2eEffectsEngine !== "undefined" && Add2eEffectsEngine?.getActiveTags) {
+      tags = Add2eEffectsEngine.getActiveTags(actor) ?? [];
+    }
+  } catch (err) {
+    console.warn("[ADD2E][VOLEUR][BONUS TAGS] Impossible de lire les tags actifs.", err);
+  }
+
+  for (const raw of tags) {
+    const parsed = add2eParseThiefBonusTag(raw);
+    if (!parsed) continue;
+    if (![wanted, "all", "toutes", "global", "*"].includes(parsed.key)) continue;
+    if (parsed.value !== 0) out.push({ label: "Effets actifs", value: parsed.value });
+  }
+
+  return out;
+}
+
+function add2eGetThiefSkillBonuses(actor, key) {
+  const out = [];
+  const details = add2eGetThiefClassSystem(actor);
+  const race = add2eGetActorRaceSystem(actor);
+
+  for (const map of [
+    actor?.system?.thiefSkillAdjustments,
+    actor?.system?.thiefSkillBonuses,
+    actor?.system?.voleurSkillAdjustments,
+    actor?.system?.voleurSkillBonuses,
+    actor?.system?.bonus_competences_voleur,
+    actor?.system?.bonusCompetencesVoleur
+  ]) add2ePushThiefBonus(out, "Acteur", map, key);
+
+  for (const map of [
+    details.thiefSkillAdjustments,
+    details.thiefSkillBonuses,
+    details.thief_adjustments,
+    details.thief_bonuses,
+    details.voleurSkillAdjustments,
+    details.voleurSkillBonuses,
+    details.bonus_competences_voleur,
+    details.bonus_competence_voleur,
+    details.bonus_voleur,
+    details.malus_competences_voleur,
+    details.skillBonuses?.voleur,
+    details.skillAdjustments?.voleur
+  ]) add2ePushThiefBonus(out, "Classe", map, key);
+
+  for (const map of [
+    race.thief_adjustments,
+    race.thief_bonuses,
+    race.thiefSkillAdjustments,
+    race.thiefSkillBonuses,
+    race.voleurSkillAdjustments,
+    race.voleurSkillBonuses,
+    race.bonus_competences_voleur,
+    race.bonus_competence_voleur,
+    race.bonus_voleur,
+    race.malus_competences_voleur,
+    race.skillBonuses?.voleur,
+    race.skillAdjustments?.voleur
+  ]) add2ePushThiefBonus(out, "Race", map, key);
+
+  const dexBonus = add2eGetThiefDexBonus(actor, key);
+  if (dexBonus.value !== 0) out.push(dexBonus);
+
+  for (const src of add2eGetEquippedThiefBonusMaps(actor)) {
+    add2ePushThiefBonus(out, src.label, src.map, key);
+  }
+
+  out.push(...add2eGetActiveTagThiefBonuses(actor, key));
+
+  return out.filter(b => Number(b.value || 0) !== 0);
+}
+
+function add2eFormatSigned(value) {
+  const n = Number(value) || 0;
+  return `${n >= 0 ? "+" : ""}${n}`;
+}
+
+function add2eBuildThiefSkillRow({ keyRaw, labelRaw, valueRaw, actor, type = "percent", canRoll = true }) {
+  const key = add2eNormalizeThiefSkillKey(keyRaw || labelRaw);
+  if (!key) return null;
+
+  const base = Number(valueRaw ?? 0);
+  if (!Number.isFinite(base)) return null;
+
+  const isBackstab = key.includes("frappe") || key.includes("dos") || key.includes("backstab");
+  const finalType = isBackstab ? "multiplier" : type;
+  const bonuses = finalType === "multiplier" ? [] : add2eGetThiefSkillBonuses(actor, key);
+  const bonusTotal = bonuses.reduce((sum, b) => sum + (Number(b.value) || 0), 0);
+  const finalValue = finalType === "multiplier" ? base : Math.max(0, base + bonusTotal);
+  const bonusDisplay = bonusTotal === 0 ? "" : add2eFormatSigned(bonusTotal);
+  const detailParts = [
+    `Base ${finalType === "multiplier" ? `×${base}` : `${base}%`}`,
+    ...bonuses.map(b => `${b.label} ${add2eFormatSigned(b.value)}%`)
+  ];
+
+  return {
+    key,
+    label: String(labelRaw || keyRaw || key).trim(),
+    shortLabel: String(labelRaw || keyRaw || key).trim()
+      .replace(/^Détection\/désamorçage des pièges$/i, "Pièges")
+      .replace(/^Détection de pièges$/i, "Pièges")
+      .replace(/^Crochetage de serrures$/i, "Crochetage")
+      .replace(/^Ouverture de serrures$/i, "Serrures")
+      .replace(/^Déplacement silencieux$/i, "Silence")
+      .replace(/^Dissimulation dans l’ombre$/i, "Dissimulation")
+      .replace(/^Lecture des langues$/i, "Langues"),
+    base,
+    value: finalValue,
+    finalValue,
+    bonusTotal,
+    bonusDisplay,
+    bonuses,
+    display: finalType === "multiplier" ? `×${finalValue}` : `${finalValue}%`,
+    baseDisplay: finalType === "multiplier" ? `×${base}` : `${base}%`,
+    type: finalType,
+    canRoll: finalType !== "multiplier" && canRoll === true,
+    note: finalType === "multiplier" ? "Multiplicateur d'attaque dans le dos" : "Jet de pourcentage : réussite si d100 ≤ score",
+    breakdownTitle: detailParts.join(" | ")
+  };
+}
+
+function add2eGetActorThiefSkills(actor, progressionRow = null) {
+  const details = add2eGetThiefClassSystem(actor);
+  const level = Math.max(1, Number(actor?.system?.niveau ?? 1) || 1);
+  const progression = Array.isArray(details.progression) ? details.progression : [];
+  const row = progressionRow || progression.find((r, idx) => Number(r?.niveau ?? r?.level ?? idx + 1) === level) || null;
+  if (!row) return [];
+
+  const labelsObj = details.thiefSkillLabels && typeof details.thiefSkillLabels === "object"
+    ? details.thiefSkillLabels
+    : null;
+  const order = Array.isArray(details.thiefSkillOrder) && details.thiefSkillOrder.length
+    ? details.thiefSkillOrder.map(add2eNormalizeThiefSkillKey)
+    : labelsObj
+      ? Object.keys(labelsObj).map(add2eNormalizeThiefSkillKey)
+      : [];
+
+  const legacyLabels = Array.isArray(details.skillLabels) ? details.skillLabels : [];
+  const legacyValues = Array.isArray(row.skills) ? row.skills : [];
+  const structured = row.thiefSkills && typeof row.thiefSkills === "object" ? row.thiefSkills : {};
+
+  const rows = [];
+  const pushed = new Set();
+
+  const pushSkill = (keyRaw, labelRaw, valueRaw, opts = {}) => {
+    const skill = add2eBuildThiefSkillRow({ keyRaw, labelRaw, valueRaw, actor, ...opts });
+    if (!skill || pushed.has(skill.key)) return;
+    pushed.add(skill.key);
+    rows.push(skill);
+  };
+
+  if (order.length) {
+    for (let idx = 0; idx < order.length; idx++) {
+      const key = order[idx];
+      const label = labelsObj?.[key] ?? legacyLabels[idx] ?? key;
+      const value = structured[key] ?? legacyValues[idx];
+      pushSkill(key, label, value);
+    }
+  }
+
+  // Compatibilité pure avec l'ancien couple skillLabels/progression.skills.
+  if (!rows.length && legacyLabels.length && legacyValues.length) {
+    legacyLabels.forEach((label, idx) => pushSkill(label, label, legacyValues[idx]));
+  }
+
+  const readLanguages = Number(row.readLanguages ?? row.read_languages ?? row.lectureLangues ?? structured.read_languages ?? structured.lecture_langues ?? 0) || 0;
+  if (readLanguages > 0 && !pushed.has("lecture_langues")) {
+    pushSkill("lecture_langues", "Lecture des langues", readLanguages);
+  }
+
+  return rows;
+}
+
+async function add2ePromptThiefSkillModifiers(actor, skill) {
+  return new Promise(resolve => {
+    const isPickpocket = skill.key === "pickpocket";
+    const content = `
+      <form class="add2e-thief-roll-dialog">
+        <div style="margin-bottom:0.6em;">
+          <b>${skill.label}</b><br>
+          <span>Score actuel : ${skill.display}</span>
+        </div>
+        <div style="margin-bottom:0.6em;">
+          <label>Modificateur situationnel</label>
+          <input type="number" name="mod" value="0" step="1" style="width:5em;">
+        </div>
+        ${isPickpocket ? `
+          <div style="margin-bottom:0.6em;">
+            <label>Niveau de la cible</label>
+            <input type="number" name="targetLevel" value="" min="0" step="1" style="width:5em;">
+            <p style="margin:0.3em 0 0;color:#666;font-size:0.9em;">Pickpocket : –5 % par niveau de la cible au-dessus du niveau 3.</p>
+          </div>
+        ` : ""}
+      </form>
+    `;
+
+    new Dialog({
+      title: `Jet de ${skill.label}`,
+      content,
+      buttons: {
+        roll: {
+          label: "Lancer",
+          callback: html => {
+            const form = html[0]?.querySelector?.("form") ?? html.find?.("form")?.[0];
+            const mod = Number(form?.querySelector?.('[name="mod"]')?.value ?? 0) || 0;
+            const targetLevel = Number(form?.querySelector?.('[name="targetLevel"]')?.value ?? 0) || 0;
+            resolve({ mod, targetLevel });
+          }
+        },
+        cancel: { label: "Annuler", callback: () => resolve(null) }
+      },
+      default: "roll",
+      close: () => resolve(null)
+    }).render(true);
+  });
+}
+
+async function add2eRollThiefSkill(actor, key) {
+  if (!actor) return ui.notifications.warn("Acteur introuvable.");
+
+  const details = add2eGetThiefClassSystem(actor);
+  const level = Math.max(1, Number(actor.system?.niveau ?? 1) || 1);
+  const progression = Array.isArray(details.progression) ? details.progression : [];
+  const row = progression.find((r, idx) => Number(r?.niveau ?? r?.level ?? idx + 1) === level) || null;
+  const skills = add2eGetActorThiefSkills(actor, row);
+  const wanted = add2eNormalizeThiefSkillKey(key);
+  const skill = skills.find(s => s.key === wanted);
+
+  if (!skill) return ui.notifications.warn("Compétence de voleur introuvable pour ce niveau.");
+  if (!skill.canRoll) return ui.notifications.info(`${skill.label} : ${skill.display}. Aucun jet automatique requis.`);
+
+  const options = await add2ePromptThiefSkillModifiers(actor, skill);
+  if (!options) return;
+
+  const isAssassination = skill.key === "assassinat";
+  const situational = Number(options.mod || 0) || 0;
+  const targetLevel = Number(options.targetLevel || 0) || 0;
+  const targetPenalty = skill.key === "pickpocket" && targetLevel > 3 ? -5 * (targetLevel - 3) : 0;
+  const finalValue = Math.max(0, Number(skill.value || 0) + situational + targetPenalty);
+
+  const roll = await new Roll("1d100").evaluate({ async: true });
+  if (game.dice3d) await game.dice3d.showForRoll(roll);
+
+  const success = roll.total <= finalValue;
+  const noticed = skill.key === "pickpocket" && roll.total >= finalValue + 21;
+  const color = success ? "#1f8f4d" : "#b3261e";
+  const allDetails = [
+    { label: "Base", value: skill.base },
+    ...skill.bonuses,
+    ...(situational !== 0 ? [{ label: "Situation", value: situational }] : []),
+    ...(targetPenalty !== 0 ? [{ label: `Cible niveau ${targetLevel}`, value: targetPenalty }] : [])
+  ];
+
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content: `
+      <div class="add2e-card-test" style="border-radius:12px;border:1px solid ${color};background:#fffdf6;padding:0.75em 1em;font-family:var(--font-primary);">
+        <div style="display:flex;align-items:center;gap:0.6em;margin-bottom:0.4em;">
+          <i class="fas fa-mask" style="color:${color};font-size:1.5em;"></i>
+          <b style="color:${color};font-size:1.12em;">${skill.label}</b>
+          <span style="margin-left:auto;color:#666;">${isAssassination ? "Compétence d’assassin" : "Compétence de voleur"}</span>
+        </div>
+        <div>Score final : <b>${finalValue}%</b> — Jet : <b>${roll.total}</b></div>
+        <div style="font-size:0.9em;color:#555;margin-top:0.35em;">
+          ${allDetails.map(d => `${d.label} ${add2eFormatSigned(d.value)}%`).join(" ; ")}
+        </div>
+        <div style="margin-top:0.35em;font-weight:800;color:${color};">${success ? "Réussite" : "Échec"}</div>
+        ${isAssassination && success ? `<div style="margin-top:0.25em;color:#1f8f4d;font-weight:700;">Assassinat réussi : effet létal à appliquer selon les conditions de scène et l’arbitrage du MJ.</div>` : ""}
+        ${isAssassination && !success ? `<div style="margin-top:0.25em;color:#b3261e;font-weight:700;">Assassinat manqué.</div>` : ""}
+        ${noticed ? `<div style="margin-top:0.25em;color:#b3261e;font-weight:700;">La victime remarque la tentative de pickpocket.</div>` : ""}
+      </div>
+    `
+  });
+}
+
+globalThis.add2eGetActorThiefSkills = add2eGetActorThiefSkills;
+globalThis.add2eRollThiefSkill = add2eRollThiefSkill;
+globalThis.add2eParseThiefBonusTag = add2eParseThiefBonusTag;
+
 async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
   if (!actor || !action || !itemId) return;
 
@@ -1027,6 +3063,346 @@ function formatSortChamp(val) {
 }
 globalThis.formatSortChamp = formatSortChamp;
 
+
+// ============================================================
+// ADD2E — Spellcasting générique par lignes de sorts
+// Supporte les classes simples (Clerc, Druide, Magicien, Paladin)
+// et les classes mixtes comme le Ranger : Druidique + Magicien.
+// ============================================================
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-05-04-consolidated-v20-level-cap";
+
+function add2eRerenderActorSheet(actor, force = true) {
+  if (!actor) return false;
+
+  try {
+    if (actor.sheet?.render) {
+      actor.sheet.render(force);
+      return true;
+    }
+  } catch (err) {
+    console.warn("[ADD2E][SHEET][RERENDER] actor.sheet.render impossible", err);
+  }
+
+  try {
+    for (const app of Object.values(ui.windows ?? {})) {
+      const appActor = app?.actor ?? app?.document;
+      if (appActor?.id === actor.id && app?.render) {
+        app.render(force);
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn("[ADD2E][SHEET][RERENDER] ui.windows impossible", err);
+  }
+
+  return false;
+}
+globalThis.add2eRerenderActorSheet = add2eRerenderActorSheet;
+
+function add2eNormalizeSpellKey(value) {
+  const v = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[\s_-]+/g, "_");
+
+  const aliases = {
+    cleric: "clerc",
+    clerc: "clerc",
+    priest: "clerc",
+    pretre: "clerc",
+    prêtre: "clerc",
+
+    druid: "druide",
+    druide: "druide",
+    druidique: "druide",
+
+    wizard: "magicien",
+    mage: "magicien",
+    magic_user: "magicien",
+    magicien: "magicien",
+    magician: "magicien",
+
+    illusionist: "illusionniste",
+    illusionniste: "illusionniste"
+  };
+
+  return aliases[v] || v;
+}
+
+function add2eSpellLabel(value) {
+  const key = add2eNormalizeSpellKey(value);
+  const labels = {
+    clerc: "Clerc",
+    druide: "Druidique",
+    magicien: "Magicien",
+    illusionniste: "Illusionniste"
+  };
+  return labels[key] || String(value ?? key ?? "—");
+}
+
+function add2eToArray(value) {
+  if (Array.isArray(value)) return value.filter(v => v !== undefined && v !== null && String(v).trim() !== "");
+  if (typeof value === "string") return value.split(/[,;|]/).map(s => s.trim()).filter(Boolean);
+  return [];
+}
+
+function add2eGetActorClassItemForSpellcasting(actor) {
+  return actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") || null;
+}
+
+function add2eGetProgressionRowForActor(actor) {
+  const level = Math.max(1, Number(actor?.system?.niveau) || 1);
+  const classItem = add2eGetActorClassItemForSpellcasting(actor);
+  const details = classItem?.system || actor?.system?.details_classe || {};
+  const progression = Array.isArray(details.progression) ? details.progression : [];
+  return progression[level - 1] || {};
+}
+
+function add2eReadSpellcastingSource(actor) {
+  const classItem = add2eGetActorClassItemForSpellcasting(actor);
+  const classSpellcasting = classItem?.system?.spellcasting;
+  const actorSpellcasting = actor?.system?.spellcasting;
+
+  // Priorité à la classe embarquée, car c'est la source de règles.
+  if (classSpellcasting && typeof classSpellcasting === "object") return classSpellcasting;
+  if (actorSpellcasting && typeof actorSpellcasting === "object") return actorSpellcasting;
+  return {};
+}
+
+function add2eGetSpellcastingEntries(actor) {
+  const casting = add2eReadSpellcastingSource(actor);
+  const rawEntries = Array.isArray(casting.entries) ? casting.entries
+    : Array.isArray(casting.pools) ? casting.pools
+    : null;
+
+  let entries = [];
+
+  if (rawEntries) {
+    entries = rawEntries.map((e, idx) => {
+      const rawKey = e.key ?? e.list ?? e.liste ?? e.name ?? e.label ?? e.type;
+      const key = add2eNormalizeSpellKey(rawKey);
+      return {
+        index: idx,
+        key,
+        label: e.label || add2eSpellLabel(key),
+        startsAt: Number(e.startsAt ?? e.startLevel ?? e.niveauDepart ?? casting.startsAt ?? 1) || 1,
+        maxSpellLevel: Number(e.maxSpellLevel ?? e.maxLevel ?? e.maxNiveauSort ?? casting.maxSpellLevel ?? 0) || 0,
+        slotsField: e.slotsField || e.slotField || e.progressionField || null,
+        notes: e.notes || ""
+      };
+    }).filter(e => e.key);
+  } else {
+    const lists = add2eToArray(casting.lists).map(add2eNormalizeSpellKey).filter(Boolean);
+    entries = [...new Set(lists)].map((key, idx) => ({
+      index: idx,
+      key,
+      label: add2eSpellLabel(key),
+      startsAt: Number(casting.startsAt ?? 1) || 1,
+      maxSpellLevel: Number(casting.maxSpellLevel ?? 0) || 0,
+      slotsField: null,
+      notes: casting.notes || ""
+    }));
+  }
+
+  return entries;
+}
+
+function add2eGetSpellListsFromItem(sort) {
+  const sys = sort?.system ?? {};
+  const fromLists = add2eToArray(sys.spellLists).map(add2eNormalizeSpellKey).filter(Boolean);
+  if (fromLists.length) return [...new Set(fromLists)];
+
+  // Fallback legacy.
+  const legacy = sys.classe || sys.class || sys.liste;
+  const key = add2eNormalizeSpellKey(legacy);
+  return key ? [key] : [];
+}
+
+function add2eGetSlotsForEntryLevel(actor, entry, spellLevel) {
+  const row = add2eGetProgressionRowForActor(actor);
+  const key = add2eNormalizeSpellKey(entry?.key);
+  const label = entry?.label || add2eSpellLabel(key);
+  const idx = Math.max(0, Number(spellLevel) - 1);
+
+  const tryArray = (raw) => add2eSpellSyncReadSlotValue(raw, idx + 1, key);
+
+  // Nouveau modèle conseillé : progression[].spellSlotsByList.{Druide/Magicien/Clerc}
+  // Lecture robuste : les clés sont comparées après normalisation.
+  // Ainsi Druide, druide, Druidique, Magicien ou wizard pointent vers la même ligne interne.
+  for (const containerName of ["spellSlotsByList", "spellsByList", "spellsPerLevelByList", "sortsParListe"]) {
+    const c = row?.[containerName];
+    if (!c || typeof c !== "object") continue;
+
+    for (const [rawContainerKey, value] of Object.entries(c)) {
+      if (add2eNormalizeSpellKey(rawContainerKey) !== key) continue;
+      const v = tryArray(value);
+      if (v !== null) return v;
+    }
+  }
+
+  // Champs directs pratiques.
+  const directFields = [
+    entry?.slotsField,
+    `spellsPerLevel_${key}`,
+    `spellsPerLevel${label}`,
+    `spellsPerLevel${label.replace(/\s+/g, "")}`,
+    key === "druide" ? "spellsPerLevelDruide" : null,
+    key === "magicien" ? "spellsPerLevelMagicien" : null,
+    key === "clerc" ? "spellsPerLevelClerc" : null,
+    key === "illusionniste" ? "spellsPerLevelIllusionniste" : null
+  ].filter(Boolean);
+
+  for (const field of directFields) {
+    const v = tryArray(row?.[field]);
+    if (v !== null) return v;
+  }
+
+  // Legacy : une seule ligne de sorts.
+  const entries = add2eGetSpellcastingEntries(actor);
+  if (entries.length <= 1) {
+    const v = tryArray(row?.spellsPerLevel) ?? tryArray(row?.sortsParNiveau);
+    return v ?? 0;
+  }
+
+  return 0;
+}
+
+function add2eGetSpellSlotPoolsByLevel(actor) {
+  const entries = add2eGetSpellcastingEntries(actor);
+  const pools = {};
+  const actorLevel = Math.max(1, Number(actor?.system?.niveau) || 1);
+
+  for (const entry of entries) {
+    const slotsByLevel = {};
+    const maxSpellLevel = Number(entry.maxSpellLevel) || 9;
+    for (let lvl = 1; lvl <= maxSpellLevel; lvl++) {
+      slotsByLevel[lvl] = actorLevel >= Number(entry.startsAt || 1)
+        ? add2eGetSlotsForEntryLevel(actor, entry, lvl)
+        : 0;
+    }
+    pools[entry.key] = { ...entry, slotsByLevel };
+  }
+
+  return pools;
+}
+
+function add2eGetSpellEntryForSpell(actor, sort) {
+  const actorLevel = Math.max(1, Number(actor?.system?.niveau) || 1);
+  const spellLevel = Number(sort?.system?.niveau ?? sort?.system?.level ?? 0) || 0;
+  const sortLists = add2eGetSpellListsFromItem(sort);
+  const entries = add2eGetSpellcastingEntries(actor);
+
+  const matches = entries.filter(e => sortLists.includes(e.key));
+  if (!matches.length) return null;
+
+  // On renvoie d'abord une entrée réellement disponible au niveau courant.
+  const available = matches.find(e => {
+    const startsAt = Number(e.startsAt || 1);
+    const max = Number(e.maxSpellLevel || 0);
+    return actorLevel >= startsAt && (!max || spellLevel <= max);
+  });
+
+  return available || matches[0] || null;
+}
+
+function add2eCanActorUseSpell(actor, sort) {
+  const actorLevel = Math.max(1, Number(actor?.system?.niveau) || 1);
+  const spellLevel = Number(sort?.system?.niveau ?? sort?.system?.level ?? 0) || 0;
+  const sortLists = add2eGetSpellListsFromItem(sort);
+  const entries = add2eGetSpellcastingEntries(actor);
+  const matching = entries.filter(e => sortLists.includes(e.key));
+
+  if (!matching.length) {
+    return { ok: false, reason: "list", sortLists, entries, entry: null };
+  }
+
+  for (const entry of matching) {
+    const startsAt = Number(entry.startsAt || 1);
+    const max = Number(entry.maxSpellLevel || 0);
+    if (actorLevel < startsAt) return { ok: false, reason: "start", sortLists, entries, entry, actorLevel, spellLevel };
+    if (max && spellLevel > max) return { ok: false, reason: "max-level", sortLists, entries, entry, actorLevel, spellLevel };
+
+    return { ok: true, reason: "ok", sortLists, entries, entry, actorLevel, spellLevel };
+  }
+
+  return { ok: false, reason: "unknown", sortLists, entries, entry: matching[0] ?? null, actorLevel, spellLevel };
+}
+
+function add2eGetMemorizedByList(sort) {
+  const raw = sort?.getFlag?.("add2e", "memorizedByList") ?? sort?.flags?.add2e?.memorizedByList ?? {};
+  return raw && typeof raw === "object" && !Array.isArray(raw) ? foundry.utils.deepClone(raw) : {};
+}
+
+function add2eGetMemorizedCountForEntry(sort, entry) {
+  const key = add2eNormalizeSpellKey(entry?.key);
+  if (!sort || !key) return 0;
+
+  const byList = add2eGetMemorizedByList(sort);
+  if (Object.prototype.hasOwnProperty.call(byList, key)) {
+    return Number(byList[key] ?? 0) || 0;
+  }
+
+  // Compatibilité anciens sorts : si le sort ne correspond qu'à une seule liste,
+  // son ancien memorizedCount est considéré comme le compteur de cette liste.
+  const lists = add2eGetSpellListsFromItem(sort);
+  if (lists.length <= 1 && lists.includes(key)) {
+    return Number(sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount ?? 0) || 0;
+  }
+
+  return 0;
+}
+
+async function add2eSetMemorizedCountForEntry(sort, entry, value) {
+  const key = add2eNormalizeSpellKey(entry?.key);
+  if (!sort || !key) return;
+
+  const byList = add2eGetMemorizedByList(sort);
+  byList[key] = Math.max(0, Number(value) || 0);
+
+  // Nettoyage des zéros pour garder les flags lisibles.
+  for (const k of Object.keys(byList)) {
+    if ((Number(byList[k]) || 0) <= 0) delete byList[k];
+  }
+
+  const total = Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
+
+  await sort.setFlag("add2e", "memorizedByList", byList);
+  await sort.setFlag("add2e", "memorizedCount", total);
+}
+
+function add2eGetTotalMemorizedCount(sort) {
+  const byList = add2eGetMemorizedByList(sort);
+  const totalByList = Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
+  if (totalByList > 0) return totalByList;
+  return Number(sort?.getFlag?.("add2e", "memorizedCount") ?? sort?.flags?.add2e?.memorizedCount ?? 0) || 0;
+}
+
+function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
+  const key = add2eNormalizeSpellKey(entry?.key);
+  const lvl = Number(spellLevel) || 1;
+  let total = 0;
+
+  for (const s of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
+    const sLvl = Number(s.system?.niveau ?? s.system?.level ?? 1) || 1;
+    if (sLvl !== lvl) continue;
+    const sEntry = add2eGetSpellEntryForSpell(actor, s);
+    if (sEntry && add2eNormalizeSpellKey(sEntry.key) === key) {
+      total += add2eGetMemorizedCountForEntry(s, entry);
+    }
+  }
+
+  return total;
+}
+
+globalThis.add2eGetSpellcastingEntries = add2eGetSpellcastingEntries;
+globalThis.add2eGetSpellSlotPoolsByLevel = add2eGetSpellSlotPoolsByLevel;
+globalThis.add2eCanActorUseSpell = add2eCanActorUseSpell;
+globalThis.add2eGetMemorizedCountForEntry = add2eGetMemorizedCountForEntry;
+globalThis.add2eSetMemorizedCountForEntry = add2eSetMemorizedCountForEntry;
+globalThis.add2eGetTotalMemorizedCount = add2eGetTotalMemorizedCount;
+
 function evalFormuleValeur(valeur, niveau) {
   if (typeof valeur === "object" && typeof valeur.valeur !== "undefined") valeur = valeur.valeur;
   if (typeof valeur !== "string") return valeur;
@@ -1069,28 +3445,45 @@ function add2eUiNormalizeText(value) {
 }
 
 function add2eUiGetSpellSlotsByLevel(actor) {
-  const actorLevel = Math.max(1, Number(actor?.system?.niveau) || 1);
-  const classItem = actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") || null;
-  const details = classItem?.system || actor?.system?.details_classe || {};
-  const progression = Array.isArray(details.progression) ? details.progression : [];
-  const row = progression[actorLevel - 1] || {};
-  const rawSlots = Array.isArray(row.spellsPerLevel)
-    ? row.spellsPerLevel
-    : (Array.isArray(row.sortsParNiveau) ? row.sortsParNiveau : []);
+  const pools = add2eGetSpellSlotPoolsByLevel(actor);
+  const totals = {};
 
-  const slotsByLevel = {};
-  for (let i = 0; i < rawSlots.length; i++) {
-    slotsByLevel[i + 1] = Number(rawSlots[i]) || 0;
+  for (const pool of Object.values(pools)) {
+    for (const [lvl, max] of Object.entries(pool.slotsByLevel || {})) {
+      totals[lvl] = (Number(totals[lvl]) || 0) + (Number(max) || 0);
+    }
   }
 
-  return slotsByLevel;
+  return totals;
+}
+
+function add2eUiGetSpellPoolsByLevel(actor) {
+  const pools = add2eGetSpellSlotPoolsByLevel(actor);
+  const out = {};
+
+  for (const [key, pool] of Object.entries(pools)) {
+    for (const [lvl, max] of Object.entries(pool.slotsByLevel || {})) {
+      const spellLevel = Number(lvl) || 1;
+      if (!out[spellLevel]) out[spellLevel] = [];
+      out[spellLevel].push({
+        key,
+        label: pool.label || add2eSpellLabel(key),
+        startsAt: Number(pool.startsAt || 1),
+        maxSpellLevel: Number(pool.maxSpellLevel || 0),
+        max: Number(max) || 0,
+        count: add2eCountPreparedForEntryLevel(actor, pool, spellLevel)
+      });
+    }
+  }
+
+  return out;
 }
 
 function add2eUiGetMemorizedSpellsByLevel(actor) {
   const countByLevel = {};
   for (const sort of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
     const niv = Number(sort.system?.niveau || sort.system?.level || 1) || 1;
-    const count = Number(sort.getFlag?.("add2e", "memorizedCount") ?? 0) || 0;
+    const count = add2eGetTotalMemorizedCount(sort);
     countByLevel[niv] = (countByLevel[niv] || 0) + count;
   }
   return countByLevel;
@@ -1156,6 +3549,264 @@ function add2eUiBuildEffectsTab(sheet) {
         </table>
       </div>
     </section>`;
+}
+
+
+function add2eMagicItemEquippedOrUsable(item) {
+  // IMPORTANT : ce helper sert maintenant à l'AFFICHAGE des objets magiques possédés,
+  // pas à l'exclusivité d'équipement. Un bâton magique peut être déséquipé automatiquement
+  // quand une autre arme est équipée ; ses pouvoirs doivent quand même rester visibles
+  // dans la section Objets magiques de la fiche.
+  return !!item;
+}
+
+function add2eMagicObjectRawPowers(item) {
+  const sys = item?.system ?? {};
+  return sys.pouvoirs
+    ?? sys.powers
+    ?? sys.pouvoirsMagiques
+    ?? sys.magicalPowers
+    ?? sys.sorts
+    ?? sys.spells
+    ?? [];
+}
+
+function add2eMagicObjectPowerArray(item) {
+  const raw = add2eMagicObjectRawPowers(item);
+  if (Array.isArray(raw)) return raw.filter(p => p && typeof p === "object");
+  if (raw && typeof raw === "object") return Object.values(raw).filter(p => p && typeof p === "object");
+  return [];
+}
+
+function add2eMagicReadNumber(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    if (typeof value === "object") {
+      const nested = add2eMagicReadNumber(value.value, value.current, value.actuel, value.max);
+      if (Number.isFinite(nested)) return nested;
+      continue;
+    }
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
+}
+
+function add2eMagicObjectChargeInfo(item, powers = null) {
+  const sys = item?.system ?? {};
+  const list = powers ?? add2eMagicObjectPowerArray(item);
+
+  const maxCandidates = [
+    sys.max_charges,
+    sys.maxCharges,
+    sys.charges_max,
+    sys.chargesMax,
+    sys.max,
+    sys.charges?.max,
+    sys.charges?.maximum,
+    ...list.map(p => p.max ?? p.maxCharges ?? p.chargesMax ?? p.charges_max)
+  ];
+
+  let max = add2eMagicReadNumber(...maxCandidates);
+  if (!Number.isFinite(max) || max < 0) max = 0;
+
+  const currentCandidates = [
+    item?.getFlag?.("add2e", "global_charges"),
+    item?.getFlag?.("add2e", "charges"),
+    sys.charges,
+    sys.current_charges,
+    sys.currentCharges,
+    sys.charges_actuelles,
+    sys.chargesRestantes,
+    sys.remainingCharges,
+    sys.charges?.value,
+    sys.charges?.current,
+    sys.charges?.actuel,
+    sys.charges?.remaining
+  ];
+
+  let current = add2eMagicReadNumber(...currentCandidates);
+  if (!Number.isFinite(current)) current = max;
+  if (max > 0) current = Math.max(0, Math.min(current, max));
+
+  return { current, max, label: max > 0 ? `${current}/${max}` : "—" };
+}
+
+function add2eMagicLooksMagical(item) {
+  const sys = item?.system ?? {};
+  const tags = add2eToEquipArray(sys.tags ?? sys.effectTags ?? sys.effets ?? sys.effects).map(add2eNormalizeEquipTag);
+  const name = String(item?.name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return tags.some(t => t.includes("magique") || t.includes("magic"))
+    || name.includes("magique")
+    || sys.magique === true
+    || sys.magic === true;
+}
+
+function add2eMagicPowerGeneratedId(item, index) {
+  return String(item?.id ?? "00000000000000").substring(0, 14) + String(index).padStart(2, "0");
+}
+
+function add2eUiCollectObjectMagicGroups(actor) {
+  const groups = [];
+
+  const itemsSources = actor?.items?.filter?.(item => {
+    const type = String(item?.type ?? "").toLowerCase();
+    if (!["arme", "armure", "objet", "object", "magic", "objet_magique"].includes(type)) return false;
+
+    if (!add2eMagicItemEquippedOrUsable(item)) return false;
+
+    const powers = add2eMagicObjectPowerArray(item);
+    const hasPowers = powers.length > 0;
+    const charges = add2eMagicObjectChargeInfo(item, powers);
+    const hasCharges = charges.max > 0;
+
+    return hasPowers || hasCharges || add2eMagicLooksMagical(item);
+  }) ?? [];
+
+  for (const itemSource of itemsSources) {
+    let pouvoirs = add2eMagicObjectPowerArray(itemSource);
+
+    if (!pouvoirs.length) {
+      pouvoirs = [{
+        name: itemSource.name,
+        img: itemSource.img,
+        description: itemSource.system?.description ?? itemSource.system?.desc ?? "Objet magique sans pouvoir détaillé.",
+        max: itemSource.system?.max_charges ?? itemSource.system?.maxCharges ?? itemSource.system?.charges_max ?? itemSource.system?.chargesMax ?? itemSource.system?.charges ?? 0,
+        niveau: 1
+      }];
+    }
+
+    const chargeInfo = add2eMagicObjectChargeInfo(itemSource, pouvoirs);
+    const maxGlobal = Number(chargeInfo.max) || 0;
+    const isGlobal = maxGlobal > 0;
+
+    const powers = [];
+    for (let idx = 0; idx < pouvoirs.length; idx++) {
+      const p = pouvoirs[idx] ?? {};
+      const max = isGlobal ? maxGlobal : (Number(p.max ?? p.maxCharges ?? p.chargesMax ?? p.charges_max ?? itemSource.system?.charges ?? 1) || 1);
+      const charges = isGlobal
+        ? chargeInfo.current
+        : (itemSource.getFlag?.("add2e", `charges_${idx}`) ?? p.charges ?? itemSource.system?.charges ?? max);
+
+      powers.push({
+        id: add2eMagicPowerGeneratedId(itemSource, idx),
+        name: String(p.name || p.nom || itemSource.name || "Pouvoir").trim() || "Pouvoir",
+        img: p.img || itemSource.img || "icons/svg/aura.svg",
+        sourceItemId: itemSource.id,
+        sourceName: itemSource.name || "Objet magique",
+        sourceImg: itemSource.img || "icons/svg/item-bag.svg",
+        niveau: Number(p.niveau ?? p.level ?? 1) || 1,
+        description: p.description || p.desc || "",
+        charges: Number(charges) || 0,
+        max,
+        cost: Number(p.cout ?? p.cost ?? 0) || 0
+      });
+    }
+
+    groups.push({
+      itemId: itemSource.id,
+      itemName: itemSource.name || "Objet magique",
+      itemImg: itemSource.img || "icons/svg/item-bag.svg",
+      charges: chargeInfo.current,
+      max: chargeInfo.max,
+      chargeLabel: chargeInfo.label,
+      powers: powers.sort((a, b) => String(a.name).localeCompare(String(b.name), "fr"))
+    });
+  }
+
+  return groups.sort((a, b) => String(a.itemName).localeCompare(String(b.itemName), "fr"));
+}
+
+function add2eUiCollectObjectMagicPowers(actor) {
+  return add2eUiCollectObjectMagicGroups(actor).flatMap(group => group.powers);
+}
+
+function add2eUiBuildObjectMagicSection(actor) {
+  const groups = add2eUiCollectObjectMagicGroups(actor);
+
+  const content = groups.length ? groups.map(group => {
+    const rows = group.powers.length ? group.powers.map(power => `
+      <tr class="add2e-object-magic-power-row" data-sort-id="${add2eUiEscapeHtml(power.id)}">
+        <td style="width:46px;text-align:center;">
+          <img class="sort-cast-img add2e-object-magic-cast" data-sort-id="${add2eUiEscapeHtml(power.id)}" src="${add2eUiEscapeHtml(power.img)}" title="Utiliser ${add2eUiEscapeHtml(power.name)}" style="width:32px;height:32px;border:1px solid #6f4b12;border-radius:6px;object-fit:cover;cursor:pointer;">
+        </td>
+        <td><strong>${add2eUiEscapeHtml(power.name)}</strong><br><small>Niveau ${Number(power.niveau) || 1}${power.cost ? ` — coût ${Number(power.cost)}` : ""}</small></td>
+        <td class="a2e-small">${add2eUiEscapeHtml(power.description || "")}</td>
+      </tr>
+    `).join("") : `
+      <tr>
+        <td colspan="3" class="a2e-muted" style="text-align:center;padding:0.6em;">Aucun pouvoir détaillé.</td>
+      </tr>
+    `;
+
+    return `
+      <div class="add2e-object-magic-group" data-item-id="${add2eUiEscapeHtml(group.itemId)}" style="border:1px solid #d9bf73;border-radius:9px;margin-bottom:8px;background:#fffdf6;overflow:hidden;">
+        <div class="add2e-object-magic-header" style="display:flex;align-items:center;gap:8px;padding:7px 9px;background:#ead99d;border-bottom:1px solid #dac276;color:#3d2b0a;font-weight:900;">
+          <img src="${add2eUiEscapeHtml(group.itemImg)}" alt="" style="width:28px;height:28px;border:1px solid #6f4b12;border-radius:6px;object-fit:cover;">
+          <span style="flex:1;">${add2eUiEscapeHtml(group.itemName)}</span>
+          <span title="Charges restantes / charges maximum" style="padding:2px 8px;border:1px solid #9f7a24;border-radius:999px;background:#fffaf0;white-space:nowrap;">Charges ${add2eUiEscapeHtml(group.chargeLabel)}</span>
+        </div>
+        <table class="a2e-table add2e-object-magic-table" style="margin:0;">
+          <thead>
+            <tr>
+              <th style="width:46px;">Utiliser</th>
+              <th>Pouvoir</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }).join("") : `
+    <div class="a2e-muted" style="text-align:center;padding:0.8em;border:1px solid #dac276;border-radius:9px;background:#fffdf6;">
+      Aucun objet magique équipé ou doté d’un pouvoir utilisable.
+    </div>
+  `;
+
+  return `
+    <section class="a2e-panel add2e-object-magic-panel">
+      <h2><i class="fas fa-wand-sparkles"></i> Objets magiques</h2>
+      <div class="a2e-panel-body">${content}</div>
+    </section>
+  `;
+}
+
+
+globalThis.add2eUiCollectObjectMagicGroups = add2eUiCollectObjectMagicGroups;
+globalThis.add2eUiCollectObjectMagicPowers = add2eUiCollectObjectMagicPowers;
+function add2eUiInjectObjectMagicSection(spellContainer, actor) {
+  if (!spellContainer || !actor) return;
+
+  // IMPORTANT : le conteneur doit être le contenu de l'onglet Sorts,
+  // jamais le bouton d'onglet [data-tab="sorts"].
+  if (spellContainer.matches?.(".item, a.item, .sheet-tabs, .tabs, nav")) {
+    console.warn("[ADD2E][OBJETS_MAGIQUES][UI] Conteneur invalide, injection annulée.", spellContainer);
+    return;
+  }
+
+  spellContainer.querySelectorAll(".add2e-object-magic-panel").forEach(el => el.remove());
+
+  const html = add2eUiBuildObjectMagicSection(actor);
+  if (!html) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = html.trim();
+  const panel = wrapper.firstElementChild;
+  if (!panel) return;
+
+  // Placement voulu : après le résumé des listes, mais avant les tables de sorts.
+  const summary = spellContainer.querySelector(".a2e-spellcasting-summary");
+  const firstSpellPanel = Array.from(spellContainer.querySelectorAll(".a2e-panel"))
+    .find(p => p.querySelector?.("table.sort-table"));
+
+  if (summary) {
+    spellContainer.insertBefore(panel, summary.nextElementSibling || firstSpellPanel || null);
+  } else if (firstSpellPanel) {
+    spellContainer.insertBefore(panel, firstSpellPanel);
+  } else {
+    spellContainer.insertBefore(panel, spellContainer.firstElementChild || null);
+  }
 }
 
 function add2eEnhanceCharacterSheetUi(sheet, html) {
@@ -1226,23 +3877,57 @@ function add2eEnhanceCharacterSheetUi(sheet, html) {
     });
 
   // ------------------------------------------------------------
-  // 2. Onglet Sorts : affichage des slots à côté de la colonne Sort
+  // 2. Onglet Sorts : affichage lisible des lignes de sorts
   // ------------------------------------------------------------
-  const slotsByLevel = add2eUiGetSpellSlotsByLevel(actor);
-  const memorizedByLevel = add2eUiGetMemorizedSpellsByLevel(actor);
+  const poolsByLevel = add2eUiGetSpellPoolsByLevel(actor);
+  const entries = add2eGetSpellcastingEntries(actor);
+
+  const spellTab =
+    sheetRoot.querySelector('.sheet-body .a2e-tab-content[data-tab="sorts"]') ||
+    sheetRoot.querySelector('.sheet-body .a2e-tab-content[data-tab="sort"]') ||
+    sheetRoot.querySelector('.sheet-body .tab[data-tab="sorts"]') ||
+    sheetRoot.querySelector('.sheet-body .tab[data-tab="sort"]') ||
+    sheetRoot.querySelector('.sheet-body [data-tab="sorts"]') ||
+    sheetRoot.querySelector('.sheet-body [data-tab="sort"]');
+
+  const firstSortTable = sheetRoot.querySelector("table.sort-table");
+  const spellContainer = spellTab || firstSortTable?.closest?.(".a2e-tab-content, .tab") || firstSortTable?.parentElement;
+
+  if (spellContainer && entries.length && !spellContainer.querySelector(".a2e-spellcasting-summary")) {
+    const summary = document.createElement("div");
+    summary.className = "a2e-spellcasting-summary";
+    summary.innerHTML = `
+      <strong>Sorts utilisables :</strong>
+      ${entries.map(e => `
+        <span class="a2e-spell-pool-summary">
+          ${add2eUiEscapeHtml(e.label || add2eSpellLabel(e.key))}
+          <small>niv. ${Number(e.startsAt || 1)}+, sorts ${Number(e.maxSpellLevel || 0) || "—"}</small>
+        </span>
+      `).join("")}
+    `;
+    spellContainer.insertBefore(summary, spellContainer.firstElementChild || null);
+  }
+
+  if (spellContainer) add2eUiInjectObjectMagicSection(spellContainer, actor);
 
   for (const table of sheetRoot.querySelectorAll("table.sort-table")) {
     const panel = table.closest(".a2e-panel") || table.parentElement;
     const panelText = panel?.querySelector?.("h2, h3")?.textContent || panel?.textContent || "";
     const levelMatch = panelText.match(/niveau\s*(\d+)/i);
     const spellLevel = levelMatch ? Number(levelMatch[1]) : null;
-    const max = spellLevel ? Number(slotsByLevel[spellLevel] || 0) : null;
-    const count = spellLevel ? Number(memorizedByLevel[spellLevel] || 0) : null;
+    const pools = spellLevel ? (poolsByLevel[spellLevel] || []) : [];
 
     const headers = Array.from(table.querySelectorAll("thead th"));
     const sortHeader = headers.find(th => add2eUiNormalizeText(th.textContent) === "sort");
-    if (sortHeader && spellLevel && !sortHeader.querySelector(".a2e-sort-slot-label")) {
-      sortHeader.innerHTML = `Sort <span class="a2e-sort-slot-label" title="Sorts préparés / lançables pour le niveau ${spellLevel}">${count} / ${max}</span>`;
+    if (sortHeader && spellLevel && !sortHeader.querySelector(".a2e-sort-pool-labels")) {
+      const activePools = pools.filter(p => Number(p.max) > 0 || Number(p.count) > 0);
+      const poolHtml = activePools.length
+        ? activePools.map(p => `
+          <span class="a2e-sort-slot-label a2e-sort-slot-${add2eUiEscapeHtml(p.key)}" title="${add2eUiEscapeHtml(p.label)} : préparés / maximum">
+            ${add2eUiEscapeHtml(p.label)} ${Number(p.count) || 0}/${Number(p.max) || 0}
+          </span>`).join("")
+        : `<span class="a2e-sort-slot-label muted" title="Aucun emplacement disponible à ce niveau">0</span>`;
+      sortHeader.innerHTML = `Sort <span class="a2e-sort-pool-labels">${poolHtml}</span>`;
     }
 
     const memIndex = headers.findIndex(th => add2eUiNormalizeText(th.textContent).includes("memorisation"));
@@ -1251,6 +3936,49 @@ function add2eEnhanceCharacterSheetUi(sheet, html) {
       for (const row of table.querySelectorAll("tbody tr")) {
         const cells = Array.from(row.children).filter(el => el.tagName === "TD" || el.tagName === "TH");
         if (cells[memIndex]) cells[memIndex].style.display = "none";
+      }
+    }
+
+    for (const row of table.querySelectorAll("tbody tr")) {
+      if (row.classList.contains("sort-description")) continue;
+      const sortId = row.querySelector("[data-sort-id]")?.dataset?.sortId || row.querySelector("[data-sort-id]")?.getAttribute("data-sort-id");
+      const sort = sortId ? actor.items.get(sortId) : null;
+      if (!sort) continue;
+
+      const check = add2eCanActorUseSpell(actor, sort);
+      const entry = check.entry || add2eGetSpellEntryForSpell(actor, sort);
+      const label = entry?.label || add2eGetSpellListsFromItem(sort).map(add2eSpellLabel).join(" / ") || "Sort";
+
+      const memBadge = row.querySelector(".sort-memorize-badge");
+      if (memBadge && entry) {
+        const memCount = add2eGetMemorizedCountForEntry(sort, entry);
+        memBadge.textContent = `${memCount}`;
+        memBadge.title = `Sort préparé comme ${entry.label}`;
+        memBadge.dataset.spellEntryKey = entry.key;
+      }
+      for (const btn of row.querySelectorAll(".sort-memorize-plus, .sort-memorize-minus")) {
+        if (entry) btn.dataset.spellEntryKey = entry.key;
+      }
+
+      const cells = Array.from(row.children).filter(el => el.tagName === "TD" || el.tagName === "TH");
+      const targetCell = cells.find(td => td.textContent?.trim() && !td.querySelector("img")) || cells[0];
+      if (targetCell) {
+        let badge = row.querySelector(".a2e-sort-list-badge");
+        if (!badge) {
+          badge = document.createElement("span");
+          badge.className = "a2e-sort-list-badge";
+          targetCell.appendChild(document.createTextNode(" "));
+          targetCell.appendChild(badge);
+        }
+        badge.className = `a2e-sort-list-badge ${check.ok ? "ok" : "locked"}`;
+        badge.title = check.ok
+          ? `${label} — utilisable`
+          : check.reason === "start"
+            ? `${label} — disponible à partir du niveau ${entry?.startsAt}`
+            : check.reason === "max-level"
+              ? `${label} — niveau de sort maximum ${entry?.maxSpellLevel}`
+              : `${label} — non autorisé par cette classe`;
+        badge.textContent = label;
       }
     }
   }
@@ -1337,6 +4065,30 @@ function add2eEnhanceCharacterSheetUi(sheet, html) {
     const style = document.createElement("style");
     style.dataset.add2eUiEnhance = "1";
     style.textContent = `
+      .add2e-character-v3 .a2e-spellcasting-summary {
+        margin:0 0 8px 0;
+        padding:7px 9px;
+        border:1px solid #d9bf73;
+        border-radius:9px;
+        background:#fff8df;
+        color:#3d2b0a;
+        line-height:1.45;
+      }
+      .add2e-character-v3 .a2e-spell-pool-summary {
+        display:inline-flex;
+        align-items:center;
+        gap:0.35em;
+        margin:2px 4px;
+        padding:2px 7px;
+        border:1px solid #c49a41;
+        border-radius:999px;
+        background:#fffdf6;
+        font-weight:900;
+      }
+      .add2e-character-v3 .a2e-spell-pool-summary small {
+        color:#7f704d;
+        font-weight:700;
+      }
       .add2e-character-v3 .a2e-sort-slot-label {
         display:inline-block;
         margin-left:0.45em;
@@ -1347,6 +4099,37 @@ function add2eEnhanceCharacterSheetUi(sheet, html) {
         font-weight:900;
         font-size:0.9em;
         line-height:1.45em;
+      }
+      .add2e-character-v3 .a2e-sort-slot-label.muted {
+        background:#918873;
+      }
+      .add2e-character-v3 .a2e-sort-slot-druide {
+        background:#2f8f4e;
+      }
+      .add2e-character-v3 .a2e-sort-slot-magicien {
+        background:#7c39c3;
+      }
+      .add2e-character-v3 .a2e-sort-slot-clerc {
+        background:#b88924;
+      }
+      .add2e-character-v3 .a2e-sort-list-badge {
+        display:inline-block;
+        margin-left:0.35em;
+        padding:0.05em 0.45em;
+        border-radius:999px;
+        font-size:0.78em;
+        line-height:1.35;
+        font-weight:900;
+        vertical-align:middle;
+        border:1px solid rgba(0,0,0,0.12);
+      }
+      .add2e-character-v3 .a2e-sort-list-badge.ok {
+        background:#eaf8ef;
+        color:#226d3b;
+      }
+      .add2e-character-v3 .a2e-sort-list-badge.locked {
+        background:#f3eee1;
+        color:#8a611d;
       }
       .add2e-character-v3 .a2e-sort-prep-controls {
         display:inline-flex;
@@ -1369,6 +4152,15 @@ function add2eEnhanceCharacterSheetUi(sheet, html) {
         color:#7c39c3;
         text-shadow:0 0 3px rgba(124,57,195,0.18);
       }
+      .add2e-character-v3 .add2e-object-magic-panel {
+        border-color:#b88924;
+        box-shadow:0 1px 6px rgba(80,58,10,0.16);
+      }
+      .add2e-character-v3 .add2e-object-magic-panel > h2 {
+        background:linear-gradient(180deg, #ead99d, #dfc36f);
+      }
+      .add2e-character-v3 .add2e-object-magic-table td,
+      .add2e-character-v3 .add2e-object-magic-table th,
       .add2e-character-v3 .add2e-effects-table td,
       .add2e-character-v3 .add2e-effects-table th {
         vertical-align:middle;
@@ -1503,32 +4295,564 @@ function canCastSpell(spellData, actor) {
 }
 
 
-function checkClassStatMin(actor, classeItem) {
-  const min = classeItem.system?.caracs_min || {};
-  const base = actor.system || {};
-  const bonus = base.bonus_caracteristiques || {};
+function add2eRaceTagsFromData(raceData) {
+  const sys = raceData?.system ?? {};
+  const tags = new Set();
 
-  let ok = true, manque = [];
+  for (const raw of [
+    ...add2eToEquipArray(sys.identityTags),
+    ...add2eToEquipArray(sys.tags),
+    ...add2eToEquipArray(raceData?.flags?.add2e?.tags)
+  ]) {
+    const tag = add2eNormalizeEquipTag(raw);
+    if (tag.startsWith("race:")) tags.add(tag);
+  }
 
-  for (let [c, v] of Object.entries(min)) {
-    const valBase = Number(base[`${c}_base`] ?? 0);
-    const modRace = Number(bonus[c] ?? 0);
-    const valTotale = valBase + modRace;
+  if (!tags.size) {
+    const name = add2eNormalizeEquipTag(raceData?.name ?? sys.label ?? sys.nom ?? "");
+    if (name) tags.add(`race:${name}`);
+  }
 
-    if (valTotale < v) {
-      manque.push(`${c} ${valTotale} < ${v}`);
-      ok = false;
+  return [...tags];
+}
+
+function add2eClassRuleSystem(classeItem) {
+  const sys = add2eDeepClone(classeItem?.system ?? {}) || {};
+  const hasRaceRules = !!sys.raceRestriction?.races && Object.keys(sys.raceRestriction.races).length > 0;
+  const hasReqTags = add2eToEquipArray(sys.requirementTags).length > 0;
+
+  // Micro-fallback : si l'item droppé est une copie incomplète, on relit l'item Monde du même nom.
+  // On ne crée pas de second système : on complète seulement les champs de règles manquants.
+  if ((!hasRaceRules || !hasReqTags) && classeItem?.name && game?.items) {
+    const worldClass = game.items.find(i => i.type === "classe" && i.name === classeItem.name);
+    const worldSys = worldClass?.system;
+
+    if (worldSys) {
+      if (!hasRaceRules && worldSys.raceRestriction?.races) {
+        sys.raceRestriction = add2eDeepClone(worldSys.raceRestriction);
+      }
+      if (!hasReqTags && add2eToEquipArray(worldSys.requirementTags).length) {
+        sys.requirementTags = add2eDeepClone(worldSys.requirementTags);
+      }
+      for (const field of ["alignment", "alignements_autorises", "caracs_min"]) {
+        if (!add2eHasUsefulValue(sys[field]) && add2eHasUsefulValue(worldSys[field])) {
+          sys[field] = add2eDeepClone(worldSys[field]);
+        }
+      }
     }
   }
 
-  if (!ok) {
-    ui.notifications.warn(`Caractéristiques insuffisantes pour la classe "${classeItem.name}" (${manque.join(", ")})`);
-    console.warn("[ADD2e] Classe refusée, carac non atteintes :", manque);
-  }
-
-  return ok;
+  return sys;
 }
 
+function add2eClassAllowedAlignments(classeSystem) {
+  return add2eToEquipArray(
+    classeSystem?.alignements_autorises ??
+    classeSystem?.alignment ??
+    []
+  ).filter(Boolean);
+}
+
+function add2ePickClassAlignment(actor, classeSystem) {
+  const allowed = add2eClassAllowedAlignments(classeSystem);
+  if (!allowed.length) return actor?.system?.alignement ?? "";
+
+  const current = add2eNormalizeEquipTag(actor?.system?.alignement ?? "");
+  const allowedNorm = allowed.map(add2eNormalizeEquipTag);
+
+  if (current && allowedNorm.includes(current)) return actor.system.alignement;
+  return allowed[0];
+}
+
+
+// ============================================================
+// ADD2E — Auto-compatibilité race / classe au drop
+// Objectif : ne plus bloquer un drop uniquement parce que la race
+// ou la classe courante est incompatible. Comme pour l'alignement,
+// on choisit automatiquement une race ou une classe compatible.
+// ============================================================
+function add2eDropDebugRaceClass(...args) {
+  if (globalThis.ADD2E_DEBUG_RACE_CLASSE === true) {
+    console.log("[ADD2E][DROP][RACE_CLASSE]", ...args);
+  }
+}
+
+function add2eItemDataCloneForDrop(itemLike) {
+  if (!itemLike) return null;
+  const data = typeof itemLike.toObject === "function" ? itemLike.toObject() : add2eDeepClone(itemLike);
+  if (!data || typeof data !== "object") return null;
+  delete data._id;
+  delete data._stats;
+  return data;
+}
+
+function add2eWorldItemsByType(type) {
+  const wanted = String(type ?? "").toLowerCase();
+  return Array.from(game?.items ?? [])
+    .filter(i => String(i?.type ?? "").toLowerCase() === wanted)
+    .map(i => add2eItemDataCloneForDrop(i))
+    .filter(Boolean);
+}
+
+function add2eRaceCandidateLabel(raceData) {
+  return String(raceData?.name ?? raceData?.system?.label ?? raceData?.system?.nom ?? "Race").trim() || "Race";
+}
+
+function add2eClassCandidateLabel(classData) {
+  return String(classData?.name ?? classData?.system?.label ?? classData?.system?.nom ?? "Classe").trim() || "Classe";
+}
+
+function add2eRaceMatchesClassRules(raceData, classData) {
+  const cls = add2eClassRuleSystem(classData);
+  const rules = cls?.raceRestriction?.races;
+  if (!rules || typeof rules !== "object" || !Object.keys(rules).length) return true;
+
+  const raceTags = add2eRaceTagsFromData(raceData).map(add2eNormalizeEquipTag);
+  const normalizedRules = {};
+  for (const [tag, rule] of Object.entries(rules)) normalizedRules[add2eNormalizeEquipTag(tag)] = rule;
+
+  const matched = raceTags.find(t => Object.prototype.hasOwnProperty.call(normalizedRules, t));
+  if (!matched) return false;
+  return normalizedRules[matched]?.allowed === true;
+}
+
+function add2eFindCompatibleRaceForClass(actor, classData, alignmentCandidate = null) {
+  const currentRaces = (actor?.items?.filter?.(i => String(i.type).toLowerCase() === "race") ?? [])
+    .map(i => add2eItemDataCloneForDrop(i))
+    .filter(Boolean);
+
+  const candidates = [
+    ...currentRaces,
+    ...add2eWorldItemsByType("race")
+  ];
+
+  const seen = new Set();
+  for (const raceData of candidates) {
+    const key = add2eNormalizeEquipTag(raceData?.name ?? raceData?.system?.slug ?? raceData?.system?.label ?? "");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+
+    if (!add2eRaceMatchesClassRules(raceData, classData)) continue;
+
+    const ok = typeof checkClassStatMin === "function"
+      ? checkClassStatMin(actor, classData, raceData, alignmentCandidate, { silent: true, ignoreLevelMax: true })
+      : true;
+
+    if (ok) {
+      add2eDropDebugRaceClass("Race compatible trouvée pour classe", {
+        actor: actor?.name,
+        classe: add2eClassCandidateLabel(classData),
+        race: add2eRaceCandidateLabel(raceData),
+        alignmentCandidate
+      });
+      return raceData;
+    }
+  }
+
+  return null;
+}
+
+function add2eFindCompatibleClassForRace(actor, raceData) {
+  const currentClasses = (actor?.items?.filter?.(i => String(i.type).toLowerCase() === "classe") ?? [])
+    .map(i => add2eItemDataCloneForDrop(i))
+    .filter(Boolean);
+
+  const candidates = [
+    ...currentClasses,
+    ...add2eWorldItemsByType("classe")
+  ];
+
+  const seen = new Set();
+  for (const classData of candidates) {
+    const key = add2eNormalizeEquipTag(classData?.name ?? classData?.system?.slug ?? classData?.system?.label ?? "");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+
+    if (!add2eRaceMatchesClassRules(raceData, classData)) continue;
+
+    const alignmentCandidate = add2ePickClassAlignment(actor, classData.system ?? {});
+    const ok = typeof checkClassStatMin === "function"
+      ? checkClassStatMin(actor, classData, raceData, alignmentCandidate, { silent: true, ignoreLevelMax: true })
+      : true;
+
+    if (ok) {
+      add2eDropDebugRaceClass("Classe compatible trouvée pour race", {
+        actor: actor?.name,
+        race: add2eRaceCandidateLabel(raceData),
+        classe: add2eClassCandidateLabel(classData),
+        alignmentCandidate
+      });
+      return { classData, alignmentCandidate };
+    }
+  }
+
+  return null;
+}
+
+async function add2eApplyRaceItemDataToActor(actor, raceData, sheet = null, options = {}) {
+  if (!actor || !raceData || raceData.type !== "race") return null;
+
+  const data = add2eItemDataCloneForDrop(raceData);
+  data.type = "race";
+
+  const existingRaces = actor.items.filter(i => String(i.type || "").toLowerCase() === "race");
+  for (const oldRace of existingRaces) {
+    const raceEffects = actor.effects.filter(eff => eff.origin === oldRace.uuid);
+    if (raceEffects.length) {
+      const ids = raceEffects.map(e => e.id).filter(id => actor.effects.has(id));
+      if (ids.length) await actor.deleteEmbeddedDocuments("ActiveEffect", ids, { add2eInternal: true });
+    }
+    await oldRace.delete({ render: false });
+  }
+
+  await actor.update({ "system.bonus_caracteristiques": {} }, { add2eInternal: true });
+
+  const [raceDoc] = await actor.createEmbeddedDocuments("Item", [data], { add2eInternal: true });
+  if (!raceDoc) return null;
+
+  if (raceDoc.effects.contents?.length) {
+    const actorEffects = raceDoc.effects.contents.map(eff => {
+      const effectData = foundry.utils.duplicate(eff.toObject());
+      effectData.origin = raceDoc.uuid;
+      effectData.disabled = false;
+      effectData.transfer = false;
+      effectData.flags = effectData.flags ?? {};
+      effectData.flags.add2e = {
+        ...(effectData.flags.add2e ?? {}),
+        sourceType: "race",
+        sourceItemId: raceDoc.id,
+        sourceItemUuid: raceDoc.uuid
+      };
+      return effectData;
+    });
+    await actor.createEmbeddedDocuments("ActiveEffect", actorEffects, { add2eInternal: true });
+  }
+
+  const raceSystem = foundry.utils.deepClone(raceDoc.system ?? {});
+  await actor.update({
+    "system.race": raceDoc.name,
+    "system.details_race": {
+      ...raceSystem,
+      name: raceDoc.name,
+      label: raceSystem.label || raceDoc.name,
+      img: raceDoc.img || raceSystem.img || ""
+    },
+    "system.bonus_caracteristiques": raceSystem.bonus_caracteristiques
+      ? foundry.utils.deepClone(raceSystem.bonus_caracteristiques)
+      : {}
+  }, { add2eInternal: true });
+
+  if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
+
+  if (options.notify !== false) {
+    ui.notifications.info(`Race ajustée automatiquement : ${raceDoc.name}.`);
+  }
+
+  return raceDoc;
+}
+
+async function add2eApplyClassItemDataToActor(actor, classData, sheet = null, options = {}) {
+  if (!actor || !classData || classData.type !== "classe") return null;
+
+  const data = add2eItemDataCloneForDrop(classData);
+  data.type = "classe";
+
+  const alignmentCandidate = options.alignmentCandidate ?? add2ePickClassAlignment(actor, data.system ?? {});
+
+  const typesToDelete = ["classe", "sort", "arme", "armure", "spell", "weapon", "armor"];
+  const itemsToDelete = actor.items.filter(i => typesToDelete.includes(String(i.type || "").toLowerCase()));
+  const effectsToDelete = actor.effects.filter(eff => add2eShouldDeleteEffectForClassPurge(eff, itemsToDelete));
+
+  for (const eff of effectsToDelete) await eff.delete({ render: false });
+  for (const it of itemsToDelete) await it.delete({ render: false });
+
+  const [classDoc] = await actor.createEmbeddedDocuments("Item", [data], { add2eInternal: true });
+  if (!classDoc) return null;
+
+  if (classDoc.effects.contents?.length) {
+    const actorEffects = classDoc.effects.contents.map(eff => {
+      const effectData = foundry.utils.duplicate(eff.toObject());
+      effectData.origin = classDoc.uuid;
+      effectData.disabled = false;
+      effectData.transfer = false;
+      effectData.flags = effectData.flags ?? {};
+      effectData.flags.add2e = {
+        ...(effectData.flags.add2e ?? {}),
+        sourceType: "classe",
+        sourceClasse: classDoc.name,
+        sourceItemId: classDoc.id,
+        sourceItemUuid: classDoc.uuid
+      };
+      return effectData;
+    });
+    await actor.createEmbeddedDocuments("ActiveEffect", actorEffects, { add2eInternal: true });
+  }
+
+  const classSystem = foundry.utils.deepClone(classDoc.system ?? {});
+  const levelClamp = add2eClampLevelToClassMax(actor, actor.system?.niveau, classSystem, { notify: true });
+  const alns = add2eClassAllowedAlignments(classSystem);
+  const updates = {
+    "system.classe": classDoc.name,
+    "system.details_classe": classSystem,
+    "system.spellcasting": classSystem.spellcasting ?? null,
+    "system.alignements_autorises": alns
+  };
+
+  if (levelClamp.changed) updates["system.niveau"] = levelClamp.level;
+  if (alignmentCandidate) updates["system.alignement"] = alignmentCandidate;
+
+  if (classDoc.system?.progression?.[0]?.sauvegardes) {
+    updates["system.sauvegardes"] = foundry.utils.duplicate(classDoc.system.progression[0].sauvegardes);
+  }
+
+  await actor.update(updates, { add2eInternal: true });
+
+  if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
+  if (typeof sheet?.autoSetPointsDeCoup === "function") {
+    await sheet.autoSetPointsDeCoup({ syncCurrent: true, force: true, reason: options.reason || "auto-class-compat" });
+  }
+
+  try { await add2eSyncMonkUnarmedWeapon(actor); }
+  catch (e) { console.warn("[ADD2E][MOINE] Erreur synchronisation Main nue après changement auto classe :", e); }
+
+  try { await add2eSyncClassPassiveEffect(actor); }
+  catch (e) { console.warn("[ADD2E][CLASSE][EFFETS] Erreur effets classe après changement auto classe :", e); }
+
+  try {
+    const spellSync = await add2eSyncActorSpellsFromClass(actor, classDoc, { mode: "replace", showWait: true });
+    if (spellSync?.handled) ui.notifications.info(`Sorts de ${classDoc.name} synchronisés : ${spellSync.imported} importé(s).`);
+  } catch (e) {
+    console.error("[ADD2E][CLASSE][SORTS] Erreur synchronisation sorts après changement auto classe :", e);
+    ui.notifications.error("Erreur pendant la synchronisation des sorts de classe.");
+  }
+
+  if (options.notify !== false) ui.notifications.info(`Classe ajustée automatiquement : ${classDoc.name}.`);
+
+  return classDoc;
+}
+
+globalThis.add2eFindCompatibleRaceForClass = add2eFindCompatibleRaceForClass;
+globalThis.add2eFindCompatibleClassForRace = add2eFindCompatibleClassForRace;
+globalThis.add2eApplyRaceItemDataToActor = add2eApplyRaceItemDataToActor;
+globalThis.add2eApplyClassItemDataToActor = add2eApplyClassItemDataToActor;
+
+function checkClassStatMin(actor, classeItem, candidateRaceData = null, candidateAlignment = null, options = {}) {
+  const silent = options?.silent === true;
+  const ignoreLevelMax = options?.ignoreLevelMax === true;
+  const classeSystem = add2eClassRuleSystem(classeItem);
+  const actorSystem = actor?.system ?? {};
+  const manques = [];
+
+  const raceItems =
+    actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "race") ?? [];
+
+  const wantedRace = add2eNormalizeEquipTag(
+    actorSystem.race ||
+    actorSystem.details_race?.label ||
+    actorSystem.details_race?.name ||
+    actorSystem.details_race?.nom ||
+    ""
+  );
+
+  const matchedRaceItem = wantedRace
+    ? raceItems.find(r => {
+        const sys = r.system ?? {};
+        return [
+          r.id,
+          r.name,
+          sys.slug,
+          sys.label,
+          sys.name,
+          sys.nom
+        ].map(add2eNormalizeEquipTag).includes(wantedRace);
+      })
+    : null;
+
+  // Si actor.system.race est plus récent que les items embarqués, on valide contre
+  // la race affichée/persistée plutôt que contre un ancien item orphelin.
+  const actorRaceFallback = wantedRace
+    ? {
+        name: actorSystem.race || actorSystem.details_race?.label || actorSystem.details_race?.name || actorSystem.details_race?.nom || wantedRace,
+        system: {
+          ...(actorSystem.details_race ?? {}),
+          slug: actorSystem.details_race?.slug || wantedRace,
+          tags: add2eToEquipArray(actorSystem.details_race?.tags).length
+            ? actorSystem.details_race.tags
+            : [`race:${wantedRace}`],
+          identityTags: add2eToEquipArray(actorSystem.details_race?.identityTags).length
+            ? actorSystem.details_race.identityTags
+            : [`race:${wantedRace}`],
+          bonus_caracteristiques: actorSystem.bonus_caracteristiques ?? actorSystem.details_race?.bonus_caracteristiques ?? {}
+        }
+      }
+    : null;
+
+  const raceData =
+    candidateRaceData ??
+    matchedRaceItem ??
+    actorRaceFallback ??
+    raceItems[0] ??
+    null;
+
+  const raceTags = add2eRaceTagsFromData(raceData);
+  const actorLevel = Number(actorSystem.niveau ?? 1) || 1;
+
+  const candidateRaceBonus = candidateRaceData?.system?.bonus_caracteristiques ?? null;
+  const currentRaceBonus = actorSystem.bonus_caracteristiques ?? {};
+
+  const caracTotal = (carac) => {
+    const base = Number(actorSystem[`${carac}_base`] ?? actorSystem[carac] ?? 10) || 10;
+    const race = Number((candidateRaceBonus ?? currentRaceBonus)?.[carac] ?? actorSystem[`${carac}_race`] ?? 0) || 0;
+    return base + race;
+  };
+
+  // Compatibilité race/classe : source unique = objet classe via raceRestriction.
+  // Les anciens champs raceAllowed ne sont utilisés qu'en fallback si l'objet
+  // classe n'a pas encore été migré.
+  const races = classeSystem.raceRestriction?.races;
+  const hasRaceRestriction = races && typeof races === "object" && Object.keys(races).length > 0;
+
+  if (hasRaceRestriction) {
+    if (!raceData) {
+      manques.push("race requise pour vérifier la compatibilité de classe");
+    } else {
+      const normalizedRules = {};
+      for (const [tag, rule] of Object.entries(races)) {
+        normalizedRules[add2eNormalizeEquipTag(tag)] = rule;
+      }
+
+      const matchedTag = raceTags.find(tag => Object.prototype.hasOwnProperty.call(normalizedRules, tag));
+
+      if (!matchedTag) {
+        manques.push(`race non autorisée (${raceTags.join(", ") || "aucun tag race:*"})`);
+      } else {
+        const rule = normalizedRules[matchedTag] ?? {};
+        if (rule.allowed !== true) manques.push(`race interdite (${matchedTag})`);
+
+        const maxLevel = Number(rule.maxLevel ?? rule.niveauMax ?? rule.max);
+        if (!ignoreLevelMax && Number.isFinite(maxLevel) && maxLevel > 0 && actorLevel > maxLevel) {
+          manques.push(`${matchedTag} limité au niveau ${maxLevel}`);
+        }
+      }
+    }
+  } else if (raceData) {
+    const legacyAllowed = add2eToEquipArray(classeSystem.raceAllowed).map(add2eNormalizeEquipTag).filter(Boolean);
+    if (legacyAllowed.length) {
+      const matchedLegacy = raceTags.some(t => legacyAllowed.includes(t.replace(/^race:/, "")) || legacyAllowed.includes(t));
+      if (!matchedLegacy) manques.push(`race non autorisée (${raceTags.join(", ") || "aucun tag race:*"})`);
+    }
+  }
+
+  // Ancien champ conservé pour compatibilité des objets déjà créés.
+  const min = classeSystem.caracs_min || {};
+  for (const [carac, rawMin] of Object.entries(min)) {
+    const minVal = Number(rawMin);
+    if (!Number.isFinite(minVal)) continue;
+
+    const total = caracTotal(carac);
+    if (total < minVal) manques.push(`${carac} ${total} < ${minVal}`);
+  }
+
+  // Alignements déclarés par l'objet classe.
+  const allowedAlignments = add2eClassAllowedAlignments(classeSystem);
+  const currentAlignmentRaw = candidateAlignment ?? actorSystem.alignement ?? "";
+  const currentAlignment = add2eNormalizeEquipTag(currentAlignmentRaw);
+  if (allowedAlignments.length) {
+    const allowedNorm = allowedAlignments.map(add2eNormalizeEquipTag);
+    if (!currentAlignment || !allowedNorm.includes(currentAlignment)) {
+      manques.push(`alignement requis : ${allowedAlignments.join(" ou ")}`);
+    }
+  }
+
+  // Nouveau système générique par tags de prérequis.
+  // Les tags prerequis:alignement:allow:* multiples sont interprétés en OU.
+  const requirementTags = add2eToEquipArray(classeSystem.requirementTags)
+    .map(add2eNormalizeEquipTag)
+    .filter(Boolean);
+
+  const allowedAlignmentTags = [];
+  const forbiddenAlignmentTags = [];
+
+  for (const tag of requirementTags) {
+    const parts = tag.split(":");
+    if (parts[0] !== "prerequis" || parts[1] !== "alignement") continue;
+
+    const mode = parts[2];
+    const wanted = add2eNormalizeEquipTag(parts.slice(3).join(":"));
+    if (!wanted) continue;
+
+    if (mode === "allow") allowedAlignmentTags.push(wanted);
+    if (mode === "not") forbiddenAlignmentTags.push(wanted);
+  }
+
+  if (currentAlignment) {
+    const forbiddenMatch = forbiddenAlignmentTags.find(a => currentAlignment === a);
+    if (forbiddenMatch) manques.push(`alignement interdit : ${currentAlignmentRaw || actorSystem.alignement}`);
+
+    const uniqueAllowedAlignments = [...new Set(allowedAlignmentTags)];
+    if (uniqueAllowedAlignments.length && !uniqueAllowedAlignments.includes(currentAlignment)) {
+      manques.push(`alignement requis : ${uniqueAllowedAlignments.join(" ou ")}`);
+    }
+  }
+
+  for (const tag of requirementTags) {
+    const parts = tag.split(":");
+    if (parts[0] !== "prerequis") continue;
+
+    if (parts[1] === "alignement") continue;
+
+    if (parts[1] === "caracteristique") {
+      const carac = parts[2];
+      const op = parts[3];
+      const target = Number(parts[4]);
+      if (!carac || !Number.isFinite(target)) continue;
+
+      const total = caracTotal(carac);
+      if (op === "min" && total < target) manques.push(`${carac} ${total} < ${target}`);
+      if (op === "max" && total > target) manques.push(`${carac} ${total} > ${target}`);
+    }
+
+    if (parts[1] === "niveau") {
+      const op = parts[2];
+      const target = Number(parts[3]);
+      if (!Number.isFinite(target)) continue;
+
+      if (op === "min" && actorLevel < target) manques.push(`niveau ${actorLevel} < ${target}`);
+      if (op === "max" && actorLevel > target && !ignoreLevelMax) manques.push(`niveau ${actorLevel} > ${target}`);
+    }
+
+    if (parts[1] === "tag") {
+      const mode = parts[2];
+      const wanted = add2eNormalizeEquipTag(parts.slice(3).join(":"));
+      if (!wanted) continue;
+
+      const activeTags = typeof Add2eEffectsEngine !== "undefined"
+        ? Add2eEffectsEngine.getActiveTags(actor)
+        : [];
+
+      const has = activeTags.map(add2eNormalizeEquipTag).includes(wanted);
+      if (mode === "required" && !has) manques.push(`tag requis absent : ${wanted}`);
+      if (mode === "forbidden" && has) manques.push(`tag interdit présent : ${wanted}`);
+    }
+  }
+
+  if (manques.length) {
+    if (!silent) {
+      ui.notifications.warn(`Prérequis insuffisants pour la classe "${classeItem.name}" (${manques.join(", ")})`);
+      console.warn("[ADD2e] Classe refusée, prérequis non atteints :", {
+        actor: actor?.name,
+        classe: classeItem?.name,
+        race: raceData?.name ?? null,
+        raceTags,
+        alignementTeste: currentAlignmentRaw,
+        manques
+      });
+    }
+    return false;
+  }
+
+  return true;
+}
 
 const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const CARAC_SHORT = {
@@ -1539,6 +4863,186 @@ const CARAC_SHORT = {
   sagesse: "SAG",
   charisme: "CHA"
 };
+
+
+// ADD2E — Moine : synchronisation de l'arme virtuelle Main nue.
+function add2eGetMonkClassSystem(actor) {
+  const item = actor?.items?.find?.(i => i.type === "classe") ?? null;
+  const sys = item?.system ?? {};
+  const details = actor?.system?.details_classe ?? {};
+  const label = add2eNormalizeEquipTag(item?.name || sys.label || details.label || details.name || actor?.system?.classe || "");
+  const tags = [
+    ...(Array.isArray(sys.tags) ? sys.tags : []),
+    ...(Array.isArray(details.tags) ? details.tags : [])
+  ].map(add2eNormalizeEquipTag);
+  if (!label.includes("moine") && !tags.includes("classe:moine")) return null;
+  return { ...add2eDeepClone(details), ...add2eDeepClone(sys) };
+}
+
+function add2eGetMonkProgressionRow(actor) {
+  const cls = add2eGetMonkClassSystem(actor);
+  if (!cls) return null;
+  const level = Number(actor?.system?.niveau ?? 1) || 1;
+  const prog = Array.isArray(cls.monkProgression) && cls.monkProgression.length
+    ? cls.monkProgression
+    : Array.isArray(cls.progression) ? cls.progression : [];
+  return prog.find(r => Number(r.level ?? r.niveau) === level) ?? prog[level - 1] ?? prog[0] ?? null;
+}
+
+function add2eMonkDamageParts(raw) {
+  if (raw && typeof raw === "object") raw = raw.raw ?? raw.value ?? raw.contre_moyen ?? raw.medium ?? raw.moyen;
+  const parts = String(raw ?? "1d6/1d3").split(/[\/|]/).map(p => p.trim()).filter(Boolean);
+  const moyen = parts[0] || "1d6";
+  const grand = parts[1] || moyen;
+  return { raw: `${moyen} / ${grand}`, moyen, grand };
+}
+
+function add2eIsMonkAutoUnarmed(item) {
+  if (!item || item.type !== "arme") return false;
+  const name = add2eNormalizeEquipTag(item.name);
+  const sys = item.system ?? {};
+  return ["main_nue", "mainnue"].includes(name)
+    || (sys.add2eAutoCreated === true && add2eNormalizeEquipTag(sys.sourceClasse) === "moine")
+    || add2eNormalizeEquipTag(sys.sourceCapacite) === "main_nue_moine";
+}
+
+async function add2eSyncMonkUnarmedWeapon(actor) {
+  if (!actor || actor.type !== "personnage") return false;
+  const cls = add2eGetMonkClassSystem(actor);
+  const existing = actor.items?.filter?.(add2eIsMonkAutoUnarmed) ?? [];
+
+  if (!cls) {
+    if (existing.length) await actor.deleteEmbeddedDocuments("Item", existing.map(i => i.id));
+    return false;
+  }
+
+  const row = add2eGetMonkProgressionRow(actor) ?? {};
+  const dmg = add2eMonkDamageParts(row.unarmedDamage ?? row.main_nue ?? row.damage ?? actor.system?.moine?.main_nue);
+  const system = {
+    nom: "Main nue",
+    equipee: true,
+    categorie: "melee",
+    type_degats: "contondant",
+    type_arme: "main_nue",
+    famille_arme: "main_nue",
+    degats: dmg.raw,
+    "dégâts": { contre_moyen: dmg.moyen, contre_grand: dmg.grand },
+    bonus_hit: 0,
+    bonus_dom: 0,
+    facteur_rapidité: 1,
+    portee_courte: 0,
+    portee_moyenne: 0,
+    portee_longue: 0,
+    tags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine"],
+    effectTags: ["arme", "arme:main_nue", "type_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "classe:moine"],
+    add2eAutoCreated: true,
+    sourceClasse: "moine",
+    sourceCapacite: "main_nue_moine"
+  };
+
+  await actor.update({
+    "system.moine.main_nue": dmg.raw,
+    "system.moine.main_nue_contre_moyen": dmg.moyen,
+    "system.moine.main_nue_contre_grand": dmg.grand
+  }, { add2eInternal: true });
+
+  if (existing.length) {
+    const [first, ...duplicates] = existing;
+    await actor.updateEmbeddedDocuments("Item", [{ _id: first.id, name: "Main nue", img: first.img || "icons/svg/fist.svg", system }]);
+    if (duplicates.length) await actor.deleteEmbeddedDocuments("Item", duplicates.map(i => i.id));
+  } else {
+    await actor.createEmbeddedDocuments("Item", [{ type: "arme", name: "Main nue", img: "icons/svg/fist.svg", system, flags: { add2e: { autoCreated: true, sourceClasse: "moine", sourceCapacite: "main_nue_moine" } } }]);
+  }
+  return true;
+}
+
+globalThis.add2eSyncMonkUnarmedWeapon = add2eSyncMonkUnarmedWeapon;
+
+
+function add2eGetRaceTagsForLevelCap(actor) {
+  const tags = new Set();
+  const push = (value) => {
+    const tag = add2eNormalizeEquipTag(value);
+    if (tag) tags.add(tag);
+  };
+  const pushArray = (value) => {
+    if (Array.isArray(value)) value.forEach(push);
+    else if (value && typeof value === "object") Object.values(value).forEach(pushArray);
+    else push(value);
+  };
+
+  const raceItems = actor?.items?.filter?.(i => i.type === "race") ?? [];
+  for (const race of raceItems) {
+    push(`race:${race.system?.slug || race.name}`);
+    pushArray(race.system?.tags);
+    pushArray(race.system?.identityTags);
+  }
+
+  const details = actor?.system?.details_race ?? {};
+  push(`race:${details.slug || details.label || details.name || actor?.system?.race || ""}`);
+  pushArray(details.tags);
+  pushArray(details.identityTags);
+  push(`race:${actor?.system?.race || ""}`);
+
+  return tags;
+}
+
+function add2eGetClassMaxLevelForActor(actor, classSystem = null) {
+  const cls = classSystem ?? add2eGetActorClassSystem(actor);
+  if (!cls || typeof cls !== "object") return null;
+
+  const progression = Array.isArray(cls.progression) ? cls.progression : [];
+  const progressionMax = progression
+    .map((row, index) => Number(row?.niveau ?? row?.level ?? index + 1) || 0)
+    .filter(n => Number.isFinite(n) && n > 0)
+    .reduce((max, n) => Math.max(max, n), 0);
+
+  let maxLevel = progressionMax > 0 ? progressionMax : null;
+
+  const raceRules = cls.raceRestriction?.races;
+  if (raceRules && typeof raceRules === "object") {
+    const raceTags = add2eGetRaceTagsForLevelCap(actor);
+    for (const [rawTag, rule] of Object.entries(raceRules)) {
+      const tag = add2eNormalizeEquipTag(rawTag);
+      if (!tag || !raceTags.has(tag) || rule?.allowed === false) continue;
+      const raceMax = Number(rule?.maxLevel ?? rule?.niveauMax ?? rule?.max);
+      if (Number.isFinite(raceMax) && raceMax > 0) {
+        maxLevel = maxLevel ? Math.min(maxLevel, raceMax) : raceMax;
+      }
+    }
+  }
+
+  return Number.isFinite(maxLevel) && maxLevel > 0 ? Math.floor(maxLevel) : null;
+}
+
+function add2eClampLevelToClassMax(actor, desiredLevel, classSystem = null, { notify = false } = {}) {
+  const minLevel = 1;
+  let level = Math.max(minLevel, Number.parseInt(desiredLevel, 10) || minLevel);
+  const maxLevel = add2eGetClassMaxLevelForActor(actor, classSystem);
+
+  if (maxLevel && level > maxLevel) {
+    if (notify) {
+      const clsName = classSystem?.label || classSystem?.name || classSystem?.nom || actor?.system?.classe || "cette classe";
+      ui.notifications.warn(`${clsName} est limité au niveau ${maxLevel}. Niveau ramené à ${maxLevel}.`);
+    }
+    return { level: maxLevel, maxLevel, changed: true, original: level };
+  }
+
+  return { level, maxLevel, changed: false, original: level };
+}
+
+async function add2eClampActorLevelToClassMax(actor, classSystem = null, options = {}) {
+  if (!actor || actor.type !== "personnage") return null;
+  const clamp = add2eClampLevelToClassMax(actor, actor.system?.niveau, classSystem, options);
+  if (clamp.changed) {
+    await actor.update({ "system.niveau": clamp.level }, { add2eInternal: true });
+    actor.sheet?.render?.(false);
+  }
+  return clamp;
+}
+
+globalThis.add2eGetClassMaxLevelForActor = add2eGetClassMaxLevelForActor;
+globalThis.add2eClampActorLevelToClassMax = add2eClampActorLevelToClassMax;
 
 
 // Anti-réentrée pour le recalcul auto des caracs
@@ -1578,10 +5082,26 @@ Hooks.on("updateActor", async (actor, changes, options, userId) => {
   // =====================================================
   if (options?.add2eInternal) return;
 
+  // Niveau maximum : si la classe possède une progression limitée, on ramène immédiatement au niveau max réel.
+  if (changes?.system && Object.prototype.hasOwnProperty.call(changes.system, "niveau")) {
+    const clamp = add2eClampLevelToClassMax(actor, changes.system.niveau, null, { notify: true });
+    if (clamp.changed) {
+      console.warn("[ADD2E][NIVEAU][MAX] Niveau supérieur au maximum de classe : correction automatique", {
+        actor: actor?.name,
+        niveauDemande: clamp.original,
+        niveauMax: clamp.maxLevel,
+        niveauApplique: clamp.level
+      });
+      await actor.update({ "system.niveau": clamp.level }, { add2eInternal: true });
+      changes.system.niveau = clamp.level;
+    }
+  }
+
   // Au changement de niveau : on recalcule PV max (system.points_de_coup) et on aligne PV courant (system.pdv)
   if (changes?.system && Object.prototype.hasOwnProperty.call(changes.system, "niveau")) {
+    const lvl = Number(changes.system.niveau) || Number(actor.system?.niveau) || 1;
+
     try {
-      const lvl = Number(changes.system.niveau) || Number(actor.system?.niveau) || 1;
       console.log(`[ADD2E][HP] Changement de niveau détecté -> recalcul PV max + PV courant (niveau=${lvl})`, { actor: actor?.name });
 
       // Priorité : si la feuille fournit la méthode, on l'utilise (même logique que drop classe)
@@ -1598,6 +5118,22 @@ Hooks.on("updateActor", async (actor, changes, options, userId) => {
       }
     } catch (e) {
       console.warn("[ADD2E][HP] Erreur recalcul PV au changement de niveau :", e);
+    }
+    try {
+      await add2eSyncMonkUnarmedWeapon(actor);
+    } catch (e) {
+      console.warn("[ADD2E][MOINE] Erreur synchronisation Main nue au changement de niveau :", e);
+    }
+
+    try {
+      await add2eSyncNewSpellLevelsAfterActorLevelChange(actor, lvl);
+    } catch (e) {
+      console.error("[ADD2E][LEVEL_SPELL_SYNC] Erreur import / nettoyage des sorts au changement de niveau :", {
+        actor: actor?.name,
+        niveau: lvl,
+        err: e
+      });
+      ui.notifications.error("Erreur pendant la synchronisation des sorts au changement de niveau. Voir la console.");
     }
   }
 
@@ -2358,17 +5894,10 @@ console.log("[ADD2E][getData] classe=", sys.classe, "niveau=", sys.niveau, "spel
   sys.spellcasting = null;
 }
 
-const lists = data.actor.system.spellcasting?.lists || [];
-
-const LABELS = {
-  cleric: "Clerc",
-  druid: "Druide",
-  mage: "Magicien",
-  wizard: "Magicien",
-  illusionist: "Illusionniste"
-};
-
-data.spellLists = lists.map(k => LABELS[k] || k);
+const spellEntriesForDisplay = add2eGetSpellcastingEntries(data.actor);
+data.spellLists = spellEntriesForDisplay.map(e => e.label || add2eSpellLabel(e.key));
+data.spellcastingEntries = spellEntriesForDisplay;
+data.spellSlotsByPool = add2eGetSpellSlotPoolsByLevel(data.actor);
 
   // --- Récupération robuste de la race (id OU nom, insensible à la casse) ---
   let raceItem = null;
@@ -2535,8 +6064,19 @@ const intersects = (a, b) => a.some(x => b.includes(x));
     sys.ca_naturel = progressionCourante.monkAC;
   }
   data.progressionCourante = progressionCourante;
+
+  // Capacités de classe visibles : uniquement celles débloquées au niveau actuel.
+  // Les capacités de niveau supérieur restent dans le JSON pour le moteur, mais ne sont pas affichées.
+  const classFeaturesForDisplay = add2eGetActorClassFeatures(this.actor)
+    .map((feature, index) => ({ ...feature, __featureIndex: index }))
+    .filter(feature => niveau >= add2eFeatureMinLevel(feature) && niveau <= add2eFeatureMaxLevel(feature));
+
+  data.activeClassFeatures = classFeaturesForDisplay.filter(feature => feature.activable === true);
+  data.passiveClassFeatures = classFeaturesForDisplay.filter(feature => feature.activable !== true);
+
   data.listeArmes = items.filter(item => item.type === "arme");
   data.listeArmures = items.filter(item => item.type === "armure");
+  data.thiefSkills = add2eGetActorThiefSkills(this.actor, progressionCourante);
 // [AJOUT] Récupération de l'équipement divers
     data.listeObjets = items.filter(i => i.type === "objet");
 
@@ -2691,92 +6231,134 @@ const intersects = (a, b) => a.some(x => b.includes(x));
     data.forceExValues.push({ value: i, label: display });
   }
    const sorts = items.filter(i => i.type === "sort");
+  const add2eObjectMagicPowersForHbs = [];
   const sortsParNiveau = {};
 
 // =====================================================
 // [MODIF] INJECTION DES POUVOIRS (Tous types d'items)
+// Source stable : tous les objets magiques possédés par l'acteur,
+// même si un autre équipement les déséquipe automatiquement.
 // =====================================================
-// On cherche les pouvoirs sur Armes, Armures et Objets divers, tant qu'ils sont équipés
 const itemsAvecPouvoirs = items.filter(i => {
-  if (!["arme", "armure", "objet"].includes(i.type)) return false;
-  if (!i.system?.equipee) return false;
-  const p = i.system.pouvoirs;
-  if (!p) return false;
-  if (Array.isArray(p)) return p.length > 0;
-  if (typeof p === "object") return Object.keys(p).length > 0;
-  return false;
+  if (!["arme", "armure", "objet", "object", "magic", "objet_magique"].includes(String(i.type || "").toLowerCase())) return false;
+
+  const pouvoirs = typeof add2eMagicObjectPowerArray === "function"
+    ? add2eMagicObjectPowerArray(i)
+    : (() => {
+        const raw = i.system?.pouvoirs ?? i.system?.powers ?? i.system?.pouvoirsMagiques ?? i.system?.magicalPowers ?? i.system?.sorts ?? i.system?.spells;
+        if (Array.isArray(raw)) return raw.filter(p => p && typeof p === "object");
+        if (raw && typeof raw === "object") return Object.values(raw).filter(p => p && typeof p === "object");
+        return [];
+      })();
+
+  if (pouvoirs.length > 0) return true;
+
+  const charges = typeof add2eMagicObjectChargeInfo === "function"
+    ? add2eMagicObjectChargeInfo(i, pouvoirs)
+    : { max: Number(i.system?.max_charges ?? i.system?.maxCharges ?? i.system?.charges_max ?? i.system?.chargesMax ?? 0) || 0 };
+
+  if ((Number(charges.max) || 0) > 0) return true;
+
+  return typeof add2eMagicLooksMagical === "function" ? add2eMagicLooksMagical(i) : false;
 });
 
 for (const itemSource of itemsAvecPouvoirs) {
-  // Normalisation pouvoirs → toujours un tableau
-  let pouvoirs = [];
-  const raw = itemSource.system.pouvoirs;
-  if (Array.isArray(raw)) {
-    pouvoirs = raw.filter(p => p && typeof p === "object");
-  } else if (raw && typeof raw === "object") {
-    pouvoirs = Object.values(raw).filter(p => p && typeof p === "object");
-  }
+  let pouvoirs = typeof add2eMagicObjectPowerArray === "function"
+    ? add2eMagicObjectPowerArray(itemSource)
+    : [];
+
+  // Objet magique sans pouvoir détaillé : on garde une entrée visible,
+  // mais elle ne crée pas une fausse action de lancement inutile.
   if (!pouvoirs.length) continue;
 
-  const maxGlobal = Number(itemSource.system.max_charges) || 0;
+  const chargeInfo = typeof add2eMagicObjectChargeInfo === "function"
+    ? add2eMagicObjectChargeInfo(itemSource, pouvoirs)
+    : { current: Number(itemSource.system?.charges ?? 0) || 0, max: Number(itemSource.system?.max_charges ?? itemSource.system?.maxCharges ?? 0) || 0 };
+
+  const maxGlobal = Number(chargeInfo.max) || 0;
   const isGlobal  = maxGlobal > 0;
 
   pouvoirs.forEach((p, idx) => {
-    // =====================================================
-    // RECHERCHE D'ICONE INTELLIGENTE
-    // =====================================================
     let iconImage = p.img;
 
     const realSpell = game.items.find(i =>
-      i.type === "sort" && i.name.toLowerCase() === (p.name || "").toLowerCase()
+      i.type === "sort" && i.name.toLowerCase() === String(p.name || p.nom || "").toLowerCase()
     );
 
-    if (realSpell) {
-      iconImage = realSpell.img;
-    }
-    if (!iconImage) {
-      iconImage = itemSource.img;
-    }
+    if (realSpell) iconImage = realSpell.img;
+    if (!iconImage) iconImage = itemSource.img;
+
+    const generatedId = typeof add2eMagicPowerGeneratedId === "function"
+      ? add2eMagicPowerGeneratedId(itemSource, idx)
+      : itemSource.id.substring(0, 14) + idx.toString().padStart(2, "0");
+
+    const powerMax = isGlobal
+      ? maxGlobal
+      : (Number(p.max ?? p.maxCharges ?? p.chargesMax ?? p.charges_max ?? p.charges ?? 1) || 1);
 
     const fakeSpellData = {
-      _id: itemSource.id.substring(0, 14) + idx.toString().padStart(2, "0"),
-      name: `${p.name}`,
+      _id: generatedId,
+      name: `${p.name || p.nom || itemSource.name}`,
       type: "sort",
       img: iconImage,
       system: {
-        niveau: p.niveau || 1,
-        école: p.ecole || "Magique",
-        description: p.description || "",
+        niveau: p.niveau || p.level || 1,
+        école: p.ecole || p["école"] || "Magique",
+        description: p.description || p.desc || "",
         composantes: "Objet",
         temps_incantation: "1",
         isPower: true,
         sourceWeaponId: itemSource.id,
+        sourceItemId: itemSource.id,
+        sourceItemName: itemSource.name,
         powerIndex: idx,
-        cost: p.cout || 0,
-        max: isGlobal ? maxGlobal : (p.max || 1),
+        cost: p.cout || p.cost || 0,
+        max: powerMax,
         isGlobalCharge: isGlobal,
-        onUse: p.onUse || ""
+        onUse: p.onUse || p.onuse || p.on_use || p.script || "",
+        onuse: p.onuse || p.onUse || p.on_use || p.script || "",
+        on_use: p.on_use || p.onUse || p.onuse || p.script || "",
+        objetMagicOnUse: p.objetMagicOnUse || p.fallbackOnUse || "",
+        linkedSpell: p.linkedSpell || null
       }
     };
 
     const virtualSpell = new Item(fakeSpellData, { parent: this.actor });
 
     virtualSpell.getFlag = (scope, key) => {
+      if (scope !== "add2e") return null;
       if (key === "memorizedCount") {
         if (isGlobal) {
           const val = itemSource.getFlag("add2e", "global_charges");
-          return (val !== undefined) ? val : maxGlobal;
-        } else {
-          const charges = itemSource.getFlag("add2e", `charges_${idx}`);
-          return (charges !== undefined) ? charges : p.max;
+          return (val !== undefined) ? val : chargeInfo.current;
         }
+        const charges = itemSource.getFlag("add2e", `charges_${idx}`);
+        return (charges !== undefined) ? charges : powerMax;
       }
       return null;
     };
 
+    add2eObjectMagicPowersForHbs.push(virtualSpell);
+    // Compatibilité HBS natif : le template existant lit les pouvoirs d’objets via la liste des sorts virtuels.
     sorts.push(virtualSpell);
   });
 }
+
+data.add2eObjectMagicPowers = add2eObjectMagicPowersForHbs.map(power => ({
+  id: power.id || power._id,
+  name: power.name || "Pouvoir",
+  img: power.img || "icons/svg/aura.svg",
+  niveau: Number(power.system?.niveau ?? 1) || 1,
+  description: power.system?.description || "",
+  sourceItemId: power.system?.sourceWeaponId || power.system?.sourceItemId || "",
+  powerIndex: power.system?.powerIndex ?? null,
+  charges: Number(power.getFlag?.("add2e", "memorizedCount") ?? power.system?.max ?? 0) || 0,
+  max: Number(power.system?.max ?? 0) || 0,
+  cost: Number(power.system?.cost ?? 0) || 0,
+  onUse: power.system?.onUse || power.system?.onuse || power.system?.on_use || "",
+  onuse: power.system?.onuse || power.system?.onUse || power.system?.on_use || "",
+  on_use: power.system?.on_use || power.system?.onUse || power.system?.onuse || ""
+}));
 
     // =====================================================
   for (const sort of sorts) {
@@ -2788,44 +6370,243 @@ for (const itemSource of itemsAvecPouvoirs) {
   data.sortsParNiveau = sortsParNiveau;
   data.niveauxSorts = niveauxSorts;
 
-  // ----- AJOUT LIMITES DE SORTS MÉMORISÉS -----
+  // ----- LIMITES DE SORTS PRÉPARÉS PAR LIGNE DE SORTS -----
   const sortsMemorizedByLevel = {};
+  const spellPoolsByLevel = {};
+  const slotPools = add2eGetSpellSlotPoolsByLevel(this.actor);
+
   for (const niv of niveauxSorts) {
-    const sorts = sortsParNiveau[niv] || [];
-    if (classe === "ranger") {
-      const sortsDruide = sorts.filter(s => (s.system.classe || "").toLowerCase() === "druide");
-      const sortsMagicien = sorts.filter(s => (s.system.classe || "").toLowerCase() === "magicien");
-      let countDruide = 0, countMagicien = 0;
-      for (const s of sortsDruide) {
-        const mem = await s.getFlag("add2e", "memorizedCount");
-        countDruide += Number(mem) || 0;
-      }
-      for (const s of sortsMagicien) {
-        const mem = await s.getFlag("add2e", "memorizedCount");
-        countMagicien += Number(mem) || 0;
-      }
-      let maxDruide = progressionCourante?.spellsPerLevel?.[niv-1] ?? 0;
-      let maxMagicien = progressionCourante?.spellsPerLevel1?.[niv-1] ?? 0;
-      sortsMemorizedByLevel[niv] = {
-        druide: { count: countDruide, max: maxDruide },
-        magicien: { count: countMagicien, max: maxMagicien }
-      };
-    } else {
-      let count = 0;
-      for (const s of sorts) {
-        const mem = await s.getFlag("add2e", "memorizedCount");
-        count += Number(mem) || 0;
-      }
-      let max = 0;
-      if (classe === "paladin" && progressionCourante?.spellsPerLevelClerc) {
-        max = progressionCourante.spellsPerLevelClerc[niv-1] || 0;
-      } else if (progressionCourante?.spellsPerLevel) {
-        max = progressionCourante.spellsPerLevel[niv-1] || 0;
-      }
-      sortsMemorizedByLevel[niv] = { count, max };
+    const pools = [];
+    let totalCount = 0;
+    let totalMax = 0;
+
+    for (const [key, pool] of Object.entries(slotPools)) {
+      const max = Number(pool.slotsByLevel?.[niv] || 0) || 0;
+      const count = add2eCountPreparedForEntryLevel(this.actor, pool, niv);
+      totalCount += count;
+      totalMax += max;
+      pools.push({
+        key,
+        label: pool.label || add2eSpellLabel(key),
+        count,
+        max,
+        startsAt: pool.startsAt,
+        maxSpellLevel: pool.maxSpellLevel
+      });
     }
+
+    spellPoolsByLevel[niv] = pools;
+    sortsMemorizedByLevel[niv] = {
+      count: totalCount,
+      max: totalMax,
+      pools,
+      byList: Object.fromEntries(pools.map(p => [p.key, { count: p.count, max: p.max, label: p.label }]))
+    };
   }
+
   data.sortsMemorizedByLevel = sortsMemorizedByLevel;
+  data.spellPoolsByLevel = spellPoolsByLevel;
+
+  // ----- DONNÉES NATIVES HBS : préparation par liste et par niveau -----
+  // Le template character-sheet.hbs utilise directement ces champs ; il n'y a plus
+  // besoin de remplacer/masquer des blocs après rendu.
+  const add2eActorLevelForSpells = Math.max(1, Number(this.actor.system?.niveau ?? 1) || 1);
+  const add2eSpellEntriesForHbs = add2eGetSpellcastingEntries(this.actor);
+
+  const add2eSpellItemLevel = (sort) => Number(sort?.system?.niveau ?? sort?.system?.level ?? 1) || 1;
+  const add2eEntryLabelForHbs = (entry) => entry?.label || add2eSpellLabel(entry?.key);
+  const add2eEntryKeyForHbs = (entry) => add2eNormalizeSpellKey(entry?.key);
+
+  const add2eMaxSpellLevelFromEntries = add2eSpellEntriesForHbs.reduce((max, entry) => {
+    const v = Number(entry?.maxSpellLevel ?? 0) || 0;
+    return Math.max(max, v);
+  }, 0);
+
+  const add2eMaxSpellLevelFromItems = sorts.reduce((max, sort) => Math.max(max, add2eSpellItemLevel(sort)), 0);
+  const add2eMaxSpellLevelForHbs = Math.max(add2eMaxSpellLevelFromEntries, add2eMaxSpellLevelFromItems, 0);
+
+  const add2eBuildCountersForLevel = (spellLevel) => {
+    return add2eSpellEntriesForHbs
+      .filter(entry => {
+        const maxSpellLevel = Number(entry?.maxSpellLevel ?? 0) || 0;
+        return !maxSpellLevel || Number(spellLevel) <= maxSpellLevel;
+      })
+      .map(entry => {
+        const count = add2eCountPreparedForEntryLevel(this.actor, entry, spellLevel);
+        const max = add2eGetSlotsForEntryLevel(this.actor, entry, spellLevel);
+        return {
+          key: add2eEntryKeyForHbs(entry),
+          label: add2eEntryLabelForHbs(entry),
+          count,
+          max,
+          full: max > 0 && count >= max,
+          over: max > 0 && count > max
+        };
+      })
+      .filter(counter => counter.max > 0);
+  };
+
+  data.add2eSpellSummaryRows = add2eSpellEntriesForHbs.map(entry => {
+    const maxSpellLevel = Number(entry?.maxSpellLevel ?? add2eMaxSpellLevelForHbs) || add2eMaxSpellLevelForHbs;
+    const levels = [];
+    for (let spellLevel = 1; spellLevel <= maxSpellLevel; spellLevel++) {
+      const count = add2eCountPreparedForEntryLevel(this.actor, entry, spellLevel);
+      const max = add2eGetSlotsForEntryLevel(this.actor, entry, spellLevel);
+      if (max > 0) {
+        levels.push({ spellLevel, count, max });
+      }
+    }
+    return {
+      key: add2eEntryKeyForHbs(entry),
+      label: add2eEntryLabelForHbs(entry),
+      levels
+    };
+  }).filter(row => row.levels.length);
+
+  data.add2eSpellLevels = [];
+
+  const add2eIsObjectPowerRow = (sort) => {
+    const sys = sort?.system ?? {};
+    return sys.isPower === true
+      || sys.isObjectPower === true
+      || sys.sourceWeaponId
+      || sys.sourceItemId
+      || sys.powerIndex !== undefined
+      || String(sys.composantes ?? "").toLowerCase().includes("objet");
+  };
+
+  const add2eIsCapacitySpellRow = (sort) => {
+    const sys = sort?.system ?? {};
+    const flags = sort?.flags?.add2e ?? {};
+    return sys.isCapacity === true
+      || sys.isCapacite === true
+      || sys.usageType === "classFeature"
+      || sys.sourceCapacite
+      || sys.sourceFeature
+      || flags.sourceType === "capacite"
+      || flags.sourceType === "capacity";
+  };
+
+  const add2eBuildSpellRowForHbs = (sort, spellLevel) => {
+    const spellLists = add2eGetSpellListsFromItem(sort);
+    const allowedEntries = add2eSpellEntriesForHbs.filter(entry => {
+      const key = add2eEntryKeyForHbs(entry);
+      const startsAt = Number(entry?.startsAt ?? 1) || 1;
+      const maxSpellLevel = Number(entry?.maxSpellLevel ?? 0) || 0;
+      return spellLists.includes(key)
+        && add2eActorLevelForSpells >= startsAt
+        && (!maxSpellLevel || spellLevel <= maxSpellLevel);
+    });
+
+    const matchingLabels = add2eSpellEntriesForHbs
+      .filter(entry => spellLists.includes(add2eEntryKeyForHbs(entry)))
+      .map(add2eEntryLabelForHbs);
+
+    const isObjectPower = add2eIsObjectPowerRow(sort);
+    const isCapacity = add2eIsCapacitySpellRow(sort);
+
+    return {
+      id: sort.id || sort._id,
+      name: sort.name || "Sort",
+      img: sort.img || "icons/svg/book.svg",
+      ecole: sort.system?.école || sort.system?.ecole || sort.system?.school || "",
+      description: sort.system?.description || "",
+      composantes: sort.system?.composantes || "",
+      temps_incantation: sort.system?.temps_incantation || "",
+      portee: sort.system?.portee || sort.system?.portée || null,
+      duree: sort.system?.duree || sort.system?.durée || null,
+      isObjectPower,
+      isCapacity,
+      isRegularSpell: !isObjectPower && !isCapacity,
+      objectPowerCharges: isObjectPower ? (Number(sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount ?? sort.system?.max ?? 0) || 0) : 0,
+      listLabel: matchingLabels.length ? matchingLabels.join(" / ") : (spellLists.map(add2eSpellLabel).join(" / ") || "Non autorisé"),
+      entries: allowedEntries.map(entry => {
+        const count = add2eGetMemorizedCountForEntry(sort, entry);
+        const total = add2eCountPreparedForEntryLevel(this.actor, entry, spellLevel);
+        const max = add2eGetSlotsForEntryLevel(this.actor, entry, spellLevel);
+        return {
+          key: add2eEntryKeyForHbs(entry),
+          label: add2eEntryLabelForHbs(entry),
+          count,
+          total,
+          max,
+          over: max > 0 && total > max
+        };
+      })
+    };
+  };
+
+  const add2eMakeSpellGroup = ({ key, label, title, kind, counter, sorts }) => ({
+    key,
+    label,
+    title,
+    kind,
+    counter: counter || { key, label, count: 0, max: 0 },
+    sorts: sorts || []
+  });
+
+  for (let spellLevel = 1; spellLevel <= add2eMaxSpellLevelForHbs; spellLevel++) {
+    const counters = add2eBuildCountersForLevel(spellLevel);
+    const levelSorts = sorts
+      .filter(sort => add2eSpellItemLevel(sort) === spellLevel)
+      .sort((a, b) => String(a?.name ?? "").localeCompare(String(b?.name ?? "")));
+
+    if (!counters.length && !levelSorts.length) continue;
+
+    const sortRows = levelSorts.map(sort => add2eBuildSpellRowForHbs(sort, spellLevel));
+    const regularRows = sortRows.filter(row => row.isRegularSpell);
+    const objectPowerRows = sortRows.filter(row => row.isObjectPower);
+    const capacityRows = sortRows.filter(row => row.isCapacity);
+
+    const groups = [];
+
+    // Les pouvoirs d'objets magiques doivent apparaître avant les sorts du niveau.
+    if (objectPowerRows.length) {
+      groups.push(add2eMakeSpellGroup({
+        key: "objet_magique",
+        label: "Effets d'objet magique",
+        title: "Effets d'objet magique",
+        kind: "object-power",
+        counter: { key: "objet_magique", label: "Effets d'objet magique", count: objectPowerRows.length, max: objectPowerRows.length },
+        sorts: objectPowerRows
+      }));
+    }
+
+    if (capacityRows.length) {
+      groups.push(add2eMakeSpellGroup({
+        key: "capacite",
+        label: "Capacités",
+        title: "Capacités",
+        kind: "capacity",
+        counter: { key: "capacite", label: "Capacités", count: capacityRows.length, max: capacityRows.length },
+        sorts: capacityRows
+      }));
+    }
+
+    for (const counter of counters) {
+      const key = add2eNormalizeSpellKey(counter.key);
+      const label = counter.label || add2eSpellLabel(key);
+      const groupedSorts = regularRows.filter(row => row.entries.some(entry => add2eNormalizeSpellKey(entry.key) === key));
+
+      // Une section est affichée si le niveau de sort est réellement accessible
+      // au niveau actuel du personnage. Elle peut donc être vide si aucun sort
+      // de ce niveau n'a encore été importé, mais elle disparaît dès que le
+      // personnage n'a plus d'emplacement pour ce niveau.
+      groups.push(add2eMakeSpellGroup({
+        key,
+        label,
+        title: `Sorts de ${String(label).toLowerCase()}`,
+        kind: "spell-list",
+        counter,
+        sorts: groupedSorts
+      }));
+    }
+
+    if (!groups.length) continue;
+
+    data.add2eSpellLevels.push({ spellLevel, counters, groups, sorts: sortRows });
+  }
+
 
   // ----- ENRICHISSEMENT DES EFFETS ACTIFS POUR L’AFFICHAGE -----
   data.activeEffectsList = this.actor.effects.map(eff => {
@@ -3279,7 +7060,15 @@ async autoSetCaracAjustements() {
       if (this.rendered) this._add2eRememberActiveTab(this.element);
     } catch (e) {}
     const result = super.render(force, options);
-    setTimeout(() => this._add2eActivateTab(this._add2eActiveTab || this._add2eReadStoredTab() || "resume"), 0);
+    const refreshUi = () => {
+      this._add2eActivateTab(this._add2eActiveTab || this._add2eReadStoredTab() || "resume");
+      try {
+        add2eEnhanceCharacterSheetUi(this, this.element);
+      } catch (err) {
+        console.warn("[ADD2E][OBJETS_MAGIQUES][UI] Réinjection après render impossible.", err);
+      }
+    };
+    for (const delay of [0, 80, 220]) setTimeout(refreshUi, delay);
     return result;
   }
 
@@ -3420,12 +7209,24 @@ html.find('.roll-save').off('click.add2e').on('click.add2e', async ev => {
   // LANCE DICE SO NICE sans créer de message gris
   if (game.dice3d) await game.dice3d.showForRoll(roll);
 
+  let bonusSave = 0;
+  if (typeof Add2eEffectsEngine !== "undefined") {
+    try {
+      const analyse = Add2eEffectsEngine.analyze?.(this.actor, { type: "save", vsType: nom, frontale: true }) ?? {};
+      bonusSave = Number(analyse.bonus_save || 0);
+    } catch (e) {
+      console.warn("[ADD2E][SAVE] Erreur analyse effets de sauvegarde", e);
+    }
+  }
+
+  const totalJet = Number(roll.total || 0) + bonusSave;
+
   // Icônes et couleurs par type de save
   const saveIcons = ["fa-skull-crossbones","fa-mountain","fa-magic","fa-fire","fa-scroll"];
   const icon = saveIcons[idx] || "fa-dice-d20";
   const colors = ["#c48642","#6394e8","#b12f95","#e67e22","#a173d9"];
   const color = colors[idx] || "#6c4e95";
-  const reussite = roll.total > valeur;
+  const reussite = totalJet >= valeur;
 
   const htmlCard = `
     <div class="add2e-card-test" style="
@@ -3441,6 +7242,7 @@ html.find('.roll-save').off('click.add2e').on('click.add2e', async ev => {
       <div style="font-size:1.09em; margin-bottom:0.25em;">
         Seuil&nbsp;: <b>${valeur}</b>
         &nbsp;&nbsp;|&nbsp;&nbsp;Résultat&nbsp;: <b>${roll.total}</b>
+        ${bonusSave ? `&nbsp;&nbsp;|&nbsp;&nbsp;Effets&nbsp;: <b>${bonusSave >= 0 ? "+" : ""}${bonusSave}</b> → <b>${totalJet}</b>` : ""}
       </div>
       <div style="margin:0.2em 0 0.1em 0; font-size:1.1em;">
         <span style="font-weight:600; color:${reussite ? "#1cb360" : "#c34040"};">
@@ -3456,8 +7258,12 @@ html.find('.roll-save').off('click.add2e').on('click.add2e', async ev => {
   });
 });
 
-
-
+html.find('.add2e-thief-skill-roll').off('click.add2e').on('click.add2e', async ev => {
+  ev.preventDefault();
+  ev.stopPropagation();
+  const key = $(ev.currentTarget).data('thief-skill-key');
+  await add2eRollThiefSkill(this.actor, key);
+});
 
 // 2. Click sur image/nom = attaque directe
 html.find('.arme-img-attack').off('click').on('click', async ev => {
@@ -3483,16 +7289,87 @@ html.find('.arme-img-attack').attr('draggable', 'true').off('dragstart').on('dra
 html.find('[data-action]').off().on('click', async ev => {
   ev.stopPropagation();
   this._add2eRememberActiveTab(html);
+
   const $el = $(ev.currentTarget);
   const action = $el.data('action');
   const itemId = $el.data('item-id');
-  const sortId = $(ev.currentTarget).data('sort-id');
-await handleItemAction({
-  actor: this.actor,
-  action,
-  itemId,
-  sheet: this
+  const sortId = $el.data('sort-id');
+
+  const actionNorm = String(action ?? "").trim().toLowerCase();
+  const hasFeatureMarker =
+    $el.data("feature-index") !== undefined ||
+    $el.data("feature-name") !== undefined ||
+    $el.data("feature-id") !== undefined ||
+    $el.data("feature-key") !== undefined ||
+    $el.data("on-use") !== undefined ||
+    $el.closest("[data-feature-index], [data-feature-name], [data-feature-id], [data-feature-key], [data-on-use]").length > 0;
+
+  const candidateFeature = add2eFindClassFeatureFromElement(this.actor, ev.currentTarget);
+  const looksLikeFeatureUse =
+    hasFeatureMarker ||
+    actionNorm.includes("feature") ||
+    actionNorm.includes("capacite") ||
+    actionNorm.includes("capacité") ||
+    actionNorm === "use-class-feature" ||
+    actionNorm === "class-feature-use" ||
+    (candidateFeature && !itemId && !sortId && (
+      actionNorm === "use" ||
+      actionNorm === "utiliser" ||
+      actionNorm.includes("use") ||
+      String($el.text() ?? "").trim().toLowerCase().includes("utiliser")
+    ));
+
+  if (looksLikeFeatureUse && candidateFeature) {
+    await add2eExecuteClassFeatureOnUse(this.actor, candidateFeature, this);
+    return;
+  }
+
+  if (looksLikeFeatureUse && !candidateFeature) {
+    console.warn("[ADD2E][CAPACITE][CLICK] Bouton détecté mais capacité introuvable", {
+      action,
+      dataset: { ...($el[0]?.dataset ?? {}) },
+      text: $el.text?.(),
+      features: add2eGetActorActivableClassFeatures(this.actor).map(f => ({
+        name: add2eFeatureName(f),
+        on_use: add2eFeatureOnUse(f)
+      }))
+    });
+    ui.notifications.warn("Capacité de classe introuvable pour ce bouton. Voir console [ADD2E][CAPACITE][CLICK].");
+    return;
+  }
+
+  await handleItemAction({
+    actor: this.actor,
+    action,
+    itemId,
+    sheet: this
+  });
 });
+
+// Fallback pour les boutons Utiliser de capacité qui n'ont pas data-action.
+html.find('.add2e-feature-use, button, a, .a2e-btn').off('click.add2eFeatureFallback').on('click.add2eFeatureFallback', async ev => {
+  const $el = $(ev.currentTarget);
+  if ($el.data('item-id') || $el.data('sort-id')) return;
+
+  const label = String($el.text?.() ?? "").trim().toLowerCase();
+  const action = String($el.data('action') ?? "").trim().toLowerCase();
+  const hasFeatureMarker =
+    $el.hasClass('add2e-feature-use') ||
+    $el.data("feature-index") !== undefined ||
+    $el.data("feature-name") !== undefined ||
+    $el.data("feature-id") !== undefined ||
+    $el.data("feature-key") !== undefined ||
+    $el.data("on-use") !== undefined;
+
+  if (!hasFeatureMarker && !label.includes("utiliser") && !action.includes("feature") && !action.includes("capacite") && !action.includes("capacité")) return;
+
+  const feature = add2eFindClassFeatureFromElement(this.actor, ev.currentTarget);
+  if (!feature) return;
+
+  ev.preventDefault();
+  ev.stopPropagation();
+  this._add2eRememberActiveTab(html);
+  await add2eExecuteClassFeatureOnUse(this.actor, feature, this);
 });
 
 html.find('.roll-initiative-btn').off().on('click', async ev => {
@@ -3659,10 +7536,13 @@ html.find('.armure-delete').off().on('click', async ev => {
        await this.actor.deleteEmbeddedDocuments("Item", [itemId]);
     });
     html.find('input[name="system.niveau"]').off('change.add2e').on("change.add2e", async ev => {
-      let v = parseInt(ev.target.value) || 1;
-      v = Math.max(1, v);
+      let v = parseInt(ev.target.value, 10) || 1;
+      const clamp = add2eClampLevelToClassMax(this.actor, v, null, { notify: true });
+      v = clamp.level;
       ev.target.value = v;
       await this.actor.update({ "system.niveau": v });
+      try { await add2eSyncMonkUnarmedWeapon(this.actor); } catch (e) { console.warn("[ADD2E][MOINE] Sync niveau échoué", e); }
+      try { await add2eSyncClassPassiveEffect(this.actor); } catch (e) { console.warn("[ADD2E][CLASSE][EFFETS] Sync niveau échoué", e); }
       this.render(false);
     });
 // Accordéon description (affiche/masque la description du sort)
@@ -3691,7 +7571,7 @@ html.find('.sort-delete').off().on('click', async function(ev) {
   ev.stopPropagation();
   const sortId = $(this).data('sort-id');
   await self.actor.deleteEmbeddedDocuments("Item", [sortId]);
-  self.render(false);
+  add2eRerenderActorSheet(self.actor);
   return false;
 });
 
@@ -3701,143 +7581,270 @@ html.find('.sort-memorize-plus, .sort-memorize-minus')
   .on('click', async ev => {
     ev.preventDefault();
     ev.stopPropagation();
-    const $btn   = $(ev.currentTarget);
+
+    const $btn = $(ev.currentTarget);
     const sortId = $btn.data('sort-id');
-    const sort   = this.actor.items.get(sortId);
+    const sort = this.actor.items.get(sortId);
     if (!sort) return;
-    const isPlus      = $btn.hasClass('sort-memorize-plus');
-    let cur          = Number(await sort.getFlag("add2e","memorizedCount")) || 0;
-    if (isPlus) {
-      // Calcul de la limite
-      const niv       = Number(sort.system.niveau) || 1;
-      const prog      = this.actor.system.details_classe?.progression?.[this.actor.system.niveau-1]||{};
- let limit = 0, total = 0;
 
-// Comptage des sorts déjà mémorisés du même niveau
-for (const s of this.actor.items.filter(i =>
-  i.type === "sort" &&
-  Number(i.system.niveau) === niv
-)) {
-  total += Number(await s.getFlag("add2e","memorizedCount")) || 0;
-}
+    const isPlus = $btn.hasClass('sort-memorize-plus');
+    const niv = Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1;
+    const requestedEntryKey = add2eNormalizeSpellKey($btn.data('spell-entry-key') || $btn.attr('data-spell-entry-key') || "");
 
+    let check = add2eCanActorUseSpell(this.actor, sort);
 
-// Calcul générique de la limite
-limit = prog?.spellsPerLevel?.[niv - 1] ?? 0;
+    if (requestedEntryKey) {
+      const entries = add2eGetSpellcastingEntries(this.actor);
+      const sortLists = add2eGetSpellListsFromItem(sort);
+      const requestedEntry = entries.find(e => add2eNormalizeSpellKey(e.key) === requestedEntryKey) || null;
 
-// Vérification de la limite atteinte
-if (limit && total >= limit) {
-  return ui.notifications.warn(`Limite atteinte niveau ${niv} (${limit} max).`);
-}
+      if (!requestedEntry || !sortLists.includes(requestedEntryKey)) {
+        return ui.notifications.warn(`Ce sort ne peut pas être préparé comme ${requestedEntry?.label || requestedEntryKey}.`);
+      }
 
-cur++;
-    } else {
-      if (cur>0) cur--;
-      else return ui.notifications.warn("Aucun emplacement à libérer.");
+      const actorLevel = Math.max(1, Number(this.actor?.system?.niveau) || 1);
+      const startsAt = Number(requestedEntry.startsAt || 1);
+      const maxLevel = Number(requestedEntry.maxSpellLevel || 0);
+
+      if (actorLevel < startsAt) {
+        return ui.notifications.warn(`${requestedEntry.label || "Cette ligne de sorts"} n'est disponible qu'à partir du niveau ${startsAt}.`);
+      }
+      if (maxLevel && niv > maxLevel) {
+        return ui.notifications.warn(`${requestedEntry.label || "Cette ligne de sorts"} ne permet pas les sorts de niveau ${niv}.`);
+      }
+
+      check = { ok: true, reason: "ok", entry: requestedEntry };
     }
-    await sort.setFlag("add2e","memorizedCount", cur);
-    this.render(false);
+
+    if (!check.ok) {
+      const entry = check.entry;
+      if (check.reason === "start") {
+        return ui.notifications.warn(`${entry?.label || "Cette ligne de sorts"} n'est disponible qu'à partir du niveau ${entry?.startsAt}.`);
+      }
+      if (check.reason === "max-level") {
+        return ui.notifications.warn(`${entry?.label || "Cette ligne de sorts"} ne permet pas les sorts de niveau ${niv}.`);
+      }
+      return ui.notifications.warn(`Ce sort n'est pas autorisé pour cette classe.`);
+    }
+
+    const entry = check.entry;
+    let cur = add2eGetMemorizedCountForEntry(sort, entry);
+
+    if (isPlus) {
+      const limit = add2eGetSlotsForEntryLevel(this.actor, entry, niv);
+      const total = add2eCountPreparedForEntryLevel(this.actor, entry, niv);
+
+      if (limit <= 0) {
+        return ui.notifications.warn(`Aucun emplacement ${entry.label} de niveau ${niv} disponible.`);
+      }
+
+      if (total >= limit) {
+        return ui.notifications.warn(`Limite atteinte : ${entry.label} niveau ${niv} (${total}/${limit}).`);
+      }
+
+      cur++;
+    } else {
+      if (cur > 0) cur--;
+      else return ui.notifications.warn(`Aucun emplacement ${entry.label} à libérer.`);
+    }
+
+    await add2eSetMemorizedCountForEntry(sort, entry, cur);
+    add2eRerenderActorSheet(this.actor);
   });
 
-// Clic pour lancer le sort (séparé, sans conflit)
+// Clic pour lancer le sort ou un pouvoir d'objet magique
 // -----------------------------------------------------------
-    // GESTION DU LANCEMENT DE SORT (Compatible Virtuels & Réels)
-    // -----------------------------------------------------------
-    html.find('.sort-cast, .sort-cast-img').off('click').on('click', async function(ev) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      const sortId = $(this).data('sort-id');
-      
-      // 1. On cherche d'abord un VRAI sort (inventaire)
-      let sort = self.actor.items.get(sortId);
+// Mécanique conservée : les pouvoirs d'objets sont reconstruits en faux Item sort,
+// puis envoyés dans add2eCastSpell comme le faisait déjà le Bâton de Magius.
+// Le branchement est seulement rendu délégué pour rester actif après les réinjections UI.
+html
+  .off("click.add2eSortCast")
+  .on("click.add2eSortCast", ".sort-cast, .sort-cast-img, .add2e-object-magic-cast", async function(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
 
- // 2. Si non trouvé, on cherche dans TOUS LES ITEMS ÉQUIPÉS (Pouvoirs virtuels)
-  if (!sort) {
-    const itemsSources = self.actor.items.filter(i => {
-      if (!["arme", "armure", "objet"].includes(i.type)) return false;
-      if (!i.system?.equipee) return false;
-      const p = i.system.pouvoirs;
-      if (!p) return false;
-      if (Array.isArray(p)) return p.length > 0;
-      if (typeof p === "object") return Object.keys(p).length > 0;
+    const sortId = String(
+      this.dataset?.sortId ||
+      this.getAttribute?.("data-sort-id") ||
+      $(this).data("sort-id") ||
+      ""
+    ).trim();
+
+    const debug = !!globalThis.ADD2E_DEBUG_OBJETS_MAGIQUES;
+
+    if (debug) {
+      console.group("[ADD2E][OBJETS_MAGIQUES][CLICK]");
+      console.log("element", this);
+      console.log("sortId", sortId);
+    }
+
+    if (!sortId) {
+      if (debug) console.groupEnd();
+      ui.notifications.warn("Impossible de lancer : identifiant du sort introuvable.");
       return false;
-    });
-        
-    // On parcourt les items pour retrouver celui qui a généré cet ID
-    for (const itemSource of itemsSources) {
-      // Normalisation pouvoirs → tableau
-      let pouvoirs = [];
-      const raw = itemSource.system.pouvoirs;
-      if (Array.isArray(raw)) {
-        pouvoirs = raw.filter(p => p && typeof p === "object");
-      } else if (raw && typeof raw === "object") {
-        pouvoirs = Object.values(raw).filter(p => p && typeof p === "object");
+    }
+
+    // 1. Sort réel présent dans l'acteur.
+    let sort = self.actor.items.get(sortId) ?? null;
+
+    if (debug) console.log("Sort réel trouvé", !!sort, sort);
+
+    // 2. Pouvoir virtuel d'objet magique : on retrouve l'objet source + l'index du pouvoir.
+    if (!sort) {
+      const itemSources = self.actor.items.filter(i => {
+        if (!["arme", "armure", "objet", "object", "magic", "objet_magique"].includes(String(i.type || "").toLowerCase())) return false;
+
+        // Ne pas filtrer agressivement sur equipee : la section objets magiques affiche volontairement
+        // les objets magiques possédés, et le Bâton de Magius fonctionnait avec cette logique souple.
+        if (typeof add2eMagicItemEquippedOrUsable === "function") {
+          if (!add2eMagicItemEquippedOrUsable(i)) return false;
+        } else if (i.system?.equipee === false) return false;
+
+        const pouvoirs = typeof add2eMagicObjectPowerArray === "function"
+          ? add2eMagicObjectPowerArray(i)
+          : (() => {
+              const raw = i.system?.pouvoirs ?? i.system?.powers ?? i.system?.pouvoirsMagiques ?? i.system?.magicalPowers ?? i.system?.sorts ?? i.system?.spells;
+              if (Array.isArray(raw)) return raw.filter(p => p && typeof p === "object");
+              if (raw && typeof raw === "object") return Object.values(raw).filter(p => p && typeof p === "object");
+              return [];
+            })();
+
+        return pouvoirs.length > 0;
+      });
+
+      if (debug) {
+        console.log("Sources objets magiques candidates", itemSources.map(i => ({ id: i.id, name: i.name, type: i.type })));
       }
-      if (!pouvoirs.length) continue;
 
-      const maxGlobal = Number(itemSource.system.max_charges) || 0;
-      const isGlobal  = maxGlobal > 0;
+      for (const itemSource of itemSources) {
+        const pouvoirs = typeof add2eMagicObjectPowerArray === "function"
+          ? add2eMagicObjectPowerArray(itemSource)
+          : (() => {
+              const raw = itemSource.system?.pouvoirs ?? itemSource.system?.powers ?? itemSource.system?.pouvoirsMagiques ?? itemSource.system?.magicalPowers ?? itemSource.system?.sorts ?? itemSource.system?.spells;
+              if (Array.isArray(raw)) return raw.filter(p => p && typeof p === "object");
+              if (raw && typeof raw === "object") return Object.values(raw).filter(p => p && typeof p === "object");
+              return [];
+            })();
 
-      for (let idx = 0; idx < pouvoirs.length; idx++) {
-        const p = pouvoirs[idx];
-        const genId = itemSource.id.substring(0, 14) + idx.toString().padStart(2, "0");
-             
-        if (genId === sortId) {
-          const fakeData = {
-            _id: genId,
-            name: `${p.name}`,
-            type: "sort",
-            img: p.img || itemSource.img,
-            system: {
-              niveau: p.niveau || 1,
-              école: p.ecole || "Magique",
-              description: p.description || "",
-              isPower: true,
-              sourceWeaponId: itemSource.id,
-              powerIndex: idx,
-              cost: p.cout || 0,
-              max: isGlobal ? maxGlobal : (p.max || 1),
-              isGlobalCharge: isGlobal,
-              onUse: p.onUse || ""
-            }
-          };
-               
-          sort = new Item(fakeData, { parent: self.actor });
-               
-          sort.getFlag = (scope, key) => {
-            if (key === "memorizedCount") {
-              if (isGlobal) {
-                const val = itemSource.getFlag("add2e", "global_charges");
-                return (val !== undefined) ? val : maxGlobal;
-              } else {
-                const charges = itemSource.getFlag("add2e", `charges_${idx}`);
-                return (charges !== undefined) ? charges : p.max;
+        for (let idx = 0; idx < pouvoirs.length; idx++) {
+          const generatedId = typeof add2eMagicPowerGeneratedId === "function"
+            ? add2eMagicPowerGeneratedId(itemSource, idx)
+            : itemSource.id.substring(0, 14) + idx.toString().padStart(2, "0");
+
+          if (debug) {
+            console.log("[CHECK POUVOIR OBJET]", {
+              item: itemSource.name,
+              idx,
+              generatedId,
+              sortId,
+              match: generatedId === sortId,
+              pouvoir: pouvoirs[idx]
+            });
+          }
+
+          if (generatedId !== sortId) continue;
+
+          if (typeof add2eBuildVirtualObjectPowerSort === "function") {
+            sort = add2eBuildVirtualObjectPowerSort(self.actor, itemSource, pouvoirs[idx], idx);
+          } else {
+            const p = pouvoirs[idx];
+            const onUse = String(p?.onUse ?? p?.onuse ?? p?.on_use ?? p?.script ?? "").trim();
+            const cost = Math.max(0, Number(p?.cout ?? p?.cost ?? 0) || 0);
+            const maxGlobal = Number(itemSource.system?.charges?.max ?? itemSource.system?.max_charges ?? 0) || 0;
+            const isGlobal = maxGlobal > 0;
+            const max = cost <= 0 ? 1 : (isGlobal ? maxGlobal : (Number(p?.max ?? p?.charges ?? 1) || 1));
+
+            sort = new Item({
+              _id: generatedId,
+              name: String(p?.name ?? p?.nom ?? itemSource.name ?? "Pouvoir"),
+              type: "sort",
+              img: p?.img || itemSource.img,
+              system: {
+                niveau: Number(p?.niveau ?? p?.level ?? 1) || 1,
+                école: p?.ecole || p?.["école"] || "Magique",
+                description: p?.description || "",
+                composantes: "Objet",
+                temps_incantation: p?.activation || "Objet magique",
+                isPower: true,
+                isObjectPower: true,
+                sourceWeaponId: itemSource.id,
+                sourceItemId: itemSource.id,
+                sourceItemName: itemSource.name,
+                powerIndex: idx,
+                cost,
+                cout: cost,
+                max,
+                isGlobalCharge: isGlobal,
+                onUse,
+                onuse: onUse,
+                on_use: onUse
+              },
+              flags: {
+                add2e: {
+                  memorizedCount: cost <= 0 ? 1 : max,
+                  originalOnUse: onUse,
+                  sourceType: "objet_magique",
+                  sourceItemId: itemSource.id,
+                  sourceItemName: itemSource.name,
+                  powerIndex: idx
+                }
               }
-            }
-            return null;
-          };
+            }, { parent: self.actor });
+
+            sort.getFlag = (scope, key) => {
+              if (scope !== "add2e") return null;
+              if (key === "memorizedCount") return cost <= 0 ? 1 : max;
+              if (key === "originalOnUse") return onUse;
+              return sort.flags?.add2e?.[key] ?? null;
+            };
+          }
+
+          if (debug) {
+            console.log("[POUVOIR VIRTUEL REBRANCHÉ]", {
+              sort,
+              system: sort?.system,
+              flags: sort?.flags,
+              memorizedCount: sort?.getFlag?.("add2e", "memorizedCount")
+            });
+          }
+
           break;
         }
+
+        if (sort) break;
       }
-      if (sort) break;
     }
-  }
 
-
-      // 3. Lancement
-      if (sort) {
-        if (typeof globalThis.add2eCastSpell === "function") {
-           await globalThis.add2eCastSpell({ actor: self.actor, sort });
-           // On rafraîchit la feuille pour mettre à jour le compteur de charges
-           self.render(false);
-        } else {
-           ui.notifications.error("La fonction add2eCastSpell est introuvable.");
+    // 3. Lancement par la mécanique existante.
+    if (sort) {
+      if (typeof globalThis.add2eCastSpell === "function") {
+        if (debug) {
+          console.log("[LANCEMENT add2eCastSpell]", {
+            actor: self.actor?.name,
+            sort: sort.name,
+            sortId: sort.id,
+            system: sort.system,
+            flags: sort.flags
+          });
+          console.groupEnd();
         }
+
+        await globalThis.add2eCastSpell({ actor: self.actor, sort });
+        self.render(false);
       } else {
-        ui.notifications.warn("Impossible de retrouver les données de ce sort.");
+        if (debug) console.groupEnd();
+        ui.notifications.error("La fonction add2eCastSpell est introuvable.");
       }
-      return false;
-    });
+    } else {
+      if (debug) {
+        console.warn("Aucun sort/pouvoir retrouvé pour", sortId);
+        console.groupEnd();
+      }
+      ui.notifications.warn("Impossible de retrouver les données de ce sort ou pouvoir d'objet magique.");
+    }
+
+    return false;
+  });
 
 // Drag’n’drop de l’icône
 html.find('.sort-cast-img')
@@ -3929,160 +7936,104 @@ async _onDrop(event) {
   const VALID = ["arme", "armure", "sort", "classe", "race"];
   if (!VALID.includes(itemData.type)) return super._onDrop(event);
 
- // --- Validation générique du drop de sort (DEBUG)
+ // --- Validation générique du drop de sort par lignes de sorts
 if (itemData.type === "sort") {
-
-  console.log("=== [ADD2E DROP SORT] ===");
+  console.log("=== [ADD2E DROP SORT][POOLS] ===");
   console.log("actor:", { id: this.actor?.id, name: this.actor?.name });
   console.log("itemData:", itemData);
 
-  const normalize = v => (v ?? "").toString().toLowerCase().trim();
-
   let source = null;
 
-  // 1) UUID
-  console.log("[ADD2E DROP SORT] uuid:", itemData.uuid);
   if (itemData.uuid) {
     source = await fromUuid(itemData.uuid);
-    console.log("[ADD2E DROP SORT] source via uuid:", source);
   }
 
-  // 2) Compendium
-  console.log("[ADD2E DROP SORT] pack:", itemData.pack, "_id:", itemData._id);
   if (!source && itemData.pack && itemData._id) {
     const pack = game.packs.get(itemData.pack);
-    console.log("[ADD2E DROP SORT] resolved pack:", pack);
-    if (pack) {
-      source = await pack.getDocument(itemData._id);
-      console.log("[ADD2E DROP SORT] source via pack:", source);
-    }
+    if (pack) source = await pack.getDocument(itemData._id);
   }
 
-  // 3) Fallback local (itemData)
   if (!source && itemData.system) {
-    source = { name: itemData.name, system: itemData.system };
-    console.log("[ADD2E DROP SORT] source via fallback system:", source);
+    source = { name: itemData.name, type: itemData.type, system: itemData.system };
   }
 
   if (!source || !source.system) {
-    console.log("[ADD2E DROP SORT] ❌ FAIL: source unresolved");
+    console.log("[ADD2E DROP SORT][POOLS] ❌ FAIL: source unresolved");
     ui.notifications.error("Impossible de résoudre le sort.");
     return false;
   }
 
-  const sys = source.system;
+  const check = add2eCanActorUseSpell(this.actor, source);
 
-  console.log("[ADD2E DROP SORT] sys.name:", source.name);
-  console.log("[ADD2E DROP SORT] sys.spellLists:", sys.spellLists);
-  console.log("[ADD2E DROP SORT] sys.niveau:", sys.niveau);
+  console.log("[ADD2E DROP SORT][POOLS] check:", {
+    sort: source.name,
+    sortLists: check.sortLists,
+    actorEntries: check.entries,
+    selectedEntry: check.entry,
+    reason: check.reason,
+    actorLevel: check.actorLevel,
+    spellLevel: check.spellLevel
+  });
 
-  const sortLists = Array.isArray(sys.spellLists)
-    ? sys.spellLists.map(normalize).filter(Boolean)
-    : [];
-
-  console.log("[ADD2E DROP SORT] normalized sortLists:", sortLists);
-
-  if (!sortLists.length) {
-    console.log("[ADD2E DROP SORT] ❌ FAIL: no spellLists on spell");
+  if (!check.sortLists?.length) {
     ui.notifications.error(`Sort non migré : “${source.name}” n’a pas system.spellLists.`);
     return false;
   }
 
-  // =====================================================
-  // IMPORTANT : Autorisation EXCLUSIVEMENT via system.spellcasting
-  // - Pas de fallback classe
-  // - Pas de fallback progression/slots
-  // =====================================================
-  const casting = this.actor.system?.spellcasting;
-
-  console.log("[ADD2E DROP SORT] actor.system.spellcasting (raw):", casting);
-
-  const actorLists = Array.isArray(casting?.lists)
-    ? casting.lists.map(normalize).filter(Boolean)
-    : [];
-
-  const startsAt = Number(casting?.startsAt);
-  const maxSpellLevel = Number(casting?.maxSpellLevel);
-
-  console.log("[ADD2E DROP SORT] actorLists(normalized):", actorLists);
-  console.log("[ADD2E DROP SORT] startsAt:", casting?.startsAt, "=>", startsAt, "| maxSpellLevel:", casting?.maxSpellLevel, "=>", maxSpellLevel);
-
-  if (!actorLists.length) {
-    console.log("[ADD2E DROP SORT] ❌ FAIL: actorLists empty (no spellcasting.lists)");
-    ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou mémoriser ce sort (“${source.name}”).`);
+  if (!check.ok) {
+    const entry = check.entry;
+    if (check.reason === "list") {
+      ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou préparer “${source.name}” : ligne de sort non autorisée (${check.sortLists.map(add2eSpellLabel).join(", ")}).`);
+    } else if (check.reason === "start") {
+      ui.notifications.error(`${this.actor.name} ne peut pas encore préparer “${source.name}” : ${entry?.label || "cette ligne"} commence au niveau ${entry?.startsAt}.`);
+    } else if (check.reason === "max-level") {
+      ui.notifications.error(`${this.actor.name} ne peut pas préparer “${source.name}” : ${entry?.label || "cette ligne"} est limitée aux sorts de niveau ${entry?.maxSpellLevel}.`);
+    } else {
+      ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou préparer “${source.name}”.`);
+    }
     return false;
   }
 
-  // Intersection lignes sort vs lignes autorisées acteur
-  const intersect = sortLists.filter(l => actorLists.includes(l));
-
-  console.log("[ADD2E DROP SORT] intersection:", intersect);
-
-  if (!intersect.length) {
-    console.log("[ADD2E DROP SORT] ❌ FAIL: no intersection (line not allowed)");
-    ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou mémoriser ce sort (“${source.name}”).`);
-    return false;
-  }
-
-  // Niveaux
-  const actorLevelRaw = this.actor.system?.niveau;
-  const actorLevel = Number(actorLevelRaw);
-
-  const spellLevelRaw = sys.niveau;
-  const spellLevel = Number(spellLevelRaw);
-
-  console.log("[ADD2E DROP SORT] actorLevel:", actorLevelRaw, "=>", actorLevel, "| spellLevel:", spellLevelRaw, "=>", spellLevel);
-
-  if (!Number.isFinite(actorLevel) || actorLevel <= 0) {
-    console.log("[ADD2E DROP SORT] ❌ FAIL: actorLevel invalid");
-    ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou mémoriser ce sort (“${source.name}”).`);
-    return false;
-  }
-
-  if (!Number.isFinite(spellLevel) || spellLevel <= 0) {
-    console.log("[ADD2E DROP SORT] ❌ FAIL: spellLevel invalid");
-    ui.notifications.error(`Niveau du sort invalide pour “${source.name}”.`);
-    return false;
-  }
-
-  // startsAt (si défini)
-  if (Number.isFinite(startsAt) && startsAt > 0 && actorLevel < startsAt) {
-    console.log("[ADD2E DROP SORT] ❌ FAIL: actorLevel < startsAt", { actorLevel, startsAt });
-    ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou mémoriser ce sort (“${source.name}”).`);
-    return false;
-  }
-
-  // maxSpellLevel (si défini)
-  if (Number.isFinite(maxSpellLevel) && maxSpellLevel > 0 && spellLevel > maxSpellLevel) {
-    console.log("[ADD2E DROP SORT] ❌ FAIL: spellLevel > maxSpellLevel", { spellLevel, maxSpellLevel });
-    ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou mémoriser ce sort (“${source.name}”).`);
-    return false;
-  }
-
-  console.log("[ADD2E DROP SORT] ✅ DROP SORT OK (authorized by spellcasting only)", {
-    actorLists,
-    sortLists,
-    intersection: intersect,
-    startsAt: Number.isFinite(startsAt) ? startsAt : null,
-    maxSpellLevel: Number.isFinite(maxSpellLevel) ? maxSpellLevel : null,
-    actorLevel,
-    spellLevel
+  console.log("[ADD2E DROP SORT][POOLS] ✅ DROP SORT OK", {
+    sort: source.name,
+    list: check.entry?.label,
+    spellLevel: check.spellLevel
   });
 }
-// --- Vérifie stats minimales pour la classe
-  if (itemData.type === "classe") {
-    if (typeof checkClassStatMin === "function") {
-      // 🔥 CORRECTION : reset ancienne classe
-await this.actor.update({ "system.-=details_classe": null });
+// --- Prévalidation race/classe AVANT toute modification de l'acteur.
+  // Important : on ne met plus à jour system.classe/details_classe avant validation,
+  // sinon un drop refusé laisse la fiche avec des données mélangées.
+  // Si seule la compatibilité race/classe bloque, on corrige automatiquement
+  // comme pour l'alignement : drop classe => race compatible ; drop race => classe compatible.
+  let add2eClassAlignmentCandidate = null;
+  let add2eAutoRaceCandidateData = null;
+  let add2eAutoClassCandidateData = null;
+  let add2eAutoClassAlignmentCandidate = null;
 
-// 🔥 applique la nouvelle classe correctement
-await this.actor.update({
-  "system.classe": itemData.name,
-  "system.details_classe": foundry.utils.deepClone(itemData.system)
-});
-      const ok = checkClassStatMin(this.actor, itemData);
+  if (itemData.type === "classe") {
+    add2eClassAlignmentCandidate = add2ePickClassAlignment(this.actor, itemData.system ?? {});
+
+    if (typeof checkClassStatMin === "function") {
+      let ok = checkClassStatMin(this.actor, itemData, null, add2eClassAlignmentCandidate, { silent: true, ignoreLevelMax: true });
+
       if (!ok) {
-        console.warn("[ADD2e] Blocage prise de classe (stats minimales NON atteintes)");
+        const compatibleRace = add2eFindCompatibleRaceForClass(this.actor, itemData, add2eClassAlignmentCandidate);
+        if (compatibleRace) {
+          add2eAutoRaceCandidateData = compatibleRace;
+          ok = checkClassStatMin(this.actor, itemData, compatibleRace, add2eClassAlignmentCandidate, { silent: true, ignoreLevelMax: true });
+        }
+      }
+
+      if (!ok) {
+        // Dernier appel non silencieux pour conserver le message précis des vrais prérequis bloquants.
+        checkClassStatMin(this.actor, itemData, add2eAutoRaceCandidateData, add2eClassAlignmentCandidate, { silent: false, ignoreLevelMax: true });
+        console.warn("[ADD2e] Blocage prise de classe (aucune race compatible trouvée ou prérequis NON atteints)", {
+          actor: this.actor?.name,
+          classe: itemData?.name,
+          raceAuto: add2eAutoRaceCandidateData?.name ?? null,
+          alignementTeste: add2eClassAlignmentCandidate
+        });
+        add2eRerenderActorSheet(this.actor);
         return false;
       }
     } else {
@@ -4090,29 +8041,61 @@ await this.actor.update({
     }
   }
 
-  // --- Vérifie compatibilité race/classe avant tout changement
   if (itemData.type === "race") {
     const existingClass = this.actor.items.find(i => i.type === "classe");
-    if (existingClass) {
-      const allowedRaces = (existingClass.system?.raceAllowed || []).map(r => r.toLowerCase());
-      const droppedRace = (itemData.name || itemData.system?.label || "").toLowerCase();
-      if (allowedRaces.length && !allowedRaces.includes(droppedRace)) {
-        ui.notifications.error(`La race "${itemData.name}" n'est pas compatible avec la classe "${existingClass.name}" déjà présente sur ce personnage.`);
+    if (existingClass && typeof checkClassStatMin === "function") {
+      let existingAlignment = add2ePickClassAlignment(this.actor, existingClass.system ?? {});
+      let ok = checkClassStatMin(
+        this.actor,
+        existingClass,
+        itemData,
+        existingAlignment,
+        { silent: true, ignoreLevelMax: true }
+      );
+
+      if (!ok) {
+        const compatibleClass = add2eFindCompatibleClassForRace(this.actor, itemData);
+        if (compatibleClass?.classData) {
+          add2eAutoClassCandidateData = compatibleClass.classData;
+          add2eAutoClassAlignmentCandidate = compatibleClass.alignmentCandidate;
+          ok = checkClassStatMin(
+            this.actor,
+            add2eAutoClassCandidateData,
+            itemData,
+            add2eAutoClassAlignmentCandidate,
+            { silent: true, ignoreLevelMax: true }
+          );
+        }
+      }
+
+      if (!ok) {
+        checkClassStatMin(
+          this.actor,
+          add2eAutoClassCandidateData ?? existingClass,
+          itemData,
+          add2eAutoClassAlignmentCandidate ?? existingAlignment,
+          { silent: false, ignoreLevelMax: true }
+        );
+        console.warn("[ADD2e] Blocage prise de race (aucune classe compatible trouvée ou prérequis NON atteints)", {
+          actor: this.actor?.name,
+          race: itemData?.name,
+          classeActuelle: existingClass?.name,
+          classeAuto: add2eAutoClassCandidateData?.name ?? null
+        });
+        add2eRerenderActorSheet(this.actor);
         return false;
       }
     }
   }
 
-  if (itemData.type === "classe") {
-    const existingRace = this.actor.items.find(i => i.type === "race");
-    if (existingRace) {
-      const allowedRaces = (itemData.system?.raceAllowed || []).map(r => r.toLowerCase());
-      const actorRace = (existingRace.name || existingRace.system?.label || "").toLowerCase();
-      if (allowedRaces.length && !allowedRaces.includes(actorRace)) {
-        ui.notifications.error(`La classe "${itemData.name}" n'est pas compatible avec la race "${existingRace.name}" déjà présente sur ce personnage.`);
-        return false;
-      }
-    }
+  // Drop d'une classe incompatible avec la race actuelle : on remplace la race avant
+  // de créer la classe, afin que la fiche reste cohérente et que le niveau max racial
+  // soit calculé sur la bonne race.
+  if (itemData.type === "classe" && add2eAutoRaceCandidateData) {
+    await add2eApplyRaceItemDataToActor(this.actor, add2eAutoRaceCandidateData, this, {
+      notify: true,
+      reason: "class-drop-race-auto-compat"
+    });
   }
 
   // --- Remplace ancienne race (et ses effets)
@@ -4157,16 +8140,10 @@ if (itemData.type === "classe") {
     uuid: i.uuid
   })));
 
-  // Effets liés aux items supprimés.
-  // On cible l'origine exacte et, par sécurité, les origins qui finissent par l'id d'item.
-  const itemUuidsToDelete = itemsToDelete.map(i => i.uuid).filter(Boolean);
-  const itemIdsToDelete = itemsToDelete.map(i => i.id).filter(Boolean);
-
-  const effectsToDelete = this.actor.effects.filter(eff => {
-    const origin = String(eff.origin || "");
-    return itemUuidsToDelete.includes(origin)
-      || itemIdsToDelete.some(id => origin.endsWith(`.${id}`));
-  });
+  // Effets liés aux items supprimés et effets de classe générés sans origine fiable.
+  const effectsToDelete = this.actor.effects.filter(eff =>
+    add2eShouldDeleteEffectForClassPurge(eff, itemsToDelete)
+  );
 
   console.log("[ADD2E][DROP CLASSE][PURGE] effets liés à supprimer :", effectsToDelete.map(e => ({
     id: e.id,
@@ -4217,48 +8194,96 @@ if (itemData.type === "classe") {
       data.origin = itemDoc.uuid;
       data.disabled = false;
       data.transfer = false;
+      data.flags = data.flags ?? {};
+      data.flags.add2e = {
+        ...(data.flags.add2e ?? {}),
+        sourceType: itemDoc.type === "classe" ? "classe" : itemDoc.type,
+        sourceClasse: itemDoc.type === "classe" ? itemDoc.name : undefined,
+        sourceItemId: itemDoc.id,
+        sourceItemUuid: itemDoc.uuid
+      };
       return data;
     });
     await this.actor.createEmbeddedDocuments("ActiveEffect", actorEffects);
   }
 
   // --- Traitement spécial classe (alignements, etc.)
-  if (itemData.type === "classe") {
-    const alns = itemDoc.system?.alignements_autorises
-        || itemDoc.system?.alignment
-        || [];
-    await this.actor.update({
-      "system.alignements_autorises": alns
-    });
-  }
+  // La mise à jour complète de system.classe/details_classe est faite plus bas,
+  // après création effective de l'item classe.
 
   // --- Application effets et bonus pour race
   if (itemData.type === "race") {
-    await this.actor.update({ "system.race": itemDoc.name });
-    await this.actor.update({ "system.bonus_caracteristiques": null });
-    await new Promise(r => setTimeout(r, 25));
-    if (itemDoc.system?.bonus_caracteristiques) {
-      await this.actor.update({
-        "system.bonus_caracteristiques": foundry.utils.duplicate(itemDoc.system.bonus_caracteristiques)
-      });
-    }
+    const raceSystem = foundry.utils.deepClone(itemDoc.system ?? {});
+    await this.actor.update({
+      "system.race": itemDoc.name,
+      "system.details_race": {
+        ...raceSystem,
+        name: itemDoc.name,
+        label: raceSystem.label || itemDoc.name,
+        img: itemDoc.img || raceSystem.img || ""
+      },
+      "system.bonus_caracteristiques": raceSystem.bonus_caracteristiques
+        ? foundry.utils.deepClone(raceSystem.bonus_caracteristiques)
+        : {}
+    });
+
     if (typeof this.autoSetCaracAjustements === "function") {
       await this.autoSetCaracAjustements();
+    }
+
+    // Drop d'une race incompatible avec la classe actuelle : on remplace la classe
+    // par une classe compatible après l'application de la nouvelle race.
+    if (add2eAutoClassCandidateData) {
+      await add2eApplyClassItemDataToActor(this.actor, add2eAutoClassCandidateData, this, {
+        alignmentCandidate: add2eAutoClassAlignmentCandidate,
+        notify: true,
+        reason: "race-drop-class-auto-compat"
+      });
+    } else {
+      // La race peut modifier le niveau maximum autorisé de la classe actuelle.
+      // On accepte le drop, puis on ramène proprement le niveau si nécessaire.
+      try {
+        const currentClass = this.actor.items.find(i => i.type === "classe");
+        if (currentClass) {
+          const classSystem = foundry.utils.deepClone(currentClass.system ?? this.actor.system?.details_classe ?? {});
+          const clamp = add2eClampLevelToClassMax(this.actor, this.actor.system?.niveau, classSystem, { notify: true });
+          if (clamp.changed) {
+            await this.actor.update({ "system.niveau": clamp.level }, { add2eInternal: true });
+            if (typeof this.autoSetPointsDeCoup === "function") {
+              await this.autoSetPointsDeCoup({ syncCurrent: true, force: true, reason: "race-drop-level-clamp" });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[ADD2E][DROP RACE][NIVEAU MAX] Erreur correction niveau max après drop race", e);
+      }
     }
   }
 
   // --- Application effets + sauvegardes pour classe
   if (itemData.type === "classe") {
+    const classSystem = foundry.utils.deepClone(itemDoc.system ?? {});
+    const levelClamp = add2eClampLevelToClassMax(this.actor, this.actor.system?.niveau, classSystem, { notify: true });
+    const alns = add2eClassAllowedAlignments(classSystem);
     const updates = {
-  "system.classe": itemDoc.name
-};
+      "system.classe": itemDoc.name,
+      "system.details_classe": classSystem,
+      "system.spellcasting": classSystem.spellcasting ?? null,
+      "system.alignements_autorises": alns
+    };
 
-// details_classe sera recalculé automatiquement dans getData()
-await this.actor.update(updates);
+    if (levelClamp.changed) {
+      updates["system.niveau"] = levelClamp.level;
+    }
+
+    if (add2eClassAlignmentCandidate) {
+      updates["system.alignement"] = add2eClassAlignmentCandidate;
+    }
 
     if (itemDoc.system?.progression?.[0]?.sauvegardes) {
       updates["system.sauvegardes"] = foundry.utils.duplicate(itemDoc.system.progression[0].sauvegardes);
     }
+
     await this.actor.update(updates);
     if (typeof this.autoSetCaracAjustements === "function") {
       await this.autoSetCaracAjustements();
@@ -4266,21 +8291,28 @@ await this.actor.update(updates);
    if (typeof this.autoSetPointsDeCoup === "function") {
   await this.autoSetPointsDeCoup({ syncCurrent: true, force: true, reason: "class-drop" });
 }
-    if (itemDoc.name?.toLowerCase().includes("moine")) {
-      const hasUnarmed = this.actor.items.some(i =>
-        i.type === "arme" && i.name.trim().toLowerCase() === "main nue"
-      );
-      if (!hasUnarmed) {
-        let degats = "1d6";
-        if (itemDoc.system?.progression?.[0]?.main_nue) {
-          degats = itemDoc.system.progression[0].main_nue;
-        }
-        await this.actor.createEmbeddedDocuments("Item", [{
-          type: "arme",
-          name: "main nue",
-          system: { degats: degats }
-        }]);
+    try {
+      await add2eSyncMonkUnarmedWeapon(this.actor);
+    } catch (e) {
+      console.warn("[ADD2E][MOINE] Erreur synchronisation Main nue après drop classe :", e);
+    }
+
+    try {
+      await add2eSyncClassPassiveEffect(this.actor);
+    } catch (e) {
+      console.warn("[ADD2E][CLASSE][EFFETS] Erreur synchronisation des effets de classe :", e);
+    }
+
+    try {
+      const spellSync = await add2eSyncActorSpellsFromClass(this.actor, itemDoc, { mode: "replace", showWait: true });
+      if (spellSync?.handled) {
+        ui.notifications.info(
+          `Sorts de ${itemDoc.name} synchronisés : ${spellSync.imported} importé(s).`
+        );
       }
+    } catch (e) {
+      console.error("[ADD2E][CLASSE][SORTS] Erreur synchronisation des sorts après drop classe :", e);
+      ui.notifications.error("Erreur pendant la synchronisation des sorts de classe.");
     }
   }
 
@@ -4336,6 +8368,76 @@ Items.registerSheet("add2e", Add2eArmureSheet, {
   types: ["armure"],
   makeDefault: true,
   label: "ADD2e Armure"
+});
+
+
+class Add2eObjetSheet extends ItemSheet {
+  static get defaultOptions() {
+    return foundry.utils.mergeObject(super.defaultOptions, {
+      classes: ["add2e", "sheet", "item", "objet", "objet-magique"],
+      template: "systems/add2e/templates/item/objet-sheet.hbs",
+      width: 760,
+      height: "auto",
+      resizable: true,
+      tabs: [{ navSelector: ".tabs", contentSelector: ".sheet-body", initial: "resume" }]
+    });
+  }
+
+  async getData(options = {}) {
+    const data = await super.getData(options);
+    const item = this.item ?? this.object;
+    const system = item?.system ?? {};
+
+    const toArray = value => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value.filter(v => v !== undefined && v !== null && String(v).trim() !== "");
+      if (typeof value === "object") return Object.values(value).filter(v => v !== undefined && v !== null && String(v).trim() !== "");
+      if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
+      return [];
+    };
+
+    const powersRaw = system.pouvoirs ?? system.powers ?? system.pouvoirsMagiques ?? system.magicalPowers ?? [];
+    const pouvoirs = Array.isArray(powersRaw)
+      ? powersRaw.filter(p => p && typeof p === "object")
+      : (powersRaw && typeof powersRaw === "object" ? Object.values(powersRaw).filter(p => p && typeof p === "object") : []);
+
+    data.item = item;
+    data.system = system;
+    data.img = item?.img || "icons/svg/mystery-man.svg";
+    data.pouvoirs = pouvoirs;
+    data.tags = toArray(system.tags);
+    data.effectTags = toArray(system.effectTags ?? system.effets ?? system.effects);
+    data.charges = {
+      value: Number(system.charges?.value ?? system.chargesValeur ?? system.current_charges ?? system.currentCharges ?? 0) || 0,
+      max: Number(system.charges?.max ?? system.max_charges ?? system.maxCharges ?? system.charges_max ?? 0) || 0
+    };
+    data.isMagicItem = system.magique === true || system.magic === true || String(system.categorie ?? "").toLowerCase().includes("magique");
+
+    return data;
+  }
+
+  activateListeners(html) {
+    super.activateListeners(html);
+    add2eRegisterImgPicker(html, this);
+
+    html.find(".tabs a").off("click.add2e-objet-tab").on("click.add2e-objet-tab", ev => {
+      ev.preventDefault();
+      const tab = ev.currentTarget.dataset.tab;
+      html.find(".tabs a").removeClass("active");
+      html.find(ev.currentTarget).addClass("active");
+      html.find(".sheet-body .content").addClass("hidden");
+      html.find(`.sheet-body .content[data-tab="${tab}"]`).removeClass("hidden");
+    });
+  }
+}
+
+globalThis.Add2eObjetSheet = Add2eObjetSheet;
+Items.registerSheet("add2e", Add2eObjetSheet, {
+  types: ["objet"],
+  makeDefault: true,
+  canConfigure: true,
+  canBeDefault: true,
+  label: "ADD2e Objet"
 });
 
 class Add2eArmeSheet extends ItemSheet {
@@ -4642,10 +8744,10 @@ Hooks.on("deleteItem", async (item, options, userId) => {
 
   const actor = item.parent;
 
-  // 3. Recherche des effets liés à cet objet
-  // On compare l'origine de l'effet (origin) avec l'UUID de l'objet supprimé
+  // 3. Recherche des effets liés à cet objet.
+  // Pour les classes, on supprime aussi les anciens effets générés sans origin fiable.
   const effectsToDelete = actor.effects
-    .filter(e => e.origin === item.uuid)
+    .filter(e => item.type === "classe" ? add2eShouldDeleteEffectForClassPurge(e, [item]) : e.origin === item.uuid)
     .map(e => e.id);
 
   // 4. Suppression
@@ -5018,3 +9120,99 @@ Hooks.once("ready", () => {
     console.warn("[ADD2E][GM-RELAY] opération inconnue :", operation, payload);
   });
 });
+
+// ============================================================
+// ADD2E — Affichage compact des emplacements de préparation
+// V25 : affichage strict par type de magie dans Résumé + Sorts.
+// Format voulu : Druide : N1 0/1 N2 0/0 ; Magicien : N1 0/1.
+// Le panneau est toujours reconstruit au rendu pour éviter les restes
+// quand la classe est remplacée puis redéposée.
+// ============================================================
+
+// ============================================================
+// ADD2E — Sorts : affichage natif HBS
+// Les anciennes injections visuelles V24–V30 ont été supprimées.
+// Le HBS affiche les sous-listes ; ce fichier conserve uniquement
+// les données, la validation et les boutons + / -.
+// ============================================================
+
+function add2eBindNativeHbsSpellPreparationControls(actor, root) {
+  if (!actor || !root) return;
+
+  root.querySelectorAll(".a2e-spell-entry-plus, .a2e-spell-entry-minus").forEach(btn => {
+    btn.onclick = async ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      const sortId = btn.dataset.sortId;
+      const entryKey = add2eNormalizeSpellKey(btn.dataset.entryKey);
+      const sort = actor.items.get(sortId);
+      if (!sort) return ui.notifications.warn("Sort introuvable.");
+
+      const entry = add2eGetSpellcastingEntries(actor).find(e => add2eNormalizeSpellKey(e.key) === entryKey);
+      if (!entry) return ui.notifications.warn("Type de préparation introuvable.");
+
+      const check = add2eCanActorUseSpell(actor, sort);
+      const sortLists = add2eGetSpellListsFromItem(sort);
+      const spellLevel = Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1;
+      const actorLevel = Math.max(1, Number(actor.system?.niveau ?? 1) || 1);
+      const startsAt = Number(entry.startsAt ?? 1) || 1;
+      const maxSpellLevel = Number(entry.maxSpellLevel ?? 0) || 0;
+
+      if (!sortLists.includes(entryKey)) return ui.notifications.warn(`Ce sort n'appartient pas à la liste ${entry.label}.`);
+      if (actorLevel < startsAt) return ui.notifications.warn(`${entry.label} n'est disponible qu'à partir du niveau ${startsAt}.`);
+      if (maxSpellLevel && spellLevel > maxSpellLevel) return ui.notifications.warn(`${entry.label} ne permet pas les sorts de niveau ${spellLevel}.`);
+      if (!check.ok && add2eNormalizeSpellKey(check.entry?.key) !== entryKey) return ui.notifications.warn("Ce sort n'est pas autorisé pour cette classe.");
+
+      let cur = add2eGetMemorizedCountForEntry(sort, entry);
+      const isPlus = btn.classList.contains("a2e-spell-entry-plus");
+
+      if (isPlus) {
+        const limit = add2eGetSlotsForEntryLevel(actor, entry, spellLevel);
+        const total = add2eCountPreparedForEntryLevel(actor, entry, spellLevel);
+        if (limit <= 0) return ui.notifications.warn(`Aucun emplacement ${entry.label} de niveau ${spellLevel} disponible.`);
+        if (total >= limit) return ui.notifications.warn(`Limite atteinte : ${entry.label} niveau ${spellLevel} (${total}/${limit}).`);
+        cur++;
+      } else {
+        if (cur <= 0) return ui.notifications.warn(`Aucun sort ${entry.label} à retirer.`);
+        cur--;
+      }
+
+      await add2eSetMemorizedCountForEntry(sort, entry, cur);
+      add2eRerenderActorSheet(actor);
+    };
+  });
+}
+
+Hooks.on("renderActorSheet", (app, html) => {
+  const actor = app?.actor ?? app?.document;
+  const root = html?.[0] ?? html;
+  setTimeout(() => add2eBindNativeHbsSpellPreparationControls(actor, root), 20);
+  for (const delay of [40, 120, 260]) {
+    setTimeout(() => {
+      try {
+        if (actor?.type === "personnage") add2eEnhanceCharacterSheetUi(app, html);
+      } catch (err) {
+        console.warn("[ADD2E][OBJETS_MAGIQUES][UI] Injection après rendu impossible.", err);
+      }
+    }, delay);
+  }
+});
+
+Hooks.on("renderApplication", (app, html) => {
+  const actor = app?.actor ?? app?.document;
+  const root = html?.[0] ?? html;
+  setTimeout(() => add2eBindNativeHbsSpellPreparationControls(actor, root), 20);
+  for (const delay of [40, 120, 260]) {
+    setTimeout(() => {
+      try {
+        if (actor?.type === "personnage") add2eEnhanceCharacterSheetUi(app, html);
+      } catch (err) {
+        console.warn("[ADD2E][OBJETS_MAGIQUES][UI] Injection application impossible.", err);
+      }
+    }, delay);
+  }
+});
+
+console.log("ADD2E | Spell preparation native HBS V31 loaded");
+ 
