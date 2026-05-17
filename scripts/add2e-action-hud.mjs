@@ -1,14 +1,19 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide sans ouvrir la fiche personnage
-// Version : 2026-05-16-v7-spell-refresh-real-mechanics
+// Version : 2026-05-16-v8-spell-rememorize-no-sheet-open
 //
 // Le HUD utilise les mécaniques existantes du système :
 // - attaque  : globalThis.add2eAttackRoll({ actor, arme })
 // - sort     : globalThis.add2eCastSpell({ actor, sort })
 // - capacité : globalThis.add2eExecuteClassFeatureOnUse(actor, feature, null)
-// Il ne lance pas de feuille d'acteur quand le sort est lancé depuis le HUD.
+//
+// Correctifs V8 :
+// - si la fiche remémorise via flags.add2e.memorizedByList mais que memorizedCount reste à 0,
+//   le HUD resynchronise memorizedCount avant d'appeler add2eCastSpell.
+// - le HUD bloque temporairement le render() des fiches acteur fermées pendant le lancement,
+//   sans modifier actor.sheet durablement.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v7-spell-refresh-real-mechanics";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v8-spell-rememorize-no-sheet-open";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
@@ -18,6 +23,9 @@ let add2eHudActorId = null;
 let add2eHudActiveTab = null;
 let add2eHudCollapsed = false;
 let add2eHudLayout = null;
+let add2eHudRenderGuard = null;
+let add2eHudRenderGuardInstalled = false;
+let add2eHudOriginalRenders = [];
 
 const ADD2E_HUD_CARACS = [
   { key: "force", label: "FOR", title: "Force", icon: "fa-dumbbell", color: "#4ab878" },
@@ -35,9 +43,7 @@ const ADD2E_HUD_SAVE_COLORS = ["#c48642", "#6394e8", "#b12f95", "#e67e22", "#a17
 
 function add2eHudEscape(value) {
   try { return foundry.utils.escapeHTML(String(value ?? "")); }
-  catch (_e) {
-    return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-  }
+  catch (_e) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"); }
 }
 
 function add2eHudArray(value) {
@@ -143,21 +149,44 @@ function add2eHudSumMemorizedByList(value) {
   return total;
 }
 
-function add2eHudPreparedCount(sort) {
+function add2eHudMemorizedState(sort) {
   const flags = sort?.flags?.add2e ?? {};
+  const memorizedCount = flags.memorizedCount === undefined || flags.memorizedCount === null
+    ? null
+    : Math.max(0, add2eHudNumber(flags.memorizedCount, 0));
+  const byListTotal = flags.memorizedByList === undefined || flags.memorizedByList === null
+    ? null
+    : Math.max(0, add2eHudSumMemorizedByList(flags.memorizedByList));
 
-  // Source stricte : le HUD lit les mêmes compteurs que add2eCastSpell consomme.
-  // Ne jamais utiliser system.prepared comme secours : ce champ peut rester à 1
-  // et ferait réapparaître un sort pourtant consommé.
-  if (flags.memorizedCount !== undefined && flags.memorizedCount !== null) {
-    return Math.max(0, add2eHudNumber(flags.memorizedCount, 0));
+  return {
+    memorizedCount,
+    byListTotal,
+    count: Math.max(0, Number(memorizedCount ?? 0), Number(byListTotal ?? 0))
+  };
+}
+
+function add2eHudPreparedCount(sort) {
+  return add2eHudMemorizedState(sort).count;
+}
+
+async function add2eHudSyncMemorizedCountBeforeCast(sort) {
+  const state = add2eHudMemorizedState(sort);
+
+  // Cas rencontré : après consommation memorizedCount vaut 0.
+  // La remémorisation depuis la fiche peut remettre memorizedByList à 1 sans remettre memorizedCount.
+  // Or add2eCastSpell consomme memorizedCount. On synchronise donc avant l'appel au moteur existant.
+  if ((state.memorizedCount ?? 0) <= 0 && (state.byListTotal ?? 0) > 0) {
+    await sort.update({ "flags.add2e.memorizedCount": state.byListTotal });
+    console.log(`${TAG}[SPELL_MEM_SYNC_BEFORE_CAST]`, {
+      sort: sort.name,
+      memorizedCountBefore: state.memorizedCount,
+      memorizedByListTotal: state.byListTotal,
+      memorizedCountAfter: state.byListTotal
+    });
+    return state.byListTotal;
   }
 
-  if (flags.memorizedByList !== undefined && flags.memorizedByList !== null) {
-    return Math.max(0, add2eHudSumMemorizedByList(flags.memorizedByList));
-  }
-
-  return 0;
+  return state.count;
 }
 
 function add2eHudSpells(actor) {
@@ -225,30 +254,17 @@ function add2eHudInjectStyle() {
     #${HUD_ID}.collapsed .a2e-hud-tabs,#${HUD_ID}.collapsed .a2e-hud-body{display:none;}
     #${HUD_ID} .a2e-hud-shell{position:relative;border:1px solid #8a611d;border-radius:14px;overflow:visible;background:radial-gradient(circle at 15% 0%,rgba(213,147,45,.28),transparent 36%),linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,230,160,.12);backdrop-filter:blur(3px);}
     #${HUD_ID} .a2e-hud-header{display:grid;grid-template-columns:88px minmax(0,1fr) 70px;gap:8px;align-items:center;min-height:86px;padding:5px 8px;border-bottom:1px solid rgba(184,137,36,.55);border-radius:14px 14px 0 0;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));}
-    #${HUD_ID} .a2e-hud-drag-zone{cursor:move;}
-    #${HUD_ID} .a2e-hud-portrait{width:78px;height:78px;align-self:center;border-radius:10px;object-fit:cover;border:2px solid #c4973f;background:#111;box-shadow:0 2px 8px rgba(0,0,0,.45);}
+    #${HUD_ID} .a2e-hud-drag-zone{cursor:move;}#${HUD_ID} .a2e-hud-portrait{width:78px;height:78px;align-self:center;border-radius:10px;object-fit:cover;border:2px solid #c4973f;background:#111;box-shadow:0 2px 8px rgba(0,0,0,.45);}
     #${HUD_ID} .a2e-hud-main{min-width:0;overflow:visible;display:grid;grid-template-columns:minmax(180px,1fr) max-content;grid-template-rows:24px 24px;column-gap:12px;row-gap:0;align-items:center;align-content:center;}
-    #${HUD_ID} .a2e-hud-name{grid-column:1;grid-row:1;color:#fff4cf;font-size:1.08em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
-    #${HUD_ID} .a2e-hud-subtitle{grid-column:1;grid-row:2;color:#d8bd78;font-size:.82em;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
-    #${HUD_ID} .a2e-hud-metrics{grid-column:2;grid-row:1/span 2;display:grid;grid-template-columns:max-content max-content max-content;gap:5px;align-items:center;justify-content:end;width:max-content;max-width:none;overflow:visible;white-space:nowrap;}
-    #${HUD_ID} .a2e-hud-pill{display:inline-flex;align-items:center;justify-content:center;height:24px;min-width:0;max-width:none;padding:1px 8px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.76em;line-height:1;font-weight:900;white-space:nowrap;}
-    #${HUD_ID} .a2e-hud-controls{display:grid;grid-template-columns:30px 30px;gap:5px;justify-content:end;align-items:center;}
-    #${HUD_ID} .a2e-hud-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;}
-    #${HUD_ID} .a2e-hud-tabs{display:grid;grid-template-columns:repeat(5,1fr);border-radius:0 0 14px 14px;overflow:hidden;background:rgba(0,0,0,.22);}
-    #${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.78em;font-weight:900;cursor:pointer;}
-    #${HUD_ID} .a2e-hud-tab:last-child{border-right:0;}#${HUD_ID} .a2e-hud-tab.active{color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e);}
-    #${HUD_ID} .a2e-hud-body{position:absolute;left:0;right:0;bottom:calc(100% + 8px);max-height:var(--a2e-hud-menu-height,360px);overflow-y:auto;padding:9px;border:1px solid #8a611d;border-radius:14px;background:radial-gradient(circle at 20% 0%,rgba(213,147,45,.24),transparent 34%),linear-gradient(145deg,rgba(28,22,15,.98),rgba(12,10,8,.97));box-shadow:0 8px 24px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,230,160,.10);}
-    #${HUD_ID} .a2e-hud-body:after{content:"";position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:9px solid #8a611d;}
-    #${HUD_ID} .a2e-hud-section{display:none;}#${HUD_ID} .a2e-hud-section.active{display:grid;gap:7px;}
-    #${HUD_ID} .a2e-hud-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);user-select:text;}
-    #${HUD_ID} .a2e-hud-row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px;}#${HUD_ID} .a2e-hud-row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25);}
-    #${HUD_ID} .a2e-hud-row-title{color:#fff4cf;font-weight:900;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}#${HUD_ID} .a2e-hud-row-meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px;}
-    #${HUD_ID} .a2e-hud-action{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap;}#${HUD_ID} .a2e-hud-action:disabled{opacity:.45;cursor:not-allowed;}
-    #${HUD_ID} .a2e-hud-icon-btn:hover,#${HUD_ID} .a2e-hud-action:hover,#${HUD_ID} .a2e-hud-tab:hover{filter:brightness(1.15);transform:translateY(-1px);}#${HUD_ID} .a2e-hud-empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center;}
-    #${HUD_ID} .a2e-hud-ability-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}#${HUD_ID} .a2e-hud-ability{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:7px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);}#${HUD_ID} .a2e-hud-ability b{color:#fff4cf;font-size:1.15em;}#${HUD_ID} .a2e-hud-ability span{display:block;color:#c8ad6e;font-size:.76em;font-weight:800;}
-    #${HUD_ID} .a2e-hud-resize{position:absolute;right:4px;top:-11px;width:18px;height:18px;border:1px solid rgba(214,176,90,.8);border-radius:5px;background:rgba(20,14,8,.92);color:#ffe4a1;display:flex;align-items:center;justify-content:center;cursor:nwse-resize;font-size:10px;z-index:3;}
-    @media(max-width:900px){#${HUD_ID}{left:12px;right:12px;width:calc(100vw - 24px);max-width:calc(100vw - 24px);min-width:0;}#${HUD_ID} .a2e-hud-main{grid-template-columns:minmax(140px,1fr) max-content;column-gap:8px;}#${HUD_ID} .a2e-hud-pill{padding:1px 6px;font-size:.72em;}}
-    @media(max-width:680px){#${HUD_ID} .a2e-hud-header{grid-template-columns:74px minmax(0,1fr) 64px;}#${HUD_ID} .a2e-hud-portrait{width:66px;height:66px;}#${HUD_ID} .a2e-hud-main{grid-template-columns:1fr;grid-template-rows:21px 19px 24px;}#${HUD_ID} .a2e-hud-metrics{grid-column:1;grid-row:3;justify-content:start;}#${HUD_ID} .a2e-hud-ability-grid{grid-template-columns:repeat(2,1fr);}}
+    #${HUD_ID} .a2e-hud-name{grid-column:1;grid-row:1;color:#fff4cf;font-size:1.08em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}#${HUD_ID} .a2e-hud-subtitle{grid-column:1;grid-row:2;color:#d8bd78;font-size:.82em;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+    #${HUD_ID} .a2e-hud-metrics{grid-column:2;grid-row:1/span 2;display:grid;grid-template-columns:max-content max-content max-content;gap:5px;align-items:center;justify-content:end;width:max-content;max-width:none;overflow:visible;white-space:nowrap;}#${HUD_ID} .a2e-hud-pill{display:inline-flex;align-items:center;justify-content:center;height:24px;min-width:0;max-width:none;padding:1px 8px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.76em;line-height:1;font-weight:900;white-space:nowrap;}
+    #${HUD_ID} .a2e-hud-controls{display:grid;grid-template-columns:30px 30px;gap:5px;justify-content:end;align-items:center;}#${HUD_ID} .a2e-hud-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;}
+    #${HUD_ID} .a2e-hud-tabs{display:grid;grid-template-columns:repeat(5,1fr);border-radius:0 0 14px 14px;overflow:hidden;background:rgba(0,0,0,.22);}#${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.78em;font-weight:900;cursor:pointer;}#${HUD_ID} .a2e-hud-tab:last-child{border-right:0;}#${HUD_ID} .a2e-hud-tab.active{color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e);}
+    #${HUD_ID} .a2e-hud-body{position:absolute;left:0;right:0;bottom:calc(100% + 8px);max-height:var(--a2e-hud-menu-height,360px);overflow-y:auto;padding:9px;border:1px solid #8a611d;border-radius:14px;background:radial-gradient(circle at 20% 0%,rgba(213,147,45,.24),transparent 34%),linear-gradient(145deg,rgba(28,22,15,.98),rgba(12,10,8,.97));box-shadow:0 8px 24px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,230,160,.10);}#${HUD_ID} .a2e-hud-body:after{content:"";position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:9px solid #8a611d;}
+    #${HUD_ID} .a2e-hud-section{display:none;}#${HUD_ID} .a2e-hud-section.active{display:grid;gap:7px;}#${HUD_ID} .a2e-hud-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);user-select:text;}#${HUD_ID} .a2e-hud-row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px;}#${HUD_ID} .a2e-hud-row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25);}
+    #${HUD_ID} .a2e-hud-row-title{color:#fff4cf;font-weight:900;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}#${HUD_ID} .a2e-hud-row-meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px;}#${HUD_ID} .a2e-hud-action{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap;}#${HUD_ID} .a2e-hud-action:disabled{opacity:.45;cursor:not-allowed;}
+    #${HUD_ID} .a2e-hud-icon-btn:hover,#${HUD_ID} .a2e-hud-action:hover,#${HUD_ID} .a2e-hud-tab:hover{filter:brightness(1.15);transform:translateY(-1px);}#${HUD_ID} .a2e-hud-empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center;}#${HUD_ID} .a2e-hud-ability-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}#${HUD_ID} .a2e-hud-ability{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:7px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);}#${HUD_ID} .a2e-hud-ability b{color:#fff4cf;font-size:1.15em;}#${HUD_ID} .a2e-hud-ability span{display:block;color:#c8ad6e;font-size:.76em;font-weight:800;}#${HUD_ID} .a2e-hud-resize{position:absolute;right:4px;top:-11px;width:18px;height:18px;border:1px solid rgba(214,176,90,.8);border-radius:5px;background:rgba(20,14,8,.92);color:#ffe4a1;display:flex;align-items:center;justify-content:center;cursor:nwse-resize;font-size:10px;z-index:3;}
+    @media(max-width:900px){#${HUD_ID}{left:12px;right:12px;width:calc(100vw - 24px);max-width:calc(100vw - 24px);min-width:0;}#${HUD_ID} .a2e-hud-main{grid-template-columns:minmax(140px,1fr) max-content;column-gap:8px;}#${HUD_ID} .a2e-hud-pill{padding:1px 6px;font-size:.72em;}}@media(max-width:680px){#${HUD_ID} .a2e-hud-header{grid-template-columns:74px minmax(0,1fr) 64px;}#${HUD_ID} .a2e-hud-portrait{width:66px;height:66px;}#${HUD_ID} .a2e-hud-main{grid-template-columns:1fr;grid-template-rows:21px 19px 24px;}#${HUD_ID} .a2e-hud-metrics{grid-column:1;grid-row:3;justify-content:start;}#${HUD_ID} .a2e-hud-ability-grid{grid-template-columns:repeat(2,1fr);}}
   `;
   document.head.appendChild(style);
 }
@@ -256,25 +272,18 @@ function add2eHudInjectStyle() {
 function add2eHudWeaponRows(actor) {
   const weapons = add2eHudWeapons(actor);
   if (!weapons.length) return `<div class="a2e-hud-empty">Aucune arme équipée.</div>`;
-  return weapons.map(arme => {
-    const id = add2eHudEscape(arme.id);
-    const name = add2eHudEscape(arme.name);
-    const img = add2eHudEscape(arme.img || "icons/svg/sword.svg");
-    return `<div class="a2e-hud-row" data-item-id="${id}"><img src="${img}" alt="${name}"><div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>Équipée</span><span>Dégâts ${add2eHudEscape(add2eHudDamageText(arme))}</span><span>Portée ${add2eHudEscape(add2eHudRangeText(arme))}</span></div></div><button type="button" class="a2e-hud-action" data-action="attack" data-item-id="${id}">Attaquer</button></div>`;
-  }).join("");
+  return weapons.map(arme => `<div class="a2e-hud-row" data-item-id="${add2eHudEscape(arme.id)}"><img src="${add2eHudEscape(arme.img || "icons/svg/sword.svg")}" alt="${add2eHudEscape(arme.name)}"><div><div class="a2e-hud-row-title">${add2eHudEscape(arme.name)}</div><div class="a2e-hud-row-meta"><span>Équipée</span><span>Dégâts ${add2eHudEscape(add2eHudDamageText(arme))}</span><span>Portée ${add2eHudEscape(add2eHudRangeText(arme))}</span></div></div><button type="button" class="a2e-hud-action" data-action="attack" data-item-id="${add2eHudEscape(arme.id)}">Attaquer</button></div>`).join("");
 }
 
 function add2eHudSpellRows(actor) {
   const spells = add2eHudSpells(actor);
   if (!spells.length) return `<div class="a2e-hud-empty">Aucun sort mémorisé.</div>`;
   return spells.map(sort => {
-    const id = add2eHudEscape(sort.id);
-    const name = add2eHudEscape(sort.name);
-    const img = add2eHudEscape(sort.img || "icons/svg/book.svg");
+    const state = add2eHudMemorizedState(sort);
+    const prepared = state.count;
     const niv = add2eHudEscape(sort.system?.niveau ?? sort.system?.level ?? "—");
     const school = add2eHudEscape(sort.system?.école ?? sort.system?.ecole ?? "");
-    const prepared = add2eHudPreparedCount(sort);
-    return `<div class="a2e-hud-row" data-item-id="${id}"><img src="${img}" alt="${name}"><div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>Niv. ${niv}</span>${school ? `<span>${school}</span>` : ""}<span>Mémorisé ${prepared}</span></div></div><button type="button" class="a2e-hud-action" data-action="cast-spell" data-item-id="${id}">Lancer</button></div>`;
+    return `<div class="a2e-hud-row" data-item-id="${add2eHudEscape(sort.id)}"><img src="${add2eHudEscape(sort.img || "icons/svg/book.svg")}" alt="${add2eHudEscape(sort.name)}"><div><div class="a2e-hud-row-title">${add2eHudEscape(sort.name)}</div><div class="a2e-hud-row-meta"><span>Niv. ${niv}</span>${school ? `<span>${school}</span>` : ""}<span>Mémorisé ${prepared}</span></div></div><button type="button" class="a2e-hud-action" data-action="cast-spell" data-item-id="${add2eHudEscape(sort.id)}">Lancer</button></div>`;
   }).join("");
 }
 
@@ -296,17 +305,11 @@ function add2eHudFeatureRows(actor) {
 
 function add2eHudSaveRows(actor) {
   const saves = add2eHudSavingThrows(actor);
-  return ADD2E_HUD_SAVE_FULL_NAMES.map((label, idx) => {
-    const value = saves[idx] || "—";
-    return `<div class="a2e-hud-row compact"><div><div class="a2e-hud-row-title">${add2eHudEscape(label)}</div><div class="a2e-hud-row-meta"><span>Seuil ${add2eHudEscape(value)} ou plus</span></div></div><button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button></div>`;
-  }).join("");
+  return ADD2E_HUD_SAVE_FULL_NAMES.map((label, idx) => `<div class="a2e-hud-row compact"><div><div class="a2e-hud-row-title">${add2eHudEscape(label)}</div><div class="a2e-hud-row-meta"><span>Seuil ${add2eHudEscape(saves[idx] || "—")} ou plus</span></div></div><button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button></div>`).join("");
 }
 
 function add2eHudAbilityRows(actor) {
-  return `<div class="a2e-hud-ability-grid">${ADD2E_HUD_CARACS.map(carac => {
-    const value = add2eHudAbilityValue(actor, carac.key);
-    return `<div class="a2e-hud-ability"><div><b>${carac.label} ${value}</b><span>${add2eHudEscape(carac.title)}</span></div><button type="button" class="a2e-hud-action" data-action="roll-ability" data-ability="${carac.key}">Jet</button></div>`;
-  }).join("")}</div>`;
+  return `<div class="a2e-hud-ability-grid">${ADD2E_HUD_CARACS.map(carac => `<div class="a2e-hud-ability"><div><b>${carac.label} ${add2eHudAbilityValue(actor, carac.key)}</b><span>${add2eHudEscape(carac.title)}</span></div><button type="button" class="a2e-hud-action" data-action="roll-ability" data-ability="${carac.key}">Jet</button></div>`).join("")}</div>`;
 }
 
 function add2eHudHtml(actor, token = null) {
@@ -363,6 +366,7 @@ function add2eBindHudEvents(hud, actor) {
       add2eRefreshActionHud();
     });
   });
+
   hud.querySelectorAll("[data-action]").forEach(btn => {
     btn.addEventListener("click", async ev => {
       ev.preventDefault();
@@ -387,6 +391,7 @@ function add2eBindHudEvents(hud, actor) {
       }
     });
   });
+
   hud.querySelectorAll(".a2e-hud-drag-zone").forEach(el => add2eBindHudDragHandle(hud, el));
   hud.querySelector("[data-resize-hud]")?.addEventListener("pointerdown", ev => add2eStartHudResize(ev, hud));
   hud.querySelector(".a2e-hud-drag-zone")?.addEventListener("dblclick", ev => { ev.preventDefault(); add2eHudResetLayout(); });
@@ -470,6 +475,10 @@ async function add2eHudAttack(actor, itemId) {
   return globalThis.add2eAttackRoll({ actor, arme });
 }
 
+function add2eHudGetSheetDocument(sheet) {
+  return sheet?.actor ?? sheet?.document ?? sheet?.object ?? null;
+}
+
 function add2eHudIsSheetRendered(sheet) {
   if (!sheet) return false;
   if (sheet.rendered === true) return true;
@@ -479,58 +488,62 @@ function add2eHudIsSheetRendered(sheet) {
   return false;
 }
 
-function add2eHudBlockClosedSheetOpening(actor, duration = 1600) {
-  if (!actor) return () => {};
+function add2eHudShouldBlockSheetRender(sheet) {
+  const guard = add2eHudRenderGuard;
+  if (!guard || Date.now() > guard.until) return false;
+  const doc = add2eHudGetSheetDocument(sheet);
+  if (!doc || doc.documentName !== "Actor") return false;
+  if (String(doc.id) !== String(guard.actorId)) return false;
+  return !add2eHudIsSheetRendered(sheet);
+}
 
-  let sheet = null;
-  let originalRender = null;
-  let originalOwnSheetDescriptor = null;
-  let restoreDone = false;
-
-  try {
-    sheet = actor.sheet;
-    if (!sheet || add2eHudIsSheetRendered(sheet) || typeof sheet.render !== "function") return () => {};
-
-    originalRender = sheet.render;
-    originalOwnSheetDescriptor = Object.getOwnPropertyDescriptor(actor, "sheet");
-
-    sheet.render = function(...args) {
+function add2eHudPatchRenderPrototype(proto, label) {
+  if (!proto || typeof proto.render !== "function") return;
+  if (proto.render.__add2eHudPatched) return;
+  const original = proto.render;
+  const patched = function(...args) {
+    if (add2eHudShouldBlockSheetRender(this)) {
       console.log(`${TAG}[SHEET_RENDER_BLOCKED]`, {
-        actor: actor.name,
-        reason: "Sort lancé depuis le HUD : fiche fermée, ouverture bloquée",
+        label,
+        actor: add2eHudGetSheetDocument(this)?.name,
         args
       });
       return this;
-    };
-
-    // add2eCastSpell relance actor.sheet.render dans un setTimeout interne.
-    // On force donc actor.sheet à renvoyer la même feuille patchée pendant quelques instants.
-    try {
-      Object.defineProperty(actor, "sheet", {
-        configurable: true,
-        get() { return sheet; }
-      });
-    } catch (_e) {}
-  } catch (_e) {
-    return () => {};
-  }
-
-  const restore = () => {
-    if (restoreDone) return;
-    restoreDone = true;
-    try { if (sheet && originalRender) sheet.render = originalRender; } catch (_e) {}
-    try {
-      if (originalOwnSheetDescriptor) Object.defineProperty(actor, "sheet", originalOwnSheetDescriptor);
-      else delete actor.sheet;
-    } catch (_e) {}
+    }
+    return original.apply(this, args);
   };
+  patched.__add2eHudPatched = true;
+  patched.__add2eHudOriginal = original;
+  proto.render = patched;
+  add2eHudOriginalRenders.push({ proto, original, label });
+}
 
-  window.setTimeout(restore, duration);
-  return restore;
+function add2eHudInstallRenderGuard(actor) {
+  if (add2eHudRenderGuardInstalled) return;
+  add2eHudRenderGuardInstalled = true;
+
+  // Patch de la fiche concrète ADD2E.
+  try { add2eHudPatchRenderPrototype(actor?.sheet?.constructor?.prototype, "actor.sheet.constructor"); } catch (_e) {}
+
+  // Fallbacks Foundry V13/V12.
+  try { add2eHudPatchRenderPrototype(foundry?.applications?.api?.ApplicationV2?.prototype, "ApplicationV2"); } catch (_e) {}
+  try { add2eHudPatchRenderPrototype(globalThis.Application?.prototype, "ApplicationV1"); } catch (_e) {}
+  try { add2eHudPatchRenderPrototype(globalThis.ActorSheet?.prototype, "ActorSheet"); } catch (_e) {}
+}
+
+function add2eHudArmRenderGuard(actor, duration = 2200) {
+  add2eHudInstallRenderGuard(actor);
+  add2eHudRenderGuard = {
+    actorId: actor?.id,
+    until: Date.now() + duration
+  };
+  return () => {
+    if (add2eHudRenderGuard?.actorId === actor?.id) add2eHudRenderGuard = null;
+  };
 }
 
 async function add2eHudCastSpell(actor, itemId, button = null) {
-  const sort = add2eHudFindItem(actor, itemId);
+  let sort = add2eHudFindItem(actor, itemId);
   if (!sort) return ui.notifications.warn("Sort introuvable.");
   if (typeof globalThis.add2eCastSpell !== "function") {
     ui.notifications.error("Fonction add2eCastSpell introuvable.");
@@ -538,36 +551,42 @@ async function add2eHudCastSpell(actor, itemId, button = null) {
     return;
   }
 
-  const before = add2eHudPreparedCount(sort);
-  if (before <= 0) {
+  let available = add2eHudPreparedCount(sort);
+  if (available <= 0) {
     ui.notifications.warn(`Le sort "${sort.name}" n'est plus mémorisé.`);
     add2eRefreshActionHudSoon();
     return false;
   }
 
   button?.setAttribute?.("disabled", "disabled");
-  const restore = add2eHudBlockClosedSheetOpening(actor, 1800);
+  const disarmRenderGuard = add2eHudArmRenderGuard(actor, 2400);
 
   try {
+    available = await add2eHudSyncMemorizedCountBeforeCast(sort);
+    if (available <= 0) {
+      ui.notifications.warn(`Le sort "${sort.name}" n'est plus mémorisé.`);
+      return false;
+    }
+
+    // Relecture après update éventuel du flag.
+    sort = add2eHudFindItem(actor, itemId) ?? sort;
+
     const result = await globalThis.add2eCastSpell({ actor, sort });
-    await add2eHudSleep(120);
+    await add2eHudSleep(140);
 
     const refreshedSort = add2eHudFindItem(actor, itemId) ?? sort;
-    const after = add2eHudPreparedCount(refreshedSort);
-
     console.log(`${TAG}[CAST_SPELL_RESULT]`, {
       actor: actor.name,
       sort: sort.name,
       result,
-      memorizedBefore: before,
-      memorizedAfter: after,
+      stateAfter: add2eHudMemorizedState(refreshedSort),
       flags: refreshedSort?.flags?.add2e ?? null
     });
 
     add2eRefreshActionHudSoon();
     return result;
   } finally {
-    window.setTimeout(restore, 1850);
+    window.setTimeout(disarmRenderGuard, 2500);
     window.setTimeout(() => button?.removeAttribute?.("disabled"), 250);
   }
 }
@@ -635,10 +654,7 @@ Hooks.once("init", () => {
 Hooks.on("controlToken", () => window.setTimeout(add2eRefreshActionHud, 60));
 Hooks.on("canvasReady", () => window.setTimeout(add2eRefreshActionHud, 150));
 Hooks.once("ready", () => window.setTimeout(add2eRefreshActionHud, 300));
-
-Hooks.on("updateActor", actor => {
-  if (actor?.id === add2eHudActorId) window.setTimeout(add2eRefreshActionHud, 60);
-});
+Hooks.on("updateActor", actor => { if (actor?.id === add2eHudActorId) window.setTimeout(add2eRefreshActionHud, 60); });
 
 for (const hookName of ["createItem", "updateItem", "deleteItem", "createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
   Hooks.on(hookName, doc => {
