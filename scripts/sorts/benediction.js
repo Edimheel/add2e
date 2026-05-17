@@ -33,6 +33,9 @@ const __add2eOnUseResult = await (async () => {
     muted: "#6b5a35"
   };
 
+  const ADD2E_BENEDICTION_GUARD_VERSION = "2026-05-17-v1-no-closed-target-sheet";
+  const ADD2E_BENEDICTION_GUARD_TAG = "[ADD2E][BENEDICTION][SHEET_GUARD]";
+
   function add2eEscapeHtml(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -44,6 +47,163 @@ const __add2eOnUseResult = await (async () => {
 
   function add2eSpellImg(src, fallback = "icons/magic/holy/prayer-hands-glowing-yellow.webp") {
     return add2eEscapeHtml(src || fallback);
+  }
+
+  function add2eBenedictionGuardGetDoc(app) {
+    return app?.actor ?? app?.document ?? app?.object ?? null;
+  }
+
+  function add2eBenedictionGuardAppId(app) {
+    return String(app?.id ?? app?.appId ?? app?._id ?? app?.constructor?.name ?? "unknown");
+  }
+
+  function add2eBenedictionGuardIsRendered(app) {
+    if (!app) return false;
+    if (app.rendered === true) return true;
+
+    try {
+      const el = app.element;
+      if (el instanceof HTMLElement) return document.body.contains(el);
+      if (el?.[0] instanceof HTMLElement) return document.body.contains(el[0]);
+    } catch (e) {}
+
+    return false;
+  }
+
+  function add2eBenedictionGuardPatchRenderPrototype(proto, label) {
+    if (!proto || typeof proto.render !== "function") return;
+    if (proto.render.__add2eBenedictionGuardPatched) return;
+
+    const original = proto.render;
+
+    const patched = function(...args) {
+      const guard = globalThis.ADD2E_BENEDICTION_SHEET_GUARD;
+
+      if (guard?.active && Date.now() <= guard.until) {
+        const doc = add2eBenedictionGuardGetDoc(this);
+
+        if (doc?.documentName === "Actor") {
+          const id = String(doc.id ?? "");
+          const uuid = String(doc.uuid ?? "");
+          const name = String(doc.name ?? "");
+          const appId = add2eBenedictionGuardAppId(this);
+          const isGuarded = guard.actorIds?.has(id) || guard.actorUuids?.has(uuid) || guard.actorNames?.has(name);
+          const wasOpen = guard.allowedAppIds?.has(appId);
+          const isRendered = add2eBenedictionGuardIsRendered(this);
+
+          console.log(`${ADD2E_BENEDICTION_GUARD_TAG}[RENDER_SEEN]`, {
+            label,
+            appClass: this?.constructor?.name,
+            appId,
+            actor: name,
+            actorId: id,
+            actorUuid: uuid,
+            isGuarded,
+            wasOpen,
+            isRendered,
+            args
+          });
+
+          if (isGuarded && !wasOpen && !isRendered) {
+            console.log(`${ADD2E_BENEDICTION_GUARD_TAG}[BLOCK_RENDER]`, {
+              label,
+              actor: name,
+              actorId: id,
+              actorUuid: uuid,
+              reason: "Bénédiction/Malédiction ne doit pas ouvrir une fiche fermée"
+            });
+            return this;
+          }
+        }
+      }
+
+      return original.apply(this, args);
+    };
+
+    patched.__add2eBenedictionGuardPatched = true;
+    patched.__add2eBenedictionGuardOriginal = original;
+    proto.render = patched;
+
+    console.log(`${ADD2E_BENEDICTION_GUARD_TAG}[PATCH_RENDER]`, label);
+  }
+
+  function add2eBenedictionGuardInstall(actorList = []) {
+    globalThis.ADD2E_BENEDICTION_SHEET_GUARD = globalThis.ADD2E_BENEDICTION_SHEET_GUARD ?? {
+      active: false,
+      until: 0,
+      actorIds: new Set(),
+      actorUuids: new Set(),
+      actorNames: new Set(),
+      allowedAppIds: new Set()
+    };
+
+    try { add2eBenedictionGuardPatchRenderPrototype(foundry?.applications?.api?.ApplicationV2?.prototype, "ApplicationV2"); } catch (e) {}
+    try { add2eBenedictionGuardPatchRenderPrototype(globalThis.Application?.prototype, "ApplicationV1"); } catch (e) {}
+    try { add2eBenedictionGuardPatchRenderPrototype(globalThis.ActorSheet?.prototype, "ActorSheet"); } catch (e) {}
+    try { add2eBenedictionGuardPatchRenderPrototype(foundry?.applications?.sheets?.ActorSheetV2?.prototype, "ActorSheetV2"); } catch (e) {}
+
+    for (const actorDoc of actorList) {
+      try { add2eBenedictionGuardPatchRenderPrototype(actorDoc?.sheet?.constructor?.prototype, "actor.sheet.constructor"); } catch (e) {}
+    }
+  }
+
+  function add2eBenedictionGuardCollectOpenApps(actorList = []) {
+    const allowed = new Set();
+    const ids = new Set(actorList.map(a => String(a?.id ?? "")).filter(Boolean));
+    const uuids = new Set(actorList.map(a => String(a?.uuid ?? "")).filter(Boolean));
+    const names = new Set(actorList.map(a => String(a?.name ?? "")).filter(Boolean));
+
+    for (const actorDoc of actorList) {
+      try {
+        const sheet = actorDoc?.sheet;
+        if (sheet && add2eBenedictionGuardIsRendered(sheet)) allowed.add(add2eBenedictionGuardAppId(sheet));
+      } catch (e) {}
+    }
+
+    try {
+      for (const app of Object.values(ui.windows ?? {})) {
+        const doc = add2eBenedictionGuardGetDoc(app);
+        if (doc?.documentName !== "Actor") continue;
+
+        const same = ids.has(String(doc.id ?? "")) || uuids.has(String(doc.uuid ?? "")) || names.has(String(doc.name ?? ""));
+        if (same && add2eBenedictionGuardIsRendered(app)) allowed.add(add2eBenedictionGuardAppId(app));
+      }
+    } catch (e) {}
+
+    return allowed;
+  }
+
+  function add2eBenedictionGuardArm(actorList = [], duration = 4500) {
+    add2eBenedictionGuardInstall(actorList);
+
+    const guard = globalThis.ADD2E_BENEDICTION_SHEET_GUARD;
+    guard.active = true;
+    guard.until = Date.now() + duration;
+    guard.actorIds = new Set(actorList.map(a => String(a?.id ?? "")).filter(Boolean));
+    guard.actorUuids = new Set(actorList.map(a => String(a?.uuid ?? "")).filter(Boolean));
+    guard.actorNames = new Set(actorList.map(a => String(a?.name ?? "")).filter(Boolean));
+    guard.allowedAppIds = add2eBenedictionGuardCollectOpenApps(actorList);
+
+    console.log(`${ADD2E_BENEDICTION_GUARD_TAG}[ARM]`, {
+      version: ADD2E_BENEDICTION_GUARD_VERSION,
+      actors: actorList.map(a => ({ name: a?.name, id: a?.id, uuid: a?.uuid })),
+      allowedAppIds: Array.from(guard.allowedAppIds),
+      until: guard.until
+    });
+
+    window.setTimeout(() => {
+      if (globalThis.ADD2E_BENEDICTION_SHEET_GUARD === guard) {
+        console.log(`${ADD2E_BENEDICTION_GUARD_TAG}[DISARM]`, {
+          actors: Array.from(guard.actorNames ?? [])
+        });
+        guard.active = false;
+        guard.until = 0;
+        guard.actorIds = new Set();
+        guard.actorUuids = new Set();
+        guard.actorNames = new Set();
+        guard.allowedAppIds = new Set();
+      }
+    }, duration + 250);
   }
 
   function add2eClercCard({ caster, sourceItem, modeLabel, targetsLabel, resultHtml }) {
@@ -153,6 +313,13 @@ const __add2eOnUseResult = await (async () => {
   async function add2eCreateEffectOnActor(targetActor, effectData) {
     if (!targetActor) return false;
 
+    console.log("[ADD2E][BENEDICTION][EFFECT_APPLY][START]", {
+      actor: targetActor.name,
+      effect: effectData?.name,
+      tags: effectData?.flags?.add2e?.tags ?? [],
+      actorSheetRendered: add2eBenedictionGuardIsRendered(targetActor.sheet)
+    });
+
     if (game.user.isGM || targetActor.isOwner) {
       // Nettoyage local pour éviter les doublons du même sort ou de son inverse.
       const oldIds = targetActor.effects
@@ -166,10 +333,19 @@ const __add2eOnUseResult = await (async () => {
         .map(e => e.id);
 
       if (oldIds.length) {
+        console.log("[ADD2E][BENEDICTION][EFFECT_DELETE_OLD]", {
+          actor: targetActor.name,
+          ids: oldIds
+        });
         await targetActor.deleteEmbeddedDocuments("ActiveEffect", oldIds);
       }
 
       await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+
+      console.log("[ADD2E][BENEDICTION][EFFECT_APPLY][OK]", {
+        actor: targetActor.name,
+        effect: effectData?.name
+      });
       return true;
     }
 
@@ -262,6 +438,9 @@ const __add2eOnUseResult = await (async () => {
     ui.notifications.warn("Bénédiction : une cible n'a pas d'acteur.");
     return false;
   }
+
+  const guardedActors = [caster, ...targets.map(t => t.actor).filter(Boolean)];
+  add2eBenedictionGuardArm(guardedActors, 5000);
 
   const maxRange = 18;
   const outOfRange = targets.filter(t => add2eDistanceMeters(casterToken, t) > maxRange);
@@ -375,13 +554,21 @@ const __add2eOnUseResult = await (async () => {
     ? "icons/magic/control/debuff-energy-hold-pink.webp"
     : "icons/magic/holy/prayer-hands-glowing-yellow.webp");
 
+  console.log("[ADD2E][BENEDICTION][MODE_SELECTED]", {
+    mode,
+    isCurse,
+    modeLabel,
+    effectName,
+    caster: caster.name,
+    targets: targets.map(t => ({ name: t.name, actor: t.actor?.name }))
+  });
+
   const durationData = {
     rounds: 6,
     startRound: game.combat?.round ?? null,
     startTurn: game.combat?.turn ?? null,
     startTime: game.time.worldTime
   };
-
 
   function add2eAEAddChange(key, value, priority = 20) {
     if (CONST.ACTIVE_EFFECT_CHANGE_TYPES) {
@@ -504,7 +691,8 @@ const __add2eOnUseResult = await (async () => {
       targetsLabel: applied.map(t => add2eEscapeHtml(t.name)).join(", "),
       resultHtml
     }),
-      ...(CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })});
+    ...(CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })
+  });
 
   console.log("[ADD2E][benediction.js][ONUSE_RESULT]", true);
   return true;
