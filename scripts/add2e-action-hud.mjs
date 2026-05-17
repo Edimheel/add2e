@@ -1,14 +1,14 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide sans ouvrir la fiche personnage
-// Version : 2026-05-16-v6-spell-sync-no-sheet-open
+// Version : 2026-05-16-v7-spell-refresh-real-mechanics
 //
-// Règle : le HUD ne réinvente pas les actions.
-// - Attaque  -> globalThis.add2eAttackRoll({ actor, arme })
-// - Sort     -> globalThis.add2eCastSpell({ actor, sort })
-// - Capacité -> globalThis.add2eExecuteClassFeatureOnUse(actor, feature)
-// - Carac / sauvegarde : même mécanique et même carte chat que la fiche personnage.
+// Le HUD utilise les mécaniques existantes du système :
+// - attaque  : globalThis.add2eAttackRoll({ actor, arme })
+// - sort     : globalThis.add2eCastSpell({ actor, sort })
+// - capacité : globalThis.add2eExecuteClassFeatureOnUse(actor, feature, null)
+// Il ne lance pas de feuille d'acteur quand le sort est lancé depuis le HUD.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v6-spell-sync-no-sheet-open";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v7-spell-refresh-real-mechanics";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
@@ -34,14 +34,9 @@ const ADD2E_HUD_SAVE_ICONS = ["fa-skull-crossbones", "fa-mountain", "fa-magic", 
 const ADD2E_HUD_SAVE_COLORS = ["#c48642", "#6394e8", "#b12f95", "#e67e22", "#a173d9"];
 
 function add2eHudEscape(value) {
-  try {
-    return foundry.utils.escapeHTML(String(value ?? ""));
-  } catch (_e) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;");
+  try { return foundry.utils.escapeHTML(String(value ?? "")); }
+  catch (_e) {
+    return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
   }
 }
 
@@ -66,21 +61,19 @@ function add2eHudClamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function add2eHudSleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function add2eHudLoadLayout() {
   if (add2eHudLayout) return add2eHudLayout;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    add2eHudLayout = raw ? JSON.parse(raw) : {};
-  } catch (_e) {
-    add2eHudLayout = {};
-  }
+  try { add2eHudLayout = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+  catch (_e) { add2eHudLayout = {}; }
   return add2eHudLayout;
 }
 
 function add2eHudSaveLayout() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(add2eHudLayout ?? {}));
-  } catch (_e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(add2eHudLayout ?? {})); } catch (_e) {}
 }
 
 function add2eHudResetLayout() {
@@ -93,7 +86,6 @@ function add2eHudApplyLayout(hud) {
   const layout = add2eHudLoadLayout();
   const width = add2eHudClamp(Number(layout.width) || 760, 520, Math.max(560, window.innerWidth - 24));
   const menuHeight = add2eHudClamp(Number(layout.menuHeight) || 360, 180, Math.max(220, window.innerHeight - 170));
-
   hud.style.width = `${width}px`;
   hud.style.setProperty("--a2e-hud-menu-height", `${menuHeight}px`);
 
@@ -104,10 +96,7 @@ function add2eHudApplyLayout(hud) {
     hud.style.top = `${top}px`;
     hud.style.bottom = "auto";
     hud.style.right = "auto";
-    add2eHudLayout.left = left;
-    add2eHudLayout.top = top;
-    add2eHudLayout.width = width;
-    add2eHudLayout.menuHeight = menuHeight;
+    Object.assign(add2eHudLayout, { left, top, width, menuHeight });
     add2eHudSaveLayout();
   } else {
     hud.style.left = "116px";
@@ -146,35 +135,26 @@ function add2eHudWeapons(actor) {
   return actor?.items?.filter?.(i => i.type === "arme" && add2eHudIsEquipped(i)) ?? [];
 }
 
-function add2eHudSumNumbers(value) {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
+function add2eHudSumMemorizedByList(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, value);
   if (!value || typeof value !== "object") return 0;
   let total = 0;
-  for (const v of Object.values(value)) {
-    if (typeof v === "number" && Number.isFinite(v)) total += v;
-    else if (v && typeof v === "object") total += add2eHudSumNumbers(v);
-  }
+  for (const child of Object.values(value)) total += add2eHudSumMemorizedByList(child);
   return total;
 }
 
 function add2eHudPreparedCount(sort) {
-  const add2eFlags = sort?.flags?.add2e ?? {};
+  const flags = sort?.flags?.add2e ?? {};
 
-  // Source stricte : même compteur que add2eCastSpell consomme.
-  // Ne pas utiliser system.prepared : ce champ peut rester à 1 et ferait réapparaître
-  // le sort dans le HUD alors que flags.add2e.memorizedCount est déjà à 0.
-  if (add2eFlags.memorizedCount !== undefined && add2eFlags.memorizedCount !== null) {
-    return Math.max(0, add2eHudNumber(add2eFlags.memorizedCount, 0));
+  // Source stricte : le HUD lit les mêmes compteurs que add2eCastSpell consomme.
+  // Ne jamais utiliser system.prepared comme secours : ce champ peut rester à 1
+  // et ferait réapparaître un sort pourtant consommé.
+  if (flags.memorizedCount !== undefined && flags.memorizedCount !== null) {
+    return Math.max(0, add2eHudNumber(flags.memorizedCount, 0));
   }
 
-  const byList = add2eFlags.memorizedByList;
-  if (byList !== undefined && byList !== null) {
-    return Math.max(0, add2eHudSumNumbers(byList));
-  }
-
-  const direct = sort?.getFlag?.("add2e", "memorizedCount");
-  if (direct !== undefined && direct !== null) {
-    return Math.max(0, add2eHudNumber(direct, 0));
+  if (flags.memorizedByList !== undefined && flags.memorizedByList !== null) {
+    return Math.max(0, add2eHudSumMemorizedByList(flags.memorizedByList));
   }
 
   return 0;
@@ -187,9 +167,7 @@ function add2eHudSpells(actor) {
 function add2eHudClassFeatures(actor) {
   const details = actor?.system?.details_classe ?? {};
   const raw = details.classFeatures ?? details.capacitesClasse ?? actor?.system?.classFeatures ?? [];
-  return add2eHudArray(raw)
-    .map((feature, index) => ({ ...feature, __index: index }))
-    .filter(feature => feature?.activable === true);
+  return add2eHudArray(raw).map((feature, index) => ({ ...feature, __index: index })).filter(feature => feature?.activable === true);
 }
 
 function add2eHudAbilityValue(actor, key) {
@@ -242,44 +220,35 @@ function add2eHudInjectStyle() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-    #${HUD_ID} { position: fixed; left: 116px; bottom: 22px; width: 760px; max-width: calc(100vw - 24px); min-width: 520px; z-index: 80; color: #f6e8bd; font-family: var(--font-primary, Signika, sans-serif); pointer-events: auto; user-select: none; }
-    #${HUD_ID}.a2e-hud-dragging, #${HUD_ID}.a2e-hud-resizing { transition: none !important; }
-    #${HUD_ID}.collapsed .a2e-hud-tabs, #${HUD_ID}.collapsed .a2e-hud-body { display: none; }
-    #${HUD_ID} .a2e-hud-shell { position: relative; border: 1px solid #8a611d; border-radius: 14px; overflow: visible; background: radial-gradient(circle at 15% 0%, rgba(213,147,45,.28), transparent 36%), linear-gradient(145deg, rgba(32,25,16,.97), rgba(18,14,10,.96)); box-shadow: 0 8px 26px rgba(0,0,0,.48), inset 0 0 0 1px rgba(255,230,160,.12); backdrop-filter: blur(3px); }
-    #${HUD_ID} .a2e-hud-header { display: grid; grid-template-columns: 88px minmax(0, 1fr) 70px; gap: 8px; align-items: center; min-height: 86px; padding: 5px 8px; border-bottom: 1px solid rgba(184,137,36,.55); border-radius: 14px 14px 0 0; background: linear-gradient(180deg, rgba(78,48,18,.78), rgba(36,26,14,.62)); }
-    #${HUD_ID} .a2e-hud-drag-zone { cursor: move; }
-    #${HUD_ID} .a2e-hud-portrait { width: 78px; height: 78px; align-self: center; border-radius: 10px; object-fit: cover; border: 2px solid #c4973f; background: #111; box-shadow: 0 2px 8px rgba(0,0,0,.45); }
-    #${HUD_ID} .a2e-hud-main { min-width: 0; overflow: visible; display: grid; grid-template-columns: minmax(180px, 1fr) max-content; grid-template-rows: 24px 24px; column-gap: 12px; row-gap: 0; align-items: center; align-content: center; }
-    #${HUD_ID} .a2e-hud-name { grid-column: 1; grid-row: 1; color: #fff4cf; font-size: 1.08em; font-weight: 900; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    #${HUD_ID} .a2e-hud-subtitle { grid-column: 1; grid-row: 2; color: #d8bd78; font-size: .82em; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    #${HUD_ID} .a2e-hud-metrics { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-columns: max-content max-content max-content; gap: 5px; align-items: center; justify-content: end; width: max-content; max-width: none; overflow: visible; white-space: nowrap; flex-wrap: nowrap; }
-    #${HUD_ID} .a2e-hud-pill { display: inline-flex; align-items: center; justify-content: center; height: 24px; min-width: 0; max-width: none; padding: 1px 8px; border: 1px solid rgba(214,176,90,.75); border-radius: 999px; background: rgba(255,244,201,.12); color: #fff0bd; font-size: .76em; line-height: 1; font-weight: 900; white-space: nowrap; flex: 0 0 auto; }
-    #${HUD_ID} .a2e-hud-controls { display: grid; grid-template-columns: 30px 30px; gap: 5px; justify-content: end; align-items: center; }
-    #${HUD_ID} .a2e-hud-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid rgba(214,176,90,.75); border-radius: 9px; background: rgba(255,244,201,.12); color: #ffe4a1; cursor: pointer; }
-    #${HUD_ID} .a2e-hud-tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-radius: 0 0 14px 14px; overflow: hidden; background: rgba(0,0,0,.22); }
-    #${HUD_ID} .a2e-hud-tab { min-height: 34px; border: 0; border-right: 1px solid rgba(184,137,36,.32); background: transparent; color: #d8bd78; font-size: .78em; font-weight: 900; cursor: pointer; }
-    #${HUD_ID} .a2e-hud-tab:last-child { border-right: 0; }
-    #${HUD_ID} .a2e-hud-tab.active { color: #211307; background: linear-gradient(180deg,#f0c66d,#c78d2e); }
-    #${HUD_ID} .a2e-hud-body { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); max-height: var(--a2e-hud-menu-height, 360px); overflow-y: auto; padding: 9px; border: 1px solid #8a611d; border-radius: 14px; background: radial-gradient(circle at 20% 0%, rgba(213,147,45,.24), transparent 34%), linear-gradient(145deg, rgba(28,22,15,.98), rgba(12,10,8,.97)); box-shadow: 0 8px 24px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,230,160,.10); }
-    #${HUD_ID} .a2e-hud-body:after { content: ""; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 9px solid #8a611d; }
-    #${HUD_ID} .a2e-hud-section { display: none; }
-    #${HUD_ID} .a2e-hud-section.active { display: grid; gap: 7px; }
-    #${HUD_ID} .a2e-hud-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 8px; align-items: center; min-height: 48px; padding: 6px; border: 1px solid rgba(214,176,90,.38); border-radius: 10px; background: rgba(255,250,235,.07); user-select: text; }
-    #${HUD_ID} .a2e-hud-row.compact { grid-template-columns: minmax(0, 1fr) auto; min-height: 38px; }
-    #${HUD_ID} .a2e-hud-row img { width: 34px; height: 34px; border-radius: 7px; object-fit: cover; border: 1px solid rgba(214,176,90,.65); background: rgba(0,0,0,.25); }
-    #${HUD_ID} .a2e-hud-row-title { color: #fff4cf; font-weight: 900; line-height: 1.08; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #${HUD_ID} .a2e-hud-row-meta { display: flex; flex-wrap: wrap; gap: 4px 8px; color: #c8ad6e; font-size: .76em; font-weight: 750; margin-top: 2px; }
-    #${HUD_ID} .a2e-hud-action { min-width: 78px; min-height: 30px; padding: 4px 9px; border: 1px solid #d6b05a; border-radius: 9px; background: linear-gradient(180deg,#fff0bd,#d6a345); color: #211307; font-size: .8em; font-weight: 950; cursor: pointer; white-space: nowrap; }
-    #${HUD_ID} .a2e-hud-action:disabled { opacity: .45; cursor: not-allowed; }
-    #${HUD_ID} .a2e-hud-icon-btn:hover, #${HUD_ID} .a2e-hud-action:hover, #${HUD_ID} .a2e-hud-tab:hover { filter: brightness(1.15); transform: translateY(-1px); }
-    #${HUD_ID} .a2e-hud-empty { padding: 12px; border: 1px dashed rgba(214,176,90,.45); border-radius: 10px; color: #c8ad6e; font-style: italic; text-align: center; }
-    #${HUD_ID} .a2e-hud-ability-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-    #${HUD_ID} .a2e-hud-ability { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; padding: 7px; border: 1px solid rgba(214,176,90,.38); border-radius: 10px; background: rgba(255,250,235,.07); }
-    #${HUD_ID} .a2e-hud-ability b { color:#fff4cf;font-size:1.15em; }
-    #${HUD_ID} .a2e-hud-ability span { display:block;color:#c8ad6e;font-size:.76em;font-weight:800; }
-    #${HUD_ID} .a2e-hud-resize { position: absolute; right: 4px; top: -11px; width: 18px; height: 18px; border: 1px solid rgba(214,176,90,.8); border-radius: 5px; background: rgba(20,14,8,.92); color: #ffe4a1; display: flex; align-items: center; justify-content: center; cursor: nwse-resize; font-size: 10px; z-index: 3; }
-    @media (max-width: 900px) { #${HUD_ID} { left: 12px; right: 12px; width: calc(100vw - 24px); max-width: calc(100vw - 24px); min-width: 0; } #${HUD_ID} .a2e-hud-main { grid-template-columns: minmax(140px, 1fr) max-content; column-gap: 8px; } #${HUD_ID} .a2e-hud-pill { padding: 1px 6px; font-size: .72em; } }
-    @media (max-width: 680px) { #${HUD_ID} .a2e-hud-header { grid-template-columns: 74px minmax(0,1fr) 64px; } #${HUD_ID} .a2e-hud-portrait { width:66px; height:66px; } #${HUD_ID} .a2e-hud-main { grid-template-columns: 1fr; grid-template-rows: 21px 19px 24px; } #${HUD_ID} .a2e-hud-metrics { grid-column: 1; grid-row: 3; justify-content: start; } #${HUD_ID} .a2e-hud-ability-grid { grid-template-columns: repeat(2, 1fr); } }
+    #${HUD_ID}{position:fixed;left:116px;bottom:22px;width:760px;max-width:calc(100vw - 24px);min-width:520px;z-index:80;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;user-select:none;}
+    #${HUD_ID}.a2e-hud-dragging,#${HUD_ID}.a2e-hud-resizing{transition:none!important;}
+    #${HUD_ID}.collapsed .a2e-hud-tabs,#${HUD_ID}.collapsed .a2e-hud-body{display:none;}
+    #${HUD_ID} .a2e-hud-shell{position:relative;border:1px solid #8a611d;border-radius:14px;overflow:visible;background:radial-gradient(circle at 15% 0%,rgba(213,147,45,.28),transparent 36%),linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,230,160,.12);backdrop-filter:blur(3px);}
+    #${HUD_ID} .a2e-hud-header{display:grid;grid-template-columns:88px minmax(0,1fr) 70px;gap:8px;align-items:center;min-height:86px;padding:5px 8px;border-bottom:1px solid rgba(184,137,36,.55);border-radius:14px 14px 0 0;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));}
+    #${HUD_ID} .a2e-hud-drag-zone{cursor:move;}
+    #${HUD_ID} .a2e-hud-portrait{width:78px;height:78px;align-self:center;border-radius:10px;object-fit:cover;border:2px solid #c4973f;background:#111;box-shadow:0 2px 8px rgba(0,0,0,.45);}
+    #${HUD_ID} .a2e-hud-main{min-width:0;overflow:visible;display:grid;grid-template-columns:minmax(180px,1fr) max-content;grid-template-rows:24px 24px;column-gap:12px;row-gap:0;align-items:center;align-content:center;}
+    #${HUD_ID} .a2e-hud-name{grid-column:1;grid-row:1;color:#fff4cf;font-size:1.08em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+    #${HUD_ID} .a2e-hud-subtitle{grid-column:1;grid-row:2;color:#d8bd78;font-size:.82em;font-weight:750;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+    #${HUD_ID} .a2e-hud-metrics{grid-column:2;grid-row:1/span 2;display:grid;grid-template-columns:max-content max-content max-content;gap:5px;align-items:center;justify-content:end;width:max-content;max-width:none;overflow:visible;white-space:nowrap;}
+    #${HUD_ID} .a2e-hud-pill{display:inline-flex;align-items:center;justify-content:center;height:24px;min-width:0;max-width:none;padding:1px 8px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.76em;line-height:1;font-weight:900;white-space:nowrap;}
+    #${HUD_ID} .a2e-hud-controls{display:grid;grid-template-columns:30px 30px;gap:5px;justify-content:end;align-items:center;}
+    #${HUD_ID} .a2e-hud-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;}
+    #${HUD_ID} .a2e-hud-tabs{display:grid;grid-template-columns:repeat(5,1fr);border-radius:0 0 14px 14px;overflow:hidden;background:rgba(0,0,0,.22);}
+    #${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.78em;font-weight:900;cursor:pointer;}
+    #${HUD_ID} .a2e-hud-tab:last-child{border-right:0;}#${HUD_ID} .a2e-hud-tab.active{color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e);}
+    #${HUD_ID} .a2e-hud-body{position:absolute;left:0;right:0;bottom:calc(100% + 8px);max-height:var(--a2e-hud-menu-height,360px);overflow-y:auto;padding:9px;border:1px solid #8a611d;border-radius:14px;background:radial-gradient(circle at 20% 0%,rgba(213,147,45,.24),transparent 34%),linear-gradient(145deg,rgba(28,22,15,.98),rgba(12,10,8,.97));box-shadow:0 8px 24px rgba(0,0,0,.55),inset 0 0 0 1px rgba(255,230,160,.10);}
+    #${HUD_ID} .a2e-hud-body:after{content:"";position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:9px solid #8a611d;}
+    #${HUD_ID} .a2e-hud-section{display:none;}#${HUD_ID} .a2e-hud-section.active{display:grid;gap:7px;}
+    #${HUD_ID} .a2e-hud-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);user-select:text;}
+    #${HUD_ID} .a2e-hud-row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px;}#${HUD_ID} .a2e-hud-row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25);}
+    #${HUD_ID} .a2e-hud-row-title{color:#fff4cf;font-weight:900;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}#${HUD_ID} .a2e-hud-row-meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px;}
+    #${HUD_ID} .a2e-hud-action{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap;}#${HUD_ID} .a2e-hud-action:disabled{opacity:.45;cursor:not-allowed;}
+    #${HUD_ID} .a2e-hud-icon-btn:hover,#${HUD_ID} .a2e-hud-action:hover,#${HUD_ID} .a2e-hud-tab:hover{filter:brightness(1.15);transform:translateY(-1px);}#${HUD_ID} .a2e-hud-empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center;}
+    #${HUD_ID} .a2e-hud-ability-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}#${HUD_ID} .a2e-hud-ability{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:7px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);}#${HUD_ID} .a2e-hud-ability b{color:#fff4cf;font-size:1.15em;}#${HUD_ID} .a2e-hud-ability span{display:block;color:#c8ad6e;font-size:.76em;font-weight:800;}
+    #${HUD_ID} .a2e-hud-resize{position:absolute;right:4px;top:-11px;width:18px;height:18px;border:1px solid rgba(214,176,90,.8);border-radius:5px;background:rgba(20,14,8,.92);color:#ffe4a1;display:flex;align-items:center;justify-content:center;cursor:nwse-resize;font-size:10px;z-index:3;}
+    @media(max-width:900px){#${HUD_ID}{left:12px;right:12px;width:calc(100vw - 24px);max-width:calc(100vw - 24px);min-width:0;}#${HUD_ID} .a2e-hud-main{grid-template-columns:minmax(140px,1fr) max-content;column-gap:8px;}#${HUD_ID} .a2e-hud-pill{padding:1px 6px;font-size:.72em;}}
+    @media(max-width:680px){#${HUD_ID} .a2e-hud-header{grid-template-columns:74px minmax(0,1fr) 64px;}#${HUD_ID} .a2e-hud-portrait{width:66px;height:66px;}#${HUD_ID} .a2e-hud-main{grid-template-columns:1fr;grid-template-rows:21px 19px 24px;}#${HUD_ID} .a2e-hud-metrics{grid-column:1;grid-row:3;justify-content:start;}#${HUD_ID} .a2e-hud-ability-grid{grid-template-columns:repeat(2,1fr);}}
   `;
   document.head.appendChild(style);
 }
@@ -291,12 +260,7 @@ function add2eHudWeaponRows(actor) {
     const id = add2eHudEscape(arme.id);
     const name = add2eHudEscape(arme.name);
     const img = add2eHudEscape(arme.img || "icons/svg/sword.svg");
-    return `
-      <div class="a2e-hud-row" data-item-id="${id}">
-        <img src="${img}" alt="${name}">
-        <div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>Équipée</span><span>Dégâts ${add2eHudEscape(add2eHudDamageText(arme))}</span><span>Portée ${add2eHudEscape(add2eHudRangeText(arme))}</span></div></div>
-        <button type="button" class="a2e-hud-action" data-action="attack" data-item-id="${id}">Attaquer</button>
-      </div>`;
+    return `<div class="a2e-hud-row" data-item-id="${id}"><img src="${img}" alt="${name}"><div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>Équipée</span><span>Dégâts ${add2eHudEscape(add2eHudDamageText(arme))}</span><span>Portée ${add2eHudEscape(add2eHudRangeText(arme))}</span></div></div><button type="button" class="a2e-hud-action" data-action="attack" data-item-id="${id}">Attaquer</button></div>`;
   }).join("");
 }
 
@@ -310,12 +274,7 @@ function add2eHudSpellRows(actor) {
     const niv = add2eHudEscape(sort.system?.niveau ?? sort.system?.level ?? "—");
     const school = add2eHudEscape(sort.system?.école ?? sort.system?.ecole ?? "");
     const prepared = add2eHudPreparedCount(sort);
-    return `
-      <div class="a2e-hud-row" data-item-id="${id}">
-        <img src="${img}" alt="${name}">
-        <div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>Niv. ${niv}</span>${school ? `<span>${school}</span>` : ""}<span>Mémorisé ${prepared}</span></div></div>
-        <button type="button" class="a2e-hud-action" data-action="cast-spell" data-item-id="${id}">Lancer</button>
-      </div>`;
+    return `<div class="a2e-hud-row" data-item-id="${id}"><img src="${img}" alt="${name}"><div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>Niv. ${niv}</span>${school ? `<span>${school}</span>` : ""}<span>Mémorisé ${prepared}</span></div></div><button type="button" class="a2e-hud-action" data-action="cast-spell" data-item-id="${id}">Lancer</button></div>`;
   }).join("");
 }
 
@@ -331,11 +290,7 @@ function add2eHudFeatureRows(actor) {
     const max = maxRaw === "" || maxRaw === undefined || maxRaw === null ? 999 : add2eHudNumber(maxRaw, 999);
     const locked = actorLevel < min || actorLevel > max;
     const uses = add2eHudEscape(feature.uses?.label ?? feature.usesLabel ?? "");
-    return `
-      <div class="a2e-hud-row compact" data-feature-index="${idx}">
-        <div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta">${locked ? `<span>Niveau requis ${min}${max !== 999 ? `-${max}` : ""}</span>` : `<span>Disponible</span>`}${uses ? `<span>${uses}</span>` : ""}</div></div>
-        <button type="button" class="a2e-hud-action" data-action="use-feature" data-feature-index="${idx}" ${locked ? "disabled" : ""}>Utiliser</button>
-      </div>`;
+    return `<div class="a2e-hud-row compact" data-feature-index="${idx}"><div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta">${locked ? `<span>Niveau requis ${min}${max !== 999 ? `-${max}` : ""}</span>` : `<span>Disponible</span>`}${uses ? `<span>${uses}</span>` : ""}</div></div><button type="button" class="a2e-hud-action" data-action="use-feature" data-feature-index="${idx}" ${locked ? "disabled" : ""}>Utiliser</button></div>`;
   }).join("");
 }
 
@@ -343,11 +298,7 @@ function add2eHudSaveRows(actor) {
   const saves = add2eHudSavingThrows(actor);
   return ADD2E_HUD_SAVE_FULL_NAMES.map((label, idx) => {
     const value = saves[idx] || "—";
-    return `
-      <div class="a2e-hud-row compact">
-        <div><div class="a2e-hud-row-title">${add2eHudEscape(label)}</div><div class="a2e-hud-row-meta"><span>Seuil ${add2eHudEscape(value)} ou plus</span></div></div>
-        <button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button>
-      </div>`;
+    return `<div class="a2e-hud-row compact"><div><div class="a2e-hud-row-title">${add2eHudEscape(label)}</div><div class="a2e-hud-row-meta"><span>Seuil ${add2eHudEscape(value)} ou plus</span></div></div><button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button></div>`;
   }).join("");
 }
 
@@ -365,26 +316,10 @@ function add2eHudHtml(actor, token = null) {
   const niveau = actor.system?.niveau ?? "—";
   const ac = actor.system?.ca_total ?? actor.system?.ca ?? "—";
   const thaco = add2eHudThaco(actor);
-
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${add2eHudActiveTab === key ? "active" : ""}" data-hud-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="a2e-hud-section ${add2eHudActiveTab === key ? "active" : ""}" data-hud-section="${key}">${html}</section>`;
   const body = add2eHudActiveTab ? `<div class="a2e-hud-body">${section("attaques", add2eHudWeaponRows(actor))}${section("sorts", add2eHudSpellRows(actor))}${section("capacites", add2eHudFeatureRows(actor))}${section("sauvegardes", add2eHudSaveRows(actor))}${section("caracs", add2eHudAbilityRows(actor))}</div>` : "";
-
-  return `
-    <div class="a2e-hud-shell">
-      ${body}
-      <div class="a2e-hud-resize" data-resize-hud="1" title="Redimensionner le HUD"><i class="fas fa-up-right-and-down-left-from-center"></i></div>
-      <div class="a2e-hud-header">
-        <img class="a2e-hud-portrait a2e-hud-drag-zone" src="${add2eHudEscape(img)}" alt="${add2eHudEscape(actor.name)}" title="Glisser pour déplacer">
-        <div class="a2e-hud-main a2e-hud-drag-zone" title="Glisser pour déplacer — double-clic pour réinitialiser">
-          <div class="a2e-hud-name">${add2eHudEscape(actor.name)}</div>
-          <div class="a2e-hud-subtitle">${add2eHudEscape(race)} — ${add2eHudEscape(classe)} niv. ${add2eHudEscape(niveau)}</div>
-          <div class="a2e-hud-metrics"><span class="a2e-hud-pill">PV ${add2eHudHp(actor)} / ${add2eHudHpMax(actor)}</span><span class="a2e-hud-pill">CA ${add2eHudEscape(ac)}</span><span class="a2e-hud-pill">THAC0 ${add2eHudEscape(thaco)}</span></div>
-        </div>
-        <div class="a2e-hud-controls"><button type="button" class="a2e-hud-icon-btn" data-action="reset-layout" title="Réinitialiser position/taille"><i class="fas fa-crosshairs"></i></button><button type="button" class="a2e-hud-icon-btn" data-action="toggle-collapse" title="Réduire / agrandir"><i class="fas fa-chevron-down"></i></button></div>
-      </div>
-      <nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Attaques")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav>
-    </div>`;
+  return `<div class="a2e-hud-shell">${body}<div class="a2e-hud-resize" data-resize-hud="1" title="Redimensionner le HUD"><i class="fas fa-up-right-and-down-left-from-center"></i></div><div class="a2e-hud-header"><img class="a2e-hud-portrait a2e-hud-drag-zone" src="${add2eHudEscape(img)}" alt="${add2eHudEscape(actor.name)}" title="Glisser pour déplacer"><div class="a2e-hud-main a2e-hud-drag-zone" title="Glisser pour déplacer — double-clic pour réinitialiser"><div class="a2e-hud-name">${add2eHudEscape(actor.name)}</div><div class="a2e-hud-subtitle">${add2eHudEscape(race)} — ${add2eHudEscape(classe)} niv. ${add2eHudEscape(niveau)}</div><div class="a2e-hud-metrics"><span class="a2e-hud-pill">PV ${add2eHudHp(actor)} / ${add2eHudHpMax(actor)}</span><span class="a2e-hud-pill">CA ${add2eHudEscape(ac)}</span><span class="a2e-hud-pill">THAC0 ${add2eHudEscape(thaco)}</span></div></div><div class="a2e-hud-controls"><button type="button" class="a2e-hud-icon-btn" data-action="reset-layout" title="Réinitialiser position/taille"><i class="fas fa-crosshairs"></i></button><button type="button" class="a2e-hud-icon-btn" data-action="toggle-collapse" title="Réduire / agrandir"><i class="fas fa-chevron-down"></i></button></div></div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Attaques")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav></div>`;
 }
 
 function add2eRenderActionHud(actor = null, token = null) {
@@ -411,7 +346,7 @@ function add2eRefreshActionHud() {
 }
 
 function add2eRefreshActionHudSoon() {
-  for (const delay of [0, 80, 220, 500]) window.setTimeout(add2eRefreshActionHud, delay);
+  for (const delay of [0, 80, 220, 500, 1000]) window.setTimeout(add2eRefreshActionHud, delay);
 }
 
 function add2eCloseActionHud() {
@@ -428,7 +363,6 @@ function add2eBindHudEvents(hud, actor) {
       add2eRefreshActionHud();
     });
   });
-
   hud.querySelectorAll("[data-action]").forEach(btn => {
     btn.addEventListener("click", async ev => {
       ev.preventDefault();
@@ -443,7 +377,7 @@ function add2eBindHudEvents(hud, actor) {
           return;
         }
         if (action === "attack") return add2eHudAttack(actor, btn.dataset.itemId);
-        if (action === "cast-spell") return add2eHudCastSpell(actor, btn.dataset.itemId);
+        if (action === "cast-spell") return add2eHudCastSpell(actor, btn.dataset.itemId, btn);
         if (action === "use-feature") return add2eHudUseFeature(actor, btn.dataset.featureIndex);
         if (action === "roll-save") return add2eHudRollSaveLikeSheet(actor, Number(btn.dataset.saveIndex));
         if (action === "roll-ability") return add2eHudRollAbilityLikeSheet(actor, btn.dataset.ability);
@@ -453,19 +387,15 @@ function add2eBindHudEvents(hud, actor) {
       }
     });
   });
-
   hud.querySelectorAll(".a2e-hud-drag-zone").forEach(el => add2eBindHudDragHandle(hud, el));
   hud.querySelector("[data-resize-hud]")?.addEventListener("pointerdown", ev => add2eStartHudResize(ev, hud));
-  hud.querySelector(".a2e-hud-drag-zone")?.addEventListener("dblclick", ev => {
-    ev.preventDefault();
-    add2eHudResetLayout();
-  });
+  hud.querySelector(".a2e-hud-drag-zone")?.addEventListener("dblclick", ev => { ev.preventDefault(); add2eHudResetLayout(); });
 }
 
 function add2eBindHudDragHandle(hud, handle) {
   handle.addEventListener("pointerdown", ev => {
     if (ev.button !== 0) return;
-    if (ev.target.closest?.("button, a, input, select, textarea, [data-action], [data-resize-hud]")) return;
+    if (ev.target.closest?.("button,a,input,select,textarea,[data-action],[data-resize-hud]")) return;
     ev.preventDefault();
     const rect = hud.getBoundingClientRect();
     const startX = ev.clientX;
@@ -540,32 +470,66 @@ async function add2eHudAttack(actor, itemId) {
   return globalThis.add2eAttackRoll({ actor, arme });
 }
 
-async function add2eHudWithoutOpeningClosedActorSheet(actor, operation) {
-  const sheet = actor?.sheet ?? null;
-  const wasRendered = !!sheet?.rendered;
-  const originalRender = sheet?.render;
+function add2eHudIsSheetRendered(sheet) {
+  if (!sheet) return false;
+  if (sheet.rendered === true) return true;
+  const el = sheet.element;
+  if (el instanceof HTMLElement) return document.body.contains(el);
+  if (el?.[0] instanceof HTMLElement) return document.body.contains(el[0]);
+  return false;
+}
 
-  if (sheet && !wasRendered && typeof originalRender === "function") {
+function add2eHudBlockClosedSheetOpening(actor, duration = 1600) {
+  if (!actor) return () => {};
+
+  let sheet = null;
+  let originalRender = null;
+  let originalOwnSheetDescriptor = null;
+  let restoreDone = false;
+
+  try {
+    sheet = actor.sheet;
+    if (!sheet || add2eHudIsSheetRendered(sheet) || typeof sheet.render !== "function") return () => {};
+
+    originalRender = sheet.render;
+    originalOwnSheetDescriptor = Object.getOwnPropertyDescriptor(actor, "sheet");
+
     sheet.render = function(...args) {
-      console.log(`${TAG}[SHEET_RENDER_SKIPPED]`, {
-        actor: actor?.name,
-        reason: "HUD spell cast : fiche fermée, ne pas l'ouvrir",
+      console.log(`${TAG}[SHEET_RENDER_BLOCKED]`, {
+        actor: actor.name,
+        reason: "Sort lancé depuis le HUD : fiche fermée, ouverture bloquée",
         args
       });
       return this;
     };
+
+    // add2eCastSpell relance actor.sheet.render dans un setTimeout interne.
+    // On force donc actor.sheet à renvoyer la même feuille patchée pendant quelques instants.
+    try {
+      Object.defineProperty(actor, "sheet", {
+        configurable: true,
+        get() { return sheet; }
+      });
+    } catch (_e) {}
+  } catch (_e) {
+    return () => {};
   }
 
-  try {
-    return await operation();
-  } finally {
-    if (sheet && !wasRendered && typeof originalRender === "function") {
-      sheet.render = originalRender;
-    }
-  }
+  const restore = () => {
+    if (restoreDone) return;
+    restoreDone = true;
+    try { if (sheet && originalRender) sheet.render = originalRender; } catch (_e) {}
+    try {
+      if (originalOwnSheetDescriptor) Object.defineProperty(actor, "sheet", originalOwnSheetDescriptor);
+      else delete actor.sheet;
+    } catch (_e) {}
+  };
+
+  window.setTimeout(restore, duration);
+  return restore;
 }
 
-async function add2eHudCastSpell(actor, itemId) {
+async function add2eHudCastSpell(actor, itemId, button = null) {
   const sort = add2eHudFindItem(actor, itemId);
   if (!sort) return ui.notifications.warn("Sort introuvable.");
   if (typeof globalThis.add2eCastSpell !== "function") {
@@ -574,9 +538,38 @@ async function add2eHudCastSpell(actor, itemId) {
     return;
   }
 
-  const result = await add2eHudWithoutOpeningClosedActorSheet(actor, () => globalThis.add2eCastSpell({ actor, sort }));
-  add2eRefreshActionHudSoon();
-  return result;
+  const before = add2eHudPreparedCount(sort);
+  if (before <= 0) {
+    ui.notifications.warn(`Le sort "${sort.name}" n'est plus mémorisé.`);
+    add2eRefreshActionHudSoon();
+    return false;
+  }
+
+  button?.setAttribute?.("disabled", "disabled");
+  const restore = add2eHudBlockClosedSheetOpening(actor, 1800);
+
+  try {
+    const result = await globalThis.add2eCastSpell({ actor, sort });
+    await add2eHudSleep(120);
+
+    const refreshedSort = add2eHudFindItem(actor, itemId) ?? sort;
+    const after = add2eHudPreparedCount(refreshedSort);
+
+    console.log(`${TAG}[CAST_SPELL_RESULT]`, {
+      actor: actor.name,
+      sort: sort.name,
+      result,
+      memorizedBefore: before,
+      memorizedAfter: after,
+      flags: refreshedSort?.flags?.add2e ?? null
+    });
+
+    add2eRefreshActionHudSoon();
+    return result;
+  } finally {
+    window.setTimeout(restore, 1850);
+    window.setTimeout(() => button?.removeAttribute?.("disabled"), 250);
+  }
 }
 
 async function add2eHudUseFeature(actor, featureIndex) {
@@ -598,11 +591,11 @@ async function add2eHudRollAbilityLikeSheet(actor, carac) {
   const roll = new Roll("1d20");
   await roll.evaluate();
   if (game.dice3d) await game.dice3d.showForRoll(roll);
-  const caracIcon = data?.icon || "fa-dice-d20";
-  const caracColor = data?.color || "#6c4e95";
-  const reussite = roll.total <= val;
-  const htmlCard = `<div class="add2e-card-test" style="border-radius:13px; box-shadow:0 2px 10px #b5e7c388; background:linear-gradient(100deg,#f9fcfa 90%,#e4fbf1 100%); border:1.4px solid ${caracColor}; max-width:420px; padding:0.85em 1.1em 0.8em 1.1em; font-family: var(--font-primary);"><div style="display:flex; align-items:center; gap:0.7em; margin-bottom:0.5em;"><i class="fas ${caracIcon}" style="font-size:2em;color:${caracColor};"></i><span style="font-size:1.17em; font-weight:bold; color:${caracColor};">${label}</span><span style="margin-left:auto; font-size:1em; font-weight:500; color:#666;">Test de caractéristique</span></div><div style="font-size:1.11em; margin-bottom:0.25em;">Seuil&nbsp;: <b>${val}</b>&nbsp;&nbsp;|&nbsp;&nbsp;Résultat&nbsp;: <b>${roll.total}</b></div><div style="margin:0.2em 0 0.1em 0; font-size:1.1em;"><span style="font-weight:600; color:${reussite ? "#1cb360" : "#c34040"};">${reussite ? "✔️ Réussite" : "❌ Échec"}</span></div></div>`;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: htmlCard });
+  const icon = data?.icon || "fa-dice-d20";
+  const color = data?.color || "#6c4e95";
+  const ok = roll.total <= val;
+  const html = `<div class="add2e-card-test" style="border-radius:13px;box-shadow:0 2px 10px #b5e7c388;background:linear-gradient(100deg,#f9fcfa 90%,#e4fbf1 100%);border:1.4px solid ${color};max-width:420px;padding:.85em 1.1em .8em 1.1em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:.7em;margin-bottom:.5em;"><i class="fas ${icon}" style="font-size:2em;color:${color};"></i><span style="font-size:1.17em;font-weight:bold;color:${color};">${label}</span><span style="margin-left:auto;font-size:1em;font-weight:500;color:#666;">Test de caractéristique</span></div><div style="font-size:1.11em;margin-bottom:.25em;">Seuil&nbsp;: <b>${val}</b>&nbsp;&nbsp;|&nbsp;&nbsp;Résultat&nbsp;: <b>${roll.total}</b></div><div style="margin:.2em 0 .1em 0;font-size:1.1em;"><span style="font-weight:600;color:${ok ? "#1cb360" : "#c34040"};">${ok ? "✔️ Réussite" : "❌ Échec"}</span></div></div>`;
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: html });
 }
 
 async function add2eHudRollSaveLikeSheet(actor, idx) {
@@ -615,19 +608,15 @@ async function add2eHudRollSaveLikeSheet(actor, idx) {
   if (game.dice3d) await game.dice3d.showForRoll(roll);
   let bonusSave = 0;
   if (typeof Add2eEffectsEngine !== "undefined") {
-    try {
-      const analyse = Add2eEffectsEngine.analyze?.(actor, { type: "save", vsType: nom, frontale: true }) ?? {};
-      bonusSave = Number(analyse.bonus_save || 0);
-    } catch (e) {
-      console.warn("[ADD2E][SAVE] Erreur analyse effets de sauvegarde", e);
-    }
+    try { bonusSave = Number(Add2eEffectsEngine.analyze?.(actor, { type: "save", vsType: nom, frontale: true })?.bonus_save || 0); }
+    catch (e) { console.warn("[ADD2E][SAVE] Erreur analyse effets de sauvegarde", e); }
   }
   const totalJet = Number(roll.total || 0) + bonusSave;
   const icon = ADD2E_HUD_SAVE_ICONS[idx] || "fa-dice-d20";
   const color = ADD2E_HUD_SAVE_COLORS[idx] || "#6c4e95";
-  const reussite = totalJet >= valeur;
-  const htmlCard = `<div class="add2e-card-test" style="border-radius:13px; box-shadow:0 2px 10px #cfdfff88; background:linear-gradient(100deg,#f9fafd 90%,#e6e8fb 100%); border:1.4px solid ${color}; max-width:420px; padding:0.85em 1.1em 0.8em 1.1em; font-family: var(--font-primary);"><div style="display:flex; align-items:center; gap:0.7em; margin-bottom:0.5em;"><i class="fas ${icon}" style="font-size:2em;color:${color};"></i><span style="font-size:1.12em; font-weight:bold; color:${color};">${nom}</span><span style="margin-left:auto; font-size:1em; font-weight:500; color:#666;">Jet de sauvegarde</span></div><div style="font-size:1.09em; margin-bottom:0.25em;">Seuil&nbsp;: <b>${valeur}</b>&nbsp;&nbsp;|&nbsp;&nbsp;Résultat&nbsp;: <b>${roll.total}</b>${bonusSave ? `&nbsp;&nbsp;|&nbsp;&nbsp;Effets&nbsp;: <b>${bonusSave >= 0 ? "+" : ""}${bonusSave}</b> → <b>${totalJet}</b>` : ""}</div><div style="margin:0.2em 0 0.1em 0; font-size:1.1em;"><span style="font-weight:600; color:${reussite ? "#1cb360" : "#c34040"};">${reussite ? "✔️ Réussite" : "❌ Échec"}</span></div></div>`;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: htmlCard });
+  const ok = totalJet >= valeur;
+  const html = `<div class="add2e-card-test" style="border-radius:13px;box-shadow:0 2px 10px #cfdfff88;background:linear-gradient(100deg,#f9fafd 90%,#e6e8fb 100%);border:1.4px solid ${color};max-width:420px;padding:.85em 1.1em .8em 1.1em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:.7em;margin-bottom:.5em;"><i class="fas ${icon}" style="font-size:2em;color:${color};"></i><span style="font-size:1.12em;font-weight:bold;color:${color};">${nom}</span><span style="margin-left:auto;font-size:1em;font-weight:500;color:#666;">Jet de sauvegarde</span></div><div style="font-size:1.09em;margin-bottom:.25em;">Seuil&nbsp;: <b>${valeur}</b>&nbsp;&nbsp;|&nbsp;&nbsp;Résultat&nbsp;: <b>${roll.total}</b>${bonusSave ? `&nbsp;&nbsp;|&nbsp;&nbsp;Effets&nbsp;: <b>${bonusSave >= 0 ? "+" : ""}${bonusSave}</b> → <b>${totalJet}</b>` : ""}</div><div style="margin:.2em 0 .1em 0;font-size:1.1em;"><span style="font-weight:600;color:${ok ? "#1cb360" : "#c34040"};">${ok ? "✔️ Réussite" : "❌ Échec"}</span></div></div>`;
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: html });
 }
 
 Hooks.once("init", () => {
