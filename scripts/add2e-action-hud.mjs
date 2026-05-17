@@ -1,19 +1,14 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide sans ouvrir la fiche personnage
-// Version : 2026-05-16-v8-spell-rememorize-no-sheet-open
+// Version : 2026-05-16-v9-capture-spell-click
 //
-// Le HUD utilise les mécaniques existantes du système :
-// - attaque  : globalThis.add2eAttackRoll({ actor, arme })
-// - sort     : globalThis.add2eCastSpell({ actor, sort })
-// - capacité : globalThis.add2eExecuteClassFeatureOnUse(actor, feature, null)
-//
-// Correctifs V8 :
-// - si la fiche remémorise via flags.add2e.memorizedByList mais que memorizedCount reste à 0,
-//   le HUD resynchronise memorizedCount avant d'appeler add2eCastSpell.
-// - le HUD bloque temporairement le render() des fiches acteur fermées pendant le lancement,
-//   sans modifier actor.sheet durablement.
+// Principe :
+// - le HUD affiche uniquement les armes équipées et les sorts réellement mémorisés ;
+// - les attaques/sorts/capacités appellent les mécaniques existantes du système ;
+// - le clic de lancement de sort est intercepté en phase capture, comme le patch console validé,
+//   pour empêcher toute ouverture parasite de la fiche acteur fermée.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v8-spell-rememorize-no-sheet-open";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v9-capture-spell-click";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
@@ -23,9 +18,10 @@ let add2eHudActorId = null;
 let add2eHudActiveTab = null;
 let add2eHudCollapsed = false;
 let add2eHudLayout = null;
-let add2eHudRenderGuard = null;
-let add2eHudRenderGuardInstalled = false;
-let add2eHudOriginalRenders = [];
+let add2eHudCaptureInstalled = false;
+let add2eHudRenderPatchInstalled = false;
+
+const add2eHudRenderGuard = { actorId: null, until: 0 };
 
 const ADD2E_HUD_CARACS = [
   { key: "force", label: "FOR", title: "Force", icon: "fa-dumbbell", color: "#4ab878" },
@@ -46,13 +42,6 @@ function add2eHudEscape(value) {
   catch (_e) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"); }
 }
 
-function add2eHudArray(value) {
-  if (value === undefined || value === null || value === "") return [];
-  if (Array.isArray(value)) return value;
-  if (typeof value === "object") return Object.values(value);
-  return [value];
-}
-
 function add2eHudNumber(value, fallback = 0) {
   if (typeof value === "string") {
     const m = value.match(/-?\d+/);
@@ -61,6 +50,13 @@ function add2eHudNumber(value, fallback = 0) {
   }
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function add2eHudArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === "object") return Object.values(value);
+  return [value];
 }
 
 function add2eHudClamp(value, min, max) {
@@ -92,6 +88,7 @@ function add2eHudApplyLayout(hud) {
   const layout = add2eHudLoadLayout();
   const width = add2eHudClamp(Number(layout.width) || 760, 520, Math.max(560, window.innerWidth - 24));
   const menuHeight = add2eHudClamp(Number(layout.menuHeight) || 360, 180, Math.max(220, window.innerHeight - 170));
+
   hud.style.width = `${width}px`;
   hud.style.setProperty("--a2e-hud-menu-height", `${menuHeight}px`);
 
@@ -132,6 +129,22 @@ function add2eHudFindItem(actor, itemId) {
   return actor.items?.get?.(itemId) ?? actor.items?.find?.(i => String(i.id ?? i._id) === String(itemId)) ?? null;
 }
 
+function add2eHudActorForItemId(itemId) {
+  if (!itemId) return null;
+
+  const selectedActor = canvas?.tokens?.controlled?.[0]?.actor;
+  if (selectedActor?.items?.get?.(itemId) && add2eHudCanUseActor(selectedActor)) return selectedActor;
+
+  const userActor = game.user.character;
+  if (userActor?.items?.get?.(itemId) && add2eHudCanUseActor(userActor)) return userActor;
+
+  return game.actors.find(a =>
+    a.type === "personnage" &&
+    a.items?.get?.(itemId) &&
+    add2eHudCanUseActor(a)
+  ) ?? null;
+}
+
 function add2eHudIsEquipped(item) {
   const s = item?.system ?? {};
   return Boolean(s.equipee ?? s.equipped ?? s.estEquipee);
@@ -152,16 +165,16 @@ function add2eHudSumMemorizedByList(value) {
 function add2eHudMemorizedState(sort) {
   const flags = sort?.flags?.add2e ?? {};
   const memorizedCount = flags.memorizedCount === undefined || flags.memorizedCount === null
-    ? null
+    ? 0
     : Math.max(0, add2eHudNumber(flags.memorizedCount, 0));
   const byListTotal = flags.memorizedByList === undefined || flags.memorizedByList === null
-    ? null
+    ? 0
     : Math.max(0, add2eHudSumMemorizedByList(flags.memorizedByList));
 
   return {
     memorizedCount,
     byListTotal,
-    count: Math.max(0, Number(memorizedCount ?? 0), Number(byListTotal ?? 0))
+    count: Math.max(memorizedCount, byListTotal)
   };
 }
 
@@ -172,10 +185,7 @@ function add2eHudPreparedCount(sort) {
 async function add2eHudSyncMemorizedCountBeforeCast(sort) {
   const state = add2eHudMemorizedState(sort);
 
-  // Cas rencontré : après consommation memorizedCount vaut 0.
-  // La remémorisation depuis la fiche peut remettre memorizedByList à 1 sans remettre memorizedCount.
-  // Or add2eCastSpell consomme memorizedCount. On synchronise donc avant l'appel au moteur existant.
-  if ((state.memorizedCount ?? 0) <= 0 && (state.byListTotal ?? 0) > 0) {
+  if (state.memorizedCount <= 0 && state.byListTotal > 0) {
     await sort.update({ "flags.add2e.memorizedCount": state.byListTotal });
     console.log(`${TAG}[SPELL_MEM_SYNC_BEFORE_CAST]`, {
       sort: sort.name,
@@ -196,7 +206,9 @@ function add2eHudSpells(actor) {
 function add2eHudClassFeatures(actor) {
   const details = actor?.system?.details_classe ?? {};
   const raw = details.classFeatures ?? details.capacitesClasse ?? actor?.system?.classFeatures ?? [];
-  return add2eHudArray(raw).map((feature, index) => ({ ...feature, __index: index })).filter(feature => feature?.activable === true);
+  return add2eHudArray(raw)
+    .map((feature, index) => ({ ...feature, __index: index }))
+    .filter(feature => feature?.activable === true);
 }
 
 function add2eHudAbilityValue(actor, key) {
@@ -250,8 +262,7 @@ function add2eHudInjectStyle() {
   style.id = STYLE_ID;
   style.textContent = `
     #${HUD_ID}{position:fixed;left:116px;bottom:22px;width:760px;max-width:calc(100vw - 24px);min-width:520px;z-index:80;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;user-select:none;}
-    #${HUD_ID}.a2e-hud-dragging,#${HUD_ID}.a2e-hud-resizing{transition:none!important;}
-    #${HUD_ID}.collapsed .a2e-hud-tabs,#${HUD_ID}.collapsed .a2e-hud-body{display:none;}
+    #${HUD_ID}.a2e-hud-dragging,#${HUD_ID}.a2e-hud-resizing{transition:none!important;}#${HUD_ID}.collapsed .a2e-hud-tabs,#${HUD_ID}.collapsed .a2e-hud-body{display:none;}
     #${HUD_ID} .a2e-hud-shell{position:relative;border:1px solid #8a611d;border-radius:14px;overflow:visible;background:radial-gradient(circle at 15% 0%,rgba(213,147,45,.28),transparent 36%),linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,230,160,.12);backdrop-filter:blur(3px);}
     #${HUD_ID} .a2e-hud-header{display:grid;grid-template-columns:88px minmax(0,1fr) 70px;gap:8px;align-items:center;min-height:86px;padding:5px 8px;border-bottom:1px solid rgba(184,137,36,.55);border-radius:14px 14px 0 0;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));}
     #${HUD_ID} .a2e-hud-drag-zone{cursor:move;}#${HUD_ID} .a2e-hud-portrait{width:78px;height:78px;align-self:center;border-radius:10px;object-fit:cover;border:2px solid #c4973f;background:#111;box-shadow:0 2px 8px rgba(0,0,0,.45);}
@@ -280,10 +291,9 @@ function add2eHudSpellRows(actor) {
   if (!spells.length) return `<div class="a2e-hud-empty">Aucun sort mémorisé.</div>`;
   return spells.map(sort => {
     const state = add2eHudMemorizedState(sort);
-    const prepared = state.count;
     const niv = add2eHudEscape(sort.system?.niveau ?? sort.system?.level ?? "—");
     const school = add2eHudEscape(sort.system?.école ?? sort.system?.ecole ?? "");
-    return `<div class="a2e-hud-row" data-item-id="${add2eHudEscape(sort.id)}"><img src="${add2eHudEscape(sort.img || "icons/svg/book.svg")}" alt="${add2eHudEscape(sort.name)}"><div><div class="a2e-hud-row-title">${add2eHudEscape(sort.name)}</div><div class="a2e-hud-row-meta"><span>Niv. ${niv}</span>${school ? `<span>${school}</span>` : ""}<span>Mémorisé ${prepared}</span></div></div><button type="button" class="a2e-hud-action" data-action="cast-spell" data-item-id="${add2eHudEscape(sort.id)}">Lancer</button></div>`;
+    return `<div class="a2e-hud-row" data-item-id="${add2eHudEscape(sort.id)}"><img src="${add2eHudEscape(sort.img || "icons/svg/book.svg")}" alt="${add2eHudEscape(sort.name)}"><div><div class="a2e-hud-row-title">${add2eHudEscape(sort.name)}</div><div class="a2e-hud-row-meta"><span>Niv. ${niv}</span>${school ? `<span>${school}</span>` : ""}<span>Mémorisé ${state.count}</span></div></div><button type="button" class="a2e-hud-action" data-action="cast-spell" data-item-id="${add2eHudEscape(sort.id)}">Lancer</button></div>`;
   }).join("");
 }
 
@@ -349,7 +359,7 @@ function add2eRefreshActionHud() {
 }
 
 function add2eRefreshActionHudSoon() {
-  for (const delay of [0, 80, 220, 500, 1000]) window.setTimeout(add2eRefreshActionHud, delay);
+  for (const delay of [0, 100, 250, 600, 1200]) window.setTimeout(add2eRefreshActionHud, delay);
 }
 
 function add2eCloseActionHud() {
@@ -372,6 +382,8 @@ function add2eBindHudEvents(hud, actor) {
       ev.preventDefault();
       ev.stopPropagation();
       const action = btn.dataset.action;
+      if (action === "cast-spell") return; // géré en capture globale, comme le patch console validé
+
       try {
         if (action === "reset-layout") return add2eHudResetLayout();
         if (action === "toggle-collapse") {
@@ -381,7 +393,6 @@ function add2eBindHudEvents(hud, actor) {
           return;
         }
         if (action === "attack") return add2eHudAttack(actor, btn.dataset.itemId);
-        if (action === "cast-spell") return add2eHudCastSpell(actor, btn.dataset.itemId, btn);
         if (action === "use-feature") return add2eHudUseFeature(actor, btn.dataset.featureIndex);
         if (action === "roll-save") return add2eHudRollSaveLikeSheet(actor, Number(btn.dataset.saveIndex));
         if (action === "roll-ability") return add2eHudRollAbilityLikeSheet(actor, btn.dataset.ability);
@@ -395,6 +406,34 @@ function add2eBindHudEvents(hud, actor) {
   hud.querySelectorAll(".a2e-hud-drag-zone").forEach(el => add2eBindHudDragHandle(hud, el));
   hud.querySelector("[data-resize-hud]")?.addEventListener("pointerdown", ev => add2eStartHudResize(ev, hud));
   hud.querySelector(".a2e-hud-drag-zone")?.addEventListener("dblclick", ev => { ev.preventDefault(); add2eHudResetLayout(); });
+}
+
+function add2eHudInstallCaptureCastHandler() {
+  if (add2eHudCaptureInstalled) return;
+  add2eHudCaptureInstalled = true;
+
+  document.addEventListener("click", async ev => {
+    const button = ev.target.closest?.(`#${HUD_ID} [data-action='cast-spell']`);
+    if (!button) return;
+
+    ev.preventDefault();
+    ev.stopPropagation();
+    ev.stopImmediatePropagation();
+
+    const itemId = button.dataset.itemId;
+    const actor = add2eHudActorForItemId(itemId);
+    const sort = actor?.items?.get?.(itemId);
+
+    if (!actor || !sort) {
+      ui.notifications.warn("HUD : acteur ou sort introuvable.");
+      console.warn(`${TAG}[CAPTURE_CAST_MISSING]`, { actor, itemId, sort });
+      return false;
+    }
+
+    return add2eHudCastSpell(actor, itemId, button);
+  }, true);
+
+  console.log(`${TAG}[CAPTURE_CAST_HANDLER_INSTALLED]`);
 }
 
 function add2eBindHudDragHandle(hud, handle) {
@@ -488,21 +527,21 @@ function add2eHudIsSheetRendered(sheet) {
   return false;
 }
 
-function add2eHudShouldBlockSheetRender(sheet) {
-  const guard = add2eHudRenderGuard;
-  if (!guard || Date.now() > guard.until) return false;
+function add2eHudShouldBlockRender(sheet) {
+  if (!add2eHudRenderGuard.actorId || Date.now() > add2eHudRenderGuard.until) return false;
   const doc = add2eHudGetSheetDocument(sheet);
   if (!doc || doc.documentName !== "Actor") return false;
-  if (String(doc.id) !== String(guard.actorId)) return false;
+  if (String(doc.id) !== String(add2eHudRenderGuard.actorId)) return false;
   return !add2eHudIsSheetRendered(sheet);
 }
 
 function add2eHudPatchRenderPrototype(proto, label) {
   if (!proto || typeof proto.render !== "function") return;
-  if (proto.render.__add2eHudPatched) return;
+  if (proto.render.__add2eHudCapturePatched) return;
+
   const original = proto.render;
   const patched = function(...args) {
-    if (add2eHudShouldBlockSheetRender(this)) {
+    if (add2eHudShouldBlockRender(this)) {
       console.log(`${TAG}[SHEET_RENDER_BLOCKED]`, {
         label,
         actor: add2eHudGetSheetDocument(this)?.name,
@@ -512,43 +551,38 @@ function add2eHudPatchRenderPrototype(proto, label) {
     }
     return original.apply(this, args);
   };
-  patched.__add2eHudPatched = true;
-  patched.__add2eHudOriginal = original;
+
+  patched.__add2eHudCapturePatched = true;
+  patched.__add2eHudCaptureOriginal = original;
   proto.render = patched;
-  add2eHudOriginalRenders.push({ proto, original, label });
+  console.log(`${TAG}[PATCH_RENDER]`, label);
 }
 
-function add2eHudInstallRenderGuard(actor) {
-  if (add2eHudRenderGuardInstalled) return;
-  add2eHudRenderGuardInstalled = true;
+function add2eHudInstallRenderGuardPatches(actor = null) {
+  if (!add2eHudRenderPatchInstalled) {
+    add2eHudRenderPatchInstalled = true;
+    try { add2eHudPatchRenderPrototype(foundry?.applications?.api?.ApplicationV2?.prototype, "ApplicationV2"); } catch (_e) {}
+    try { add2eHudPatchRenderPrototype(globalThis.Application?.prototype, "ApplicationV1"); } catch (_e) {}
+    try { add2eHudPatchRenderPrototype(globalThis.ActorSheet?.prototype, "ActorSheet"); } catch (_e) {}
+  }
 
-  // Patch de la fiche concrète ADD2E.
   try { add2eHudPatchRenderPrototype(actor?.sheet?.constructor?.prototype, "actor.sheet.constructor"); } catch (_e) {}
-
-  // Fallbacks Foundry V13/V12.
-  try { add2eHudPatchRenderPrototype(foundry?.applications?.api?.ApplicationV2?.prototype, "ApplicationV2"); } catch (_e) {}
-  try { add2eHudPatchRenderPrototype(globalThis.Application?.prototype, "ApplicationV1"); } catch (_e) {}
-  try { add2eHudPatchRenderPrototype(globalThis.ActorSheet?.prototype, "ActorSheet"); } catch (_e) {}
 }
 
-function add2eHudArmRenderGuard(actor, duration = 2200) {
-  add2eHudInstallRenderGuard(actor);
-  add2eHudRenderGuard = {
-    actorId: actor?.id,
-    until: Date.now() + duration
-  };
-  return () => {
-    if (add2eHudRenderGuard?.actorId === actor?.id) add2eHudRenderGuard = null;
-  };
+function add2eHudArmRenderGuard(actor, duration = 3200) {
+  add2eHudInstallRenderGuardPatches(actor);
+  add2eHudRenderGuard.actorId = actor?.id ?? null;
+  add2eHudRenderGuard.until = Date.now() + duration;
 }
 
 async function add2eHudCastSpell(actor, itemId, button = null) {
   let sort = add2eHudFindItem(actor, itemId);
   if (!sort) return ui.notifications.warn("Sort introuvable.");
+
   if (typeof globalThis.add2eCastSpell !== "function") {
     ui.notifications.error("Fonction add2eCastSpell introuvable.");
     console.warn(`${TAG}[MISSING] add2eCastSpell`);
-    return;
+    return false;
   }
 
   let available = add2eHudPreparedCount(sort);
@@ -559,23 +593,23 @@ async function add2eHudCastSpell(actor, itemId, button = null) {
   }
 
   button?.setAttribute?.("disabled", "disabled");
-  const disarmRenderGuard = add2eHudArmRenderGuard(actor, 2400);
 
   try {
     available = await add2eHudSyncMemorizedCountBeforeCast(sort);
     if (available <= 0) {
       ui.notifications.warn(`Le sort "${sort.name}" n'est plus mémorisé.`);
+      add2eRefreshActionHudSoon();
       return false;
     }
 
-    // Relecture après update éventuel du flag.
     sort = add2eHudFindItem(actor, itemId) ?? sort;
+    add2eHudArmRenderGuard(actor, 3200);
 
     const result = await globalThis.add2eCastSpell({ actor, sort });
-    await add2eHudSleep(140);
+    await add2eHudSleep(120);
 
     const refreshedSort = add2eHudFindItem(actor, itemId) ?? sort;
-    console.log(`${TAG}[CAST_SPELL_RESULT]`, {
+    console.log(`${TAG}[CAST_RESULT]`, {
       actor: actor.name,
       sort: sort.name,
       result,
@@ -585,9 +619,13 @@ async function add2eHudCastSpell(actor, itemId, button = null) {
 
     add2eRefreshActionHudSoon();
     return result;
+  } catch (err) {
+    console.error(`${TAG}[CAST_ERROR]`, err);
+    ui.notifications.error("HUD : erreur pendant le lancement du sort.");
+    return false;
   } finally {
-    window.setTimeout(disarmRenderGuard, 2500);
-    window.setTimeout(() => button?.removeAttribute?.("disabled"), 250);
+    window.setTimeout(() => { if (add2eHudRenderGuard.actorId === actor?.id) add2eHudRenderGuard.actorId = null; }, 3300);
+    window.setTimeout(() => button?.removeAttribute?.("disabled"), 300);
   }
 }
 
@@ -651,9 +689,14 @@ Hooks.once("init", () => {
   console.log(`${TAG}[INIT]`, ADD2E_ACTION_HUD_VERSION);
 });
 
+Hooks.once("ready", () => {
+  add2eHudInstallCaptureCastHandler();
+  add2eHudInstallRenderGuardPatches();
+  window.setTimeout(add2eRefreshActionHud, 300);
+});
+
 Hooks.on("controlToken", () => window.setTimeout(add2eRefreshActionHud, 60));
 Hooks.on("canvasReady", () => window.setTimeout(add2eRefreshActionHud, 150));
-Hooks.once("ready", () => window.setTimeout(add2eRefreshActionHud, 300));
 Hooks.on("updateActor", actor => { if (actor?.id === add2eHudActorId) window.setTimeout(add2eRefreshActionHud, 60); });
 
 for (const hookName of ["createItem", "updateItem", "deleteItem", "createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
