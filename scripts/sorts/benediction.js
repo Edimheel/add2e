@@ -242,6 +242,10 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
+  // Compatibilité avec les anciens scripts de FX qui utilisaient casterTokenObj.
+  // Important : ne jamais référencer casterTokenObj directement s'il n'est pas déclaré.
+  const add2eCasterFxSource = casterToken ?? caster;
+
   // ======================================================
   // 2. CIBLES
   // ======================================================
@@ -489,7 +493,7 @@ const __add2eOnUseResult = await (async () => {
     </div>
   `;
 
-  if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(casterTokenObj ?? casterToken ?? caster, "divine");
+  if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(add2eCasterFxSource, "divine");
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
