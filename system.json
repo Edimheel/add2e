@@ -14,6 +14,8 @@
   "scripts/add2e-active-effects-expire.js",
   "scripts/effects-engine.mjs",
   "scripts/add2e.mjs",
+  "scripts/add2e-new-day.mjs",
+  "scripts/add2e-action-hud.mjs",
   "scripts/add2e-attack.mjs",
   "scripts/resolveActiveEffectsOnTarget.mjs",
   "scripts/monster-sheet.mjs"
