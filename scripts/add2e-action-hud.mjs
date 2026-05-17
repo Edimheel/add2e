@@ -1,6 +1,6 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide sans ouvrir la fiche personnage
-// Version : 2026-05-16-v3-upward-menus
+// Version : 2026-05-16-v4-single-file-layout
 //
 // Règle : le HUD ne réinvente pas les actions.
 // - Attaque  -> globalThis.add2eAttackRoll({ actor, arme })
@@ -8,9 +8,10 @@
 // - Capacité -> globalThis.add2eExecuteClassFeatureOnUse(actor, feature)
 // - Carac / sauvegarde : même mécanique et même carte chat que la fiche personnage.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v3-upward-menus";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v4-single-file-layout";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
+const STYLE_ID = "add2e-action-hud-style";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = null;
@@ -133,7 +134,6 @@ function add2eHudAbilityValue(actor, key) {
 function add2eHudSavingThrows(actor) {
   const level = Math.max(1, add2eHudNumber(actor?.system?.niveau, 1));
   const row = actor?.system?.details_classe?.progression?.[level - 1];
-
   const saves = row?.savingThrows || actor?.system?.sauvegardes || [];
   const arr = add2eHudArray(saves).map(v => add2eHudNumber(v, 0));
   return arr.length >= 5 ? arr.slice(0, 5) : [0, 0, 0, 0, 0];
@@ -172,16 +172,16 @@ function add2eHudRangeText(arme) {
 }
 
 function add2eHudInjectStyle() {
-  if (document.getElementById("add2e-action-hud-style")) return;
+  document.getElementById(STYLE_ID)?.remove();
 
   const style = document.createElement("style");
-  style.id = "add2e-action-hud-style";
+  style.id = STYLE_ID;
   style.textContent = `
     #${HUD_ID} {
       position: fixed;
       left: 116px;
       bottom: 22px;
-      width: 625px;
+      width: 760px;
       max-width: calc(100vw - 140px);
       z-index: 80;
       color: #f6e8bd;
@@ -208,9 +208,9 @@ function add2eHudInjectStyle() {
 
     #${HUD_ID} .a2e-hud-header {
       display: grid;
-      grid-template-columns: 86px minmax(0, 1fr) 34px;
+      grid-template-columns: 88px minmax(0, 1fr) 34px;
       gap: 8px;
-      align-items: stretch;
+      align-items: center;
       min-height: 86px;
       padding: 5px 8px;
       border-bottom: 1px solid rgba(184,137,36,.55);
@@ -231,12 +231,19 @@ function add2eHudInjectStyle() {
 
     #${HUD_ID} .a2e-hud-main {
       min-width: 0;
+      overflow: visible;
       display: grid;
-      grid-template-rows: 22px 20px 26px;
+      grid-template-columns: minmax(180px, 1fr) max-content;
+      grid-template-rows: 24px 24px;
+      column-gap: 12px;
+      row-gap: 0;
+      align-items: center;
       align-content: center;
     }
 
     #${HUD_ID} .a2e-hud-name {
+      grid-column: 1;
+      grid-row: 1;
       color: #fff4cf;
       font-size: 1.08em;
       font-weight: 900;
@@ -244,37 +251,50 @@ function add2eHudInjectStyle() {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      min-width: 0;
     }
 
     #${HUD_ID} .a2e-hud-subtitle {
+      grid-column: 1;
+      grid-row: 2;
       color: #d8bd78;
       font-size: .82em;
       font-weight: 750;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      min-width: 0;
     }
 
     #${HUD_ID} .a2e-hud-metrics {
-      display: flex;
-      flex-wrap: nowrap;
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      display: grid;
+      grid-template-columns: max-content max-content max-content;
       gap: 5px;
-      overflow: hidden;
-      white-space: nowrap;
       align-items: center;
+      justify-content: end;
+      width: max-content;
+      max-width: none;
+      overflow: visible;
+      white-space: nowrap;
+      flex-wrap: nowrap;
     }
 
     #${HUD_ID} .a2e-hud-pill {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      height: 23px;
+      height: 24px;
+      min-width: 0;
+      max-width: none;
       padding: 1px 8px;
       border: 1px solid rgba(214,176,90,.75);
       border-radius: 999px;
       background: rgba(255,244,201,.12);
       color: #fff0bd;
-      font-size: .78em;
+      font-size: .76em;
+      line-height: 1;
       font-weight: 900;
       white-space: nowrap;
       flex: 0 0 auto;
@@ -313,14 +333,8 @@ function add2eHudInjectStyle() {
       cursor: pointer;
     }
 
-    #${HUD_ID} .a2e-hud-tab:last-child {
-      border-right: 0;
-    }
-
-    #${HUD_ID} .a2e-hud-tab.active {
-      color: #211307;
-      background: linear-gradient(180deg,#f0c66d,#c78d2e);
-    }
+    #${HUD_ID} .a2e-hud-tab:last-child { border-right: 0; }
+    #${HUD_ID} .a2e-hud-tab.active { color: #211307; background: linear-gradient(180deg,#f0c66d,#c78d2e); }
 
     #${HUD_ID} .a2e-hud-body {
       position: absolute;
@@ -366,38 +380,10 @@ function add2eHudInjectStyle() {
       background: rgba(255,250,235,.07);
     }
 
-    #${HUD_ID} .a2e-hud-row.compact {
-      grid-template-columns: minmax(0, 1fr) auto;
-      min-height: 38px;
-    }
-
-    #${HUD_ID} .a2e-hud-row img {
-      width: 34px;
-      height: 34px;
-      border-radius: 7px;
-      object-fit: cover;
-      border: 1px solid rgba(214,176,90,.65);
-      background: rgba(0,0,0,.25);
-    }
-
-    #${HUD_ID} .a2e-hud-row-title {
-      color: #fff4cf;
-      font-weight: 900;
-      line-height: 1.08;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    #${HUD_ID} .a2e-hud-row-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px 8px;
-      color: #c8ad6e;
-      font-size: .76em;
-      font-weight: 750;
-      margin-top: 2px;
-    }
+    #${HUD_ID} .a2e-hud-row.compact { grid-template-columns: minmax(0, 1fr) auto; min-height: 38px; }
+    #${HUD_ID} .a2e-hud-row img { width: 34px; height: 34px; border-radius: 7px; object-fit: cover; border: 1px solid rgba(214,176,90,.65); background: rgba(0,0,0,.25); }
+    #${HUD_ID} .a2e-hud-row-title { color: #fff4cf; font-weight: 900; line-height: 1.08; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #${HUD_ID} .a2e-hud-row-meta { display: flex; flex-wrap: wrap; gap: 4px 8px; color: #c8ad6e; font-size: .76em; font-weight: 750; margin-top: 2px; }
 
     #${HUD_ID} .a2e-hud-action {
       min-width: 78px;
@@ -413,52 +399,29 @@ function add2eHudInjectStyle() {
       white-space: nowrap;
     }
 
-    #${HUD_ID} .a2e-hud-action:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
-
+    #${HUD_ID} .a2e-hud-action:disabled { opacity: .45; cursor: not-allowed; }
     #${HUD_ID} .a2e-hud-icon-btn:hover,
     #${HUD_ID} .a2e-hud-action:hover,
-    #${HUD_ID} .a2e-hud-tab:hover {
-      filter: brightness(1.15);
-      transform: translateY(-1px);
-    }
+    #${HUD_ID} .a2e-hud-tab:hover { filter: brightness(1.15); transform: translateY(-1px); }
 
-    #${HUD_ID} .a2e-hud-empty {
-      padding: 12px;
-      border: 1px dashed rgba(214,176,90,.45);
-      border-radius: 10px;
-      color: #c8ad6e;
-      font-style: italic;
-      text-align: center;
-    }
-
-    #${HUD_ID} .a2e-hud-ability-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 7px;
-    }
-
-    #${HUD_ID} .a2e-hud-ability {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 6px;
-      align-items: center;
-      padding: 7px;
-      border: 1px solid rgba(214,176,90,.38);
-      border-radius: 10px;
-      background: rgba(255,250,235,.07);
-    }
-
+    #${HUD_ID} .a2e-hud-empty { padding: 12px; border: 1px dashed rgba(214,176,90,.45); border-radius: 10px; color: #c8ad6e; font-style: italic; text-align: center; }
+    #${HUD_ID} .a2e-hud-ability-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    #${HUD_ID} .a2e-hud-ability { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; padding: 7px; border: 1px solid rgba(214,176,90,.38); border-radius: 10px; background: rgba(255,250,235,.07); }
     #${HUD_ID} .a2e-hud-ability b { color:#fff4cf;font-size:1.15em; }
     #${HUD_ID} .a2e-hud-ability span { display:block;color:#c8ad6e;font-size:.76em;font-weight:800; }
 
-    @media (max-width:760px) {
-      #${HUD_ID} { left:8px;right:8px;bottom:8px;width:auto;max-width:none; }
+    @media (max-width: 900px) {
+      #${HUD_ID} { left: 12px; right: 12px; width: calc(100vw - 24px); max-width: calc(100vw - 24px); }
+      #${HUD_ID} .a2e-hud-main { grid-template-columns: minmax(140px, 1fr) max-content; column-gap: 8px; }
+      #${HUD_ID} .a2e-hud-pill { padding: 1px 6px; font-size: .72em; }
+    }
+
+    @media (max-width: 680px) {
       #${HUD_ID} .a2e-hud-header { grid-template-columns: 74px minmax(0,1fr) 34px; }
-      #${HUD_ID} .a2e-hud-portrait { width:66px;height:66px; }
-      #${HUD_ID} .a2e-hud-ability-grid { grid-template-columns:repeat(2,1fr); }
+      #${HUD_ID} .a2e-hud-portrait { width:66px; height:66px; }
+      #${HUD_ID} .a2e-hud-main { grid-template-columns: 1fr; grid-template-rows: 21px 19px 24px; }
+      #${HUD_ID} .a2e-hud-metrics { grid-column: 1; grid-row: 3; justify-content: start; }
+      #${HUD_ID} .a2e-hud-ability-grid { grid-template-columns: repeat(2, 1fr); }
     }
   `;
   document.head.appendChild(style);
@@ -744,7 +707,6 @@ async function add2eHudUseFeature(actor, featureIndex) {
   return globalThis.add2eExecuteClassFeatureOnUse(actor, feature, null);
 }
 
-// Copie volontaire de la mécanique de .roll-stat dans Add2eActorSheet.activateListeners.
 async function add2eHudRollAbilityLikeSheet(actor, carac) {
   const data = ADD2E_HUD_CARACS.find(c => c.key === carac);
   const label = carac?.toUpperCase() || "Caractéristique";
@@ -781,13 +743,9 @@ async function add2eHudRollAbilityLikeSheet(actor, carac) {
     </div>
   `;
 
-  return ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: htmlCard
-  });
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: htmlCard });
 }
 
-// Copie volontaire de la mécanique de .roll-save dans Add2eActorSheet.activateListeners.
 async function add2eHudRollSaveLikeSheet(actor, idx) {
   const saves = actor.system?.details_classe?.progression?.[actor.system.niveau - 1]?.savingThrows
     || actor.system?.sauvegardes
@@ -841,10 +799,7 @@ async function add2eHudRollSaveLikeSheet(actor, idx) {
     </div>
   `;
 
-  return ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: htmlCard
-  });
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: htmlCard });
 }
 
 Hooks.once("init", () => {
