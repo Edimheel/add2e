@@ -1,6 +1,6 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide sans ouvrir la fiche personnage
-// Version : 2026-05-16-v2-sheet-mechanics
+// Version : 2026-05-16-v3-upward-menus
 //
 // Règle : le HUD ne réinvente pas les actions.
 // - Attaque  -> globalThis.add2eAttackRoll({ actor, arme })
@@ -8,12 +8,12 @@
 // - Capacité -> globalThis.add2eExecuteClassFeatureOnUse(actor, feature)
 // - Carac / sauvegarde : même mécanique et même carte chat que la fiche personnage.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v2-sheet-mechanics";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-16-v3-upward-menus";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 
 let add2eHudActorId = null;
-let add2eHudActiveTab = "attaques";
+let add2eHudActiveTab = null;
 let add2eHudCollapsed = false;
 
 const ADD2E_HUD_CARACS = [
@@ -94,15 +94,7 @@ function add2eHudIsEquipped(item) {
 }
 
 function add2eHudWeapons(actor) {
-  const all = actor?.items?.filter?.(i => i.type === "arme") ?? [];
-  const equipped = all.filter(add2eHudIsEquipped);
-  return equipped.length ? equipped : all;
-}
-
-function add2eHudSpells(actor) {
-  const spells = actor?.items?.filter?.(i => i.type === "sort") ?? [];
-  const prepared = spells.filter(s => add2eHudPreparedCount(s) > 0);
-  return prepared.length ? prepared : spells;
+  return actor?.items?.filter?.(i => i.type === "arme" && add2eHudIsEquipped(i)) ?? [];
 }
 
 function add2eHudPreparedCount(sort) {
@@ -116,6 +108,10 @@ function add2eHudPreparedCount(sort) {
   );
 }
 
+function add2eHudSpells(actor) {
+  return actor?.items?.filter?.(i => i.type === "sort" && add2eHudPreparedCount(i) > 0) ?? [];
+}
+
 function add2eHudClassFeatures(actor) {
   const details = actor?.system?.details_classe ?? {};
   const raw = details.classFeatures ?? details.capacitesClasse ?? actor?.system?.classFeatures ?? [];
@@ -125,7 +121,6 @@ function add2eHudClassFeatures(actor) {
 }
 
 function add2eHudAbilityValue(actor, key) {
-  // Même source que la fiche : actor.system[carac]
   const direct = Number(actor?.system?.[key]);
   if (Number.isFinite(direct)) return direct;
 
@@ -139,7 +134,6 @@ function add2eHudSavingThrows(actor) {
   const level = Math.max(1, add2eHudNumber(actor?.system?.niveau, 1));
   const row = actor?.system?.details_classe?.progression?.[level - 1];
 
-  // Même priorité que la fiche personnage.
   const saves = row?.savingThrows || actor?.system?.sauvegardes || [];
   const arr = add2eHudArray(saves).map(v => add2eHudNumber(v, 0));
   return arr.length >= 5 ? arr.slice(0, 5) : [0, 0, 0, 0, 0];
@@ -187,85 +181,283 @@ function add2eHudInjectStyle() {
       position: fixed;
       left: 116px;
       bottom: 22px;
-      width: 535px;
+      width: 625px;
       max-width: calc(100vw - 140px);
       z-index: 80;
       color: #f6e8bd;
       font-family: var(--font-primary, Signika, sans-serif);
       pointer-events: auto;
     }
+
     #${HUD_ID}.collapsed .a2e-hud-tabs,
-    #${HUD_ID}.collapsed .a2e-hud-body { display:none; }
+    #${HUD_ID}.collapsed .a2e-hud-body {
+      display: none;
+    }
+
     #${HUD_ID} .a2e-hud-shell {
+      position: relative;
       border: 1px solid #8a611d;
       border-radius: 14px;
-      overflow: hidden;
-      background: radial-gradient(circle at 15% 0%, rgba(213,147,45,.28), transparent 36%), linear-gradient(145deg, rgba(32,25,16,.97), rgba(18,14,10,.96));
+      overflow: visible;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(213,147,45,.28), transparent 36%),
+        linear-gradient(145deg, rgba(32,25,16,.97), rgba(18,14,10,.96));
       box-shadow: 0 8px 26px rgba(0,0,0,.48), inset 0 0 0 1px rgba(255,230,160,.12);
       backdrop-filter: blur(3px);
     }
+
     #${HUD_ID} .a2e-hud-header {
-      display:grid;
-      grid-template-columns:74px minmax(0,1fr) auto;
-      gap:10px;
-      align-items:center;
-      padding:9px 10px;
-      border-bottom:1px solid rgba(184,137,36,.55);
-      background:linear-gradient(180deg, rgba(78,48,18,.78), rgba(36,26,14,.62));
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr) 34px;
+      gap: 8px;
+      align-items: stretch;
+      min-height: 86px;
+      padding: 5px 8px;
+      border-bottom: 1px solid rgba(184,137,36,.55);
+      border-radius: 14px 14px 0 0;
+      background: linear-gradient(180deg, rgba(78,48,18,.78), rgba(36,26,14,.62));
     }
+
     #${HUD_ID} .a2e-hud-portrait {
-      width:64px;height:64px;border-radius:12px;object-fit:cover;
-      border:2px solid #c4973f;background:#111;box-shadow:0 2px 8px rgba(0,0,0,.45);
+      width: 78px;
+      height: 78px;
+      align-self: center;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 2px solid #c4973f;
+      background: #111;
+      box-shadow: 0 2px 8px rgba(0,0,0,.45);
     }
-    #${HUD_ID} .a2e-hud-name { color:#fff4cf;font-size:1.12em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    #${HUD_ID} .a2e-hud-subtitle { color:#d8bd78;font-size:.82em;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    #${HUD_ID} .a2e-hud-metrics { display:flex;flex-wrap:wrap;gap:4px;margin-top:5px; }
+
+    #${HUD_ID} .a2e-hud-main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 22px 20px 26px;
+      align-content: center;
+    }
+
+    #${HUD_ID} .a2e-hud-name {
+      color: #fff4cf;
+      font-size: 1.08em;
+      font-weight: 900;
+      line-height: 1.1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #${HUD_ID} .a2e-hud-subtitle {
+      color: #d8bd78;
+      font-size: .82em;
+      font-weight: 750;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #${HUD_ID} .a2e-hud-metrics {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 5px;
+      overflow: hidden;
+      white-space: nowrap;
+      align-items: center;
+    }
+
     #${HUD_ID} .a2e-hud-pill {
-      display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:2px 7px;
-      border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);
-      color:#fff0bd;font-size:.78em;font-weight:850;white-space:nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 23px;
+      padding: 1px 8px;
+      border: 1px solid rgba(214,176,90,.75);
+      border-radius: 999px;
+      background: rgba(255,244,201,.12);
+      color: #fff0bd;
+      font-size: .78em;
+      font-weight: 900;
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
+
     #${HUD_ID} .a2e-hud-icon-btn {
-      display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
-      border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      align-self: center;
+      border: 1px solid rgba(214,176,90,.75);
+      border-radius: 9px;
+      background: rgba(255,244,201,.12);
+      color: #ffe4a1;
+      cursor: pointer;
     }
+
     #${HUD_ID} .a2e-hud-tabs {
-      display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.18);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border-radius: 0 0 14px 14px;
+      overflow: hidden;
+      background: rgba(0,0,0,.22);
     }
+
     #${HUD_ID} .a2e-hud-tab {
-      min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;
-      font-size:.78em;font-weight:900;cursor:pointer;
+      min-height: 34px;
+      border: 0;
+      border-right: 1px solid rgba(184,137,36,.32);
+      background: transparent;
+      color: #d8bd78;
+      font-size: .78em;
+      font-weight: 900;
+      cursor: pointer;
     }
-    #${HUD_ID} .a2e-hud-tab.active { color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e); }
-    #${HUD_ID} .a2e-hud-body { padding:9px;max-height:320px;overflow-y:auto; }
-    #${HUD_ID} .a2e-hud-section { display:none; }
-    #${HUD_ID} .a2e-hud-section.active { display:grid;gap:7px; }
+
+    #${HUD_ID} .a2e-hud-tab:last-child {
+      border-right: 0;
+    }
+
+    #${HUD_ID} .a2e-hud-tab.active {
+      color: #211307;
+      background: linear-gradient(180deg,#f0c66d,#c78d2e);
+    }
+
+    #${HUD_ID} .a2e-hud-body {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(100% + 8px);
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 9px;
+      border: 1px solid #8a611d;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(213,147,45,.24), transparent 34%),
+        linear-gradient(145deg, rgba(28,22,15,.98), rgba(12,10,8,.97));
+      box-shadow: 0 8px 24px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,230,160,.10);
+    }
+
+    #${HUD_ID} .a2e-hud-body:after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -8px;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-top: 9px solid #8a611d;
+    }
+
+    #${HUD_ID} .a2e-hud-section { display: none; }
+    #${HUD_ID} .a2e-hud-section.active { display: grid; gap: 7px; }
+
     #${HUD_ID} .a2e-hud-row {
-      display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;
-      border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      min-height: 48px;
+      padding: 6px;
+      border: 1px solid rgba(214,176,90,.38);
+      border-radius: 10px;
+      background: rgba(255,250,235,.07);
     }
-    #${HUD_ID} .a2e-hud-row.compact { grid-template-columns:minmax(0,1fr) auto;min-height:38px; }
-    #${HUD_ID} .a2e-hud-row img { width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25); }
-    #${HUD_ID} .a2e-hud-row-title { color:#fff4cf;font-weight:900;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    #${HUD_ID} .a2e-hud-row-meta { display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px; }
+
+    #${HUD_ID} .a2e-hud-row.compact {
+      grid-template-columns: minmax(0, 1fr) auto;
+      min-height: 38px;
+    }
+
+    #${HUD_ID} .a2e-hud-row img {
+      width: 34px;
+      height: 34px;
+      border-radius: 7px;
+      object-fit: cover;
+      border: 1px solid rgba(214,176,90,.65);
+      background: rgba(0,0,0,.25);
+    }
+
+    #${HUD_ID} .a2e-hud-row-title {
+      color: #fff4cf;
+      font-weight: 900;
+      line-height: 1.08;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #${HUD_ID} .a2e-hud-row-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 8px;
+      color: #c8ad6e;
+      font-size: .76em;
+      font-weight: 750;
+      margin-top: 2px;
+    }
+
     #${HUD_ID} .a2e-hud-action {
-      min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;
-      background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap;
+      min-width: 78px;
+      min-height: 30px;
+      padding: 4px 9px;
+      border: 1px solid #d6b05a;
+      border-radius: 9px;
+      background: linear-gradient(180deg,#fff0bd,#d6a345);
+      color: #211307;
+      font-size: .8em;
+      font-weight: 950;
+      cursor: pointer;
+      white-space: nowrap;
     }
-    #${HUD_ID} .a2e-hud-action:disabled { opacity:.45;cursor:not-allowed; }
+
+    #${HUD_ID} .a2e-hud-action:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
     #${HUD_ID} .a2e-hud-icon-btn:hover,
     #${HUD_ID} .a2e-hud-action:hover,
-    #${HUD_ID} .a2e-hud-tab:hover { filter:brightness(1.15);transform:translateY(-1px); }
-    #${HUD_ID} .a2e-hud-empty { padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center; }
-    #${HUD_ID} .a2e-hud-ability-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:7px; }
-    #${HUD_ID} .a2e-hud-ability {
-      display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:7px;
-      border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);
+    #${HUD_ID} .a2e-hud-tab:hover {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
     }
+
+    #${HUD_ID} .a2e-hud-empty {
+      padding: 12px;
+      border: 1px dashed rgba(214,176,90,.45);
+      border-radius: 10px;
+      color: #c8ad6e;
+      font-style: italic;
+      text-align: center;
+    }
+
+    #${HUD_ID} .a2e-hud-ability-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+
+    #${HUD_ID} .a2e-hud-ability {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      align-items: center;
+      padding: 7px;
+      border: 1px solid rgba(214,176,90,.38);
+      border-radius: 10px;
+      background: rgba(255,250,235,.07);
+    }
+
     #${HUD_ID} .a2e-hud-ability b { color:#fff4cf;font-size:1.15em; }
     #${HUD_ID} .a2e-hud-ability span { display:block;color:#c8ad6e;font-size:.76em;font-weight:800; }
+
     @media (max-width:760px) {
       #${HUD_ID} { left:8px;right:8px;bottom:8px;width:auto;max-width:none; }
+      #${HUD_ID} .a2e-hud-header { grid-template-columns: 74px minmax(0,1fr) 34px; }
+      #${HUD_ID} .a2e-hud-portrait { width:66px;height:66px; }
       #${HUD_ID} .a2e-hud-ability-grid { grid-template-columns:repeat(2,1fr); }
     }
   `;
@@ -274,20 +466,19 @@ function add2eHudInjectStyle() {
 
 function add2eHudWeaponRows(actor) {
   const weapons = add2eHudWeapons(actor);
-  if (!weapons.length) return `<div class="a2e-hud-empty">Aucune arme disponible.</div>`;
+  if (!weapons.length) return `<div class="a2e-hud-empty">Aucune arme équipée.</div>`;
 
   return weapons.map(arme => {
     const id = add2eHudEscape(arme.id);
     const name = add2eHudEscape(arme.name);
     const img = add2eHudEscape(arme.img || "icons/svg/sword.svg");
-    const equipped = add2eHudIsEquipped(arme) ? "Équipée" : "Non équipée";
     return `
       <div class="a2e-hud-row" data-item-id="${id}">
         <img src="${img}" alt="${name}">
         <div>
           <div class="a2e-hud-row-title">${name}</div>
           <div class="a2e-hud-row-meta">
-            <span>${equipped}</span>
+            <span>Équipée</span>
             <span>Dégâts ${add2eHudEscape(add2eHudDamageText(arme))}</span>
             <span>Portée ${add2eHudEscape(add2eHudRangeText(arme))}</span>
           </div>
@@ -300,7 +491,7 @@ function add2eHudWeaponRows(actor) {
 
 function add2eHudSpellRows(actor) {
   const spells = add2eHudSpells(actor);
-  if (!spells.length) return `<div class="a2e-hud-empty">Aucun sort disponible.</div>`;
+  if (!spells.length) return `<div class="a2e-hud-empty">Aucun sort mémorisé.</div>`;
 
   return spells.map(sort => {
     const id = add2eHudEscape(sort.id);
@@ -317,7 +508,7 @@ function add2eHudSpellRows(actor) {
           <div class="a2e-hud-row-meta">
             <span>Niv. ${niv}</span>
             ${school ? `<span>${school}</span>` : ""}
-            ${prepared > 0 ? `<span>Préparé ${prepared}</span>` : `<span>Disponible</span>`}
+            <span>Mémorisé ${prepared}</span>
           </div>
         </div>
         <button type="button" class="a2e-hud-action" data-action="cast-spell" data-item-id="${id}">Lancer</button>
@@ -407,11 +598,23 @@ function add2eHudHtml(actor, token = null) {
     <section class="a2e-hud-section ${add2eHudActiveTab === key ? "active" : ""}" data-hud-section="${key}">${html}</section>
   `;
 
+  const body = add2eHudActiveTab ? `
+    <div class="a2e-hud-body">
+      ${section("attaques", add2eHudWeaponRows(actor))}
+      ${section("sorts", add2eHudSpellRows(actor))}
+      ${section("capacites", add2eHudFeatureRows(actor))}
+      ${section("sauvegardes", add2eHudSaveRows(actor))}
+      ${section("caracs", add2eHudAbilityRows(actor))}
+    </div>
+  ` : "";
+
   return `
     <div class="a2e-hud-shell">
+      ${body}
+
       <div class="a2e-hud-header">
         <img class="a2e-hud-portrait" src="${add2eHudEscape(img)}" alt="${add2eHudEscape(actor.name)}">
-        <div>
+        <div class="a2e-hud-main">
           <div class="a2e-hud-name">${add2eHudEscape(actor.name)}</div>
           <div class="a2e-hud-subtitle">${add2eHudEscape(race)} — ${add2eHudEscape(classe)} niv. ${add2eHudEscape(niveau)}</div>
           <div class="a2e-hud-metrics">
@@ -430,14 +633,6 @@ function add2eHudHtml(actor, token = null) {
         ${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}
         ${tab("caracs", "fas fa-dice-d20", "Carac.")}
       </nav>
-
-      <div class="a2e-hud-body">
-        ${section("attaques", add2eHudWeaponRows(actor))}
-        ${section("sorts", add2eHudSpellRows(actor))}
-        ${section("capacites", add2eHudFeatureRows(actor))}
-        ${section("sauvegardes", add2eHudSaveRows(actor))}
-        ${section("caracs", add2eHudAbilityRows(actor))}
-      </div>
     </div>
   `;
 }
@@ -477,7 +672,8 @@ function add2eBindHudEvents(hud, actor) {
   hud.querySelectorAll("[data-hud-tab]").forEach(btn => {
     btn.addEventListener("click", ev => {
       ev.preventDefault();
-      add2eHudActiveTab = btn.dataset.hudTab || "attaques";
+      const nextTab = btn.dataset.hudTab || "attaques";
+      add2eHudActiveTab = add2eHudActiveTab === nextTab ? null : nextTab;
       add2eRefreshActionHud();
     });
   });
@@ -491,6 +687,7 @@ function add2eBindHudEvents(hud, actor) {
       try {
         if (action === "toggle-collapse") {
           add2eHudCollapsed = !add2eHudCollapsed;
+          if (add2eHudCollapsed) add2eHudActiveTab = null;
           add2eRefreshActionHud();
           return;
         }
