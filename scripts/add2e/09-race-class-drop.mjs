@@ -50,6 +50,9 @@ function add2eRaceMatchesClassRules(raceData, classData) {
 }
 
 function add2eFindCompatibleRaceForClass(actor, classData, alignmentCandidate = null) {
+  const queued = add2eDropConsumeQueuedChoice(actor, "race", classData);
+  if (queued) return queued;
+
   const currentRaces = (actor?.items?.filter?.(i => String(i.type).toLowerCase() === "race") ?? [])
     .map(i => add2eItemDataCloneForDrop(i))
     .filter(Boolean);
@@ -86,6 +89,9 @@ function add2eFindCompatibleRaceForClass(actor, classData, alignmentCandidate = 
 }
 
 function add2eFindCompatibleClassForRace(actor, raceData) {
+  const queued = add2eDropConsumeQueuedChoice(actor, "classe", raceData);
+  if (queued?.classData) return queued;
+
   const currentClasses = (actor?.items?.filter?.(i => String(i.type).toLowerCase() === "classe") ?? [])
     .map(i => add2eItemDataCloneForDrop(i))
     .filter(Boolean);
@@ -301,8 +307,6 @@ function checkClassStatMin(actor, classeItem, candidateRaceData = null, candidat
       })
     : null;
 
-  // Si actor.system.race est plus récent que les items embarqués, on valide contre
-  // la race affichée/persistée plutôt que contre un ancien item orphelin.
   const actorRaceFallback = wantedRace
     ? {
         name: actorSystem.race || actorSystem.details_race?.label || actorSystem.details_race?.name || actorSystem.details_race?.nom || wantedRace,
@@ -339,9 +343,6 @@ function checkClassStatMin(actor, classeItem, candidateRaceData = null, candidat
     return base + race;
   };
 
-  // Compatibilité race/classe : source unique = objet classe via raceRestriction.
-  // Les anciens champs raceAllowed ne sont utilisés qu'en fallback si l'objet
-  // classe n'a pas encore été migré.
   const races = classeSystem.raceRestriction?.races;
   const hasRaceRestriction = races && typeof races === "object" && Object.keys(races).length > 0;
 
@@ -376,7 +377,6 @@ function checkClassStatMin(actor, classeItem, candidateRaceData = null, candidat
     }
   }
 
-  // Ancien champ conservé pour compatibilité des objets déjà créés.
   const min = classeSystem.caracs_min || {};
   for (const [carac, rawMin] of Object.entries(min)) {
     const minVal = Number(rawMin);
@@ -386,7 +386,6 @@ function checkClassStatMin(actor, classeItem, candidateRaceData = null, candidat
     if (total < minVal) manques.push(`${carac} ${total} < ${minVal}`);
   }
 
-  // Alignements déclarés par l'objet classe.
   const allowedAlignments = add2eClassAllowedAlignments(classeSystem);
   const currentAlignmentRaw = candidateAlignment ?? actorSystem.alignement ?? "";
   const currentAlignment = add2eNormalizeEquipTag(currentAlignmentRaw);
@@ -397,8 +396,6 @@ function checkClassStatMin(actor, classeItem, candidateRaceData = null, candidat
     }
   }
 
-  // Nouveau système générique par tags de prérequis.
-  // Les tags prerequis:alignement:allow:* multiples sont interprétés en OU.
   const requirementTags = add2eToEquipArray(classeSystem.requirementTags)
     .map(add2eNormalizeEquipTag)
     .filter(Boolean);
@@ -497,6 +494,254 @@ const CARAC_SHORT = {
   charisme: "CHA"
 };
 
+// ============================================================
+// ADD2E — Popup de résolution des incohérences drop race/classe/niveau
+// ============================================================
+const ADD2E_DROP_COMPAT_CHOICES = new Map();
+
+function add2eDropChoiceKey(actor, kind, itemData) {
+  return [actor?.uuid ?? actor?.id ?? "actor", kind, add2eNormalizeEquipTag(itemData?.name ?? itemData?.system?.slug ?? "")].join("|");
+}
+
+function add2eDropQueueChoice(actor, kind, itemData, value) {
+  ADD2E_DROP_COMPAT_CHOICES.set(add2eDropChoiceKey(actor, kind, itemData), value);
+}
+
+function add2eDropConsumeQueuedChoice(actor, kind, itemData) {
+  const key = add2eDropChoiceKey(actor, kind, itemData);
+  const value = ADD2E_DROP_COMPAT_CHOICES.get(key);
+  if (value) ADD2E_DROP_COMPAT_CHOICES.delete(key);
+  return value ?? null;
+}
+
+function add2eDropCompatibleRaceCandidates(actor, classData, alignmentCandidate = null) {
+  const candidates = [...add2eWorldItemsByType("race")];
+  const currentRace = actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "race");
+  if (currentRace) candidates.unshift(add2eItemDataCloneForDrop(currentRace));
+
+  const seen = new Set();
+  return candidates.filter(raceData => {
+    const key = add2eNormalizeEquipTag(raceData?.name ?? raceData?.system?.slug ?? raceData?.system?.label ?? "");
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    if (!add2eRaceMatchesClassRules(raceData, classData)) return false;
+    return typeof checkClassStatMin === "function"
+      ? checkClassStatMin(actor, classData, raceData, alignmentCandidate, { silent: true, ignoreLevelMax: true })
+      : true;
+  });
+}
+
+function add2eDropCompatibleClassCandidates(actor, raceData) {
+  const candidates = [...add2eWorldItemsByType("classe")];
+  const currentClass = actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe");
+  if (currentClass) candidates.unshift(add2eItemDataCloneForDrop(currentClass));
+
+  const seen = new Set();
+  return candidates.map(classData => {
+    const key = add2eNormalizeEquipTag(classData?.name ?? classData?.system?.slug ?? classData?.system?.label ?? "");
+    if (!key || seen.has(key)) return null;
+    seen.add(key);
+    if (!add2eRaceMatchesClassRules(raceData, classData)) return null;
+    const alignmentCandidate = add2ePickClassAlignment(actor, classData.system ?? {});
+    const ok = typeof checkClassStatMin === "function"
+      ? checkClassStatMin(actor, classData, raceData, alignmentCandidate, { silent: true, ignoreLevelMax: true })
+      : true;
+    return ok ? { classData, alignmentCandidate } : null;
+  }).filter(Boolean);
+}
+
+function add2eDropCurrentClassLevelMax(actor, classData, raceData = null) {
+  const cls = add2eClassRuleSystem(classData);
+  const raceTags = add2eRaceTagsFromData(raceData).map(add2eNormalizeEquipTag);
+  const races = cls?.raceRestriction?.races ?? {};
+  let max = 0;
+  for (const [tag, rule] of Object.entries(races)) {
+    if (!raceTags.includes(add2eNormalizeEquipTag(tag))) continue;
+    const n = Number(rule?.maxLevel ?? rule?.niveauMax ?? rule?.max ?? 0);
+    if (Number.isFinite(n) && n > 0) max = max ? Math.min(max, n) : n;
+  }
+  return max;
+}
+
+function add2eDropDialog(content, buttons, title = "Compatibilité du personnage") {
+  return new Promise(resolve => {
+    new Dialog({
+      title,
+      content,
+      buttons,
+      close: () => resolve(null)
+    }, { width: 560 }).render(true);
+  });
+}
+
+async function add2eDropShowClassIncompatPopup(actor, classData) {
+  const alignmentCandidate = add2ePickClassAlignment(actor, classData.system ?? {});
+  const raceCandidates = add2eDropCompatibleRaceCandidates(actor, classData, alignmentCandidate);
+  const currentRace = actor?.system?.race || actor?.items?.find?.(i => i.type === "race")?.name || "Aucune";
+  const actorLevel = Number(actor?.system?.niveau ?? 1) || 1;
+
+  const options = raceCandidates.map((race, index) => {
+    const max = add2eDropCurrentClassLevelMax(actor, classData, race);
+    const maxTxt = max ? ` — niveau max ${max}` : "";
+    return `<option value="${index}">${add2eRaceCandidateLabel(race)}${maxTxt}</option>`;
+  }).join("");
+
+  const content = `
+    <form class="add2e-drop-compat-dialog" style="line-height:1.45;">
+      <p><b>Incohérence détectée</b></p>
+      <p>Classe déposée : <b>${add2eClassCandidateLabel(classData)}</b></p>
+      <p>Race actuelle : <b>${currentRace}</b> — Niveau actuel : <b>${actorLevel}</b></p>
+      <p>Choisis une race compatible avec la classe déposée.</p>
+      ${raceCandidates.length ? `
+        <div class="form-group">
+          <label>Race compatible</label>
+          <select name="raceChoice">${options}</select>
+        </div>
+      ` : `<p style="color:#9b1c1c;font-weight:700;">Aucune race compatible trouvée dans les items monde.</p>`}
+      <p style="font-size:0.9em;color:#6b5a2a;">Si la race sélectionnée limite le niveau maximum, le niveau sera ramené automatiquement au maximum autorisé.</p>
+    </form>
+  `;
+
+  if (!raceCandidates.length) return { action: "cancel" };
+
+  return add2eDropDialog(content, {
+    apply: {
+      label: "Appliquer ce choix",
+      callback: html => {
+        const idx = Number(html.find('[name="raceChoice"]').val());
+        return { action: "apply", raceData: raceCandidates[idx], alignmentCandidate };
+      }
+    },
+    cancel: { label: "Annuler le drop", callback: () => ({ action: "cancel" }) }
+  });
+}
+
+async function add2eDropShowRaceIncompatPopup(actor, raceData) {
+  const classCandidates = add2eDropCompatibleClassCandidates(actor, raceData);
+  const currentClass = actor?.system?.classe || actor?.items?.find?.(i => i.type === "classe")?.name || "Aucune";
+  const actorLevel = Number(actor?.system?.niveau ?? 1) || 1;
+
+  const options = classCandidates.map((entry, index) => {
+    const max = add2eDropCurrentClassLevelMax(actor, entry.classData, raceData);
+    const maxTxt = max ? ` — niveau max ${max}` : "";
+    return `<option value="${index}">${add2eClassCandidateLabel(entry.classData)}${maxTxt}</option>`;
+  }).join("");
+
+  const content = `
+    <form class="add2e-drop-compat-dialog" style="line-height:1.45;">
+      <p><b>Incohérence détectée</b></p>
+      <p>Race déposée : <b>${add2eRaceCandidateLabel(raceData)}</b></p>
+      <p>Classe actuelle : <b>${currentClass}</b> — Niveau actuel : <b>${actorLevel}</b></p>
+      <p>Choisis une classe compatible avec la race déposée.</p>
+      ${classCandidates.length ? `
+        <div class="form-group">
+          <label>Classe compatible</label>
+          <select name="classChoice">${options}</select>
+        </div>
+      ` : `<p style="color:#9b1c1c;font-weight:700;">Aucune classe compatible trouvée dans les items monde.</p>`}
+      <p style="font-size:0.9em;color:#6b5a2a;">Si la classe/race sélectionnée limite le niveau maximum, le niveau sera ramené automatiquement au maximum autorisé.</p>
+    </form>
+  `;
+
+  if (!classCandidates.length) return { action: "cancel" };
+
+  return add2eDropDialog(content, {
+    apply: {
+      label: "Appliquer ce choix",
+      callback: html => {
+        const idx = Number(html.find('[name="classChoice"]').val());
+        return { action: "apply", ...classCandidates[idx] };
+      }
+    },
+    cancel: { label: "Annuler le drop", callback: () => ({ action: "cancel" }) }
+  });
+}
+
+async function add2eResolveDropCompatibilityWithPopup(actor, itemData) {
+  if (!actor || !itemData || !["classe", "race"].includes(itemData.type)) return { ok: true };
+
+  if (itemData.type === "classe") {
+    const alignmentCandidate = add2ePickClassAlignment(actor, itemData.system ?? {});
+    const ok = typeof checkClassStatMin === "function"
+      ? checkClassStatMin(actor, itemData, null, alignmentCandidate, { silent: true, ignoreLevelMax: true })
+      : true;
+    if (ok) return { ok: true };
+
+    const choice = await add2eDropShowClassIncompatPopup(actor, itemData);
+    if (!choice || choice.action !== "apply" || !choice.raceData) return { ok: false };
+    add2eDropQueueChoice(actor, "race", itemData, choice.raceData);
+    return { ok: true };
+  }
+
+  if (itemData.type === "race") {
+    const existingClass = actor.items?.find?.(i => String(i.type || "").toLowerCase() === "classe");
+    if (!existingClass) return { ok: true };
+    const alignmentCandidate = add2ePickClassAlignment(actor, existingClass.system ?? {});
+    const ok = typeof checkClassStatMin === "function"
+      ? checkClassStatMin(actor, existingClass, itemData, alignmentCandidate, { silent: true, ignoreLevelMax: true })
+      : true;
+    if (ok) return { ok: true };
+
+    const choice = await add2eDropShowRaceIncompatPopup(actor, itemData);
+    if (!choice || choice.action !== "apply" || !choice.classData) return { ok: false };
+    add2eDropQueueChoice(actor, "classe", itemData, { classData: choice.classData, alignmentCandidate: choice.alignmentCandidate });
+    return { ok: true };
+  }
+
+  return { ok: true };
+}
+
+function add2eInstallDropCompatibilityPopupWrapper() {
+  const SheetClass = globalThis.Add2eActorSheet;
+  if (!SheetClass?.prototype?._onDrop) return false;
+  if (SheetClass.prototype._add2eDropCompatPopupWrapped) return true;
+
+  const original = SheetClass.prototype._onDrop;
+  SheetClass.prototype._onDrop = async function add2eDropCompatPopupWrapped(event) {
+    let raw = null;
+    let itemData = null;
+
+    try {
+      raw = JSON.parse(event.dataTransfer?.getData("text/plain") || "{}");
+      if (raw?.type === "Item") {
+        itemData = raw.data ?? null;
+        if (!itemData && raw.uuid) {
+          const doc = await fromUuid(raw.uuid);
+          if (doc instanceof Item) itemData = doc.toObject();
+        }
+        if (!itemData && raw.pack && raw.id) {
+          const pack = game.packs.get(raw.pack);
+          const ent = pack && await pack.getDocument(raw.id);
+          if (ent instanceof Item) itemData = ent.toObject();
+        }
+      }
+    } catch (_e) {}
+
+    if (itemData && ["classe", "race"].includes(itemData.type)) {
+      const resolved = await add2eResolveDropCompatibilityWithPopup(this.actor, itemData);
+      if (!resolved.ok) {
+        event.preventDefault();
+        event.stopPropagation();
+        ui.notifications.info("Drop annulé.");
+        return false;
+      }
+    }
+
+    return original.call(this, event);
+  };
+
+  SheetClass.prototype._add2eDropCompatPopupWrapped = true;
+  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe/niveau installé.");
+  return true;
+}
+
+Hooks.once("ready", () => {
+  if (!add2eInstallDropCompatibilityPopupWrapper()) {
+    setTimeout(add2eInstallDropCompatibilityPopupWrapper, 250);
+    setTimeout(add2eInstallDropCompatibilityPopupWrapper, 1000);
+  }
+});
+
 // Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
 try { globalThis.add2eDropDebugRaceClass = add2eDropDebugRaceClass; } catch (_e) {}
 try { globalThis.add2eItemDataCloneForDrop = add2eItemDataCloneForDrop; } catch (_e) {}
@@ -511,3 +756,5 @@ try { globalThis.add2eApplyClassItemDataToActor = add2eApplyClassItemDataToActor
 try { globalThis.checkClassStatMin = checkClassStatMin; } catch (_e) {}
 try { globalThis.CARACS = CARACS; } catch (_e) {}
 try { globalThis.CARAC_SHORT = CARAC_SHORT; } catch (_e) {}
+try { globalThis.add2eResolveDropCompatibilityWithPopup = add2eResolveDropCompatibilityWithPopup; } catch (_e) {}
+try { globalThis.add2eInstallDropCompatibilityPopupWrapper = add2eInstallDropCompatibilityPopupWrapper; } catch (_e) {}
