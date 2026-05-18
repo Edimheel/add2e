@@ -10,6 +10,7 @@
  * - Consommation automatique des armes temporaires à usage unique
  */
 
+globalThis.ADD2E_ATTACK_VERSION = "2026-05-05-attack-v25-scene-token-computed-ca";
 
 // --- TABLE 39 : THAC0 MONSTRES ---
 const MONSTER_THACO_TABLE = [
