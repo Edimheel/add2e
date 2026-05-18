@@ -1,10 +1,10 @@
 // ============================================================
 // ADD2E — Affichage compact des emplacements de préparation
-// V36 : diagnostics + restauration tardive du scroll + MAJ directe du badge.
-// Le comportement de mémorisation existant est conservé.
+// V37 : MAJ directe des compteurs de niveau + exclusion visuelle
+// des pouvoirs d'objets magiques de la liste normale des sorts.
 // ============================================================
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-05-18-v36-badge-direct-update";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-05-18-v37-counter-and-object-power-filter";
 const ADD2E_SPELL_PREP_PENDING_SCROLL = new Map();
 
 function add2eSpellPrepDebugEnabled() {
@@ -260,6 +260,62 @@ function add2eSpellPrepFindRowsForSort(root, sortId) {
   return [...rows];
 }
 
+function add2eSpellPrepGetMagicObjectPowerIds(actor) {
+  const ids = new Set();
+  const allowedTypes = new Set(["arme", "armure", "objet", "object", "magic", "objet_magique"]);
+
+  for (const item of actor?.items ?? []) {
+    if (!allowedTypes.has(String(item.type || "").toLowerCase())) continue;
+
+    const pouvoirs = typeof add2eMagicObjectPowerArray === "function"
+      ? add2eMagicObjectPowerArray(item)
+      : (() => {
+          const raw = item.system?.pouvoirs ?? item.system?.powers ?? item.system?.pouvoirsMagiques ?? item.system?.magicalPowers ?? item.system?.sorts ?? item.system?.spells;
+          if (Array.isArray(raw)) return raw.filter(p => p && typeof p === "object");
+          if (raw && typeof raw === "object") return Object.values(raw).filter(p => p && typeof p === "object");
+          return [];
+        })();
+
+    pouvoirs.forEach((_p, idx) => {
+      const generatedId = typeof add2eMagicPowerGeneratedId === "function"
+        ? add2eMagicPowerGeneratedId(item, idx)
+        : item.id.substring(0, 14) + idx.toString().padStart(2, "0");
+      if (generatedId) ids.add(String(generatedId));
+    });
+  }
+
+  return ids;
+}
+
+function add2eSpellPrepHideMagicObjectPowerRows(actor, root) {
+  if (!actor || !root) return;
+  const ids = add2eSpellPrepGetMagicObjectPowerIds(actor);
+  if (!ids.size) return;
+
+  let hidden = 0;
+  for (const id of ids) {
+    const escaped = add2eSpellPrepEscapeCss(id);
+    const rows = root.querySelectorAll?.(`[data-sort-id="${escaped}"]`) ?? [];
+    for (const el of rows) {
+      const row = el.closest?.("tr");
+      if (row) {
+        row.style.display = "none";
+        row.dataset.add2eHiddenObjectPower = "1";
+        hidden++;
+      }
+    }
+
+    const desc = root.querySelector?.(`#desc-chat-${escaped}`);
+    if (desc) {
+      desc.style.display = "none";
+      desc.dataset.add2eHiddenObjectPower = "1";
+      hidden++;
+    }
+  }
+
+  if (hidden) add2eSpellPrepLog("HIDE_OBJECT_POWER_ROWS", { actor: actor.name, ids: [...ids], hidden });
+}
+
 function add2eSpellPrepUpdateBadgeInContainer(container, count, source = "unknown") {
   if (!container) return 0;
 
@@ -285,6 +341,79 @@ function add2eSpellPrepUpdateBadgeInContainer(container, count, source = "unknow
   });
 
   return badges.length;
+}
+
+function add2eSpellPrepComputeCounter(actor, entry, spellLevel) {
+  const key = add2eNormalizeSpellKey(entry?.key);
+  const slots = add2eGetSpellSlotPoolsByLevel(actor);
+  const pool = slots?.[key] ?? entry;
+  return {
+    key,
+    label: entry?.label || pool?.label || add2eSpellLabel(key),
+    count: add2eCountPreparedForEntryLevel(actor, entry, spellLevel),
+    max: Number(pool?.slotsByLevel?.[spellLevel] ?? add2eGetSlotsForEntryLevel(actor, entry, spellLevel) ?? 0) || 0
+  };
+}
+
+function add2eSpellPrepRefreshLevelCounters(actor, spellLevel, entry, clickedButton = null) {
+  if (!actor || !entry || !spellLevel) return;
+
+  const entries = typeof add2eGetSpellcastingEntries === "function" ? add2eGetSpellcastingEntries(actor) : [entry];
+  const counters = entries
+    .map(e => add2eSpellPrepComputeCounter(actor, e, spellLevel))
+    .filter(c => c.max > 0);
+
+  const totalCount = counters.reduce((sum, c) => sum + c.count, 0);
+  const totalMax = counters.reduce((sum, c) => sum + c.max, 0);
+  const thisCounter = counters.find(c => c.key === add2eNormalizeSpellKey(entry.key)) ?? add2eSpellPrepComputeCounter(actor, entry, spellLevel);
+
+  const updateRoot = root => {
+    if (!root) return;
+
+    const panels = new Set();
+    if (clickedButton?.isConnected) {
+      const panel = clickedButton.closest?.(".a2e-panel");
+      if (panel) panels.add(panel);
+    }
+
+    root.querySelectorAll?.(".a2e-panel").forEach(panel => {
+      const h3 = panel.querySelector?.("h3");
+      if (!h3) return;
+      if (String(h3.textContent ?? "").includes(`Niveau ${spellLevel}`)) panels.add(panel);
+    });
+
+    for (const panel of panels) {
+      const h3Badge = panel.querySelector?.("h3 .sort-memorize-badge");
+      if (h3Badge) h3Badge.textContent = `Sorts : ${totalCount} / ${totalMax}`;
+
+      panel.querySelectorAll?.("thead th").forEach(th => {
+        const txt = String(th.textContent ?? "");
+        if (!txt.includes(thisCounter.label) && !txt.trim().startsWith("Sort")) return;
+
+        const badge = th.querySelector?.(".sort-memorize-badge, .a2e-spell-capacity-pill");
+        if (badge) {
+          badge.textContent = `${thisCounter.label} ${thisCounter.count}/${thisCounter.max}`;
+        } else if (txt.includes(thisCounter.label) && /\d+\s*\/\s*\d+/.test(txt)) {
+          const label = thisCounter.label;
+          th.textContent = txt.replace(new RegExp(`${label}\\s*\\d+\\s*/\\s*\\d+`), `${label} ${thisCounter.count}/${thisCounter.max}`);
+        }
+      });
+    }
+  };
+
+  for (const app of add2eSpellPrepActorWindows(actor)) {
+    updateRoot(app.element?.[0] ?? app.element ?? null);
+  }
+
+  add2eSpellPrepLog("COUNTER_REFRESH", {
+    actor: actor.name,
+    spellLevel,
+    entry: thisCounter.label,
+    count: thisCounter.count,
+    max: thisCounter.max,
+    totalCount,
+    totalMax
+  });
 }
 
 function add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, count, clickedButton = null) {
@@ -319,6 +448,8 @@ function add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, count, clickedBut
 function add2eBindNativeHbsSpellPreparationControls(actor, root) {
   if (!actor || !root) return;
 
+  add2eSpellPrepHideMagicObjectPowerRows(actor, root);
+
   root.querySelectorAll(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus").forEach(btn => {
     if (btn.dataset.add2ePrepBound === "1") return;
     btn.dataset.add2ePrepBound = "1";
@@ -349,12 +480,17 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
       let sort = null;
       let entry = null;
       let cur = 0;
+      let spellLevel = 1;
 
       try {
         const sortId = btn.dataset.sortId;
         const entryKey = add2eNormalizeSpellKey(btn.dataset.entryKey || btn.dataset.spellEntryKey || btn.getAttribute("data-spell-entry-key"));
         sort = actor.items.get(sortId);
         if (!sort) return ui.notifications.warn("Sort introuvable.");
+
+        if (typeof add2eIsObjectMagicSpellForPreparation === "function" && add2eIsObjectMagicSpellForPreparation(sort)) {
+          return ui.notifications.warn("Ce pouvoir d'objet magique ne se prépare pas comme un sort.");
+        }
 
         const check = add2eCanActorUseSpell(actor, sort);
         entry = entryKey
@@ -365,7 +501,7 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
 
         const sortLists = add2eGetSpellListsFromItem(sort);
         const resolvedEntryKey = add2eNormalizeSpellKey(entry.key);
-        const spellLevel = Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1;
+        spellLevel = Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1;
         const actorLevel = Math.max(1, Number(actor.system?.niveau ?? 1) || 1);
         const startsAt = Number(entry.startsAt ?? 1) || 1;
         const maxSpellLevel = Number(entry.maxSpellLevel ?? 0) || 0;
@@ -398,13 +534,15 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
           cur--;
         }
 
-        // Mise à jour optimiste immédiate : le compteur visible descend/monte tout de suite.
+        // Mise à jour optimiste immédiate : ligne + compteur de niveau.
         add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, cur, btn);
+        add2eSpellPrepRefreshLevelCounters(actor, spellLevel, entry, btn);
 
         await add2eSetMemorizedCountForEntry(sort, entry, cur);
 
         // Deuxième mise à jour après persistance Foundry.
         add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, cur, btn);
+        add2eSpellPrepRefreshLevelCounters(actor, spellLevel, entry, btn);
         add2eSpellPrepLog("UPDATE_DONE", { actor: actor.name, sort: sort.name, entry: entry.label, after: cur });
       } catch (err) {
         console.error("[ADD2E][SPELL_PREP_SCROLL][ERROR]", err);
@@ -430,11 +568,17 @@ Hooks.on("renderActorSheet", (app, html) => {
   const pending = add2eSpellPrepConsumePendingActorScroll(actor, "renderActorSheet");
   if (pending) add2eSpellPrepRestoreActorScrollRepeated(actor, pending, "renderActorSheet-pending");
 
-  setTimeout(() => add2eBindNativeHbsSpellPreparationControls(actor, root), 20);
+  setTimeout(() => {
+    add2eBindNativeHbsSpellPreparationControls(actor, root);
+    add2eSpellPrepHideMagicObjectPowerRows(actor, root);
+  }, 20);
   for (const delay of [40, 120, 260]) {
     setTimeout(() => {
       try {
-        if (actor?.type === "personnage") add2eEnhanceCharacterSheetUi(app, html);
+        if (actor?.type === "personnage") {
+          add2eEnhanceCharacterSheetUi(app, html);
+          add2eSpellPrepHideMagicObjectPowerRows(actor, root);
+        }
       } catch (err) {
         console.warn("[ADD2E][OBJETS_MAGIQUES][UI] Injection après rendu impossible.", err);
       }
@@ -456,11 +600,17 @@ Hooks.on("renderApplication", (app, html) => {
     if (pending) add2eSpellPrepRestoreActorScrollRepeated(actor, pending, "renderApplication-pending");
   }
 
-  setTimeout(() => add2eBindNativeHbsSpellPreparationControls(actor, root), 20);
+  setTimeout(() => {
+    add2eBindNativeHbsSpellPreparationControls(actor, root);
+    if (actor?.documentName === "Actor") add2eSpellPrepHideMagicObjectPowerRows(actor, root);
+  }, 20);
   for (const delay of [40, 120, 260]) {
     setTimeout(() => {
       try {
-        if (actor?.type === "personnage") add2eEnhanceCharacterSheetUi(app, html);
+        if (actor?.type === "personnage") {
+          add2eEnhanceCharacterSheetUi(app, html);
+          add2eSpellPrepHideMagicObjectPowerRows(actor, root);
+        }
       } catch (err) {
         console.warn("[ADD2E][OBJETS_MAGIQUES][UI] Injection application impossible.", err);
       }
@@ -485,8 +635,13 @@ Hooks.on("updateItem", (item, changes, options, userId) => {
 
   const pending = add2eSpellPrepConsumePendingActorScroll(actor, "updateItem");
   if (pending) add2eSpellPrepRestoreActorScrollRepeated(actor, pending, "updateItem-pending");
+
+  const spellLevel = Number(item.system?.niveau ?? item.system?.level ?? 1) || 1;
+  const check = typeof add2eCanActorUseSpell === "function" ? add2eCanActorUseSpell(actor, item) : null;
+  if (check?.entry) add2eSpellPrepRefreshLevelCounters(actor, spellLevel, check.entry, null);
 });
 
-console.log("ADD2E | Spell preparation native HBS V36 badge direct update loaded");
+console.log("ADD2E | Spell preparation native HBS V37 counter/object-power filter loaded");
 
 try { globalThis.add2eBindNativeHbsSpellPreparationControls = add2eBindNativeHbsSpellPreparationControls; } catch (_e) {}
+try { globalThis.add2eSpellPrepHideMagicObjectPowerRows = add2eSpellPrepHideMagicObjectPowerRows; } catch (_e) {}
