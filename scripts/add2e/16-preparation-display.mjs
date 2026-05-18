@@ -13,6 +13,58 @@
 // les données, la validation et les boutons + / -.
 // ============================================================
 
+function add2eSpellPrepRootFromNode(node) {
+  if (!node) return null;
+  return node.closest?.(".add2e-character-v3") ?? node.querySelector?.(".add2e-character-v3") ?? node;
+}
+
+function add2eSpellPrepScrollableNodes(root) {
+  if (!root) return [];
+
+  const nodes = [];
+  const add = el => {
+    if (el && typeof el.scrollTop === "number" && !nodes.includes(el)) nodes.push(el);
+  };
+
+  add(root.querySelector?.(".window-content"));
+  add(root.querySelector?.(".sheet-body"));
+  add(root.querySelector?.(".a2e-tab-content.active"));
+  add(root.querySelector?.('.a2e-tab-content[data-tab="sorts"]'));
+  add(root.querySelector?.(".tab-sorts"));
+
+  return nodes;
+}
+
+function add2eSpellPrepCaptureScroll(root) {
+  const sheetRoot = add2eSpellPrepRootFromNode(root);
+  if (!sheetRoot) return [];
+
+  return add2eSpellPrepScrollableNodes(sheetRoot).map((el, index) => ({
+    index,
+    scrollTop: el.scrollTop,
+    scrollLeft: el.scrollLeft
+  }));
+}
+
+function add2eSpellPrepRestoreScroll(root, snapshot) {
+  const sheetRoot = add2eSpellPrepRootFromNode(root);
+  if (!sheetRoot || !snapshot?.length) return;
+
+  const nodes = add2eSpellPrepScrollableNodes(sheetRoot);
+  for (const item of snapshot) {
+    const el = nodes[item.index];
+    if (!el) continue;
+    el.scrollTop = item.scrollTop;
+    el.scrollLeft = item.scrollLeft;
+  }
+}
+
+function add2eSpellPrepRestoreScrollRepeated(root, snapshot) {
+  for (const delay of [0, 20, 60, 120, 240]) {
+    setTimeout(() => add2eSpellPrepRestoreScroll(root, snapshot), delay);
+  }
+}
+
 function add2eBindNativeHbsSpellPreparationControls(actor, root) {
   if (!actor || !root) return;
 
@@ -20,6 +72,9 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
     btn.onclick = async ev => {
       ev.preventDefault();
       ev.stopPropagation();
+
+      const sheetRoot = add2eSpellPrepRootFromNode(btn);
+      const scrollSnapshot = add2eSpellPrepCaptureScroll(sheetRoot);
 
       const sortId = btn.dataset.sortId;
       const entryKey = add2eNormalizeSpellKey(btn.dataset.entryKey);
@@ -56,7 +111,9 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
       }
 
       await add2eSetMemorizedCountForEntry(sort, entry, cur);
-      add2eRerenderActorSheet(actor);
+
+      add2eRerenderActorSheet(actor, false);
+      add2eSpellPrepRestoreScrollRepeated(sheetRoot, scrollSnapshot);
     };
   });
 }
@@ -91,7 +148,7 @@ Hooks.on("renderApplication", (app, html) => {
   }
 });
 
-console.log("ADD2E | Spell preparation native HBS V31 loaded");
+console.log("ADD2E | Spell preparation native HBS V32 scroll-preserve loaded");
 
 // Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
 try { globalThis.add2eBindNativeHbsSpellPreparationControls = add2eBindNativeHbsSpellPreparationControls; } catch (_e) {}
