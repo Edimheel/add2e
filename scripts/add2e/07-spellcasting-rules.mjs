@@ -3,7 +3,7 @@
 // Supporte les classes simples (Clerc, Druide, Magicien, Paladin)
 // et les classes mixtes comme le Ranger : Druidique + Magicien.
 // ============================================================
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-05-18-no-render-on-prep-change";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-05-18-prep-counters-visible-spells-only";
 
 function add2eRerenderActorSheet(actor, force = true) {
   if (!actor) return false;
@@ -147,6 +147,20 @@ function add2eGetSpellListsFromItem(sort) {
   return key ? [key] : [];
 }
 
+function add2eIsObjectMagicSpellForPreparation(sort) {
+  const sys = sort?.system ?? {};
+  const flags = sort?.flags?.add2e ?? {};
+  return sys.isPower === true
+    || sys.isObjectPower === true
+    || !!sys.sourceWeaponId
+    || !!sys.sourceItemId
+    || sys.powerIndex !== undefined
+    || flags.sourceType === "objet_magique"
+    || !!flags.sourceItemId
+    || !!flags.sourceWeaponId
+    || String(sys.composantes ?? "").toLowerCase().includes("objet");
+}
+
 function add2eGetSlotsForEntryLevel(actor, entry, spellLevel) {
   const row = add2eGetProgressionRowForActor(actor);
   const key = add2eNormalizeSpellKey(entry?.key);
@@ -216,6 +230,8 @@ function add2eGetSpellSlotPoolsByLevel(actor) {
 }
 
 function add2eGetSpellEntryForSpell(actor, sort) {
+  if (add2eIsObjectMagicSpellForPreparation(sort)) return null;
+
   const actorLevel = Math.max(1, Number(actor?.system?.niveau) || 1);
   const spellLevel = Number(sort?.system?.niveau ?? sort?.system?.level ?? 0) || 0;
   const sortLists = add2eGetSpellListsFromItem(sort);
@@ -235,6 +251,10 @@ function add2eGetSpellEntryForSpell(actor, sort) {
 }
 
 function add2eCanActorUseSpell(actor, sort) {
+  if (add2eIsObjectMagicSpellForPreparation(sort)) {
+    return { ok: false, reason: "object-power", sortLists: [], entries: add2eGetSpellcastingEntries(actor), entry: null };
+  }
+
   const actorLevel = Math.max(1, Number(actor?.system?.niveau) || 1);
   const spellLevel = Number(sort?.system?.niveau ?? sort?.system?.level ?? 0) || 0;
   const sortLists = add2eGetSpellListsFromItem(sort);
@@ -265,17 +285,27 @@ function add2eGetMemorizedByList(sort) {
 function add2eGetMemorizedCountForEntry(sort, entry) {
   const key = add2eNormalizeSpellKey(entry?.key);
   if (!sort || !key) return 0;
+  if (add2eIsObjectMagicSpellForPreparation(sort)) return 0;
+
+  const lists = add2eGetSpellListsFromItem(sort);
+  const legacyRaw = sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount;
+  const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
+  const legacyCount = Number(legacyRaw) || 0;
+
+  // La fiche HBS actuelle affiche encore memorizedCount. Pour les sorts à une seule liste,
+  // on prend donc memorizedCount comme source d'autorité afin d'éviter les anciens
+  // memorizedByList orphelins qui affichaient Clerc 3/3 alors que les lignes étaient à 0.
+  if (lists.length <= 1 && lists.includes(key) && legacyPresent) {
+    return Math.max(0, legacyCount);
+  }
 
   const byList = add2eGetMemorizedByList(sort);
   if (Object.prototype.hasOwnProperty.call(byList, key)) {
-    return Number(byList[key] ?? 0) || 0;
+    return Math.max(0, Number(byList[key] ?? 0) || 0);
   }
 
-  // Compatibilité anciens sorts : si le sort ne correspond qu'à une seule liste,
-  // son ancien memorizedCount est considéré comme le compteur de cette liste.
-  const lists = add2eGetSpellListsFromItem(sort);
   if (lists.length <= 1 && lists.includes(key)) {
-    return Number(sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount ?? 0) || 0;
+    return Math.max(0, legacyCount);
   }
 
   return 0;
@@ -284,6 +314,7 @@ function add2eGetMemorizedCountForEntry(sort, entry) {
 async function add2eSetMemorizedCountForEntry(sort, entry, value) {
   const key = add2eNormalizeSpellKey(entry?.key);
   if (!sort || !key) return;
+  if (add2eIsObjectMagicSpellForPreparation(sort)) return;
 
   const byList = add2eGetMemorizedByList(sort);
   byList[key] = Math.max(0, Number(value) || 0);
@@ -304,10 +335,12 @@ async function add2eSetMemorizedCountForEntry(sort, entry, value) {
 }
 
 function add2eGetTotalMemorizedCount(sort) {
+  if (add2eIsObjectMagicSpellForPreparation(sort)) return 0;
+  const legacyRaw = sort?.getFlag?.("add2e", "memorizedCount") ?? sort?.flags?.add2e?.memorizedCount;
+  if (legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "") return Math.max(0, Number(legacyRaw) || 0);
+
   const byList = add2eGetMemorizedByList(sort);
-  const totalByList = Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
-  if (totalByList > 0) return totalByList;
-  return Number(sort?.getFlag?.("add2e", "memorizedCount") ?? sort?.flags?.add2e?.memorizedCount ?? 0) || 0;
+  return Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
 }
 
 function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
@@ -315,13 +348,29 @@ function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
   const lvl = Number(spellLevel) || 1;
   let total = 0;
 
+  const details = [];
+
   for (const s of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
+    if (add2eIsObjectMagicSpellForPreparation(s)) continue;
+
     const sLvl = Number(s.system?.niveau ?? s.system?.level ?? 1) || 1;
     if (sLvl !== lvl) continue;
     const sEntry = add2eGetSpellEntryForSpell(actor, s);
     if (sEntry && add2eNormalizeSpellKey(sEntry.key) === key) {
-      total += add2eGetMemorizedCountForEntry(s, entry);
+      const count = add2eGetMemorizedCountForEntry(s, entry);
+      total += count;
+      if (count) details.push({ id: s.id, name: s.name, count });
     }
+  }
+
+  if (details.length) {
+    console.log("[ADD2E][SPELL_PREP][COUNT]", {
+      actor: actor?.name,
+      entry: entry?.label || key,
+      spellLevel: lvl,
+      total,
+      details
+    });
   }
 
   return total;
@@ -330,6 +379,7 @@ function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
 globalThis.add2eGetSpellcastingEntries = add2eGetSpellcastingEntries;
 globalThis.add2eGetSpellSlotPoolsByLevel = add2eGetSpellSlotPoolsByLevel;
 globalThis.add2eCanActorUseSpell = add2eCanActorUseSpell;
+globalThis.add2eIsObjectMagicSpellForPreparation = add2eIsObjectMagicSpellForPreparation;
 globalThis.add2eGetMemorizedCountForEntry = add2eGetMemorizedCountForEntry;
 globalThis.add2eSetMemorizedCountForEntry = add2eSetMemorizedCountForEntry;
 globalThis.add2eGetTotalMemorizedCount = add2eGetTotalMemorizedCount;
@@ -362,6 +412,7 @@ try { globalThis.add2eGetSlotsForEntryLevel = add2eGetSlotsForEntryLevel; } catc
 try { globalThis.add2eGetSpellSlotPoolsByLevel = add2eGetSpellSlotPoolsByLevel; } catch (_e) {}
 try { globalThis.add2eGetSpellEntryForSpell = add2eGetSpellEntryForSpell; } catch (_e) {}
 try { globalThis.add2eCanActorUseSpell = add2eCanActorUseSpell; } catch (_e) {}
+try { globalThis.add2eIsObjectMagicSpellForPreparation = add2eIsObjectMagicSpellForPreparation; } catch (_e) {}
 try { globalThis.add2eGetMemorizedByList = add2eGetMemorizedByList; } catch (_e) {}
 try { globalThis.add2eGetMemorizedCountForEntry = add2eGetMemorizedCountForEntry; } catch (_e) {}
 try { globalThis.add2eSetMemorizedCountForEntry = add2eSetMemorizedCountForEntry; } catch (_e) {}
