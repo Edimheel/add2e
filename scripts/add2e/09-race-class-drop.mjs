@@ -9,7 +9,7 @@
 // - conserver les fonctions globales attendues par le code legacy.
 // ============================================================
 
-const ADD2E_RACE_CLASS_DROP_VERSION = "2026-05-18-dev-race-class-drop-direct-apply-v3";
+const ADD2E_RACE_CLASS_DROP_VERSION = "2026-05-18-dev-race-class-drop-cleanup-v4";
 globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION;
 console.log("[ADD2E][DROP][RACE_CLASSE][VERSION]", ADD2E_RACE_CLASS_DROP_VERSION);
 
@@ -136,6 +136,42 @@ function add2eReadDialogSelect(html, selector, fallback = 0) {
   } catch (_e) {}
 
   return Number(fallback);
+}
+
+function add2eEffectBelongsToOldClass(effect, itemsToDelete = []) {
+  const origin = String(effect?.origin || "");
+  const flags = effect?.flags?.add2e ?? {};
+  const oldClassItems = itemsToDelete.filter(i => String(i?.type || "").toLowerCase() === "classe");
+  const itemUuids = itemsToDelete.map(i => i.uuid).filter(Boolean);
+  const itemIds = itemsToDelete.map(i => i.id).filter(Boolean);
+
+  if (itemUuids.includes(origin)) return true;
+  if (itemIds.some(id => origin.endsWith(`.${id}`))) return true;
+
+  const sourceType = add2eNormalizeDropTag(flags.sourceType ?? flags.type ?? flags.kind ?? "");
+  if (["classe", "class", "class_feature", "capacite_classe", "classfeature"].includes(sourceType)) return true;
+  if (flags.autoClassPassiveEffect === true) return true;
+
+  if (!oldClassItems.length) return false;
+
+  const oldClassKeys = new Set();
+  for (const cls of oldClassItems) {
+    const sys = cls.system ?? {};
+    for (const value of [cls.name, sys.label, sys.nom, sys.name, sys.classe, sys.slug, cls.id, cls.uuid]) {
+      const key = add2eNormalizeDropTag(value);
+      if (key) oldClassKeys.add(key);
+    }
+  }
+
+  const sourceClass = add2eNormalizeDropTag(flags.sourceClasse ?? flags.sourceClass ?? flags.className ?? flags.classe ?? flags.classKey ?? "");
+  const sourceId = add2eNormalizeDropTag(flags.sourceItemId ?? flags.sourceClassId ?? flags.classId ?? "");
+  const effectName = add2eNormalizeDropTag(effect?.name ?? effect?.label ?? "");
+
+  if (sourceClass && oldClassKeys.has(sourceClass)) return true;
+  if (sourceId && oldClassKeys.has(sourceId)) return true;
+  if (effectName && [...oldClassKeys].some(k => k && effectName.includes(k))) return true;
+
+  return false;
 }
 
 async function add2eDropDialog(content, buttons, title = "Compatibilité du personnage") {
@@ -521,12 +557,18 @@ async function add2eApplyClassItemDataToActor(actor, classData, sheet = null, op
 
   const typesToDelete = ["classe", "sort", "arme", "armure", "spell", "weapon", "armor"];
   const itemsToDelete = actor.items.filter(i => typesToDelete.includes(String(i.type || "").toLowerCase()));
-  const effectsToDelete = typeof add2eShouldDeleteEffectForClassPurge === "function"
-    ? actor.effects.filter(eff => add2eShouldDeleteEffectForClassPurge(eff, itemsToDelete))
-    : [];
+  const effectsToDelete = actor.effects.filter(eff => add2eEffectBelongsToOldClass(eff, itemsToDelete));
+  const effectIdsToDelete = effectsToDelete.map(eff => eff.id).filter(Boolean);
 
-  for (const eff of effectsToDelete) await eff.delete({ render: false });
-  for (const it of itemsToDelete) await it.delete({ render: false });
+  console.log("[ADD2E][DROP][CLASSE][PURGE]", {
+    actor: actor.name,
+    oldItems: itemsToDelete.map(i => ({ name: i.name, type: i.type, id: i.id })),
+    oldEffects: effectsToDelete.map(e => ({ name: e.name, id: e.id, origin: e.origin, flags: e.flags?.add2e ?? {} }))
+  });
+
+  if (effectIdsToDelete.length) await actor.deleteEmbeddedDocuments("ActiveEffect", effectIdsToDelete, { add2eInternal: true });
+  const itemIdsToDelete = itemsToDelete.map(i => i.id).filter(Boolean);
+  if (itemIdsToDelete.length) await actor.deleteEmbeddedDocuments("Item", itemIdsToDelete, { add2eInternal: true });
 
   const [classDoc] = await actor.createEmbeddedDocuments("Item", [data], { add2eInternal: true });
   if (!classDoc) return null;
@@ -550,7 +592,14 @@ async function add2eApplyClassItemDataToActor(actor, classData, sheet = null, op
     if (actorEffects.length) await actor.createEmbeddedDocuments("ActiveEffect", actorEffects, { add2eInternal: true });
   }
 
-  const classSystem = foundry.utils.deepClone(classDoc.system ?? {});
+  const classSystem = {
+    ...foundry.utils.deepClone(classDoc.system ?? {}),
+    name: classDoc.name,
+    label: classDoc.system?.label || classDoc.name,
+    img: classDoc.img || classDoc.system?.img || "",
+    sourceItemId: classDoc.id,
+    sourceItemUuid: classDoc.uuid
+  };
   const levelClamp = typeof add2eClampLevelToClassMax === "function"
     ? add2eClampLevelToClassMax(actor, actor.system?.niveau, classSystem, { notify: true })
     : { changed: false, level: actor.system?.niveau };
@@ -588,6 +637,8 @@ async function add2eApplyClassItemDataToActor(actor, classData, sheet = null, op
     ui.notifications.error("Erreur pendant la synchronisation des sorts de classe.");
   }
 
+  sheet?._add2eRememberActiveTab?.();
+  sheet?.render?.(false);
   if (options.notify !== false) ui.notifications.info(`Classe ajustée automatiquement : ${classDoc.name}.`);
   return classDoc;
 }
