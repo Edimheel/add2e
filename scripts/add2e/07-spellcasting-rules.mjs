@@ -3,23 +3,14 @@
 // Supporte les classes simples (Clerc, Druide, Magicien, Paladin)
 // et les classes mixtes comme le Ranger : Druidique + Magicien.
 // ============================================================
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-05-04-consolidated-v20-level-cap";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-05-18-no-render-on-prep-change";
 
 function add2eRerenderActorSheet(actor, force = true) {
   if (!actor) return false;
 
   try {
-    if (actor.sheet?.render) {
-      actor.sheet.render(force);
-      return true;
-    }
-  } catch (err) {
-    console.warn("[ADD2E][SHEET][RERENDER] actor.sheet.render impossible", err);
-  }
-
-  try {
     for (const app of Object.values(ui.windows ?? {})) {
-      const appActor = app?.actor ?? app?.document;
+      const appActor = app?.actor ?? app?.document ?? app?.object;
       if (appActor?.id === actor.id && app?.render) {
         app.render(force);
         return true;
@@ -29,6 +20,8 @@ function add2eRerenderActorSheet(actor, force = true) {
     console.warn("[ADD2E][SHEET][RERENDER] ui.windows impossible", err);
   }
 
+  // Ne pas utiliser actor.sheet.render ici : cela peut instancier/ouvrir la feuille
+  // ou provoquer un scroll parasite quand l'action vient d'un bouton déjà visible.
   return false;
 }
 globalThis.add2eRerenderActorSheet = add2eRerenderActorSheet;
@@ -302,8 +295,12 @@ async function add2eSetMemorizedCountForEntry(sort, entry, value) {
 
   const total = Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
 
-  await sort.setFlag("add2e", "memorizedByList", byList);
-  await sort.setFlag("add2e", "memorizedCount", total);
+  // Un seul update, sans rendu automatique : les boutons + / - mettent à jour
+  // le badge visible eux-mêmes. Cela évite le scroll parasite de la feuille.
+  await sort.update({
+    "flags.add2e.memorizedByList": byList,
+    "flags.add2e.memorizedCount": total
+  }, { render: false, diff: true });
 }
 
 function add2eGetTotalMemorizedCount(sort) {
