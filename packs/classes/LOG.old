@@ -1,16 +1,3 @@
-2026/05/18-16:29:36.503146 7f5d59efc0 Log #457: 0 ops saved to Table #458 OK
-2026/05/18-16:29:36.503925 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/000457.log: OK
-2026/05/18-16:29:36.504431 7f5d59efc0 Table #456: 10 entries OK
-2026/05/18-16:29:36.504707 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000358: OK
-2026/05/18-16:29:36.504755 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000012: OK
-2026/05/18-16:29:36.504820 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000405: OK
-2026/05/18-16:29:36.504882 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000407: OK
-2026/05/18-16:29:36.504924 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000451: OK
-2026/05/18-16:29:36.504994 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000425: OK
-2026/05/18-16:29:36.505055 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000390: OK
-2026/05/18-16:29:36.505114 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000421: OK
-2026/05/18-16:29:36.505173 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000417: OK
-2026/05/18-16:29:36.505233 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000398: OK
-2026/05/18-16:29:36.505275 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000453: OK
-2026/05/18-16:29:36.505335 7f5d59efc0 Archiving /data2/Data/systems/add2e/packs/classes/MANIFEST-000393: OK
-2026/05/18-16:29:36.515475 7f5d59efc0 **** Repaired leveldb /data2/Data/systems/add2e/packs/classes; recovered 1 files; 74495 bytes. Some data may have been lost. ****
+2026/05/18-18:59:13.639334 7f6e7cefc0 Recovering log #462
+2026/05/18-18:59:13.654390 7f6e7cefc0 Delete type=3 #461
+2026/05/18-18:59:13.654467 7f6e7cefc0 Delete type=0 #462
