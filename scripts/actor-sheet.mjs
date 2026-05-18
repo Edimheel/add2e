@@ -810,6 +810,70 @@ function add2eCheckClassRequirements({ actor, className, classSystem, projectedA
   };
 }
 
+async function add2eShowClassRequirementsRefusalDialog({
+  actor,
+  className,
+  raceName = "",
+  requirements,
+  projectedAbilities = null
+} = {}) {
+  const failures = requirements?.failures ?? [];
+  const abilities = projectedAbilities ?? add2eProjectedAbilities(actor, null);
+
+  const caracRows = ADD2E_CARACS.map(c => {
+    const value = abilities?.[c] ?? actor?.system?.[c] ?? "";
+    return `<tr>
+      <td style="padding:3px 8px;"><strong>${c}</strong></td>
+      <td style="padding:3px 8px;text-align:center;">${value}</td>
+    </tr>`;
+  }).join("");
+
+  const failureRows = failures.length
+    ? failures.map(f => `<li>${f.reason || f.tag || "Pré-requis non respecté."}</li>`).join("")
+    : `<li>${requirements?.reason || "Pré-requis non respecté."}</li>`;
+
+  const content = `
+    <div class="add2e-drop-refusal" style="min-width:420px;">
+      <p><strong>Drop refusé : prérequis de classe non respectés.</strong></p>
+
+      <p>
+        <strong>Classe :</strong> ${className || "Classe inconnue"}<br>
+        <strong>Race :</strong> ${raceName || "Race non renseignée"}
+      </p>
+
+      <hr>
+
+      <p><strong>Raison :</strong></p>
+      <ul>
+        ${failureRows}
+      </ul>
+
+      <hr>
+
+      <p><strong>Caractéristiques actuellement vérifiées :</strong></p>
+      <table style="width:100%;border-collapse:collapse;">
+        <tbody>
+          ${caracRows}
+        </tbody>
+      </table>
+
+      <hr>
+
+      <p style="margin-bottom:0;">
+        Le choix race/classe peut être cohérent, mais les caractéristiques du personnage
+        ne respectent pas les prérequis mécaniques de la classe.
+      </p>
+    </div>
+  `;
+
+  return Dialog.confirm({
+    title: "ADD2E — Classe impossible",
+    content,
+    yes: () => true,
+    no: () => false,
+    defaultYes: true
+  });
+}
 
 async function add2eDeleteOwnedItemsOfType(actor, type) {
   if (!actor?.items) return;
@@ -1022,7 +1086,6 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       });
 
       if (!requirements.ok) {
-        ui.notifications.error(requirements.reason);
         console.warn("[ADD2E][DROP RACE][REFUS PREREQUIS CLASSE]", {
           actor: this.actor.name,
           race: raceName,
@@ -1030,6 +1093,15 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
           projectedAbilities,
           requirements
         });
+
+        await add2eShowClassRequirementsRefusalDialog({
+          actor: this.actor,
+          className: currentClassName,
+          raceName,
+          requirements,
+          projectedAbilities
+        });
+
         return;
       }
 
@@ -1160,13 +1232,20 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     });
 
     if (!requirements.ok) {
-      ui.notifications.error(requirements.reason);
       console.warn("[ADD2E][DROP CLASSE][REFUS PREREQUIS]", {
         actor: this.actor.name,
         race: currentRaceName,
         classe: item.name,
         requirements
       });
+
+      await add2eShowClassRequirementsRefusalDialog({
+        actor: this.actor,
+        className: item.name,
+        raceName: currentRaceName,
+        requirements
+      });
+
       return;
     }
 
