@@ -6,7 +6,7 @@ import { Add2eItemSheet } from "../add2e-item-sheet.mjs";
 globalThis.Add2eItemSheet = Add2eItemSheet;
 
 // 2. INITIALISATION (enregistrement strict des fiches)
-function add2eRegisterClassItemSheet() {
+export function add2eRegisterClassItemSheet() {
   const options = {
     types: ["classe"],
     makeDefault: true,
@@ -33,6 +33,8 @@ function add2eRegisterClassItemSheet() {
 
   console.log("[ADD2E][SHEETS] Fiche Item.classe enregistrée :", Add2eItemSheet?.name);
 }
+
+globalThis.add2eRegisterClassItemSheet = add2eRegisterClassItemSheet;
 
 Hooks.once("init", function() {
   console.log("ADD2e | Initialisation du système...");
