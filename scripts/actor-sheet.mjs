@@ -5,6 +5,10 @@
 const { ActorSheetV2 } = foundry.applications.sheets;
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 
+const ADD2E_ACTOR_SHEET_VERSION = "2026-05-18-drop-prerequis-dialog-v2";
+globalThis.ADD2E_ACTOR_SHEET_VERSION = ADD2E_ACTOR_SHEET_VERSION;
+console.log("[ADD2E][ACTOR_SHEET][VERSION]", ADD2E_ACTOR_SHEET_VERSION);
+
 // =====================================================
 // OUTILS
 // =====================================================
@@ -860,18 +864,31 @@ async function add2eShowClassRequirementsRefusalDialog({
       <hr>
 
       <p style="margin-bottom:0;">
-        Le choix race/classe peut être cohérent, mais les caractéristiques du personnage
-        ne respectent pas les prérequis mécaniques de la classe.
+        Ce message est informatif : le drop reste refusé tant que ces prérequis ne sont pas respectés.
       </p>
     </div>
   `;
 
-  return Dialog.confirm({
-    title: "ADD2E — Classe impossible",
-    content,
-    yes: () => true,
-    no: () => false,
-    defaultYes: true
+  return new Promise(resolve => {
+    let resolved = false;
+    const close = (value) => {
+      if (resolved) return;
+      resolved = true;
+      resolve(value);
+    };
+
+    new Dialog({
+      title: "ADD2E — Drop refusé",
+      content,
+      buttons: {
+        ok: {
+          label: "Compris",
+          callback: () => close(true)
+        }
+      },
+      default: "ok",
+      close: () => close(false)
+    }).render(true);
   });
 }
 
@@ -1030,6 +1047,7 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   }
 
   async _onDropItem(event, data) {
+    console.log("[ADD2E][DROP][VERSION]", ADD2E_ACTOR_SHEET_VERSION);
     console.log("[add2e] DROP ITEM :", data);
 
     let item = null;
@@ -1087,6 +1105,7 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
       if (!requirements.ok) {
         console.warn("[ADD2E][DROP RACE][REFUS PREREQUIS CLASSE]", {
+          version: ADD2E_ACTOR_SHEET_VERSION,
           actor: this.actor.name,
           race: raceName,
           classe: currentClassName,
@@ -1233,6 +1252,7 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
 
     if (!requirements.ok) {
       console.warn("[ADD2E][DROP CLASSE][REFUS PREREQUIS]", {
+        version: ADD2E_ACTOR_SHEET_VERSION,
         actor: this.actor.name,
         race: currentRaceName,
         classe: item.name,
@@ -1524,7 +1544,7 @@ globalThis.Add2eActorSheet = Add2eActorSheet;
 // =====================================================
 
 Hooks.once("init", () => {
-  console.log("[add2e] Hook init : override ActorSheet");
+  console.log("[add2e] Hook init : override ActorSheet", ADD2E_ACTOR_SHEET_VERSION);
 
   try {
     Actors.unregisterSheet("core", ActorSheet);
@@ -1538,5 +1558,5 @@ Hooks.once("init", () => {
     label: "ADD2e Descartes (FR)"
   });
 
-  console.log("[add2e] Feuille acteur ADD2E enregistrée.");
+  console.log("[add2e] Feuille acteur ADD2E enregistrée.", ADD2E_ACTOR_SHEET_VERSION);
 });
