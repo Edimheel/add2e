@@ -53,24 +53,21 @@ export function add2eObjectPowerOnUsePath(power) {
   ).trim();
 }
 
-function add2eObjectPowerCost(power) {
+export function add2eObjectPowerCost(power) {
   return Math.max(0, Number(power?.cout ?? power?.cost ?? power?.chargeCost ?? 0) || 0);
 }
 
-function add2eObjectPowerMaxCharges(itemSource, power, idx) {
+export function add2eObjectPowerMaxCharges(itemSource, power, idx) {
   const sys = itemSource?.system ?? {};
   const globalMax = Number(sys?.charges?.max ?? sys?.max_charges ?? sys?.maxCharges ?? sys?.chargesMax ?? 0) || 0;
   if (globalMax > 0) return globalMax;
   return Number(power?.max ?? power?.chargesMax ?? power?.maxCharges ?? power?.charges?.max ?? power?.charges ?? 1) || 1;
 }
 
-function add2eObjectPowerCurrentCharges(itemSource, power, idx) {
+export function add2eObjectPowerCurrentCharges(itemSource, power, idx) {
   const sys = itemSource?.system ?? {};
   const cost = add2eObjectPowerCost(power);
 
-  // Un pouvoir permanent / gratuit doit rester lançable même si l'objet n'a pas de réserve de charges.
-  // Exemple : Anneau d'invisibilité. La mécanique existante passe par add2eCastSpell,
-  // qui vérifie le flag memorizedCount ; on renvoie donc 1 pour les pouvoirs à coût 0.
   if (cost <= 0) return 1;
 
   const globalMax = Number(sys?.charges?.max ?? sys?.max_charges ?? sys?.maxCharges ?? sys?.chargesMax ?? 0) || 0;
@@ -86,7 +83,7 @@ function add2eObjectPowerCurrentCharges(itemSource, power, idx) {
   return Number(power?.charges?.value ?? power?.charges ?? power?.value ?? power?.max ?? 1) || 0;
 }
 
-async function add2eObjectPowerSetCharges(itemSource, power, idx, value) {
+export async function add2eObjectPowerSetCharges(itemSource, power, idx, value) {
   const sys = itemSource?.system ?? {};
   const globalMax = Number(sys?.charges?.max ?? sys?.max_charges ?? sys?.maxCharges ?? sys?.chargesMax ?? 0) || 0;
   const next = Math.max(0, Number(value) || 0);
@@ -108,7 +105,6 @@ export function add2eMagicPowerGeneratedId(item, index) {
 
 export function add2eBuildVirtualObjectPowerSort(actor, itemSource, power, idx) {
   const generatedId = add2eMagicPowerGeneratedId(itemSource, idx);
-
   const onUse = add2eObjectPowerOnUsePath(power);
   const cost = add2eObjectPowerCost(power);
   const max = cost <= 0 ? Math.max(1, add2eObjectPowerMaxCharges(itemSource, power, idx)) : add2eObjectPowerMaxCharges(itemSource, power, idx);
@@ -174,6 +170,11 @@ export async function add2eExecuteObjectMagicPower(actor, itemSource, power, idx
   const cost = add2eObjectPowerCost(power);
   const current = add2eObjectPowerCurrentCharges(itemSource, power, idx);
 
+  if (!onUse) {
+    ui.notifications.warn(`${powerName} n'a pas de script utilisable.`);
+    return false;
+  }
+
   if (cost > 0 && current < cost) {
     ui.notifications.warn(`${itemSource.name} n'a pas assez de charges pour utiliser ${powerName}.`);
     return false;
@@ -183,57 +184,24 @@ export async function add2eExecuteObjectMagicPower(actor, itemSource, power, idx
 
   try {
     let result = true;
+    const url = onUse.includes("?") ? `${onUse}&cb=${Date.now()}` : `${onUse}?cb=${Date.now()}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
 
-    if (onUse) {
-      const url = onUse.includes("?") ? `${onUse}&cb=${Date.now()}` : `${onUse}?cb=${Date.now()}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    const code = await response.text();
+    const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+    const scope = { actor, item: itemSource, sourceItem: itemSource, sort, power, pouvoir: power, powerIndex: idx, isObjectPower: true };
+    const args = [{ actor, item: itemSource, sourceItem: itemSource, sort, power, pouvoir: power, powerIndex: idx, scope }];
 
-      const code = await response.text();
-      const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-      const scope = {
-        actor,
-        item: itemSource,
-        sourceItem: itemSource,
-        sort,
-        power,
-        pouvoir: power,
-        powerIndex: idx,
-        isObjectPower: true
-      };
-      const args = [{ actor, item: itemSource, sourceItem: itemSource, sort, power, pouvoir: power, powerIndex: idx, scope }];
+    const runner = new AsyncFunction(
+      "actor", "item", "sourceItem", "sort", "power", "pouvoir", "powerIndex", "scope", "args",
+      "game", "ui", "ChatMessage", "Roll", "foundry", "canvas",
+      code
+    );
 
-      const runner = new AsyncFunction(
-        "actor",
-        "item",
-        "sourceItem",
-        "sort",
-        "power",
-        "pouvoir",
-        "powerIndex",
-        "scope",
-        "args",
-        "game",
-        "ui",
-        "ChatMessage",
-        "Roll",
-        "foundry",
-        "canvas",
-        code
-      );
+    result = await runner(actor, itemSource, itemSource, sort, power, power, idx, scope, args, game, ui, ChatMessage, Roll, foundry, canvas);
 
-      result = await runner(actor, itemSource, itemSource, sort, power, power, idx, scope, args, game, ui, ChatMessage, Roll, foundry, canvas);
-    } else {
-      await ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor }),
-        content: `<div class="add2e chat-card"><h3>${powerName}</h3><p>${power?.description || itemSource?.system?.description || "Pouvoir d'objet magique utilisé."}</p></div>`
-      });
-    }
-
-    // Convention ADD2E : un script peut retourner false pour ne pas consommer la ressource.
-    if (result !== false && cost > 0) {
-      await add2eObjectPowerSetCharges(itemSource, power, idx, current - cost);
-    }
+    if (result !== false && cost > 0) await add2eObjectPowerSetCharges(itemSource, power, idx, current - cost);
 
     if (result !== false) {
       console.log("[ADD2E][OBJET_MAGIQUE][POUVOIR_OK]", { actor: actor.name, item: itemSource.name, power: powerName, onUse, cost });
@@ -252,17 +220,13 @@ export async function add2eExecuteObjectMagicPower(actor, itemSource, power, idx
 }
 
 // ============================================================
-// ADD2E — Affichage des objets magiques dans l'onglet Sorts
+// ADD2E — Collecte / affichage des objets magiques activables
 // ============================================================
-function add2eMagicItemEquippedOrUsable(item) {
-  // IMPORTANT : ce helper sert maintenant à l'AFFICHAGE des objets magiques possédés,
-  // pas à l'exclusivité d'équipement. Un bâton magique peut être déséquipé automatiquement
-  // quand une autre arme est équipée ; ses pouvoirs doivent quand même rester visibles
-  // dans la section Objets magiques de la fiche.
+export function add2eMagicItemEquippedOrUsable(item) {
   return !!item;
 }
 
-function add2eMagicObjectRawPowers(item) {
+export function add2eMagicObjectRawPowers(item) {
   const sys = item?.system ?? {};
   return sys.pouvoirs
     ?? sys.powers
@@ -280,11 +244,13 @@ export function add2eMagicObjectPowerArray(item) {
   return [];
 }
 
-function add2eMagicObjectActivePowerArray(item) {
-  return add2eMagicObjectPowerArray(item).filter(p => add2eObjectPowerOnUsePath(p));
+export function add2eMagicObjectActivePowerEntries(item) {
+  return add2eMagicObjectPowerArray(item)
+    .map((power, index) => ({ power, index }))
+    .filter(entry => add2eObjectPowerOnUsePath(entry.power));
 }
 
-function add2eMagicReadNumber(...values) {
+export function add2eMagicReadNumber(...values) {
   for (const value of values) {
     if (value === undefined || value === null || value === "") continue;
     if (typeof value === "object") {
@@ -298,7 +264,7 @@ function add2eMagicReadNumber(...values) {
   return NaN;
 }
 
-function add2eMagicObjectChargeInfo(item, powers = null) {
+export function add2eMagicObjectChargeInfo(item, powers = null) {
   const sys = item?.system ?? {};
   const list = powers ?? add2eMagicObjectPowerArray(item);
 
@@ -338,7 +304,7 @@ function add2eMagicObjectChargeInfo(item, powers = null) {
   return { current, max, label: max > 0 ? `${current}/${max}` : "—" };
 }
 
-function add2eMagicLooksMagical(item) {
+export function add2eMagicLooksMagical(item) {
   const sys = item?.system ?? {};
   const tags = add2eObjectMagicToArray(sys.tags ?? sys.effectTags ?? sys.effets ?? sys.effects).map(add2eObjectMagicNormalizeTag);
   const name = String(item?.name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -354,26 +320,24 @@ export function add2eUiCollectObjectMagicGroups(actor) {
   const itemsSources = actor?.items?.filter?.(item => {
     const type = String(item?.type ?? "").toLowerCase();
     if (!["arme", "armure", "objet", "object", "magic", "objet_magique"].includes(type)) return false;
-
     if (!add2eMagicItemEquippedOrUsable(item)) return false;
 
-    // Filtre strict : seuls les objets possédant au moins un pouvoir réellement activable
-    // apparaissent dans l'onglet Sorts. Les armes/armures +1 et autres bonus passifs
-    // restent dans leur onglet d'équipement.
-    return add2eMagicObjectActivePowerArray(item).length > 0;
+    // Critère strict : seuls les objets ayant un pouvoir avec script onUse sont affichés.
+    // Les armes +1, armures +1 et bonus passifs ne doivent pas apparaître dans l'onglet Sorts.
+    return add2eMagicObjectActivePowerEntries(item).length > 0;
   }) ?? [];
 
   for (const itemSource of itemsSources) {
-    let pouvoirs = add2eMagicObjectActivePowerArray(itemSource);
-    if (!pouvoirs.length) continue;
+    const powerEntries = add2eMagicObjectActivePowerEntries(itemSource);
+    if (!powerEntries.length) continue;
 
-    const chargeInfo = add2eMagicObjectChargeInfo(itemSource, pouvoirs);
+    const activePowers = powerEntries.map(e => e.power);
+    const chargeInfo = add2eMagicObjectChargeInfo(itemSource, activePowers);
     const maxGlobal = Number(chargeInfo.max) || 0;
     const isGlobal = maxGlobal > 0;
 
     const powers = [];
-    for (let idx = 0; idx < pouvoirs.length; idx++) {
-      const p = pouvoirs[idx] ?? {};
+    for (const { power: p, index: idx } of powerEntries) {
       const max = isGlobal ? maxGlobal : (Number(p.max ?? p.maxCharges ?? p.chargesMax ?? p.charges_max ?? itemSource.system?.charges ?? 1) || 1);
       const charges = isGlobal
         ? chargeInfo.current
@@ -412,7 +376,7 @@ export function add2eUiCollectObjectMagicPowers(actor) {
   return add2eUiCollectObjectMagicGroups(actor).flatMap(group => group.powers);
 }
 
-function add2eUiBuildObjectMagicSection(actor) {
+export function add2eUiBuildObjectMagicSection(actor) {
   const groups = add2eUiCollectObjectMagicGroups(actor);
 
   const content = groups.length ? groups.map(group => {
@@ -451,7 +415,7 @@ function add2eUiBuildObjectMagicSection(actor) {
     `;
   }).join("") : `
     <div class="a2e-muted" style="text-align:center;padding:0.8em;border:1px solid #dac276;border-radius:9px;background:#fffdf6;">
-      Aucun objet magique équipé ou doté d’un pouvoir utilisable.
+      Aucun objet magique doté d’un pouvoir utilisable.
     </div>
   `;
 
@@ -466,8 +430,6 @@ function add2eUiBuildObjectMagicSection(actor) {
 export function add2eUiInjectObjectMagicSection(spellContainer, actor) {
   if (!spellContainer || !actor) return;
 
-  // IMPORTANT : le conteneur doit être le contenu de l'onglet Sorts,
-  // jamais le bouton d'onglet [data-tab="sorts"].
   if (spellContainer.matches?.(".item, a.item, .sheet-tabs, .tabs, nav")) {
     console.warn("[ADD2E][OBJETS_MAGIQUES][UI] Conteneur invalide, injection annulée.", spellContainer);
     return;
@@ -483,7 +445,6 @@ export function add2eUiInjectObjectMagicSection(spellContainer, actor) {
   const panel = wrapper.firstElementChild;
   if (!panel) return;
 
-  // Placement voulu : après le résumé des listes, mais avant les tables de sorts.
   const summary = spellContainer.querySelector(".a2e-spellcasting-summary");
   const firstSpellPanel = Array.from(spellContainer.querySelectorAll(".a2e-panel"))
     .find(p => p.querySelector?.("table.sort-table"));
@@ -497,11 +458,22 @@ export function add2eUiInjectObjectMagicSection(spellContainer, actor) {
   }
 }
 
-globalThis.add2eExecuteObjectMagicPower = add2eExecuteObjectMagicPower;
 globalThis.add2eObjectPowerOnUsePath = add2eObjectPowerOnUsePath;
-globalThis.add2eMagicObjectPowerArray = add2eMagicObjectPowerArray;
-globalThis.add2eMagicPowerGeneratedId = add2eMagicPowerGeneratedId;
+globalThis.add2eObjectPowerCost = add2eObjectPowerCost;
+globalThis.add2eObjectPowerMaxCharges = add2eObjectPowerMaxCharges;
+globalThis.add2eObjectPowerCurrentCharges = add2eObjectPowerCurrentCharges;
+globalThis.add2eObjectPowerSetCharges = add2eObjectPowerSetCharges;
 globalThis.add2eBuildVirtualObjectPowerSort = add2eBuildVirtualObjectPowerSort;
+globalThis.add2eExecuteObjectMagicPower = add2eExecuteObjectMagicPower;
+globalThis.add2eMagicItemEquippedOrUsable = add2eMagicItemEquippedOrUsable;
+globalThis.add2eMagicObjectRawPowers = add2eMagicObjectRawPowers;
+globalThis.add2eMagicObjectPowerArray = add2eMagicObjectPowerArray;
+globalThis.add2eMagicObjectActivePowerEntries = add2eMagicObjectActivePowerEntries;
+globalThis.add2eMagicReadNumber = add2eMagicReadNumber;
+globalThis.add2eMagicObjectChargeInfo = add2eMagicObjectChargeInfo;
+globalThis.add2eMagicLooksMagical = add2eMagicLooksMagical;
+globalThis.add2eMagicPowerGeneratedId = add2eMagicPowerGeneratedId;
 globalThis.add2eUiCollectObjectMagicGroups = add2eUiCollectObjectMagicGroups;
 globalThis.add2eUiCollectObjectMagicPowers = add2eUiCollectObjectMagicPowers;
+globalThis.add2eUiBuildObjectMagicSection = add2eUiBuildObjectMagicSection;
 globalThis.add2eUiInjectObjectMagicSection = add2eUiInjectObjectMagicSection;

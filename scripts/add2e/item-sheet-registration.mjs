@@ -3,6 +3,7 @@
 
 // 1. IMPORT (Obligatoire tout en haut)
 import { Add2eItemSheet } from "../add2e-item-sheet.mjs";
+globalThis.Add2eItemSheet = Add2eItemSheet;
 
 // 2. INITIALISATION (enregistrement strict des fiches)
 function add2eRegisterClassItemSheet() {
