@@ -1,7 +1,16 @@
-2026/05/17-21:28:23.034730 7f5fffefc0 Recovering log #4
-2026/05/17-21:28:23.050550 7f5fffefc0 Delete type=0 #4
-2026/05/17-21:28:23.050608 7f5fffefc0 Delete type=3 #2
-2026/05/17-22:03:38.822828 7f5edbffc0 Level-0 table #9: started
-2026/05/17-22:03:38.822887 7f5edbffc0 Level-0 table #9: 0 bytes OK
-2026/05/17-22:03:38.829160 7f5edbffc0 Delete type=0 #7
-2026/05/17-22:03:38.835258 7f5edbffc0 Manual compaction at level-0 from 'undefined' @ 72057594037927935 : 1 .. 'undefined' @ 0 : 0; will stop at (end)
+2026/05/18-16:29:36.613904 7f47ffefc0 Log #522: 0 ops saved to Table #525 OK
+2026/05/18-16:29:36.614896 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/000522.log: OK
+2026/05/18-16:29:36.615108 7f47ffefc0 Table #524: 26 entries OK
+2026/05/18-16:29:36.615290 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000012: OK
+2026/05/18-16:29:36.615332 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000467: OK
+2026/05/18-16:29:36.615368 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000432: OK
+2026/05/18-16:29:36.615403 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000475: OK
+2026/05/18-16:29:36.615438 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000461: OK
+2026/05/18-16:29:36.615474 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000519: OK
+2026/05/18-16:29:36.615508 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000463: OK
+2026/05/18-16:29:36.615543 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000487: OK
+2026/05/18-16:29:36.615577 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000473: OK
+2026/05/18-16:29:36.615612 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000483: OK
+2026/05/18-16:29:36.615712 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000491: OK
+2026/05/18-16:29:36.615751 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/races/MANIFEST-000517: OK
+2026/05/18-16:29:36.655451 7f47ffefc0 **** Repaired leveldb /data2/Data/systems/add2e/packs/races; recovered 1 files; 11412 bytes. Some data may have been lost. ****

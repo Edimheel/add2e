@@ -1,0 +1,115 @@
+{
+  "_id": "monkclass0001a",
+  "name": "Moine",
+  "type": "classe",
+  "img": "systems/add2e/assets/moine.png",
+  "system": {
+    "label": "Moine",
+    "description": "Artiste martial et ascète, le moine maîtrise le combat à mains nues, la rapidité et la discipline du corps et de l'esprit. Il porte rarement d'armure et développe des capacités surnaturelles au fil des niveaux.",
+    "caracs_min": {
+      "force": 15,
+      "sagesse": 15,
+      "dexterite": 15,
+      "constitution": 11
+    },
+    "primaryAbility": "Dextérité, Sagesse",
+    "prerequis": {
+      "alignement": "Loyal uniquement",
+      "race": "Humain",
+      "autre": "Doit appartenir à un monastère, suivre une discipline stricte. Pas d'armure ni de bouclier."
+    },
+    "alignment": [
+      "Loyal Bon",
+      "Loyal Neutre",
+      "Loyal Mauvais"
+    ],
+    "raceAllowed": ["Humain"],
+"armorAllowed": ["aucune"],
+    "shieldAllowed": false,
+    "armes_autorisees": [ "main nue", "dague", "bâton", "fronde"],
+    "weaponRestriction": { "allowedNames": ["Dague", "Bâton", "main nue", "fronde"] ,"base": true}, 
+    "magicAllowed": "Objets magiques autorisés : objets non métalliques, potions, quelques objets divers.",
+    "hdPerLevel": "1d8",
+    "hitDie": 8,
+    "hpAfter9": 2,
+"progression": [
+  { "level": 1,  "xp": 0,      "hd": "1d8",    "title": "Novice",                "thac0": 20, "savingThrows": [10,14,13,16,15], "spells": [0,0,0,0,0,0,0], "attacksPerRound": "1",   "monkAC": 10, "move": 12, "openDoors": 1,  "damage": "1d6/1d3", "stunParalyze": 15,  "slowFall": 0,    "immuneDisease": false, "selfHealPerDay": 0, "resistCharmSuggestion": 0, "resistESP": 0, "quiveringPalm": false },
+  { "level": 2,  "xp": 1500,   "hd": "2d8",    "title": "Aspirant",              "thac0": 20, "savingThrows": [10,14,13,16,15], "spells": [0,0,0,0,0,0,0], "attacksPerRound": "1",   "monkAC": 9,  "move": 12, "openDoors": 1,  "damage": "1d6/1d3", "stunParalyze": 20,  "slowFall": 0,    "immuneDisease": false, "selfHealPerDay": 0, "resistCharmSuggestion": 0, "resistESP": 0, "quiveringPalm": false },
+  { "level": 3,  "xp": 3000,   "hd": "3d8",    "title": "Disciple",              "thac0": 19, "savingThrows": [10,14,13,16,15], "spells": [0,0,0,0,0,0,0], "attacksPerRound": "3/2", "monkAC": 8,  "move": 15, "openDoors": 2,  "damage": "1d6/1d3", "stunParalyze": 25,  "slowFall": 6,    "immuneDisease": false, "selfHealPerDay": 0, "resistCharmSuggestion": 0, "resistESP": 0, "quiveringPalm": false },
+  { "level": 4,  "xp": 6000,   "hd": "4d8",    "title": "Initié",                "thac0": 18, "savingThrows": [9,13,12,15,14],  "spells": [0,0,0,0,0,0,0], "attacksPerRound": "3/2", "monkAC": 7,  "move": 15, "openDoors": 2,  "damage": "1d6/1d3", "stunParalyze": 30,  "slowFall": 6,    "immuneDisease": false, "selfHealPerDay": 0, "resistCharmSuggestion": 0, "resistESP": 0, "quiveringPalm": false },
+  { "level": 5,  "xp": 13000,  "hd": "5d8",    "title": "Maître",                "thac0": 18, "savingThrows": [9,13,12,15,14],  "spells": [0,0,0,0,0,0,0], "attacksPerRound": "3/2", "monkAC": 6,  "move": 18, "openDoors": 2,  "damage": "1d8/1d4", "stunParalyze": 35,  "slowFall": 6,    "immuneDisease": false, "selfHealPerDay": 0, "resistCharmSuggestion": 0, "resistESP": 0, "quiveringPalm": false },
+  { "level": 6,  "xp": 27500,  "hd": "6d8",    "title": "Maître supérieur",      "thac0": 17, "savingThrows": [9,13,12,15,14],  "spells": [0,0,0,0,0,0,0], "attacksPerRound": "2",   "monkAC": 5,  "move": 18, "openDoors": 3,  "damage": "1d8/1d4", "stunParalyze": 40,  "slowFall": 9,    "immuneDisease": true,  "selfHealPerDay": 0, "resistCharmSuggestion": 5, "resistESP": 0, "quiveringPalm": false },
+  { "level": 7,  "xp": 55000,  "hd": "7d8",    "title": "Grand maître",          "thac0": 16, "savingThrows": [7,11,10,13,12],  "spells": [0,0,0,0,0,0,0], "attacksPerRound": "2",   "monkAC": 4,  "move": 21, "openDoors": 3,  "damage": "1d8/1d4", "stunParalyze": 45,  "slowFall": 9,    "immuneDisease": true,  "selfHealPerDay": 2, "resistCharmSuggestion": 10, "resistESP": 0, "quiveringPalm": false },
+  { "level": 8,  "xp": 110000, "hd": "8d8",    "title": "Patriarche",            "thac0": 15, "savingThrows": [7,11,10,13,12],  "spells": [0,0,0,0,0,0,0], "attacksPerRound": "2",   "monkAC": 3,  "move": 24, "openDoors": 3,  "damage": "1d10/1d6", "stunParalyze": 50,  "slowFall": 12,   "immuneDisease": true,  "selfHealPerDay": 2, "resistCharmSuggestion": 15, "resistESP": 5, "quiveringPalm": false },
+  { "level": 9,  "xp": 225000, "hd": "9d8",    "title": "Patriarche supérieur",  "thac0": 14, "savingThrows": [7,11,10,13,12],  "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": 2,  "move": 27, "openDoors": 4,  "damage": "1d10/1d6", "stunParalyze": 55,  "slowFall": 12,   "immuneDisease": true,  "selfHealPerDay": 2, "resistCharmSuggestion": 20, "resistESP": 10, "quiveringPalm": true },
+  { "level": 10, "xp": 450000, "hd": "9d8+2",  "title": "Patriarche suprême",    "thac0": 13, "savingThrows": [6,10,9,12,11],   "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": 1,  "move": 30, "openDoors": 4,  "damage": "2d6/2d6", "stunParalyze": 60,  "slowFall": 15,   "immuneDisease": true,  "selfHealPerDay": 2, "resistCharmSuggestion": 25, "resistESP": 15, "quiveringPalm": true },
+  { "level": 11, "xp": 675000, "hd": "9d8+4",  "title": "Grand instructeur",     "thac0": 12, "savingThrows": [6,10,9,12,11],   "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": 0,  "move": 33, "openDoors": 4,  "damage": "2d6/2d6", "stunParalyze": 65,  "slowFall": 15,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 30, "resistESP": 20, "quiveringPalm": true },
+  { "level": 12, "xp": 900000, "hd": "9d8+6",  "title": "Sage du temple",        "thac0": 11, "savingThrows": [6,10,9,12,11],   "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": -1, "move": 36, "openDoors": 5,  "damage": "2d8/2d6", "stunParalyze": 70,  "slowFall": 18,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 35, "resistESP": 25, "quiveringPalm": true },
+  { "level": 13, "xp":1125000, "hd": "9d8+8",  "title": "Maître éveillé",        "thac0": 10, "savingThrows": [5,9,8,11,10],    "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": -2, "move": 39, "openDoors": 5,  "damage": "2d8/2d6", "stunParalyze": 75,  "slowFall": 21,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 40, "resistESP": 30, "quiveringPalm": true },
+  { "level": 14, "xp":1350000, "hd": "9d8+10", "title": "Élu du Nirvana",        "thac0": 9,  "savingThrows": [5,9,8,11,10],    "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": -3, "move": 42, "openDoors": 5,  "damage": "2d10/2d8", "stunParalyze": 80,  "slowFall": 24,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 45, "resistESP": 35, "quiveringPalm": true },
+  { "level": 15, "xp":1575000, "hd": "9d8+12", "title": "Avatar",                "thac0": 8,  "savingThrows": [5,9,8,11,10],    "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": -4, "move": 45, "openDoors": 6,  "damage": "2d10/2d8", "stunParalyze": 85,  "slowFall": 27,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 50, "resistESP": 40, "quiveringPalm": true },
+  { "level": 16, "xp":1800000, "hd": "9d8+14", "title": "Esprit Parfait",        "thac0": 7,  "savingThrows": [4,8,7,10,9],     "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": -5, "move": 48, "openDoors": 6,  "damage": "2d12/2d10", "stunParalyze": 90,  "slowFall": 30,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 55, "resistESP": 45, "quiveringPalm": true },
+  { "level": 17, "xp":2025000, "hd": "9d8+16", "title": "Esprit Éveillé",        "thac0": 6,  "savingThrows": [4,8,7,10,9],     "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": -6, "move": 51, "openDoors": 6,  "damage": "2d12/2d10", "stunParalyze": 95,  "slowFall": 33,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 60, "resistESP": 50, "quiveringPalm": true },
+  { "level": 18, "xp":2250000, "hd": "9d8+18", "title": "Immortel",              "thac0": 5,  "savingThrows": [4,8,7,10,9],     "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": -7, "move": 54, "openDoors": 6,  "damage": "3d10/3d8", "stunParalyze": 100, "slowFall": 36,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 65, "resistESP": 55, "quiveringPalm": true },
+  { "level": 19, "xp":2475000, "hd": "9d8+20", "title": "Demi-dieu",             "thac0": 4,  "savingThrows": [2,6,5,8,7],      "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": -8, "move": 57, "openDoors": 6,  "damage": "3d10/3d8", "stunParalyze": 100, "slowFall": 39,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 70, "resistESP": 60, "quiveringPalm": true },
+  { "level": 20, "xp":2700000, "hd": "9d8+22", "title": "Maître Universel",      "thac0": 3,  "savingThrows": [2,6,5,8,7],      "spells": [0,0,0,0,0,0,0], "attacksPerRound": "5/2", "monkAC": -9, "move": 60, "openDoors": 6,  "damage": "3d12/3d10", "stunParalyze": 100, "slowFall": 42,   "immuneDisease": true,  "selfHealPerDay": 4, "resistCharmSuggestion": 75, "resistESP": 65, "quiveringPalm": true }
+],
+
+    "specialAbilities": [
+      {
+        "level": 1,
+        "nom": "Combat à mains nues",
+        "description": "Le moine inflige des dégâts croissants à mains nues selon son niveau, ignore certaines résistances et peut assommer ses adversaires."
+      },
+      {
+        "level": 1,
+        "nom": "Défense naturelle",
+        "description": "Ajoute un bonus à la Classe d’Armure à chaque niveau pair (jusqu’à +8 au niveau 16)."
+      },
+      {
+        "level": 1,
+        "nom": "Vitesse surnaturelle",
+        "description": "Déplacement accru (jusqu’à x2 la vitesse de base au niveau 9)."
+      },
+      {
+        "level": 3,
+        "nom": "Résistance mentale",
+        "description": "Jet de sauvegarde amélioré contre la magie mentale et le contrôle mental."
+      },
+      {
+        "level": 4,
+        "nom": "Chute amortie",
+        "description": "Peut ignorer les dégâts de chute si proche d’un mur."
+      },
+      {
+        "level": 5,
+        "nom": "Immunité aux maladies",
+        "description": "Immunité totale à partir du niveau 5."
+      },
+      {
+        "level": 9,
+        "nom": "Immunité au poison",
+        "description": "À partir du niveau 9, le moine devient immunisé au poison."
+      }
+    ],
+    "notes": "Le moine ne peut utiliser d’armure ni de bouclier, doit rester loyal. Il progresse rapidement mais ne peut utiliser la plupart des objets magiques. Voir Manuel des Joueurs AD&D2."
+  },
+  "effects": [],
+  "folder": null,
+  "flags": {
+    "exportSource": {
+      "world": "test",
+      "system": "add2e",
+      "coreVersion": "12.343",
+      "systemVersion": "0.1.12"
+    }
+  },
+  "_stats": {
+    "coreVersion": "12.343",
+    "systemId": "add2e",
+    "systemVersion": "0.1.12",
+    "createdTime": 1750881472417,
+    "modifiedTime": 1750881472417,
+    "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+  }
+}

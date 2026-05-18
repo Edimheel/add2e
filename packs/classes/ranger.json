@@ -1,0 +1,70 @@
+{
+  "name": "Ranger",
+  "type": "classe",
+  "img": "systems/add2e/assets/ranger.png",
+  "system": {
+    "label": "Ranger",
+    "description": "Protecteur de la nature et pisteur émérite...",
+    "caracs_min": {
+      "force": 13,
+      "dexterite": 13,
+      "constitution": 14,
+      "sagesse": 14
+    },
+    "primaryAbility": "Dextérité, Sagesse, Force",
+    "prerequis": {
+      "alignement": "Bon uniquement",
+      "raceAllowed": ["Humain", "Demi-elfe", "Demi-orque"],
+      "autre": "Ne doit jamais être mauvais ; doit respecter la nature."
+    },
+    "alignment": [
+      "Loyal Bon", "Neutre Bon", "Chaotique Bon"
+    ],
+    "raceAllowed": ["Humain", "Demi-elfe"],
+    "armorAllowed": ["toutes"],
+    "shieldAllowed": true,
+    "armes_autorisees": ["toutes"],
+    "weaponRestriction": null,
+    "magicAllowed": "Sorts de druide (niveaux 8–17), puis sorts de magicien (niveaux 9+)",
+    "hdPerLevel": "1d8",
+    "hpAfter9": 2,
+    "progression": [
+  { "level": 1,  "xp": 0,      "hd": "2d8",      "title": "Trappeur",         "thac0": 20, "attacksPerRound": "1/1", "savingThrows": [14,16,15,17,17], "spellsPerLevel": [0,0,0], "spellsPerLevel1": [0,0] },
+  { "level": 2,  "xp": 2251,   "hd": "3d8",      "title": "Pisteur",          "thac0": 20, "attacksPerRound": "1/1", "savingThrows": [14,16,15,17,17], "spellsPerLevel": [0,0,0], "spellsPerLevel1": [0,0] },
+  { "level": 3,  "xp": 4501,   "hd": "4d8",      "title": "Éclaireur",        "thac0": 19, "attacksPerRound": "1/1", "savingThrows": [14,16,15,17,17], "spellsPerLevel": [0,0,0], "spellsPerLevel1": [0,0] },
+  { "level": 4,  "xp": 10001,  "hd": "5d8",      "title": "Chasseur",         "thac0": 19, "attacksPerRound": "1/1", "savingThrows": [13,15,14,16,16], "spellsPerLevel": [0,0,0], "spellsPerLevel1": [0,0] },
+  { "level": 5,  "xp": 20001,  "hd": "6d8",      "title": "Traqueur",         "thac0": 18, "attacksPerRound": "1/1", "savingThrows": [13,15,14,16,16], "spellsPerLevel": [0,0,0], "spellsPerLevel1": [0,0] },
+  { "level": 6,  "xp": 40001,  "hd": "7d8",      "title": "Guide",            "thac0": 18, "attacksPerRound": "1/1", "savingThrows": [12,14,13,15,15], "spellsPerLevel": [0,0,0], "spellsPerLevel1": [0,0] },
+  { "level": 7,  "xp": 90001,  "hd": "8d8",      "title": "Pionnier",         "thac0": 17, "attacksPerRound": "3/2", "savingThrows": [12,14,13,15,15], "spellsPerLevel": [0,0,0], "spellsPerLevel1": [0,0] },
+  { "level": 8,  "xp": 150001, "hd": "9d8",      "title": "Ranger",           "thac0": 17, "attacksPerRound": "3/2", "savingThrows": [11,13,12,14,14], "spellsPerLevel": [1,0,0], "spellsPerLevel1": [0,0] },
+  { "level": 9,  "xp": 225001, "hd": "10d8",     "title": "Ranger Expert",    "thac0": 16, "attacksPerRound": "3/2", "savingThrows": [11,13,12,14,14], "spellsPerLevel": [2,0,0], "spellsPerLevel1": [1,0] },
+  { "level": 10, "xp": 325001, "hd": "11d8",     "title": "Chevalier Ranger", "thac0": 16, "attacksPerRound": "2/1", "savingThrows": [10,12,11,13,13], "spellsPerLevel": [2,1,0], "spellsPerLevel1": [2,0] },
+  { "level": 11, "xp": 650001, "hd": "11d8+2",   "title": "Seigneur Ranger",  "thac0": 15, "attacksPerRound": "2/1", "savingThrows": [10,12,11,13,13], "spellsPerLevel": [2,2,0], "spellsPerLevel1": [2,1] },
+  { "level": 12, "xp": 975001, "hd": "11d8+4",   "title": "Seigneur Ranger",  "thac0": 15, "attacksPerRound": "2/1", "savingThrows": [9,11,10,12,12],   "spellsPerLevel": [2,2,1], "spellsPerLevel1": [2,2] },
+  { "level": 13, "xp": 1325001,"hd": "11d8+6",   "title": "Roi des Bois",     "thac0": 14, "attacksPerRound": "2/1", "savingThrows": [9,11,10,12,12],   "spellsPerLevel": [2,2,2], "spellsPerLevel1": [2,2] },
+  { "level": 14, "xp": 1675001,"hd": "11d8+8",   "title": "Seigneur des Bois","thac0": 14, "attacksPerRound": "2/1", "savingThrows": [8,10,9,11,11],    "spellsPerLevel": [2,2,2], "spellsPerLevel1": [2,2] },
+  { "level": 15, "xp": 2025001,"hd": "11d8+10",  "title": "Maître des Bois",  "thac0": 13, "attacksPerRound": "2/1", "savingThrows": [8,10,9,11,11],    "spellsPerLevel": [2,2,2], "spellsPerLevel1": [2,2] },
+  { "level": 16, "xp": 2375001,"hd": "11d8+12",  "title": "Grand Ranger",     "thac0": 13, "attacksPerRound": "2/1", "savingThrows": [7,9,8,10,10],     "spellsPerLevel": [2,2,2], "spellsPerLevel1": [2,2] },
+  { "level": 17, "xp": 2725001,"hd": "11d8+14",  "title": "Seigneur Forestier","thac0": 12, "attacksPerRound": "2/1", "savingThrows": [7,9,8,10,10],    "spellsPerLevel": [2,2,2], "spellsPerLevel1": [2,2] },
+  { "level": 18, "xp": 3075001,"hd": "11d8+16",  "title": "Gardien Ancien",   "thac0": 12, "attacksPerRound": "2/1", "savingThrows": [6,8,7,9,9],       "spellsPerLevel": [2,2,2], "spellsPerLevel1": [2,2] },
+  { "level": 19, "xp": 3425001,"hd": "11d8+18",  "title": "Gardien Sacré",    "thac0": 11, "attacksPerRound": "2/1", "savingThrows": [6,8,7,9,9],       "spellsPerLevel": [2,2,2], "spellsPerLevel1": [2,2] },
+  { "level": 20, "xp": 3775001,"hd": "11d8+20",  "title": "Ancien Ranger",    "thac0": 11, "attacksPerRound": "2/1", "savingThrows": [5,7,6,8,8],       "spellsPerLevel": [2,2,2], "spellsPerLevel1": [2,2] }
+    ],
+    "specialAbilities": [
+      { "level": 1, "nom": "Bonus contre humanoïdes", "description": "+1 dégât/niveau contre humanoïdes 'géants' (voir manuel)." },
+      { "level": 1, "nom": "Surprise & Détection", "description": "50 % de chances de surprendre et 1/6 d’être surpris en extérieur." },
+      { "level": 1, "nom": "Suivi de piste", "description": "Peut suivre des traces même dans des conditions difficiles." },
+      { "level": 8, "nom": "Sorts de druide", "description": "Accès aux sorts de druide à partir du niveau 8." },
+      { "level": 9, "nom": "Sorts de magicien", "description": "Accès aux sorts de magicien à partir du niveau 9." },
+      { "level": 10, "nom": "Objets magiques", "description": "Peut utiliser des objets magiques de clairaudience, clairvoyance, ESP, télépathie au niveau 10." },
+      { "level": 10, "nom": "Suivants", "description": "Attire 2–24 suivants à partir du niveau 10." }
+    ],
+    "notes": "Progression XP et HD d’après le Tableau I – Ranger. Attaques par round : 1/1 (niv. 1–6), 3/2 (7–9), 2/1 (10+)."
+  },
+  "effects": [],
+  "folder": null,
+  "flags": {
+    "exportSource": {"world":"test","system":"add2e","coreVersion":"12.343","systemVersion":"0.1.12"}
+  },
+  "_stats": {"coreVersion":"12.343","systemId":"add2e","systemVersion":"0.1.12","createdTime":0,"modifiedTime":0,"lastModifiedBy":""}
+}

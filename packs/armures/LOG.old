@@ -1,7 +1,16 @@
-2026/05/17-21:28:23.099984 7f5f7eefc0 Recovering log #4
-2026/05/17-21:28:23.114762 7f5f7eefc0 Delete type=0 #4
-2026/05/17-21:28:23.114828 7f5f7eefc0 Delete type=3 #2
-2026/05/17-22:03:38.856334 7f5edbffc0 Level-0 table #9: started
-2026/05/17-22:03:38.856393 7f5edbffc0 Level-0 table #9: 0 bytes OK
-2026/05/17-22:03:38.862761 7f5edbffc0 Delete type=0 #7
-2026/05/17-22:03:38.863039 7f5edbffc0 Manual compaction at level-0 from 'undefined' @ 72057594037927935 : 1 .. 'undefined' @ 0 : 0; will stop at (end)
+2026/05/18-16:29:36.775317 7f47ffefc0 Log #244: 0 ops saved to Table #247 OK
+2026/05/18-16:29:36.776024 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/000244.log: OK
+2026/05/18-16:29:36.776171 7f47ffefc0 Table #246: 24 entries OK
+2026/05/18-16:29:36.776300 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000012: OK
+2026/05/18-16:29:36.776396 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000183: OK
+2026/05/18-16:29:36.776459 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000195: OK
+2026/05/18-16:29:36.776520 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000189: OK
+2026/05/18-16:29:36.776586 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000213: OK
+2026/05/18-16:29:36.776628 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000241: OK
+2026/05/18-16:29:36.776686 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000155: OK
+2026/05/18-16:29:36.776744 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000185: OK
+2026/05/18-16:29:36.776802 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000197: OK
+2026/05/18-16:29:36.776842 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000239: OK
+2026/05/18-16:29:36.776898 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000204: OK
+2026/05/18-16:29:36.776959 7f47ffefc0 Archiving /data2/Data/systems/add2e/packs/armures/MANIFEST-000209: OK
+2026/05/18-16:29:36.786802 7f47ffefc0 **** Repaired leveldb /data2/Data/systems/add2e/packs/armures; recovered 1 files; 6736 bytes. Some data may have been lost. ****

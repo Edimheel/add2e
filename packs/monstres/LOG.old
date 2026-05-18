@@ -1,7 +1,16 @@
-2026/05/17-21:28:23.012987 7f5f7eefc0 Recovering log #4
-2026/05/17-21:28:23.028862 7f5f7eefc0 Delete type=0 #4
-2026/05/17-21:28:23.028920 7f5f7eefc0 Delete type=3 #2
-2026/05/17-22:03:38.809220 7f5edbffc0 Level-0 table #9: started
-2026/05/17-22:03:38.809336 7f5edbffc0 Level-0 table #9: 0 bytes OK
-2026/05/17-22:03:38.816139 7f5edbffc0 Delete type=0 #7
-2026/05/17-22:03:38.835184 7f5edbffc0 Manual compaction at level-0 from 'undefined' @ 72057594037927935 : 1 .. 'undefined' @ 0 : 0; will stop at (end)
+2026/05/18-16:29:36.544418 7f5cd8efc0 Log #284: 0 ops saved to Table #287 OK
+2026/05/18-16:29:36.545269 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/000284.log: OK
+2026/05/18-16:29:36.550934 7f5cd8efc0 Table #286: 1726 entries OK
+2026/05/18-16:29:36.551306 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000012: OK
+2026/05/18-16:29:36.551353 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000279: OK
+2026/05/18-16:29:36.551464 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000233: OK
+2026/05/18-16:29:36.551527 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000241: OK
+2026/05/18-16:29:36.551587 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000223: OK
+2026/05/18-16:29:36.551630 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000281: OK
+2026/05/18-16:29:36.551690 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000221: OK
+2026/05/18-16:29:36.551749 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000227: OK
+2026/05/18-16:29:36.551809 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000235: OK
+2026/05/18-16:29:36.551867 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000249: OK
+2026/05/18-16:29:36.551935 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000253: OK
+2026/05/18-16:29:36.551995 7f5cd8efc0 Archiving /data2/Data/systems/add2e/packs/monstres/MANIFEST-000193: OK
+2026/05/18-16:29:36.561946 7f5cd8efc0 **** Repaired leveldb /data2/Data/systems/add2e/packs/monstres; recovered 1 files; 1201867 bytes. Some data may have been lost. ****

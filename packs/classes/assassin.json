@@ -1,0 +1,130 @@
+{
+  "_id": "assassinclass0001a",
+  "name": "Assassin",
+  "type": "classe",
+  "img": "systems/add2e/assets/assassin.png",
+  "system": {
+    "label": "Assassin",
+    "description": "Tueur professionnel, maître de la furtivité, de la dissimulation et du déguisement. Spécialiste des coups mortels, poisons et missions secrètes.",
+    "caracs_min": { "force": 12, "dexterite": 12, "intelligence": 11 },
+    "primaryAbility": "Dextérité, Force",
+    "prerequis": {
+      "alignement": "Non-bon uniquement",
+      "race": "Humain, Demi-elfe, Demi-orque uniquement",
+      "autre": "Ne peut appartenir qu'à une Guilde ou Organisation. Ne peut utiliser d'armes à deux mains ou de boucliers lourds."
+    },
+    "alignment": [
+      "Loyal Neutre", "Loyal Mauvais",
+      "Neutre", "Neutre Mauvais",
+      "Chaotique Neutre", "Chaotique Mauvais"
+    ],
+    "raceAllowed": ["Humain", "Demi-elfe", "Demi-orque","Gnome","Nain","Elfe"],
+"armes_autorisees": [
+  "dague",
+  "épée",
+  "arc",
+  "arbalète",
+  "bâton",
+  "fronde",
+  "sabre",
+  "masse"
+],
+ "weaponRestriction": { "deuxMains": false, "encombrante": false },
+    "armorAllowed": ["cuir", "cuir cloute", "armure d ombre"],
+    "shieldAllowed": true,
+    "magicAllowed": "Objets magiques de voleur autorisés. Accès limité aux sorts s'il s'agit d'un assassin multiclassé.",
+    "richesse_initiale": "2d6 × 10 po",
+    "hdPerLevel": "1d6",
+    "hpAfter9": 2,
+    "followerLevel": 13,
+"progression": [
+  { "niveau": 1, "xp": 0,      "hd": "1d6",   "title": "Tueur",            "thac0": 20, "savingThrows": [13,14,13,16,15], "compAssassin": "Assassinat 50%", "skills": [25,20,15,10,30,20,10,0], "attacksPerRound": "1/1" },
+  { "niveau": 2, "xp": 1600,   "hd": "2d6",   "title": "Traqueur",         "thac0": 20, "savingThrows": [13,14,13,16,15], "compAssassin": "Assassinat 55%", "skills": [30,25,20,15,35,25,15,5], "attacksPerRound": "1/1" },
+  { "niveau": 3, "xp": 3200,   "hd": "3d6",   "title": "Espion",           "thac0": 19, "savingThrows": [13,14,13,16,15], "compAssassin": "Assassinat 60%", "skills": [35,30,25,20,40,30,20,10], "attacksPerRound": "1/1" },
+  { "niveau": 4, "xp": 6400,   "hd": "4d6",   "title": "Bourreau",         "thac0": 19, "savingThrows": [12,13,12,15,14], "compAssassin": "Assassinat 65%", "skills": [40,35,30,25,45,35,25,15], "attacksPerRound": "1/1" },
+  { "niveau": 5, "xp": 12000,  "hd": "5d6",   "title": "Exécuteur",        "thac0": 18, "savingThrows": [12,13,12,15,14], "compAssassin": "Assassinat 70%", "skills": [45,40,35,30,50,40,30,20], "attacksPerRound": "1/1" },
+  { "niveau": 6, "xp": 24000,  "hd": "6d6",   "title": "Assassin",         "thac0": 18, "savingThrows": [11,12,11,14,13], "compAssassin": "Assassinat 75%", "skills": [50,45,40,35,55,45,35,25], "attacksPerRound": "1/1" },
+  { "niveau": 7, "xp": 48000,  "hd": "7d6",   "title": "Maître Assassin",  "thac0": 17, "savingThrows": [11,12,11,14,13], "compAssassin": "Assassinat 80%", "skills": [55,50,45,40,60,50,40,30], "attacksPerRound": "1/1" },
+  { "niveau": 8, "xp": 95000,  "hd": "8d6",   "title": "Maître Exécuteur", "thac0": 17, "savingThrows": [10,11,10,13,12], "compAssassin": "Assassinat 85%", "skills": [60,55,50,45,65,55,45,35], "attacksPerRound": "1/1" },
+  { "niveau": 9, "xp": 180000, "hd": "9d6",   "title": "Chef de Guilde",   "thac0": 16, "savingThrows": [10,11,10,13,12], "compAssassin": "Assassinat 90%", "skills": [65,60,55,50,70,60,50,40], "attacksPerRound": "3/2" },
+  { "niveau": 10,"xp": 360000, "hd": "9d6+2", "title": "Grand Assassin",   "thac0": 16, "savingThrows": [9,10,9,12,11],   "compAssassin": "Assassinat 95%", "skills": [70,65,60,55,75,65,55,45], "attacksPerRound": "3/2" }
+],
+
+    "specialAbilities": [
+      {
+        "level": 1,
+        "nom": "Assassinat",
+        "description": "Permet d'assassiner en un coup : test de réussite selon niveau vs. niveau de la cible, ajustements selon circonstances. Si échec, attaque normale. Bonus si attaque surprise."
+      },
+      {
+        "level": 1,
+        "nom": "Dissimulation",
+        "description": "Peut se cacher, se déguiser, changer d'identité et usurper un rôle."
+      },
+      {
+        "level": 1,
+        "nom": "Utilisation du poison",
+        "description": "Peut manier, appliquer ou concocter des poisons sans risque, sous réserve de règles locales."
+      },
+      {
+        "level": 1,
+        "nom": "Compétences de voleur",
+        "description": "Dispose de toutes les compétences du voleur au même niveau (crochetage, déplacement silencieux, etc.)."
+      },
+      {
+        "level": 3,
+        "nom": "Détection des poisons",
+        "description": "Détecte automatiquement les poisons à partir du niveau 3."
+      },
+      {
+        "level": 5,
+        "nom": "Langues supplémentaires",
+        "description": "Peut apprendre des langues supplémentaires liées à l'espionnage et aux missions d'infiltration."
+      },
+      {
+        "level": 9,
+        "nom": "Guilde d’assassins",
+        "description": "Peut établir sa propre guilde et recruter des apprentis assassins, espions, informateurs, etc."
+      }
+    ],
+    "skillLabels": [
+      "Crochetage de serrures",
+      "Ouverture de serrures",
+      "Détection de pièges",
+      "Déplacement silencieux",
+      "Dissimulation",
+      "Écoute",
+      "Escalade",
+      "Frappe dans le dos"
+    ],
+    "competences": [
+      { "level": 1, "name": "Crochetage de serrures" },
+      { "level": 1, "name": "Désamorçage de pièges" },
+      { "level": 1, "name": "Déplacement silencieux" },
+      { "level": 1, "name": "Escalade" },
+      { "level": 1, "name": "Détection/suppression de pièges" },
+      { "level": 1, "name": "Assassinat" },
+      { "level": 1, "name": "Dissimulation" },
+      { "level": 1, "name": "Usage du poison" }
+    ],
+    "notes": "L’assassin ne peut être d’alignement bon. Nécessite l’adhésion à une Guilde. Table d’assassinat : réussite, bonus/malus selon la situation, voir Manuel AD&D2e. À partir du niveau 13, attire des suivants (apprentis assassins, espions, etc.)."
+  },
+  "effects": [],
+  "folder": null,
+  "flags": {
+    "exportSource": {
+      "world": "test",
+      "system": "add2e",
+      "coreVersion": "12.343",
+      "systemVersion": "0.1.12"
+    }
+  },
+  "_stats": {
+    "coreVersion": "12.343",
+    "systemId": "add2e",
+    "systemVersion": "0.1.12",
+    "createdTime": 1750881472417,
+    "modifiedTime": 1750881472417,
+    "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+  }
+}

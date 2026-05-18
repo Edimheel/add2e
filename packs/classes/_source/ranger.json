@@ -1,0 +1,69 @@
+{
+  "_id": "ranger-add2e-core",
+  "name": "Ranger",
+  "type": "classe",
+  "img": "systems/add2e/assets/ranger.png",
+  "system": {
+    "label": "Ranger",
+    "subclassOf": "Guerrier",
+
+    "hitDie": 10,
+    "hpFormula": "1d10 + constitution.mod",
+    "spellcasting": {
+      "lists": ["cleric"],
+      "startsAt": 8,
+      "maxSpellLevel": 3
+    },  
+
+    "attacksPerRound": [
+      { "minLevel": 1, "maxLevel": 20, "attacks": 1 }
+    ],
+
+    "armorAllowed": ["toutes"],
+    "shieldAllowed": true,
+    "weaponsAllowed": ["toutes"],
+
+    "specialAbilities": [
+      "Sous-classe de Guerrier",
+      "Capacités de furtivité en milieu naturel",
+      "Surprise améliorée / surprise adverse",
+      "Deux armes sans pénalité en armure légère",
+      "Lancer de sorts de prêtre (à partir du niveau 8)"
+    ],
+
+    "titlesByLevel": [
+      { "minLevel": 1, "maxLevel": 1, "title": "Trappeur" },
+      { "minLevel": 2, "maxLevel": 2, "title": "Pisteur" },
+      { "minLevel": 3, "maxLevel": 3, "title": "Éclaireur" },
+      { "minLevel": 4, "maxLevel": 4, "title": "Chasseur" },
+      { "minLevel": 5, "maxLevel": 5, "title": "Traqueur" },
+      { "minLevel": 6, "maxLevel": 6, "title": "Guide" },
+      { "minLevel": 7, "maxLevel": 7, "title": "Pionnier" },
+      { "minLevel": 8, "maxLevel": 8, "title": "Ranger" },
+      { "minLevel": 9, "maxLevel": 20, "title": "Seigneur Ranger" }
+    ],
+
+    "progression": [
+      { "niveau": 1,  "xp": 0,        "thac0": 20, "savingThrows": [14,16,15,17,17], "weaponMasterySlots": 0, "skills": [10,15], "spellsPerLevel": [0,0,0] },
+      { "niveau": 2,  "xp": 2250,     "thac0": 19, "savingThrows": [14,16,15,17,17], "weaponMasterySlots": 0, "skills": [15,21], "spellsPerLevel": [0,0,0] },
+      { "niveau": 3,  "xp": 4500,     "thac0": 18, "savingThrows": [13,15,14,16,16], "weaponMasterySlots": 0, "skills": [20,27], "spellsPerLevel": [0,0,0] },
+      { "niveau": 4,  "xp": 10000,    "thac0": 17, "savingThrows": [13,15,14,16,16], "weaponMasterySlots": 0, "skills": [25,33], "spellsPerLevel": [0,0,0] },
+      { "niveau": 5,  "xp": 20000,    "thac0": 16, "savingThrows": [11,13,12,13,14], "weaponMasterySlots": 0, "skills": [31,40], "spellsPerLevel": [0,0,0] },
+      { "niveau": 6,  "xp": 40000,    "thac0": 15, "savingThrows": [11,13,12,13,14], "weaponMasterySlots": 0, "skills": [37,47], "spellsPerLevel": [0,0,0] },
+      { "niveau": 7,  "xp": 90000,    "thac0": 14, "savingThrows": [10,12,11,12,13], "weaponMasterySlots": 0, "skills": [43,55], "spellsPerLevel": [0,0,0] },
+
+      { "niveau": 8,  "xp": 150000,   "thac0": 13, "savingThrows": [10,12,11,12,13], "weaponMasterySlots": 1, "skills": [49,62], "spellsPerLevel": [1,0,0] },
+      { "niveau": 9,  "xp": 225000,   "thac0": 12, "savingThrows": [8,10,9,9,11],   "weaponMasterySlots": 2, "skills": [56,70], "spellsPerLevel": [2,0,0] },
+      { "niveau": 10, "xp": 325000,   "thac0": 11, "savingThrows": [8,10,9,9,11],   "weaponMasterySlots": 3, "skills": [63,78], "spellsPerLevel": [2,1,0] },
+      { "niveau": 11, "xp": 650000,   "thac0": 10, "savingThrows": [7,9,8,8,10],    "weaponMasterySlots": 4, "skills": [70,86], "spellsPerLevel": [2,2,0] },
+      { "niveau": 12, "xp": 975000,   "thac0": 9,  "savingThrows": [7,9,8,8,10],    "weaponMasterySlots": 5, "skills": [77,94], "spellsPerLevel": [2,2,1] },
+      { "niveau": 13, "xp": 1300000,  "thac0": 8,  "savingThrows": [2,7,6,5,8],     "weaponMasterySlots": 6, "skills": [85,99], "spellsPerLevel": [3,2,1] },
+      { "niveau": 14, "xp": 1650000,  "thac0": 7,  "savingThrows": [2,7,6,5,8],     "weaponMasterySlots": 7, "skills": [93,99], "spellsPerLevel": [3,2,2] },
+      { "niveau": 15, "xp": 2000000,  "thac0": 6,  "savingThrows": [4,6,5,4,7],     "weaponMasterySlots": 8, "skills": [99,99], "spellsPerLevel": [3,3,2] },
+      { "niveau": 16, "xp": 2350000,  "thac0": 5,  "savingThrows": [4,6,5,4,7],     "weaponMasterySlots": 9, "skills": [99,99], "spellsPerLevel": [3,3,3] }
+    ]
+  },
+  "sort": 100000,
+  "flags": {},
+  "folder": null
+}

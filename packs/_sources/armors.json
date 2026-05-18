@@ -1,0 +1,648 @@
+[
+  {
+    "name": "Cuir clouté",
+    "type": "armure",
+    "data": {
+      "nom": "Cuir clouté",
+      "ac": 6,
+      "weight": 20,
+      "properties": "Légère",
+      "cost": "12 po",
+      "effectTags": [
+        "armure",
+        "armure_legere",
+        "cuir_cloute",
+        "type_armure_cuir_cloute",
+        "type_armure_besantine",
+        "matiere_cuir",
+        "matiere_metal"
+      ],
+      "tags": [
+        "armure",
+        "armure:legere",
+        "type_armure:cuir_cloute",
+        "type_armure:besantine",
+        "matiere:cuir",
+        "matiere:metal"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Cuir_cloute.png"
+  },
+  {
+    "name": "Armure de cuir à pointes",
+    "type": "armure",
+    "data": {
+      "nom": "Armure de cuir à pointes",
+      "ac": 7,
+      "weight": 25,
+      "properties": "Légère",
+      "cost": "20 po",
+      "description": "Variante de cuir clouté munie de pointes.",
+      "tags": [
+        "armure",
+        "armure:legere",
+        "type_armure:cuir_a_pointes",
+        "matiere:cuir",
+        "matiere:metal",
+        "danger:pointes"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_legere",
+        "type_armure_cuir_a_pointes",
+        "matiere_cuir",
+        "matiere_metal",
+        "danger_pointes"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_de_cuir_a_pointes.png"
+  },
+  {
+    "name": "Besantine",
+    "type": "armure",
+    "data": {
+      "nom": "Besantine",
+      "ac": 7,
+      "weight": 20,
+      "properties": "Légère",
+      "cost": "20 po",
+      "description": "Armure de cuir clouté ou besantine.",
+      "tags": [
+        "armure",
+        "armure:legere",
+        "type_armure:besantine",
+        "type_armure:cuir_cloute",
+        "matiere:cuir",
+        "matiere:metal"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_legere",
+        "type_armure_besantine",
+        "type_armure_cuir_cloute",
+        "matiere_cuir",
+        "matiere_metal"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Besantine.png"
+  },
+  {
+    "name": "Cuir",
+    "type": "armure",
+    "data": {
+      "nom": "Cuir",
+      "ac": 7,
+      "weight": 15,
+      "properties": "Légère",
+      "cost": "10 po",
+      "effectTags": [
+        "armure",
+        "armure_legere",
+        "cuir",
+        "type_armure_cuir",
+        "type_armure_cuir_bouilli",
+        "matiere_cuir"
+      ],
+      "tags": [
+        "armure",
+        "armure:legere",
+        "type_armure:cuir",
+        "type_armure:cuir_bouilli",
+        "matiere:cuir"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Cuir.png"
+  },
+  {
+    "name": "Armure rembourrée",
+    "type": "armure",
+    "data": {
+      "nom": "Armure rembourrée",
+      "ac": 8,
+      "weight": 10,
+      "properties": "Légère",
+      "cost": "5 po",
+      "effectTags": [
+        "armure",
+        "armure_legere",
+        "rembourree",
+        "type_armure_rembourree",
+        "type_armure_gambison",
+        "matiere_textile",
+        "matiere_matelassee"
+      ],
+      "tags": [
+        "armure",
+        "armure:legere",
+        "type_armure:rembourree",
+        "type_armure:gambison",
+        "matiere:textile",
+        "matiere:matelassee"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_rembourree.png"
+  },
+  {
+    "name": "Cuir bouilli",
+    "type": "armure",
+    "data": {
+      "nom": "Cuir bouilli",
+      "ac": 8,
+      "weight": 15,
+      "properties": "Légère",
+      "cost": "5 po",
+      "description": "Variante d'armure de cuir.",
+      "tags": [
+        "armure",
+        "armure:legere",
+        "type_armure:cuir_bouilli",
+        "type_armure:cuir",
+        "matiere:cuir"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_legere",
+        "type_armure_cuir_bouilli",
+        "type_armure_cuir",
+        "matiere_cuir"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Cuir_bouilli.png"
+  },
+  {
+    "name": "Gambison",
+    "type": "armure",
+    "data": {
+      "nom": "Gambison",
+      "ac": 8,
+      "weight": 10,
+      "properties": "Légère",
+      "cost": "5 po",
+      "description": "Armure matelassée ou gambison.",
+      "tags": [
+        "armure",
+        "armure:legere",
+        "type_armure:gambison",
+        "type_armure:rembourree",
+        "matiere:textile",
+        "matiere:matelassee"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_legere",
+        "type_armure_gambison",
+        "type_armure_rembourree",
+        "matiere_textile",
+        "matiere_matelassee"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Gambison.png"
+  },
+  {
+    "name": "Cotte de mailles",
+    "type": "armure",
+    "data": {
+      "nom": "Cotte de mailles",
+      "ac": 5,
+      "weight": 25,
+      "properties": "Moyenne",
+      "cost": "15 po",
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "cotte_mailles",
+        "type_armure_cotte_de_mailles",
+        "matiere_metal",
+        "structure_mailles"
+      ],
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:cotte_de_mailles",
+        "matiere:metal",
+        "structure:mailles"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Cotte_de_mailles.png"
+  },
+  {
+    "name": "Tunique métallique",
+    "type": "armure",
+    "data": {
+      "nom": "Tunique métallique",
+      "ac": 5,
+      "weight": 30,
+      "properties": "Moyenne",
+      "cost": "20 po",
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "tunique_metallique",
+        "type_armure_tunique_metallique",
+        "matiere_metal"
+      ],
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:tunique_metallique",
+        "matiere:metal"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Tunique_metallique.png"
+  },
+  {
+    "name": "Armure d'écailles",
+    "type": "armure",
+    "data": {
+      "nom": "Armure d'écailles",
+      "ac": 6,
+      "weight": 40,
+      "properties": "Moyenne",
+      "cost": "120 po",
+      "description": "Armure d'écailles.",
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:ecailles",
+        "matiere:metal",
+        "structure:ecailles"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "type_armure_ecailles",
+        "matiere_metal",
+        "structure_ecailles"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_decailles.png"
+  },
+  {
+    "name": "Armure d'écailles d'elfe de mer",
+    "type": "armure",
+    "data": {
+      "nom": "Armure d'écailles d'elfe de mer",
+      "ac": 6,
+      "weight": 25,
+      "properties": "Moyenne",
+      "cost": "rare",
+      "description": "Variante d'armure d'écailles des elfes de mer.",
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:ecailles",
+        "type_armure:elfe_de_mer",
+        "matiere:ecaille",
+        "aquatique"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "type_armure_ecailles",
+        "type_armure_elfe_de_mer",
+        "matiere_ecaille",
+        "aquatique"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_decailles_delfe_de_mer.png"
+  },
+  {
+    "name": "Armure de monnaie",
+    "type": "armure",
+    "data": {
+      "nom": "Armure de monnaie",
+      "ac": 6,
+      "weight": 40,
+      "properties": "Moyenne",
+      "cost": "variable",
+      "description": "Variante d'armure d'écailles utilisant des pièces.",
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:monnaie",
+        "type_armure:ecailles",
+        "matiere:metal",
+        "structure:ecailles"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "type_armure_monnaie",
+        "type_armure_ecailles",
+        "matiere_metal",
+        "structure_ecailles"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_de_monnaie.png"
+  },
+  {
+    "name": "Armure de peau",
+    "type": "armure",
+    "data": {
+      "nom": "Armure de peau",
+      "ac": 6,
+      "weight": 30,
+      "properties": "Moyenne",
+      "cost": "15 po",
+      "description": "Armure de peau.",
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:armure_de_peau",
+        "matiere:peau",
+        "matiere:cuir",
+        "culture:primitive"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "type_armure_armure_de_peau",
+        "matiere_peau",
+        "matiere_cuir",
+        "culture_primitive"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_de_peau.png"
+  },
+  {
+    "name": "Brigandine",
+    "type": "armure",
+    "data": {
+      "nom": "Brigandine",
+      "ac": 6,
+      "weight": 35,
+      "properties": "Moyenne",
+      "cost": "120 po",
+      "description": "Brigandine.",
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:brigandine",
+        "matiere:cuir",
+        "matiere:metal",
+        "structure:rivets"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "type_armure_brigandine",
+        "matiere_cuir",
+        "matiere_metal",
+        "structure_rivets"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Brigandine.png"
+  },
+  {
+    "name": "Cuirasse",
+    "type": "armure",
+    "data": {
+      "nom": "Cuirasse",
+      "ac": 6,
+      "weight": 30,
+      "properties": "Moyenne",
+      "cost": "15 po",
+      "description": "Cuirasse ou armure de peau.",
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:cuirasse",
+        "matiere:metal",
+        "protection:torse"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "type_armure_cuirasse",
+        "matiere_metal",
+        "protection_torse"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Cuirasse.png"
+  },
+  {
+    "name": "Jaseran",
+    "type": "armure",
+    "data": {
+      "nom": "Jaseran",
+      "ac": 6,
+      "weight": 40,
+      "properties": "Moyenne",
+      "cost": "120 po",
+      "description": "Jaseran, proche de l'armure d'écailles.",
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:jaseran",
+        "type_armure:ecailles",
+        "matiere:metal",
+        "structure:ecailles"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "type_armure_jaseran",
+        "type_armure_ecailles",
+        "matiere_metal",
+        "structure_ecailles"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Jaseran.png"
+  },
+  {
+    "name": "Armure annelée",
+    "type": "armure",
+    "data": {
+      "nom": "Armure annelée",
+      "ac": 7,
+      "weight": 30,
+      "properties": "Moyenne",
+      "cost": "100 po",
+      "description": "Armure annelée.",
+      "tags": [
+        "armure",
+        "armure:moyenne",
+        "type_armure:annelee",
+        "matiere:cuir",
+        "matiere:metal",
+        "structure:anneaux"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_moyenne",
+        "type_armure_annelee",
+        "matiere_cuir",
+        "matiere_metal",
+        "structure_anneaux"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_annelee.png"
+  },
+  {
+    "name": "Armure de plaques",
+    "type": "armure",
+    "data": {
+      "nom": "Armure de plaques",
+      "ac": 3,
+      "weight": 50,
+      "properties": "Lourde",
+      "cost": "50 po",
+      "effectTags": [
+        "armure",
+        "armure_lourde",
+        "plaques",
+        "type_armure_plaques",
+        "matiere_metal"
+      ],
+      "tags": [
+        "armure",
+        "armure:lourde",
+        "type_armure:plaques",
+        "matiere:metal"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_de_plaques.png"
+  },
+  {
+    "name": "Armure feuilletée",
+    "type": "armure",
+    "data": {
+      "nom": "Armure feuilletée",
+      "ac": 4,
+      "weight": 40,
+      "properties": "Lourde",
+      "cost": "80 po",
+      "description": "Armure feuilletée.",
+      "tags": [
+        "armure",
+        "armure:lourde",
+        "type_armure:feuilletee",
+        "matiere:metal",
+        "structure:lamelles"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_lourde",
+        "type_armure_feuilletee",
+        "matiere_metal",
+        "structure_lamelles"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_feuilletee.png"
+  },
+  {
+    "name": "Armure à bandes",
+    "type": "armure",
+    "data": {
+      "nom": "Armure à bandes",
+      "ac": 4,
+      "weight": 35,
+      "properties": "Lourde",
+      "cost": "200 po",
+      "description": "Armure à bandes.",
+      "tags": [
+        "armure",
+        "armure:lourde",
+        "type_armure:bandes",
+        "matiere:metal",
+        "structure:bandes"
+      ],
+      "effectTags": [
+        "armure",
+        "armure_lourde",
+        "type_armure_bandes",
+        "matiere_metal",
+        "structure_bandes"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Armure_a_bandes.png"
+  },
+  {
+    "name": "Torse blindé",
+    "type": "armure",
+    "data": {
+      "nom": "Torse blindé",
+      "ac": 4,
+      "weight": 40,
+      "properties": "Lourde",
+      "cost": "35 po",
+      "effectTags": [
+        "armure",
+        "armure_lourde",
+        "torse_blinde",
+        "type_armure_torse_blinde",
+        "matiere_metal"
+      ],
+      "tags": [
+        "armure",
+        "armure:lourde",
+        "type_armure:torse_blinde",
+        "matiere:metal"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Torse_blinde.png"
+  },
+  {
+    "name": "Bouclier rond",
+    "type": "armure",
+    "data": {
+      "nom": "Bouclier rond",
+      "ac": 1,
+      "weight": 5,
+      "properties": "Bouclier",
+      "cost": "5 po",
+      "effectTags": [
+        "bouclier",
+        "bouclier_rond",
+        "type_bouclier_rond"
+      ],
+      "tags": [
+        "bouclier",
+        "type_bouclier:rond"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Bouclier_rond.png"
+  },
+  {
+    "name": "Bouclier lourd",
+    "type": "armure",
+    "data": {
+      "nom": "Bouclier lourd",
+      "ac": 2,
+      "weight": 10,
+      "properties": "Bouclier",
+      "cost": "15 po",
+      "effectTags": [
+        "bouclier",
+        "bouclier_lourd",
+        "type_bouclier_lourd"
+      ],
+      "tags": [
+        "bouclier",
+        "type_bouclier:lourd"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Bouclier_lourd.png"
+  },
+  {
+    "name": "Bouclier de tour",
+    "type": "armure",
+    "data": {
+      "nom": "Bouclier de tour",
+      "ac": 3,
+      "weight": 15,
+      "properties": "Bouclier",
+      "cost": "20 po",
+      "effectTags": [
+        "bouclier",
+        "bouclier_tour",
+        "type_bouclier_tour"
+      ],
+      "tags": [
+        "bouclier",
+        "type_bouclier:tour"
+      ]
+    },
+    "img": "systems/add2e/assets/icones/armures/Bouclier_de_tour.png"
+  }
+]

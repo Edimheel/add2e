@@ -1,0 +1,74 @@
+{
+  "name": "Illusionniste",
+  "type": "classe",
+  "img": "systems/add2e/assets/illusionniste.png",
+  "system": {
+    "label": "Illusionniste",
+    "description": "Spécialiste de la magie d’illusion et de tromperie, l’illusionniste manipule les sens, dissimule la réalité, et abuse ses ennemis par la ruse.",
+    "caracs_min": { "intelligence": 15, "dexterite": 16 },
+    "primaryAbility": "Intelligence",
+    "prerequis": {
+      "alignement": "Voir alignements autorisés",
+      "race": "Humain, Gnome",
+      "autre": "Aucune armure ni bouclier, armes restreintes. Accès uniquement à la magie d’illusion."
+    },
+    "alignements_autorises": [
+      "Loyal Bon", "Loyal Neutre", "Loyal Mauvais",
+      "Neutre Bon", "Neutre", "Neutre Mauvais",
+      "Chaotique Bon", "Chaotique Neutre", "Chaotique Mauvais"
+    ],
+    "raceAllowed": [ "Humain", "Gnome" ],
+    "armes_autorisees": [ "dague", "bâton", "arbalète légère" ],
+
+    "weaponRestriction": { "allowedNames": ["Dague", "Bâton", "Arbalète légère"] },    
+    "armorAllowed": ["aucune"],
+    "shieldAllowed": false,
+    "magicAllowed": "Sorts d’illusion uniquement (voir liste dédiée dans le manuel). Objets magiques autorisés : baguettes et bâtons d’illusion, objets sans attaque directe.",
+    "richesse_initiale": "1d4+1 × 10 po",
+    "hdPerLevel": "1d4",
+    "hpAfter9": 1,
+    "followerLevel": null,
+    "progression": [
+      { "niveau": 1,  "xp":      0, "hd": "1d4",     "title": "Prestidigitateur",             "thac0": 20, "savingThrows": [15,14,13,16,16], "spellsPerLevel": [1,0,0,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 2,  "xp":   2500, "hd": "2d4",     "title": "Manipulateur néophyte",        "thac0": 20, "savingThrows": [15,14,13,16,16], "spellsPerLevel": [2,0,0,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 3,  "xp":   5000, "hd": "3d4",     "title": "Manipulateur",                 "thac0": 19, "savingThrows": [15,14,13,16,16], "spellsPerLevel": [2,1,0,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 4,  "xp":  10000, "hd": "4d4",     "title": "Maître manipulateur",          "thac0": 19, "savingThrows": [13,12,11,14,14], "spellsPerLevel": [3,2,0,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 5,  "xp":  20000, "hd": "5d4",     "title": "Cabaliste",                    "thac0": 18, "savingThrows": [13,12,11,14,14], "spellsPerLevel": [4,2,1,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 6,  "xp":  40000, "hd": "6d4",     "title": "Visionnaire",                  "thac0": 18, "savingThrows": [11,10,9,12,12],  "spellsPerLevel": [4,3,1,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 7,  "xp":  70000, "hd": "7d4",     "title": "Fantasmiste",                  "thac0": 17, "savingThrows": [11,10,9,12,12],  "spellsPerLevel": [4,3,2,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 8,  "xp": 110000, "hd": "8d4",     "title": "Apparitionniste",              "thac0": 17, "savingThrows": [9,8,7,10,10],    "spellsPerLevel": [4,3,2,1,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 9,  "xp": 160000, "hd": "9d4",     "title": "Créateur",                     "thac0": 16, "savingThrows": [9,8,7,10,10],    "spellsPerLevel": [5,3,3,2,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 10, "xp": 225000, "hd": "10d4",    "title": "Illusionniste",                "thac0": 16, "savingThrows": [7,6,5,8,8],      "spellsPerLevel": [5,4,3,2,1,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 11, "xp": 375000, "hd": "10d4+1",  "title": "Illusionniste (Maître)",       "thac0": 15, "savingThrows": [7,6,5,8,8],      "spellsPerLevel": [5,4,3,3,2,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 12, "xp": 525000, "hd": "10d4+2",  "title": "Illusionniste (Haut-Maître)",  "thac0": 15, "savingThrows": [5,4,3,6,6],      "spellsPerLevel": [5,5,4,3,2,1,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 13, "xp": 675000, "hd": "10d4+3",  "title": "Illusionniste (Archi-Maître)", "thac0": 14, "savingThrows": [5,4,3,6,6],      "spellsPerLevel": [5,5,4,3,2,2,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 14, "xp": 825000, "hd": "10d4+4",  "title": "Illusionniste (Archi-Maître)", "thac0": 14, "savingThrows": [3,2,1,4,4],      "spellsPerLevel": [5,5,4,3,2,2,1,0,0], "attacksPerRound": 1 },
+      { "niveau": 15, "xp": 975000, "hd": "10d4+5",  "title": "Illusionniste (Archi-Maître)", "thac0": 13, "savingThrows": [3,2,1,4,4],      "spellsPerLevel": [5,5,4,4,2,2,2,0,0], "attacksPerRound": 1 },
+      { "niveau": 16, "xp":1125000, "hd": "10d4+6",  "title": "Illusionniste (Archi-Maître)", "thac0": 13, "savingThrows": [2,1,1,3,3],      "spellsPerLevel": [5,5,5,4,3,2,2,1,0], "attacksPerRound": 1 },
+      { "niveau": 17, "xp":1275000, "hd": "10d4+7",  "title": "Illusionniste (Archi-Maître)", "thac0": 12, "savingThrows": [2,1,1,3,3],      "spellsPerLevel": [5,5,5,4,3,2,2,1,1], "attacksPerRound": 1 },
+      { "niveau": 18, "xp":1425000, "hd": "10d4+8",  "title": "Illusionniste (Archi-Maître)", "thac0": 12, "savingThrows": [1,1,1,2,2],      "spellsPerLevel": [5,5,5,5,3,3,2,2,1], "attacksPerRound": 1 },
+      { "niveau": 19, "xp":1575000, "hd": "10d4+9",  "title": "Illusionniste (Archi-Maître)", "thac0": 11, "savingThrows": [1,1,1,2,2],      "spellsPerLevel": [5,5,5,5,4,3,2,2,1], "attacksPerRound": 1 },
+      { "niveau": 20, "xp":1725000, "hd": "10d4+10", "title": "Illusionniste (Archi-Maître)", "thac0": 11, "savingThrows": [1,1,1,2,2],      "spellsPerLevel": [5,5,5,5,4,3,3,2,2], "attacksPerRound": 1 }
+    ],
+    "specialAbilities": [
+      {
+        "nom": "Sorts d’illusion",
+        "description": "Accès à la liste exclusive des sorts d’illusion, non accessibles aux magiciens classiques.",
+        "niveau": 1
+      },
+      {
+        "nom": "Résistance accrue",
+        "description": "Jets de sauvegarde améliorés contre les sorts d’illusion et les effets mentaux.",
+        "niveau": 1
+      },
+      {
+        "nom": "Lecture et écriture magique",
+        "description": "Peut lire des parchemins d’illusion, créer ses propres sorts à haut niveau.",
+        "niveau": 9
+      }
+    ],
+    "notes": "Un illusionniste doit posséder un score d’INT ≥ 15 et DEX ≥ 16. Il ne peut utiliser d’armure ni de bouclier. Gnome et Humain uniquement. Voir Manuel du Joueur, tableau de progression et sorts dédiés."
+  },
+  "effects": [],
+  "folder": null
+}

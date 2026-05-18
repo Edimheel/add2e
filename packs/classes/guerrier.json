@@ -1,0 +1,91 @@
+{
+  "name": "Guerrier",
+  "type": "classe",
+  "img": "systems/add2e/assets/guerrier.png",
+  "system": {
+    "label": "Guerrier",
+    "description": "Combattant polyvalent, expert du maniement des armes et des armures. Représente l’archétype du héros martial.",
+    "caracs_min": { "force": 9 },
+    "primaryAbility": "Force",
+    "prerequis": {
+      "alignement": "Voir alignements autorisés",
+      "race": "Toutes",
+      "autre": "Aucun"
+    },
+    "alignements_autorises": [
+      "Loyal Bon", "Loyal Neutre", "Loyal Mauvais",
+      "Neutre Bon", "Neutre", "Neutre Mauvais",
+      "Chaotique Bon", "Chaotique Neutre", "Chaotique Mauvais"
+    ],
+    "raceAllowed": [
+      "Humain", "Elfe", "Nain", "Gnome", "Halfelin", "Demi-elfe", "Demi-orque"
+    ],
+    "armes_autorisees": ["toutes"],
+    "weaponRestriction": null,
+    "armorAllowed": ["toutes"],
+    "shieldAllowed": true,
+    "magicAllowed": "Objets magiques autorisés : toutes les armes, armures, boucliers, potions, anneaux, objets divers, baguettes (certaines), etc.",
+    "richesse_initiale": "5d4 × 10 po",
+    "hdPerLevel": "1d10",
+    "hpAfter9": 3,
+    "followerLevel": 9,
+    "progression": [
+      { "niveau": 1,  "xp": 0,      "hd": "1d10",     "title": "Homme d’armes", "thac0": 20, "savingThrows": [14,16,15,17,17], "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "1/1" },
+      { "niveau": 2,  "xp": 2001,   "hd": "2d10",     "title": "Guerrier",      "thac0": 19, "savingThrows": [14,16,15,17,17], "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "1/1" },
+      { "niveau": 3,  "xp": 4001,   "hd": "3d10",     "title": "Vétéran",       "thac0": 18, "savingThrows": [14,16,15,17,17], "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "1/1" },
+      { "niveau": 4,  "xp": 8001,   "hd": "4d10",     "title": "Héros",         "thac0": 17, "savingThrows": [12,14,13,15,15], "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "1/1" },
+      { "niveau": 5,  "xp": 18001,  "hd": "5d10",     "title": "Sergent",       "thac0": 16, "savingThrows": [12,14,13,15,15], "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "1/1" },
+      { "niveau": 6,  "xp": 35001,  "hd": "6d10",     "title": "Lieutenant",    "thac0": 15, "savingThrows": [10,12,11,13,13], "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "1/1" },
+      { "niveau": 7,  "xp": 70001,  "hd": "7d10",     "title": "Capitaine",     "thac0": 14, "savingThrows": [10,12,11,13,13], "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "1/1" },
+      { "niveau": 8,  "xp": 125001, "hd": "8d10",     "title": "Champion",      "thac0": 13, "savingThrows": [8,10,9,11,11],   "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "1/1" },
+      { "niveau": 9,  "xp": 250001, "hd": "9d10",     "title": "Seigneur",      "thac0": 12, "savingThrows": [8,10,9,11,11],   "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "3/2" },
+      { "niveau": 10, "xp": 500001, "hd": "9d10+3",   "title": "Seigneur",      "thac0": 11, "savingThrows": [6,8,7,9,9],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "3/2" },
+      { "niveau": 11, "xp": 725001, "hd": "9d10+6",   "title": "Seigneur",      "thac0": 10, "savingThrows": [6,8,7,9,9],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" },
+      { "niveau": 12, "xp": 950001, "hd": "9d10+9",   "title": "Seigneur",      "thac0": 9,  "savingThrows": [4,6,5,7,7],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" },
+      { "niveau": 13, "xp": 1175001,"hd": "9d10+12",  "title": "Seigneur",      "thac0": 8,  "savingThrows": [4,6,5,7,7],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" },
+      { "niveau": 14, "xp": 1400001,"hd": "9d10+15",  "title": "Seigneur",      "thac0": 7,  "savingThrows": [2,4,3,5,5],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" },
+      { "niveau": 15, "xp": 1625001,"hd": "9d10+18",  "title": "Seigneur",      "thac0": 6,  "savingThrows": [2,4,3,5,5],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" },
+      { "niveau": 16, "xp": 1850001,"hd": "9d10+21",  "title": "Seigneur",      "thac0": 5,  "savingThrows": [2,4,3,5,5],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" },
+      { "niveau": 17, "xp": 2075001,"hd": "9d10+24",  "title": "Seigneur",      "thac0": 4,  "savingThrows": [2,4,3,5,5],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" },
+      { "niveau": 18, "xp": 2300001,"hd": "9d10+27",  "title": "Seigneur",      "thac0": 3,  "savingThrows": [2,4,3,5,5],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" },
+      { "niveau": 19, "xp": 2525001,"hd": "9d10+30",  "title": "Seigneur",      "thac0": 2,  "savingThrows": [2,4,3,5,5],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" },
+      { "niveau": 20, "xp": 2750001,"hd": "9d10+33",  "title": "Seigneur",      "thac0": 1,  "savingThrows": [2,4,3,5,5],     "sorts": [0,0,0,0,0,0,0],  "attacksPerRound": "2/1" }
+    ],
+    "specialAbilities": [
+      {
+        "nom": "Forteresse & suivants",
+        "description": "Peut établir une forteresse et attirer des suivants à partir du niveau 9.",
+        "niveau": 9
+      },
+      {
+        "nom": "Attaques supplémentaires",
+        "description": "Obtient des attaques supplémentaires avec les armes de mêlée à partir du niveau 9.",
+        "niveau": 9
+      },
+      {
+        "nom": "Spécialisation d’armes",
+        "description": "Peut se spécialiser dans une famille d’armes, bénéficiant de bonus de toucher et de dégâts.",
+        "niveau": 1
+      }
+    ],
+    "notes": "THAC0 : diminue de 1 par niveau jusqu’à 10, puis de 1 tous les 2 niveaux. Les jets de sauvegarde s’améliorent à intervalles définis (voir manuel)."
+  },
+  "effects": [],
+  "folder": null,
+  "flags": {
+    "exportSource": {
+      "world": "test",
+      "system": "add2e",
+      "coreVersion": "12.343",
+      "systemVersion": "0.1.12"
+    }
+  },
+  "_stats": {
+    "coreVersion": "12.343",
+    "systemId": "add2e",
+    "systemVersion": "0.1.12",
+    "createdTime": 1750881472418,
+    "modifiedTime": 1750881472418,
+    "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+  }
+}

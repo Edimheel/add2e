@@ -1,0 +1,102 @@
+{
+  "_id": "druidclass0001a",
+  "name": "Druide",
+  "type": "classe",
+  "img": "systems/add2e/assets/druide.png",
+  "system": {
+    "label": "Druide",
+    "description": "Gardien de la nature, magicien divin neutre, le druide est un prêtre des forces naturelles, spécialiste de la métamorphose et du savoir des plantes/animaux.",
+    "caracs_min": { "sagesse": 12, "charisme": 15 },
+    "primaryAbility": "Sagesse",
+    "prerequis": {
+      "alignement": "Strictement Neutre",
+      "race": "Humain ou Demi-elfe uniquement",
+      "autre": "Aucune armure ou arme métallique. Accès limité aux objets magiques (cf. description)."
+    },
+    "alignements_autorises": ["Neutre strict"],
+    "raceAllowed": ["Humain", "Demi-elfe"],
+"armes_autorisees": [
+  "bâton",
+  "dague",
+  "faucille",
+  "fléau",
+  "fronde",
+  "lance",
+  "masse",
+  "dard"
+],
+ "weaponRestriction": { "metal": false, "exceptions": ["Dague", "Fléau", "Dard", "Faucille"], "exceptions_bois_ou_os": true },
+    "armorAllowed": ["cuir", "armure d ecorce"],
+    "shieldAllowed": true,
+    "magicAllowed": "Sorts divins druidiques (cf. progression) ; accès aux objets magiques naturels ou liés à la nature.",
+    "richesse_initiale": "3d6 × 10 po",
+    "hdPerLevel": "1d8",
+    "hpAfter9": 2,
+    "followerLevel": 12,
+    "sorts_divins": true,
+    "progression": [
+      { "niveau": 1,  "xp": 0,      "hd": "1d8",    "title": "Novice",                  "thac0": 20, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [2,0,0,0,0,0,0] },
+      { "niveau": 2,  "xp": 2001,   "hd": "2d8",    "title": "Initié",                  "thac0": 20, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [3,0,0,0,0,0,0] },
+      { "niveau": 3,  "xp": 4001,   "hd": "3d8",    "title": "Adepte",                  "thac0": 19, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [3,2,0,0,0,0,0] },
+      { "niveau": 4,  "xp": 7501,   "hd": "4d8",    "title": "Prêtre des Branches",     "thac0": 19, "savingThrows": [13,15,14,16,16], "spellsPerLevel": [3,3,1,0,0,0,0] },
+      { "niveau": 5,  "xp": 12501,  "hd": "5d8",    "title": "Prêtre des Rameaux",      "thac0": 18, "savingThrows": [13,15,14,16,16], "spellsPerLevel": [3,3,2,0,0,0,0] },
+      { "niveau": 6,  "xp": 20001,  "hd": "6d8",    "title": "Prêtre des Feuilles",     "thac0": 18, "savingThrows": [12,14,13,15,15], "spellsPerLevel": [3,3,2,1,0,0,0] },
+      { "niveau": 7,  "xp": 35001,  "hd": "7d8",    "title": "Prêtre de l'Arbre",       "thac0": 17, "savingThrows": [12,14,13,15,15], "spellsPerLevel": [3,3,2,2,0,0,0] },
+      { "niveau": 8,  "xp": 60001,  "hd": "8d8",    "title": "Druide",                  "thac0": 17, "savingThrows": [11,13,12,14,14], "spellsPerLevel": [4,3,2,2,1,0,0] },
+      { "niveau": 9,  "xp": 90001,  "hd": "9d8",    "title": "Grand Druide",            "thac0": 16, "savingThrows": [11,13,12,14,14], "spellsPerLevel": [4,4,3,2,2,1,0] },
+      { "niveau": 10, "xp": 125001, "hd": "10d8",   "title": "Archidruide",             "thac0": 16, "savingThrows": [10,12,11,13,13], "spellsPerLevel": [4,4,3,3,2,2,1] },
+      { "niveau": 11, "xp": 200001, "hd": "11d8",   "title": "Archidruide suprême",     "thac0": 15, "savingThrows": [10,12,11,13,13], "spellsPerLevel": [5,4,4,3,3,2,2] },
+      { "niveau": 12, "xp": 300001, "hd": "12d8",   "title": "Patriarche de la Forêt",  "thac0": 15, "savingThrows": [9,11,10,12,12],  "spellsPerLevel": [6,5,4,4,3,3,2] },
+      { "niveau": 13, "xp": 750001, "hd": "13d8",   "title": "Patriarche du Cercle",    "thac0": 14, "savingThrows": [9,11,10,12,12],  "spellsPerLevel": [6,5,5,4,4,3,3] },
+      { "niveau": 14, "xp": 1500001,"hd": "14d8",   "title": "Grand Patriarche",        "thac0": 14, "savingThrows": [8,10,9,11,11],   "spellsPerLevel": [7,6,5,5,4,4,3] }
+    ],
+    "specialAbilities": [
+      {
+        "nom": "Métamorphose",
+        "description": "À partir du niveau 7, transformation animale (petits animaux, puis créatures élémentaires au niveau 14, 3 fois/jour)."
+      },
+      {
+        "nom": "Immunités naturelles",
+        "description": "Immunité au charme des fées, aux sorts liés à la terre, et résistance accrue aux poisons naturels."
+      },
+      {
+        "nom": "Influence sur la nature",
+        "description": "Peut communiquer avec les animaux, influencer la croissance des plantes et contrôler le climat local."
+      },
+      {
+        "nom": "Sorts druidiques",
+        "description": "Lanceur de sorts divins, accès aux sorts de la liste druidique. Nécessite des composantes naturelles."
+      },
+      {
+        "nom": "Suivants",
+        "description": "À partir du niveau 12, le druide attire des suivants et peut établir une demeure sacrée."
+      }
+    ],
+    "competences": [
+      "Survie en milieu naturel",
+      "Herboristerie",
+      "Identification des plantes/animaux",
+      "Langue druidique",
+      "Résistance aux éléments naturels"
+    ],
+    "notes": "Le druide doit rester neutre et défendre l'équilibre naturel. Il ne peut posséder ni porter d'objets en métal. Progression, pouvoirs et sorts : voir Manuel des Joueurs, pages 53-56."
+  },
+  "effects": [],
+  "folder": null,
+  "flags": {
+    "exportSource": {
+      "world": "test",
+      "system": "add2e",
+      "coreVersion": "12.343",
+      "systemVersion": "0.1.12"
+    }
+  },
+  "_stats": {
+    "coreVersion": "12.343",
+    "systemId": "add2e",
+    "systemVersion": "0.1.12",
+    "createdTime": 1750881472417,
+    "modifiedTime": 1750881472417,
+    "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+  }
+}
