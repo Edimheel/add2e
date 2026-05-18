@@ -154,7 +154,6 @@ const __add2eOnUseResult = await (async () => {
     if (!targetActor) return false;
 
     if (game.user.isGM || targetActor.isOwner) {
-      // Nettoyage local pour éviter les doublons du même sort ou de son inverse.
       const oldIds = targetActor.effects
         .filter(e => {
           const tags = e.flags?.add2e?.tags ?? [];
@@ -191,6 +190,11 @@ const __add2eOnUseResult = await (async () => {
     try {
       if (!tokenA || !tokenB) return 0;
 
+      if (canvas.grid?.measurePath) {
+        const result = canvas.grid.measurePath([tokenA.center, tokenB.center], { gridSpaces: true });
+        return Number(result?.distance ?? result?.gridDistance ?? result) || 0;
+      }
+
       const distance = canvas.grid.measureDistances(
         [{ ray: new Ray(tokenA.center, tokenB.center) }],
         { gridSpaces: true }
@@ -203,21 +207,13 @@ const __add2eOnUseResult = await (async () => {
     }
   }
 
-  // ======================================================
-  // 1. INITIALISATION ROBUSTE
-  // ======================================================
   let sourceItem = null;
 
   if (typeof sort !== "undefined" && sort) sourceItem = sort;
   else if (typeof item !== "undefined" && item) sourceItem = item;
   else if (typeof this !== "undefined" && this?.documentName === "Item") sourceItem = this;
 
-  if (
-    !sourceItem &&
-    typeof arguments !== "undefined" &&
-    arguments.length > 1 &&
-    arguments[1]?.name
-  ) {
+  if (!sourceItem && typeof arguments !== "undefined" && arguments.length > 1 && arguments[1]?.name) {
     sourceItem = arguments[1];
   }
 
@@ -226,9 +222,7 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  const casterToken =
-    canvas.tokens.controlled[0]
-    ?? ((typeof token !== "undefined" && token) ? token : null);
+  const casterToken = canvas.tokens.controlled[0] ?? ((typeof token !== "undefined" && token) ? token : null);
 
   if (!casterToken) {
     ui.notifications.warn("Bénédiction : sélectionne le token du lanceur.");
@@ -242,9 +236,6 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  // ======================================================
-  // 2. CIBLES
-  // ======================================================
   const targets = Array.from(game.user.targets ?? []);
 
   if (!targets.length) {
@@ -263,28 +254,18 @@ const __add2eOnUseResult = await (async () => {
   const outOfRange = targets.filter(t => add2eDistanceMeters(casterToken, t) > maxRange);
 
   if (outOfRange.length) {
-    ui.notifications.warn(
-      `Bénédiction : cible hors de portée (${outOfRange.map(t => t.name).join(", ")}).`
-    );
+    ui.notifications.warn(`Bénédiction : cible hors de portée (${outOfRange.map(t => t.name).join(", ")}).`);
     return false;
   }
 
-  // ======================================================
-  // 3. DIALOGUE SIMPLE
-  // ======================================================
   const DialogV2 = foundry.applications?.api?.DialogV2;
-
-  const targetNamesHtml = targets
-    .map(t => `<li>${add2eEscapeHtml(t.name)}</li>`)
-    .join("");
+  const targetNamesHtml = targets.map(t => `<li>${add2eEscapeHtml(t.name)}</li>`).join("");
 
   let mode = null;
 
   if (DialogV2) {
     const dialogResult = await DialogV2.wait({
-      window: {
-        title: "Lancement : Bénédiction"
-      },
+      window: { title: "Lancement : Bénédiction" },
       content: `
         <form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">
           <div class="form-group">
@@ -294,7 +275,6 @@ const __add2eOnUseResult = await (async () => {
               <option value="malediction">Malédiction (-1 attaque, -1 moral)</option>
             </select>
           </div>
-
           <div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;">
             <div><b>Durée :</b> 6 rounds</div>
             <div><b>Portée :</b> 18 m</div>
@@ -309,11 +289,7 @@ const __add2eOnUseResult = await (async () => {
           label: "Lancer",
           icon: "fa-solid fa-hands-praying",
           default: true,
-          callback: (event, button) => {
-            return {
-              mode: String(button.form.elements.mode?.value || "benediction")
-            };
-          }
+          callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "benediction") })
         },
         {
           action: "cancel",
@@ -345,14 +321,9 @@ const __add2eOnUseResult = await (async () => {
         buttons: {
           cast: {
             label: "Lancer",
-            callback: html => resolve({
-              mode: String(html.find('[name="mode"]').val() || "benediction")
-            })
+            callback: html => resolve({ mode: String(html.find('[name="mode"]').val() || "benediction") })
           },
-          cancel: {
-            label: "Annuler",
-            callback: () => resolve(null)
-          }
+          cancel: { label: "Annuler", callback: () => resolve(null) }
         },
         close: () => resolve(null),
         default: "cast"
@@ -367,9 +338,7 @@ const __add2eOnUseResult = await (async () => {
   const bonusValue = isCurse ? -1 : 1;
   const modeLabel = isCurse ? "Malédiction" : "Bénédiction";
   const effectName = isCurse ? "Malédiction" : "Bénédiction";
-  const icon = sourceItem.img || (isCurse
-    ? "icons/magic/control/debuff-energy-hold-pink.webp"
-    : "icons/magic/holy/prayer-hands-glowing-yellow.webp");
+  const icon = sourceItem.img || (isCurse ? "icons/magic/control/debuff-energy-hold-pink.webp" : "icons/magic/holy/prayer-hands-glowing-yellow.webp");
 
   const durationData = {
     rounds: 6,
@@ -378,24 +347,12 @@ const __add2eOnUseResult = await (async () => {
     startTime: game.time.worldTime
   };
 
-
   function add2eAEAddChange(key, value, priority = 20) {
     if (CONST.ACTIVE_EFFECT_CHANGE_TYPES) {
-      return {
-        key,
-        type: "add",
-        phase: "final",
-        value: String(value),
-        priority
-      };
+      return { key, type: "add", phase: "final", value: String(value), priority };
     }
 
-    return {
-      key,
-      mode: CONST.ACTIVE_EFFECT_MODES.ADD,
-      value: String(value),
-      priority
-    };
+    return { key, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(value), priority };
   }
 
   const effectData = {
@@ -405,27 +362,15 @@ const __add2eOnUseResult = await (async () => {
     disabled: false,
     transfer: false,
     duration: durationData,
-    description: isCurse
-      ? "Malus de -1 au moral et aux jets d'attaque."
-      : "Bonus de +1 au moral et aux jets d'attaque.",
+    description: isCurse ? "Malus de -1 au moral et aux jets d'attaque." : "Bonus de +1 au moral et aux jets d'attaque.",
     flags: {
       add2e: {
         spellName: sourceItem.name,
         casterId: caster.id,
         casterUuid: caster.uuid,
         tags: isCurse
-          ? [
-              "etat:malediction",
-              "malus_attaque:1",
-              "malus_moral:1",
-              "bonus_attaque:-1",
-              "bonus_moral:-1"
-            ]
-          : [
-              "etat:benediction",
-              "bonus_attaque:1",
-              "bonus_moral:1"
-            ]
+          ? ["etat:malediction", "malus_attaque:1", "malus_moral:1", "bonus_attaque:-1", "bonus_moral:-1"]
+          : ["etat:benediction", "bonus_attaque:1", "bonus_moral:1"]
       }
     },
     changes: [
@@ -434,9 +379,6 @@ const __add2eOnUseResult = await (async () => {
     ]
   };
 
-  // ======================================================
-  // 4. APPLICATION DES EFFETS
-  // ======================================================
   const applied = [];
   const failed = [];
 
@@ -452,35 +394,19 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  // ======================================================
-  // 5. MESSAGE CHAT UNIQUE
-  // ======================================================
-  const appliedHtml = applied
-    .map(t => `<li>${add2eEscapeHtml(t.name)}</li>`)
-    .join("");
+  const appliedHtml = applied.map(t => `<li>${add2eEscapeHtml(t.name)}</li>`).join("");
 
   const failedHtml = failed.length
-    ? `<div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.fail};">
-        Non appliqué : ${failed.map(t => add2eEscapeHtml(t.name)).join(", ")}
-      </div>`
+    ? `<div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.fail};">Non appliqué : ${failed.map(t => add2eEscapeHtml(t.name)).join(", ")}</div>`
     : "";
 
   const resultHtml = `
-    <div style="
-      border:1px solid ${ADD2E_CLERIC_CHAT.border};
-      background:#fffdf4;
-      border-radius:6px;
-      padding:8px;
-    ">
+    <div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;">
       <div style="text-align:center;font-weight:bold;color:${isCurse ? ADD2E_CLERIC_CHAT.fail : ADD2E_CLERIC_CHAT.success};">
         ${add2eEscapeHtml(modeLabel.toUpperCase())} APPLIQUÉE
       </div>
-      <div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};">
-        <b>Effet :</b> ${bonusValue > 0 ? "+1" : "-1"} au moral et aux jets d'attaque.
-      </div>
-      <div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};">
-        <b>Durée :</b> 6 rounds.
-      </div>
+      <div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};"><b>Effet :</b> ${bonusValue > 0 ? "+1" : "-1"} au moral et aux jets d'attaque.</div>
+      <div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};"><b>Durée :</b> 6 rounds.</div>
       <div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};">
         <b>Créatures affectées :</b>
         <ul style="margin:4px 0 0 16px;padding:0;">${appliedHtml}</ul>
@@ -489,7 +415,9 @@ const __add2eOnUseResult = await (async () => {
     </div>
   `;
 
-  if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(casterTokenObj ?? casterToken ?? caster, "divine");
+  if (typeof globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX === "function") {
+    await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(casterToken ?? caster, "divine");
+  }
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
@@ -500,7 +428,8 @@ const __add2eOnUseResult = await (async () => {
       targetsLabel: applied.map(t => add2eEscapeHtml(t.name)).join(", "),
       resultHtml
     }),
-      ...(CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })});
+    ...(CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })
+  });
 
   console.log("[ADD2E][benediction.js][ONUSE_RESULT]", true);
   return true;
