@@ -1,7 +1,7 @@
 {
   "id": "add2e",
   "title": "AD&D 2e (Descartes)",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "socket" : true,
   "compatibility": {
     "minimum": "13",
@@ -13,8 +13,8 @@
 "esmodules": [
   "scripts/add2e-active-effects-expire.js",
   "scripts/effects-engine.mjs",
-  "scripts/add2e.mjs",
   "scripts/add2e-attack.mjs",
+  "scripts/add2e.mjs",
   "scripts/resolveActiveEffectsOnTarget.mjs",
   "scripts/monster-sheet.mjs"
 ],
