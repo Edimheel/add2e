@@ -1,8 +1,23 @@
 // ============================================================
 // ADD2E — Affichage compact des emplacements de préparation
-// V34 : préservation stricte du scroll lors du clic + / -.
+// V35 : diagnostics + restauration tardive du scroll lors du clic + / -.
 // Le comportement de mémorisation existant est conservé.
 // ============================================================
+
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-05-18-v35-scroll-diagnostics";
+const ADD2E_SPELL_PREP_PENDING_SCROLL = new Map();
+
+function add2eSpellPrepDebugEnabled() {
+  return true;
+}
+
+function add2eSpellPrepLog(step, data = {}) {
+  if (!add2eSpellPrepDebugEnabled()) return;
+  console.log(`[ADD2E][SPELL_PREP_SCROLL][${step}]`, {
+    version: ADD2E_SPELL_PREP_SCROLL_VERSION,
+    ...data
+  });
+}
 
 function add2eSpellPrepRootFromNode(node) {
   if (!node) return null;
@@ -14,16 +29,30 @@ function add2eSpellPrepWindowRootFromNode(node) {
   return node.closest?.(".window-app, .application, .app") ?? node;
 }
 
+function add2eSpellPrepNodeLabel(el) {
+  if (!el) return "null";
+  const tag = String(el.tagName ?? "node").toLowerCase();
+  const id = el.id ? `#${el.id}` : "";
+  const cls = String(el.className ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 5)
+    .map(c => `.${c}`)
+    .join("");
+  return `${tag}${id}${cls}`;
+}
+
 function add2eSpellPrepScrollableNodes(root) {
   if (!root) return [];
 
   const nodes = [];
   const add = el => {
-    if (el && typeof el.scrollTop === "number" && !nodes.includes(el)) nodes.push(el);
+    if (!el || typeof el.scrollTop !== "number") return;
+    if (nodes.includes(el)) return;
+    nodes.push(el);
   };
 
-  // Le scroll réel de la feuille Foundry est souvent un ancêtre du <form>,
-  // donc querySelector seul ne suffit pas.
   add(root.closest?.(".window-content"));
   add(root.closest?.(".sheet-body"));
   add(root.closest?.(".a2e-tab-content"));
@@ -35,12 +64,22 @@ function add2eSpellPrepScrollableNodes(root) {
   add(root.querySelector?.('.a2e-tab-content[data-tab="sorts"]'));
   add(root.querySelector?.(".tab-sorts"));
 
+  try {
+    root.querySelectorAll?.("*").forEach(el => {
+      if (typeof el.scrollTop !== "number") return;
+      const canScroll = (Number(el.scrollHeight) || 0) > (Number(el.clientHeight) || 0) + 2;
+      const hasScroll = Number(el.scrollTop) !== 0 || Number(el.scrollLeft) !== 0;
+      if (canScroll || hasScroll) add(el);
+    });
+  } catch (_e) {}
+
   add(root);
+  add(document.scrollingElement);
 
   return nodes;
 }
 
-function add2eSpellPrepCaptureScroll(root) {
+function add2eSpellPrepCollectNodes(root) {
   const sheetRoot = add2eSpellPrepRootFromNode(root) ?? root;
   const windowRoot = add2eSpellPrepWindowRootFromNode(root);
   const allRoots = [windowRoot, sheetRoot, root].filter(Boolean);
@@ -52,38 +91,71 @@ function add2eSpellPrepCaptureScroll(root) {
     }
   }
 
-  return nodes.map((el, index) => ({
-    index,
-    scrollTop: el.scrollTop,
-    scrollLeft: el.scrollLeft
-  }));
+  return nodes;
 }
 
-function add2eSpellPrepRestoreScroll(root, snapshot) {
+function add2eSpellPrepCaptureScroll(root, reason = "capture") {
+  const nodes = add2eSpellPrepCollectNodes(root);
+  const snapshot = nodes.map((el, index) => ({
+    index,
+    label: add2eSpellPrepNodeLabel(el),
+    scrollTop: Number(el.scrollTop) || 0,
+    scrollLeft: Number(el.scrollLeft) || 0,
+    scrollHeight: Number(el.scrollHeight) || 0,
+    clientHeight: Number(el.clientHeight) || 0
+  }));
+
+  add2eSpellPrepLog("CAPTURE", {
+    reason,
+    root: add2eSpellPrepNodeLabel(root),
+    count: snapshot.length,
+    nonZero: snapshot.filter(s => s.scrollTop || s.scrollLeft)
+  });
+
+  return snapshot;
+}
+
+function add2eSpellPrepRestoreScroll(root, snapshot, reason = "restore") {
   if (!root || !snapshot?.length) return;
 
-  const sheetRoot = add2eSpellPrepRootFromNode(root) ?? root;
-  const windowRoot = add2eSpellPrepWindowRootFromNode(root);
-  const allRoots = [windowRoot, sheetRoot, root].filter(Boolean);
-  const nodes = [];
-
-  for (const r of allRoots) {
-    for (const el of add2eSpellPrepScrollableNodes(r)) {
-      if (!nodes.includes(el)) nodes.push(el);
-    }
-  }
+  const nodes = add2eSpellPrepCollectNodes(root);
+  const changed = [];
 
   for (const item of snapshot) {
     const el = nodes[item.index];
     if (!el) continue;
+
+    const beforeTop = Number(el.scrollTop) || 0;
+    const beforeLeft = Number(el.scrollLeft) || 0;
+
     el.scrollTop = item.scrollTop;
     el.scrollLeft = item.scrollLeft;
+
+    const afterTop = Number(el.scrollTop) || 0;
+    const afterLeft = Number(el.scrollLeft) || 0;
+
+    if (beforeTop !== afterTop || beforeLeft !== afterLeft) {
+      changed.push({
+        index: item.index,
+        label: add2eSpellPrepNodeLabel(el),
+        beforeTop,
+        afterTop,
+        targetTop: item.scrollTop,
+        beforeLeft,
+        afterLeft,
+        targetLeft: item.scrollLeft
+      });
+    }
+  }
+
+  if (changed.length) {
+    add2eSpellPrepLog("RESTORE", { reason, changed });
   }
 }
 
-function add2eSpellPrepRestoreScrollRepeated(root, snapshot) {
-  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700]) {
-    setTimeout(() => add2eSpellPrepRestoreScroll(root, snapshot), delay);
+function add2eSpellPrepRestoreScrollRepeated(root, snapshot, reason = "restore-repeated") {
+  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700, 1000, 1500]) {
+    setTimeout(() => add2eSpellPrepRestoreScroll(root, snapshot, `${reason}:${delay}`), delay);
   }
 }
 
@@ -96,7 +168,7 @@ function add2eSpellPrepActorWindows(actor) {
   });
 }
 
-function add2eSpellPrepCaptureActorScroll(actor) {
+function add2eSpellPrepCaptureActorScroll(actor, reason = "actor-capture") {
   return add2eSpellPrepActorWindows(actor).map(app => {
     const root = app.element?.[0] ?? app.element ?? null;
     const activeTab = root?.querySelector?.(".a2e-tabs .item.active[data-tab]")?.dataset?.tab
@@ -104,13 +176,14 @@ function add2eSpellPrepCaptureActorScroll(actor) {
       ?? null;
     return {
       appId: app.appId,
+      actorId: actor?.id,
       activeTab,
-      scroll: add2eSpellPrepCaptureScroll(root)
+      scroll: add2eSpellPrepCaptureScroll(root, reason)
     };
   });
 }
 
-function add2eSpellPrepRestoreActorScroll(actor, snapshot) {
+function add2eSpellPrepRestoreActorScroll(actor, snapshot, reason = "actor-restore") {
   if (!snapshot?.length) return;
   for (const snap of snapshot) {
     const app = ui.windows?.[snap.appId];
@@ -128,14 +201,45 @@ function add2eSpellPrepRestoreActorScroll(actor, snapshot) {
       } catch (_e) {}
     }
 
-    add2eSpellPrepRestoreScroll(root, snap.scroll);
+    add2eSpellPrepRestoreScroll(root, snap.scroll, `${reason}:app-${snap.appId}`);
   }
 }
 
-function add2eSpellPrepRestoreActorScrollRepeated(actor, snapshot) {
-  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700]) {
-    setTimeout(() => add2eSpellPrepRestoreActorScroll(actor, snapshot), delay);
+function add2eSpellPrepRestoreActorScrollRepeated(actor, snapshot, reason = "actor-restore-repeated") {
+  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700, 1000, 1500]) {
+    setTimeout(() => add2eSpellPrepRestoreActorScroll(actor, snapshot, `${reason}:${delay}`), delay);
   }
+}
+
+function add2eSpellPrepStorePendingActorScroll(actor, snapshot, reason) {
+  const actorId = String(actor?.id ?? "");
+  if (!actorId || !snapshot?.length) return;
+
+  ADD2E_SPELL_PREP_PENDING_SCROLL.set(actorId, {
+    reason,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 4000,
+    snapshot
+  });
+
+  add2eSpellPrepLog("PENDING_STORE", { actor: actor?.name, actorId, reason, apps: snapshot.length });
+}
+
+function add2eSpellPrepConsumePendingActorScroll(actor, reason) {
+  const actorId = String(actor?.id ?? "");
+  if (!actorId) return null;
+
+  const pending = ADD2E_SPELL_PREP_PENDING_SCROLL.get(actorId);
+  if (!pending) return null;
+
+  if (Date.now() > pending.expiresAt) {
+    ADD2E_SPELL_PREP_PENDING_SCROLL.delete(actorId);
+    add2eSpellPrepLog("PENDING_EXPIRED", { actor: actor?.name, actorId, reason });
+    return null;
+  }
+
+  add2eSpellPrepLog("PENDING_USE", { actor: actor?.name, actorId, reason, storedReason: pending.reason });
+  return pending.snapshot;
 }
 
 function add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, count, clickedButton = null) {
@@ -171,7 +275,6 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
     if (btn.dataset.add2ePrepBound === "1") return;
     btn.dataset.add2ePrepBound = "1";
 
-    // Empêche le navigateur de déplacer le scroll/focus sur le <a> avant le click.
     btn.addEventListener("pointerdown", ev => {
       ev.preventDefault();
       ev.stopPropagation();
@@ -191,17 +294,22 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
       const sheetRoot = add2eSpellPrepRootFromNode(btn);
       const windowRoot = add2eSpellPrepWindowRootFromNode(btn);
       const scrollRoot = windowRoot ?? sheetRoot;
-      const scrollSnapshot = add2eSpellPrepCaptureScroll(scrollRoot);
-      const actorScrollSnapshot = add2eSpellPrepCaptureActorScroll(actor);
+      const scrollSnapshot = add2eSpellPrepCaptureScroll(scrollRoot, "click-before");
+      const actorScrollSnapshot = add2eSpellPrepCaptureActorScroll(actor, "click-before-actor");
+      add2eSpellPrepStorePendingActorScroll(actor, actorScrollSnapshot, "click-before-update");
+
+      let sort = null;
+      let entry = null;
+      let cur = 0;
 
       try {
         const sortId = btn.dataset.sortId;
         const entryKey = add2eNormalizeSpellKey(btn.dataset.entryKey || btn.dataset.spellEntryKey || btn.getAttribute("data-spell-entry-key"));
-        const sort = actor.items.get(sortId);
+        sort = actor.items.get(sortId);
         if (!sort) return ui.notifications.warn("Sort introuvable.");
 
         const check = add2eCanActorUseSpell(actor, sort);
-        const entry = entryKey
+        entry = entryKey
           ? add2eGetSpellcastingEntries(actor).find(e => add2eNormalizeSpellKey(e.key) === entryKey)
           : check?.entry;
 
@@ -219,8 +327,17 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
         if (maxSpellLevel && spellLevel > maxSpellLevel) return ui.notifications.warn(`${entry.label} ne permet pas les sorts de niveau ${spellLevel}.`);
         if (!check.ok && add2eNormalizeSpellKey(check.entry?.key) !== resolvedEntryKey) return ui.notifications.warn("Ce sort n'est pas autorisé pour cette classe.");
 
-        let cur = add2eGetMemorizedCountForEntry(sort, entry);
+        cur = add2eGetMemorizedCountForEntry(sort, entry);
         const isPlus = btn.classList.contains("a2e-spell-entry-plus") || btn.classList.contains("sort-memorize-plus");
+
+        add2eSpellPrepLog("CLICK", {
+          actor: actor.name,
+          sort: sort.name,
+          sortId,
+          entry: entry.label,
+          before: cur,
+          action: isPlus ? "plus" : "minus"
+        });
 
         if (isPlus) {
           const limit = add2eGetSlotsForEntryLevel(actor, entry, spellLevel);
@@ -236,9 +353,13 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
         await add2eSetMemorizedCountForEntry(sort, entry, cur);
 
         add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, cur, btn);
+        add2eSpellPrepLog("UPDATE_DONE", { actor: actor.name, sort: sort.name, entry: entry.label, after: cur });
+      } catch (err) {
+        console.error("[ADD2E][SPELL_PREP_SCROLL][ERROR]", err);
+        ui.notifications.error("Erreur pendant la mémorisation du sort.");
       } finally {
-        add2eSpellPrepRestoreScrollRepeated(scrollRoot, scrollSnapshot);
-        add2eSpellPrepRestoreActorScrollRepeated(actor, actorScrollSnapshot);
+        add2eSpellPrepRestoreScrollRepeated(scrollRoot, scrollSnapshot, "click-finally-root");
+        add2eSpellPrepRestoreActorScrollRepeated(actor, actorScrollSnapshot, "click-finally-actor");
       }
     }, { capture: true });
   });
@@ -247,6 +368,16 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
 Hooks.on("renderActorSheet", (app, html) => {
   const actor = app?.actor ?? app?.document;
   const root = html?.[0] ?? html;
+
+  add2eSpellPrepLog("RENDER_ACTOR_SHEET", {
+    actor: actor?.name,
+    appId: app?.appId,
+    hasPending: !!ADD2E_SPELL_PREP_PENDING_SCROLL.get(String(actor?.id ?? ""))
+  });
+
+  const pending = add2eSpellPrepConsumePendingActorScroll(actor, "renderActorSheet");
+  if (pending) add2eSpellPrepRestoreActorScrollRepeated(actor, pending, "renderActorSheet-pending");
+
   setTimeout(() => add2eBindNativeHbsSpellPreparationControls(actor, root), 20);
   for (const delay of [40, 120, 260]) {
     setTimeout(() => {
@@ -262,6 +393,17 @@ Hooks.on("renderActorSheet", (app, html) => {
 Hooks.on("renderApplication", (app, html) => {
   const actor = app?.actor ?? app?.document;
   const root = html?.[0] ?? html;
+
+  if (actor?.documentName === "Actor") {
+    add2eSpellPrepLog("RENDER_APPLICATION_ACTOR", {
+      actor: actor?.name,
+      appId: app?.appId,
+      hasPending: !!ADD2E_SPELL_PREP_PENDING_SCROLL.get(String(actor?.id ?? ""))
+    });
+    const pending = add2eSpellPrepConsumePendingActorScroll(actor, "renderApplication");
+    if (pending) add2eSpellPrepRestoreActorScrollRepeated(actor, pending, "renderApplication-pending");
+  }
+
   setTimeout(() => add2eBindNativeHbsSpellPreparationControls(actor, root), 20);
   for (const delay of [40, 120, 260]) {
     setTimeout(() => {
@@ -274,6 +416,25 @@ Hooks.on("renderApplication", (app, html) => {
   }
 });
 
-console.log("ADD2E | Spell preparation native HBS V34 scroll-root-fix loaded");
+Hooks.on("updateItem", (item, changes, options, userId) => {
+  const actor = item?.parent;
+  if (actor?.documentName !== "Actor") return;
+  if (!changes?.flags?.add2e) return;
+
+  add2eSpellPrepLog("UPDATE_ITEM_FLAGS_ADD2E", {
+    actor: actor.name,
+    item: item.name,
+    itemId: item.id,
+    changes,
+    options,
+    userId,
+    hasPending: !!ADD2E_SPELL_PREP_PENDING_SCROLL.get(String(actor.id))
+  });
+
+  const pending = add2eSpellPrepConsumePendingActorScroll(actor, "updateItem");
+  if (pending) add2eSpellPrepRestoreActorScrollRepeated(actor, pending, "updateItem-pending");
+});
+
+console.log("ADD2E | Spell preparation native HBS V35 scroll diagnostics loaded");
 
 try { globalThis.add2eBindNativeHbsSpellPreparationControls = add2eBindNativeHbsSpellPreparationControls; } catch (_e) {}
