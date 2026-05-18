@@ -37,6 +37,84 @@ async function add2eImportAttackModule(path, label) {
   }
 }
 
+function add2eHudDiagnosticsModules() {
+  return Array.from(game?.modules ?? [])
+    .filter(([id, mod]) => {
+      const text = `${id} ${mod?.title ?? ""}`.toLowerCase();
+      return text.includes("hud") || text.includes("argon") || text.includes("combat");
+    })
+    .map(([id, mod]) => ({ id, title: mod?.title, active: mod?.active }));
+}
+
+function add2eInstallHudDiagnostics() {
+  if (globalThis.ADD2E_HUD_DIAGNOSTICS_INSTALLED) return;
+  globalThis.ADD2E_HUD_DIAGNOSTICS_INSTALLED = true;
+
+  Hooks.once("ready", () => {
+    console.log("[ADD2E][HUD][READY]", {
+      system: game.system?.id,
+      version: game.system?.version,
+      attackRoll: typeof globalThis.add2eAttackRoll,
+      castSpell: typeof globalThis.add2eCastSpell,
+      cast_spell: typeof globalThis.cast_spell,
+      attackVersion: globalThis.ADD2E_ATTACK_VERSION,
+      hudModules: add2eHudDiagnosticsModules(),
+      tokenLayerReady: !!canvas?.tokens
+    });
+  });
+
+  Hooks.on("controlToken", (token, controlled) => {
+    console.log("[ADD2E][HUD][CONTROL_TOKEN]", {
+      controlled,
+      token: token?.name,
+      tokenId: token?.id,
+      actor: token?.actor?.name,
+      actorId: token?.actor?.id,
+      actorType: token?.actor?.type,
+      isOwner: token?.actor?.isOwner,
+      selectedCount: canvas?.tokens?.controlled?.length ?? 0,
+      attackRoll: typeof globalThis.add2eAttackRoll,
+      castSpell: typeof globalThis.add2eCastSpell,
+      hudModules: add2eHudDiagnosticsModules()
+    });
+  });
+
+  Hooks.on("renderTokenHUD", (app, html, data) => {
+    console.log("[ADD2E][HUD][RENDER_TOKEN_HUD]", {
+      token: app?.object?.name,
+      tokenId: app?.object?.id,
+      actor: app?.object?.actor?.name,
+      data
+    });
+  });
+
+  // Diagnostic manuel possible depuis la console : add2eHudCheck()
+  globalThis.add2eHudCheck = function add2eHudCheck() {
+    const controlled = canvas?.tokens?.controlled ?? [];
+    const token = controlled[0] ?? null;
+    const result = {
+      system: game.system?.id,
+      version: game.system?.version,
+      attackRoll: typeof globalThis.add2eAttackRoll,
+      castSpell: typeof globalThis.add2eCastSpell,
+      cast_spell: typeof globalThis.cast_spell,
+      attackVersion: globalThis.ADD2E_ATTACK_VERSION,
+      controlled: controlled.map(t => ({ token: t.name, id: t.id, actor: t.actor?.name, actorType: t.actor?.type })),
+      hudModules: add2eHudDiagnosticsModules(),
+      tokenHudApp: ui?.token?.constructor?.name ?? null,
+      tokenHudRendered: ui?.token?.rendered ?? null,
+      tokenHudObject: ui?.token?.object?.name ?? null,
+      documentScriptsAdd2e: Array.from(document.scripts).map(s => s.src).filter(s => s.includes("add2e"))
+    };
+    console.log("[ADD2E][HUD][CHECK]", result);
+    return result;
+  };
+
+  console.log("[ADD2E][HUD][DIAGNOSTICS_INSTALLED]");
+}
+
+add2eInstallHudDiagnostics();
+
 (async () => {
   // Ordre important : helpers / dégâts / règles / VFX / sorts d'abord,
   // puis résolution d'attaque. Ainsi le HUD peut récupérer les fonctions
