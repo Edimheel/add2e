@@ -43,6 +43,97 @@ import {
 const { ActorSheetV2 } = foundry.applications.sheets;
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 
+const ADD2E_ACTOR_SHEET_VERSION = "2026-05-18-dev-drop-prerequis-dialog-v1";
+globalThis.ADD2E_ACTOR_SHEET_VERSION = ADD2E_ACTOR_SHEET_VERSION;
+console.log("[ADD2E][ACTOR_SHEET][VERSION]", ADD2E_ACTOR_SHEET_VERSION);
+
+const ADD2E_CARACS = [
+  "force",
+  "dexterite",
+  "constitution",
+  "intelligence",
+  "sagesse",
+  "charisme"
+];
+
+async function add2eShowClassRequirementsRefusalDialog({
+  actor,
+  className,
+  raceName = "",
+  requirements,
+  projectedAbilities = null
+} = {}) {
+  const failures = requirements?.failures ?? [];
+  const abilities = projectedAbilities ?? add2eProjectedAbilities(actor, null);
+
+  const caracRows = ADD2E_CARACS.map(c => {
+    const value = abilities?.[c] ?? actor?.system?.[c] ?? "";
+    return `<tr>
+      <td style="padding:3px 8px;"><strong>${c}</strong></td>
+      <td style="padding:3px 8px;text-align:center;">${value}</td>
+    </tr>`;
+  }).join("");
+
+  const failureRows = failures.length
+    ? failures.map(f => `<li>${f.reason || f.tag || "Pré-requis non respecté."}</li>`).join("")
+    : `<li>${requirements?.reason || "Pré-requis non respecté."}</li>`;
+
+  const content = `
+    <div class="add2e-drop-refusal" style="min-width:420px;">
+      <p><strong>Drop refusé : prérequis de classe non respectés.</strong></p>
+
+      <p>
+        <strong>Classe :</strong> ${className || "Classe inconnue"}<br>
+        <strong>Race :</strong> ${raceName || "Race non renseignée"}
+      </p>
+
+      <hr>
+
+      <p><strong>Raison :</strong></p>
+      <ul>
+        ${failureRows}
+      </ul>
+
+      <hr>
+
+      <p><strong>Caractéristiques actuellement vérifiées :</strong></p>
+      <table style="width:100%;border-collapse:collapse;">
+        <tbody>
+          ${caracRows}
+        </tbody>
+      </table>
+
+      <hr>
+
+      <p style="margin-bottom:0;">
+        Ce message est informatif : le drop reste refusé tant que ces prérequis ne sont pas respectés.
+      </p>
+    </div>
+  `;
+
+  return new Promise(resolve => {
+    let resolved = false;
+    const close = (value) => {
+      if (resolved) return;
+      resolved = true;
+      resolve(value);
+    };
+
+    new Dialog({
+      title: "ADD2E — Drop refusé",
+      content,
+      buttons: {
+        ok: {
+          label: "Compris",
+          callback: () => close(true)
+        }
+      },
+      default: "ok",
+      close: () => close(false)
+    }).render(true);
+  });
+}
+
 // =====================================================
 // FEUILLE ACTEUR ADD2E
 // =====================================================
@@ -156,6 +247,7 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   }
 
   async _onDropItem(event, data) {
+    console.log("[ADD2E][DROP][VERSION]", ADD2E_ACTOR_SHEET_VERSION);
     console.log("[add2e] DROP ITEM :", data);
 
     let item = null;
@@ -195,6 +287,7 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       if (!compat.ok) {
         ui.notifications.error(compat.reason);
         console.warn("[ADD2E][DROP RACE][REFUS COMPATIBILITE]", {
+          version: ADD2E_ACTOR_SHEET_VERSION,
           actor: this.actor.name,
           race: raceName,
           classe: currentClassName,
@@ -212,14 +305,23 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       });
 
       if (!requirements.ok) {
-        ui.notifications.error(requirements.reason);
         console.warn("[ADD2E][DROP RACE][REFUS PREREQUIS CLASSE]", {
+          version: ADD2E_ACTOR_SHEET_VERSION,
           actor: this.actor.name,
           race: raceName,
           classe: currentClassName,
           projectedAbilities,
           requirements
         });
+
+        await add2eShowClassRequirementsRefusalDialog({
+          actor: this.actor,
+          className: currentClassName,
+          raceName,
+          requirements,
+          projectedAbilities
+        });
+
         return;
       }
 
@@ -335,6 +437,7 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     if (!compat.ok) {
       ui.notifications.error(compat.reason);
       console.warn("[ADD2E][DROP CLASSE][REFUS COMPATIBILITE]", {
+        version: ADD2E_ACTOR_SHEET_VERSION,
         actor: this.actor.name,
         race: currentRaceName,
         raceSystem: currentRaceSystem,
@@ -352,13 +455,21 @@ export class Add2eActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     });
 
     if (!requirements.ok) {
-      ui.notifications.error(requirements.reason);
       console.warn("[ADD2E][DROP CLASSE][REFUS PREREQUIS]", {
+        version: ADD2E_ACTOR_SHEET_VERSION,
         actor: this.actor.name,
         race: currentRaceName,
         classe: item.name,
         requirements
       });
+
+      await add2eShowClassRequirementsRefusalDialog({
+        actor: this.actor,
+        className: item.name,
+        raceName: currentRaceName,
+        requirements
+      });
+
       return;
     }
 
@@ -442,7 +553,7 @@ if (game?.ready) {
 // =====================================================
 
 Hooks.once("init", () => {
-  console.log("[add2e] Hook init : override ActorSheet");
+  console.log("[add2e] Hook init : override ActorSheet", ADD2E_ACTOR_SHEET_VERSION);
 
   try {
     Actors.unregisterSheet("core", ActorSheet);
@@ -456,5 +567,5 @@ Hooks.once("init", () => {
     label: "ADD2e Descartes (FR)"
   });
 
-  console.log("[add2e] Feuille acteur ADD2E enregistrée.");
+  console.log("[add2e] Feuille acteur ADD2E enregistrée.", ADD2E_ACTOR_SHEET_VERSION);
 });
