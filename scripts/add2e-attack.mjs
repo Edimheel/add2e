@@ -38,12 +38,31 @@ async function add2eImportAttackModule(path, label) {
 }
 
 function add2eHudDiagnosticsModules() {
-  return Array.from(game?.modules ?? [])
-    .filter(([id, mod]) => {
-      const text = `${id} ${mod?.title ?? ""}`.toLowerCase();
-      return text.includes("hud") || text.includes("argon") || text.includes("combat");
-    })
-    .map(([id, mod]) => ({ id, title: mod?.title, active: mod?.active }));
+  try {
+    const modules = game?.modules;
+    let entries = [];
+
+    if (modules?.contents && Array.isArray(modules.contents)) {
+      entries = modules.contents.map(mod => [mod.id ?? mod.name ?? mod.key ?? "", mod]);
+    } else if (typeof modules?.entries === "function") {
+      entries = Array.from(modules.entries());
+    } else if (typeof modules?.values === "function") {
+      entries = Array.from(modules.values()).map(mod => [mod.id ?? mod.name ?? mod.key ?? "", mod]);
+    } else if (modules && typeof modules === "object") {
+      entries = Object.entries(modules);
+    }
+
+    return entries
+      .map(entry => Array.isArray(entry) ? entry : [entry?.id ?? entry?.name ?? "", entry])
+      .filter(([id, mod]) => {
+        const text = `${id} ${mod?.title ?? mod?.name ?? ""}`.toLowerCase();
+        return text.includes("hud") || text.includes("argon") || text.includes("combat");
+      })
+      .map(([id, mod]) => ({ id, title: mod?.title ?? mod?.name ?? id, active: mod?.active }));
+  } catch (err) {
+    console.warn("[ADD2E][HUD][MODULE_DIAGNOSTIC_ERROR]", err);
+    return [];
+  }
 }
 
 function add2eInstallHudDiagnostics() {
@@ -64,34 +83,41 @@ function add2eInstallHudDiagnostics() {
   });
 
   Hooks.on("controlToken", (token, controlled) => {
-    console.log("[ADD2E][HUD][CONTROL_TOKEN]", {
-      controlled,
-      token: token?.name,
-      tokenId: token?.id,
-      actor: token?.actor?.name,
-      actorId: token?.actor?.id,
-      actorType: token?.actor?.type,
-      isOwner: token?.actor?.isOwner,
-      selectedCount: canvas?.tokens?.controlled?.length ?? 0,
-      attackRoll: typeof globalThis.add2eAttackRoll,
-      castSpell: typeof globalThis.add2eCastSpell,
-      hudModules: add2eHudDiagnosticsModules()
-    });
+    try {
+      console.log("[ADD2E][HUD][CONTROL_TOKEN]", {
+        controlled,
+        token: token?.name,
+        tokenId: token?.id,
+        actor: token?.actor?.name,
+        actorId: token?.actor?.id,
+        actorType: token?.actor?.type,
+        isOwner: token?.actor?.isOwner,
+        selectedCount: canvas?.tokens?.controlled?.length ?? 0,
+        attackRoll: typeof globalThis.add2eAttackRoll,
+        castSpell: typeof globalThis.add2eCastSpell,
+        hudModules: add2eHudDiagnosticsModules()
+      });
+    } catch (err) {
+      console.warn("[ADD2E][HUD][CONTROL_TOKEN_DIAGNOSTIC_ERROR]", err);
+    }
   });
 
   Hooks.on("renderTokenHUD", (app, html, data) => {
-    console.log("[ADD2E][HUD][RENDER_TOKEN_HUD]", {
-      token: app?.object?.name,
-      tokenId: app?.object?.id,
-      actor: app?.object?.actor?.name,
-      data
-    });
+    try {
+      console.log("[ADD2E][HUD][RENDER_TOKEN_HUD]", {
+        token: app?.object?.name,
+        tokenId: app?.object?.id,
+        actor: app?.object?.actor?.name,
+        data
+      });
+    } catch (err) {
+      console.warn("[ADD2E][HUD][RENDER_TOKEN_HUD_DIAGNOSTIC_ERROR]", err);
+    }
   });
 
   // Diagnostic manuel possible depuis la console : add2eHudCheck()
   globalThis.add2eHudCheck = function add2eHudCheck() {
     const controlled = canvas?.tokens?.controlled ?? [];
-    const token = controlled[0] ?? null;
     const result = {
       system: game.system?.id,
       version: game.system?.version,
