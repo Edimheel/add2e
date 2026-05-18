@@ -227,3 +227,24 @@
     padding-top: 0 !important;
     border-top: none;
 }
+
+/* --- ADD2E ACTION HUD : contenu des menus aligné vers le bas --- */
+#add2e-action-hud .a2e-hud-menu-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+}
+
+#add2e-action-hud .a2e-hud-section.active {
+  display: grid !important;
+  gap: 7px !important;
+  align-content: end !important;
+  margin-top: auto !important;
+}
+
+#add2e-action-hud .a2e-hud-section.active .a2e-hud-row:first-child,
+#add2e-action-hud .a2e-hud-section.active .a2e-hud-empty:first-child,
+#add2e-action-hud .a2e-hud-section.active .a2e-hud-ability-grid:first-child {
+  margin-top: auto !important;
+}
