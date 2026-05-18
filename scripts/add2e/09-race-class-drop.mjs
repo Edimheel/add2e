@@ -4,6 +4,10 @@
 // ou la classe courante est incompatible. Comme pour l'alignement,
 // on choisit automatiquement une race ou une classe compatible.
 // ============================================================
+const ADD2E_RACE_CLASS_DROP_VERSION = "2026-05-18-dev-race-class-drop-dialog-v2";
+globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION;
+console.log("[ADD2E][DROP][RACE_CLASSE][VERSION]", ADD2E_RACE_CLASS_DROP_VERSION);
+
 function add2eDropDebugRaceClass(...args) {
   if (globalThis.ADD2E_DEBUG_RACE_CLASSE === true) {
     console.log("[ADD2E][DROP][RACE_CLASSE]", ...args);
@@ -565,11 +569,36 @@ function add2eDropCurrentClassLevelMax(actor, classData, raceData = null) {
 
 function add2eDropDialog(content, buttons, title = "Compatibilité du personnage") {
   return new Promise(resolve => {
+    let resolved = false;
+    const close = (value) => {
+      if (resolved) return;
+      resolved = true;
+      resolve(value ?? null);
+    };
+
+    const wrappedButtons = {};
+    for (const [key, button] of Object.entries(buttons ?? {})) {
+      wrappedButtons[key] = {
+        ...button,
+        callback: async html => {
+          try {
+            const value = typeof button.callback === "function" ? await button.callback(html) : null;
+            close(value);
+            return value;
+          } catch (e) {
+            console.error("[ADD2E][DROP][POPUP][ERROR] Erreur callback dialogue", e);
+            close(null);
+            return null;
+          }
+        }
+      };
+    }
+
     new Dialog({
       title,
       content,
-      buttons,
-      close: () => resolve(null)
+      buttons: wrappedButtons,
+      close: () => close(null)
     }, { width: 560 }).render(true);
   });
 }
@@ -698,6 +727,8 @@ function add2eInstallDropCompatibilityPopupWrapper() {
 
   const original = SheetClass.prototype._onDrop;
   SheetClass.prototype._onDrop = async function add2eDropCompatPopupWrapped(event) {
+    console.log("[ADD2E][DROP][RACE_CLASSE][VERSION]", ADD2E_RACE_CLASS_DROP_VERSION);
+
     let raw = null;
     let itemData = null;
 
@@ -731,7 +762,7 @@ function add2eInstallDropCompatibilityPopupWrapper() {
   };
 
   SheetClass.prototype._add2eDropCompatPopupWrapped = true;
-  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe/niveau installé.");
+  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe/niveau installé.", ADD2E_RACE_CLASS_DROP_VERSION);
   return true;
 }
 
@@ -758,3 +789,4 @@ try { globalThis.CARACS = CARACS; } catch (_e) {}
 try { globalThis.CARAC_SHORT = CARAC_SHORT; } catch (_e) {}
 try { globalThis.add2eResolveDropCompatibilityWithPopup = add2eResolveDropCompatibilityWithPopup; } catch (_e) {}
 try { globalThis.add2eInstallDropCompatibilityPopupWrapper = add2eInstallDropCompatibilityPopupWrapper; } catch (_e) {}
+try { globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION; } catch (_e) {}
