@@ -1,10 +1,10 @@
 // ============================================================
 // ADD2E — Affichage compact des emplacements de préparation
-// V35 : diagnostics + restauration tardive du scroll lors du clic + / -.
+// V36 : diagnostics + restauration tardive du scroll + MAJ directe du badge.
 // Le comportement de mémorisation existant est conservé.
 // ============================================================
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-05-18-v35-scroll-diagnostics";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-05-18-v36-badge-direct-update";
 const ADD2E_SPELL_PREP_PENDING_SCROLL = new Map();
 
 function add2eSpellPrepDebugEnabled() {
@@ -148,13 +148,11 @@ function add2eSpellPrepRestoreScroll(root, snapshot, reason = "restore") {
     }
   }
 
-  if (changed.length) {
-    add2eSpellPrepLog("RESTORE", { reason, changed });
-  }
+  if (changed.length) add2eSpellPrepLog("RESTORE", { reason, changed });
 }
 
 function add2eSpellPrepRestoreScrollRepeated(root, snapshot, reason = "restore-repeated") {
-  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700, 1000, 1500]) {
+  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700, 1000, 1500, 2500]) {
     setTimeout(() => add2eSpellPrepRestoreScroll(root, snapshot, `${reason}:${delay}`), delay);
   }
 }
@@ -206,7 +204,7 @@ function add2eSpellPrepRestoreActorScroll(actor, snapshot, reason = "actor-resto
 }
 
 function add2eSpellPrepRestoreActorScrollRepeated(actor, snapshot, reason = "actor-restore-repeated") {
-  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700, 1000, 1500]) {
+  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700, 1000, 1500, 2500]) {
     setTimeout(() => add2eSpellPrepRestoreActorScroll(actor, snapshot, `${reason}:${delay}`), delay);
   }
 }
@@ -218,7 +216,7 @@ function add2eSpellPrepStorePendingActorScroll(actor, snapshot, reason) {
   ADD2E_SPELL_PREP_PENDING_SCROLL.set(actorId, {
     reason,
     createdAt: Date.now(),
-    expiresAt: Date.now() + 4000,
+    expiresAt: Date.now() + 5000,
     snapshot
   });
 
@@ -242,30 +240,80 @@ function add2eSpellPrepConsumePendingActorScroll(actor, reason) {
   return pending.snapshot;
 }
 
+function add2eSpellPrepEscapeCss(value) {
+  const text = String(value ?? "");
+  try { if (globalThis.CSS?.escape) return CSS.escape(text); } catch (_e) {}
+  return text.replace(/(["'\\.#:[\],>+~*=])/g, "\\$1");
+}
+
+function add2eSpellPrepFindRowsForSort(root, sortId) {
+  if (!root || !sortId) return [];
+  const escaped = add2eSpellPrepEscapeCss(sortId);
+  const rows = new Set();
+
+  root.querySelectorAll?.(`tr.sort-row[data-sort-id="${escaped}"]`).forEach(row => rows.add(row));
+  root.querySelectorAll?.(`[data-sort-id="${escaped}"]`).forEach(el => {
+    const row = el.closest?.("tr");
+    if (row) rows.add(row);
+  });
+
+  return [...rows];
+}
+
+function add2eSpellPrepUpdateBadgeInContainer(container, count, source = "unknown") {
+  if (!container) return 0;
+
+  const text = String(Math.max(0, Number(count) || 0));
+  const badges = Array.from(container.querySelectorAll?.(".sort-memorize-badge, [data-memorized-count], [data-add2e-memorized-count]") ?? []);
+  let changed = 0;
+
+  for (const badge of badges) {
+    const before = String(badge.textContent ?? "").trim();
+    badge.textContent = text;
+    badge.dataset.memorizedCount = text;
+    badge.dataset.add2eMemorizedCount = text;
+    badge.setAttribute("data-memorized-count", text);
+    if (before !== text) changed++;
+  }
+
+  add2eSpellPrepLog("BADGE_CONTAINER", {
+    source,
+    container: add2eSpellPrepNodeLabel(container),
+    count: text,
+    badges: badges.length,
+    changed
+  });
+
+  return badges.length;
+}
+
 function add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, count, clickedButton = null) {
-  const sortId = String(sort?.id ?? "");
-  const entryKey = add2eNormalizeSpellKey(entry?.key);
-  if (!sortId || !entryKey) return;
+  const sortId = String(sort?.id ?? sort?._id ?? "");
+  let totalTouched = 0;
 
-  const updateRow = row => {
-    if (!row) return;
-    const badges = Array.from(row.querySelectorAll?.(".sort-memorize-badge") ?? []);
-    const editableBadge = badges.find(b => String(b.title ?? "").includes(entry?.label ?? "")) ?? badges[0];
-    if (editableBadge) editableBadge.textContent = String(Math.max(0, Number(count) || 0));
-  };
-
-  if (clickedButton) updateRow(clickedButton.closest?.("tr"));
+  if (clickedButton) {
+    totalTouched += add2eSpellPrepUpdateBadgeInContainer(clickedButton.closest?.("td"), count, "clicked-td");
+    totalTouched += add2eSpellPrepUpdateBadgeInContainer(clickedButton.closest?.("tr"), count, "clicked-tr");
+    totalTouched += add2eSpellPrepUpdateBadgeInContainer(clickedButton.parentElement, count, "clicked-parent");
+  }
 
   for (const app of add2eSpellPrepActorWindows(actor)) {
     const root = app.element?.[0] ?? app.element ?? null;
     if (!root) continue;
 
-    const escaped = globalThis.CSS?.escape ? CSS.escape(sortId) : sortId.replace(/(["'\\.#:[\],>+~*=])/g, "\\$1");
-    const row = root.querySelector?.(`tr.sort-row[data-sort-id="${escaped}"]`)
-      ?? root.querySelector?.(`[data-sort-id="${escaped}"]`)?.closest?.("tr");
-
-    updateRow(row);
+    for (const row of add2eSpellPrepFindRowsForSort(root, sortId)) {
+      totalTouched += add2eSpellPrepUpdateBadgeInContainer(row, count, `window-row-${app.appId}`);
+    }
   }
+
+  add2eSpellPrepLog("BADGE_UPDATE", {
+    actor: actor?.name,
+    sort: sort?.name,
+    sortId,
+    entry: entry?.label,
+    count,
+    totalTouched
+  });
 }
 
 function add2eBindNativeHbsSpellPreparationControls(actor, root) {
@@ -350,8 +398,12 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
           cur--;
         }
 
+        // Mise à jour optimiste immédiate : le compteur visible descend/monte tout de suite.
+        add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, cur, btn);
+
         await add2eSetMemorizedCountForEntry(sort, entry, cur);
 
+        // Deuxième mise à jour après persistance Foundry.
         add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, cur, btn);
         add2eSpellPrepLog("UPDATE_DONE", { actor: actor.name, sort: sort.name, entry: entry.label, after: cur });
       } catch (err) {
@@ -435,6 +487,6 @@ Hooks.on("updateItem", (item, changes, options, userId) => {
   if (pending) add2eSpellPrepRestoreActorScrollRepeated(actor, pending, "updateItem-pending");
 });
 
-console.log("ADD2E | Spell preparation native HBS V35 scroll diagnostics loaded");
+console.log("ADD2E | Spell preparation native HBS V36 badge direct update loaded");
 
 try { globalThis.add2eBindNativeHbsSpellPreparationControls = add2eBindNativeHbsSpellPreparationControls; } catch (_e) {}
