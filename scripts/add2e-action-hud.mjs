@@ -1,16 +1,17 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-18-v5-draggable-resizable-upward
+// Version : 2026-05-18-v6-fit-content-monsters
 //
 // Règle : le HUD ne réinvente pas les actions.
-// - Attaque  -> globalThis.add2eAttackRoll({ actor, arme })
-// - Sort     -> globalThis.add2eCastSpell({ actor, sort })
-// - Capacité -> globalThis.add2eExecuteClassFeatureOnUse(actor, feature)
+// - Attaque PJ/arme -> globalThis.add2eAttackRoll({ actor, arme })
+// - Sort PJ         -> globalThis.add2eCastSpell({ actor, sort })
+// - Capacité        -> globalThis.add2eExecuteClassFeatureOnUse(actor, feature)
+// - Monstre MJ      -> HUD visible pour le MJ, avec attaques issues des items ou de system.attaques/system.attacks.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-18-v5-draggable-resizable-upward";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-18-v6-fit-content-monsters";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
-const STORAGE_KEY = "add2e.actionHud.state.v5";
+const STORAGE_KEY = "add2e.actionHud.state.v6";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -27,13 +28,7 @@ const ADD2E_HUD_CARACS = [
 ];
 
 const ADD2E_HUD_SAVE_NAMES = ["Paralysie", "Pétrification", "Baguettes", "Souffles", "Sorts"];
-const ADD2E_HUD_SAVE_FULL_NAMES = [
-  "Paralysie / poison / mort",
-  "Pétrification / métamorphose",
-  "Baguettes",
-  "Souffles",
-  "Sorts"
-];
+const ADD2E_HUD_SAVE_FULL_NAMES = ["Paralysie / poison / mort", "Pétrification / métamorphose", "Baguettes", "Souffles", "Sorts"];
 const ADD2E_HUD_SAVE_ICONS = ["fa-skull-crossbones", "fa-mountain", "fa-magic", "fa-fire", "fa-scroll"];
 const ADD2E_HUD_SAVE_COLORS = ["#c48642", "#6394e8", "#b12f95", "#e67e22", "#a173d9"];
 
@@ -70,13 +65,11 @@ function add2eHudClamp(value, min, max) {
 }
 
 function add2eHudDefaultState() {
-  const width = 560;
-  const height = 360;
   return {
     left: 116,
-    top: Math.max(20, window.innerHeight - height - 22),
-    width,
-    height
+    top: Math.max(20, window.innerHeight - 360 - 22),
+    width: 560,
+    maxMenuHeight: 320
   };
 }
 
@@ -89,7 +82,7 @@ function add2eHudLoadState() {
         left: add2eHudClamp(Number(raw.left) || 116, 0, Math.max(0, window.innerWidth - 220)),
         top: add2eHudClamp(Number(raw.top) || 120, 0, Math.max(0, window.innerHeight - 120)),
         width: add2eHudClamp(Number(raw.width) || 560, 360, Math.max(380, window.innerWidth - 20)),
-        height: add2eHudClamp(Number(raw.height) || 360, 220, Math.max(260, window.innerHeight - 20))
+        maxMenuHeight: add2eHudClamp(Number(raw.maxMenuHeight) || 320, 110, Math.max(140, window.innerHeight - 130))
       };
       return add2eHudState;
     }
@@ -114,8 +107,19 @@ function add2eHudSelectedActorAndToken() {
   return { actor: token?.actor ?? game.user.character ?? null, token };
 }
 
+function add2eHudIsMonster(actor) {
+  return String(actor?.type ?? "").toLowerCase() === "monster";
+}
+
+function add2eHudIsCharacter(actor) {
+  return String(actor?.type ?? "").toLowerCase() === "personnage";
+}
+
 function add2eHudIsRelevant(actor) {
-  return actor && actor.type === "personnage" && add2eHudCanUseActor(actor);
+  if (!actor) return false;
+  if (add2eHudIsCharacter(actor)) return add2eHudCanUseActor(actor);
+  if (add2eHudIsMonster(actor)) return game.user.isGM;
+  return false;
 }
 
 function add2eHudFindItem(actor, itemId) {
@@ -129,7 +133,8 @@ function add2eHudIsEquipped(item) {
 }
 
 function add2eHudWeapons(actor) {
-  const all = actor?.items?.filter?.(i => i.type === "arme") ?? [];
+  const all = actor?.items?.filter?.(i => String(i.type ?? "").toLowerCase() === "arme") ?? [];
+  if (add2eHudIsMonster(actor)) return all;
   const equipped = all.filter(add2eHudIsEquipped);
   return equipped.length ? equipped : all;
 }
@@ -138,32 +143,30 @@ function add2eHudPreparedCount(sort) {
   try {
     if (typeof globalThis.add2eGetTotalMemorizedCount === "function") return globalThis.add2eGetTotalMemorizedCount(sort);
   } catch (_e) {}
-  return add2eHudNumber(
-    sort?.getFlag?.("add2e", "memorizedCount") ??
-    sort?.flags?.add2e?.memorizedCount ??
-    sort?.system?.memorizedCount ??
-    sort?.system?.prepared ??
-    0,
-    0
-  );
+  return add2eHudNumber(sort?.getFlag?.("add2e", "memorizedCount") ?? sort?.flags?.add2e?.memorizedCount ?? sort?.system?.memorizedCount ?? sort?.system?.prepared ?? 0, 0);
 }
 
 function add2eHudSpells(actor) {
-  const spells = actor?.items?.filter?.(i => i.type === "sort") ?? [];
+  const spells = actor?.items?.filter?.(i => String(i.type ?? "").toLowerCase() === "sort") ?? [];
   const usable = spells.filter(s => {
     if (typeof globalThis.add2eIsObjectMagicSpellForPreparation === "function" && globalThis.add2eIsObjectMagicSpellForPreparation(s)) return false;
     return true;
   });
+  if (add2eHudIsMonster(actor)) return usable;
   const prepared = usable.filter(s => add2eHudPreparedCount(s) > 0);
   return prepared.length ? prepared : usable;
 }
 
 function add2eHudClassFeatures(actor) {
   const details = actor?.system?.details_classe ?? {};
-  const raw = details.classFeatures ?? details.capacitesClasse ?? actor?.system?.classFeatures ?? [];
-  return add2eHudArray(raw)
-    .map((feature, index) => ({ ...feature, __index: index }))
-    .filter(feature => feature?.activable === true);
+  const raw = details.classFeatures ?? details.capacitesClasse ?? actor?.system?.classFeatures ?? actor?.system?.capacites ?? actor?.system?.capacitesSpeciales ?? [];
+  return add2eHudArray(raw).map((feature, index) => ({ ...feature, __index: index })).filter(feature => feature?.activable === true || add2eHudIsMonster(actor));
+}
+
+function add2eHudMonsterAttackArray(actor) {
+  const sys = actor?.system ?? {};
+  const raw = sys.attaques ?? sys.attacks ?? sys.actions ?? sys.attackList ?? [];
+  return add2eHudArray(raw).map((a, index) => ({ ...a, __index: index })).filter(a => a && typeof a === "object");
 }
 
 function add2eHudAbilityValue(actor, key) {
@@ -178,17 +181,17 @@ function add2eHudAbilityValue(actor, key) {
 function add2eHudSavingThrows(actor) {
   const level = Math.max(1, add2eHudNumber(actor?.system?.niveau, 1));
   const row = actor?.system?.details_classe?.progression?.[level - 1];
-  const saves = row?.savingThrows || actor?.system?.sauvegardes || [];
+  const saves = row?.savingThrows || actor?.system?.sauvegardes || actor?.system?.savingThrows || [];
   const arr = add2eHudArray(saves).map(v => add2eHudNumber(v, 0));
   return arr.length >= 5 ? arr.slice(0, 5) : [0, 0, 0, 0, 0];
 }
 
 function add2eHudHp(actor) {
-  return add2eHudNumber(actor?.system?.pdv ?? actor?.system?.pv?.value ?? actor?.system?.hp?.value, 0);
+  return add2eHudNumber(actor?.system?.pdv ?? actor?.system?.pv?.value ?? actor?.system?.hp?.value ?? actor?.system?.hp, 0);
 }
 
 function add2eHudHpMax(actor) {
-  return add2eHudNumber(actor?.system?.points_de_coup ?? actor?.system?.pv?.max ?? actor?.system?.hp?.max, 0);
+  return add2eHudNumber(actor?.system?.points_de_coup ?? actor?.system?.pv?.max ?? actor?.system?.hp?.max ?? actor?.system?.hpMax, add2eHudHp(actor));
 }
 
 function add2eHudThaco(actor) {
@@ -199,15 +202,18 @@ function add2eHudThaco(actor) {
   return row?.thac0 ?? row?.thaco ?? 20;
 }
 
+function add2eHudArmorClass(actor) {
+  return actor?.system?.ca_total ?? actor?.system?.ca ?? actor?.system?.armorClass ?? actor?.system?.ac ?? "—";
+}
+
 function add2eHudDamageText(arme) {
-  const s = arme?.system ?? {};
-  return s?.dégâts?.contre_moyen ?? s?.degats?.contre_moyen ?? s?.degats_moyen ?? s?.damage ?? "—";
+  const s = arme?.system ?? arme ?? {};
+  return s?.dégâts?.contre_moyen ?? s?.degats?.contre_moyen ?? s?.degats_moyen ?? s?.damage ?? s?.degats ?? s?.dmg ?? "—";
 }
 
 function add2eHudRangeText(arme) {
-  const s = arme?.system ?? {};
-  const parts = [s.portee_courte ?? s.portee_short, s.portee_moyenne ?? s.portee_medium, s.portee_longue ?? s.portee_long]
-    .filter(v => v !== undefined && v !== null && String(v) !== "");
+  const s = arme?.system ?? arme ?? {};
+  const parts = [s.portee_courte ?? s.portee_short, s.portee_moyenne ?? s.portee_medium, s.portee_longue ?? s.portee_long].filter(v => v !== undefined && v !== null && String(v) !== "");
   return parts.length ? parts.join(" / ") : "—";
 }
 
@@ -216,123 +222,61 @@ function add2eHudInjectStyle() {
   const style = document.createElement("style");
   style.id = "add2e-action-hud-style";
   style.textContent = `
-    #${HUD_ID} {
-      position: fixed;
-      z-index: 100;
-      color: #f6e8bd;
-      font-family: var(--font-primary, Signika, sans-serif);
-      pointer-events: auto;
-      min-width: 360px;
-      min-height: 220px;
-      resize: none;
-    }
-    #${HUD_ID}.collapsed .a2e-hud-menu-panel { display:none; }
-    #${HUD_ID} .a2e-hud-shell {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      border: 1px solid #8a611d;
-      border-radius: 14px;
-      overflow: hidden;
-      background: radial-gradient(circle at 15% 0%, rgba(213,147,45,.28), transparent 36%), linear-gradient(145deg, rgba(32,25,16,.97), rgba(18,14,10,.96));
-      box-shadow: 0 8px 26px rgba(0,0,0,.48), inset 0 0 0 1px rgba(255,230,160,.12);
-      backdrop-filter: blur(3px);
-    }
-    #${HUD_ID} .a2e-hud-menu-panel {
-      flex: 1 1 auto;
-      min-height: 0;
-      padding: 9px;
-      overflow-y: auto;
-      border-bottom:1px solid rgba(184,137,36,.45);
-      background:rgba(0,0,0,.12);
-    }
-    #${HUD_ID} .a2e-hud-section { display:none; }
-    #${HUD_ID} .a2e-hud-section.active { display:grid;gap:7px; }
-    #${HUD_ID} .a2e-hud-tabs {
-      flex: 0 0 auto;
-      display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.18);
-    }
-    #${HUD_ID} .a2e-hud-tab {
-      min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;
-      font-size:.78em;font-weight:900;cursor:pointer;
-    }
-    #${HUD_ID} .a2e-hud-tab.active { color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e); }
-    #${HUD_ID} .a2e-hud-header {
-      flex: 0 0 auto;
-      display:grid;
-      grid-template-columns:74px minmax(0,1fr) auto auto;
-      gap:10px;
-      align-items:center;
-      padding:9px 10px;
-      background:linear-gradient(180deg, rgba(78,48,18,.78), rgba(36,26,14,.62));
-      cursor: move;
-      user-select: none;
-    }
-    #${HUD_ID} .a2e-hud-portrait {
-      width:64px;height:64px;border-radius:12px;object-fit:cover;
-      border:2px solid #c4973f;background:#111;box-shadow:0 2px 8px rgba(0,0,0,.45);
-      pointer-events:none;
-    }
-    #${HUD_ID} .a2e-hud-name { color:#fff4cf;font-size:1.12em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    #${HUD_ID} .a2e-hud-subtitle { color:#d8bd78;font-size:.82em;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    #${HUD_ID} .a2e-hud-metrics { display:flex;flex-wrap:wrap;gap:4px;margin-top:5px; }
-    #${HUD_ID} .a2e-hud-pill {
-      display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:2px 7px;
-      border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);
-      color:#fff0bd;font-size:.78em;font-weight:850;white-space:nowrap;
-    }
-    #${HUD_ID} .a2e-hud-icon-btn,
-    #${HUD_ID} .a2e-hud-resize {
-      display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
-      border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;
-    }
+    #${HUD_ID} { position:fixed; z-index:100; color:#f6e8bd; font-family:var(--font-primary, Signika, sans-serif); pointer-events:auto; min-width:360px; resize:none; }
+    #${HUD_ID}.collapsed .a2e-hud-menu-panel { display:none !important; }
+    #${HUD_ID} .a2e-hud-shell { display:flex; flex-direction:column; justify-content:flex-end; border:1px solid #8a611d; border-radius:14px; overflow:hidden; background:radial-gradient(circle at 15% 0%, rgba(213,147,45,.28), transparent 36%), linear-gradient(145deg, rgba(32,25,16,.97), rgba(18,14,10,.96)); box-shadow:0 8px 26px rgba(0,0,0,.48), inset 0 0 0 1px rgba(255,230,160,.12); backdrop-filter:blur(3px); }
+    #${HUD_ID} .a2e-hud-menu-panel { flex:0 1 auto !important; min-height:0 !important; max-height:var(--a2e-hud-menu-max, 320px) !important; padding:9px !important; overflow-y:auto !important; border-bottom:1px solid rgba(184,137,36,.45); background:rgba(0,0,0,.12); display:block !important; }
+    #${HUD_ID} .a2e-hud-section { display:none !important; }
+    #${HUD_ID} .a2e-hud-section.active { display:grid !important; gap:7px !important; align-content:start !important; margin-top:0 !important; }
+    #${HUD_ID} .a2e-hud-section.active .a2e-hud-row:first-child, #${HUD_ID} .a2e-hud-section.active .a2e-hud-empty:first-child, #${HUD_ID} .a2e-hud-section.active .a2e-hud-ability-grid:first-child { margin-top:0 !important; }
+    #${HUD_ID} .a2e-hud-tabs { flex:0 0 auto; display:grid; grid-template-columns:repeat(5,1fr); border-bottom:1px solid rgba(184,137,36,.45); background:rgba(0,0,0,.18); }
+    #${HUD_ID} .a2e-hud-tab { min-height:34px; border:0; border-right:1px solid rgba(184,137,36,.32); background:transparent; color:#d8bd78; font-size:.78em; font-weight:900; cursor:pointer; }
+    #${HUD_ID} .a2e-hud-tab.active { color:#211307; background:linear-gradient(180deg,#f0c66d,#c78d2e); }
+    #${HUD_ID} .a2e-hud-header { flex:0 0 auto; display:grid; grid-template-columns:74px minmax(0,1fr) auto auto; gap:10px; align-items:center; padding:9px 10px; background:linear-gradient(180deg, rgba(78,48,18,.78), rgba(36,26,14,.62)); cursor:move; user-select:none; }
+    #${HUD_ID} .a2e-hud-portrait { width:64px; height:64px; border-radius:12px; object-fit:cover; border:2px solid #c4973f; background:#111; box-shadow:0 2px 8px rgba(0,0,0,.45); pointer-events:none; }
+    #${HUD_ID} .a2e-hud-name { color:#fff4cf; font-size:1.12em; font-weight:900; line-height:1.1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #${HUD_ID} .a2e-hud-subtitle { color:#d8bd78; font-size:.82em; font-weight:700; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #${HUD_ID} .a2e-hud-metrics { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+    #${HUD_ID} .a2e-hud-pill { display:inline-flex; align-items:center; justify-content:center; min-height:22px; padding:2px 7px; border:1px solid rgba(214,176,90,.75); border-radius:999px; background:rgba(255,244,201,.12); color:#fff0bd; font-size:.78em; font-weight:850; white-space:nowrap; }
+    #${HUD_ID} .a2e-hud-icon-btn, #${HUD_ID} .a2e-hud-resize { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border:1px solid rgba(214,176,90,.75); border-radius:9px; background:rgba(255,244,201,.12); color:#ffe4a1; cursor:pointer; }
     #${HUD_ID} .a2e-hud-resize { cursor:nwse-resize; }
-    #${HUD_ID} .a2e-hud-row {
-      display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;
-      border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);
-    }
-    #${HUD_ID} .a2e-hud-row.compact { grid-template-columns:minmax(0,1fr) auto;min-height:38px; }
-    #${HUD_ID} .a2e-hud-row img { width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25); }
-    #${HUD_ID} .a2e-hud-row-title { color:#fff4cf;font-weight:900;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    #${HUD_ID} .a2e-hud-row-meta { display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px; }
-    #${HUD_ID} .a2e-hud-action {
-      min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;
-      background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap;
-    }
-    #${HUD_ID} .a2e-hud-action:disabled { opacity:.45;cursor:not-allowed; }
-    #${HUD_ID} .a2e-hud-icon-btn:hover,
-    #${HUD_ID} .a2e-hud-action:hover,
-    #${HUD_ID} .a2e-hud-tab:hover { filter:brightness(1.15);transform:translateY(-1px); }
-    #${HUD_ID} .a2e-hud-empty { padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center; }
-    #${HUD_ID} .a2e-hud-ability-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:7px; }
-    #${HUD_ID} .a2e-hud-ability {
-      display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:7px;
-      border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);
-    }
-    #${HUD_ID} .a2e-hud-ability b { color:#fff4cf;font-size:1.15em; }
-    #${HUD_ID} .a2e-hud-ability span { display:block;color:#c8ad6e;font-size:.76em;font-weight:800; }
-    @media (max-width:760px) {
-      #${HUD_ID} { left:8px !important; right:8px; width:auto !important; min-width:0; }
-      #${HUD_ID} .a2e-hud-ability-grid { grid-template-columns:repeat(2,1fr); }
-    }
+    #${HUD_ID} .a2e-hud-row { display:grid; grid-template-columns:38px minmax(0,1fr) auto; gap:8px; align-items:center; min-height:48px; padding:6px; border:1px solid rgba(214,176,90,.38); border-radius:10px; background:rgba(255,250,235,.07); }
+    #${HUD_ID} .a2e-hud-row.compact { grid-template-columns:minmax(0,1fr) auto; min-height:38px; }
+    #${HUD_ID} .a2e-hud-row img { width:34px; height:34px; border-radius:7px; object-fit:cover; border:1px solid rgba(214,176,90,.65); background:rgba(0,0,0,.25); }
+    #${HUD_ID} .a2e-hud-row-title { color:#fff4cf; font-weight:900; line-height:1.08; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #${HUD_ID} .a2e-hud-row-meta { display:flex; flex-wrap:wrap; gap:4px 8px; color:#c8ad6e; font-size:.76em; font-weight:750; margin-top:2px; }
+    #${HUD_ID} .a2e-hud-action { min-width:78px; min-height:30px; padding:4px 9px; border:1px solid #d6b05a; border-radius:9px; background:linear-gradient(180deg,#fff0bd,#d6a345); color:#211307; font-size:.8em; font-weight:950; cursor:pointer; white-space:nowrap; }
+    #${HUD_ID} .a2e-hud-action:disabled { opacity:.45; cursor:not-allowed; }
+    #${HUD_ID} .a2e-hud-empty { padding:12px; border:1px dashed rgba(214,176,90,.45); border-radius:10px; color:#c8ad6e; font-style:italic; text-align:center; }
+    #${HUD_ID} .a2e-hud-ability-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+    #${HUD_ID} .a2e-hud-ability { display:grid; grid-template-columns:1fr auto; gap:6px; align-items:center; padding:7px; border:1px solid rgba(214,176,90,.38); border-radius:10px; background:rgba(255,250,235,.07); }
+    #${HUD_ID} .a2e-hud-ability b { color:#fff4cf; font-size:1.15em; }
+    #${HUD_ID} .a2e-hud-ability span { display:block; color:#c8ad6e; font-size:.76em; font-weight:800; }
+    @media (max-width:760px) { #${HUD_ID} { left:8px !important; right:8px; width:auto !important; min-width:0; } #${HUD_ID} .a2e-hud-ability-grid { grid-template-columns:repeat(2,1fr); } }
   `;
   document.head.appendChild(style);
 }
 
 function add2eHudWeaponRows(actor) {
   const weapons = add2eHudWeapons(actor);
-  if (!weapons.length) return `<div class="a2e-hud-empty">Aucune arme disponible.</div>`;
-  return weapons.map(arme => {
+  const monsterAttacks = add2eHudIsMonster(actor) ? add2eHudMonsterAttackArray(actor) : [];
+  const rows = [];
+
+  for (const arme of weapons) {
     const id = add2eHudEscape(arme.id);
     const name = add2eHudEscape(arme.name);
     const img = add2eHudEscape(arme.img || "icons/svg/sword.svg");
-    const equipped = add2eHudIsEquipped(arme) ? "Équipée" : "Non équipée";
-    return `<div class="a2e-hud-row" data-item-id="${id}">
-      <img src="${img}" alt="${name}">
-      <div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>${equipped}</span><span>Dégâts ${add2eHudEscape(add2eHudDamageText(arme))}</span><span>Portée ${add2eHudEscape(add2eHudRangeText(arme))}</span></div></div>
-      <button type="button" class="a2e-hud-action" data-action="attack" data-item-id="${id}">Attaquer</button>
-    </div>`;
-  }).join("");
+    const equipped = add2eHudIsMonster(actor) ? "Attaque" : (add2eHudIsEquipped(arme) ? "Équipée" : "Non équipée");
+    rows.push(`<div class="a2e-hud-row" data-item-id="${id}"><img src="${img}" alt="${name}"><div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>${equipped}</span><span>Dégâts ${add2eHudEscape(add2eHudDamageText(arme))}</span><span>Portée ${add2eHudEscape(add2eHudRangeText(arme))}</span></div></div><button type="button" class="a2e-hud-action" data-action="attack" data-item-id="${id}">Attaquer</button></div>`);
+  }
+
+  monsterAttacks.forEach(a => {
+    const idx = add2eHudEscape(a.__index);
+    const name = add2eHudEscape(a.name ?? a.nom ?? a.label ?? `Attaque ${a.__index + 1}`);
+    rows.push(`<div class="a2e-hud-row compact" data-monster-attack-index="${idx}"><div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>THAC0 ${add2eHudEscape(a.thac0 ?? a.thaco ?? add2eHudThaco(actor))}</span><span>Dégâts ${add2eHudEscape(add2eHudDamageText(a))}</span></div></div><button type="button" class="a2e-hud-action" data-action="monster-attack" data-monster-attack-index="${idx}">Attaquer</button></div>`);
+  });
+
+  return rows.length ? rows.join("") : `<div class="a2e-hud-empty">Aucune attaque disponible.</div>`;
 }
 
 function add2eHudSpellRows(actor) {
@@ -345,11 +289,7 @@ function add2eHudSpellRows(actor) {
     const niv = add2eHudEscape(sort.system?.niveau ?? sort.system?.level ?? "—");
     const school = add2eHudEscape(sort.system?.école ?? sort.system?.ecole ?? "");
     const prepared = add2eHudPreparedCount(sort);
-    return `<div class="a2e-hud-row" data-item-id="${id}">
-      <img src="${img}" alt="${name}">
-      <div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>Niv. ${niv}</span>${school ? `<span>${school}</span>` : ""}${prepared > 0 ? `<span>Préparé ${prepared}</span>` : `<span>Disponible</span>`}</div></div>
-      <button type="button" class="a2e-hud-action" data-action="cast-spell" data-item-id="${id}">Lancer</button>
-    </div>`;
+    return `<div class="a2e-hud-row" data-item-id="${id}"><img src="${img}" alt="${name}"><div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta"><span>Niv. ${niv}</span>${school ? `<span>${school}</span>` : ""}${prepared > 0 ? `<span>Préparé ${prepared}</span>` : `<span>Disponible</span>`}</div></div><button type="button" class="a2e-hud-action" data-action="cast-spell" data-item-id="${id}">Lancer</button></div>`;
   }).join("");
 }
 
@@ -363,12 +303,9 @@ function add2eHudFeatureRows(actor) {
     const min = add2eHudNumber(feature.minLevel ?? feature.minimumLevel ?? feature.niveauMin ?? 1, 1);
     const maxRaw = feature.maxLevel ?? feature.maximumLevel ?? feature.niveauMax ?? "";
     const max = maxRaw === "" || maxRaw === undefined || maxRaw === null ? 999 : add2eHudNumber(maxRaw, 999);
-    const locked = actorLevel < min || actorLevel > max;
-    const uses = add2eHudEscape(feature.uses?.label ?? feature.usesLabel ?? "");
-    return `<div class="a2e-hud-row compact" data-feature-index="${idx}">
-      <div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta">${locked ? `<span>Niveau requis ${min}${max !== 999 ? `-${max}` : ""}</span>` : `<span>Disponible</span>`}${uses ? `<span>${uses}</span>` : ""}</div></div>
-      <button type="button" class="a2e-hud-action" data-action="use-feature" data-feature-index="${idx}" ${locked ? "disabled" : ""}>Utiliser</button>
-    </div>`;
+    const locked = !add2eHudIsMonster(actor) && (actorLevel < min || actorLevel > max);
+    const uses = add2eHudEscape(feature.uses?.label ?? feature.usesLabel ?? feature.description ?? "");
+    return `<div class="a2e-hud-row compact" data-feature-index="${idx}"><div><div class="a2e-hud-row-title">${name}</div><div class="a2e-hud-row-meta">${locked ? `<span>Niveau requis ${min}${max !== 999 ? `-${max}` : ""}</span>` : `<span>Disponible</span>`}${uses ? `<span>${uses}</span>` : ""}</div></div><button type="button" class="a2e-hud-action" data-action="use-feature" data-feature-index="${idx}" ${locked ? "disabled" : ""}>Utiliser</button></div>`;
   }).join("");
 }
 
@@ -376,10 +313,7 @@ function add2eHudSaveRows(actor) {
   const saves = add2eHudSavingThrows(actor);
   return ADD2E_HUD_SAVE_FULL_NAMES.map((label, idx) => {
     const value = saves[idx] || "—";
-    return `<div class="a2e-hud-row compact">
-      <div><div class="a2e-hud-row-title">${add2eHudEscape(label)}</div><div class="a2e-hud-row-meta"><span>Seuil ${add2eHudEscape(value)} ou plus</span></div></div>
-      <button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button>
-    </div>`;
+    return `<div class="a2e-hud-row compact"><div><div class="a2e-hud-row-title">${add2eHudEscape(label)}</div><div class="a2e-hud-row-meta"><span>Seuil ${add2eHudEscape(value)} ou plus</span></div></div><button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button></div>`;
   }).join("");
 }
 
@@ -392,36 +326,16 @@ function add2eHudAbilityRows(actor) {
 
 function add2eHudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
-  const race = actor.system?.race || actor.system?.details_race?.label || actor.items?.find?.(i => i.type === "race")?.name || "Race";
-  const classe = actor.system?.classe || actor.system?.details_classe?.label || actor.items?.find?.(i => i.type === "classe")?.name || "Classe";
-  const niveau = actor.system?.niveau ?? "—";
-  const ac = actor.system?.ca_total ?? actor.system?.ca ?? "—";
+  const isMonster = add2eHudIsMonster(actor);
+  const race = isMonster ? (actor.system?.type ?? actor.system?.race ?? "Monstre") : (actor.system?.race || actor.system?.details_race?.label || actor.items?.find?.(i => i.type === "race")?.name || "Race");
+  const classe = isMonster ? (actor.system?.taille ?? actor.system?.size ?? actor.system?.alignment ?? "MJ") : (actor.system?.classe || actor.system?.details_classe?.label || actor.items?.find?.(i => i.type === "classe")?.name || "Classe");
+  const niveau = isMonster ? (actor.system?.dv ?? actor.system?.hitDice ?? actor.system?.niveau ?? "—") : (actor.system?.niveau ?? "—");
+  const ac = add2eHudArmorClass(actor);
   const thaco = add2eHudThaco(actor);
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${add2eHudActiveTab === key ? "active" : ""}" data-hud-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="a2e-hud-section ${add2eHudActiveTab === key ? "active" : ""}" data-hud-section="${key}">${html}</section>`;
 
-  return `<div class="a2e-hud-shell">
-    <div class="a2e-hud-menu-panel">
-      ${section("attaques", add2eHudWeaponRows(actor))}
-      ${section("sorts", add2eHudSpellRows(actor))}
-      ${section("capacites", add2eHudFeatureRows(actor))}
-      ${section("sauvegardes", add2eHudSaveRows(actor))}
-      ${section("caracs", add2eHudAbilityRows(actor))}
-    </div>
-    <nav class="a2e-hud-tabs">
-      ${tab("attaques", "fas fa-swords", "Attaques")}
-      ${tab("sorts", "fas fa-book", "Sorts")}
-      ${tab("capacites", "fas fa-bolt", "Capacités")}
-      ${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}
-      ${tab("caracs", "fas fa-dice-d20", "Carac.")}
-    </nav>
-    <div class="a2e-hud-header" data-drag-handle="1">
-      <img class="a2e-hud-portrait" src="${add2eHudEscape(img)}" alt="${add2eHudEscape(actor.name)}">
-      <div><div class="a2e-hud-name">${add2eHudEscape(actor.name)}</div><div class="a2e-hud-subtitle">${add2eHudEscape(race)} — ${add2eHudEscape(classe)} niv. ${add2eHudEscape(niveau)}</div><div class="a2e-hud-metrics"><span class="a2e-hud-pill">PV ${add2eHudHp(actor)} / ${add2eHudHpMax(actor)}</span><span class="a2e-hud-pill">CA ${add2eHudEscape(ac)}</span><span class="a2e-hud-pill">THAC0 ${add2eHudEscape(thaco)}</span></div></div>
-      <button type="button" class="a2e-hud-icon-btn" data-action="toggle-collapse" title="Réduire / agrandir"><i class="fas fa-chevron-down"></i></button>
-      <button type="button" class="a2e-hud-resize" data-resize-handle="1" title="Redimensionner"><i class="fas fa-up-right-and-down-left-from-center"></i></button>
-    </div>
-  </div>`;
+  return `<div class="a2e-hud-shell"><div class="a2e-hud-menu-panel">${section("attaques", add2eHudWeaponRows(actor))}${section("sorts", add2eHudSpellRows(actor))}${section("capacites", add2eHudFeatureRows(actor))}${section("sauvegardes", add2eHudSaveRows(actor))}${section("caracs", add2eHudAbilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Attaques")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="a2e-hud-portrait" src="${add2eHudEscape(img)}" alt="${add2eHudEscape(actor.name)}"><div><div class="a2e-hud-name">${add2eHudEscape(actor.name)}</div><div class="a2e-hud-subtitle">${add2eHudEscape(race)} — ${add2eHudEscape(classe)} ${isMonster ? "DV" : "niv."} ${add2eHudEscape(niveau)}</div><div class="a2e-hud-metrics"><span class="a2e-hud-pill">PV ${add2eHudHp(actor)} / ${add2eHudHpMax(actor)}</span><span class="a2e-hud-pill">CA ${add2eHudEscape(ac)}</span><span class="a2e-hud-pill">THAC0 ${add2eHudEscape(thaco)}</span></div></div><button type="button" class="a2e-hud-icon-btn" data-action="toggle-collapse" title="Réduire / agrandir"><i class="fas fa-chevron-down"></i></button><button type="button" class="a2e-hud-resize" data-resize-handle="1" title="Redimensionner"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
 }
 
 function add2eHudApplyGeometry(hud) {
@@ -429,13 +343,14 @@ function add2eHudApplyGeometry(hud) {
   hud.style.left = `${s.left}px`;
   hud.style.top = `${s.top}px`;
   hud.style.width = `${s.width}px`;
-  hud.style.height = `${s.height}px`;
+  hud.style.removeProperty("height");
+  hud.style.setProperty("--a2e-hud-menu-max", `${s.maxMenuHeight}px`);
 }
 
 function add2eHudConstrainState() {
   const s = add2eHudLoadState();
   s.width = add2eHudClamp(s.width, 360, Math.max(380, window.innerWidth - 20));
-  s.height = add2eHudClamp(s.height, 220, Math.max(260, window.innerHeight - 20));
+  s.maxMenuHeight = add2eHudClamp(s.maxMenuHeight, 110, Math.max(140, window.innerHeight - 130));
   s.left = add2eHudClamp(s.left, 0, Math.max(0, window.innerWidth - 80));
   s.top = add2eHudClamp(s.top, 0, Math.max(0, window.innerHeight - 80));
 }
@@ -479,32 +394,27 @@ function add2eBindHudDragResize(hud) {
     if (ev.target.closest?.("button") && mode === "drag") return;
     ev.preventDefault();
     ev.stopPropagation();
-
     const s = add2eHudLoadState();
-    const start = { x: ev.clientX, y: ev.clientY, left: s.left, top: s.top, width: s.width, height: s.height };
-
+    const start = { x: ev.clientX, y: ev.clientY, left: s.left, top: s.top, width: s.width, maxMenuHeight: s.maxMenuHeight };
     const move = e => {
       if (mode === "drag") {
         s.left = start.left + (e.clientX - start.x);
         s.top = start.top + (e.clientY - start.y);
       } else {
         s.width = start.width + (e.clientX - start.x);
-        s.height = start.height + (e.clientY - start.y);
+        s.maxMenuHeight = start.maxMenuHeight + (e.clientY - start.y);
       }
       add2eHudConstrainState();
       add2eHudApplyGeometry(hud);
     };
-
     const up = () => {
       window.removeEventListener("pointermove", move, true);
       window.removeEventListener("pointerup", up, true);
       add2eHudSaveState();
     };
-
     window.addEventListener("pointermove", move, true);
     window.addEventListener("pointerup", up, true);
   };
-
   header?.addEventListener("pointerdown", ev => startPointer(ev, "drag"));
   resize?.addEventListener("pointerdown", ev => startPointer(ev, "resize"));
 }
@@ -530,6 +440,7 @@ function add2eBindHudEvents(hud, actor) {
           return;
         }
         if (action === "attack") return add2eHudAttack(actor, btn.dataset.itemId);
+        if (action === "monster-attack") return add2eHudMonsterAttack(actor, Number(btn.dataset.monsterAttackIndex));
         if (action === "cast-spell") return add2eHudCastSpell(actor, btn.dataset.itemId);
         if (action === "use-feature") return add2eHudUseFeature(actor, btn.dataset.featureIndex);
         if (action === "roll-save") return add2eHudRollSaveLikeSheet(actor, Number(btn.dataset.saveIndex));
@@ -549,6 +460,16 @@ async function add2eHudAttack(actor, itemId) {
   return globalThis.add2eAttackRoll({ actor, arme });
 }
 
+async function add2eHudMonsterAttack(actor, index) {
+  const attack = add2eHudMonsterAttackArray(actor).find(a => Number(a.__index) === Number(index));
+  if (!attack) return ui.notifications.warn("Attaque de monstre introuvable.");
+  if (typeof globalThis.add2eAttackRoll === "function") return globalThis.add2eAttackRoll({ actor, attaque: attack, monsterAttack: attack });
+  const name = attack.name ?? attack.nom ?? attack.label ?? "Attaque";
+  const thac0 = attack.thac0 ?? attack.thaco ?? add2eHudThaco(actor);
+  const dmg = add2eHudDamageText(attack);
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<b>${add2eHudEscape(actor.name)}</b> utilise <b>${add2eHudEscape(name)}</b><br>THAC0 : ${add2eHudEscape(thac0)}<br>Dégâts : ${add2eHudEscape(dmg)}` });
+}
+
 async function add2eHudCastSpell(actor, itemId) {
   const sort = add2eHudFindItem(actor, itemId);
   if (!sort) return ui.notifications.warn("Sort introuvable.");
@@ -560,7 +481,9 @@ async function add2eHudUseFeature(actor, featureIndex) {
   const features = add2eHudClassFeatures(actor);
   const feature = features.find(f => String(f.__index) === String(featureIndex));
   if (!feature) return ui.notifications.warn("Capacité introuvable.");
-  if (typeof globalThis.add2eExecuteClassFeatureOnUse !== "function") return ui.notifications.error("Fonction add2eExecuteClassFeatureOnUse introuvable.");
+  if (typeof globalThis.add2eExecuteClassFeatureOnUse !== "function") {
+    return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<b>${add2eHudEscape(actor.name)}</b> utilise <b>${add2eHudEscape(feature.name ?? feature.label ?? feature.nom ?? "Capacité")}</b>` });
+  }
   return globalThis.add2eExecuteClassFeatureOnUse(actor, feature, null);
 }
 
@@ -579,9 +502,9 @@ async function add2eHudRollAbilityLikeSheet(actor, carac) {
 }
 
 async function add2eHudRollSaveLikeSheet(actor, idx) {
-  const saves = actor.system?.details_classe?.progression?.[actor.system.niveau - 1]?.savingThrows || actor.system?.sauvegardes || [];
+  const saves = actor.system?.details_classe?.progression?.[actor.system.niveau - 1]?.savingThrows || actor.system?.sauvegardes || actor.system?.savingThrows || [];
   const nom = ADD2E_HUD_SAVE_NAMES[idx] || "Jet";
-  const valeur = Number(saves[idx]);
+  const valeur = Number(add2eHudArray(saves)[idx]);
   if (!valeur) return ui.notifications.warn("Aucune valeur pour ce jet.");
   const roll = new Roll("1d20");
   await roll.evaluate();
