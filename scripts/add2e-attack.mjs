@@ -5,6 +5,27 @@
 
 console.log("ADD2E | add2e-attack modulaire : chargement sécurisé");
 
+// Important pour le HUD : certains modules testent l'existence des fonctions
+// pendant leur propre initialisation. On expose donc immédiatement des stubs,
+// puis les vrais modules les remplacent dès qu'ils sont chargés.
+if (typeof globalThis.add2eAttackRoll !== "function") {
+  globalThis.add2eAttackRoll = async function add2eAttackRollPending(...args) {
+    console.warn("[ADD2E][ATTACK][PENDING] add2eAttackRoll appelée avant chargement complet", args);
+    ui.notifications?.warn?.("Le module d'attaque ADD2E est encore en cours de chargement. Recharge la scène si le problème persiste.");
+    return false;
+  };
+}
+
+if (typeof globalThis.add2eCastSpell !== "function") {
+  globalThis.add2eCastSpell = async function add2eCastSpellPending(...args) {
+    console.warn("[ADD2E][ATTACK][PENDING] add2eCastSpell appelée avant chargement complet", args);
+    ui.notifications?.warn?.("Le module de sorts ADD2E est encore en cours de chargement. Recharge la scène si le problème persiste.");
+    return false;
+  };
+}
+
+if (typeof globalThis.cast_spell !== "function") globalThis.cast_spell = globalThis.add2eCastSpell;
+
 async function add2eImportAttackModule(path, label) {
   try {
     await import(path);
@@ -27,5 +48,9 @@ async function add2eImportAttackModule(path, label) {
   await add2eImportAttackModule("./add2e-attack/06-cast-spell.mjs", "06-cast-spell");
   await add2eImportAttackModule("./add2e-attack/04-attack-roll.mjs", "04-attack-roll");
 
-  console.log("ADD2E | add2e-attack modulaire chargé", globalThis.ADD2E_ATTACK_VERSION);
+  console.log("ADD2E | add2e-attack modulaire chargé", {
+    version: globalThis.ADD2E_ATTACK_VERSION,
+    hasAttackRoll: typeof globalThis.add2eAttackRoll === "function",
+    hasCastSpell: typeof globalThis.add2eCastSpell === "function"
+  });
 })();
