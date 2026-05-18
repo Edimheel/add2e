@@ -228,23 +228,38 @@
     border-top: none;
 }
 
-/* --- ADD2E ACTION HUD : contenu des menus aligné vers le bas --- */
-#add2e-action-hud .a2e-hud-menu-panel {
+/* --- ADD2E ACTION HUD : bas fixe, menus déployés vers le haut --- */
+#add2e-action-hud {
+  top: auto !important;
+  bottom: 18px !important;
+  height: auto !important;
+}
+
+#add2e-action-hud .a2e-hud-shell {
+  height: auto !important;
+  max-height: calc(100vh - 36px) !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-end !important;
-  align-items: stretch !important;
+}
+
+#add2e-action-hud .a2e-hud-menu-panel {
+  flex: 0 1 auto !important;
+  min-height: 0 !important;
+  max-height: var(--a2e-hud-menu-max, 320px) !important;
+  display: block !important;
+  overflow-y: auto !important;
 }
 
 #add2e-action-hud .a2e-hud-section.active {
   display: grid !important;
   gap: 7px !important;
-  align-content: end !important;
-  margin-top: auto !important;
+  align-content: start !important;
+  margin-top: 0 !important;
 }
 
 #add2e-action-hud .a2e-hud-section.active .a2e-hud-row:first-child,
 #add2e-action-hud .a2e-hud-section.active .a2e-hud-empty:first-child,
 #add2e-action-hud .a2e-hud-section.active .a2e-hud-ability-grid:first-child {
-  margin-top: auto !important;
+  margin-top: 0 !important;
 }
