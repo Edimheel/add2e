@@ -16,6 +16,7 @@
   "scripts/add2e-attack.mjs",
   "scripts/add2e-action-hud.mjs",
   "scripts/add2e.mjs",
+  "scripts/08-character-sheet-ui.mjs",
   "scripts/resolveActiveEffectsOnTarget.mjs",
   "scripts/monster-sheet.mjs"
 ],
