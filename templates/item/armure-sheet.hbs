@@ -1,57 +1,80 @@
-<form class="add2e armure-sheet" autocomplete="off">
-<header>
-  <h2>{{item.name}}</h2>
-  <div class="form-group image-selector">
-      <div class="header-flex">
-<img src="{{img}}" alt="Image du sort"
-  width="256" height="256"
-  style="object-fit: contain; border-radius: 8px; border: 1px solid #666; background: #222; display: block; margin: auto; cursor:pointer;" 
-  data-edit="img" />
-</div>
-  </div>
-  <div class="form-group">
-    <label>Équipée</label>
-    <input type="checkbox" name="system.equipee" {{checked system.equipee}} class="toggle-equip"/>
-  </div>
-</header>
+<form class="sheet item armure-sheet add2e-pretty-item" autocomplete="off">
+  <style>
+    .armure-sheet.add2e-pretty-item{--card:#fffaf0;--border:#8b5e34;--soft:rgba(91,52,25,.22);--title:#3b2414;color:#2f241c;}
+    .armure-sheet input,.armure-sheet textarea{width:100%;background:rgba(255,255,255,.88);border:1px solid var(--soft);border-radius:6px;padding:4px 6px;color:#1f1a16;}
+    .armure-sheet textarea{min-height:72px;resize:vertical;}
+    .a2e-armor-hero{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:12px;border:2px solid var(--border);border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ead9b7);box-shadow:0 2px 8px rgba(0,0,0,.18);margin-bottom:10px;}
+    .a2e-armor-hero img{width:110px;height:110px;object-fit:contain;border-radius:10px;border:2px solid rgba(75,47,24,.5);background:#1f1a16;cursor:pointer;}
+    .a2e-armor-title input{font-size:1.65em;font-weight:800;color:var(--title);border:0;border-bottom:2px solid rgba(124,45,18,.35);border-radius:0;background:rgba(255,255,255,.35);}
+    .a2e-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+    .a2e-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;}
+    .a2e-grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+    .a2e-card{background:var(--card);border:1px solid var(--soft);border-radius:10px;padding:10px;margin-bottom:10px;}
+    .a2e-card h3{margin:0 0 8px;color:var(--title);border-bottom:1px solid var(--soft);padding-bottom:5px;font-size:1.15em;font-weight:800;}
+    .a2e-field label,.a2e-stat label{display:block;font-size:.78em;text-transform:uppercase;letter-spacing:.04em;color:#6f6258;font-weight:800;margin-bottom:3px;}
+    .a2e-stat{background:rgba(251,246,234,.95);border:1px solid rgba(124,45,18,.18);border-radius:8px;padding:7px;}
+    .a2e-checks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px;}
+    .a2e-checks label{display:flex;align-items:center;gap:6px;padding:6px;border:1px solid var(--soft);border-radius:8px;background:rgba(255,255,255,.5);font-weight:700;}
+    .a2e-checks input{width:auto;}
+    .a2e-note{font-size:.86em;color:#6f6258;margin-top:4px;}
+  </style>
 
+  <header class="a2e-armor-hero">
+    <img src="{{img}}" alt="Image de l'armure" data-edit="img" />
+    <div>
+      <div class="a2e-armor-title">
+        <input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'armure">
+      </div>
+      <div class="a2e-grid-3">
+        <div class="a2e-field"><label>Nom système</label><input type="text" name="system.nom" value="{{item.system.nom}}"></div>
+        <div class="a2e-field"><label>Catégorie</label><input type="text" name="system.categorie" value="{{item.system.categorie}}" placeholder="Lourde"></div>
+        <div class="a2e-field"><label>Propriétés legacy</label><input type="text" name="system.properties" value="{{item.system.properties}}" placeholder="Lourde"></div>
+      </div>
+    </div>
+  </header>
 
-  <div class="sheet-body">
-    <div class="form-group">
-      <label>Classe d’armure (CA de base)</label>
-      <input type="number" name="system.ac" value="{{system.ac}}" />
+  <section class="a2e-card">
+    <h3><i class="fas fa-shield-alt"></i> Protection</h3>
+    <div class="a2e-grid-4">
+      <div class="a2e-stat"><label>CA de base</label><input type="number" name="system.ac" value="{{item.system.ac}}"></div>
+      <div class="a2e-stat"><label>Bonus CA</label><input type="number" name="system.bonus_ac" value="{{item.system.bonus_ac}}"></div>
+      <div class="a2e-stat"><label>Bonus toucher</label><input type="number" name="system.bonus_toucher" value="{{item.system.bonus_toucher}}"></div>
+      <div class="a2e-stat"><label>Bonus dégâts</label><input type="number" name="system.bonus_degats" value="{{item.system.bonus_degats}}"></div>
     </div>
-    <div class="form-group">
-      <label>Bonus de CA</label>
-      <input type="number" name="system.bonus_ac" value="{{system.bonus_ac}}" />
+    <div class="a2e-checks">
+      <label><input type="checkbox" name="system.equipee" {{#if item.system.equipee}}checked{{/if}}> Équipée</label>
+      <label><input type="checkbox" name="system.magique" {{#if item.system.magique}}checked{{/if}}> Magique</label>
+      <label><input type="checkbox" name="system.base" {{#if item.system.base}}checked{{/if}}> Base</label>
+      <label><input type="checkbox" name="system.bouclier" {{#if item.system.bouclier}}checked{{/if}}> Bouclier</label>
     </div>
-    <div class="form-group">
-      <label>Bonus au toucher</label>
-      <input type="number" name="system.bonus_toucher" value="{{system.bonus_toucher}}" />
+  </section>
+
+  <section class="a2e-card">
+    <h3><i class="fas fa-weight-hanging"></i> Encombrement et valeur</h3>
+    <div class="a2e-grid-4">
+      <div class="a2e-stat"><label>Poids</label><input type="number" name="system.poids" value="{{item.system.poids}}"></div>
+      <div class="a2e-stat"><label>Weight legacy</label><input type="number" name="system.weight" value="{{item.system.weight}}"></div>
+      <div class="a2e-stat"><label>Prix</label><input type="text" name="system.prix" value="{{item.system.prix}}"></div>
+      <div class="a2e-stat"><label>Cost legacy</label><input type="text" name="system.cost" value="{{item.system.cost}}"></div>
     </div>
-    <div class="form-group">
-      <label>Bonus aux dégâts</label>
-      <input type="number" name="system.bonus_degats" value="{{system.bonus_degats}}" />
+    <div class="a2e-grid-3">
+      <div class="a2e-stat"><label>Matériau</label><input type="text" name="system.materiau" value="{{item.system.materiau}}"></div>
+      <div class="a2e-stat"><label>Type armure</label><input type="text" name="system.type_armure" value="{{item.system.type_armure}}" placeholder="bandes"></div>
+      <div class="a2e-stat"><label>Structure</label><input type="text" name="system.structure" value="{{item.system.structure}}" placeholder="bandes"></div>
     </div>
-    <div class="form-group">
-      <label>Poids</label>
-      <input type="number" name="system.poids" value="{{system.poids}}" /> <span>kg</span>
+  </section>
+
+  <section class="a2e-card">
+    <h3><i class="fas fa-tags"></i> Tags d’effets</h3>
+    <div class="a2e-grid-2">
+      <div class="a2e-field"><label>Tags</label><textarea name="system.tags" rows="4">{{item.system.tags}}</textarea></div>
+      <div class="a2e-field"><label>Effect tags</label><textarea name="system.effectTags" rows="4">{{item.system.effectTags}}</textarea></div>
     </div>
-    <div class="form-group">
-      <label>Prix</label>
-      <input type="text" name="system.prix" value="{{system.prix}}" />
-    </div>
-    <div class="form-group">
-      <label>Catégorie</label>
-      <input type="text" name="system.categorie" value="{{system.categorie}}" />
-    </div>
-    <div class="form-group">
-      <label>Matériau</label>
-      <input type="text" name="system.materiau" value="{{system.materiau}}" />
-    </div>
-    <div class="form-group">
-      <label>Description</label>
-      <textarea name="system.description">{{system.description}}</textarea>
-    </div>
-  </div>
+    <div class="a2e-note">Ces tags permettent au moteur d’effets et aux restrictions de classe/race de reconnaître l’armure.</div>
+  </section>
+
+  <section class="a2e-card">
+    <h3><i class="fas fa-scroll"></i> Description</h3>
+    <div class="a2e-field"><label>Description</label><textarea name="system.description" rows="5">{{item.system.description}}</textarea></div>
+  </section>
 </form>
