@@ -78,32 +78,41 @@ export function injectCharacterUiStyles(sheetRoot) {
       min-width:34px;
     }
     .add2e-character-v3 .a2e-thief-skill-icon-btn {
-      width:32px;
-      height:32px;
-      min-width:32px;
-      min-height:32px;
+      --a2e-thief-icon-color:#2b82c8;
+      width:31px;
+      height:31px;
+      min-width:31px;
+      min-height:31px;
       padding:0;
-      border:1px solid #1c6aa8;
-      border-radius:10px;
-      background:linear-gradient(180deg, #3a97da 0%, #1666a9 100%);
-      color:#fff;
+      border:2px solid var(--a2e-thief-icon-color);
+      border-radius:999px;
+      background:radial-gradient(circle at 35% 30%, #ffffff 0%, #fffaf0 62%, #f0dfb6 100%);
+      color:var(--a2e-thief-icon-color);
       display:inline-flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
-      box-shadow:0 2px 5px rgba(0,0,0,.18);
+      box-shadow:0 1px 4px rgba(92,64,12,.22), inset 0 0 0 1px rgba(255,255,255,.75);
       transition:transform .08s ease, box-shadow .12s ease, filter .12s ease;
     }
+    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="lock"] { --a2e-thief-icon-color:#168a4a; }
+    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="trap"] { --a2e-thief-icon-color:#d88916; }
+    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="move"] { --a2e-thief-icon-color:#2b82c8; }
+    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="hide"] { --a2e-thief-icon-color:#8a4bb3; }
+    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="listen"] { --a2e-thief-icon-color:#2f9a9a; }
+    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="climb"] { --a2e-thief-icon-color:#c66a1d; }
+    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="language"] { --a2e-thief-icon-color:#6c5bd5; }
+    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="pocket"] { --a2e-thief-icon-color:#b35b26; }
     .add2e-character-v3 .a2e-thief-skill-icon-btn:hover {
-      filter:brightness(1.07);
-      box-shadow:0 3px 7px rgba(0,0,0,.22);
+      filter:brightness(1.04);
+      box-shadow:0 2px 6px rgba(92,64,12,.26), inset 0 0 0 1px rgba(255,255,255,.85);
     }
     .add2e-character-v3 .a2e-thief-skill-icon-btn:active {
       transform:translateY(1px);
-      box-shadow:0 1px 4px rgba(0,0,0,.18);
+      box-shadow:0 1px 3px rgba(92,64,12,.20), inset 0 0 0 1px rgba(255,255,255,.70);
     }
     .add2e-character-v3 .a2e-thief-skill-icon-btn i {
-      font-size:.95rem;
+      font-size:.92rem;
       line-height:1;
       pointer-events:none;
     }
