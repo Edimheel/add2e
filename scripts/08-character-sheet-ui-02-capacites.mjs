@@ -99,10 +99,27 @@ function getThiefSkills(actor) {
   }
 }
 
-function isThiefLikeActor(actor) {
-  const className = String(actor?.system?.classe ?? actor?.system?.details_classe?.label ?? actor?.system?.details_classe?.name ?? "");
-  const s = slug(className);
-  return s.includes("voleur") || s.includes("assassin");
+function classSlug(actor) {
+  return slug(
+    actor?.system?.classe ??
+    actor?.system?.details_classe?.label ??
+    actor?.system?.details_classe?.name ??
+    actor?.items?.find?.(i => String(i?.type || "").toLowerCase() === "classe")?.name ??
+    ""
+  );
+}
+
+function isThiefSkillClass(actor) {
+  const s = classSlug(actor);
+  return s.includes("voleur") || s.includes("assassin") || s.includes("moine");
+}
+
+function thiefSkillPanelTitle(actor) {
+  const s = classSlug(actor);
+  if (s.includes("moine")) return "Compétences spéciales du moine";
+  if (s.includes("assassin")) return "Compétences de voleur / assassin";
+  if (s.includes("voleur")) return "Compétences de voleur";
+  return "Compétences spéciales";
 }
 
 function isBackstabLike(value) {
@@ -185,6 +202,8 @@ function isThiefSkillFeature(feature) {
     "bruit",
     "escalade",
     "grimper",
+    "lecture_langues",
+    "lecture_des_langues",
     "frappe_dans_le_dos",
     "attaque_dans_le_dos",
     "backstab",
@@ -195,14 +214,15 @@ function isThiefSkillFeature(feature) {
 
 function visibleFeatures(actor) {
   const level = Number(actor?.system?.niveau ?? 1) || 1;
-  const thiefLike = isThiefLikeActor(actor);
-  const hasListenTile = getThiefSkills(actor).some(s => isListenLike(`${s?.key ?? ""} ${s?.label ?? ""} ${s?.shortLabel ?? ""}`));
+  const thiefSkills = getThiefSkills(actor);
+  const usesThiefSkillTiles = thiefSkills.length > 0 || isThiefSkillClass(actor);
+  const hasListenTile = thiefSkills.some(s => isListenLike(`${s?.key ?? ""} ${s?.label ?? ""} ${s?.shortLabel ?? ""}`));
   const seen = new Set();
 
   return allClassFeatures(actor)
     .map((feature, index) => ({ feature, index }))
     .filter(({ feature }) => level >= featureMinLevel(feature) && level <= featureMaxLevel(feature))
-    .filter(({ feature }) => !(thiefLike && isThiefSkillFeature(feature)))
+    .filter(({ feature }) => !(usesThiefSkillTiles && isThiefSkillFeature(feature)))
     .filter(({ feature }) => !(hasListenTile && isListenLike(`${featureName(feature)} ${feature?.key ?? ""} ${feature?.skillKey ?? ""} ${feature?.slug ?? ""}`)))
     .filter(({ feature }) => {
       const key = `${slug(featureName(feature))}|${featureMinLevel(feature)}|${isFeatureActivable(feature) ? "A" : "P"}`;
@@ -242,7 +262,7 @@ function buildThiefSkillsPanel(actor) {
 
   return `
     <div class="a2e-panel add2e-thief-skills-panel">
-      <h2>Compétences de voleur / assassin</h2>
+      <h2>${escapeHtml(thiefSkillPanelTitle(actor))}</h2>
       <div class="a2e-panel-body"><div class="a2e-thief-skills-inline" style="grid-template-columns:repeat(${skills.length}, minmax(0, 1fr));">${cards}</div></div>
     </div>`;
 }
@@ -322,6 +342,7 @@ export function injectCapacitesTab(sheet, sheetRoot) {
 
   console.log("[ADD2E][CAPACITES][UI][SPLIT] Rendu capacités", {
     actor: actor.name,
+    class: actor.system?.classe,
     level: actor.system?.niveau,
     thiefSkills: getThiefSkills(actor).length,
     visibleThiefSkills: getThiefSkills(actor).filter(s => !isBackstabLike(`${s?.key ?? ""} ${s?.label ?? ""} ${s?.shortLabel ?? ""}`)).length,
