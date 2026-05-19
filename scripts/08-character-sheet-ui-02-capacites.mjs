@@ -124,19 +124,38 @@ function isListenLike(value) {
     || s.includes("bruit");
 }
 
-function thiefSkillIcon(skill) {
-  const s = slug(`${skill?.key ?? ""} ${skill?.label ?? ""} ${skill?.shortLabel ?? ""}`);
+function thiefSkillSlug(skill) {
+  return slug(`${skill?.key ?? ""} ${skill?.label ?? ""} ${skill?.shortLabel ?? ""}`);
+}
 
-  if (s.includes("pickpocket") || s.includes("poche")) return "fa-hand";
+function thiefSkillIcon(skill) {
+  const s = thiefSkillSlug(skill);
+
+  if (s.includes("pickpocket") || s.includes("poche")) return "fa-hand-holding";
   if (s.includes("crochetage") || s.includes("serrure")) return "fa-key";
   if (s.includes("piege") || s.includes("desamorc")) return "fa-triangle-exclamation";
-  if (s.includes("silence")) return "fa-volume-xmark";
+  if (s.includes("silence")) return "fa-shoe-prints";
   if (s.includes("dissimulation") || s.includes("cacher")) return "fa-user-secret";
   if (isListenLike(s)) return "fa-ear-listen";
   if (s.includes("escalade") || s.includes("grimper")) return "fa-mountain";
   if (s.includes("langue")) return "fa-language";
 
   return "fa-dice-d20";
+}
+
+function thiefSkillTone(skill) {
+  const s = thiefSkillSlug(skill);
+
+  if (s.includes("crochetage") || s.includes("serrure")) return "lock";
+  if (s.includes("piege") || s.includes("desamorc")) return "trap";
+  if (s.includes("silence")) return "move";
+  if (s.includes("dissimulation") || s.includes("cacher")) return "hide";
+  if (isListenLike(s)) return "listen";
+  if (s.includes("escalade") || s.includes("grimper")) return "climb";
+  if (s.includes("langue")) return "language";
+  if (s.includes("pickpocket") || s.includes("poche")) return "pocket";
+
+  return "default";
 }
 
 function isThiefSkillFeature(feature) {
@@ -207,9 +226,10 @@ function buildThiefSkillsPanel(actor) {
       ? `<span class="a2e-thief-skill-bonus neutral">+0%</span>`
       : `<span class="a2e-thief-skill-bonus ${bonus > 0 ? "positive" : "negative"}">${bonus > 0 ? "+" : ""}${bonus}%</span>`;
     const iconClass = thiefSkillIcon(skill);
+    const tone = thiefSkillTone(skill);
     const action = skill.canRoll === false
       ? `<span class="a2e-muted">—</span>`
-      : `<button type="button" class="a2e-thief-skill-icon-btn add2e-thief-skill-roll" data-skill-key="${escapeHtml(skill.key)}" title="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}" aria-label="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}"><i class="fas ${iconClass}"></i></button>`;
+      : `<button type="button" class="a2e-thief-skill-icon-btn add2e-thief-skill-roll" data-skill-key="${escapeHtml(skill.key)}" data-skill-tone="${escapeHtml(tone)}" title="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}" aria-label="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}"><i class="fas ${iconClass}"></i></button>`;
 
     return `
       <div class="a2e-thief-skill-card" title="${escapeHtml(skill.breakdownTitle ?? "")}">
