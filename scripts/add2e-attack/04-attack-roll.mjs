@@ -642,6 +642,10 @@ if (isDistanceWeapon) {
             // --- 2. BONUS ATTAQUE ---
             let bonusHit = Number(arme.system.bonus_hit || 0);
             let bonusDom = Number(arme.system.bonus_dom || 0);
+            if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function") {
+              bonusHit = Add2eEffectsEngine.getMagicWeaponBonus(arme, "hit");
+              bonusDom = Add2eEffectsEngine.getMagicWeaponBonus(arme, "damage");
+            }
             let modCaracToucher = 0;
             let modCaracDegats = 0;
 
@@ -826,9 +830,25 @@ let totalBonusToucher =
             let caComputedDetails = null;
 
             if (cible.type === "personnage") {
-              caComputedDetails = add2eAttackComputeCharacterDisplayedCA(cible);
-              caSourceCible = "computed-token-scene:armor+dexDefense+shield";
-              caBaseCible = caComputedDetails.caTotal;
+              if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
+                caComputedDetails = Add2eEffectsEngine.getMagicPassiveDefense(cible, {
+                  source: "attack-roll",
+                  attacker: actor?.name,
+                  weapon: arme?.name
+                });
+                caComputedDetails.stored = {
+                  ca: sysCible.ca,
+                  armorClass: sysCible.armorClass,
+                  ca_total: sysCible.ca_total,
+                  ca_naturel: sysCible.ca_naturel
+                };
+                caSourceCible = "effects-engine:magic-passive-defense";
+                caBaseCible = caComputedDetails.caTotal;
+              } else {
+                caComputedDetails = add2eAttackComputeCharacterDisplayedCA(cible);
+                caSourceCible = "computed-token-scene:armor+dexDefense+shield";
+                caBaseCible = caComputedDetails.caTotal;
+              }
 
               const storedNums = Object.fromEntries(
                 Object.entries(caComputedDetails.stored).map(([k, v]) => [k, add2eReadStrictNumber(v)])
