@@ -3,10 +3,12 @@
 // ============================================================
 
 export function injectCharacterUiStyles(sheetRoot) {
-  if (!sheetRoot || sheetRoot.querySelector("style[data-add2e-ui-enhance-split='1']")) return;
+  if (!sheetRoot) return;
+
+  sheetRoot.querySelectorAll("style[data-add2e-ui-enhance-split]").forEach(s => s.remove());
 
   const style = document.createElement("style");
-  style.dataset.add2eUiEnhanceSplit = "1";
+  style.dataset.add2eUiEnhanceSplit = "7";
   style.textContent = `
     .add2e-character-v3 .add2e-capacites-modern-root {
       display:block;
@@ -18,9 +20,9 @@ export function injectCharacterUiStyles(sheetRoot) {
     }
     .add2e-character-v3 .a2e-thief-skill-card {
       display:grid;
-      grid-template-columns:1fr 26px;
+      grid-template-columns:1fr 24px;
       grid-template-rows:auto auto auto;
-      gap:2px 5px;
+      gap:2px 4px;
       align-items:center;
       padding:7px 7px;
       border:1px solid #d6b05a;
@@ -75,47 +77,63 @@ export function injectCharacterUiStyles(sheetRoot) {
       display:flex;
       align-items:center;
       justify-content:center;
-      min-width:26px;
+      min-width:24px;
     }
+
+    /* Force l'apparence icône seule, même si une ancienne classe .a2e-btn.blue reste dans le DOM. */
+    .add2e-character-v3 button.add2e-thief-skill-roll,
+    .add2e-character-v3 .add2e-thief-skill-roll,
+    .add2e-character-v3 button.a2e-thief-skill-icon-btn,
     .add2e-character-v3 .a2e-thief-skill-icon-btn {
       --a2e-thief-icon-color:#2b82c8;
-      width:24px;
-      height:24px;
-      min-width:24px;
-      min-height:24px;
-      padding:0;
-      margin:0;
-      border:0;
-      border-radius:0;
-      background:transparent;
-      color:var(--a2e-thief-icon-color);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
+      width:22px !important;
+      height:22px !important;
+      min-width:22px !important;
+      min-height:22px !important;
+      max-width:22px !important;
+      max-height:22px !important;
+      padding:0 !important;
+      margin:0 !important;
+      border:0 !important;
+      outline:0 !important;
+      border-radius:0 !important;
+      background:transparent !important;
+      background-color:transparent !important;
+      background-image:none !important;
+      color:var(--a2e-thief-icon-color) !important;
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
       cursor:pointer;
-      box-shadow:none;
+      box-shadow:none !important;
       text-shadow:0 1px 1px rgba(255,255,255,.75), 0 1px 2px rgba(92,64,12,.18);
       transition:transform .08s ease, filter .12s ease;
+      overflow:visible !important;
+      line-height:1 !important;
+      appearance:none !important;
+      -webkit-appearance:none !important;
     }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="lock"] { --a2e-thief-icon-color:#168a4a; }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="trap"] { --a2e-thief-icon-color:#d88916; }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="move"] { --a2e-thief-icon-color:#2b82c8; }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="hide"] { --a2e-thief-icon-color:#8a4bb3; }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="listen"] { --a2e-thief-icon-color:#2f9a9a; }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="climb"] { --a2e-thief-icon-color:#c66a1d; }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="language"] { --a2e-thief-icon-color:#6c5bd5; }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn[data-skill-tone="pocket"] { --a2e-thief-icon-color:#b35b26; }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn:hover {
+    .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="lock"] { --a2e-thief-icon-color:#168a4a; }
+    .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="trap"] { --a2e-thief-icon-color:#d88916; }
+    .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="move"] { --a2e-thief-icon-color:#2b82c8; }
+    .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="hide"] { --a2e-thief-icon-color:#8a4bb3; }
+    .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="listen"] { --a2e-thief-icon-color:#2f9a9a; }
+    .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="climb"] { --a2e-thief-icon-color:#c66a1d; }
+    .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="language"] { --a2e-thief-icon-color:#6c5bd5; }
+    .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="pocket"] { --a2e-thief-icon-color:#b35b26; }
+    .add2e-character-v3 .add2e-thief-skill-roll:hover {
       filter:brightness(1.14) saturate(1.08);
-      transform:scale(1.08);
+      transform:scale(1.12);
     }
-    .add2e-character-v3 .a2e-thief-skill-icon-btn:active {
-      transform:translateY(1px) scale(1.02);
+    .add2e-character-v3 .add2e-thief-skill-roll:active {
+      transform:translateY(1px) scale(1.03);
     }
+    .add2e-character-v3 .add2e-thief-skill-roll i,
     .add2e-character-v3 .a2e-thief-skill-icon-btn i {
-      font-size:1.12rem;
-      line-height:1;
+      font-size:1.12rem !important;
+      line-height:1 !important;
       pointer-events:none;
+      color:inherit !important;
     }
     .add2e-character-v3 .a2e-feature-card-list {
       display:grid;
