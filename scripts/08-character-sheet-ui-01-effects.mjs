@@ -1,0 +1,102 @@
+// ============================================================
+// ADD2E — 08 Character Sheet UI — 01 effets
+// ============================================================
+import { escapeHtml, formatDuration, expose } from "./08-character-sheet-ui-00-utils.mjs";
+
+export function buildEffectsTab(sheet) {
+  const actor = sheet?.actor ?? sheet?.document;
+  const effects = Array.from(actor?.effects ?? []);
+
+  const rows = effects.length ? effects.map(eff => {
+    const desc = eff.getFlag?.("core", "description")
+      || eff.flags?.add2e?.desc
+      || eff.description
+      || (Array.isArray(eff.flags?.add2e?.tags) ? `<small>${escapeHtml(eff.flags.add2e.tags.join(", "))}</small>` : "");
+    const sourceName = eff.parent?.name || eff.origin || "—";
+
+    return `
+      <tr>
+        <td style="width:42px;text-align:center;">
+          <img src="${escapeHtml(eff.img || "icons/svg/aura.svg")}" alt="" style="width:28px;height:28px;border:0;object-fit:cover;">
+        </td>
+        <td><strong>${escapeHtml(eff.name || eff.label || "Effet")}</strong></td>
+        <td>${escapeHtml(sourceName)}</td>
+        <td>${escapeHtml(formatDuration(eff))}</td>
+        <td class="a2e-small">${desc}</td>
+        <td style="white-space:nowrap;text-align:center;">
+          <a class="effect-edit add2e-effect-edit a2e-action-icon a2e-action-edit" data-effect-id="${escapeHtml(eff.id)}" title="Éditer l’effet"><i class="fas fa-edit"></i></a>
+          <a class="effect-delete add2e-effect-delete a2e-action-icon a2e-action-delete" data-effect-id="${escapeHtml(eff.id)}" title="Supprimer l’effet"><i class="fas fa-trash"></i></a>
+        </td>
+      </tr>`;
+  }).join("") : `
+      <tr><td colspan="6" class="a2e-muted" style="text-align:center;padding:0.8em;">Aucun effet actif.</td></tr>`;
+
+  return `
+    <section class="a2e-panel add2e-effects-panel">
+      <h2><i class="fas fa-sparkles"></i> Effets actifs</h2>
+      <div class="a2e-panel-body">
+        <table class="a2e-table add2e-effects-table">
+          <thead><tr><th></th><th>Effet</th><th>Source</th><th>Durée</th><th>Description</th><th>Actions</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </section>`;
+}
+
+export function injectEffectsTab(sheet, sheetRoot) {
+  const actor = sheet?.actor ?? sheet?.document;
+  if (!actor || !sheetRoot) return;
+
+  const tabs = sheetRoot.querySelector(".a2e-tabs.sheet-tabs.tabs, .sheet-tabs.tabs, .a2e-tabs");
+  const body = sheetRoot.querySelector(".sheet-body");
+
+  if (tabs && body && !tabs.querySelector('[data-tab="effets"]')) {
+    const effectsTab = document.createElement("a");
+    effectsTab.className = "item";
+    effectsTab.dataset.tab = "effets";
+    effectsTab.innerHTML = '<i class="fas fa-sparkles"></i> Effets';
+    tabs.appendChild(effectsTab);
+  }
+
+  if (body && !body.querySelector('[data-tab="effets"]')) {
+    const effectsContent = document.createElement("div");
+    effectsContent.className = "tab a2e-tab-content";
+    effectsContent.dataset.tab = "effets";
+    effectsContent.innerHTML = buildEffectsTab(sheet);
+    body.appendChild(effectsContent);
+  } else {
+    const effectsContent = body?.querySelector('[data-tab="effets"]');
+    const effectsPanel = effectsContent?.querySelector(".add2e-effects-panel");
+    if (effectsPanel) effectsPanel.outerHTML = buildEffectsTab(sheet);
+  }
+
+  $(sheetRoot).find('[data-tab="effets"]')
+    .off("click.add2e-effects-tab")
+    .on("click.add2e-effects-tab", ev => {
+      ev.preventDefault();
+      sheet._add2eActivateTab?.("effets", sheetRoot);
+    });
+
+  $(sheetRoot).find(".add2e-effect-edit, .effect-edit")
+    .off("click.add2e-effects")
+    .on("click.add2e-effects", ev => {
+      ev.preventDefault();
+      const effectId = $(ev.currentTarget).data("effect-id");
+      const effect = actor.effects.get(effectId);
+      if (effect) effect.sheet.render(true);
+    });
+
+  $(sheetRoot).find(".add2e-effect-delete, .effect-delete")
+    .off("click.add2e-effects")
+    .on("click.add2e-effects", async ev => {
+      ev.preventDefault();
+      sheet._add2eRememberActiveTab?.(sheetRoot);
+      const effectId = $(ev.currentTarget).data("effect-id");
+      if (effectId) {
+        await actor.deleteEmbeddedDocuments("ActiveEffect", [effectId]);
+        sheet.render(false);
+      }
+    });
+}
+
+expose("add2eUiBuildEffectsTab", buildEffectsTab);
