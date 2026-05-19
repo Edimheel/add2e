@@ -1,7 +1,125 @@
 // ADD2E — Actor sheet drop extrait de 13-actor-sheet-legacy.mjs
-// Logique conservée volontairement : aucune correction métier appliquée dans ce découpage.
+// Correction : purge de changement de classe accélérée par suppression groupée.
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
+
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-05-19-drop-v2-bulk-class-purge";
+globalThis.ADD2E_ACTOR_SHEET_DROP_VERSION = ADD2E_ACTOR_SHEET_DROP_VERSION;
+console.log("[ADD2E][DROP][VERSION]", ADD2E_ACTOR_SHEET_DROP_VERSION);
+
+function add2eDropUniqueExistingIds(collection, ids) {
+  return [...new Set(
+    (Array.isArray(ids) ? ids : [])
+      .map(id => String(id ?? "").trim())
+      .filter(Boolean)
+  )].filter(id => collection?.has?.(id));
+}
+
+async function add2eDropBulkDelete(actor, documentName, ids, label) {
+  const collection = documentName === "Item" ? actor?.items : actor?.effects;
+  const existingIds = add2eDropUniqueExistingIds(collection, ids);
+
+  if (!existingIds.length) {
+    console.log(`[ADD2E][DROP CLASSE][PURGE][${label}][SKIP] Aucun document existant à supprimer.`);
+    return { deleted: 0, ids: [] };
+  }
+
+  console.log(`[ADD2E][DROP CLASSE][PURGE][${label}][BULK_DELETE]`, {
+    actor: actor?.name,
+    documentName,
+    count: existingIds.length,
+    ids: existingIds
+  });
+
+  try {
+    await actor.deleteEmbeddedDocuments(documentName, existingIds, {
+      add2eInternal: true,
+      add2eDropPurge: true,
+      render: false
+    });
+    return { deleted: existingIds.length, ids: existingIds };
+  } catch (err) {
+    console.warn(`[ADD2E][DROP CLASSE][PURGE][${label}][BULK_FAILED] Fallback unitaire sécurisé.`, {
+      actor: actor?.name,
+      documentName,
+      ids: existingIds,
+      err
+    });
+
+    let deleted = 0;
+    for (const id of existingIds) {
+      const doc = collection?.get?.(id);
+      if (!doc) continue;
+
+      try {
+        await doc.delete({
+          add2eInternal: true,
+          add2eDropPurge: true,
+          render: false
+        });
+        deleted += 1;
+      } catch (oneErr) {
+        const msg = String(oneErr?.message ?? oneErr ?? "");
+        if (msg.includes("does not exist")) {
+          console.warn(`[ADD2E][DROP CLASSE][PURGE][${label}][ALREADY_GONE]`, { id });
+          continue;
+        }
+        console.error(`[ADD2E][DROP CLASSE][PURGE][${label}][DELETE_ERROR]`, { id, err: oneErr });
+      }
+    }
+
+    return { deleted, ids: existingIds };
+  }
+}
+
+async function add2eDropPurgeClassContent(actor, itemData) {
+  console.log("=== [ADD2E][DROP CLASSE][PURGE] ===", {
+    actor: actor.name,
+    nouvelleClasse: itemData.name,
+    actorIsToken: actor.isToken ?? false,
+    tokenId: actor.token?.id ?? null,
+    mode: "bulk"
+  });
+
+  const typesToDelete = ["classe", "sort", "arme", "armure", "spell", "weapon", "armor"];
+
+  const itemsToDelete = actor.items.filter(i =>
+    typesToDelete.includes(String(i.type || "").toLowerCase())
+  );
+
+  console.log("[ADD2E][DROP CLASSE][PURGE] items à supprimer :", itemsToDelete.map(i => ({
+    id: i.id,
+    name: i.name,
+    type: i.type,
+    uuid: i.uuid
+  })));
+
+  const effectsToDelete = actor.effects.filter(eff =>
+    add2eShouldDeleteEffectForClassPurge(eff, itemsToDelete)
+  );
+
+  console.log("[ADD2E][DROP CLASSE][PURGE] effets liés à supprimer :", effectsToDelete.map(e => ({
+    id: e.id,
+    name: e.name,
+    origin: e.origin
+  })));
+
+  // Important : effets d'abord, puis items. Les deux suppressions sont groupées.
+  const effectResult = await add2eDropBulkDelete(actor, "ActiveEffect", effectsToDelete.map(e => e.id), "EFFECTS");
+  const itemResult = await add2eDropBulkDelete(actor, "Item", itemsToDelete.map(i => i.id), "ITEMS");
+
+  console.log("[ADD2E][DROP CLASSE][PURGE][DONE]", {
+    actor: actor.name,
+    effectsDeleted: effectResult.deleted,
+    itemsDeleted: itemResult.deleted,
+    itemsRestants: actor.items.map(i => ({ id: i.id, name: i.name, type: i.type }))
+  });
+
+  return { effectsDeleted: effectResult.deleted, itemsDeleted: itemResult.deleted };
+}
+
+try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_e) {}
+try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_e) {}
 
 globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
   event.preventDefault();
@@ -34,75 +152,72 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
   const VALID = ["arme", "armure", "sort", "classe", "race"];
   if (!VALID.includes(itemData.type)) return ActorSheet.prototype._onDrop.call(this, event);
 
- // --- Validation générique du drop de sort par lignes de sorts
-if (itemData.type === "sort") {
-  console.log("=== [ADD2E DROP SORT][POOLS] ===");
-  console.log("actor:", { id: this.actor?.id, name: this.actor?.name });
-  console.log("itemData:", itemData);
+  // --- Validation générique du drop de sort par lignes de sorts
+  if (itemData.type === "sort") {
+    console.log("=== [ADD2E DROP SORT][POOLS] ===");
+    console.log("actor:", { id: this.actor?.id, name: this.actor?.name });
+    console.log("itemData:", itemData);
 
-  let source = null;
+    let source = null;
 
-  if (itemData.uuid) {
-    source = await fromUuid(itemData.uuid);
-  }
-
-  if (!source && itemData.pack && itemData._id) {
-    const pack = game.packs.get(itemData.pack);
-    if (pack) source = await pack.getDocument(itemData._id);
-  }
-
-  if (!source && itemData.system) {
-    source = { name: itemData.name, type: itemData.type, system: itemData.system };
-  }
-
-  if (!source || !source.system) {
-    console.log("[ADD2E DROP SORT][POOLS] ❌ FAIL: source unresolved");
-    ui.notifications.error("Impossible de résoudre le sort.");
-    return false;
-  }
-
-  const check = add2eCanActorUseSpell(this.actor, source);
-
-  console.log("[ADD2E DROP SORT][POOLS] check:", {
-    sort: source.name,
-    sortLists: check.sortLists,
-    actorEntries: check.entries,
-    selectedEntry: check.entry,
-    reason: check.reason,
-    actorLevel: check.actorLevel,
-    spellLevel: check.spellLevel
-  });
-
-  if (!check.sortLists?.length) {
-    ui.notifications.error(`Sort non migré : “${source.name}” n’a pas system.spellLists.`);
-    return false;
-  }
-
-  if (!check.ok) {
-    const entry = check.entry;
-    if (check.reason === "list") {
-      ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou préparer “${source.name}” : ligne de sort non autorisée (${check.sortLists.map(add2eSpellLabel).join(", ")}).`);
-    } else if (check.reason === "start") {
-      ui.notifications.error(`${this.actor.name} ne peut pas encore préparer “${source.name}” : ${entry?.label || "cette ligne"} commence au niveau ${entry?.startsAt}.`);
-    } else if (check.reason === "max-level") {
-      ui.notifications.error(`${this.actor.name} ne peut pas préparer “${source.name}” : ${entry?.label || "cette ligne"} est limitée aux sorts de niveau ${entry?.maxSpellLevel}.`);
-    } else {
-      ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou préparer “${source.name}”.`);
+    if (itemData.uuid) {
+      source = await fromUuid(itemData.uuid);
     }
-    return false;
+
+    if (!source && itemData.pack && itemData._id) {
+      const pack = game.packs.get(itemData.pack);
+      if (pack) source = await pack.getDocument(itemData._id);
+    }
+
+    if (!source && itemData.system) {
+      source = { name: itemData.name, type: itemData.type, system: itemData.system };
+    }
+
+    if (!source || !source.system) {
+      console.log("[ADD2E DROP SORT][POOLS] ❌ FAIL: source unresolved");
+      ui.notifications.error("Impossible de résoudre le sort.");
+      return false;
+    }
+
+    const check = add2eCanActorUseSpell(this.actor, source);
+
+    console.log("[ADD2E DROP SORT][POOLS] check:", {
+      sort: source.name,
+      sortLists: check.sortLists,
+      actorEntries: check.entries,
+      selectedEntry: check.entry,
+      reason: check.reason,
+      actorLevel: check.actorLevel,
+      spellLevel: check.spellLevel
+    });
+
+    if (!check.sortLists?.length) {
+      ui.notifications.error(`Sort non migré : “${source.name}” n’a pas system.spellLists.`);
+      return false;
+    }
+
+    if (!check.ok) {
+      const entry = check.entry;
+      if (check.reason === "list") {
+        ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou préparer “${source.name}” : ligne de sort non autorisée (${check.sortLists.map(add2eSpellLabel).join(", ")}).`);
+      } else if (check.reason === "start") {
+        ui.notifications.error(`${this.actor.name} ne peut pas encore préparer “${source.name}” : ${entry?.label || "cette ligne"} commence au niveau ${entry?.startsAt}.`);
+      } else if (check.reason === "max-level") {
+        ui.notifications.error(`${this.actor.name} ne peut pas préparer “${source.name}” : ${entry?.label || "cette ligne"} est limitée aux sorts de niveau ${entry?.maxSpellLevel}.`);
+      } else {
+        ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou préparer “${source.name}”.`);
+      }
+      return false;
+    }
+
+    console.log("[ADD2E DROP SORT][POOLS] ✅ DROP SORT OK", {
+      sort: source.name,
+      list: check.entry?.label,
+      spellLevel: check.spellLevel
+    });
   }
 
-  console.log("[ADD2E DROP SORT][POOLS] ✅ DROP SORT OK", {
-    sort: source.name,
-    list: check.entry?.label,
-    spellLevel: check.spellLevel
-  });
-}
-// --- Prévalidation race/classe AVANT toute modification de l'acteur.
-  // Important : on ne met plus à jour system.classe/details_classe avant validation,
-  // sinon un drop refusé laisse la fiche avec des données mélangées.
-  // Si seule la compatibilité race/classe bloque, on corrige automatiquement
-  // comme pour l'alignement : drop classe => race compatible ; drop race => classe compatible.
+  // --- Prévalidation race/classe AVANT toute modification de l'acteur.
   let add2eClassAlignmentCandidate = null;
   let add2eAutoRaceCandidateData = null;
   let add2eAutoClassCandidateData = null;
@@ -123,7 +238,6 @@ if (itemData.type === "sort") {
       }
 
       if (!ok) {
-        // Dernier appel non silencieux pour conserver le message précis des vrais prérequis bloquants.
         checkClassStatMin(this.actor, itemData, add2eAutoRaceCandidateData, add2eClassAlignmentCandidate, { silent: false, ignoreLevelMax: true });
         console.warn("[ADD2e] Blocage prise de classe (aucune race compatible trouvée ou prérequis NON atteints)", {
           actor: this.actor?.name,
@@ -209,66 +323,14 @@ if (itemData.type === "sort") {
       }
       await oldRace.delete();
     }
-    // Supprime les anciens bonus raciaux
     await this.actor.update({ "system.bonus_caracteristiques": {} });
   }
 
-
-// --- Changement de classe : purge ancienne classe + sorts + armes + armures
-// Important : on ne supprime PAS la race.
-// Important : suppression item par item, plus fiable sur token non lié / acteur synthétique.
-if (itemData.type === "classe") {
-  console.log("=== [ADD2E][DROP CLASSE][PURGE] ===", {
-    actor: this.actor.name,
-    nouvelleClasse: itemData.name,
-    actorIsToken: this.actor.isToken ?? false,
-    tokenId: this.actor.token?.id ?? null
-  });
-
-  const typesToDelete = ["classe", "sort", "arme", "armure", "spell", "weapon", "armor"];
-
-  const itemsToDelete = this.actor.items.filter(i =>
-    typesToDelete.includes(String(i.type || "").toLowerCase())
-  );
-
-  console.log("[ADD2E][DROP CLASSE][PURGE] items à supprimer :", itemsToDelete.map(i => ({
-    id: i.id,
-    name: i.name,
-    type: i.type,
-    uuid: i.uuid
-  })));
-
-  // Effets liés aux items supprimés et effets de classe générés sans origine fiable.
-  const effectsToDelete = this.actor.effects.filter(eff =>
-    add2eShouldDeleteEffectForClassPurge(eff, itemsToDelete)
-  );
-
-  console.log("[ADD2E][DROP CLASSE][PURGE] effets liés à supprimer :", effectsToDelete.map(e => ({
-    id: e.id,
-    name: e.name,
-    origin: e.origin
-  })));
-
-  for (const eff of effectsToDelete) {
-    await eff.delete({ render: false });
+  // --- Changement de classe : purge ancienne classe + sorts + armes + armures.
+  // Correction : suppression groupée au lieu d'une suppression item par item.
+  if (itemData.type === "classe") {
+    await add2eDropPurgeClassContent(this.actor, itemData);
   }
-
-  for (const it of itemsToDelete) {
-    console.log("[ADD2E][DROP CLASSE][PURGE] suppression item :", {
-      id: it.id,
-      name: it.name,
-      type: it.type
-    });
-
-    await it.delete({ render: false });
-  }
-
-  console.log("[ADD2E][DROP CLASSE][PURGE] items restants après purge :", this.actor.items.map(i => ({
-    id: i.id,
-    name: i.name,
-    type: i.type
-  })));
-}
 
   // --- Anti-doublon (évite d'ajouter deux fois le même item)
   if (["arme", "armure", "sort"].includes(itemData.type)) {
@@ -285,7 +347,7 @@ if (itemData.type === "classe") {
     return false;
   }
 
-   // --- Application effets embarqués SAUF pour les sorts
+  // --- Application effets embarqués SAUF pour les sorts
   if (itemData.type !== "sort" && itemDoc.effects.contents?.length) {
     const actorEffects = itemDoc.effects.contents.map(eff => {
       const data = foundry.utils.duplicate(eff.toObject());
@@ -304,10 +366,6 @@ if (itemData.type === "classe") {
     });
     await this.actor.createEmbeddedDocuments("ActiveEffect", actorEffects);
   }
-
-  // --- Traitement spécial classe (alignements, etc.)
-  // La mise à jour complète de system.classe/details_classe est faite plus bas,
-  // après création effective de l'item classe.
 
   // --- Application effets et bonus pour race
   if (itemData.type === "race") {
@@ -329,8 +387,6 @@ if (itemData.type === "classe") {
       await this.autoSetCaracAjustements();
     }
 
-    // Drop d'une race incompatible avec la classe actuelle : on remplace la classe
-    // par une classe compatible après l'application de la nouvelle race.
     if (add2eAutoClassCandidateData) {
       await add2eApplyClassItemDataToActor(this.actor, add2eAutoClassCandidateData, this, {
         alignmentCandidate: add2eAutoClassAlignmentCandidate,
@@ -338,8 +394,6 @@ if (itemData.type === "classe") {
         reason: "race-drop-class-auto-compat"
       });
     } else {
-      // La race peut modifier le niveau maximum autorisé de la classe actuelle.
-      // On accepte le drop, puis on ramène proprement le niveau si nécessaire.
       try {
         const currentClass = this.actor.items.find(i => i.type === "classe");
         if (currentClass) {
@@ -383,12 +437,15 @@ if (itemData.type === "classe") {
     }
 
     await this.actor.update(updates);
+
     if (typeof this.autoSetCaracAjustements === "function") {
       await this.autoSetCaracAjustements();
     }
-   if (typeof this.autoSetPointsDeCoup === "function") {
-  await this.autoSetPointsDeCoup({ syncCurrent: true, force: true, reason: "class-drop" });
-}
+
+    if (typeof this.autoSetPointsDeCoup === "function") {
+      await this.autoSetPointsDeCoup({ syncCurrent: true, force: true, reason: "class-drop" });
+    }
+
     try {
       await add2eSyncMonkUnarmedWeapon(this.actor);
     } catch (e) {
@@ -404,9 +461,7 @@ if (itemData.type === "classe") {
     try {
       const spellSync = await add2eSyncActorSpellsFromClass(this.actor, itemDoc, { mode: "replace", showWait: true });
       if (spellSync?.handled) {
-        ui.notifications.info(
-          `Sorts de ${itemDoc.name} synchronisés : ${spellSync.imported} importé(s).`
-        );
+        ui.notifications.info(`Sorts de ${itemDoc.name} synchronisés : ${spellSync.imported} importé(s).`);
       }
     } catch (e) {
       console.error("[ADD2E][CLASSE][SORTS] Erreur synchronisation des sorts après drop classe :", e);
@@ -416,5 +471,4 @@ if (itemData.type === "classe") {
 
   this.render(false);
   return true;
-
 };
