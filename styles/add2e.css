@@ -264,8 +264,7 @@
   margin-top: 0 !important;
 }
 
-/* --- ADD2E Capacités : boutons de jet lisibles --- */
-.add2e-character-v3 .add2e-capacites-modern-root .add2e-thief-skill-roll,
+/* --- ADD2E Capacités : bouton utiliser des capacités de classe --- */
 .add2e-character-v3 .add2e-capacites-modern-root .add2e-feature-use {
   min-width: 42px !important;
   min-height: 34px !important;
@@ -280,23 +279,13 @@
   font-weight: 950 !important;
   box-shadow: 0 2px 4px rgba(0,0,0,.18) !important;
   cursor: pointer !important;
-}
-
-.add2e-character-v3 .add2e-capacites-modern-root .add2e-feature-use {
   padding: 5px 10px !important;
 }
 
-.add2e-character-v3 .add2e-capacites-modern-root .add2e-thief-skill-roll {
-  width: 42px !important;
-  padding: 0 !important;
-}
-
-.add2e-character-v3 .add2e-capacites-modern-root .add2e-thief-skill-roll i,
 .add2e-character-v3 .add2e-capacites-modern-root .add2e-feature-use i {
   font-size: 1.15em !important;
 }
 
-.add2e-character-v3 .add2e-capacites-modern-root .add2e-thief-skill-roll:hover,
 .add2e-character-v3 .add2e-capacites-modern-root .add2e-feature-use:hover {
   filter: brightness(1.08) !important;
   transform: translateY(-1px) !important;
