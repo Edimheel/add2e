@@ -2,7 +2,7 @@
 // ADD2E — Garde anti-doublons pour la synchronisation des sorts
 // ============================================================
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-05-19-spell-sync-dedupe-v2-safe-delete";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-05-19-spell-sync-dedupe-v3-name-level-cleanup";
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
 console.log("[ADD2E][SPELL_SYNC_DEDUPE][VERSION]", ADD2E_SPELL_SYNC_DEDUPE_VERSION);
 
@@ -17,8 +17,10 @@ function add2eSpellDedupeNormalize(value) {
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
+    .replace(/\s*\([^)]*\)\s*$/g, "")
     .replace(/[\s\-]+/g, "_")
-    .replace(/_+/g, "_");
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 function add2eSpellDedupeLevel(system = {}) {
@@ -27,18 +29,40 @@ function add2eSpellDedupeLevel(system = {}) {
   return m ? Number(m[0]) || 0 : 0;
 }
 
+function add2eSpellDedupeSchool(system = {}) {
+  return add2eSpellDedupeNormalize(system.ecole ?? system["école"] ?? system.school ?? "");
+}
+
 function add2eSpellDedupeKey(itemLike) {
   const sys = itemLike?.system ?? {};
   const name = add2eSpellDedupeNormalize(itemLike?.name ?? sys.nom ?? sys.name ?? "");
   const level = add2eSpellDedupeLevel(sys);
-  const lists = (() => {
-    try {
-      if (typeof add2eSpellSyncSpellLists === "function") return add2eSpellSyncSpellLists(sys).sort().join("+");
-      if (typeof add2eGetSpellListsFromItem === "function") return add2eGetSpellListsFromItem(itemLike).sort().join("+");
-    } catch (_e) {}
-    return "";
-  })();
-  return `${level}|${name}|${lists}`;
+
+  // Clé volontairement simple : sur une fiche d'acteur, un même sort ne doit pas exister deux fois
+  // uniquement parce que les champs spellLists/classe sont différents ou incomplets après import.
+  if (!name) return "";
+  return `${level}|${name}`;
+}
+
+function add2eSpellDedupeSortWeight(item) {
+  const prepared = Number(item?.system?.prepared ?? item?.system?.prepare ?? item?.system?.memorise ?? item?.system?.memorized ?? 0) || 0;
+  const hasImg = item?.img && !String(item.img).includes("icons/svg/item-bag.svg") && !String(item.img).includes("mystery-man");
+  const source = String(item?._stats?.compendiumSource ?? item?.flags?.core?.sourceId ?? "");
+  const created = Number(item?._stats?.createdTime ?? 0) || 0;
+
+  // On garde de préférence la copie préparée, puis celle avec image, puis celle liée à un compendium,
+  // puis la plus ancienne pour stabiliser le résultat.
+  return [prepared > 0 ? 0 : 1, hasImg ? 0 : 1, source ? 0 : 1, created || Number.MAX_SAFE_INTEGER];
+}
+
+function add2eSpellDedupeCompareKeep(a, b) {
+  const aw = add2eSpellDedupeSortWeight(a);
+  const bw = add2eSpellDedupeSortWeight(b);
+  for (let i = 0; i < Math.max(aw.length, bw.length); i++) {
+    const d = (aw[i] ?? 0) - (bw[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
 }
 
 function add2eSpellDedupeRunKey(actor) {
@@ -144,17 +168,30 @@ async function add2eRemoveDuplicateActorSpells(actor, reason = "manual") {
   ADD2E_SPELL_SYNC_DEDUPE_RUNNING.add(runKey);
 
   try {
-    const seen = new Map();
-    const toDelete = [];
+    const byKey = new Map();
 
     for (const item of actor.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
       const key = add2eSpellDedupeKey(item);
-      if (!key || key === "0||") continue;
-      if (!seen.has(key)) {
-        seen.set(key, item.id);
-        continue;
-      }
-      toDelete.push(item.id);
+      if (!key || key === "0|") continue;
+      if (!byKey.has(key)) byKey.set(key, []);
+      byKey.get(key).push(item);
+    }
+
+    const toDelete = [];
+
+    for (const [key, spells] of byKey.entries()) {
+      if (spells.length < 2) continue;
+      const sorted = [...spells].sort(add2eSpellDedupeCompareKeep);
+      const keep = sorted[0];
+      const duplicates = sorted.slice(1);
+      console.warn("[ADD2E][SPELL_SYNC_DEDUPE][DUPLICATE_GROUP]", {
+        actor: actor.name,
+        reason,
+        key,
+        keep: { id: keep.id, name: keep.name, img: keep.img },
+        delete: duplicates.map(s => ({ id: s.id, name: s.name, img: s.img, ecole: add2eSpellDedupeSchool(s.system) }))
+      });
+      toDelete.push(...duplicates.map(s => s.id));
     }
 
     if (!toDelete.length) return { deleted: 0 };
@@ -163,6 +200,28 @@ async function add2eRemoveDuplicateActorSpells(actor, reason = "manual") {
   } finally {
     ADD2E_SPELL_SYNC_DEDUPE_RUNNING.delete(runKey);
   }
+}
+
+async function add2eRemoveDuplicateSpellsEverywhere(reason = "manual-all-actors") {
+  if (!game.user?.isGM) {
+    ui.notifications?.warn?.("Seul le MJ peut nettoyer les sorts en doublon de tous les acteurs.");
+    return { actors: 0, deleted: 0 };
+  }
+
+  let actors = 0;
+  let deleted = 0;
+  const results = [];
+
+  for (const actor of game.actors?.filter?.(a => a.type === "personnage") ?? []) {
+    actors += 1;
+    const result = await add2eRemoveDuplicateActorSpells(actor, reason);
+    deleted += Number(result?.deleted ?? 0) || 0;
+    results.push({ actor: actor.name, ...result });
+  }
+
+  console.warn("[ADD2E][SPELL_SYNC_DEDUPE][ALL_ACTORS_DONE]", { actors, deleted, results });
+  ui.notifications?.info?.(`ADD2E : nettoyage terminé (${deleted} sort(s) doublon(s) supprimé(s)).`);
+  return { actors, deleted, results };
 }
 
 function add2eInstallSpellSyncDedupeWrapper() {
@@ -204,3 +263,4 @@ Hooks.on("createItem", async (item, _options, userId) => {
 
 globalThis.add2eRemoveDuplicateActorSpells = add2eRemoveDuplicateActorSpells;
 globalThis.add2eSafeDeleteDuplicateActorSpellIds = add2eSafeDeleteDuplicateActorSpellIds;
+globalThis.add2eRemoveDuplicateSpellsEverywhere = add2eRemoveDuplicateSpellsEverywhere;
