@@ -1,6 +1,5 @@
 // ADD2E — Feuille personnage découpée
 // Ancien fichier monolithique remplacé par les imports 13a à 13f.
-// Découpage structurel uniquement : aucune correction métier appliquée ici.
 
 import "./13a-actor-sheet-class.mjs";
 import "./13b-actor-sheet-get-data.mjs";
@@ -10,19 +9,26 @@ import "./13e-actor-sheet-drop.mjs";
 import "./13f-actor-sheet-registration.mjs";
 
 // ============================================================
-// ADD2E — Cohérence CA fixe des bracelets / objets de défense
+// ADD2E — Affichage CA fixe bracelets / objets de défense
 // ============================================================
-const ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION = "2026-05-19-bracers-fixed-ca-sheet-v1";
+const ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION = "2026-05-19-bracers-fixed-ca-sheet-v4-bracers-only";
 globalThis.ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION = ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION;
 
-function add2eSheetBool(value) {
-  if (value === true) return true;
-  if (value === false || value === undefined || value === null) return false;
-  const s = String(value).trim().toLowerCase();
-  return ["true", "1", "yes", "oui", "on", "checked", "equipped", "equipe", "équipé", "equipee", "équipée"].includes(s);
+function a2eSheetNum(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    if (typeof value === "object") {
+      const n = a2eSheetNum(value.value, value.current, value.actuel, value.total, value.max);
+      if (Number.isFinite(n)) return n;
+      continue;
+    }
+    const n = Number(String(value).replace(",", "."));
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
 }
 
-function add2eSheetNorm(value) {
+function a2eSheetNorm(value) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
@@ -33,131 +39,97 @@ function add2eSheetNorm(value) {
     .replace(/^_|_$/g, "");
 }
 
-function add2eSheetNumber(...values) {
-  for (const value of values) {
-    if (value === undefined || value === null || value === "") continue;
-    if (typeof value === "object") {
-      const nested = add2eSheetNumber(value.value, value.current, value.actuel, value.total, value.max);
-      if (Number.isFinite(nested)) return nested;
-      continue;
-    }
-    const n = Number(String(value).replace(",", "."));
-    if (Number.isFinite(n)) return n;
-  }
-  return null;
-}
-
-function add2eSheetArray(value) {
+function a2eSheetArray(value) {
   if (!value) return [];
-  if (Array.isArray(value)) return value.flatMap(add2eSheetArray).filter(v => String(v ?? "").trim() !== "");
+  if (Array.isArray(value)) return value.flatMap(a2eSheetArray).filter(v => String(v ?? "").trim() !== "");
   if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
   if (typeof value === "object") {
     for (const key of ["value", "tags", "effectTags", "effets", "effects", "list", "items"]) {
-      if (value[key] !== undefined && value[key] !== null) return add2eSheetArray(value[key]);
+      if (value[key] !== undefined && value[key] !== null) return a2eSheetArray(value[key]);
     }
   }
   return [];
 }
 
-function add2eSheetItemTags(item) {
-  const sys = item?.system ?? {};
-  const raw = [
-    item?.name,
-    sys.nom,
-    sys.categorie,
-    sys.category,
-    sys.type,
-    sys.sousType,
-    sys.sous_type,
-    sys.famille,
-    sys.famille_arme,
-    ...add2eSheetArray(sys.tags),
-    ...add2eSheetArray(sys.effectTags),
-    ...add2eSheetArray(sys.effets),
-    ...add2eSheetArray(sys.effects),
-    ...add2eSheetArray(item?.flags?.add2e?.tags),
-    ...add2eSheetArray(item?.flags?.add2e?.effectTags)
-  ];
-  return raw.map(add2eSheetNorm).filter(Boolean);
+function a2eSheetBool(value) {
+  if (value === true) return true;
+  if (value === false || value === undefined || value === null) return false;
+  const s = String(value).trim().toLowerCase();
+  return ["true", "1", "yes", "oui", "on", "checked", "equipped", "equipe", "équipé", "equipee", "équipée", "worn", "portee", "portée"].includes(s);
 }
 
-function add2eSheetItemText(item) {
-  return add2eSheetItemTags(item).join(" ");
-}
-
-function add2eSheetIsEquipped(item) {
+function a2eSheetEquipped(item) {
   const s = item?.system ?? {};
-  return add2eSheetBool(s.equipee)
-    || add2eSheetBool(s.equipped)
-    || add2eSheetBool(s.portee)
-    || add2eSheetBool(s.worn)
-    || add2eSheetBool(s.estEquipee)
-    || add2eSheetBool(s.est_equipee)
-    || add2eSheetBool(s.equipe)
-    || add2eSheetBool(s["équipé"])
-    || add2eSheetBool(s["équipée"]);
+  return a2eSheetBool(s.equipee) || a2eSheetBool(s.equipped) || a2eSheetBool(s.portee) || a2eSheetBool(s.worn) || a2eSheetBool(s.estEquipee) || a2eSheetBool(s.est_equipee) || a2eSheetBool(s.equipe) || a2eSheetBool(s["équipé"]) || a2eSheetBool(s["équipée"]);
 }
 
-function add2eSheetIsShield(item) {
-  const text = add2eSheetItemText(item);
-  return text.includes("bouclier") || text.includes("shield");
+function a2eSheetTags(item) {
+  const s = item?.system ?? {};
+  return [
+    item?.name,
+    s.nom,
+    s.categorie,
+    s.category,
+    s.sousType,
+    s.sous_type,
+    s.slot,
+    s.emplacement,
+    ...a2eSheetArray(s.tags),
+    ...a2eSheetArray(s.effectTags)
+  ].map(a2eSheetNorm).filter(Boolean);
 }
 
-function add2eSheetIsHelmet(item) {
-  const text = add2eSheetItemText(item);
-  return text.includes("heaume") || text.includes("casque") || text.includes("helmet");
+function a2eSheetNameNorm(item) {
+  return a2eSheetNorm(item?.name ?? item?.system?.nom ?? "");
 }
 
-function add2eSheetBonusFromName(item) {
+function a2eSheetIsShield(item) {
+  const n = a2eSheetNameNorm(item);
+  const tags = new Set(a2eSheetTags(item));
+  return n.includes("bouclier") || n.includes("shield") || tags.has("bouclier") || tags.has("shield") || tags.has("role:bouclier") || tags.has("emplacement:bouclier") || tags.has("categorie_armure:bouclier") || tags.has("type_armure:bouclier");
+}
+
+function a2eSheetIsHelmet(item) {
+  const n = a2eSheetNameNorm(item);
+  const tags = new Set(a2eSheetTags(item));
+  return n.includes("heaume") || n.includes("casque") || n.includes("helmet") || tags.has("heaume") || tags.has("casque") || tags.has("helmet") || tags.has("role:casque") || tags.has("emplacement:casque");
+}
+
+function a2eSheetBonusFromName(item) {
   const m = String(item?.name ?? item?.system?.nom ?? "").match(/\+\s*(\d+)/);
   return m ? Number(m[1]) || 0 : 0;
 }
 
-function add2eSheetLooksMagic(item) {
-  const sys = item?.system ?? {};
-  const text = add2eSheetItemText(item);
-  return add2eSheetBool(sys.magique) || add2eSheetBool(sys.magic) || text.includes("magique") || text.includes("magic") || /\+\s*\d+/.test(String(item?.name ?? ""));
+function a2eSheetBonus(item) {
+  const s = item?.system ?? {};
+  const explicit = Math.abs(a2eSheetNum(s.bonus_ca, s.bonus_ac, s.ca_bonus, s.ac_bonus, s.protectionBonus, s.protection_bonus) ?? 0);
+  if (explicit) return explicit;
+  return a2eSheetBonusFromName(item);
 }
 
-function add2eSheetDefenseBonus(item) {
-  const sys = item?.system ?? {};
-  let bonus = Math.abs(add2eSheetNumber(sys.bonus_ca, sys.bonus_ac, sys.ca_bonus, sys.ac_bonus, sys.protectionBonus, sys.protection_bonus) ?? 0);
-  for (const tag of add2eSheetItemTags(item)) {
-    const m = tag.match(/^(?:bonus_ca|bonus_ac|protection|protection_ca):([+\-]?\d+)$/);
-    if (m) bonus += Math.abs(Number(m[1]) || 0);
-  }
-  if (!bonus && add2eSheetLooksMagic(item)) {
-    const type = String(item?.type ?? "").toLowerCase();
-    const text = add2eSheetItemText(item);
-    if (type === "armure" || type === "armor" || text.includes("anneau") || text.includes("bague") || text.includes("cape") || text.includes("protection")) {
-      bonus = add2eSheetBonusFromName(item);
-    }
-  }
-  return bonus;
-}
-
-function add2eSheetFixedCA(item) {
-  const sys = item?.system ?? {};
+function a2eSheetFixedCA(item) {
+  const s = item?.system ?? {};
   const type = String(item?.type ?? "").toLowerCase();
-  const text = add2eSheetItemText(item);
-  let ca = add2eSheetNumber(sys.ca_fixe, sys.caFixe, sys.fixedCA, sys.fixed_ac, sys.ac_fixe, sys.acFixe);
-  for (const tag of add2eSheetItemTags(item)) {
+  const tags = a2eSheetTags(item);
+  let ca = a2eSheetNum(s.ca_fixe, s.caFixe, s.fixedCA, s.fixed_ac, s.ac_fixe, s.acFixe);
+  for (const tag of tags) {
     const m = tag.match(/^(?:ca_fixe|ca_fixe_autres|ac_fixe|fixed_ca|classe_armure):([+\-]?\d+)$/);
     if (m) ca = Number(m[1]);
   }
-  if (!Number.isFinite(ca) && (type === "objet" || type === "object" || type === "equipment") && (text.includes("bracelet") || text.includes("bracer"))) {
-    const name = String(item?.name ?? sys.nom ?? "");
+  const text = tags.join(" ");
+  if (!Number.isFinite(ca) && ["objet", "object", "equipment"].includes(type) && (text.includes("bracelet") || text.includes("bracer"))) {
+    const name = String(item?.name ?? s.nom ?? "");
     const m = name.match(/(?:ca|classe\s+d[’']?armure|ac)\s*([\-]?\d+)/i) || name.match(/\b([\-]?\d+)\b\s*$/);
     if (m) ca = Number(m[1]);
   }
   return Number.isFinite(ca) ? ca : null;
 }
 
-function add2eSheetDexDefense(actor) {
-  const sys = actor?.system ?? {};
-  const direct = add2eSheetNumber(sys.dex_def, sys.dexDefense, sys.dex_defense, sys.mod_dex_defense);
+function a2eSheetDex(actor) {
+  const s = actor?.system ?? {};
+  const direct = a2eSheetNum(s.dex_def, s.dexDefense, s.dex_defense, s.mod_dex_defense);
   if (Number.isFinite(direct)) return direct;
-  const dex = add2eSheetNumber(sys.dexterite, sys.dexterite_base, sys.dex, sys.dexterity) ?? 10;
+  const dex = a2eSheetNum(s.dexterite, s.dexterite_base, s.dex, s.dexterity) ?? 10;
   if (dex <= 3) return 4;
   if (dex === 4) return 3;
   if (dex === 5) return 2;
@@ -169,31 +141,30 @@ function add2eSheetDexDefense(actor) {
   return -4;
 }
 
-function add2eSheetComputeMagicDefense(actor, context = {}) {
-  const items = [...(actor?.items ?? [])].filter(add2eSheetIsEquipped);
+function a2eSheetDefense(actor, context = {}) {
+  const items = [...(actor?.items ?? [])].filter(a2eSheetEquipped);
   const armors = items.filter(i => ["armure", "armor"].includes(String(i.type ?? "").toLowerCase()));
   const objects = items.filter(i => !["armure", "armor"].includes(String(i.type ?? "").toLowerCase()));
-  const wornArmors = armors.filter(i => !add2eSheetIsShield(i) && !add2eSheetIsHelmet(i));
-  const shields = armors.filter(add2eSheetIsShield);
-  const helmets = armors.filter(add2eSheetIsHelmet);
+  const wornArmors = armors.filter(i => !a2eSheetIsShield(i) && !a2eSheetIsHelmet(i));
+  const shields = armors.filter(a2eSheetIsShield);
+  const helmets = armors.filter(a2eSheetIsHelmet);
 
   let armorBase = 10;
   let armorName = "Aucune";
   let armorMagicBonus = 0;
-
   for (const armor of wornArmors) {
-    const ac = add2eSheetNumber(armor.system?.ac, armor.system?.ca, armor.system?.armorClass, armor.system?.base_ca, armor.system?.baseAC);
+    const ac = a2eSheetNum(armor.system?.ac, armor.system?.ca, armor.system?.armorClass, armor.system?.base_ca, armor.system?.baseAC);
     if (Number.isFinite(ac) && ac < armorBase) {
       armorBase = ac;
       armorName = armor.name;
-      armorMagicBonus = add2eSheetDefenseBonus(armor);
+      armorMagicBonus = a2eSheetBonus(armor);
     }
   }
 
   let fixedCA = null;
   let fixedSource = "";
   for (const item of objects) {
-    const ca = add2eSheetFixedCA(item);
+    const ca = a2eSheetFixedCA(item);
     if (Number.isFinite(ca) && (fixedCA === null || ca < fixedCA)) {
       fixedCA = ca;
       fixedSource = item.name;
@@ -201,89 +172,83 @@ function add2eSheetComputeMagicDefense(actor, context = {}) {
   }
 
   const fixedCAActive = Number.isFinite(fixedCA);
-  const baseAfterFixed = fixedCAActive ? fixedCA : armorBase;
-  const appliedArmorMagicBonus = fixedCAActive ? 0 : armorMagicBonus;
+
+  // Règle locale demandée : si des bracelets / une CA fixe sont portés,
+  // seule cette CA est prise en compte. L'armure, le bouclier, le casque,
+  // la DEX et les autres bonus de protection ne sont pas empilés.
+  if (fixedCAActive) {
+    return {
+      armorBase,
+      armorName,
+      armorMagicBonus: 0,
+      ignoredArmorMagicBonus: armorMagicBonus,
+      fixedCA,
+      fixedSource,
+      fixedCAActive: true,
+      baseAfterFixed: fixedCA,
+      armorLayerCA: fixedCA,
+      dex: 0,
+      shieldBonus: 0,
+      shieldSources: [],
+      helmetBonus: 0,
+      objectProtectionBonus: 0,
+      objectSources: [],
+      caNaturel: fixedCA,
+      caTotal: fixedCA,
+      syntheticArmorAC: fixedCA,
+      context,
+      version: ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION
+    };
+  }
 
   let shieldBonus = 0;
   const shieldSources = [];
   for (const shield of shields) {
-    const base = Math.max(1, Math.abs(add2eSheetNumber(shield.system?.ac, shield.system?.ca, shield.system?.armorClass) ?? 1));
-    const magic = add2eSheetDefenseBonus(shield);
-    shieldBonus += base + magic;
-    shieldSources.push(`${shield.name}:${base + magic}`);
+    const total = 1 + a2eSheetBonus(shield);
+    shieldBonus += total;
+    shieldSources.push(`${shield.name}:${total}`);
   }
 
   let helmetBonus = 0;
-  for (const helmet of helmets) {
-    helmetBonus += Math.abs(add2eSheetNumber(helmet.system?.ac, helmet.system?.ca, helmet.system?.armorClass) ?? 0) + add2eSheetDefenseBonus(helmet);
-  }
+  for (const helmet of helmets) helmetBonus += Math.abs(a2eSheetNum(helmet.system?.ac, helmet.system?.ca, helmet.system?.armorClass) ?? 0) + a2eSheetBonus(helmet);
 
   let objectProtectionBonus = 0;
   const objectSources = [];
   for (const item of objects) {
-    if (add2eSheetFixedCA(item) !== null) continue;
-    const bonus = add2eSheetDefenseBonus(item);
-    if (!bonus) continue;
-    objectProtectionBonus += bonus;
-    objectSources.push(`${item.name}:${bonus}`);
+    if (a2eSheetFixedCA(item) !== null) continue;
+    const b = a2eSheetBonus(item);
+    if (!b) continue;
+    objectProtectionBonus += b;
+    objectSources.push(`${item.name}:${b}`);
   }
 
-  const dex = add2eSheetDexDefense(actor);
-  const armorLayerCA = baseAfterFixed - appliedArmorMagicBonus;
+  const dex = a2eSheetDex(actor);
+  const armorLayerCA = armorBase - armorMagicBonus;
   const caNaturel = armorLayerCA + dex - shieldBonus - helmetBonus;
   const caTotal = caNaturel - objectProtectionBonus;
-
-  return {
-    armorBase,
-    armorName,
-    armorMagicBonus: appliedArmorMagicBonus,
-    ignoredArmorMagicBonus: fixedCAActive ? armorMagicBonus : 0,
-    fixedCA,
-    fixedSource,
-    fixedCAActive,
-    baseAfterFixed,
-    armorLayerCA,
-    dex,
-    shieldBonus,
-    shieldSources,
-    helmetBonus,
-    objectProtectionBonus,
-    objectSources,
-    caNaturel,
-    caTotal,
-    syntheticArmorAC: armorLayerCA - objectProtectionBonus,
-    context,
-    version: ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION
-  };
+  return { armorBase, armorName, armorMagicBonus, ignoredArmorMagicBonus: 0, fixedCA, fixedSource, fixedCAActive: false, baseAfterFixed: armorBase, armorLayerCA, dex, shieldBonus, shieldSources, helmetBonus, objectProtectionBonus, objectSources, caNaturel, caTotal, syntheticArmorAC: armorLayerCA - objectProtectionBonus, context, version: ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION };
 }
 
-// On remplace la méthode du moteur par la version robuste pour que la fiche ET les attaques utilisent la même CA.
 if (globalThis.Add2eEffectsEngine) {
-  globalThis.Add2eEffectsEngine.itemEquipped = add2eSheetIsEquipped;
-  globalThis.Add2eEffectsEngine.getMagicPassiveDefense = add2eSheetComputeMagicDefense;
+  globalThis.Add2eEffectsEngine.itemEquipped = a2eSheetEquipped;
+  globalThis.Add2eEffectsEngine.getMagicPassiveDefense = a2eSheetDefense;
 }
 
-if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototype.__add2eBraceletsDefenseDisplayFix) {
-  globalThis.Add2eActorSheet.prototype.__add2eBraceletsDefenseDisplayFix = true;
+if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototype.__add2eBraceletsDefenseDisplayFixV4) {
+  globalThis.Add2eActorSheet.prototype.__add2eBraceletsDefenseDisplayFixV4 = true;
   const originalGetData = globalThis.Add2eActorSheet.prototype.getData;
-
   globalThis.Add2eActorSheet.prototype.getData = async function add2eBraceletsDefenseGetData(...args) {
     const data = await originalGetData.apply(this, args);
     try {
       if (this.actor?.type !== "personnage") return data;
-      const defense = add2eSheetComputeMagicDefense(this.actor, { source: "actor-sheet-postprocess" });
+      const defense = a2eSheetDefense(this.actor, { source: "actor-sheet-postprocess" });
       data.combatDefense = data.combatDefense || {};
       data.combatDefense.ac_naturelle = defense.caNaturel;
       data.combatDefense.ac_totale = defense.caTotal;
       data.combatDefense.objets_magiques_defense = defense;
-
-      if (defense.fixedCAActive) {
-        data.combatDefense.armure = `${defense.fixedSource} <small style="color:#7f704d;">(remplace l'armure portée)</small>`;
-      }
-
+      if (defense.fixedCAActive) data.combatDefense.armure = `${defense.fixedSource} <small style="color:#7f704d;">(CA fixe, armure ignorée)</small>`;
       data.actor.system.ca_naturel = defense.caNaturel;
       data.actor.system.ca_total = defense.caTotal;
-
       if (this.actor.system.ca_total !== defense.caTotal || this.actor.system.ca_naturel !== defense.caNaturel) {
         setTimeout(() => this.actor.update({ "system.ca_naturel": defense.caNaturel, "system.ca_total": defense.caTotal }, { add2eInternal: true }), 0);
       }
