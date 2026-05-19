@@ -8,7 +8,7 @@ export function injectCharacterUiStyles(sheetRoot) {
   sheetRoot.querySelectorAll("style[data-add2e-ui-enhance-split]").forEach(s => s.remove());
 
   const style = document.createElement("style");
-  style.dataset.add2eUiEnhanceSplit = "7";
+  style.dataset.add2eUiEnhanceSplit = "8";
   style.textContent = `
     .add2e-character-v3 .add2e-capacites-modern-root {
       display:block;
@@ -79,39 +79,30 @@ export function injectCharacterUiStyles(sheetRoot) {
       justify-content:center;
       min-width:24px;
     }
-
-    /* Force l'apparence icône seule, même si une ancienne classe .a2e-btn.blue reste dans le DOM. */
-    .add2e-character-v3 button.add2e-thief-skill-roll,
-    .add2e-character-v3 .add2e-thief-skill-roll,
-    .add2e-character-v3 button.a2e-thief-skill-icon-btn,
-    .add2e-character-v3 .a2e-thief-skill-icon-btn {
+    .add2e-character-v3 .add2e-thief-skill-roll {
       --a2e-thief-icon-color:#2b82c8;
-      width:22px !important;
-      height:22px !important;
-      min-width:22px !important;
-      min-height:22px !important;
-      max-width:22px !important;
-      max-height:22px !important;
-      padding:0 !important;
-      margin:0 !important;
-      border:0 !important;
-      outline:0 !important;
-      border-radius:0 !important;
-      background:transparent !important;
-      background-color:transparent !important;
-      background-image:none !important;
-      color:var(--a2e-thief-icon-color) !important;
-      display:inline-flex !important;
-      align-items:center !important;
-      justify-content:center !important;
+      width:22px;
+      height:22px;
+      min-width:22px;
+      min-height:22px;
+      padding:0;
+      margin:0;
+      border:0;
+      outline:0;
+      border-radius:0;
+      background:transparent;
+      color:var(--a2e-thief-icon-color);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       cursor:pointer;
-      box-shadow:none !important;
+      box-shadow:none;
       text-shadow:0 1px 1px rgba(255,255,255,.75), 0 1px 2px rgba(92,64,12,.18);
       transition:transform .08s ease, filter .12s ease;
-      overflow:visible !important;
-      line-height:1 !important;
-      appearance:none !important;
-      -webkit-appearance:none !important;
+      overflow:visible;
+      line-height:1;
+      appearance:none;
+      -webkit-appearance:none;
     }
     .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="lock"] { --a2e-thief-icon-color:#168a4a; }
     .add2e-character-v3 .add2e-thief-skill-roll[data-skill-tone="trap"] { --a2e-thief-icon-color:#d88916; }
@@ -128,12 +119,11 @@ export function injectCharacterUiStyles(sheetRoot) {
     .add2e-character-v3 .add2e-thief-skill-roll:active {
       transform:translateY(1px) scale(1.03);
     }
-    .add2e-character-v3 .add2e-thief-skill-roll i,
-    .add2e-character-v3 .a2e-thief-skill-icon-btn i {
-      font-size:1.12rem !important;
-      line-height:1 !important;
+    .add2e-character-v3 .add2e-thief-skill-roll i {
+      font-size:1.12rem;
+      line-height:1;
       pointer-events:none;
-      color:inherit !important;
+      color:inherit;
     }
     .add2e-character-v3 .a2e-feature-card-list {
       display:grid;
