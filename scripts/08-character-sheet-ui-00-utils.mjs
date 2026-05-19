@@ -1,7 +1,7 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 00 utilitaires
 // ============================================================
-export const ADD2E_CHARACTER_SHEET_UI_VERSION = "2026-05-19-character-ui-split-v1";
+export const ADD2E_CHARACTER_SHEET_UI_VERSION = "2026-05-19-character-ui-split-v2-repush";
 
 export function escapeHtml(value) {
   return String(value ?? "")
