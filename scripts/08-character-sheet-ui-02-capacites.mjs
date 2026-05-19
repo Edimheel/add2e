@@ -229,7 +229,7 @@ function buildThiefSkillsPanel(actor) {
     const tone = thiefSkillTone(skill);
     const action = skill.canRoll === false
       ? `<span class="a2e-muted">—</span>`
-      : `<button type="button" class="a2e-thief-skill-icon-btn add2e-thief-skill-roll" data-skill-key="${escapeHtml(skill.key)}" data-skill-tone="${escapeHtml(tone)}" title="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}" aria-label="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}"><i class="fas ${iconClass}"></i></button>`;
+      : `<button type="button" class="add2e-thief-skill-roll" data-skill-key="${escapeHtml(skill.key)}" data-skill-tone="${escapeHtml(tone)}" title="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}" aria-label="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}"><i class="fas ${iconClass}"></i></button>`;
 
     return `
       <div class="a2e-thief-skill-card" title="${escapeHtml(skill.breakdownTitle ?? "")}">
