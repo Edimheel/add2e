@@ -115,6 +115,15 @@ function isBackstabLike(value) {
     || s.includes("assassination");
 }
 
+function isListenLike(value) {
+  const s = slug(value);
+  return s.includes("ecoute")
+    || s.includes("auditiv")
+    || s.includes("ouie")
+    || s.includes("entendre")
+    || s.includes("bruit");
+}
+
 function isThiefSkillFeature(feature) {
   const name = slug(featureName(feature));
   const key = slug(feature?.skillKey ?? feature?.key ?? feature?.slug ?? "");
@@ -136,6 +145,9 @@ function isThiefSkillFeature(feature) {
     "dissimulation",
     "cacher",
     "ecoute",
+    "auditiv",
+    "ouie",
+    "entendre",
     "bruit",
     "escalade",
     "grimper",
@@ -150,12 +162,14 @@ function isThiefSkillFeature(feature) {
 function visibleFeatures(actor) {
   const level = Number(actor?.system?.niveau ?? 1) || 1;
   const thiefLike = isThiefLikeActor(actor);
+  const hasListenTile = getThiefSkills(actor).some(s => isListenLike(`${s?.key ?? ""} ${s?.label ?? ""} ${s?.shortLabel ?? ""}`));
   const seen = new Set();
 
   return allClassFeatures(actor)
     .map((feature, index) => ({ feature, index }))
     .filter(({ feature }) => level >= featureMinLevel(feature) && level <= featureMaxLevel(feature))
     .filter(({ feature }) => !(thiefLike && isThiefSkillFeature(feature)))
+    .filter(({ feature }) => !(hasListenTile && isListenLike(`${featureName(feature)} ${feature?.key ?? ""} ${feature?.skillKey ?? ""} ${feature?.slug ?? ""}`)))
     .filter(({ feature }) => {
       const key = `${slug(featureName(feature))}|${featureMinLevel(feature)}|${isFeatureActivable(feature) ? "A" : "P"}`;
       if (seen.has(key)) return false;
@@ -193,7 +207,7 @@ function buildThiefSkillsPanel(actor) {
   return `
     <div class="a2e-panel add2e-thief-skills-panel">
       <h2>Compétences de voleur / assassin</h2>
-      <div class="a2e-panel-body"><div class="a2e-thief-skills-inline">${cards}</div></div>
+      <div class="a2e-panel-body"><div class="a2e-thief-skills-inline" style="grid-template-columns:repeat(${skills.length}, minmax(0, 1fr));">${cards}</div></div>
     </div>`;
 }
 
