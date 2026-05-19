@@ -7,7 +7,7 @@
 // - anciens alias conservés : capacitesClasse, classFeaturesDebloquees
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-05-19-active-class-features-v2";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-05-19-thief-skills-table-v3";
 globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION;
 console.log("[ADD2E][CAPACITES][VERSION]", ADD2E_CLASS_ACTIVE_ABILITIES_VERSION);
 
@@ -297,6 +297,211 @@ async function add2eUseClassFeatureFromElement(actor, element, sheet = null) {
   return add2eExecuteClassFeatureOnUse(actor, feature, sheet);
 }
 
+// ============================================================
+// Tableau dédié des compétences de voleur dans l'onglet Capacités
+// Source : progression[n].thiefSkills, ou ancien progression[n].skills.
+// ============================================================
+
+const ADD2E_THIEF_SKILL_ROWS = [
+  ["pickpocket", "Pickpocket"],
+  ["crochetage_serrures", "Crochetage / ouverture des serrures"],
+  ["detection_pieges", "Détection / désamorçage des pièges"],
+  ["deplacement_silencieux", "Déplacement silencieux"],
+  ["dissimulation", "Dissimulation"],
+  ["ecoute", "Écoute"],
+  ["escalade", "Escalade"],
+  ["lecture_langues", "Lecture des langues"]
+];
+
+const ADD2E_THIEF_SKILL_ALIASES = {
+  pick_pockets: "pickpocket",
+  pick_pocket: "pickpocket",
+  pickpockets: "pickpocket",
+  pickpocket: "pickpocket",
+  open_locks: "crochetage_serrures",
+  open_lock: "crochetage_serrures",
+  crochetage: "crochetage_serrures",
+  crochetage_serrures: "crochetage_serrures",
+  ouverture_serrures: "crochetage_serrures",
+  ouverture_de_serrures: "crochetage_serrures",
+  find_remove_traps: "detection_pieges",
+  find_traps: "detection_pieges",
+  remove_traps: "detection_pieges",
+  detect_traps: "detection_pieges",
+  detection_pieges: "detection_pieges",
+  detection_de_pieges: "detection_pieges",
+  desamorcage_pieges: "detection_pieges",
+  move_silently: "deplacement_silencieux",
+  deplacement_silencieux: "deplacement_silencieux",
+  hide_in_shadows: "dissimulation",
+  dissimulation: "dissimulation",
+  dissimulation_dans_l_ombre: "dissimulation",
+  dissimulation_dans_lombre: "dissimulation",
+  hear_noise: "ecoute",
+  hear_noises: "ecoute",
+  listen: "ecoute",
+  detect_noise: "ecoute",
+  ecoute: "ecoute",
+  climb_walls: "escalade",
+  climb_wall: "escalade",
+  escalade: "escalade",
+  read_languages: "lecture_langues",
+  read_language: "lecture_langues",
+  lecture_langues: "lecture_langues",
+  lecture_des_langues: "lecture_langues"
+};
+
+function add2eNormalizeThiefSkillKeyLocal(value) {
+  if (typeof globalThis.add2eNormalizeThiefSkillKey === "function") return globalThis.add2eNormalizeThiefSkillKey(value);
+  const raw = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[_\s-]+/g, "_");
+  return ADD2E_THIEF_SKILL_ALIASES[raw] ?? raw;
+}
+
+function add2eGetActorClassProgression(actor) {
+  const level = Math.max(1, Number(actor?.system?.niveau ?? 1) || 1);
+  for (const system of add2eGetActorClassSystems(actor)) {
+    const progression = system?.progression;
+    if (!Array.isArray(progression)) continue;
+    const byLevel = progression.find(p => Number(p?.level ?? p?.niveau ?? 0) === level);
+    if (byLevel) return byLevel;
+    if (progression[level - 1]) return progression[level - 1];
+  }
+  return null;
+}
+
+function add2eGetActorThiefSkillTable(actor) {
+  const progression = add2eGetActorClassProgression(actor);
+  const raw = progression?.thiefSkills ?? progression?.voleurSkills ?? progression?.competencesVoleur ?? null;
+  const output = {};
+
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    for (const [key, value] of Object.entries(raw)) {
+      const normalized = add2eNormalizeThiefSkillKeyLocal(key);
+      output[normalized] = Number(value ?? 0) || 0;
+    }
+  }
+
+  if (!Object.keys(output).length && Array.isArray(progression?.skills)) {
+    const keys = ADD2E_THIEF_SKILL_ROWS.map(([key]) => key);
+    for (let i = 0; i < keys.length; i++) output[keys[i]] = Number(progression.skills[i] ?? 0) || 0;
+  }
+
+  if (!Object.keys(output).length) return [];
+
+  return ADD2E_THIEF_SKILL_ROWS.map(([key, label]) => ({
+    key,
+    label,
+    value: Number(output[key] ?? 0) || 0
+  }));
+}
+
+function add2eRenderThiefSkillsTable(actor) {
+  const rows = add2eGetActorThiefSkillTable(actor);
+  if (!rows.length) return "";
+
+  const body = rows.map(row => `
+    <tr>
+      <td><b>${row.label}</b></td>
+      <td style="text-align:center;font-weight:900;">${row.value}%</td>
+      <td style="text-align:center;">
+        <button type="button" class="a2e-btn blue add2e-thief-skill-roll" data-skill-key="${row.key}" title="Tester ${row.label}">
+          <i class="fas fa-dice-d100"></i>&nbsp;Jet
+        </button>
+      </td>
+    </tr>
+  `).join("");
+
+  return `
+    <div class="a2e-panel a2e-thief-skills-panel">
+      <h2>Compétences de voleur</h2>
+      <div class="a2e-panel-body">
+        <table class="a2e-table">
+          <thead>
+            <tr>
+              <th>Compétence</th>
+              <th style="width:90px;text-align:center;">%</th>
+              <th style="width:100px;text-align:center;">Jet</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function add2eInjectThiefSkillsTable(sheet, html) {
+  const actor = sheet?.actor;
+  if (!actor || actor.type !== "personnage") return;
+
+  const root = html?.jquery ? html[0] : (html instanceof HTMLElement ? html : html?.[0]);
+  if (!root?.querySelector) return;
+
+  const tab = root.querySelector('.tab-capacites[data-tab="capacites"]');
+  if (!tab) return;
+
+  const existing = tab.querySelector(".a2e-thief-skills-panel");
+  if (existing) existing.remove();
+
+  const markup = add2eRenderThiefSkillsTable(actor);
+  if (!markup) return;
+
+  tab.insertAdjacentHTML("afterbegin", markup);
+  console.log("[ADD2E][VOLEUR][TABLE] Tableau compétences injecté", {
+    actor: actor.name,
+    skills: add2eGetActorThiefSkillTable(actor)
+  });
+}
+
+function add2eInstallThiefSkillsTableHooks() {
+  if (globalThis.ADD2E_THIEF_SKILLS_TABLE_HOOKS_INSTALLED) return;
+  globalThis.ADD2E_THIEF_SKILLS_TABLE_HOOKS_INSTALLED = true;
+
+  const inject = (app, html) => {
+    try { add2eInjectThiefSkillsTable(app, html); }
+    catch (e) { console.warn("[ADD2E][VOLEUR][TABLE] Erreur injection tableau", e); }
+  };
+
+  Hooks.on("renderAdd2eActorSheet", inject);
+  Hooks.on("renderActorSheet", inject);
+
+  document.addEventListener("click", async event => {
+    const button = event.target.closest?.(".add2e-thief-skill-roll[data-skill-key]");
+    if (!button) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const sheetRoot = button.closest(".add2e-character-v3");
+    const appEl = sheetRoot?.closest?.(".application, .app, .window-app");
+    const appId = appEl?.dataset?.appid || appEl?.id?.replace(/^app-/, "");
+    const app = Object.values(ui.windows ?? {}).find(w => String(w.appId) === String(appId) || String(w.id) === String(appId));
+    const actor = app?.actor ?? canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null;
+    const skillKey = add2eNormalizeThiefSkillKeyLocal(button.dataset.skillKey);
+
+    if (!actor) {
+      ui.notifications.error("Acteur introuvable pour le jet de compétence de voleur.");
+      return;
+    }
+
+    if (typeof globalThis.add2eRollThiefSkill !== "function") {
+      ui.notifications.error("Le moteur de jet des compétences de voleur n'est pas chargé.");
+      console.error("[ADD2E][VOLEUR][TABLE][ERROR] add2eRollThiefSkill introuvable", { actor: actor.name, skillKey });
+      return;
+    }
+
+    await globalThis.add2eRollThiefSkill(actor, skillKey);
+  }, true);
+}
+
+if (game?.ready) add2eInstallThiefSkillsTableHooks();
+else Hooks.once("ready", add2eInstallThiefSkillsTableHooks);
+
 globalThis.add2eGetActorClassFeatures = add2eGetActorClassFeatures;
 globalThis.add2eGetActorActivableClassFeatures = add2eGetActorActivableClassFeatures;
 globalThis.add2eGetActorPassiveClassFeatures = add2eGetActorPassiveClassFeatures;
@@ -319,4 +524,7 @@ try { globalThis.add2eDatasetValue = add2eDatasetValue; } catch (_e) {}
 try { globalThis.add2eFindClassFeatureFromElement = add2eFindClassFeatureFromElement; } catch (_e) {}
 try { globalThis.add2eExecuteClassFeatureOnUse = add2eExecuteClassFeatureOnUse; } catch (_e) {}
 try { globalThis.add2eUseClassFeatureFromElement = add2eUseClassFeatureFromElement; } catch (_e) {}
+try { globalThis.add2eGetActorClassProgression = add2eGetActorClassProgression; } catch (_e) {}
+try { globalThis.add2eGetActorThiefSkillTable = add2eGetActorThiefSkillTable; } catch (_e) {}
+try { globalThis.add2eRenderThiefSkillsTable = add2eRenderThiefSkillsTable; } catch (_e) {}
 try { globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION; } catch (_e) {}
