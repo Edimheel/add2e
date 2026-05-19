@@ -4,33 +4,51 @@
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
 function featureName(feature) {
-  const fn = globalFn("add2eFeatureName");
-  if (fn) return fn(feature);
   return String(feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "Capacité").trim();
 }
 
+function readLevel(value, fallback) {
+  if (value === undefined || value === null || value === "") return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 function featureMinLevel(feature) {
-  const fn = globalFn("add2eFeatureMinLevel");
-  if (fn) return fn(feature);
-  return Number(feature?.minLevel ?? feature?.minimumLevel ?? feature?.niveauMin ?? feature?.level ?? feature?.niveau ?? 1) || 1;
+  return readLevel(
+    feature?.minLevel ??
+    feature?.minimumLevel ??
+    feature?.niveauMin ??
+    feature?.requiredLevel ??
+    feature?.niveauRequis ??
+    feature?.levelRequired ??
+    feature?.level ??
+    feature?.niveau,
+    1
+  );
 }
 
 function featureMaxLevel(feature) {
-  const fn = globalFn("add2eFeatureMaxLevel");
-  if (fn) return fn(feature);
-  const raw = feature?.maxLevel ?? feature?.maximumLevel ?? feature?.niveauMax ?? feature?.max;
-  return raw === undefined || raw === null || raw === "" ? 999 : Number(raw) || 999;
+  return readLevel(
+    feature?.maxLevel ??
+    feature?.maximumLevel ??
+    feature?.niveauMax ??
+    feature?.levelMax ??
+    feature?.max,
+    999
+  );
 }
 
 function featureOnUse(feature) {
-  const fn = globalFn("add2eFeatureOnUse");
-  if (fn) return fn(feature);
   return String(feature?.on_use ?? feature?.onUse ?? feature?.script ?? feature?.macro ?? "").trim();
 }
 
 function isFeatureActivable(feature) {
   const fn = globalFn("add2eIsFeatureActivable");
-  if (fn) return fn(feature);
+  if (fn) {
+    try { return fn(feature); }
+    catch (_e) {}
+  }
+
   if (!feature || typeof feature !== "object") return false;
   if (feature.activable === true) return true;
   if (feature.active === true && feature.passive !== true) return true;
@@ -87,12 +105,26 @@ function isThiefLikeActor(actor) {
   return s.includes("voleur") || s.includes("assassin");
 }
 
+function isBackstabLike(value) {
+  const s = slug(value);
+  return s.includes("backstab")
+    || s.includes("frappe_dans_le_dos")
+    || s.includes("attaque_dans_le_dos")
+    || s.includes("dos")
+    || s.includes("sournoise")
+    || s.includes("assassination");
+}
+
 function isThiefSkillFeature(feature) {
   const name = slug(featureName(feature));
   const key = slug(feature?.skillKey ?? feature?.key ?? feature?.slug ?? "");
   const joined = `${name} ${key}`;
 
   return [
+    "faculte_de_voleur",
+    "facultes_de_voleur",
+    "competence_de_voleur",
+    "competences_de_voleur",
     "pickpocket",
     "faire_les_poches",
     "crochetage",
@@ -109,7 +141,9 @@ function isThiefSkillFeature(feature) {
     "grimper",
     "frappe_dans_le_dos",
     "attaque_dans_le_dos",
-    "backstab"
+    "backstab",
+    "attaque_sournoise",
+    "assassination"
   ].some(token => joined.includes(token));
 }
 
@@ -131,7 +165,11 @@ function visibleFeatures(actor) {
 }
 
 function buildThiefSkillsPanel(actor) {
-  const skills = getThiefSkills(actor);
+  const level = Number(actor?.system?.niveau ?? 1) || 1;
+  const skills = getThiefSkills(actor)
+    .filter(skill => !isBackstabLike(`${skill?.key ?? ""} ${skill?.label ?? ""} ${skill?.shortLabel ?? ""}`))
+    .filter(skill => level >= readLevel(skill?.minLevel ?? skill?.niveauMin ?? skill?.requiredLevel ?? skill?.level ?? skill?.niveau, 1));
+
   if (!skills.length) return "";
 
   const cards = skills.map(skill => {
@@ -204,16 +242,14 @@ export function injectCapacitesTab(sheet, sheetRoot) {
   const tab = sheetRoot.querySelector('.sheet-body .a2e-tab-content[data-tab="capacites"], .sheet-body .tab[data-tab="capacites"]');
   if (!tab) return;
 
-  const oldGrid = tab.querySelector(":scope > .a2e-grid-2:not(.add2e-capacites-grid-modern)");
-  if (oldGrid) oldGrid.style.display = "none";
-
-  const previous = tab.querySelector(".add2e-capacites-modern-root");
-  if (previous) previous.remove();
-
   const wrapper = document.createElement("div");
   wrapper.className = "add2e-capacites-modern-root";
   wrapper.innerHTML = `${buildThiefSkillsPanel(actor)}${buildClassFeaturesPanel(actor)}`;
-  tab.insertBefore(wrapper, tab.firstElementChild || null);
+
+  // On remplace le contenu de l'onglet Capacités au lieu d'ajouter une couche au-dessus.
+  // Cela évite que le HBS historique ou une ancienne injection réaffiche les capacités
+  // de niveau supérieur et les doublons des compétences de voleur.
+  tab.replaceChildren(wrapper);
 
   $(wrapper).find(".add2e-thief-skill-roll")
     .off("click.add2e-thief-skill-roll")
@@ -241,6 +277,7 @@ export function injectCapacitesTab(sheet, sheetRoot) {
     actor: actor.name,
     level: actor.system?.niveau,
     thiefSkills: getThiefSkills(actor).length,
+    visibleThiefSkills: getThiefSkills(actor).filter(s => !isBackstabLike(`${s?.key ?? ""} ${s?.label ?? ""} ${s?.shortLabel ?? ""}`)).length,
     features: visibleFeatures(actor).map(e => featureName(e.feature))
   });
 }
