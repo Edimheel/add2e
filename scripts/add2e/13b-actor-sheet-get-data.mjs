@@ -170,14 +170,23 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     if (heaume) caPhysique = caPhysique - acHeaume + bonusAcHeaume;
   }
 
-  sys.ca_naturel = caPhysique;
-  let caTotale = caPhysique;
-  if (typeof Add2eEffectsEngine !== "undefined") {
-    const bonusMagique = Add2eEffectsEngine.getCABonus(this.actor);
-    if (bonusMagique !== 0) caTotale -= bonusMagique;
+  let magicDefense = null;
+  if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
+    magicDefense = Add2eEffectsEngine.getMagicPassiveDefense(this.actor, { physicalCA: caPhysique, armure, bouclier, heaume, source: "actor-sheet" });
+    sys.ca_naturel = magicDefense.caNaturel;
+    sys.ca_total = magicDefense.caTotal;
+  } else {
+    sys.ca_naturel = caPhysique;
+    let caTotale = caPhysique;
+    if (typeof Add2eEffectsEngine !== "undefined") {
+      const bonusMagique = Add2eEffectsEngine.getCABonus(this.actor);
+      if (bonusMagique !== 0) caTotale -= bonusMagique;
+    }
+    sys.ca_total = caTotale;
   }
-  sys.ca_total = caTotale;
-  if (this.actor.system.ca_total !== sys.ca_total) this.actor.update({ "system.ca_total": sys.ca_total });
+  if (this.actor.system.ca_total !== sys.ca_total || this.actor.system.ca_naturel !== sys.ca_naturel) {
+    this.actor.update({ "system.ca_naturel": sys.ca_naturel, "system.ca_total": sys.ca_total });
+  }
 
   let bonusArmureToucher = 0;
   let bonusArmureDegats = 0;
@@ -191,8 +200,16 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
 
   const thaco = data.progressionCourante?.thac0 || sys.thaco || 20;
   const typeDegats = arme?.system.type_degats || "";
-  const armeBonusToucher = arme ? Number(arme.system.bonus_hit || 0) : 0;
-  const armeBonusDegats = arme ? Number(arme.system.bonus_dom || 0) : 0;
+  const armeBonusToucher = arme ? (
+    typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function"
+      ? Add2eEffectsEngine.getMagicWeaponBonus(arme, "hit")
+      : Number(arme.system.bonus_hit || 0)
+  ) : 0;
+  const armeBonusDegats = arme ? (
+    typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function"
+      ? Add2eEffectsEngine.getMagicWeaponBonus(arme, "damage")
+      : Number(arme.system.bonus_dom || 0)
+  ) : 0;
   let bonusToucher = 0;
   let bonusDegats = 0;
 
@@ -219,6 +236,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     heaume: heaume ? heaume.name : "<em>Aucun</em>",
     ac_naturelle: sys.ca_naturel,
     ac_totale: sys.ca_total,
+    objets_magiques_defense: magicDefense,
     arme: arme ? arme.name : "<em>Aucune</em>",
     thaco,
     degats: degatsAffiche,
