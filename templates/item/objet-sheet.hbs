@@ -1,4 +1,8 @@
 <form class="{{cssClass}} add2e-objet-sheet" autocomplete="off">
+  <style>
+    .add2e-objet-description-preview{min-height:110px;padding:8px 10px;border:1px solid #d0b16b;border-radius:8px;background:#fffdf7;color:#2f241c;line-height:1.35;}
+    .add2e-objet-description-preview p{margin:0 0 .55em;}.add2e-objet-description-preview p:last-child{margin-bottom:0;}
+  </style>
   <header class="sheet-header" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
     <img class="profile-img" src="{{img}}" data-edit="img" title="{{item.name}}" width="96" height="96" style="object-fit:cover;border:1px solid #7a5a28;border-radius:6px;cursor:pointer;"/>
     <div class="header-fields" style="flex:1;display:grid;gap:6px;">
@@ -33,7 +37,6 @@
         <label><span>Identifié</span><input name="system.identifie" type="checkbox" {{checked system.identifie}}/></label>
         <label><span>Maudit</span><input name="system.maudit" type="checkbox" {{checked system.maudit}}/></label>
       </div>
-
       <fieldset style="margin-top:10px;border:1px solid #d0b16b;border-radius:6px;">
         <legend>Charges</legend>
         <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;">
@@ -43,7 +46,6 @@
           <label><span>Recharge</span><input name="system.charges.recharge" type="text" value="{{system.charges.recharge}}"/></label>
         </div>
       </fieldset>
-
       <fieldset style="margin-top:10px;border:1px solid #d0b16b;border-radius:6px;">
         <legend>Activation</legend>
         <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
@@ -86,6 +88,11 @@
     </div>
 
     <div class="content hidden" data-tab="description">
+      <div style="margin-bottom:8px;">
+        <label><strong>Aperçu</strong></label>
+        <div class="add2e-objet-description-preview">{{{descriptionHTML}}}</div>
+      </div>
+      <label><strong>Description HTML / édition</strong></label>
       <textarea name="system.description" rows="12" style="width:100%;">{{system.description}}</textarea>
     </div>
   </section>
