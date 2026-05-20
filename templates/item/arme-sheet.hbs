@@ -15,9 +15,9 @@
     .add2e-checks label { display:flex; align-items:center; gap:6px; padding:6px; border:1px solid var(--soft); border-radius:8px; background:rgba(255,255,255,.5); font-weight:700; }
     .add2e-checks input { width:auto; }
     .add2e-note { font-size:.86em; color:#6f6258; margin-top:4px; }
-    .add2e-description-preview,.add2e-rich-editor { min-height:90px; padding:8px 10px; border:1px solid var(--soft); border-radius:8px; background:#fffdf7; color:#2f241c; line-height:1.35; }
-    .add2e-description-preview p,.add2e-rich-editor p { margin:0 0 .55em; }
-    .add2e-description-preview p:last-child,.add2e-rich-editor p:last-child { margin-bottom:0; }
+    .add2e-rich-editor { min-height:90px; padding:8px 10px; border:1px solid var(--soft); border-radius:8px; background:#fffdf7; color:#2f241c; line-height:1.35; }
+    .add2e-rich-editor p { margin:0 0 .55em; }
+    .add2e-rich-editor p:last-child { margin-bottom:0; }
     .add2e-rich-editor .editor { min-height:110px; }
     .add2e-rich-editor .editor-content { min-height:90px; }
   </style>
@@ -69,6 +69,6 @@
 
   <section class="add2e-card"><h3><i class="fas fa-scroll"></i> Description</h3>
     <div class="add2e-field"><label>Propriétés</label><input type="text" name="system.proprietes" value="{{item.system.proprietes}}" placeholder="Tranchant, Magique, Distance..."></div>
-    <div class="add2e-field" style="margin-top:8px;"><label>Description</label><div class="add2e-rich-editor">{{editor content=item.system.description target="system.description" button=true editable=editable engine="prosemirror"}}</div></div>
+    <div class="add2e-field" style="margin-top:8px;"><label>Description</label><div class="add2e-rich-editor">{{editor item.system.description target="system.description" button=true editable=editable engine="prosemirror"}}</div></div>
   </section>
 </form>
