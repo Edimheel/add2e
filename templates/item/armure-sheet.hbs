@@ -17,8 +17,9 @@
     .a2e-checks label{display:flex;align-items:center;gap:6px;padding:6px;border:1px solid var(--soft);border-radius:8px;background:rgba(255,255,255,.5);font-weight:700;}
     .a2e-checks input{width:auto;}
     .a2e-note{font-size:.86em;color:#6f6258;margin-top:4px;}
-    .a2e-description-preview{min-height:90px;padding:8px 10px;border:1px solid var(--soft);border-radius:8px;background:#fffdf7;color:#2f241c;line-height:1.35;}
-    .a2e-description-preview p{margin:0 0 .55em;}.a2e-description-preview p:last-child{margin-bottom:0;}
+    .a2e-description-preview,.a2e-rich-editor{min-height:100px;padding:8px 10px;border:1px solid var(--soft);border-radius:8px;background:#fffdf7;color:#2f241c;line-height:1.35;}
+    .a2e-description-preview p,.a2e-rich-editor p{margin:0 0 .55em;}.a2e-description-preview p:last-child,.a2e-rich-editor p:last-child{margin-bottom:0;}
+    .a2e-rich-editor .editor{min-height:120px;}.a2e-rich-editor .editor-content{min-height:100px;}
   </style>
 
   <header class="a2e-armor-hero">
@@ -33,8 +34,7 @@
     </div>
   </header>
 
-  <section class="a2e-card">
-    <h3><i class="fas fa-shield-alt"></i> Protection</h3>
+  <section class="a2e-card"><h3><i class="fas fa-shield-alt"></i> Protection</h3>
     <div class="a2e-grid-4">
       <div class="a2e-stat"><label>CA de base</label><input type="number" name="system.ac" value="{{item.system.ac}}"></div>
       <div class="a2e-stat"><label>Bonus CA</label><input type="number" name="system.bonus_ac" value="{{item.system.bonus_ac}}"></div>
@@ -49,8 +49,7 @@
     </div>
   </section>
 
-  <section class="a2e-card">
-    <h3><i class="fas fa-weight-hanging"></i> Encombrement et valeur</h3>
+  <section class="a2e-card"><h3><i class="fas fa-weight-hanging"></i> Encombrement et valeur</h3>
     <div class="a2e-grid-4">
       <div class="a2e-stat"><label>Poids</label><input type="number" name="system.poids" value="{{item.system.poids}}"></div>
       <div class="a2e-stat"><label>Weight legacy</label><input type="number" name="system.weight" value="{{item.system.weight}}"></div>
@@ -64,8 +63,7 @@
     </div>
   </section>
 
-  <section class="a2e-card">
-    <h3><i class="fas fa-tags"></i> Tags d’effets</h3>
+  <section class="a2e-card"><h3><i class="fas fa-tags"></i> Tags d’effets</h3>
     <div class="a2e-grid-2">
       <div class="a2e-field"><label>Tags</label><textarea name="system.tags" rows="4">{{item.system.tags}}</textarea></div>
       <div class="a2e-field"><label>Effect tags</label><textarea name="system.effectTags" rows="4">{{item.system.effectTags}}</textarea></div>
@@ -73,9 +71,7 @@
     <div class="a2e-note">Ces tags permettent au moteur d’effets et aux restrictions de classe/race de reconnaître l’armure.</div>
   </section>
 
-  <section class="a2e-card">
-    <h3><i class="fas fa-scroll"></i> Description</h3>
-    <div class="a2e-field"><label>Aperçu</label><div class="a2e-description-preview">{{{descriptionHTML}}}</div></div>
-    <div class="a2e-field" style="margin-top:8px;"><label>Description HTML / édition</label><textarea name="system.description" rows="5">{{item.system.description}}</textarea></div>
+  <section class="a2e-card"><h3><i class="fas fa-scroll"></i> Description</h3>
+    <div class="a2e-field"><label>Description</label><div class="a2e-rich-editor">{{editor content=item.system.description target="system.description" button=true editable=editable engine="prosemirror"}}</div></div>
   </section>
 </form>
