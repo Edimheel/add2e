@@ -77,6 +77,12 @@
       "label": "Armures",
       "path": "packs/armures",
       "type": "Item"
+    },
+    {
+      "name": "objets-magiques",
+      "label": "Objets magiques",
+      "path": "packs/objets-magiques",
+      "type": "Item"
     }
   ]
 }
