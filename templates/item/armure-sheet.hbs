@@ -17,14 +17,14 @@
     .a2e-checks label{display:flex;align-items:center;gap:6px;padding:6px;border:1px solid var(--soft);border-radius:8px;background:rgba(255,255,255,.5);font-weight:700;}
     .a2e-checks input{width:auto;}
     .a2e-note{font-size:.86em;color:#6f6258;margin-top:4px;}
+    .a2e-description-preview{min-height:90px;padding:8px 10px;border:1px solid var(--soft);border-radius:8px;background:#fffdf7;color:#2f241c;line-height:1.35;}
+    .a2e-description-preview p{margin:0 0 .55em;}.a2e-description-preview p:last-child{margin-bottom:0;}
   </style>
 
   <header class="a2e-armor-hero">
     <img src="{{img}}" alt="Image de l'armure" data-edit="img" />
     <div>
-      <div class="a2e-armor-title">
-        <input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'armure">
-      </div>
+      <div class="a2e-armor-title"><input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'armure"></div>
       <div class="a2e-grid-3">
         <div class="a2e-field"><label>Nom système</label><input type="text" name="system.nom" value="{{item.system.nom}}"></div>
         <div class="a2e-field"><label>Catégorie</label><input type="text" name="system.categorie" value="{{item.system.categorie}}" placeholder="Lourde"></div>
@@ -75,6 +75,7 @@
 
   <section class="a2e-card">
     <h3><i class="fas fa-scroll"></i> Description</h3>
-    <div class="a2e-field"><label>Description</label><textarea name="system.description" rows="5">{{item.system.description}}</textarea></div>
+    <div class="a2e-field"><label>Aperçu</label><div class="a2e-description-preview">{{{descriptionHTML}}}</div></div>
+    <div class="a2e-field" style="margin-top:8px;"><label>Description HTML / édition</label><textarea name="system.description" rows="5">{{item.system.description}}</textarea></div>
   </section>
 </form>
