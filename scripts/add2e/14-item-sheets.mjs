@@ -1,3 +1,23 @@
+const ADD2E_ITEM_SHEETS_VERSION = "2026-05-20-descriptions-html-v1";
+globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
+
+function add2eGetTextEditorImplementation() {
+  return foundry?.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor ?? null;
+}
+
+async function add2eEnrichDescription(raw, item = null) {
+  const text = String(raw ?? "").trim();
+  if (!text) return "";
+  const editor = add2eGetTextEditorImplementation();
+  if (!editor?.enrichHTML) return text;
+  try {
+    return await editor.enrichHTML(text, { async: true, relativeTo: item ?? undefined });
+  } catch (err) {
+    console.warn("[ADD2E][ITEM_SHEET][DESCRIPTION_HTML] Échec enrichissement", err);
+    return text;
+  }
+}
+
 class Add2eArmureSheet extends ItemSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
@@ -9,23 +29,22 @@ class Add2eArmureSheet extends ItemSheet {
     });
   }
   async getData() {
-  const data = await super.getData();
-      data.system = data.item.system;
-  data.img = this.item.img || "icons/svg/mystery-man.svg";
-  return data;
-}
+    const data = await super.getData();
+    data.system = data.item.system;
+    data.img = this.item.img || "icons/svg/mystery-man.svg";
+    data.descriptionHTML = await add2eEnrichDescription(data.system?.description, this.item);
+    return data;
+  }
 
   activateListeners(html) {
     super.activateListeners(html);
     add2eRegisterImgPicker(html, this);
-    // Ajoute ici des listeners custom si besoin (ex : bouton, bascule équipee…)
     html.find(".toggle-equip").on("click", async ev => {
       ev.preventDefault();
       const value = !this.item.system.equipee;
-      await this.item.update({"system.equipee": value});
+      await this.item.update({ "system.equipee": value });
       this.render(false);
     });
- 
   }
 }
 globalThis.Add2eArmureSheet = Add2eArmureSheet;
@@ -34,7 +53,6 @@ Items.registerSheet("add2e", Add2eArmureSheet, {
   makeDefault: true,
   label: "ADD2e Armure"
 });
-
 
 class Add2eObjetSheet extends ItemSheet {
   static get defaultOptions() {
@@ -77,6 +95,7 @@ class Add2eObjetSheet extends ItemSheet {
       max: Number(system.charges?.max ?? system.max_charges ?? system.maxCharges ?? system.charges_max ?? 0) || 0
     };
     data.isMagicItem = system.magique === true || system.magic === true || String(system.categorie ?? "").toLowerCase().includes("magique");
+    data.descriptionHTML = await add2eEnrichDescription(system.description, item);
 
     return data;
   }
@@ -116,16 +135,16 @@ class Add2eArmeSheet extends ItemSheet {
     });
   }
   async getData() {
-  const data = await super.getData();
-      data.system = data.item.system;
-  data.img = this.item.img || "icons/svg/mystery-man.svg";
-  return data;
-}
-    activateListeners(html) {
-    super.activateListeners(html);
-add2eRegisterImgPicker(html, this);
+    const data = await super.getData();
+    data.system = data.item.system;
+    data.img = this.item.img || "icons/svg/mystery-man.svg";
+    data.descriptionHTML = await add2eEnrichDescription(data.system?.description, this.item);
+    return data;
   }
-
+  activateListeners(html) {
+    super.activateListeners(html);
+    add2eRegisterImgPicker(html, this);
+  }
 }
 globalThis.Add2eArmeSheet = Add2eArmeSheet;
 Items.registerSheet("add2e", Add2eArmeSheet, {
@@ -133,68 +152,59 @@ Items.registerSheet("add2e", Add2eArmeSheet, {
   makeDefault: true,
   label: "ADD2e Arme"
 });
+
 class Add2eSortSheet extends ItemSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["add2e", "sheet", "item", "sort"],
-      template: "systems/add2e/templates/item/sort-sheet.hbs", // Chemin réel de ton template sort
+      template: "systems/add2e/templates/item/sort-sheet.hbs",
       width: 500,
       height: "auto",
       resizable: true
     });
   }
 
- async getData() {
-  const data = await super.getData();
+  async getData() {
+    const data = await super.getData();
+    data.name = this.item?.name ?? "";
+    data.img = this.item?.img ?? "icons/svg/mystery-man.svg";
+    data.system = this.item?.system ?? {};
 
-  // Pour une ItemSheet (sort), toujours utiliser this.item
-  data.name   = this.item?.name ?? "";
-  data.img    = this.item?.img ?? "icons/svg/mystery-man.svg";
-  data.system = this.item?.system ?? {};
+    data.system.number ??= "";
+    data.system.diet ??= "";
+    data.system.encounterTable ??= "";
 
-  data.system.number         ??= "";
-  data.system.diet           ??= "";
-  data.system.encounterTable ??= "";
+    data.listeArmes = [];
+    data.listeArmures = [];
+    data.listeSorts = [];
 
-  // Les listes d’items (armes/armures/sorts) n’ont pas de sens dans une fiche de sort isolée
-  // Sauf si la fiche sort est affichée “embarquée” dans un acteur (cas Foundry rare, mais tu peux le garder en fallback)
-  data.listeArmes   = [];
-  data.listeArmures = [];
-  data.listeSorts   = [];
+    if (this.item?.parent && this.item.parent.documentName === "Actor") {
+      const actorItems = this.item.parent.items || [];
+      data.listeArmes = actorItems.filter(i => i.type === "arme");
+      data.listeArmures = actorItems.filter(i => i.type === "armure");
+      data.listeSorts = actorItems.filter(i => i.type === "sort");
+    }
 
-  if (this.item?.parent && this.item.parent.documentName === "Actor") {
-    // L’item est bien embarqué sur un acteur (fiche PJ)
-    const actorItems = this.item.parent.items || [];
-    data.listeArmes   = actorItems.filter(i => i.type === "arme");
-    data.listeArmures = actorItems.filter(i => i.type === "armure");
-    data.listeSorts   = actorItems.filter(i => i.type === "sort");
+    const sorts = data.listeSorts ?? [];
+    const sortsParNiveau = {};
+    for (const sort of sorts) {
+      let niveau = Number(sort.system?.niveau || sort.system?.level || 1);
+      if (!niveau || isNaN(niveau)) niveau = 1;
+      if (!sortsParNiveau[niveau]) sortsParNiveau[niveau] = [];
+      sortsParNiveau[niveau].push(sort);
+    }
+    const niveauxSorts = Object.keys(sortsParNiveau).map(Number).sort((a, b) => a - b);
+
+    data.sortsParNiveau = sortsParNiveau;
+    data.niveauxSorts = niveauxSorts;
+    data.sortsMemorizedByLevel = {};
+
+    return data;
   }
 
-  // SECTION CRITIQUE POUR SORTS PAR NIVEAU
-  const sorts = data.listeSorts ?? [];
-  const sortsParNiveau = {};
-  for (const sort of sorts) {
-    let niveau = Number(sort.system?.niveau || sort.system?.level || 1);
-    if (!niveau || isNaN(niveau)) niveau = 1;
-    if (!sortsParNiveau[niveau]) sortsParNiveau[niveau] = [];
-    sortsParNiveau[niveau].push(sort);
-  }
-  const niveauxSorts = Object.keys(sortsParNiveau).map(Number).sort((a, b) => a - b);
-
-  data.sortsParNiveau = sortsParNiveau;
-  data.niveauxSorts = niveauxSorts;
-
-  // Champ pour la section “mémorisés” du template
-  data.sortsMemorizedByLevel = {};
-
-  return data;
-}
-
-
-
-    activateListeners(html) {
+  activateListeners(html) {
     super.activateListeners(html);
-add2eRegisterImgPicker(html, this);
+    add2eRegisterImgPicker(html, this);
   }
 }
 globalThis.Add2eSortSheet = Add2eSortSheet;
@@ -204,7 +214,6 @@ Items.registerSheet("add2e", Add2eSortSheet, {
   label: "ADD2e Sort"
 });
 
-
 class Add2eRaceSheet extends ItemSheet {
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
@@ -213,60 +222,46 @@ class Add2eRaceSheet extends ItemSheet {
       width: 700,
       height: "auto",
       resizable: true,
-      tabs: [{navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "main"}],
-      scrollY: [".sheet-body"],
+      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "main" }],
+      scrollY: [".sheet-body"]
     });
   }
 
-async getData() {
-  const data = await super.getData();
-  // Patch sécurité pour éviter les erreurs "undefined"
-  data.system = data.system || data.item?.system || {};
+  async getData() {
+    const data = await super.getData();
+    data.system = data.system || data.item?.system || {};
 
-  // -- Transforme les objets en array pour Handlebars si besoin --
-  const toArray = obj =>
-    Array.isArray(obj)
-      ? obj
-      : typeof obj === "object" && obj !== null
-        ? Object.entries(obj)
+    const toArray = obj =>
+      Array.isArray(obj)
+        ? obj
+        : typeof obj === "object" && obj !== null
+          ? Object.entries(obj)
             .filter(([k]) => !["NEW", "NEW_KEY", "NEW_VAL"].includes(k))
             .filter(([k, v]) => v !== "" && v !== null && v !== undefined)
             .map(([_, v]) => v)
-        : [];
+          : [];
 
-  // Capacités raciales (toujours array pour le HBS)
-  data.system.capacites = toArray(data.system.capacites);
+    data.system.capacites = toArray(data.system.capacites);
+    if (typeof data.system.limites_classes !== "object" || Array.isArray(data.system.limites_classes)) data.system.limites_classes = {};
+    if (typeof data.system.min_caracteristiques !== "object" || Array.isArray(data.system.min_caracteristiques)) data.system.min_caracteristiques = {};
+    if (typeof data.system.max_caracteristiques !== "object" || Array.isArray(data.system.max_caracteristiques)) data.system.max_caracteristiques = {};
+    if (typeof data.system.bonus_caracteristiques !== "object" || Array.isArray(data.system.bonus_caracteristiques)) data.system.bonus_caracteristiques = {};
 
-  // Limites de classes (clé → valeur)
-  if (typeof data.system.limites_classes !== "object" || Array.isArray(data.system.limites_classes))
-    data.system.limites_classes = {};
-  // Min/Max caracs
-  if (typeof data.system.min_caracteristiques !== "object" || Array.isArray(data.system.min_caracteristiques))
-    data.system.min_caracteristiques = {};
-  if (typeof data.system.max_caracteristiques !== "object" || Array.isArray(data.system.max_caracteristiques))
-    data.system.max_caracteristiques = {};
-  // Bonus caracs
-  if (typeof data.system.bonus_caracteristiques !== "object" || Array.isArray(data.system.bonus_caracteristiques))
-    data.system.bonus_caracteristiques = {};
+    data.system.description ??= "";
+    data.system.description_longue ??= "";
+    data.system.note_md ??= "";
+    data.system.langues ??= "";
+    data.system.vitesse ??= "";
+    data.system.taille ??= "";
+    data.system["âge_debut"] ??= "";
+    data.system["espérance_vie"] ??= "";
 
-  // Valeurs textuelles (par défaut vide)
-  data.system.description ??= "";
-  data.system.description_longue ??= "";
-  data.system.note_md ??= "";
-  data.system.langues ??= "";
-  data.system.vitesse ??= "";
-  data.system.taille ??= "";
-  data.system["âge_debut"] ??= "";
-  data.system["espérance_vie"] ??= "";
-
-  return data;
-}
-
+    return data;
+  }
 
   activateListeners(html) {
     super.activateListeners(html);
- 
-    // Image picker Foundry natif
+
     html.find('img[data-edit="img"]').off().on('click', ev => {
       ev.preventDefault();
       new FilePicker({
@@ -280,24 +275,19 @@ async getData() {
       }).render(true);
     });
 
-    // Autosave sur modification des champs (optionnel)
     html.find('input, textarea, select').on('change', async (event) => {
       event.preventDefault();
       const form = html.find('form')[0] || html[0];
       const formData = new FormData(form);
       let updateData = foundry.utils.expandObject(Object.fromEntries(formData));
 
-      // Ajoute un nouveau bonus carac si les champs sont remplis
       if (updateData.system?.bonus_caracteristiques?.NEW_KEY) {
         const k = updateData.system.bonus_caracteristiques.NEW_KEY.trim();
         const v = Number(updateData.system.bonus_caracteristiques.NEW_VAL) || 0;
-        if (k) {
-          updateData[`system.bonus_caracteristiques.${k}`] = v;
-        }
+        if (k) updateData[`system.bonus_caracteristiques.${k}`] = v;
         delete updateData.system.bonus_caracteristiques.NEW_KEY;
         delete updateData.system.bonus_caracteristiques.NEW_VAL;
       }
-      // Ajout nouvelle capacité
       if (updateData.system?.capacites?.NEW) {
         const newCap = updateData.system.capacites.NEW.trim();
         if (newCap) {
@@ -314,7 +304,6 @@ async getData() {
   }
 }
 
-
 globalThis.Add2eRaceSheet = Add2eRaceSheet;
 Items.registerSheet("add2e", Add2eRaceSheet, {
   types: ["race"],
@@ -322,7 +311,6 @@ Items.registerSheet("add2e", Add2eRaceSheet, {
   label: "ADD2e Race"
 });
 
-// Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
 try { globalThis.Add2eArmureSheet = Add2eArmureSheet; } catch (_e) {}
 try { globalThis.Add2eObjetSheet = Add2eObjetSheet; } catch (_e) {}
 try { globalThis.Add2eArmeSheet = Add2eArmeSheet; } catch (_e) {}
