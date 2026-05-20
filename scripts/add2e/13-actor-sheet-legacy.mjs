@@ -51,4 +51,49 @@ if(globalThis.Add2eActorSheet?.prototype&&!globalThis.Add2eActorSheet.prototype.
   };
 }
 
+const ADD2E_ACTOR_ITEM_OPEN_VERSION = "2026-05-20-click-item-names-v1";
+globalThis.ADD2E_ACTOR_ITEM_OPEN_VERSION = ADD2E_ACTOR_ITEM_OPEN_VERSION;
+
+async function add2eItemDescriptionHTML(item) {
+  const raw = String(item?.system?.description ?? "").trim();
+  if (!raw) return "<p><em>Aucune description renseignée.</em></p>";
+  const editor = foundry?.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor ?? null;
+  if (!editor?.enrichHTML) return raw;
+  try { return await editor.enrichHTML(raw, { async: true, relativeTo: item }); }
+  catch (_e) { return raw; }
+}
+
+if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV1) {
+  globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV1 = true;
+  const originalActivateListeners = globalThis.Add2eActorSheet.prototype.activateListeners;
+  globalThis.Add2eActorSheet.prototype.activateListeners = function add2eOpenItemNamesActivateListeners(html) {
+    originalActivateListeners.call(this, html);
+    const sheet = this;
+
+    html.find("tr.item[data-item-id] > td:first-child b, tr.item[data-item-id] > td:nth-child(2) b, .a2e-summary-weapon-name")
+      .css({ cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "2px" })
+      .attr("title", "Cliquer pour ouvrir la fiche. Maj+clic pour afficher la description.");
+
+    html.off("click.add2eOpenItemName").on("click.add2eOpenItemName", "tr.item[data-item-id] > td:first-child b, tr.item[data-item-id] > td:nth-child(2) b, .a2e-summary-weapon-name", async function(ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const row = $(ev.currentTarget).closest(".item[data-item-id]");
+      const itemId = row.data("item-id") || row.attr("data-item-id") || row.data("itemId") || row.attr("data-itemId");
+      const item = sheet.actor?.items?.get(String(itemId));
+      if (!item) return ui.notifications.warn("Objet introuvable sur l'acteur.");
+      if (ev.shiftKey) {
+        const description = await add2eItemDescriptionHTML(item);
+        return new Dialog({
+          title: item.name,
+          content: `<div class="add2e-item-description-dialog" style="max-height:520px;overflow:auto;line-height:1.35;">${description}</div>`,
+          buttons: { open: { label: "Ouvrir la fiche", callback: () => item.sheet.render(true) }, close: { label: "Fermer" } },
+          default: "close"
+        }, { width: 620, resizable: true }).render(true);
+      }
+      return item.sheet.render(true);
+    });
+  };
+}
+
 console.log("[ADD2E][BRACELETS_DEFENSE][FIX]",ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION);
+console.log("[ADD2E][ACTOR_ITEM_OPEN]", ADD2E_ACTOR_ITEM_OPEN_VERSION);
