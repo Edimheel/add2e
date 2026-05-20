@@ -1,3 +1,5 @@
-2026/05/07-17:44:37.389966 7f6afdefc0 Recovering log #23
-2026/05/07-17:44:37.406807 7f6afdefc0 Delete type=0 #23
-2026/05/07-17:44:37.406870 7f6afdefc0 Delete type=3 #21
+2026/05/20-12:47:42.025759 7f5f7eefc0 Recovering log #26
+2026/05/20-12:47:42.025835 7f5f7eefc0 Recovering log #28
+2026/05/20-12:47:42.041579 7f5f7eefc0 Delete type=3 #25
+2026/05/20-12:47:42.041651 7f5f7eefc0 Delete type=0 #28
+2026/05/20-12:47:42.041683 7f5f7eefc0 Delete type=0 #26
