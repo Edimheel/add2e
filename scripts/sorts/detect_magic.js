@@ -1,6 +1,6 @@
 /**
  * ADD2E — Détection de la magie — Clerc niveau 1
- * Version : 2026-05-21-clerc-v1
+ * Version : 2026-05-21-clerc-v2-no-vfx
  *
  * Règle clerc :
  * - Portée : 3"
@@ -11,7 +11,7 @@
  * - Blocage : pierre 30 cm+, métal 3 cm+, bois 90 cm+
  */
 
-console.log("%c[ADD2E][DETECTION_MAGIE][CLERC] 2026-05-21-clerc-v1", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][DETECTION_MAGIE][CLERC] 2026-05-21-clerc-v2-no-vfx", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   const esc = value => String(value ?? "")
@@ -38,31 +38,20 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  const caster =
-    (typeof actor !== "undefined" && actor)
-      ? actor
-      : sourceItem.parent;
+  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
 
   if (!caster) {
     ui.notifications.error("Détection de la magie : lanceur introuvable.");
     return false;
   }
 
-  const casterToken = canvas.tokens.controlled[0] ?? ((typeof token !== "undefined" && token) ? token : null);
-
-  const existing = caster.effects.find(e =>
-    e.name === "Détection de la magie" ||
-    e.flags?.add2e?.spellKey === "detection_magie_clerc"
-  );
-
-  if (existing) await existing.delete();
-
   const durationRounds = 10;
+  const effectIcon = sourceItem.img || "systems/add2e/assets/icones/sorts/detection-magie-violet.webp";
 
   const effectData = {
     name: "Détection de la magie",
-    img: sourceItem.img || "systems/add2e/assets/icones/sorts/detection-magie-violet.webp",
-    icon: sourceItem.img || "systems/add2e/assets/icones/sorts/detection-magie-violet.webp",
+    img: effectIcon,
+    icon: effectIcon,
     origin: sourceItem.uuid,
     disabled: false,
     transfer: false,
@@ -106,24 +95,22 @@ const __add2eOnUseResult = await (async () => {
     changes: []
   };
 
-  await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
+  const existing = caster.effects.find(e =>
+    e.name === "Détection de la magie" ||
+    e.flags?.add2e?.spellKey === "detection_magie_clerc"
+  );
 
-  if (typeof Sequence !== "undefined" && casterToken) {
-    try {
-      await new Sequence()
-        .effect()
-        .file("jb2a.magic_signs.circle.02.blue")
-        .atLocation(casterToken)
-        .attachTo(casterToken)
-        .scaleToObject(1.2)
-        .belowTokens(true)
-        .fadeIn(400)
-        .fadeOut(400)
-        .duration(2200)
-        .play();
-    } catch (e) {
-      console.warn("[ADD2E][DETECTION_MAGIE][CLERC][VFX] Animation ignorée", e);
-    }
+  if (existing) {
+    await existing.update(effectData);
+    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet existant mis à jour", {
+      actor: caster.name,
+      effectId: existing.id
+    });
+  } else {
+    await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
+    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet créé", {
+      actor: caster.name
+    });
   }
 
   const detailsData = [
@@ -145,7 +132,7 @@ const __add2eOnUseResult = await (async () => {
           <div style="font-size:0.85em;opacity:0.95;">lance <b>${esc(sourceItem.name)}</b></div>
         </div>
         <div style="text-align:right;font-size:0.78em;opacity:0.95;">Sort divin</div>
-        <img src="${esc(sourceItem.img || "systems/add2e/assets/icones/sorts/detection-magie-violet.webp")}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
+        <img src="${esc(effectIcon)}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
       </div>
 
       <div style="padding:10px;">
