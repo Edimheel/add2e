@@ -1,156 +1,196 @@
-return await (async () => {
+/**
+ * ADD2E — Détection de la magie — Clerc niveau 1
+ * Version : 2026-05-21-clerc-v1
+ *
+ * Règle clerc :
+ * - Portée : 3"
+ * - Durée : 1 tour
+ * - Zone : 1" de large, 3" de long, dans la direction regardée
+ * - Rotation possible : 60° par round
+ * - Le clerc distingue seulement magie faible ou forte
+ * - Blocage : pierre 30 cm+, métal 3 cm+, bois 90 cm+
+ */
 
-    // ==============================================================
-    // 1. INITIALISATION & SÉCURITÉ
-    // ==============================================================
-    let sourceItem = null;
-    if (typeof sort !== "undefined" && sort) sourceItem = sort;
-    else if (typeof item !== "undefined" && item) sourceItem = item;
-    else if (typeof this !== "undefined" && this.documentName === "Item") sourceItem = this;
+console.log("%c[ADD2E][DETECTION_MAGIE][CLERC] 2026-05-21-clerc-v1", "color:#b88924;font-weight:bold;");
 
-    // IMPORTANT : On définit _item pour votre template de chat
-    const _item = sourceItem;
+const __add2eOnUseResult = await (async () => {
+  const esc = value => String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
-    if (!sourceItem) { ui.notifications.error("Script Détection : Source introuvable."); return false; }
+  function chatStyleData() {
+    return CONST.CHAT_MESSAGE_STYLES
+      ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
+      : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+  }
 
-    const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
-    if (!caster) return false;
+  let sourceItem = null;
+  if (typeof sort !== "undefined" && sort) sourceItem = sort;
+  else if (typeof item !== "undefined" && item) sourceItem = item;
+  else if (typeof this !== "undefined" && this?.documentName === "Item") sourceItem = this;
+  else if (typeof args !== "undefined" && args?.[0]?.item) sourceItem = args[0].item;
 
-    // --- Fonction de Remboursement ---
-    const refund = async (raison = "") => {
-        if (raison) ui.notifications.warn(raison);
-        if (sourceItem.type !== "sort") {
-            const currentGlobal = sourceItem.getFlag("add2e", "global_charges");
-            if (currentGlobal !== undefined) {
-                await sourceItem.setFlag("add2e", "global_charges", currentGlobal + 1);
-                ui.notifications.info(`Charge restituée.`);
-            } else if (sourceItem.system.isPower) {
-                 const pItem = caster.items.get(sourceItem.system.sourceWeaponId);
-                 if (pItem) {
-                     const idx = sourceItem.system.powerIndex;
-                     const c = pItem.getFlag("add2e", `charges_${idx}`);
-                     if (c !== undefined) await pItem.setFlag("add2e", `charges_${idx}`, c + 1);
-                 }
-            }
-        }
-    };
+  if (!sourceItem) {
+    ui.notifications.error("Détection de la magie : sort introuvable.");
+    return false;
+  }
 
-    // ==============================================================
-    // 2. CALCULS (Durée & Niveau)
-    // ==============================================================
-    
-    let casterLevel = 1;
-    if (sourceItem.type === "sort") {
-        casterLevel = caster.system.details_classe?.magicien?.niveau 
-                   || caster.system.niveau || 1;
-    } else {
-        casterLevel = sourceItem.system.niveau || 6; 
-    }
+  const caster =
+    (typeof actor !== "undefined" && actor)
+      ? actor
+      : sourceItem.parent;
 
-    const dureeRounds = 2 * casterLevel;
-    const info = sourceItem.system;
+  if (!caster) {
+    ui.notifications.error("Détection de la magie : lanceur introuvable.");
+    return false;
+  }
 
-    // ==============================================================
-    // 3. APPLICATION EFFET & VISUEL
-    // ==============================================================
+  const casterToken = canvas.tokens.controlled[0] ?? ((typeof token !== "undefined" && token) ? token : null);
 
-    // A. Suppression ancien effet
-    const existing = caster.effects.find(e => e.name === "Détection de la Magie");
-    if (existing) await existing.delete();
+  const existing = caster.effects.find(e =>
+    e.name === "Détection de la magie" ||
+    e.flags?.add2e?.spellKey === "detection_magie_clerc"
+  );
 
-    // B. Création Effet Actif
-    const effectData = {
-        name: "Détection de la Magie",
-        icon: "systems/add2e/assets/icones/sorts/detection-magie-violet.webp", // Icône vectorielle sûre
-        origin: sourceItem.uuid,
-        duration: { 
-            rounds: dureeRounds,
-            startTime: game.time.worldTime
+  if (existing) await existing.delete();
+
+  const durationRounds = 10;
+
+  const effectData = {
+    name: "Détection de la magie",
+    img: sourceItem.img || "systems/add2e/assets/icones/sorts/detection-magie-violet.webp",
+    icon: sourceItem.img || "systems/add2e/assets/icones/sorts/detection-magie-violet.webp",
+    origin: sourceItem.uuid,
+    disabled: false,
+    transfer: false,
+    duration: {
+      rounds: durationRounds,
+      startRound: game.combat?.round ?? null,
+      startTurn: game.combat?.turn ?? null,
+      startTime: game.time.worldTime
+    },
+    description: "Détection de la magie cléricale : le clerc perçoit les émanations magiques faibles ou fortes dans un cône rectangulaire de 1\" de large sur 3\" de long, dans la direction regardée.",
+    flags: {
+      add2e: {
+        spellKey: "detection_magie_clerc",
+        spellName: "Détection de la magie",
+        spellList: "cleric",
+        school: "divination",
+        sourceItemUuid: sourceItem.uuid,
+        casterId: caster.id,
+        casterUuid: caster.uuid,
+        range: "3\"",
+        area: "1\" de large, 3\" de long",
+        duration: "1 tour",
+        rotationPerRound: "60°",
+        detectionDetail: "faible_ou_forte_uniquement",
+        blockedBy: {
+          stoneCm: 30,
+          metalCm: 3,
+          woodCm: 90
         },
-        disabled: false,
-        description: "Vous percevez les auras magiques.",
-        flags: { 
-            add2e: { tags: ["detection", "divination"] } 
-        }
-    };
-    
-    await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
+        tags: [
+          "sort:clerc",
+          "niveau:1",
+          "divination",
+          "detection:magie",
+          "detection:faible_ou_forte",
+          "zone:1x3",
+          "rotation:60_par_round"
+        ]
+      }
+    },
+    changes: []
+  };
 
-    // C. Animation VFX (Sequencer)
-    if (typeof Sequence !== "undefined") {
-        new Sequence()
-            .effect()
-                .file("jb2a.magic_signs.circle.02.blue") 
-                .atLocation(caster)
-                .attachTo(caster)
-                .scaleToObject(1.5)
-                .belowTokens(true)
-                .fadeIn(500)
-                .fadeOut(500)
-                .duration(3000)
-            .play()
-            .catch(e => {});
+  await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
+
+  if (typeof Sequence !== "undefined" && casterToken) {
+    try {
+      await new Sequence()
+        .effect()
+        .file("jb2a.magic_signs.circle.02.blue")
+        .atLocation(casterToken)
+        .attachTo(casterToken)
+        .scaleToObject(1.2)
+        .belowTokens(true)
+        .fadeIn(400)
+        .fadeOut(400)
+        .duration(2200)
+        .play();
+    } catch (e) {
+      console.warn("[ADD2E][DETECTION_MAGIE][CLERC][VFX] Animation ignorée", e);
     }
+  }
 
-    // ==============================================================
-    // 4. MESSAGE CHAT (VOTRE MODÈLE STRICT)
-    // ==============================================================
-    
-    // Préparation des données pour le tableau
-    const detailsData = [
-        { label: "Niveau", val: casterLevel },
-        { label: "Durée", val: `${dureeRounds} rounds` },
-        { label: "Portée", val: "10m / Niv." },
-        { label: "Zone", val: "Champ visuel" }
-    ];
+  const detailsData = [
+    { label: "Liste", val: "Clerc" },
+    { label: "Niveau", val: "1" },
+    { label: "Durée", val: "1 tour / 10 rounds" },
+    { label: "Portée", val: "3\"" },
+    { label: "Zone", val: "1\" de large × 3\" de long" },
+    { label: "Orientation", val: "direction regardée, 60°/round" },
+    { label: "Information", val: "magie faible ou forte uniquement" }
+  ];
 
-    const chatContent = `
-      <div class="add2e-spell-card" style="border-radius:12px; box-shadow:0 4px 10px #715aab44; background:linear-gradient(135deg, #fdfbfd 0%, #f4efff 100%); border:1.5px solid #9373c7; margin:0.3em 0; padding:0; font-family:var(--font-primary); overflow:hidden;">
-        
-        <div style="background:linear-gradient(90deg, #6a3c99 0%, #8e44ad 100%); padding:8px 12px; display:flex; align-items:center; gap:10px; color:white; border-bottom:2px solid #5e35b1;">
-          <img src="${caster.img}" style="width:36px; height:36px; border-radius:50%; border:2px solid #fff; object-fit:cover;">
-          <div style="line-height:1.2;">
-            <div style="font-weight:bold; font-size:1.05em;">${caster.name}</div>
-            <div style="font-size:0.85em; opacity:0.9;">active <span style="font-weight:bold; color:#f1c40f;">${_item.name}</span></div>
-          </div>
-          <img src="${_item.img}" style="width:32px; height:32px; margin-left:auto; border-radius:4px; background:#fff;">
+  const chatContent = `
+    <div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,#fffaf0 0%,#fff7df 100%);border:1.5px solid #e2bc63;margin:0.3em 0;padding:0;font-family:var(--font-primary);overflow:hidden;">
+      <div style="background:linear-gradient(90deg,#6f4b12 0%,#b88924 100%);padding:8px 12px;display:flex;align-items:center;gap:10px;color:white;border-bottom:2px solid #8a611d;">
+        <img src="${esc(caster.img || "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
+        <div style="line-height:1.2;flex:1;">
+          <div style="font-weight:bold;font-size:1.05em;">${esc(caster.name)}</div>
+          <div style="font-size:0.85em;opacity:0.95;">lance <b>${esc(sourceItem.name)}</b></div>
         </div>
-
-        <div style="padding:10px 10px 5px 10px;">
-          
-          <div style="background:#eafaf1; border:1px solid #ccebd9; border-radius:6px; padding:6px; text-align:center; margin-bottom:8px;">
-            <span style="color:#27ae60; font-weight:bold; font-size:1.1em;">👁️ Détection active</span>
-            <div style="font-size:0.85em; color:#555; margin-top:2px;">Vous percevez les auras magiques</div>
-          </div>
-
-          <details style="background:#fff; border:1px solid #e0d4fc; border-radius:6px;">
-            <summary style="cursor:pointer; color:#6a3c99; font-weight:600; font-size:0.9em; padding:6px 10px; background:#efe9f6; border-radius:6px; list-style:none;">
-              📜 Voir détails & description
-            </summary>
-            <div style="padding:8px;">
-              <table style="width:100%; font-size:0.85em; border-spacing:0; margin-bottom:10px; color:#333; border-bottom:1px solid #eee;">
-                ${detailsData.map((d, i) => `
-                  <tr style="${i % 2 === 0 ? 'background:#f8f6fa;' : ''}">
-                    <td style="color:#6a3c99; font-weight:600; padding:2px 5px; width:40%;">${d.label}</td>
-                    <td style="text-align:right; padding:2px 5px;">${d.val}</td>
-                  </tr>`).join("")}
-              </table>
-              <div style="color:#4a3b69; font-size:0.9em; line-height:1.4; text-align:justify;">
-                <b>Description :</b><br>
-                ${info.description || "<em>Aucune description.</em>"}
-              </div>
-            </div>
-          </details>
-        </div>
+        <div style="text-align:right;font-size:0.78em;opacity:0.95;">Sort divin</div>
+        <img src="${esc(sourceItem.img || "systems/add2e/assets/icones/sorts/detection-magie-violet.webp")}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
       </div>
-    `;
 
-    ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: caster }),
-        content: chatContent,
-        type: CONST.CHAT_MESSAGE_TYPES.OTHER
-    });
+      <div style="padding:10px;">
+        <div style="background:#fffdf4;border:1px solid #e2bc63;border-radius:6px;padding:7px;text-align:center;margin-bottom:8px;color:#6f4b12;">
+          <div style="font-weight:bold;color:#2f8f46;">DÉTECTION ACTIVE</div>
+          <div>Le clerc perçoit uniquement si la magie est <b>faible</b> ou <b>forte</b>.</div>
+        </div>
 
-    return true;
+        <details style="background:#fff;border:1px solid #e2bc63;border-radius:6px;">
+          <summary style="cursor:pointer;color:#6f4b12;font-weight:600;font-size:0.9em;padding:6px 10px;background:#fff7df;border-radius:6px;list-style:none;">
+            Règle appliquée
+          </summary>
+          <div style="padding:8px;">
+            <table style="width:100%;font-size:0.85em;border-spacing:0;margin-bottom:10px;color:#333;border-bottom:1px solid #eee;">
+              ${detailsData.map((d, i) => `
+                <tr style="${i % 2 === 0 ? "background:#fffaf0;" : ""}">
+                  <td style="color:#6f4b12;font-weight:600;padding:2px 5px;width:42%;">${esc(d.label)}</td>
+                  <td style="text-align:right;padding:2px 5px;">${esc(d.val)}</td>
+                </tr>`).join("")}
+            </table>
+            <div style="color:#6f4b12;font-size:0.9em;line-height:1.4;text-align:justify;">
+              <b>Limites :</b> les murs de pierre de 30 cm ou plus, 3 cm ou plus de métal, ou 90 cm ou plus de bois bloquent la détection. Le script pose l’état de détection ; l’identification exacte des auras reste arbitrée par le MJ selon les objets et créatures présents.
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>`;
 
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor: caster }),
+    content: chatContent,
+    ...chatStyleData()
+  });
+
+  console.log("[ADD2E][detect_magic.js][ONUSE_RESULT]", true);
+  return true;
 })();
+
+if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
+  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", {
+    script: "detect_magic.js",
+    result: __add2eOnUseResult
+  });
+  ui.notifications?.error?.("Détection de la magie : le script onUse n'a pas retourné true/false.");
+  return false;
+}
+
+return __add2eOnUseResult;
