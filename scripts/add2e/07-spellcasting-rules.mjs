@@ -4,6 +4,7 @@
 // et les classes mixtes comme le Ranger : Druidique + Magicien.
 // ============================================================
 globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-05-18-prep-counters-visible-spells-only";
+globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
   if (!actor) return false;
@@ -397,6 +398,154 @@ function evalFormuleValeur(valeur, niveau) {
     return valeur;
   }
 }
+
+// ============================================================
+// ADD2E — Effets visuels centralisés des sorts
+// ============================================================
+const ADD2E_SPELL_FX_PRESETS = {
+  default: { launch: "divine", target: "spark" },
+  clerc_default: { launch: "divine", target: "spark" },
+  apaisement: { launch: "divine_soft", target: "calm" },
+  epouvante: { launch: "divine_dark", target: "fear" },
+  aquagenese: { launch: "water", target: "water" },
+  destruction_eau: { launch: "water_dark", target: "dry" },
+  benediction: { launch: "holy", target: "blessing" },
+  malediction: { launch: "dark_prayer", target: "curse" },
+  detection_magie: { launch: "detection", target: "magic_pulse" },
+  detection_du_mal: { launch: "detection", target: "evil_pulse" },
+  detection_du_bien: { launch: "detection", target: "good_pulse" }
+};
+
+globalThis.ADD2E_SPELL_FX_PRESETS = ADD2E_SPELL_FX_PRESETS;
+
+function add2eFxColor(preset) {
+  const colors = {
+    divine: "#f5d37a",
+    divine_soft: "#f8e7a1",
+    divine_dark: "#a23a2e",
+    holy: "#ffd76a",
+    dark_prayer: "#5b366e",
+    blessing: "#ffe28a",
+    curse: "#6a2d7a",
+    calm: "#9fd6ff",
+    fear: "#b33a2e",
+    water: "#58bde8",
+    water_dark: "#3c7894",
+    dry: "#d0a35a",
+    detection: "#d7b15a",
+    magic_pulse: "#8660d8",
+    evil_pulse: "#c23b32",
+    good_pulse: "#fff1a8",
+    spark: "#f5d37a"
+  };
+  return colors[preset] || colors.spark;
+}
+
+function add2eFxText(preset) {
+  const labels = {
+    divine: "✦",
+    divine_soft: "✧",
+    divine_dark: "✦",
+    holy: "✦",
+    dark_prayer: "✧",
+    blessing: "+",
+    curse: "✧",
+    calm: "◇",
+    fear: "!",
+    water: "☄",
+    water_dark: "☄",
+    dry: "∴",
+    detection: "◉",
+    magic_pulse: "◉",
+    evil_pulse: "◉",
+    good_pulse: "◉",
+    spark: "✦"
+  };
+  return labels[preset] || "✦";
+}
+
+function add2eResolveFxToken(target) {
+  if (!target) return null;
+  if (target.center && target.document) return target;
+  if (target.object?.center && target.object?.document) return target.object;
+  if (target.documentName === "Token") return target.object ?? canvas.tokens?.get?.(target.id) ?? null;
+  if (target.documentName === "Actor") return target.getActiveTokens?.()[0] ?? null;
+  if (target.actor && target.document) return target;
+  return null;
+}
+
+async function add2ePlayNativeSpellFx(preset, target, options = {}) {
+  const token = add2eResolveFxToken(target);
+  if (!token || !token.center || !canvas?.ready) return false;
+
+  const color = options.color || add2eFxColor(preset);
+  const text = options.text || add2eFxText(preset);
+  const point = token.center;
+
+  try {
+    if (typeof canvas.ping === "function") {
+      canvas.ping(point, { style: "pulse", color, size: options.size || 96, duration: options.duration || 700 });
+    } else if (typeof canvas.controls?.ping === "function") {
+      canvas.controls.ping(point, { style: "pulse", color, size: options.size || 96, duration: options.duration || 700 });
+    }
+  } catch (err) {
+    console.warn("[ADD2E][SPELL_FX][PING] impossible", { preset, err });
+  }
+
+  try {
+    if (canvas.interface?.createScrollingText) {
+      await canvas.interface.createScrollingText(point, text, {
+        anchor: CONST.TEXT_ANCHOR_POINTS?.CENTER ?? 0,
+        direction: CONST.TEXT_ANCHOR_POINTS?.TOP ?? 1,
+        distance: options.distance || 0.8,
+        fontSize: options.fontSize || 28,
+        fill: color,
+        stroke: options.stroke || "#2a1c08",
+        strokeThickness: options.strokeThickness || 4,
+        duration: options.durationText || 900
+      });
+    }
+  } catch (err) {
+    console.warn("[ADD2E][SPELL_FX][TEXT] impossible", { preset, err });
+  }
+
+  return true;
+}
+
+globalThis.ADD2E_PLAY_SPELL_FX = async function ADD2E_PLAY_SPELL_FX(spellKey = "default", context = {}) {
+  const key = String(spellKey || "default")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "") || "default";
+
+  const preset = ADD2E_SPELL_FX_PRESETS[key] || ADD2E_SPELL_FX_PRESETS.default;
+  const casterToken = context.casterToken ?? context.caster ?? context.sourceToken ?? null;
+  const targetToken = context.targetToken ?? context.target ?? null;
+  const targetTokens = Array.isArray(context.targetTokens) ? context.targetTokens : [];
+
+  let played = false;
+  if (casterToken && preset.launch) played = await add2ePlayNativeSpellFx(preset.launch, casterToken, context.launchOptions ?? {}) || played;
+  if (targetToken && preset.target) played = await add2ePlayNativeSpellFx(preset.target, targetToken, context.targetOptions ?? {}) || played;
+  for (const target of targetTokens) {
+    if (!target || target === targetToken) continue;
+    played = await add2ePlayNativeSpellFx(preset.target || preset.launch, target, context.targetOptions ?? {}) || played;
+  }
+
+  return played;
+};
+
+if (!globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) {
+  globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX = async function ADD2E_CLERC_PLAY_LAUNCH_FX(target, preset = "divine") {
+    return add2ePlayNativeSpellFx(preset || "divine", target);
+  };
+}
+
+try { globalThis.add2ePlayNativeSpellFx = add2ePlayNativeSpellFx; } catch (_e) {}
+console.log("[ADD2E][SPELL_FX][VERSION]", globalThis.ADD2E_SPELL_FX_VERSION);
 
 // Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
 try { globalThis.add2eRerenderActorSheet = add2eRerenderActorSheet; } catch (_e) {}
