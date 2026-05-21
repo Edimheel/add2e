@@ -1,5 +1,1 @@
-2026/05/21-10:04:05.616758 7f65ccdfc0 Log #486: 0 ops saved to Table #487 OK
-2026/05/21-10:04:05.616872 7f65ccdfc0 Archiving /data/Data/systems/add2e/packs/classes/000486.log: OK
-2026/05/21-10:04:05.617474 7f65ccdfc0 Table #480: 10 entries OK
-2026/05/21-10:04:05.617688 7f65ccdfc0 Archiving /data/Data/systems/add2e/packs/classes/MANIFEST-000485: OK
-2026/05/21-10:04:05.649915 7f65ccdfc0 **** Repaired leveldb /data/Data/systems/add2e/packs/classes; recovered 1 files; 76895 bytes. Some data may have been lost. ****
+2026/05/21-10:04:05.668772 7f65ccdfc0 Delete type=3 #1

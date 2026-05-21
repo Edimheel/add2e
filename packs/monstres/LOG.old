@@ -1,5 +1,1 @@
-2026/05/21-10:04:05.680382 7f66cedfc0 Log #314: 0 ops saved to Table #315 OK
-2026/05/21-10:04:05.680492 7f66cedfc0 Archiving /data/Data/systems/add2e/packs/monstres/000314.log: OK
-2026/05/21-10:04:05.691213 7f66cedfc0 Table #308: 1726 entries OK
-2026/05/21-10:04:05.691561 7f66cedfc0 Archiving /data/Data/systems/add2e/packs/monstres/MANIFEST-000313: OK
-2026/05/21-10:04:05.730358 7f66cedfc0 **** Repaired leveldb /data/Data/systems/add2e/packs/monstres; recovered 1 files; 1201867 bytes. Some data may have been lost. ****
+2026/05/21-10:04:05.750223 7f66cedfc0 Delete type=3 #1

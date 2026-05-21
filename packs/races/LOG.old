@@ -1,5 +1,1 @@
-2026/05/21-10:04:05.781194 7f664ddfc0 Log #553: 0 ops saved to Table #554 OK
-2026/05/21-10:04:05.781301 7f664ddfc0 Archiving /data/Data/systems/add2e/packs/races/000553.log: OK
-2026/05/21-10:04:05.781456 7f664ddfc0 Table #547: 26 entries OK
-2026/05/21-10:04:05.781578 7f664ddfc0 Archiving /data/Data/systems/add2e/packs/races/MANIFEST-000552: OK
-2026/05/21-10:04:05.811609 7f664ddfc0 **** Repaired leveldb /data/Data/systems/add2e/packs/races; recovered 1 files; 11189 bytes. Some data may have been lost. ****
+2026/05/21-10:04:05.830397 7f664ddfc0 Delete type=3 #1
