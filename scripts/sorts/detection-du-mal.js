@@ -1,20 +1,13 @@
 /**
  * ADD2E — Détection du mal / Détection du bien
- * Version : 2026-05-21-detect-alignement-v1
+ * Version : 2026-05-21-detect-alignement-v2
  *
  * Contrat onUse :
  * - true  = sort lancé et consommé ;
  * - false = sort non consommé.
- *
- * Mécanique :
- * - pose un effet de détection sur le lanceur ;
- * - scanne les tokens de la scène si leurs données d'alignement/tags sont accessibles ;
- * - détecte les créatures mauvaises/evil ou bonnes/good selon la version choisie ;
- * - affiche le degré estimé et la nature générale ;
- * - pour un mal/bien extraordinaire, tente la tendance loyal/neutre/chaotique à 10 % par niveau.
  */
 
-console.log("%c[ADD2E][DETECTION_DU_MAL] 2026-05-21-detect-alignement-v1", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][DETECTION_DU_MAL] 2026-05-21-detect-alignement-v2", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   const DialogV2 = foundry.applications?.api?.DialogV2;
@@ -174,14 +167,12 @@ const __add2eOnUseResult = await (async () => {
       actorDoc?.flags?.add2e?.alignment
     ];
 
-    const text = values.filter(v => v !== undefined && v !== null && String(v).trim()).join(" ");
-    return text;
+    return values.filter(v => v !== undefined && v !== null && String(v).trim()).join(" ");
   }
 
   function detectedSide(actorDoc) {
     const a = norm(alignmentText(actorDoc));
     const tags = collectTags(actorDoc);
-    const bag = [a, ...tags].join(" ");
 
     const evil =
       a.includes("mauvais") ||
@@ -193,7 +184,7 @@ const __add2eOnUseResult = await (async () => {
       a.includes("good") ||
       tags.some(t => ["alignement:bon", "alignment:good", "alignement:good", "aura:bien", "detection:bien", "good", "bon"].includes(t));
 
-    return { evil, good, alignmentNorm: a, tags, bag };
+    return { evil, good, alignmentNorm: a, tags };
   }
 
   function hitDiceOrLevel(actorDoc) {
@@ -311,8 +302,7 @@ const __add2eOnUseResult = await (async () => {
   }
 
   function tokenCandidates(casterToken, maxMeters) {
-    const tokens = Array.from(canvas.tokens?.placeables ?? []);
-    return tokens.filter(t => {
+    return Array.from(canvas.tokens?.placeables ?? []).filter(t => {
       if (!t?.actor) return false;
       if (casterToken && t.id === casterToken.id) return false;
       if (t.document?.hidden && !game.user.isGM) return false;
@@ -355,7 +345,7 @@ const __add2eOnUseResult = await (async () => {
           : "";
         return `<li><b>${esc(m.actor.name)}</b> : aura ${esc(sideLabel)}, degré <b>${esc(m.degree.label)}</b>, nature générale : créature${tendency}${m.distance ? `, distance ${Math.round(m.distance)} m` : ""}</li>`;
       }).join("")
-      : `<li>Aucune créature avec alignement/tags ${esc(sideLabel)} détectable automatiquement dans la zone accessible au script.</li>`;
+      : `<li>Aucune émanation du ${esc(sideLabel)} détectée.</li>`;
 
     return `
       <div style="border:1px solid ${COLORS.border};background:#fffdf4;border-radius:6px;padding:8px;color:${COLORS.dark};">
@@ -363,7 +353,6 @@ const __add2eOnUseResult = await (async () => {
         <div><b>Direction / zone :</b> ${esc(direction || "devant le lanceur")}</div>
         <div><b>Durée :</b> ${rounds} round(s)</div>
         <ul style="margin:6px 0 0 18px;">${rows}</ul>
-        <div style="margin-top:6px;font-size:0.9em;color:${COLORS.muted};">Le scan automatique dépend des données présentes sur les acteurs : alignement, tags ou flags ADD2E. Le MJ garde l’arbitrage final pour les créatures protégées, cachées ou les objets maléfiques/bénéfiques.</div>
       </div>`;
   }
 
@@ -436,14 +425,11 @@ const __add2eOnUseResult = await (async () => {
       </div>
       <label style="display:flex;align-items:center;gap:6px;">
         <input type="checkbox" name="autoScan" checked>
-        <span>Scanner automatiquement les tokens visibles de la scène dont l’alignement ou les tags sont accessibles.</span>
+        <span>Détecter les émanations présentes sur les tokens visibles.</span>
       </label>
       <div class="form-group">
-        <label style="font-weight:bold;">Portée automatique indicative en mètres :</label>
+        <label style="font-weight:bold;">Portée en mètres :</label>
         <input type="number" name="rangeMeters" value="${defaultRangeMeters}" min="1" step="1" style="width:100%;">
-      </div>
-      <div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;">
-        Le script détecte les acteurs avec alignement <b>mauvais/evil</b> ou <b>bon/good</b>, ou avec des tags compatibles. La direction reste déclarative et arbitrée par le MJ.
       </div>
     </form>`;
 
