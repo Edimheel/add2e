@@ -21,7 +21,8 @@
   "scripts/monster-sheet.mjs"
 ],
   "styles": [
-    "styles/add2e.css"
+    "styles/add2e.css",
+    "styles/character-sheet.css"
   ],
  "documentTypes": {
   "Actor": {
