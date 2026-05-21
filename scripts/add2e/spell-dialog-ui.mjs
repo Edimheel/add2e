@@ -1,6 +1,6 @@
 // ADD2E — UI commune des popups de sorts
-// Version : 2026-05-21-v3-window-harmonized
-const VERSION = "2026-05-21-v3-window-harmonized";
+// Version : 2026-05-21-v4-no-black-frame
+const VERSION = "2026-05-21-v4-no-black-frame";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(v) {
@@ -40,6 +40,16 @@ const SPELL_THEME_HINTS = new Map([
   ["detection_de_la_magie", "cleric"]
 ]);
 
+const SPELL_ICON_HINTS = new Map([
+  ["benediction", "systems/add2e/assets/icones/sorts/benediction.webp"],
+  ["malediction", "systems/add2e/assets/icones/sorts/benediction.webp"],
+  ["apaisement", "systems/add2e/assets/icones/sorts/apaisement.webp"],
+  ["epouvante", "systems/add2e/assets/icones/sorts/apaisement.webp"],
+  ["aquagenese", "systems/add2e/assets/icones/sorts/aquagenese.webp"],
+  ["destruction_eau", "systems/add2e/assets/icones/sorts/aquagenese.webp"],
+  ["detection_de_la_magie", "systems/add2e/assets/icones/sorts/detection-magie-violet.webp"]
+]);
+
 function themeData(theme) {
   return THEMES[theme] ?? THEMES.cleric;
 }
@@ -55,25 +65,53 @@ function guessTheme({ title = "", content = "", theme = null } = {}) {
   return "cleric";
 }
 
+function guessIcon({ title = "", content = "", img = null } = {}) {
+  if (img) return img;
+  const text = norm(`${title} ${content}`);
+  for (const [hint, icon] of SPELL_ICON_HINTS) if (text.includes(hint)) return icon;
+  return "icons/svg/book.svg";
+}
+
+function themeVariables(theme) {
+  const t = themeData(theme);
+  return {
+    "--a2e-bg": t.bg,
+    "--a2e-accent": t.accent,
+    "--a2e-dark": t.dark,
+    "--a2e-main": t.main,
+    "--a2e-border": t.border,
+    "--a2e-text": t.text,
+    "--a2e-label": t.labelColor
+  };
+}
+
+function setThemeVariables(el, theme) {
+  if (!el) return;
+  for (const [key, value] of Object.entries(themeVariables(theme))) el.style.setProperty(key, value);
+}
+
 function ensureStyles() {
-  if (document.getElementById("add2e-spell-dialog-ui-style")) return;
+  const old = document.getElementById("add2e-spell-dialog-ui-style");
+  if (old?.dataset?.version === VERSION) return;
+  old?.remove();
 
   const el = document.createElement("style");
   el.id = "add2e-spell-dialog-ui-style";
+  el.dataset.version = VERSION;
   el.textContent = `
-.application.add2e-spell-dialog-window.add2e-theme-cleric,.window-app.add2e-spell-dialog-window.add2e-theme-cleric{--a2e-bg:#fffaf0;--a2e-accent:#f3e6c8;--a2e-dark:#6f4b12;--a2e-main:#b88924;--a2e-border:#c99a36;--a2e-text:#2d2011;--a2e-label:#6f4b12;}
-.application.add2e-spell-dialog-window.add2e-theme-druid,.window-app.add2e-spell-dialog-window.add2e-theme-druid{--a2e-bg:#f4faef;--a2e-accent:#dfeccd;--a2e-dark:#264a23;--a2e-main:#719c4a;--a2e-border:#7fa45d;--a2e-text:#202d1a;--a2e-label:#355428;}
-.application.add2e-spell-dialog-window.add2e-theme-wizard,.window-app.add2e-spell-dialog-window.add2e-theme-wizard{--a2e-bg:#f8f3ff;--a2e-accent:#e8ddfb;--a2e-dark:#2e1c5a;--a2e-main:#6b49b8;--a2e-border:#8060cc;--a2e-text:#211735;--a2e-label:#4b3684;}
-.application.add2e-spell-dialog-window.add2e-theme-illusionist,.window-app.add2e-spell-dialog-window.add2e-theme-illusionist{--a2e-bg:#f9f7ff;--a2e-accent:#dff2ff;--a2e-dark:#275a8a;--a2e-main:#925ac6;--a2e-border:#70a9d6;--a2e-text:#1e3043;--a2e-label:#315d83;}
+.application.add2e-spell-dialog-window.add2e-theme-cleric,.window-app.add2e-spell-dialog-window.add2e-theme-cleric,.app.add2e-spell-dialog-window.add2e-theme-cleric,.application:has(.add2e-spell-dialog-theme-cleric),.window-app:has(.add2e-spell-dialog-theme-cleric),.app:has(.add2e-spell-dialog-theme-cleric){--a2e-bg:#fffaf0;--a2e-accent:#f3e6c8;--a2e-dark:#6f4b12;--a2e-main:#b88924;--a2e-border:#c99a36;--a2e-text:#2d2011;--a2e-label:#6f4b12;}
+.application.add2e-spell-dialog-window.add2e-theme-druid,.window-app.add2e-spell-dialog-window.add2e-theme-druid,.app.add2e-spell-dialog-window.add2e-theme-druid,.application:has(.add2e-spell-dialog-theme-druid),.window-app:has(.add2e-spell-dialog-theme-druid),.app:has(.add2e-spell-dialog-theme-druid){--a2e-bg:#f4faef;--a2e-accent:#dfeccd;--a2e-dark:#264a23;--a2e-main:#719c4a;--a2e-border:#7fa45d;--a2e-text:#202d1a;--a2e-label:#355428;}
+.application.add2e-spell-dialog-window.add2e-theme-wizard,.window-app.add2e-spell-dialog-window.add2e-theme-wizard,.app.add2e-spell-dialog-window.add2e-theme-wizard,.application:has(.add2e-spell-dialog-theme-wizard),.window-app:has(.add2e-spell-dialog-theme-wizard),.app:has(.add2e-spell-dialog-theme-wizard){--a2e-bg:#f8f3ff;--a2e-accent:#e8ddfb;--a2e-dark:#2e1c5a;--a2e-main:#6b49b8;--a2e-border:#8060cc;--a2e-text:#211735;--a2e-label:#4b3684;}
+.application.add2e-spell-dialog-window.add2e-theme-illusionist,.window-app.add2e-spell-dialog-window.add2e-theme-illusionist,.app.add2e-spell-dialog-window.add2e-theme-illusionist,.application:has(.add2e-spell-dialog-theme-illusionist),.window-app:has(.add2e-spell-dialog-theme-illusionist),.app:has(.add2e-spell-dialog-theme-illusionist){--a2e-bg:#f9f7ff;--a2e-accent:#dff2ff;--a2e-dark:#275a8a;--a2e-main:#925ac6;--a2e-border:#70a9d6;--a2e-text:#1e3043;--a2e-label:#315d83;}
 
-.application.add2e-spell-dialog-window,.window-app.add2e-spell-dialog-window{border:2px solid var(--a2e-border);border-radius:16px;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.22);background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent));}
-.application.add2e-spell-dialog-window .window-header,.window-app.add2e-spell-dialog-window .window-header{background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main));color:white;border-bottom:2px solid var(--a2e-border);}
-.application.add2e-spell-dialog-window .window-title,.window-app.add2e-spell-dialog-window .window-title{color:white;font-weight:800;}
-.application.add2e-spell-dialog-window .header-button,.application.add2e-spell-dialog-window .window-header a,.window-app.add2e-spell-dialog-window .header-button,.window-app.add2e-spell-dialog-window .window-header a{color:white;}
-.application.add2e-spell-dialog-window .window-content,.window-app.add2e-spell-dialog-window .window-content{background:transparent;color:var(--a2e-text);padding:10px;}
-.application.add2e-spell-dialog-window .dialog-buttons,.window-app.add2e-spell-dialog-window .dialog-buttons{background:transparent;padding:10px 0 0 0;gap:8px;}
-.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.window-app.add2e-spell-dialog-window .dialog-buttons button.default,.window-app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark));color:white;border:1px solid var(--a2e-border);border-radius:9px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.18);}
-.application.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.window-app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]){border-radius:9px;font-weight:700;}
+.application.add2e-spell-dialog-window,.window-app.add2e-spell-dialog-window,.app.add2e-spell-dialog-window,.application:has(.add2e-spell-dialog-shell),.window-app:has(.add2e-spell-dialog-shell),.app:has(.add2e-spell-dialog-shell){border:2px solid var(--a2e-border) !important;border-radius:16px !important;overflow:hidden !important;box-shadow:0 10px 26px rgba(0,0,0,.22) !important;background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;background-color:var(--a2e-bg) !important;}
+.application.add2e-spell-dialog-window .window-header,.window-app.add2e-spell-dialog-window .window-header,.app.add2e-spell-dialog-window .window-header,.application:has(.add2e-spell-dialog-shell) .window-header,.window-app:has(.add2e-spell-dialog-shell) .window-header,.app:has(.add2e-spell-dialog-shell) .window-header{background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main)) !important;color:white !important;border-bottom:2px solid var(--a2e-border) !important;}
+.application.add2e-spell-dialog-window .window-title,.window-app.add2e-spell-dialog-window .window-title,.app.add2e-spell-dialog-window .window-title,.application:has(.add2e-spell-dialog-shell) .window-title,.window-app:has(.add2e-spell-dialog-shell) .window-title,.app:has(.add2e-spell-dialog-shell) .window-title{color:white !important;font-weight:800 !important;}
+.application.add2e-spell-dialog-window .header-button,.application.add2e-spell-dialog-window .window-header a,.window-app.add2e-spell-dialog-window .header-button,.window-app.add2e-spell-dialog-window .window-header a,.app.add2e-spell-dialog-window .header-button,.app.add2e-spell-dialog-window .window-header a,.application:has(.add2e-spell-dialog-shell) .header-button,.application:has(.add2e-spell-dialog-shell) .window-header a,.window-app:has(.add2e-spell-dialog-shell) .header-button,.window-app:has(.add2e-spell-dialog-shell) .window-header a,.app:has(.add2e-spell-dialog-shell) .header-button,.app:has(.add2e-spell-dialog-shell) .window-header a{color:white !important;}
+.application.add2e-spell-dialog-window .window-content,.window-app.add2e-spell-dialog-window .window-content,.app.add2e-spell-dialog-window .window-content,.application:has(.add2e-spell-dialog-shell) .window-content,.window-app:has(.add2e-spell-dialog-shell) .window-content,.app:has(.add2e-spell-dialog-shell) .window-content{background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;color:var(--a2e-text) !important;padding:10px !important;}
+.application.add2e-spell-dialog-window .dialog-buttons,.window-app.add2e-spell-dialog-window .dialog-buttons,.app.add2e-spell-dialog-window .dialog-buttons,.application:has(.add2e-spell-dialog-shell) .dialog-buttons,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons,.app:has(.add2e-spell-dialog-shell) .dialog-buttons{background:transparent !important;padding:10px 0 0 0 !important;gap:8px !important;}
+.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.window-app.add2e-spell-dialog-window .dialog-buttons button.default,.window-app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.app.add2e-spell-dialog-window .dialog-buttons button.default,.app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.application:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.application:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark)) !important;color:white !important;border:1px solid var(--a2e-border) !important;border-radius:9px !important;font-weight:800 !important;box-shadow:0 2px 6px rgba(0,0,0,.18) !important;}
+.application.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.window-app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.application:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]){border-radius:9px !important;font-weight:700 !important;}
 
 .add2e-spell-dialog-shell{border-radius:14px;overflow:hidden;border:2px solid var(--a2e-border);background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent));color:var(--a2e-text);font-family:var(--font-primary);}
 .add2e-spell-dialog-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main));color:white;border-bottom:2px solid var(--a2e-border);}
@@ -98,10 +136,11 @@ function shell({ theme = "cleric", title = "Sort", subtitle = "", img = "icons/s
   return `
     <div
       class="add2e-spell-dialog-shell add2e-spell-dialog-theme-${esc(theme)}"
+      data-add2e-spell-theme="${esc(theme)}"
       style="--a2e-bg:${t.bg};--a2e-accent:${t.accent};--a2e-dark:${t.dark};--a2e-main:${t.main};--a2e-border:${t.border};--a2e-text:${t.text};--a2e-label:${t.labelColor};"
     >
       <div class="add2e-spell-dialog-header">
-        <img src="${esc(img)}" alt="">
+        <img src="${esc(img)}" alt="" onerror="this.src='icons/svg/book.svg';">
         <div>
           <div class="add2e-spell-dialog-title">${esc(title)}</div>
           <div class="add2e-spell-dialog-subtitle">${esc(subtitle || t.label)}</div>
@@ -116,6 +155,38 @@ function primaryButtonClass(buttons) {
   return buttons;
 }
 
+function applyThemeToOpenWindows(root = document) {
+  for (const shellEl of root.querySelectorAll?.(".add2e-spell-dialog-shell") ?? []) {
+    const theme = shellEl.dataset.add2eSpellTheme || "cleric";
+    const win = shellEl.closest(".application, .window-app, .app, .dialog");
+    if (!win) continue;
+
+    win.classList.add("add2e-spell-dialog-window", `add2e-theme-${theme}`);
+    setThemeVariables(win, theme);
+
+    const header = win.querySelector(".window-header");
+    if (header) {
+      header.style.background = `linear-gradient(90deg, ${themeData(theme).dark}, ${themeData(theme).main})`;
+      header.style.color = "white";
+      header.style.borderBottom = `2px solid ${themeData(theme).border}`;
+    }
+
+    const content = win.querySelector(".window-content");
+    if (content) {
+      content.style.background = `linear-gradient(180deg, ${themeData(theme).bg}, ${themeData(theme).accent})`;
+      content.style.color = themeData(theme).text;
+    }
+  }
+}
+
+function startObserver() {
+  if (globalThis.__ADD2E_SPELL_DIALOG_UI_OBSERVER) return;
+  const observer = new MutationObserver(() => applyThemeToOpenWindows(document));
+  observer.observe(document.body, { childList: true, subtree: true });
+  globalThis.__ADD2E_SPELL_DIALOG_UI_OBSERVER = observer;
+  applyThemeToOpenWindows(document);
+}
+
 function wrapDialogOptions(options = {}) {
   const windowTitle = String(options?.window?.title ?? options?.title ?? "");
   const content = String(options?.content ?? "");
@@ -125,7 +196,7 @@ function wrapDialogOptions(options = {}) {
   const rawTitle = windowTitle.replace(/^Lancement\s*:\s*/i, "").trim() || "Sort";
   const theme = guessTheme({ title: windowTitle, content, theme: options?.add2eTheme });
   const t = themeData(theme);
-  const img = options?.add2eImg || "icons/svg/book.svg";
+  const img = guessIcon({ title: rawTitle, content, img: options?.add2eImg });
   const classes = Array.isArray(options?.window?.classes) ? [...options.window.classes] : [];
   classes.push("add2e-spell-dialog-window", `add2e-theme-${theme}`);
 
@@ -141,13 +212,16 @@ function patchDialogV2() {
   if (!DialogV2 || DialogV2.__add2eSpellDialogPatched) return;
   const originalWait = DialogV2.wait.bind(DialogV2);
   DialogV2.wait = function add2eSpellDialogWait(options = {}, ...rest) {
-    return originalWait(wrapDialogOptions(options), ...rest);
+    const wrapped = wrapDialogOptions(options);
+    queueMicrotask(() => applyThemeToOpenWindows(document));
+    setTimeout(() => applyThemeToOpenWindows(document), 25);
+    return originalWait(wrapped, ...rest);
   };
   DialogV2.__add2eSpellDialogPatched = true;
   console.log("[ADD2E][SPELL_DIALOG_UI][PATCH_DIALOGV2] actif");
 }
 
-globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, wrapDialogOptions, esc };
-Hooks.once("ready", () => { ensureStyles(); patchDialogV2(); });
+globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, guessIcon, wrapDialogOptions, applyThemeToOpenWindows, esc };
+Hooks.once("ready", () => { ensureStyles(); patchDialogV2(); startObserver(); });
 ensureStyles();
 console.log("[ADD2E][SPELL_DIALOG_UI][VERSION]", VERSION);
