@@ -1,7 +1,11 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 01 effets
+// Version : 2026-05-21-no-native-effect-handlers-v1
 // ============================================================
 import { escapeHtml, formatDuration, expose } from "./08-character-sheet-ui-00-utils.mjs";
+
+globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-05-21-no-native-effect-handlers-v1";
+console.log("[ADD2E][CHARACTER_UI][EFFECTS][VERSION]", globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION);
 
 export function buildEffectsTab(sheet) {
   const actor = sheet?.actor ?? sheet?.document;
@@ -24,8 +28,8 @@ export function buildEffectsTab(sheet) {
         <td>${escapeHtml(formatDuration(eff))}</td>
         <td class="a2e-small">${desc}</td>
         <td style="white-space:nowrap;text-align:center;">
-          <a class="effect-edit add2e-effect-edit a2e-action-icon a2e-action-edit" data-effect-id="${escapeHtml(eff.id)}" title="Éditer l’effet"><i class="fas fa-edit"></i></a>
-          <a class="effect-delete add2e-effect-delete a2e-action-icon a2e-action-delete" data-effect-id="${escapeHtml(eff.id)}" title="Supprimer l’effet"><i class="fas fa-trash"></i></a>
+          <a class="add2e-effect-edit a2e-action-icon a2e-action-edit" data-effect-id="${escapeHtml(eff.id)}" title="Éditer l’effet"><i class="fas fa-edit"></i></a>
+          <a class="add2e-effect-delete a2e-action-icon a2e-action-delete" data-effect-id="${escapeHtml(eff.id)}" title="Supprimer l’effet"><i class="fas fa-trash"></i></a>
         </td>
       </tr>`;
   }).join("") : `
@@ -77,10 +81,13 @@ export function injectEffectsTab(sheet, sheetRoot) {
       sheet._add2eActivateTab?.("effets", sheetRoot);
     });
 
-  $(sheetRoot).find(".add2e-effect-edit, .effect-edit")
+  $(sheetRoot).find(".add2e-effect-edit")
     .off("click.add2e-effects")
     .on("click.add2e-effects", ev => {
       ev.preventDefault();
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
+
       const effectId = String($(ev.currentTarget).data("effect-id") || "");
       const effect = effectId ? actor.effects.get(effectId) : null;
 
@@ -97,10 +104,12 @@ export function injectEffectsTab(sheet, sheetRoot) {
       effect.sheet.render(true);
     });
 
-  $(sheetRoot).find(".add2e-effect-delete, .effect-delete")
+  $(sheetRoot).find(".add2e-effect-delete")
     .off("click.add2e-effects")
     .on("click.add2e-effects", async ev => {
       ev.preventDefault();
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
       sheet._add2eRememberActiveTab?.(sheetRoot);
 
       const effectId = String($(ev.currentTarget).data("effect-id") || "");
