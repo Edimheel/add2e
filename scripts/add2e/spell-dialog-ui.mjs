@@ -1,6 +1,6 @@
 // ADD2E — UI commune des popups de sorts
-// Version : 2026-05-21-v4-no-black-frame
-const VERSION = "2026-05-21-v4-no-black-frame";
+// Version : 2026-05-21-v5-real-window-root
+const VERSION = "2026-05-21-v5-real-window-root";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(v) {
@@ -99,19 +99,19 @@ function ensureStyles() {
   el.id = "add2e-spell-dialog-ui-style";
   el.dataset.version = VERSION;
   el.textContent = `
-.application.add2e-spell-dialog-window.add2e-theme-cleric,.window-app.add2e-spell-dialog-window.add2e-theme-cleric,.app.add2e-spell-dialog-window.add2e-theme-cleric,.application:has(.add2e-spell-dialog-theme-cleric),.window-app:has(.add2e-spell-dialog-theme-cleric),.app:has(.add2e-spell-dialog-theme-cleric){--a2e-bg:#fffaf0;--a2e-accent:#f3e6c8;--a2e-dark:#6f4b12;--a2e-main:#b88924;--a2e-border:#c99a36;--a2e-text:#2d2011;--a2e-label:#6f4b12;}
-.application.add2e-spell-dialog-window.add2e-theme-druid,.window-app.add2e-spell-dialog-window.add2e-theme-druid,.app.add2e-spell-dialog-window.add2e-theme-druid,.application:has(.add2e-spell-dialog-theme-druid),.window-app:has(.add2e-spell-dialog-theme-druid),.app:has(.add2e-spell-dialog-theme-druid){--a2e-bg:#f4faef;--a2e-accent:#dfeccd;--a2e-dark:#264a23;--a2e-main:#719c4a;--a2e-border:#7fa45d;--a2e-text:#202d1a;--a2e-label:#355428;}
-.application.add2e-spell-dialog-window.add2e-theme-wizard,.window-app.add2e-spell-dialog-window.add2e-theme-wizard,.app.add2e-spell-dialog-window.add2e-theme-wizard,.application:has(.add2e-spell-dialog-theme-wizard),.window-app:has(.add2e-spell-dialog-theme-wizard),.app:has(.add2e-spell-dialog-theme-wizard){--a2e-bg:#f8f3ff;--a2e-accent:#e8ddfb;--a2e-dark:#2e1c5a;--a2e-main:#6b49b8;--a2e-border:#8060cc;--a2e-text:#211735;--a2e-label:#4b3684;}
-.application.add2e-spell-dialog-window.add2e-theme-illusionist,.window-app.add2e-spell-dialog-window.add2e-theme-illusionist,.app.add2e-spell-dialog-window.add2e-theme-illusionist,.application:has(.add2e-spell-dialog-theme-illusionist),.window-app:has(.add2e-spell-dialog-theme-illusionist),.app:has(.add2e-spell-dialog-theme-illusionist){--a2e-bg:#f9f7ff;--a2e-accent:#dff2ff;--a2e-dark:#275a8a;--a2e-main:#925ac6;--a2e-border:#70a9d6;--a2e-text:#1e3043;--a2e-label:#315d83;}
+.application.add2e-spell-dialog-window.add2e-theme-cleric,.window-app.add2e-spell-dialog-window.add2e-theme-cleric,.app.add2e-spell-dialog-window.add2e-theme-cleric,.dialog.add2e-spell-dialog-window.add2e-theme-cleric,.application:has(.add2e-spell-dialog-theme-cleric),.window-app:has(.add2e-spell-dialog-theme-cleric),.app:has(.add2e-spell-dialog-theme-cleric),.dialog:has(.add2e-spell-dialog-theme-cleric){--a2e-bg:#fffaf0;--a2e-accent:#f3e6c8;--a2e-dark:#6f4b12;--a2e-main:#b88924;--a2e-border:#c99a36;--a2e-text:#2d2011;--a2e-label:#6f4b12;}
+.application.add2e-spell-dialog-window.add2e-theme-druid,.window-app.add2e-spell-dialog-window.add2e-theme-druid,.app.add2e-spell-dialog-window.add2e-theme-druid,.dialog.add2e-spell-dialog-window.add2e-theme-druid,.application:has(.add2e-spell-dialog-theme-druid),.window-app:has(.add2e-spell-dialog-theme-druid),.app:has(.add2e-spell-dialog-theme-druid),.dialog:has(.add2e-spell-dialog-theme-druid){--a2e-bg:#f4faef;--a2e-accent:#dfeccd;--a2e-dark:#264a23;--a2e-main:#719c4a;--a2e-border:#7fa45d;--a2e-text:#202d1a;--a2e-label:#355428;}
+.application.add2e-spell-dialog-window.add2e-theme-wizard,.window-app.add2e-spell-dialog-window.add2e-theme-wizard,.app.add2e-spell-dialog-window.add2e-theme-wizard,.dialog.add2e-spell-dialog-window.add2e-theme-wizard,.application:has(.add2e-spell-dialog-theme-wizard),.window-app:has(.add2e-spell-dialog-theme-wizard),.app:has(.add2e-spell-dialog-theme-wizard),.dialog:has(.add2e-spell-dialog-theme-wizard){--a2e-bg:#f8f3ff;--a2e-accent:#e8ddfb;--a2e-dark:#2e1c5a;--a2e-main:#6b49b8;--a2e-border:#8060cc;--a2e-text:#211735;--a2e-label:#4b3684;}
+.application.add2e-spell-dialog-window.add2e-theme-illusionist,.window-app.add2e-spell-dialog-window.add2e-theme-illusionist,.app.add2e-spell-dialog-window.add2e-theme-illusionist,.dialog.add2e-spell-dialog-window.add2e-theme-illusionist,.application:has(.add2e-spell-dialog-theme-illusionist),.window-app:has(.add2e-spell-dialog-theme-illusionist),.app:has(.add2e-spell-dialog-theme-illusionist),.dialog:has(.add2e-spell-dialog-theme-illusionist){--a2e-bg:#f9f7ff;--a2e-accent:#dff2ff;--a2e-dark:#275a8a;--a2e-main:#925ac6;--a2e-border:#70a9d6;--a2e-text:#1e3043;--a2e-label:#315d83;}
 
-.application.add2e-spell-dialog-window,.window-app.add2e-spell-dialog-window,.app.add2e-spell-dialog-window,.application:has(.add2e-spell-dialog-shell),.window-app:has(.add2e-spell-dialog-shell),.app:has(.add2e-spell-dialog-shell){border:2px solid var(--a2e-border) !important;border-radius:16px !important;overflow:hidden !important;box-shadow:0 10px 26px rgba(0,0,0,.22) !important;background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;background-color:var(--a2e-bg) !important;}
-.application.add2e-spell-dialog-window .window-header,.window-app.add2e-spell-dialog-window .window-header,.app.add2e-spell-dialog-window .window-header,.application:has(.add2e-spell-dialog-shell) .window-header,.window-app:has(.add2e-spell-dialog-shell) .window-header,.app:has(.add2e-spell-dialog-shell) .window-header{background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main)) !important;color:white !important;border-bottom:2px solid var(--a2e-border) !important;}
-.application.add2e-spell-dialog-window .window-title,.window-app.add2e-spell-dialog-window .window-title,.app.add2e-spell-dialog-window .window-title,.application:has(.add2e-spell-dialog-shell) .window-title,.window-app:has(.add2e-spell-dialog-shell) .window-title,.app:has(.add2e-spell-dialog-shell) .window-title{color:white !important;font-weight:800 !important;}
-.application.add2e-spell-dialog-window .header-button,.application.add2e-spell-dialog-window .window-header a,.window-app.add2e-spell-dialog-window .header-button,.window-app.add2e-spell-dialog-window .window-header a,.app.add2e-spell-dialog-window .header-button,.app.add2e-spell-dialog-window .window-header a,.application:has(.add2e-spell-dialog-shell) .header-button,.application:has(.add2e-spell-dialog-shell) .window-header a,.window-app:has(.add2e-spell-dialog-shell) .header-button,.window-app:has(.add2e-spell-dialog-shell) .window-header a,.app:has(.add2e-spell-dialog-shell) .header-button,.app:has(.add2e-spell-dialog-shell) .window-header a{color:white !important;}
-.application.add2e-spell-dialog-window .window-content,.window-app.add2e-spell-dialog-window .window-content,.app.add2e-spell-dialog-window .window-content,.application:has(.add2e-spell-dialog-shell) .window-content,.window-app:has(.add2e-spell-dialog-shell) .window-content,.app:has(.add2e-spell-dialog-shell) .window-content{background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;color:var(--a2e-text) !important;padding:10px !important;}
-.application.add2e-spell-dialog-window .dialog-buttons,.window-app.add2e-spell-dialog-window .dialog-buttons,.app.add2e-spell-dialog-window .dialog-buttons,.application:has(.add2e-spell-dialog-shell) .dialog-buttons,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons,.app:has(.add2e-spell-dialog-shell) .dialog-buttons{background:transparent !important;padding:10px 0 0 0 !important;gap:8px !important;}
-.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.window-app.add2e-spell-dialog-window .dialog-buttons button.default,.window-app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.app.add2e-spell-dialog-window .dialog-buttons button.default,.app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.application:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.application:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark)) !important;color:white !important;border:1px solid var(--a2e-border) !important;border-radius:9px !important;font-weight:800 !important;box-shadow:0 2px 6px rgba(0,0,0,.18) !important;}
-.application.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.window-app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.application:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]){border-radius:9px !important;font-weight:700 !important;}
+.application.add2e-spell-dialog-window,.window-app.add2e-spell-dialog-window,.app.add2e-spell-dialog-window,.dialog.add2e-spell-dialog-window,.application:has(.add2e-spell-dialog-shell),.window-app:has(.add2e-spell-dialog-shell),.app:has(.add2e-spell-dialog-shell),.dialog:has(.add2e-spell-dialog-shell){border:2px solid var(--a2e-border) !important;border-radius:16px !important;overflow:hidden !important;box-shadow:0 10px 26px rgba(0,0,0,.22) !important;background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;background-color:var(--a2e-bg) !important;}
+.application.add2e-spell-dialog-window .window-header,.window-app.add2e-spell-dialog-window .window-header,.app.add2e-spell-dialog-window .window-header,.dialog.add2e-spell-dialog-window .window-header,.application:has(.add2e-spell-dialog-shell) .window-header,.window-app:has(.add2e-spell-dialog-shell) .window-header,.app:has(.add2e-spell-dialog-shell) .window-header,.dialog:has(.add2e-spell-dialog-shell) .window-header{background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main)) !important;color:white !important;border-bottom:2px solid var(--a2e-border) !important;}
+.application.add2e-spell-dialog-window .window-title,.window-app.add2e-spell-dialog-window .window-title,.app.add2e-spell-dialog-window .window-title,.dialog.add2e-spell-dialog-window .window-title,.application:has(.add2e-spell-dialog-shell) .window-title,.window-app:has(.add2e-spell-dialog-shell) .window-title,.app:has(.add2e-spell-dialog-shell) .window-title,.dialog:has(.add2e-spell-dialog-shell) .window-title{color:white !important;font-weight:800 !important;}
+.application.add2e-spell-dialog-window .header-button,.application.add2e-spell-dialog-window .window-header a,.window-app.add2e-spell-dialog-window .header-button,.window-app.add2e-spell-dialog-window .window-header a,.app.add2e-spell-dialog-window .header-button,.app.add2e-spell-dialog-window .window-header a,.dialog.add2e-spell-dialog-window .header-button,.dialog.add2e-spell-dialog-window .window-header a,.application:has(.add2e-spell-dialog-shell) .header-button,.application:has(.add2e-spell-dialog-shell) .window-header a,.window-app:has(.add2e-spell-dialog-shell) .header-button,.window-app:has(.add2e-spell-dialog-shell) .window-header a,.app:has(.add2e-spell-dialog-shell) .header-button,.app:has(.add2e-spell-dialog-shell) .window-header a,.dialog:has(.add2e-spell-dialog-shell) .header-button,.dialog:has(.add2e-spell-dialog-shell) .window-header a{color:white !important;}
+.application.add2e-spell-dialog-window .window-content,.window-app.add2e-spell-dialog-window .window-content,.app.add2e-spell-dialog-window .window-content,.dialog.add2e-spell-dialog-window .window-content,.application:has(.add2e-spell-dialog-shell) .window-content,.window-app:has(.add2e-spell-dialog-shell) .window-content,.app:has(.add2e-spell-dialog-shell) .window-content,.dialog:has(.add2e-spell-dialog-shell) .window-content{background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;color:var(--a2e-text) !important;padding:10px !important;}
+.application.add2e-spell-dialog-window .dialog-buttons,.window-app.add2e-spell-dialog-window .dialog-buttons,.app.add2e-spell-dialog-window .dialog-buttons,.dialog.add2e-spell-dialog-window .dialog-buttons,.application:has(.add2e-spell-dialog-shell) .dialog-buttons,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons,.app:has(.add2e-spell-dialog-shell) .dialog-buttons,.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons{background:transparent !important;padding:10px 0 0 0 !important;gap:8px !important;}
+.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.window-app.add2e-spell-dialog-window .dialog-buttons button.default,.window-app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.app.add2e-spell-dialog-window .dialog-buttons button.default,.app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.dialog.add2e-spell-dialog-window .dialog-buttons button.default,.dialog.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.application:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.application:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark)) !important;color:white !important;border:1px solid var(--a2e-border) !important;border-radius:9px !important;font-weight:800 !important;box-shadow:0 2px 6px rgba(0,0,0,.18) !important;}
+.application.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.window-app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.dialog.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.application:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]){border-radius:9px !important;font-weight:700 !important;}
 
 .add2e-spell-dialog-shell{border-radius:14px;overflow:hidden;border:2px solid var(--a2e-border);background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent));color:var(--a2e-text);font-family:var(--font-primary);}
 .add2e-spell-dialog-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main));color:white;border-bottom:2px solid var(--a2e-border);}
@@ -155,26 +155,63 @@ function primaryButtonClass(buttons) {
   return buttons;
 }
 
+function findWindowRoot(shellEl) {
+  const candidates = [];
+  let node = shellEl?.parentElement ?? null;
+  while (node) {
+    if (node.matches?.(".application, .window-app, .app")) candidates.push(node);
+    node = node.parentElement;
+  }
+  return candidates[0] ?? shellEl.closest(".dialog") ?? null;
+}
+
+function applyThemeToElement(el, theme, { strong = false } = {}) {
+  if (!el) return;
+  const t = themeData(theme);
+  setThemeVariables(el, theme);
+  el.style.setProperty("background", `linear-gradient(180deg, ${t.bg}, ${t.accent})`, strong ? "important" : "");
+  el.style.setProperty("background-color", t.bg, strong ? "important" : "");
+  el.style.setProperty("color", t.text, strong ? "important" : "");
+}
+
 function applyThemeToOpenWindows(root = document) {
   for (const shellEl of root.querySelectorAll?.(".add2e-spell-dialog-shell") ?? []) {
     const theme = shellEl.dataset.add2eSpellTheme || "cleric";
-    const win = shellEl.closest(".application, .window-app, .app, .dialog");
+    const t = themeData(theme);
+    const win = findWindowRoot(shellEl);
     if (!win) continue;
 
     win.classList.add("add2e-spell-dialog-window", `add2e-theme-${theme}`);
     setThemeVariables(win, theme);
+    win.style.setProperty("background", `linear-gradient(180deg, ${t.bg}, ${t.accent})`, "important");
+    win.style.setProperty("background-color", t.bg, "important");
+    win.style.setProperty("border", `2px solid ${t.border}`, "important");
+    win.style.setProperty("border-radius", "16px", "important");
+    win.style.setProperty("overflow", "hidden", "important");
 
     const header = win.querySelector(".window-header");
     if (header) {
-      header.style.background = `linear-gradient(90deg, ${themeData(theme).dark}, ${themeData(theme).main})`;
-      header.style.color = "white";
-      header.style.borderBottom = `2px solid ${themeData(theme).border}`;
+      header.style.setProperty("background", `linear-gradient(90deg, ${t.dark}, ${t.main})`, "important");
+      header.style.setProperty("background-color", t.dark, "important");
+      header.style.setProperty("color", "white", "important");
+      header.style.setProperty("border-bottom", `2px solid ${t.border}`, "important");
     }
 
-    const content = win.querySelector(".window-content");
-    if (content) {
-      content.style.background = `linear-gradient(180deg, ${themeData(theme).bg}, ${themeData(theme).accent})`;
-      content.style.color = themeData(theme).text;
+    for (const elt of [
+      win.querySelector(".window-content"),
+      shellEl.parentElement,
+      shellEl.parentElement?.parentElement,
+      win.querySelector("form"),
+      win.querySelector(".standard-form"),
+      win.querySelector(".dialog-content"),
+      win.querySelector(".dialog-buttons")
+    ].filter(Boolean)) {
+      applyThemeToElement(elt, theme, { strong: true });
+    }
+
+    const buttons = win.querySelector(".dialog-buttons");
+    if (buttons) {
+      buttons.style.setProperty("padding", "10px 0 0 0", "important");
     }
   }
 }
@@ -182,7 +219,7 @@ function applyThemeToOpenWindows(root = document) {
 function startObserver() {
   if (globalThis.__ADD2E_SPELL_DIALOG_UI_OBSERVER) return;
   const observer = new MutationObserver(() => applyThemeToOpenWindows(document));
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "style"] });
   globalThis.__ADD2E_SPELL_DIALOG_UI_OBSERVER = observer;
   applyThemeToOpenWindows(document);
 }
@@ -203,6 +240,7 @@ function wrapDialogOptions(options = {}) {
   return {
     ...options,
     window: { ...(options.window ?? {}), classes: [...new Set(classes)] },
+    classes: [...new Set([...(Array.isArray(options.classes) ? options.classes : []), "add2e-spell-dialog-window", `add2e-theme-${theme}`])],
     content: shell({ theme, title: rawTitle, subtitle: `Sort — ${t.label}`, img, body: content })
   };
 }
@@ -215,6 +253,8 @@ function patchDialogV2() {
     const wrapped = wrapDialogOptions(options);
     queueMicrotask(() => applyThemeToOpenWindows(document));
     setTimeout(() => applyThemeToOpenWindows(document), 25);
+    setTimeout(() => applyThemeToOpenWindows(document), 100);
+    setTimeout(() => applyThemeToOpenWindows(document), 250);
     return originalWait(wrapped, ...rest);
   };
   DialogV2.__add2eSpellDialogPatched = true;
