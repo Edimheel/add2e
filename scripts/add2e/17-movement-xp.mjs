@@ -1,13 +1,15 @@
 // ADD2E — XP + Mouvement
-// Version : 2026-05-20-clean-v1
+// Version : 2026-05-21-clean-v2-gm-free-move-scale
 //
 // Principes :
 // - pas de patch de render()
 // - pas d'actor.update() depuis getData()
 // - ajustements XP/niveau dans preUpdateActor pour éviter les rendus en cascade
 // - contrôle token sur la valeur affichée de mouvement en mètres
+// - MJ : jamais bloqué, mais échelle couleur visible
+// - Joueurs : blocage si dépassement, avec échelle couleur visible
 
-const VERSION = "2026-05-20-clean-v1";
+const VERSION = "2026-05-21-clean-v2-gm-free-move-scale";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 
@@ -412,6 +414,63 @@ function movementOrigin(tokenDoc) {
   return tokenDoc.getFlag("add2e", "lastAllowedPosition") ?? { x: tokenDoc.x, y: tokenDoc.y };
 }
 
+function movementScaleStatus(distance, max) {
+  if (max <= 0) return { key: "red", label: "rouge", color: 0xd91e18, blocked: true };
+  if (distance <= max + 0.01) return { key: "green", label: "vert", color: 0x2ecc71, blocked: false };
+  if (distance <= (max * 2) + 0.01) return { key: "orange", label: "orange", color: 0xf39c12, blocked: true };
+  return { key: "red", label: "rouge", color: 0xd91e18, blocked: true };
+}
+
+function drawMovementScale(tokenDoc, status, distance, max) {
+  const token = canvas?.tokens?.get?.(tokenDoc.id);
+  const Graphics = globalThis.PIXI?.Graphics;
+  if (!token || !Graphics) return;
+
+  try {
+    if (!token._add2eMovementScaleRing) {
+      token._add2eMovementScaleRing = new Graphics();
+      token.addChild(token._add2eMovementScaleRing);
+    }
+
+    const g = token._add2eMovementScaleRing;
+    const w = Number(token.w ?? token.width ?? canvas.grid.size) || canvas.grid.size;
+    const h = Number(token.h ?? token.height ?? canvas.grid.size) || canvas.grid.size;
+
+    g.clear();
+    g.lineStyle(5, status.color, 0.95);
+    g.drawRoundedRect(-3, -3, w + 6, h + 6, 10);
+    g.zIndex = 9999;
+    token.sortChildren?.();
+
+    token.document.setFlag("add2e", "movementScale", {
+      status: status.key,
+      label: status.label,
+      distance,
+      max,
+      gmFreeMove: game.user.isGM
+    });
+  } catch (err) {
+    console.warn(`${TAG}[TOKEN][SCALE_DRAW_ERROR]`, err);
+  }
+}
+
+function computeTokenMovementScale(tokenDoc, changes = {}, from = null) {
+  const actor = tokenDoc.actor;
+  if (!actor || actor.type !== "personnage") return null;
+
+  const movement = computeMovement(actor);
+  const max = Number(movement.actuel ?? actor.system?.movement ?? actor.system?.vitesse_deplacement ?? 0) || 0;
+  const origin = from ?? (game.combat ? { x: tokenDoc.x, y: tokenDoc.y } : movementOrigin(tokenDoc));
+  const delta = tokenDistanceMeters(tokenDoc, changes, origin);
+  const spent = game.combat ? spentThisTurn(actor) : 0;
+  const next = Math.round((spent + delta) * 100) / 100;
+  const status = movementScaleStatus(next, max);
+
+  drawMovementScale(tokenDoc, status, next, max);
+
+  return { actor, movement, max, origin, delta, spent, next, status };
+}
+
 function validateTokenMovement(tokenDoc, changes, options = {}) {
   if (options?.add2eIgnoreMovement) return true;
   if (!game.settings.get("add2e", "enforceTokenMovement")) return true;
@@ -420,17 +479,30 @@ function validateTokenMovement(tokenDoc, changes, options = {}) {
   const actor = tokenDoc.actor;
   if (!actor || actor.type !== "personnage") return true;
 
-  const movement = computeMovement(actor);
-  const max = Number(movement.actuel ?? actor.system?.movement ?? actor.system?.vitesse_deplacement ?? 0) || 0;
-  const origin = game.combat ? { x: tokenDoc.x, y: tokenDoc.y } : movementOrigin(tokenDoc);
-  const delta = tokenDistanceMeters(tokenDoc, changes, origin);
-  const spent = game.combat ? spentThisTurn(actor) : 0;
-  const next = Math.round((spent + delta) * 100) / 100;
+  const result = computeTokenMovementScale(tokenDoc, changes);
+  if (!result) return true;
 
-  log("[TOKEN][CHECK]", { actor: actor.name, token: tokenDoc.name, delta, spent, next, max, combat: !!game.combat });
+  const { delta, spent, next, max, status } = result;
 
-  if (max <= 0 || next > max + 0.01) {
-    ui.notifications.warn(`${actor.name} dépasse son mouvement : ${next.toFixed(1)} m / ${max.toFixed(1)} m.`);
+  log("[TOKEN][CHECK]", {
+    actor: actor.name,
+    token: tokenDoc.name,
+    delta,
+    spent,
+    next,
+    max,
+    status: status.key,
+    gm: game.user.isGM,
+    combat: !!game.combat
+  });
+
+  if (game.user.isGM) {
+    if (next > max + 0.01) ui.notifications.info(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m. Déplacement MJ autorisé.`);
+    return true;
+  }
+
+  if (status.blocked) {
+    ui.notifications.warn(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m.`);
     return false;
   }
 
@@ -456,7 +528,7 @@ Hooks.once("init", () => {
   });
   game.settings.register("add2e", "enforceTokenMovement", {
     name: "ADD2E — Contrôler le déplacement des tokens",
-    hint: "Bloque un PJ qui dépasse sa valeur de mouvement affichée en mètres.",
+    hint: "Bloque les joueurs qui dépassent leur mouvement. Le MJ n'est jamais bloqué et voit seulement l'échelle de couleur.",
     scope: "world",
     config: true,
     type: Boolean,
@@ -507,8 +579,16 @@ Hooks.on("renderAdd2eActorSheet", (sheet, html) => {
 });
 
 Hooks.on("preUpdateToken", (tokenDoc, changes, options) => validateTokenMovement(tokenDoc, changes, options));
+Hooks.on("updateToken", (tokenDoc, changes) => {
+  if (!changes || (changes.x === undefined && changes.y === undefined)) return;
+  if (!game.settings.get("add2e", "enforceTokenMovement")) return;
+  computeTokenMovementScale(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y });
+});
 Hooks.on("controlToken", token => {
-  if (token?.actor?.type === "personnage") token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+  if (token?.actor?.type === "personnage") {
+    token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+    computeTokenMovementScale(token.document, { x: token.document.x, y: token.document.y });
+  }
 });
 for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
   Hooks.on(hookName, item => {
@@ -531,3 +611,4 @@ globalThis.add2eAwardXp = awardXp;
 globalThis.add2ePromptXp = promptXp;
 globalThis.add2eMinXpForLevel = minXpForLevel;
 globalThis.add2eValidateTokenMovement = validateTokenMovement;
+globalThis.add2eComputeTokenMovementScale = computeTokenMovementScale;
