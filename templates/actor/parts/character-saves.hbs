@@ -1,0 +1,31 @@
+      <aside class="a2e-saves-square-strip a2e-saves-square-side" aria-label="Jets de sauvegarde">
+        <div class="a2e-saves-square-title">
+          <i class="fas fa-dice-d20"></i>
+          <span>Sauv.</span>
+        </div>
+      <div class="a2e-save-square-grid">
+        {{#each saveShortLabels as |saveLabel idx|}}
+          <div class="a2e-save-square a2e-save-square-{{idx}}">
+            {{#if (eq idx 0)}}<i class="fas fa-skull-crossbones roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            {{#if (eq idx 1)}}<i class="fas fa-gem roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            {{#if (eq idx 2)}}<i class="fas fa-magic roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            {{#if (eq idx 3)}}<i class="fas fa-fire roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            {{#if (eq idx 4)}}<i class="fas fa-scroll roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+            <div class="a2e-save-square-label">
+              {{#if (eq idx 0)}}Paralysie / poison / mort magique{{/if}}
+              {{#if (eq idx 1)}}Pétrification / polymorphose{{/if}}
+              {{#if (eq idx 2)}}Baguettes et badines{{/if}}
+              {{#if (eq idx 3)}}Souffles{{/if}}
+              {{#if (eq idx 4)}}Sortilèges{{/if}}
+            </div>
+            <div class="a2e-save-square-value">
+              {{#if ../progressionCourante}}
+                {{lookup ../progressionCourante.savingThrows idx}}
+              {{else}}
+                —
+              {{/if}}
+            </div>
+          </div>
+        {{/each}}
+      </div>
+      </aside>
