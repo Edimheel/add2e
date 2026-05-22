@@ -107,4 +107,17 @@ if (typeof Handlebars !== "undefined") {
     if (typeof value === "string" && value.trim()) return value;
     return typeof fallback === "string" ? fallback : "";
   });
+
+  Handlebars.registerHelper("negativeNumber", function(value) {
+    const n = Number(value || 0);
+    return n === 0 ? 0 : -Math.abs(n);
+  });
+
+  Handlebars.registerHelper("magicSourceNames", function(value, fallback) {
+    if (!Array.isArray(value) || !value.length) return typeof fallback === "string" ? fallback : "";
+    return value
+      .filter(Boolean)
+      .map(source => String(source).replace(/:\s*[-+]?\d+\s*$/, ""))
+      .join("\n");
+  });
 }
