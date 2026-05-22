@@ -1,0 +1,52 @@
+      <section class='a2e-tab-content tab tab-equipement {{#if (eq activeTab "equipement")}}active{{/if}}' data-group="primary" data-tab="equipement">
+        <div class="a2e-grid-2">
+          <div class="a2e-panel">
+            <h2>Objets</h2>
+            <div class="a2e-panel-body">
+              <a class="a2e-action-icon a2e-action-add objet-create" title="Créer un objet" style="margin-bottom:8px;font-size:1.2em;"><i class="fas fa-plus-circle"></i></a>
+
+              {{#if listeObjets.length}}
+                <table class="a2e-table">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Qté</th>
+                      <th>Poids</th>
+                      <th>Équipé</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each listeObjets as |objet|}}
+                      <tr class="item" data-item-id="{{objet._id}}" data-itemId="{{objet._id}}">
+                        <td><b>{{objet.name}}</b></td>
+                        <td>{{objet.system.quantite}}</td>
+                        <td>{{objet.system.poids}}</td>
+                        <td>
+                          {{#if objet.system.equipee}}
+                            <i class="fas fa-check-circle equip-green"></i>
+                          {{else}}
+                            <i class="fas fa-times-circle equip-red"></i>
+                          {{/if}}
+                        </td>
+                        <td>
+                          <div class="a2e-actions">
+                            <a class="item-control item-equip a2e-action-icon {{#if objet.system.equipee}}a2e-action-unequip{{else}}a2e-action-equip{{/if}}" data-action="equip" data-item-id="{{objet._id}}" title="{{#if objet.system.equipee}}Retirer{{else}}Équiper{{/if}}">
+                              {{#if objet.system.equipee}}<i class="fas fa-minus-circle"></i>{{else}}<i class="fas fa-plus-circle"></i>{{/if}}
+                            </a>
+                            <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{objet._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                            <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{objet._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                          </div>
+                        </td>
+                      </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+                <p class="a2e-small"><b>Poids total objets :</b> {{poidsTotalObjets}}</p>
+              {{else}}
+                <p class="a2e-muted">Aucun objet.</p>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </section>
