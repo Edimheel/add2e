@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés.
-// Version : 2026-05-21-v2-central-jb2a-no-duplicate
+// Version : 2026-05-21-v3-target-first-no-yellow-curse
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-21-v2-central-jb2a-no-duplicate";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-21-v3-target-first-no-yellow-curse";
 
 const ADD2E_JB2A_PRESET_CANDIDATES = {
   divine: [
@@ -119,14 +119,21 @@ async function add2eJb2aFileExists(path) {
 }
 
 async function add2ePickJb2aFile(preset = "divine") {
-  const key = add2eNormalizeFxKey(preset || "divine");
-  const candidates = [
-    ...(ADD2E_JB2A_PRESET_CANDIDATES[key] ?? []),
-    ...(ADD2E_JB2A_PRESET_CANDIDATES.divine ?? [])
-  ];
+  const key = add2eNormalizeFxKey(preset || "divine") || "divine";
+  const presetCandidates = ADD2E_JB2A_PRESET_CANDIDATES[key] ?? [];
+  const candidates = key === "divine"
+    ? presetCandidates
+    : presetCandidates;
 
   for (const candidate of candidates) {
     if (await add2eJb2aFileExists(candidate)) return candidate;
+  }
+
+  // Pas de fallback jaune pour les presets spécifiques : si le fichier n'existe pas,
+  // on ne joue rien au lieu de transformer une malédiction en effet divin jaune.
+  if (key !== "divine") {
+    console.warn("[ADD2E][JB2A][MISSING_PRESET] Aucun fichier JB2A trouvé pour le preset spécifique.", { preset: key, candidates });
+    return "";
   }
 
   return "";
@@ -136,7 +143,7 @@ export async function add2ePlayJb2aPremiumFx(target, preset = "divine", options 
   try {
     if (typeof Sequence === "undefined") return false;
 
-    const key = add2eNormalizeFxKey(preset || "divine");
+    const key = add2eNormalizeFxKey(preset || "divine") || "divine";
     const tokenObj = add2eGetTokenLikeObject(target);
     const point = add2eGetTokenLikeCenter(target);
     if (!tokenObj && !point) return false;
@@ -158,7 +165,7 @@ export async function add2ePlayJb2aPremiumFx(target, preset = "divine", options 
       .belowTokens(options.belowTokens ?? false);
 
     await seq.play();
-    console.log("[ADD2E][JB2A][PLAY]", { preset: key, file });
+    console.log("[ADD2E][JB2A][PLAY]", { preset: key, file, target: tokenObj?.name ?? null });
     return true;
   } catch (e) {
     console.warn("[ADD2E][JB2A][ERROR] VFX ignoré pour ne pas bloquer l'action.", { preset, error: e });
@@ -167,18 +174,29 @@ export async function add2ePlayJb2aPremiumFx(target, preset = "divine", options 
 }
 
 async function add2ePlayCentralSpellFx(spellKey = "divine", context = {}) {
-  const key = add2eNormalizeFxKey(spellKey || "divine");
+  const key = add2eNormalizeFxKey(spellKey || "divine") || "divine";
   const preset = ADD2E_SPELL_KEY_TO_JB2A_PRESET[key] || key || "divine";
 
-  // Une seule animation par sort : priorité au lanceur pour éviter les effets partout.
-  const target = context.casterToken
-    ?? context.caster
-    ?? context.sourceToken
-    ?? context.targetToken
-    ?? context.target
-    ?? (Array.isArray(context.targetTokens) ? context.targetTokens[0] : null);
+  const targets = Array.isArray(context.targetTokens)
+    ? context.targetTokens.filter(Boolean)
+    : [];
 
-  return add2ePlayJb2aPremiumFx(target, preset, context.jb2aOptions ?? {});
+  if (!targets.length) {
+    const singleTarget = context.targetToken ?? context.target ?? null;
+    if (singleTarget) targets.push(singleTarget);
+  }
+
+  if (!targets.length) {
+    const fallbackCaster = context.casterToken ?? context.caster ?? context.sourceToken ?? null;
+    if (fallbackCaster) targets.push(fallbackCaster);
+  }
+
+  let played = false;
+  for (const target of targets) {
+    played = await add2ePlayJb2aPremiumFx(target, preset, context.jb2aOptions ?? {}) || played;
+  }
+
+  return played;
 }
 
 // Compat ancien moteur + nouveau registre centralisé.
