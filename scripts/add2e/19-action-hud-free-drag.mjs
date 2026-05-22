@@ -1,12 +1,13 @@
 // ADD2E — Correctif HUD : déplacement libre + repli fiable
-// Version : 2026-05-22-v7-no-apply-log-loop
+// Version : 2026-05-22-v8-keep-visible-after-collapse
 //
 // Ce module complète add2e-action-hud.mjs.
 // Le repli est capturé sur pointerdown, avant les handlers click internes du HUD.
 // La position sauvegardée reste la référence : un redimensionnement de fenêtre ne la réécrit plus.
 // Les applications d'état automatiques sont silencieuses pour éviter les boucles de logs.
+// Après repli/ouverture, le HUD est remonté si son bas dépasse de l'écran.
 
-const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-22-v7-no-apply-log-loop";
+const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-22-v8-keep-visible-after-collapse";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_STORAGE_KEY = "add2e.actionHud.state.v8";
 const ADD2E_HUD_TAG = "[ADD2E][ACTION_HUD][FIX]";
@@ -70,6 +71,40 @@ function add2eHudFixInjectStyle() {
   document.head.appendChild(style);
 }
 
+function add2eHudFixKeepVisible(hud, { save = true, reason = "keep-visible", log = true } = {}) {
+  if (!hud || add2eHudDragging) return false;
+
+  const margin = 8;
+  const visible = 42;
+  const rect = hud.getBoundingClientRect();
+
+  let left = rect.left;
+  let top = rect.top;
+
+  if (rect.right < visible) left = -hud.offsetWidth + visible;
+  if (rect.left > window.innerWidth - visible) left = window.innerWidth - visible;
+
+  if (rect.top < margin) top = margin;
+  if (rect.bottom > window.innerHeight - margin) {
+    top = Math.max(margin, rect.top - (rect.bottom - (window.innerHeight - margin)));
+  }
+
+  left = add2eHudFixClamp(left, -hud.offsetWidth + visible, window.innerWidth - visible);
+  top = add2eHudFixClamp(top, margin, Math.max(margin, window.innerHeight - visible));
+
+  const changed = Math.round(left) !== Math.round(rect.left) || Math.round(top) !== Math.round(rect.top);
+  if (!changed) return false;
+
+  hud.style.setProperty("left", `${Math.round(left)}px`, "important");
+  hud.style.setProperty("top", `${Math.round(top)}px`, "important");
+  hud.style.setProperty("right", "auto", "important");
+  hud.style.setProperty("bottom", "auto", "important");
+
+  if (save) add2eHudFixSaveState({ left: Math.round(left), top: Math.round(top), width: Math.round(hud.offsetWidth || rect.width || 560) });
+  if (log) console.log(`${ADD2E_HUD_TAG}[KEEP_VISIBLE]`, { reason, left: Math.round(left), top: Math.round(top) });
+  return true;
+}
+
 function add2eHudFixSetRetracted(hud, retracted, reason = "manual", { save = true, log = true } = {}) {
   if (!hud) return;
   const panel = add2eHudFixPanel(hud);
@@ -85,6 +120,7 @@ function add2eHudFixSetRetracted(hud, retracted, reason = "manual", { save = tru
   }
 
   if (save) add2eHudFixSaveState({ menuRetracted: retracted, hudCollapsed: retracted });
+  add2eHudFixKeepVisible(hud, { save, reason: `${reason}:${retracted ? "retracted" : "open"}`, log });
 
   const changed = wasRetracted !== retracted || Boolean(panelHadInlineNone) !== Boolean(retracted);
   if (log && changed) {
@@ -108,18 +144,14 @@ function add2eHudFixApplyGeometryFromState(hud, { constrainVisible = false } = {
   if (!Number.isFinite(left)) left = hud.getBoundingClientRect().left;
   if (!Number.isFinite(top)) top = hud.getBoundingClientRect().top;
 
-  if (constrainVisible) {
-    const visible = 42;
-    left = add2eHudFixClamp(left, -hud.offsetWidth + visible, window.innerWidth - visible);
-    top = add2eHudFixClamp(top, 0, window.innerHeight - visible);
-  }
-
   if (Number.isFinite(left)) hud.style.setProperty("left", `${Math.round(left)}px`, "important");
   if (Number.isFinite(top)) hud.style.setProperty("top", `${Math.round(top)}px`, "important");
   if (Number.isFinite(width)) hud.style.setProperty("width", `${Math.round(width)}px`, "important");
   hud.style.setProperty("right", "auto", "important");
   hud.style.setProperty("bottom", "auto", "important");
   hud.style.setProperty("--add2e-hud-free-width", hud.style.width || `${hud.offsetWidth || 560}px`);
+
+  if (constrainVisible) add2eHudFixKeepVisible(hud, { save: false, reason: "resize-visual-only", log: false });
 }
 
 function add2eHudFixApplyState(hud) {
@@ -194,6 +226,7 @@ function add2eHudFixStartDrag(ev) {
     window.removeEventListener("pointerup", up, true);
     add2eHudDragging = false;
     if (moved) {
+      add2eHudFixKeepVisible(hud, { save: false, reason: "drag-end", log: false });
       const r = hud.getBoundingClientRect();
       add2eHudFixSaveState({ left: Math.round(r.left), top: Math.round(r.top), width: Math.round(hud.offsetWidth || r.width || 560) });
       console.log(`${ADD2E_HUD_TAG}[DRAG_SAVE]`, { left: Math.round(r.left), top: Math.round(r.top), width: Math.round(hud.offsetWidth || r.width || 560) });
@@ -250,7 +283,7 @@ function add2eHudFixDebug() {
     hud: Boolean(hud),
     classes: hud ? [...hud.classList] : [],
     state: add2eHudFixReadState(),
-    rect: rect ? { left: Math.round(rect.left), top: Math.round(rect.top), width: Math.round(rect.width), height: Math.round(rect.height) } : null,
+    rect: rect ? { left: Math.round(rect.left), top: Math.round(rect.top), bottom: Math.round(rect.bottom), width: Math.round(rect.width), height: Math.round(rect.height), viewportH: window.innerHeight } : null,
     panelInlineDisplay: panel?.style?.display ?? null,
     panelComputedDisplay: panel ? getComputedStyle(panel).display : null,
     activeTab: hud?.querySelector?.("[data-hud-tab].active")?.dataset?.hudTab ?? null
