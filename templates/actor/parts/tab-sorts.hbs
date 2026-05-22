@@ -1,22 +1,70 @@
       <section class='a2e-tab-content tab tab-sorts {{#if (eq activeTab "sorts")}}active{{/if}}' data-group="primary" data-tab="sorts">
         <div class="a2e-panel">
-          <h2>Sorts</h2>
+          <h2>
+            Sorts
+            {{#if progressionCourante.spellsPerLevel}}
+              <span class="a2e-spell-capacity-summary" title="Emplacements de sorts disponibles par niveau">
+                {{#each progressionCourante.spellsPerLevel as |slots idx|}}
+                  {{#if slots}}
+                    <span class="a2e-spell-capacity-pill">N{{add idx 1}} {{slots}}</span>
+                  {{/if}}
+                {{/each}}
+              </span>
+            {{/if}}
+          </h2>
           <div class="a2e-panel-body">
             {{#if niveauxSorts.length}}
               {{#each niveauxSorts as |niv|}}
                 <div class="a2e-panel" style="box-shadow:none;">
-                  <h3>Niveau {{niv}}</h3>
+                  <h3>
+                    Niveau {{niv}}
+                    {{#with (lookup ../sortsMemorizedByLevel niv)}}
+                      <span class="sort-memorize-badge">Sorts : {{count}} / {{max}}</span>
+                    {{/with}}
+                  </h3>
                   <div class="a2e-panel-body">
                     <table class="sort-table">
-                      <thead><tr><th>Préparer</th><th></th><th>Sort</th><th>École</th><th>Actions</th></tr></thead>
+                      <thead>
+                        <tr>
+                          <th style="width:130px;">Préparer</th>
+                          <th style="width:42px;"></th>
+                          <th>Sort</th>
+                          <th>École</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
                       <tbody>
                         {{#each (lookup ../sortsParNiveau niv) as |sort|}}
                           <tr class="sort-row">
-                            <td><span class="sort-memorize-badge">{{getFlag sort "add2e.memorizedCount"}}</span></td>
-                            <td><img class="sort-cast-img" data-sort-id="{{sort._id}}" src="{{sort.img}}" title="Lancer {{sort.name}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;"></td>
-                            <td><a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{sort._id}}">{{sort.name}}</a></td>
+                            <td>
+                              <a class="a2e-action-icon a2e-action-remove sort-memorize-minus" data-sort-id="{{sort._id}}" title="Retirer une préparation"><i class="fas fa-minus-circle"></i></a>
+                              <span class="sort-memorize-badge">{{getFlag sort "add2e.memorizedCount"}}</span>
+                              <a class="a2e-action-icon a2e-action-add sort-memorize-plus" data-sort-id="{{sort._id}}" title="Ajouter une préparation"><i class="fas fa-plus-circle"></i></a>
+                            </td>
+                            <td class="sort-drag">
+                              <img class="sort-cast-img" data-sort-id="{{sort._id}}" src="{{sort.img}}" title="Lancer {{sort.name}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                            </td>
+                            <td>
+                              <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{sort._id}}" title="Afficher / masquer la description">{{sort.name}}</a>
+                            </td>
                             <td>{{sort.system.école}}</td>
-                            <td></td>
+                            <td>
+                              <div class="a2e-actions">
+                                <a class="a2e-action-icon a2e-action-edit sort-edit" data-sort-id="{{sort._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                                <a class="a2e-action-icon a2e-action-delete sort-delete" data-sort-id="{{sort._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr id="desc-chat-{{sort._id}}" class="sort-description">
+                            <td colspan="5" class="sort-description-fullcell">
+                              <div class="a2e-small sort-description-content">
+                                {{{sort.system.description}}}
+                                {{#if sort.system.composantes}}<div><b>Composantes :</b> {{sort.system.composantes}}</div>{{/if}}
+                                {{#if sort.system.temps_incantation}}<div><b>Incantation :</b> {{sort.system.temps_incantation}}</div>{{/if}}
+                                {{#if sort.system.portée}}<div><b>Portée :</b> {{formatSortChamp sort.system.portée}}</div>{{/if}}
+                                {{#if sort.system.durée}}<div><b>Durée :</b> {{formatSortChamp sort.system.durée}}</div>{{/if}}
+                              </div>
+                            </td>
                           </tr>
                         {{/each}}
                       </tbody>
