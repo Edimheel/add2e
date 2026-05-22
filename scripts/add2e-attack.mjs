@@ -77,6 +77,7 @@ function add2eInstallHudDiagnostics() {
       castSpell: typeof globalThis.add2eCastSpell,
       cast_spell: typeof globalThis.cast_spell,
       attackVersion: globalThis.ADD2E_ATTACK_VERSION,
+      attackRollSplitVersion: globalThis.ADD2E_ATTACK_ROLL_SPLIT_VERSION,
       hudModules: add2eHudDiagnosticsModules(),
       tokenLayerReady: !!canvas?.tokens
     });
@@ -125,6 +126,7 @@ function add2eInstallHudDiagnostics() {
       castSpell: typeof globalThis.add2eCastSpell,
       cast_spell: typeof globalThis.cast_spell,
       attackVersion: globalThis.ADD2E_ATTACK_VERSION,
+      attackRollSplitVersion: globalThis.ADD2E_ATTACK_ROLL_SPLIT_VERSION,
       controlled: controlled.map(t => ({ token: t.name, id: t.id, actor: t.actor?.name, actorType: t.actor?.type })),
       hudModules: add2eHudDiagnosticsModules(),
       tokenHudApp: ui?.token?.constructor?.name ?? null,
@@ -150,10 +152,12 @@ add2eInstallHudDiagnostics();
   await add2eImportAttackModule("./add2e-attack/03-attack-rules.mjs", "03-attack-rules");
   await add2eImportAttackModule("./add2e-attack/05-jb2a-vfx.mjs", "05-jb2a-vfx");
   await add2eImportAttackModule("./add2e-attack/06-cast-spell.mjs", "06-cast-spell");
-  await add2eImportAttackModule("./add2e-attack/04-attack-roll.mjs", "04-attack-roll");
+  await add2eImportAttackModule("./add2e-attack/04a-attack-roll-bootstrap.mjs", "04a-attack-roll-bootstrap");
+  await add2eImportAttackModule("./add2e-attack/04b-attack-roll-core.mjs", "04b-attack-roll-core");
 
   console.log("ADD2E | add2e-attack modulaire chargé", {
     version: globalThis.ADD2E_ATTACK_VERSION,
+    attackRollSplitVersion: globalThis.ADD2E_ATTACK_ROLL_SPLIT_VERSION,
     hasAttackRoll: typeof globalThis.add2eAttackRoll === "function",
     hasCastSpell: typeof globalThis.add2eCastSpell === "function"
   });
