@@ -123,6 +123,7 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.magicDefenseTooltip
     const hasAdditiveACBonus = item => {
       if (isFixedAC(item)) return false;
       const system = item?.system || {};
+      const name = normalize(item?.name);
       const effectText = normalize(JSON.stringify({
         add2eEffects: system.add2eEffects,
         effetsPassifs: system.effetsPassifs,
@@ -130,7 +131,8 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.magicDefenseTooltip
         tags: system.tags,
         effectTags: system.effectTags
       }));
-      return Number(system.bonus_ac || 0) !== 0
+      return /^anneau de protection\b/.test(name)
+        || Number(system.bonus_ac || 0) !== 0
         || Number(system.ac_bonus || 0) !== 0
         || Number(system.ca_bonus || 0) !== 0
         || /bonus_ac|ac_bonus|ca_bonus|armorclassbonus|armor_class_bonus/.test(effectText);
