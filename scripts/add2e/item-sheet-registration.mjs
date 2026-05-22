@@ -5,6 +5,14 @@
 import { Add2eItemSheet } from "../add2e-item-sheet.mjs";
 globalThis.Add2eItemSheet = Add2eItemSheet;
 
+function add2eItemsCollection() {
+  return foundry?.documents?.collections?.Items ?? globalThis.Items;
+}
+
+function add2eItemDocumentClass() {
+  return foundry?.documents?.Item ?? globalThis.Item;
+}
+
 // 2. INITIALISATION (enregistrement strict des fiches)
 export function add2eRegisterClassItemSheet() {
   const options = {
@@ -15,18 +23,24 @@ export function add2eRegisterClassItemSheet() {
     label: "ADD2E | Fiche Classe"
   };
 
-  // API historique encore disponible en Foundry v13.
-  // Important : cette fiche est limitée au type Item "classe".
-  Items.registerSheet("add2e", Add2eItemSheet, options);
+  // Foundry v13 : éviter le global déprécié Items.
+  // Fallback conservé uniquement pour compatibilité si le namespace v13 n'existe pas.
+  const ItemsCollection = add2eItemsCollection();
+  if (ItemsCollection?.registerSheet) {
+    ItemsCollection.registerSheet("add2e", Add2eItemSheet, options);
+  } else {
+    console.warn("[ADD2E][SHEETS] Collection Items introuvable : fiche classe non enregistrée.");
+  }
 
   // API DocumentSheetConfig : double sécurité pour forcer Item.classe
   // sur la fiche de classe, et jamais sur la fiche acteur.
   const DSC = globalThis.DocumentSheetConfig ?? foundry?.applications?.apps?.DocumentSheetConfig;
-  if (DSC?.registerSheet) {
+  const ItemDocument = add2eItemDocumentClass();
+  if (DSC?.registerSheet && ItemDocument) {
     try {
-      DSC.registerSheet(Item, "add2e", Add2eItemSheet, options);
+      DSC.registerSheet(ItemDocument, "add2e", Add2eItemSheet, options);
     } catch (e) {
-      // En v13, Items.registerSheet suffit. Ce fallback ne doit pas bloquer.
+      // En v13, ItemsCollection.registerSheet suffit. Ce fallback ne doit pas bloquer.
       console.warn("[ADD2E][SHEETS] DocumentSheetConfig classe non appliqué, fallback Items.registerSheet conservé.", e);
     }
   }
