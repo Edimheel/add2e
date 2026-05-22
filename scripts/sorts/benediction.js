@@ -209,7 +209,16 @@ const __add2eOnUseResult = await (async () => {
   const failedHtml = failed.length ? `<div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.fail};">Non appliqué : ${failed.map(t => add2eEscapeHtml(t.name)).join(", ")}</div>` : "";
   const resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;"><div style="text-align:center;font-weight:bold;color:${isCurse ? ADD2E_CLERIC_CHAT.fail : ADD2E_CLERIC_CHAT.success};">${add2eEscapeHtml(modeLabel.toUpperCase())} APPLIQUÉE</div><div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};"><b>Effet :</b> ${bonusValue > 0 ? "+1" : "-1"} au moral et aux jets d'attaque.</div><div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};"><b>Durée :</b> 6 rounds.</div><div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};"><b>Créatures affectées :</b><ul style="margin:4px 0 0 16px;padding:0;">${appliedHtml}</ul></div>${failedHtml}</div>`;
 
-  await globalThis.ADD2E_PLAY_SPELL_FX?.(isCurse ? "malediction" : "benediction", { casterToken, targetTokens: applied });
+  await globalThis.ADD2E_PLAY_SPELL_FX?.(isCurse ? "malediction" : "benediction", {
+    casterToken,
+    targetTokens: applied,
+    launchOptions: isCurse
+      ? { text: "MALÉDICTION", color: "#6a2d7a", size: 130, fontSize: 24, duration: 900, durationText: 1200 }
+      : { text: "BÉNÉDICTION", color: "#ffd76a", size: 130, fontSize: 24, duration: 900, durationText: 1200 },
+    targetOptions: isCurse
+      ? { text: "−1", color: "#6a2d7a", size: 90, fontSize: 36, duration: 800, durationText: 1000 }
+      : { text: "+1", color: "#ffd76a", size: 90, fontSize: 36, duration: 800, durationText: 1000 }
+  });
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
