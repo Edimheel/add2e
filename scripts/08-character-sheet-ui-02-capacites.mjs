@@ -339,15 +339,6 @@ export function injectCapacitesTab(sheet, sheetRoot) {
       await fn(actor, ev.currentTarget, sheet);
       return false;
     });
-
-  console.log("[ADD2E][CAPACITES][UI][SPLIT] Rendu capacités", {
-    actor: actor.name,
-    class: actor.system?.classe,
-    level: actor.system?.niveau,
-    thiefSkills: getThiefSkills(actor).length,
-    visibleThiefSkills: getThiefSkills(actor).filter(s => !isBackstabLike(`${s?.key ?? ""} ${s?.label ?? ""} ${s?.shortLabel ?? ""}`)).length,
-    features: visibleFeatures(actor).map(e => featureName(e.feature))
-  });
 }
 
 expose("add2eUiFeatureName", featureName);
