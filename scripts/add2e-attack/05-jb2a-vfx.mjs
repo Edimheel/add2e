@@ -1,50 +1,68 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés.
-// Version : 2026-05-21-v3-target-first-no-yellow-curse
+// Version : 2026-05-22-v4-exported-paths-target-first
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-21-v3-target-first-no-yellow-curse";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-22-v4-exported-paths-target-first";
 
 const ADD2E_JB2A_PRESET_CANDIDATES = {
   divine: [
-    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Magic_Signs/ConjurationCircleIntro_02_Regular_Yellow_800x800.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Magic_Signs/AbjurationCircleIntro_02_Regular_Blue_800x800.webm"
+    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm"
   ],
   bless: [
     "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm",
     "modules/JB2A_DnD5e/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Conditions/Boon01/ConditionBoon01_001_Green_600x600.webm",
-    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm"
+    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_200x200.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_200x200.webm"
   ],
   curse: [
-    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Purple_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Purple_400x400.webm",
-    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Dark_Red_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Dark_Red_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Magic_Signs/NecromancyCircleIntro_02_Regular_Purple_800x800.webm"
+    "modules/jb2a_patreon/Library/Generic/Conditions/Curse01/ConditionCurse01_005_Red_600x600.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_005_Red_600x600.webm",
+    "modules/jb2a_patreon/Library/Generic/Conditions/Curse01/ConditionCurse01_003_Red_600x600.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_003_Red_600x600.webm",
+    "modules/jb2a_patreon/Library/Generic/Token_Stage/TokenStageHex01_01_Regular_Red_400x400.webm"
   ],
   water: [
-    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Blue_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Blue_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerLightIntro_01_Regular_Blue_400x400.webm"
+    "modules/JB2A_DnD5e/Library/Generic/Cast/CastWater02_01_Regular_Blue_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Impact/ImpactWater02_01_Regular_Blue_600x600.webm",
+    "modules/jb2a_patreon/Library/Generic/Liquid/WaterSplashConeLoop_01_01_Regular_Blue_600x600.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Liquid/WaterSplashConeLoop_01_01_Regular_Blue_600x600.webm"
+  ],
+  dry: [
+    "modules/jb2a_patreon/Library/2nd_Level/Misty_Step/MistyStep_01_Dark_Red_400x400.webm",
+    "modules/jb2a_patreon/Library/Generic/Smoke/SmokePuffSide01_01_Regular_Grey_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Smoke/SmokePuffSide01_01_Regular_Grey_400x400.webm"
   ],
   detection: [
-    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Green_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Green_400x400.webm",
-    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm"
+    "modules/jb2a_patreon/Library/1st_Level/Detect_Magic/DetectMagicCircle_01_Regular_Purple_1200x1200.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Detect_Magic/DetectMagicCircle_01_Regular_Blue_1200x1200.webm",
+    "modules/jb2a_patreon/Library/1st_Level/Detect_Magic/DetectMagicCircle_01_Regular_Green_1200x1200.webm"
+  ],
+  evil_detection: [
+    "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
+    "modules/jb2a_patreon/Library/Generic/Conditions/Curse01/ConditionCurse01_001_Red_600x600.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_001_Red_600x600.webm"
+  ],
+  good_detection: [
+    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Blue_Intro_400x400.webm",
+    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm"
   ],
   fear: [
-    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Dark_Red_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Dark_Red_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Purple_400x400.webm"
+    "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_02_Dark_Orange_400x400.webm",
+    "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_01_Dark_Orange_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
+    "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm"
+  ],
+  calm: [
+    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Blue_Intro_400x400.webm",
+    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Green_Intro_400x400.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm"
   ],
   heal: [
     "modules/jb2a_patreon/Library/1st_Level/Cure_Wounds/CureWounds_01_Green_400x400.webm",
-    "modules/JB2A_DnD5e/Library/1st_Level/Cure_Wounds/CureWounds_01_Blue_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Healing/HealingAbility_01_Green_400x400.webm"
+    "modules/JB2A_DnD5e/Library/1st_Level/Cure_Wounds/CureWounds_01_Blue_400x400.webm"
   ],
   light: [
     "modules/jb2a_patreon/Library/Generic/Marker/MarkerLightIntro_01_Regular_Yellow_400x400.webm",
@@ -56,12 +74,14 @@ const ADD2E_SPELL_KEY_TO_JB2A_PRESET = {
   benediction: "bless",
   malediction: "curse",
   aquagenese: "water",
-  destruction_eau: "water",
+  destruction_eau: "dry",
   detection_magie: "detection",
-  detection_du_mal: "fear",
-  detection_du_bien: "bless",
-  apaisement: "bless",
-  epouvante: "fear"
+  detection_du_mal: "evil_detection",
+  detection_du_bien: "good_detection",
+  apaisement: "calm",
+  epouvante: "fear",
+  soins_des_blessures_legeres: "heal",
+  blessures_legeres: "curse"
 };
 
 const ADD2E_JB2A_FILE_CACHE = new Map();
@@ -120,22 +140,13 @@ async function add2eJb2aFileExists(path) {
 
 async function add2ePickJb2aFile(preset = "divine") {
   const key = add2eNormalizeFxKey(preset || "divine") || "divine";
-  const presetCandidates = ADD2E_JB2A_PRESET_CANDIDATES[key] ?? [];
-  const candidates = key === "divine"
-    ? presetCandidates
-    : presetCandidates;
+  const candidates = ADD2E_JB2A_PRESET_CANDIDATES[key] ?? [];
 
   for (const candidate of candidates) {
     if (await add2eJb2aFileExists(candidate)) return candidate;
   }
 
-  // Pas de fallback jaune pour les presets spécifiques : si le fichier n'existe pas,
-  // on ne joue rien au lieu de transformer une malédiction en effet divin jaune.
-  if (key !== "divine") {
-    console.warn("[ADD2E][JB2A][MISSING_PRESET] Aucun fichier JB2A trouvé pour le preset spécifique.", { preset: key, candidates });
-    return "";
-  }
-
+  console.warn("[ADD2E][JB2A][MISSING_PRESET] Aucun fichier JB2A trouvé pour le preset.", { preset: key, candidates });
   return "";
 }
 
@@ -202,8 +213,12 @@ async function add2ePlayCentralSpellFx(spellKey = "divine", context = {}) {
 // Compat ancien moteur + nouveau registre centralisé.
 globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX = add2ePlayJb2aPremiumFx;
 globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
+globalThis.ADD2E_JB2A_PRESET_CANDIDATES = ADD2E_JB2A_PRESET_CANDIDATES;
+globalThis.ADD2E_SPELL_KEY_TO_JB2A_PRESET = ADD2E_SPELL_KEY_TO_JB2A_PRESET;
 
 Hooks.once("ready", () => {
   globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
+  globalThis.ADD2E_JB2A_PRESET_CANDIDATES = ADD2E_JB2A_PRESET_CANDIDATES;
+  globalThis.ADD2E_SPELL_KEY_TO_JB2A_PRESET = ADD2E_SPELL_KEY_TO_JB2A_PRESET;
   console.log("[ADD2E][JB2A][VERSION]", globalThis.ADD2E_JB2A_VFX_VERSION);
 });
