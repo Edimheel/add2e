@@ -1,14 +1,13 @@
 // ============================================================
 // ADD2E — Affichage compact des emplacements de préparation
-// V37 : MAJ directe des compteurs de niveau + exclusion visuelle
-// des pouvoirs d'objets magiques de la liste normale des sorts.
+// V38 : logs désactivés par défaut.
 // ============================================================
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-05-18-v37-counter-and-object-power-filter";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-05-22-v38-debug-off";
 const ADD2E_SPELL_PREP_PENDING_SCROLL = new Map();
 
 function add2eSpellPrepDebugEnabled() {
-  return true;
+  return game?.settings?.get?.("add2e", "debugSpellPrep") === true;
 }
 
 function add2eSpellPrepLog(step, data = {}) {
@@ -534,13 +533,11 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
           cur--;
         }
 
-        // Mise à jour optimiste immédiate : ligne + compteur de niveau.
         add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, cur, btn);
         add2eSpellPrepRefreshLevelCounters(actor, spellLevel, entry, btn);
 
         await add2eSetMemorizedCountForEntry(sort, entry, cur);
 
-        // Deuxième mise à jour après persistance Foundry.
         add2eSpellPrepUpdateVisibleBadges(actor, sort, entry, cur, btn);
         add2eSpellPrepRefreshLevelCounters(actor, spellLevel, entry, btn);
         add2eSpellPrepLog("UPDATE_DONE", { actor: actor.name, sort: sort.name, entry: entry.label, after: cur });
@@ -640,8 +637,6 @@ Hooks.on("updateItem", (item, changes, options, userId) => {
   const check = typeof add2eCanActorUseSpell === "function" ? add2eCanActorUseSpell(actor, item) : null;
   if (check?.entry) add2eSpellPrepRefreshLevelCounters(actor, spellLevel, check.entry, null);
 });
-
-console.log("ADD2E | Spell preparation native HBS V37 counter/object-power filter loaded");
 
 try { globalThis.add2eBindNativeHbsSpellPreparationControls = add2eBindNativeHbsSpellPreparationControls; } catch (_e) {}
 try { globalThis.add2eSpellPrepHideMagicObjectPowerRows = add2eSpellPrepHideMagicObjectPowerRows; } catch (_e) {}
