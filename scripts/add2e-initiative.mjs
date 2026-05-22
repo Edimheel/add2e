@@ -3,8 +3,9 @@
 // Règle gérée ici : initiative simple au d6, ordre ascendant.
 // Surprise volontairement non gérée dans ce module.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-22-init-independent-v2";
+const ADD2E_INITIATIVE_VERSION = "2026-05-22-init-independent-v3-d6-icon";
 const TAG = "[ADD2E][INIT]";
+const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
 
@@ -151,7 +152,72 @@ function add2eExposeInitiativeGlobals() {
   globalThis.add2eConfigureInitiative = add2eConfigureInitiative;
   globalThis.add2eSortInitiativeAscending = add2eSortInitiativeAscending;
   globalThis.add2eScheduleInitiativeSort = add2eScheduleInitiativeSort;
+  globalThis.add2ePatchCombatTrackerInitiativeIcons = add2ePatchCombatTrackerInitiativeIcons;
   globalThis.triInitiativeAscendant = add2eSortInitiativeAscending;
+}
+
+function add2ePatchOneInitiativeControl(control) {
+  if (!control || control.dataset?.add2eD6InitiativeIcon === "1") return false;
+
+  const icon = control.querySelector?.("i.fa-dice-d20, i.fa-dice, i.fa-dice-six, i.fas, i.fa-solid");
+  if (!icon) return false;
+
+  const img = document.createElement("img");
+  img.src = ADD2E_INITIATIVE_D6_ICON;
+  img.alt = "D6";
+  img.className = "add2e-init-d6-icon";
+  img.style.width = "18px";
+  img.style.height = "18px";
+  img.style.objectFit = "contain";
+  img.style.verticalAlign = "middle";
+  img.style.border = "0";
+  img.style.filter = "drop-shadow(0 0 1px rgba(0,0,0,.85))";
+
+  icon.replaceWith(img);
+  control.dataset.add2eD6InitiativeIcon = "1";
+  control.title = control.title || "Lancer l'initiative ADD2E (1d6)";
+  return true;
+}
+
+function add2ePatchCombatTrackerInitiativeIcons(root = document) {
+  try {
+    const scope = root?.jquery ? root[0] : root;
+    if (!scope?.querySelectorAll) return 0;
+
+    const selectors = [
+      "#combat-tracker [data-control='rollInitiative']",
+      "#combat-tracker [data-action='rollInitiative']",
+      "#combat-tracker .combatant-control[data-control='rollInitiative']",
+      "#combat-tracker .combatant-control[data-action='rollInitiative']",
+      "#combat [data-control='rollInitiative']",
+      "#combat [data-action='rollInitiative']",
+      ".combat-sidebar [data-control='rollInitiative']",
+      ".combat-sidebar [data-action='rollInitiative']"
+    ];
+
+    const controls = new Set();
+    for (const selector of selectors) {
+      for (const el of scope.querySelectorAll(selector)) controls.add(el);
+    }
+
+    let changed = 0;
+    for (const control of controls) {
+      if (add2ePatchOneInitiativeControl(control)) changed++;
+    }
+
+    if (changed) {
+      console.log(`${TAG}[D6_ICON]`, {
+        version: ADD2E_INITIATIVE_VERSION,
+        changed,
+        icon: ADD2E_INITIATIVE_D6_ICON
+      });
+    }
+
+    return changed;
+  } catch (err) {
+    console.warn(`${TAG}[D6_ICON][ERROR]`, err);
+    return 0;
+  }
 }
 
 function add2eInstallInitiativeHooks() {
@@ -185,6 +251,14 @@ function add2eInstallInitiativeHooks() {
     add2eScheduleInitiativeSort(combatant.combat ?? game.combat);
   });
 
+  Hooks.on("renderCombatTracker", (app, html, data) => {
+    add2ePatchCombatTrackerInitiativeIcons(html);
+  });
+
+  Hooks.on("renderCombatantConfig", () => {
+    setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 50);
+  });
+
   console.log(`${TAG}[HOOKS_INSTALLED]`, { version: ADD2E_INITIATIVE_VERSION });
 }
 
@@ -193,6 +267,8 @@ Hooks.once("ready", () => {
   add2eConfigureInitiative();
   add2eRemoveLegacyInitiativeHooks();
   add2eExposeInitiativeGlobals();
+  add2ePatchCombatTrackerInitiativeIcons(document);
+  setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 500);
 });
 
 add2eExposeInitiativeGlobals();
