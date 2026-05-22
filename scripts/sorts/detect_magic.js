@@ -1,6 +1,6 @@
 /**
  * ADD2E — Détection de la magie — Clerc niveau 1
- * Version : 2026-05-21-clerc-v2-no-vfx
+ * Version : 2026-05-21-clerc-v3-central-fx
  *
  * Règle clerc :
  * - Portée : 3"
@@ -11,7 +11,7 @@
  * - Blocage : pierre 30 cm+, métal 3 cm+, bois 90 cm+
  */
 
-console.log("%c[ADD2E][DETECTION_MAGIE][CLERC] 2026-05-21-clerc-v2-no-vfx", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][DETECTION_MAGIE][CLERC] 2026-05-21-clerc-v3-central-fx", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   const esc = value => String(value ?? "")
@@ -45,6 +45,11 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
+  const casterToken = canvas.tokens?.controlled?.[0]
+    ?? ((typeof token !== "undefined" && token) ? token : null)
+    ?? caster.getActiveTokens?.()[0]
+    ?? null;
+
   const durationRounds = 10;
   const effectIcon = sourceItem.img || "systems/add2e/assets/icones/sorts/detection-magie-violet.webp";
 
@@ -76,20 +81,8 @@ const __add2eOnUseResult = await (async () => {
         duration: "1 tour",
         rotationPerRound: "60°",
         detectionDetail: "faible_ou_forte_uniquement",
-        blockedBy: {
-          stoneCm: 30,
-          metalCm: 3,
-          woodCm: 90
-        },
-        tags: [
-          "sort:clerc",
-          "niveau:1",
-          "divination",
-          "detection:magie",
-          "detection:faible_ou_forte",
-          "zone:1x3",
-          "rotation:60_par_round"
-        ]
+        blockedBy: { stoneCm: 30, metalCm: 3, woodCm: 90 },
+        tags: ["sort:clerc", "niveau:1", "divination", "detection:magie", "detection:faible_ou_forte", "zone:1x3", "rotation:60_par_round"]
       }
     },
     changes: []
@@ -102,15 +95,10 @@ const __add2eOnUseResult = await (async () => {
 
   if (existing) {
     await existing.update(effectData);
-    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet existant mis à jour", {
-      actor: caster.name,
-      effectId: existing.id
-    });
+    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet existant mis à jour", { actor: caster.name, effectId: existing.id });
   } else {
     await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
-    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet créé", {
-      actor: caster.name
-    });
+    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet créé", { actor: caster.name });
   }
 
   const detailsData = [
@@ -142,40 +130,27 @@ const __add2eOnUseResult = await (async () => {
         </div>
 
         <details style="background:#fff;border:1px solid #e2bc63;border-radius:6px;">
-          <summary style="cursor:pointer;color:#6f4b12;font-weight:600;font-size:0.9em;padding:6px 10px;background:#fff7df;border-radius:6px;list-style:none;">
-            Règle appliquée
-          </summary>
+          <summary style="cursor:pointer;color:#6f4b12;font-weight:600;font-size:0.9em;padding:6px 10px;background:#fff7df;border-radius:6px;list-style:none;">Règle appliquée</summary>
           <div style="padding:8px;">
             <table style="width:100%;font-size:0.85em;border-spacing:0;margin-bottom:10px;color:#333;border-bottom:1px solid #eee;">
-              ${detailsData.map((d, i) => `
-                <tr style="${i % 2 === 0 ? "background:#fffaf0;" : ""}">
-                  <td style="color:#6f4b12;font-weight:600;padding:2px 5px;width:42%;">${esc(d.label)}</td>
-                  <td style="text-align:right;padding:2px 5px;">${esc(d.val)}</td>
-                </tr>`).join("")}
+              ${detailsData.map((d, i) => `<tr style="${i % 2 === 0 ? "background:#fffaf0;" : ""}"><td style="color:#6f4b12;font-weight:600;padding:2px 5px;width:42%;">${esc(d.label)}</td><td style="text-align:right;padding:2px 5px;">${esc(d.val)}</td></tr>`).join("")}
             </table>
-            <div style="color:#6f4b12;font-size:0.9em;line-height:1.4;text-align:justify;">
-              <b>Limites :</b> les murs de pierre de 30 cm ou plus, 3 cm ou plus de métal, ou 90 cm ou plus de bois bloquent la détection. Le script pose l’état de détection ; l’identification exacte des auras reste arbitrée par le MJ selon les objets et créatures présents.
-            </div>
+            <div style="color:#6f4b12;font-size:0.9em;line-height:1.4;text-align:justify;"><b>Limites :</b> les murs de pierre de 30 cm ou plus, 3 cm ou plus de métal, ou 90 cm ou plus de bois bloquent la détection. Le script pose l’état de détection ; l’identification exacte des auras reste arbitrée par le MJ selon les objets et créatures présents.</div>
           </div>
         </details>
       </div>
     </div>`;
 
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: caster }),
-    content: chatContent,
-    ...chatStyleData()
-  });
+  await globalThis.ADD2E_PLAY_SPELL_FX?.("detection_magie", { casterToken });
+
+  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: caster }), content: chatContent, ...chatStyleData() });
 
   console.log("[ADD2E][detect_magic.js][ONUSE_RESULT]", true);
   return true;
 })();
 
 if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
-  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", {
-    script: "detect_magic.js",
-    result: __add2eOnUseResult
-  });
+  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", { script: "detect_magic.js", result: __add2eOnUseResult });
   ui.notifications?.error?.("Détection de la magie : le script onUse n'a pas retourné true/false.");
   return false;
 }
