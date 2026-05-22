@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés.
-// Version : 2026-05-22-v5-flamboyant-sequences
+// Version : 2026-05-22-v6-injonction-command
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-22-v5-flamboyant-sequences";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-22-v6-injonction-command";
 
 const ADD2E_JB2A_PRESET_CANDIDATES = {
   divine: [
@@ -25,6 +25,13 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
     "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_016_Red_600x600.webm",
     "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_005_Red_600x600.webm",
     "modules/jb2a_patreon/Library/Generic/Token_Stage/TokenStageHex01_01_Regular_Red_400x400.webm"
+  ],
+  command: [
+    "modules/jb2a_patreon/Library/Generic/Energy/DodecahedronRuneAbove_01_Dark_Purple_600x600.webm",
+    "modules/jb2a_patreon/Library/Generic/Energy/DodecahedronStarAbove_01_Dark_Purple_600x600.webm",
+    "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_016_Red_600x600.webm"
   ],
   water: [
     "modules/jb2a_patreon/Library/Generic/Liquid/LiquidSplash01_Bright_Blue_400x400.webm",
@@ -82,7 +89,10 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
 const ADD2E_SPELL_KEY_TO_JB2A_PRESET = {
   benediction: "bless",
   malediction: "curse",
+  injonction: "command",
+  commandement: "command",
   aquagenese: "water",
+  creation_d_eau: "water",
   destruction_eau: "dry",
   detection_magie: "detection",
   detection_du_mal: "evil_detection",
@@ -90,6 +100,7 @@ const ADD2E_SPELL_KEY_TO_JB2A_PRESET = {
   apaisement: "calm",
   epouvante: "fear",
   soins_des_blessures_legeres: "heal",
+  soins_mineurs: "heal",
   blessures_legeres: "curse"
 };
 
@@ -145,18 +156,6 @@ async function add2eJb2aFileExists(path) {
     ADD2E_JB2A_FILE_CACHE.set(path, false);
     return false;
   }
-}
-
-async function add2ePickJb2aFile(preset = "divine") {
-  const key = add2eNormalizeFxKey(preset || "divine") || "divine";
-  const candidates = ADD2E_JB2A_PRESET_CANDIDATES[key] ?? [];
-
-  for (const candidate of candidates) {
-    if (await add2eJb2aFileExists(candidate)) return candidate;
-  }
-
-  console.warn("[ADD2E][JB2A][MISSING_PRESET] Aucun fichier JB2A trouvé pour le preset.", { preset: key, candidates });
-  return "";
 }
 
 async function add2ePickJb2aFiles(preset = "divine", max = 2) {
@@ -241,7 +240,6 @@ async function add2ePlayCentralSpellFx(spellKey = "divine", context = {}) {
   return played;
 }
 
-// Compat ancien moteur + nouveau registre centralisé.
 globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX = add2ePlayJb2aPremiumFx;
 globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
 globalThis.ADD2E_JB2A_PRESET_CANDIDATES = ADD2E_JB2A_PRESET_CANDIDATES;
