@@ -254,14 +254,6 @@ function add2ePatchCombatTrackerInitiativeIcons(root = document) {
       if (add2ePatchOneInitiativeElement(el)) changed++;
     }
 
-    if (changed) {
-      console.log(`${TAG}[D6_ICON]`, {
-        version: ADD2E_INITIATIVE_VERSION,
-        changed,
-        icon: ADD2E_INITIATIVE_D6_ICON
-      });
-    }
-
     return changed;
   } catch (err) {
     console.warn(`${TAG}[D6_ICON][ERROR]`, err);
