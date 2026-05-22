@@ -9,7 +9,7 @@
                   <tr><th>CA totale</th><td><b>{{combatDefense.ac_totale}}</b></td></tr>
                   <tr><th>Armure</th><td>{{{combatDefense.armure}}}</td></tr>
                   <tr><th>Bouclier</th><td>{{{combatDefense.bouclier}}}</td></tr>
-                  <tr><th>Bonus magique</th><td title="{{magicDefenseTooltip listeObjets listeArmures}}">{{subtract combatDefense.ac_totale combatDefense.ac_naturelle}}</td></tr>
+                  <tr><th>Bonus magique</th><td title="{{joinLines combatDefense.objets_magiques_defense.objectSources 'Aucun bonus magique hors armure/bouclier.'}}">{{combatDefense.objets_magiques_defense.objectProtectionBonus}}</td></tr>
                   <tr><th>Mod. DEX défense</th><td>{{actor.system.dex_def}}</td></tr>
                 </tbody>
               </table>
