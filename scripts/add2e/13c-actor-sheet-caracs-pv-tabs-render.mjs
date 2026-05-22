@@ -5,10 +5,7 @@ if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit �
 
 globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
   if (this._autoSetCaracsInProgress) return;
-  if (!this.actor || !this.actor.system) {
-    console.warn("[ADD2E] autoSetCaracAjustements : actor ou actor.system manquant");
-    return;
-  }
+  if (!this.actor || !this.actor.system) return;
 
   const s = this.actor.system;
   this._autoSetCaracsInProgress = true;
@@ -172,11 +169,7 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
       if (cur !== v) _diff[k] = v;
     }
 
-    if (Object.keys(_diff).length) {
-      await this.actor.update(_diff);
-    } else {
-      console.log("%c[ADD2E][CARACS] Ajustements déjà à jour (aucune update).", "color:#777");
-    }
+    if (Object.keys(_diff).length) await this.actor.update(_diff);
 
     // ============================
     // 6) PV auto (si présent)
@@ -206,16 +199,10 @@ globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSe
     // Classe (priorité: item "classe", sinon details_classe)
     const classeItem = actor.items?.find(i => i.type === "classe");
     const cls = classeItem?.system || s.details_classe || null;
-    if (!cls) {
-      console.warn("[ADD2E][HP] Classe introuvable, PV non recalculés", { actor: actor.name, reason });
-      return;
-    }
+    if (!cls) return;
 
     const hitDie = Number(cls.hitDie || 0);
-    if (!Number.isFinite(hitDie) || hitDie <= 0) {
-      console.warn("[ADD2E][HP] hitDie invalide, PV non recalculés", { actor: actor.name, hitDie, reason });
-      return;
-    }
+    if (!Number.isFinite(hitDie) || hitDie <= 0) return;
 
     // Bonus CON par niveau (calculé par autoSetCaracAjustements -> system.con_pv)
     const conBonus = Number(s.con_pv || 0);
@@ -255,15 +242,6 @@ globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSe
     if (syncCurrent) up["system.pdv"] = hpMax;
 
     await actor.update(up, { add2eInternal: true });
-
-    console.log("[ADD2E][HP] PV recalculés (max niv1 + jets) OK", {
-      actor: actor.name,
-      lvl,
-      hitDie,
-      conBonus,
-      hpMax,
-      reason
-    });
 
   } catch (e) {
     console.warn("[ADD2E][HP] Erreur autoSetPointsDeCoup :", e);
@@ -434,9 +412,7 @@ globalThis.Add2eActorSheet.prototype.render = function render(force=false, optio
       this._add2eActivateTab(this._add2eActiveTab || this._add2eReadStoredTab() || "resume");
       try {
         add2eEnhanceCharacterSheetUi(this, this.element);
-      } catch (err) {
-        console.warn("[ADD2E][OBJETS_MAGIQUES][UI] Réinjection après render impossible.", err);
-      }
+      } catch (_err) {}
     };
     for (const delay of [0, 80, 220]) setTimeout(refreshUi, delay);
     return result;
