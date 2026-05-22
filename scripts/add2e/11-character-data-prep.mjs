@@ -246,36 +246,6 @@ async function majImageToken(actor, newImg) {
   };
   await actor.update(maj);
 }
-async function triInitiativeAscendant() {
-  if (!game.combat) return;
-  const sortedCombatants = game.combat.combatants.contents.slice().sort((a, b) => {
-    if (a.initiative == null && b.initiative == null) return 0;
-    if (a.initiative == null) return 1;
-    if (b.initiative == null) return -1;
-    return a.initiative - b.initiative;
-  });
-  await game.combat.updateEmbeddedDocuments("Combatant",
-    sortedCombatants.map((c, i) => ({ _id: c.id, sort: i }))
-  );
-  ui.combat.render(true);
-}
-
-// Appelé à chaque changement d'initiative d'un combattant
-Hooks.on("updateCombatant", async (combatant, changes, diff, userId) => {
-  if (changes.initiative !== undefined) {
-    // On attend que tous les changements soient faits (cas des rollAll, etc.)
-    setTimeout(() => {
-      triInitiativeAscendant();
-    }, 100); // petit délai pour éviter le conflit avec Foundry
-  }
-});
-
-// Appelé à chaque changement général du combat (parfois Foundry retrie ici !)
-Hooks.on("updateCombat", async (combat, changes, diff, userId) => {
-  setTimeout(() => {
-    triInitiativeAscendant();
-  }, 100); // délai pour éviter la course
-});
 
 // Convertit une plage de type "2-8" en formule Roll "1d7+1"
 function plageToRollFormula(plage) {
@@ -407,6 +377,5 @@ try { globalThis.CONSTITUTION_TABLE = CONSTITUTION_TABLE; } catch (_e) {}
 try { globalThis.CHARISME_TABLE = CHARISME_TABLE; } catch (_e) {}
 try { globalThis.consommerSortMemorise = consommerSortMemorise; } catch (_e) {}
 try { globalThis.majImageToken = majImageToken; } catch (_e) {}
-try { globalThis.triInitiativeAscendant = triInitiativeAscendant; } catch (_e) {}
 try { globalThis.plageToRollFormula = plageToRollFormula; } catch (_e) {}
 try { globalThis.rollHitDice = rollHitDice; } catch (_e) {}
