@@ -1,25 +1,12 @@
 /**
  * ADD2E — Sort AQUAGENÈSE
  * Foundry V13/V14
- *
- * Clerc niveau 1 — Altération
- * Effet : crée de l’eau claire et potable à raison de 15 litres par niveau du clerc.
- * Inverse : destruction d’eau, même quantité.
- * Restriction : impossible à l’intérieur d’un être vivant.
- *
- * Fenêtre volontairement simple :
- * - Création ou destruction
- * - nombre d’outres de 5 L
- *
- * Règles d’exécution :
- * - return false si le sort ne doit pas être consommé ;
- * - return true uniquement après exécution réelle ;
- * - création automatique d’un objet “Outre d’eau (5 L)” dans l’équipement du lanceur.
+ * Version : 2026-05-22-v2-chat-style-v13-v14
  */
 
-console.log("%c[ADD2E][AQUAGENESE] SCRIPT CUSTOM CLERC", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][AQUAGENESE] SCRIPT CUSTOM CLERC v2", "color:#b88924;font-weight:bold;");
 
-return await (async () => {
+const __add2eOnUseResult = await (async () => {
   const DialogV2 = foundry.applications?.api?.DialogV2;
 
   if (!DialogV2) {
@@ -39,6 +26,12 @@ return await (async () => {
     fail: "#b33a2e",
     muted: "#6b5a35"
   };
+
+  function chatStyleData() {
+    return CONST.CHAT_MESSAGE_STYLES
+      ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
+      : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+  }
 
   function add2eEscapeHtml(value) {
     return String(value ?? "")
@@ -110,7 +103,7 @@ return await (async () => {
   if (typeof sort !== "undefined" && sort) sourceItem = sort;
   else if (typeof item !== "undefined" && item) sourceItem = item;
   else if (typeof this !== "undefined" && this?.documentName === "Item") sourceItem = this;
-  if (!sourceItem && typeof arguments !== "undefined" && arguments.length > 1 && arguments[1]?.name) sourceItem = arguments[1];
+  else if (typeof args !== "undefined" && args?.[0]?.item) sourceItem = args[0].item;
 
   if (!sourceItem) { ui.notifications.error("Aquagenèse : sort introuvable."); return false; }
 
@@ -206,8 +199,16 @@ return await (async () => {
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
     content: add2eClercCard({ caster, sourceItem, mode, nbOutres, litres, maxLitres, itemCreated, itemUpdated }),
-    type: CONST.CHAT_MESSAGE_TYPES.OTHER
+    ...chatStyleData()
   });
 
   return true;
 })();
+
+if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
+  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", { script: "aquagenese.js", result: __add2eOnUseResult });
+  ui.notifications?.error?.("Aquagenèse : le script onUse n'a pas retourné true/false.");
+  return false;
+}
+
+return __add2eOnUseResult;
