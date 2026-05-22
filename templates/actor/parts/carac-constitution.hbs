@@ -1,0 +1,28 @@
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="constitution" title="Jet de Constitution" style="color:#e74c3c;"></i>
+                  <span class="carac-short">CON</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="constitution" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="constitution"
+                       title="Base : {{actor.system.constitution_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.constitution}}&#10;Total : {{add actor.system.constitution_base actor.system.bonus_caracteristiques.constitution}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.constitution_base actor.system.bonus_caracteristiques.constitution}}</span>
+                    {{#if actor.system.bonus_caracteristiques.constitution}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.constitution 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.constitution}})</span>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="constitution" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <div class="a2e-adjustment-item"><label>PV / niv.</label><input type="text" name="system.con_pv" value="{{actor.system.con_pv}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Choc</label><input type="text" name="system.con_trauma" value="{{actor.system.con_trauma}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Résurrection</label><input type="text" name="system.con_resu" value="{{actor.system.con_resu}}" readonly></div>
+                </div>
+              </td>
+            </tr>
