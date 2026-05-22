@@ -1,5 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés.
+// Version : 2026-05-21-v2-central-jb2a-no-duplicate
+
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-21-v2-central-jb2a-no-duplicate";
 
 const ADD2E_JB2A_PRESET_CANDIDATES = {
   divine: [
@@ -11,7 +14,32 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
   bless: [
     "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm",
     "modules/JB2A_DnD5e/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Conditions/Boon01/ConditionBoon01_001_Green_600x600.webm"
+    "modules/JB2A_DnD5e/Library/Generic/Conditions/Boon01/ConditionBoon01_001_Green_600x600.webm",
+    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm"
+  ],
+  curse: [
+    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Purple_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Purple_400x400.webm",
+    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Dark_Red_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Dark_Red_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Magic_Signs/NecromancyCircleIntro_02_Regular_Purple_800x800.webm"
+  ],
+  water: [
+    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Blue_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Blue_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerLightIntro_01_Regular_Blue_400x400.webm"
+  ],
+  detection: [
+    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Green_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Green_400x400.webm",
+    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Yellow_400x400.webm"
+  ],
+  fear: [
+    "modules/jb2a_patreon/Library/Generic/Cast/GenericCast01_01_Regular_Dark_Red_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Dark_Red_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Cast/GenericCast01_01_Regular_Purple_400x400.webm"
   ],
   heal: [
     "modules/jb2a_patreon/Library/1st_Level/Cure_Wounds/CureWounds_01_Green_400x400.webm",
@@ -24,7 +52,30 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
   ]
 };
 
+const ADD2E_SPELL_KEY_TO_JB2A_PRESET = {
+  benediction: "bless",
+  malediction: "curse",
+  aquagenese: "water",
+  destruction_eau: "water",
+  detection_magie: "detection",
+  detection_du_mal: "fear",
+  detection_du_bien: "bless",
+  apaisement: "bless",
+  epouvante: "fear"
+};
+
 const ADD2E_JB2A_FILE_CACHE = new Map();
+
+function add2eNormalizeFxKey(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+}
 
 function add2eGetTokenLikeCenter(target) {
   if (!target) return null;
@@ -68,7 +119,7 @@ async function add2eJb2aFileExists(path) {
 }
 
 async function add2ePickJb2aFile(preset = "divine") {
-  const key = String(preset || "divine").toLowerCase();
+  const key = add2eNormalizeFxKey(preset || "divine");
   const candidates = [
     ...(ADD2E_JB2A_PRESET_CANDIDATES[key] ?? []),
     ...(ADD2E_JB2A_PRESET_CANDIDATES.divine ?? [])
@@ -85,11 +136,12 @@ export async function add2ePlayJb2aPremiumFx(target, preset = "divine", options 
   try {
     if (typeof Sequence === "undefined") return false;
 
+    const key = add2eNormalizeFxKey(preset || "divine");
     const tokenObj = add2eGetTokenLikeObject(target);
     const point = add2eGetTokenLikeCenter(target);
     if (!tokenObj && !point) return false;
 
-    const file = await add2ePickJb2aFile(preset);
+    const file = await add2ePickJb2aFile(key);
     if (!file) return false;
 
     globalThis.ADD2E_LAST_CLERC_FX_AT = Date.now();
@@ -101,12 +153,12 @@ export async function add2ePlayJb2aPremiumFx(target, preset = "divine", options 
     else effect.atLocation(point);
 
     effect
-      .scaleToObject(options.scaleToObject ?? 1.25)
+      .scaleToObject(options.scaleToObject ?? 1.15)
       .opacity(options.opacity ?? 0.85)
       .belowTokens(options.belowTokens ?? false);
 
     await seq.play();
-    console.log("[ADD2E][JB2A][PLAY]", { preset, file });
+    console.log("[ADD2E][JB2A][PLAY]", { preset: key, file });
     return true;
   } catch (e) {
     console.warn("[ADD2E][JB2A][ERROR] VFX ignoré pour ne pas bloquer l'action.", { preset, error: e });
@@ -114,4 +166,26 @@ export async function add2ePlayJb2aPremiumFx(target, preset = "divine", options 
   }
 }
 
+async function add2ePlayCentralSpellFx(spellKey = "divine", context = {}) {
+  const key = add2eNormalizeFxKey(spellKey || "divine");
+  const preset = ADD2E_SPELL_KEY_TO_JB2A_PRESET[key] || key || "divine";
+
+  // Une seule animation par sort : priorité au lanceur pour éviter les effets partout.
+  const target = context.casterToken
+    ?? context.caster
+    ?? context.sourceToken
+    ?? context.targetToken
+    ?? context.target
+    ?? (Array.isArray(context.targetTokens) ? context.targetTokens[0] : null);
+
+  return add2ePlayJb2aPremiumFx(target, preset, context.jb2aOptions ?? {});
+}
+
+// Compat ancien moteur + nouveau registre centralisé.
 globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX = add2ePlayJb2aPremiumFx;
+globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
+
+Hooks.once("ready", () => {
+  globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
+  console.log("[ADD2E][JB2A][VERSION]", globalThis.ADD2E_JB2A_VFX_VERSION);
+});
