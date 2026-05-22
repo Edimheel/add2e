@@ -8,9 +8,6 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   const sys = data.actor.system;
   const items = data.actor.items ?? [];
 
-  // =====================================================
-  // [FIX] SYNCHRONISATION CLASSE DEPUIS L'ITEM RÉEL
-  // =====================================================
   const classItem = data.actor.items.find(i => i.type === "classe") || null;
 
   if (classItem && classItem.system) {
@@ -18,7 +15,6 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     sys.classe = classItem.name;
     sys.classe_img = classItem.img;
     sys.spellcasting = foundry.utils.duplicate(classItem.system.spellcasting ?? null);
-    console.log("[ADD2E][getData] classe=", sys.classe, "niveau=", sys.niveau, "spellcasting=", sys.spellcasting);
   } else {
     sys.details_classe = {};
     sys.classe = "";
@@ -31,7 +27,6 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   data.spellcastingEntries = spellEntriesForDisplay;
   data.spellSlotsByPool = add2eGetSpellSlotPoolsByLevel(data.actor);
 
-  // --- Récupération robuste de la race
   let raceItem = null;
   let raceKey = sys.race || "";
 
@@ -42,11 +37,6 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     raceItem = items.find(i => i.type === "race" && (i.name || "").toLowerCase() === raceKey.toLowerCase());
   }
   if (!raceItem) raceItem = items.find(i => i.type === "race") || null;
-
-  if (!raceItem) {
-    console.warn("[ADD2e debug] AUCUNE RACE TROUVEE pour", raceKey, "dans", items.map(i => `${i.name} [${i.type}]`));
-    console.warn("[ADD2e debug] raceKey =", raceKey, "| Champ system.race =", sys.race);
-  }
 
   let details_race = {};
   if (raceItem && raceItem.system) {
@@ -258,20 +248,31 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
 
   const sorts = items.filter(i => i.type === "sort");
   const add2eObjectMagicPowersForHbs = [];
+  const magicItemTypes = ["arme", "armure", "objet", "object", "magic", "objet_magique"];
 
-  const itemsAvecPouvoirs = items.filter(i => {
-    if (!["arme", "armure", "objet", "object", "magic", "objet_magique"].includes(String(i.type || "").toLowerCase())) return false;
-    const pouvoirs = typeof add2eMagicObjectPowerArray === "function" ? add2eMagicObjectPowerArray(i) : [];
-    if (pouvoirs.length > 0) return true;
-    const charges = typeof add2eMagicObjectChargeInfo === "function" ? add2eMagicObjectChargeInfo(i, pouvoirs) : { max: Number(i.system?.max_charges ?? i.system?.maxCharges ?? i.system?.charges_max ?? i.system?.chargesMax ?? 0) || 0 };
-    if ((Number(charges.max) || 0) > 0) return true;
-    return typeof add2eMagicLooksMagical === "function" ? add2eMagicLooksMagical(i) : false;
+  const hasPowerOnUse = power => String(
+    power?.onUse ?? power?.onuse ?? power?.on_use ?? power?.script ?? power?.macro ?? power?.objetMagicOnUse ?? power?.fallbackOnUse ?? power?.onUseSortPath ?? ""
+  ).trim() !== "";
+
+  const itemEquipped = item => item?.system?.equipee === true || item?.system?.equipped === true;
+
+  const itemsAvecPouvoirs = items.filter(item => {
+    if (!magicItemTypes.includes(String(item.type || "").toLowerCase())) return false;
+    if (!itemEquipped(item)) return false;
+    const entries = typeof add2eMagicObjectActivePowerEntries === "function"
+      ? add2eMagicObjectActivePowerEntries(item)
+      : (typeof add2eMagicObjectPowerArray === "function" ? add2eMagicObjectPowerArray(item).map((power, index) => ({ power, index })).filter(entry => hasPowerOnUse(entry.power)) : []);
+    return entries.length > 0;
   });
 
   for (const itemSource of itemsAvecPouvoirs) {
-    const pouvoirs = typeof add2eMagicObjectPowerArray === "function" ? add2eMagicObjectPowerArray(itemSource) : [];
-    if (!pouvoirs.length) continue;
+    const powerEntries = typeof add2eMagicObjectActivePowerEntries === "function"
+      ? add2eMagicObjectActivePowerEntries(itemSource)
+      : add2eMagicObjectPowerArray(itemSource).map((power, index) => ({ power, index })).filter(entry => hasPowerOnUse(entry.power));
 
+    if (!powerEntries.length) continue;
+
+    const pouvoirs = powerEntries.map(entry => entry.power);
     const chargeInfo = typeof add2eMagicObjectChargeInfo === "function"
       ? add2eMagicObjectChargeInfo(itemSource, pouvoirs)
       : { current: Number(itemSource.system?.charges ?? 0) || 0, max: Number(itemSource.system?.max_charges ?? itemSource.system?.maxCharges ?? 0) || 0 };
@@ -279,7 +280,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     const maxGlobal = Number(chargeInfo.max) || 0;
     const isGlobal = maxGlobal > 0;
 
-    pouvoirs.forEach((p, idx) => {
+    for (const { power: p, index: idx } of powerEntries) {
       let iconImage = p.img;
       const realSpell = game.items.find(i => i.type === "sort" && i.name.toLowerCase() === String(p.name || p.nom || "").toLowerCase());
       if (realSpell) iconImage = realSpell.img;
@@ -287,6 +288,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
 
       const generatedId = typeof add2eMagicPowerGeneratedId === "function" ? add2eMagicPowerGeneratedId(itemSource, idx) : itemSource.id.substring(0, 14) + idx.toString().padStart(2, "0");
       const powerMax = isGlobal ? maxGlobal : (Number(p.max ?? p.maxCharges ?? p.chargesMax ?? p.charges_max ?? p.charges ?? 1) || 1);
+      const onUse = String(p.onUse ?? p.onuse ?? p.on_use ?? p.script ?? p.macro ?? p.objetMagicOnUse ?? p.fallbackOnUse ?? p.onUseSortPath ?? "").trim();
 
       const fakeSpellData = {
         _id: generatedId,
@@ -303,13 +305,14 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
           sourceWeaponId: itemSource.id,
           sourceItemId: itemSource.id,
           sourceItemName: itemSource.name,
+          sourceItemDescription: itemSource.system?.description || "",
           powerIndex: idx,
           cost: p.cout || p.cost || 0,
           max: powerMax,
           isGlobalCharge: isGlobal,
-          onUse: p.onUse || p.onuse || p.on_use || p.script || "",
-          onuse: p.onuse || p.onUse || p.on_use || p.script || "",
-          on_use: p.on_use || p.onUse || p.onuse || p.script || "",
+          onUse,
+          onuse: onUse,
+          on_use: onUse,
           objetMagicOnUse: p.objetMagicOnUse || p.fallbackOnUse || "",
           linkedSpell: p.linkedSpell || null
         }
@@ -330,8 +333,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
       };
 
       add2eObjectMagicPowersForHbs.push(virtualSpell);
-      sorts.push(virtualSpell);
-    });
+    }
   }
 
   data.add2eObjectMagicPowers = add2eObjectMagicPowersForHbs.map(power => ({
@@ -341,6 +343,8 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     niveau: Number(power.system?.niveau ?? 1) || 1,
     description: power.system?.description || "",
     sourceItemId: power.system?.sourceWeaponId || power.system?.sourceItemId || "",
+    sourceItemName: power.system?.sourceItemName || "",
+    sourceItemDescription: power.system?.sourceItemDescription || "",
     powerIndex: power.system?.powerIndex ?? null,
     charges: Number(power.getFlag?.("add2e", "memorizedCount") ?? power.system?.max ?? 0) || 0,
     max: Number(power.system?.max ?? 0) || 0,
