@@ -1,13 +1,14 @@
 // ADD2E — Correctif HUD : déplacement libre + repli fiable
-// Version : 2026-05-22-v8-keep-visible-after-collapse
+// Version : 2026-05-22-v9-stable-manual-resize
 //
 // Ce module complète add2e-action-hud.mjs.
 // Le repli est capturé sur pointerdown, avant les handlers click internes du HUD.
 // La position sauvegardée reste la référence : un redimensionnement de fenêtre ne la réécrit plus.
 // Les applications d'état automatiques sont silencieuses pour éviter les boucles de logs.
 // Après repli/ouverture, le HUD est remonté si son bas dépasse de l'écran.
+// Le redimensionnement manuel est capturé ici pour éviter les sauts provoqués par les handlers concurrents.
 
-const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-22-v8-keep-visible-after-collapse";
+const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-22-v9-stable-manual-resize";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_STORAGE_KEY = "add2e.actionHud.state.v8";
 const ADD2E_HUD_TAG = "[ADD2E][ACTION_HUD][FIX]";
@@ -16,6 +17,7 @@ globalThis.ADD2E_ACTION_HUD_FREE_DRAG_VERSION = ADD2E_ACTION_HUD_FREE_DRAG_VERSI
 
 let add2eHudSuppressClickUntil = 0;
 let add2eHudDragging = false;
+let add2eHudResizing = false;
 let add2eHudLastResizeLog = 0;
 let add2eHudApplyScheduled = false;
 
@@ -62,8 +64,8 @@ function add2eHudFixInjectStyle() {
     #${ADD2E_HUD_ID} .a2e-hud-header { cursor:move; }
     #${ADD2E_HUD_ID} button,
     #${ADD2E_HUD_ID} [data-hud-tab],
-    #${ADD2E_HUD_ID} [data-action],
-    #${ADD2E_HUD_ID} [data-resize-handle] { user-select:auto; touch-action:auto; }
+    #${ADD2E_HUD_ID} [data-action] { user-select:auto; touch-action:auto; }
+    #${ADD2E_HUD_ID} [data-resize-handle] { cursor:nwse-resize !important; user-select:none; touch-action:none; }
     @media (max-width:760px) {
       #${ADD2E_HUD_ID} { right:auto !important; width:var(--add2e-hud-free-width, 560px) !important; min-width:280px !important; max-width:calc(100vw - 16px) !important; }
     }
@@ -72,7 +74,7 @@ function add2eHudFixInjectStyle() {
 }
 
 function add2eHudFixKeepVisible(hud, { save = true, reason = "keep-visible", log = true } = {}) {
-  if (!hud || add2eHudDragging) return false;
+  if (!hud || add2eHudDragging || add2eHudResizing) return false;
 
   const margin = 8;
   const visible = 42;
@@ -105,6 +107,28 @@ function add2eHudFixKeepVisible(hud, { save = true, reason = "keep-visible", log
   return true;
 }
 
+function add2eHudFixKeepVisibleAfterResize(hud) {
+  if (!hud) return;
+  const margin = 8;
+  const visible = 42;
+  const rect = hud.getBoundingClientRect();
+  let left = rect.left;
+  let top = rect.top;
+
+  if (rect.right < visible) left = -hud.offsetWidth + visible;
+  if (rect.left > window.innerWidth - visible) left = window.innerWidth - visible;
+  if (rect.top < margin) top = margin;
+  if (rect.bottom > window.innerHeight - margin) top = Math.max(margin, rect.top - (rect.bottom - (window.innerHeight - margin)));
+
+  left = add2eHudFixClamp(left, -hud.offsetWidth + visible, window.innerWidth - visible);
+  top = add2eHudFixClamp(top, margin, Math.max(margin, window.innerHeight - visible));
+
+  hud.style.setProperty("left", `${Math.round(left)}px`, "important");
+  hud.style.setProperty("top", `${Math.round(top)}px`, "important");
+  hud.style.setProperty("right", "auto", "important");
+  hud.style.setProperty("bottom", "auto", "important");
+}
+
 function add2eHudFixSetRetracted(hud, retracted, reason = "manual", { save = true, log = true } = {}) {
   if (!hud) return;
   const panel = add2eHudFixPanel(hud);
@@ -135,11 +159,12 @@ function add2eHudFixToggleRetracted(hud, reason) {
 }
 
 function add2eHudFixApplyGeometryFromState(hud, { constrainVisible = false } = {}) {
-  if (!hud || add2eHudDragging) return;
+  if (!hud || add2eHudDragging || add2eHudResizing) return;
   const state = add2eHudFixReadState();
   let left = Number(state.left);
   let top = Number(state.top);
   const width = Number(state.width);
+  const maxMenuHeight = Number(state.maxMenuHeight);
 
   if (!Number.isFinite(left)) left = hud.getBoundingClientRect().left;
   if (!Number.isFinite(top)) top = hud.getBoundingClientRect().top;
@@ -147,6 +172,7 @@ function add2eHudFixApplyGeometryFromState(hud, { constrainVisible = false } = {
   if (Number.isFinite(left)) hud.style.setProperty("left", `${Math.round(left)}px`, "important");
   if (Number.isFinite(top)) hud.style.setProperty("top", `${Math.round(top)}px`, "important");
   if (Number.isFinite(width)) hud.style.setProperty("width", `${Math.round(width)}px`, "important");
+  if (Number.isFinite(maxMenuHeight)) hud.style.setProperty("--a2e-hud-menu-max", `${Math.round(maxMenuHeight)}px`);
   hud.style.setProperty("right", "auto", "important");
   hud.style.setProperty("bottom", "auto", "important");
   hud.style.setProperty("--add2e-hud-free-width", hud.style.width || `${hud.offsetWidth || 560}px`);
@@ -155,7 +181,7 @@ function add2eHudFixApplyGeometryFromState(hud, { constrainVisible = false } = {
 }
 
 function add2eHudFixApplyState(hud) {
-  if (!hud || add2eHudDragging) return;
+  if (!hud || add2eHudDragging || add2eHudResizing) return;
   const state = add2eHudFixReadState();
   add2eHudFixApplyGeometryFromState(hud);
   add2eHudFixSetRetracted(hud, state.menuRetracted === true || state.hudCollapsed === true, "apply-state", { save: false, log: false });
@@ -166,6 +192,76 @@ function add2eHudFixPrevent(ev) {
   ev.stopPropagation();
   ev.stopImmediatePropagation?.();
   add2eHudSuppressClickUntil = Date.now() + 450;
+}
+
+function add2eHudFixStartResize(ev) {
+  const handle = ev.target?.closest?.("[data-resize-handle]");
+  const hud = ev.target?.closest?.(`#${ADD2E_HUD_ID}`);
+  if (!handle || !hud || ev.button !== 0) return false;
+
+  add2eHudFixPrevent(ev);
+  add2eHudResizing = true;
+
+  const state = add2eHudFixReadState();
+  const rect = hud.getBoundingClientRect();
+  const panel = add2eHudFixPanel(hud);
+  const startX = ev.clientX;
+  const startY = ev.clientY;
+  const startWidth = rect.width;
+  const startMaxMenuHeight = Number(state.maxMenuHeight) || Number(panel?.offsetHeight) || 320;
+  const fixedLeft = rect.left;
+  const fixedTop = rect.top;
+
+  hud.style.setProperty("left", `${Math.round(fixedLeft)}px`, "important");
+  hud.style.setProperty("top", `${Math.round(fixedTop)}px`, "important");
+  hud.style.setProperty("right", "auto", "important");
+  hud.style.setProperty("bottom", "auto", "important");
+
+  let moved = false;
+  let nextWidth = startWidth;
+  let nextMaxMenuHeight = startMaxMenuHeight;
+
+  const move = e => {
+    moved = true;
+    const maxWidth = Math.max(360, window.innerWidth - Math.max(0, fixedLeft) - 8);
+    nextWidth = add2eHudFixClamp(startWidth + (e.clientX - startX), 360, maxWidth);
+    nextMaxMenuHeight = add2eHudFixClamp(startMaxMenuHeight + (e.clientY - startY), 110, Math.max(140, window.innerHeight - 130));
+
+    hud.style.setProperty("width", `${Math.round(nextWidth)}px`, "important");
+    hud.style.setProperty("--a2e-hud-menu-max", `${Math.round(nextMaxMenuHeight)}px`);
+    hud.style.setProperty("--add2e-hud-free-width", `${Math.round(nextWidth)}px`);
+    hud.style.setProperty("left", `${Math.round(fixedLeft)}px`, "important");
+    hud.style.setProperty("top", `${Math.round(fixedTop)}px`, "important");
+    hud.style.setProperty("right", "auto", "important");
+    hud.style.setProperty("bottom", "auto", "important");
+  };
+
+  const up = () => {
+    window.removeEventListener("pointermove", move, true);
+    window.removeEventListener("pointerup", up, true);
+    add2eHudResizing = false;
+
+    if (moved) {
+      add2eHudFixKeepVisibleAfterResize(hud);
+      const r = hud.getBoundingClientRect();
+      add2eHudFixSaveState({
+        left: Math.round(r.left),
+        top: Math.round(r.top),
+        width: Math.round(hud.offsetWidth || r.width || nextWidth),
+        maxMenuHeight: Math.round(nextMaxMenuHeight)
+      });
+      console.log(`${ADD2E_HUD_TAG}[RESIZE_SAVE]`, {
+        left: Math.round(r.left),
+        top: Math.round(r.top),
+        width: Math.round(hud.offsetWidth || r.width || nextWidth),
+        maxMenuHeight: Math.round(nextMaxMenuHeight)
+      });
+    }
+  };
+
+  window.addEventListener("pointermove", move, true);
+  window.addEventListener("pointerup", up, true);
+  return true;
 }
 
 function add2eHudFixPointerControls(ev) {
@@ -238,6 +334,7 @@ function add2eHudFixStartDrag(ev) {
 }
 
 function add2eHudFixPointerDown(ev) {
+  if (add2eHudFixStartResize(ev)) return;
   if (add2eHudFixPointerControls(ev)) return;
   add2eHudFixStartDrag(ev);
 }
@@ -253,7 +350,7 @@ function add2eHudFixInstall() {
 }
 
 function add2eHudFixScheduleInstall() {
-  if (add2eHudApplyScheduled) return;
+  if (add2eHudApplyScheduled || add2eHudDragging || add2eHudResizing) return;
   add2eHudApplyScheduled = true;
   requestAnimationFrame(() => {
     add2eHudApplyScheduled = false;
@@ -263,7 +360,7 @@ function add2eHudFixScheduleInstall() {
 
 function add2eHudFixOnResize() {
   const hud = add2eHudFixHud();
-  if (!hud || add2eHudDragging) return;
+  if (!hud || add2eHudDragging || add2eHudResizing) return;
   add2eHudFixApplyGeometryFromState(hud, { constrainVisible: true });
 
   const now = Date.now();
@@ -286,7 +383,9 @@ function add2eHudFixDebug() {
     rect: rect ? { left: Math.round(rect.left), top: Math.round(rect.top), bottom: Math.round(rect.bottom), width: Math.round(rect.width), height: Math.round(rect.height), viewportH: window.innerHeight } : null,
     panelInlineDisplay: panel?.style?.display ?? null,
     panelComputedDisplay: panel ? getComputedStyle(panel).display : null,
-    activeTab: hud?.querySelector?.("[data-hud-tab].active")?.dataset?.hudTab ?? null
+    activeTab: hud?.querySelector?.("[data-hud-tab].active")?.dataset?.hudTab ?? null,
+    resizing: add2eHudResizing,
+    dragging: add2eHudDragging
   };
 }
 
