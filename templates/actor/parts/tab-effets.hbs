@@ -1,0 +1,40 @@
+      <section class='a2e-tab-content tab tab-effets {{#if (eq activeTab "effets")}}active{{/if}}' data-group="primary" data-tab="effets">
+        <div class="a2e-panel">
+          <h2>Effets actifs</h2>
+          <div class="a2e-panel-body">
+            {{#if activeEffectsList.length}}
+              <table class="a2e-table a2e-effects-table">
+                <thead>
+                  <tr>
+                    <th style="width:42px;"></th>
+                    <th>Effet</th>
+                    <th>Source</th>
+                    <th>Durée</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each activeEffectsList as |eff|}}
+                    <tr>
+                      <td><img src="{{eff.img}}" alt="{{eff.name}}" style="width:30px;height:30px;border-radius:5px;object-fit:cover;"></td>
+                      <td><b>{{eff.name}}</b></td>
+                      <td>{{eff.sourceName}}</td>
+                      <td>{{eff.duration}}</td>
+                      <td class="effect-description a2e-small">{{{eff.description}}}</td>
+                      <td>
+                        <div class="a2e-actions">
+                          <a class="a2e-action-icon a2e-action-edit effect-edit" data-effect-id="{{eff.id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                          <a class="a2e-action-icon a2e-action-delete effect-delete" data-effect-id="{{eff.id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="a2e-muted">Aucun effet actif.</p>
+            {{/if}}
+          </div>
+        </div>
+      </section>
