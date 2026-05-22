@@ -15,6 +15,7 @@
   "scripts/effects-engine.mjs",
   "scripts/add2e-attack.mjs",
   "scripts/add2e-action-hud.mjs",
+  "scripts/add2e/19-action-hud-free-drag.mjs",
   "scripts/add2e.mjs",
   "scripts/08-character-sheet-ui.mjs",
   "scripts/resolveActiveEffectsOnTarget.mjs",
