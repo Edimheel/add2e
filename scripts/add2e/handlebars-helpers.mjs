@@ -102,7 +102,7 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.length) {
 }
 
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.magicDefenseTooltip) {
-  Handlebars.registerHelper("magicDefenseTooltip", function(listeObjets, listeArmures) {
+  Handlebars.registerHelper("magicDefenseTooltip", function(listeObjets) {
     const normalize = value => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const isEquipped = item => item?.system?.equipee === true || item?.system?.equipped === true;
     const isFixedAC = item => {
@@ -136,11 +136,11 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.magicDefenseTooltip
         || /bonus_ac|ac_bonus|ca_bonus|armorclassbonus|armor_class_bonus/.test(effectText);
     };
 
-    const sources = [...(listeObjets || []), ...(listeArmures || [])]
-      .filter(item => isEquipped(item) && hasAdditiveACBonus(item))
+    const sources = (listeObjets || [])
+      .filter(item => isEquipped(item) && String(item.type || "") === "objet" && hasAdditiveACBonus(item))
       .map(item => item.name)
       .filter(Boolean);
 
-    return sources.length ? sources.join("\n") : "Aucun bonus magique additionnel de CA identifié.";
+    return sources.length ? sources.join("\n") : "Aucun bonus magique additionnel de CA hors armure/bouclier identifié.";
   });
 }
