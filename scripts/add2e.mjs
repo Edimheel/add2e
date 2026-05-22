@@ -27,3 +27,4 @@ import "./add2e/14-item-sheets.mjs";
 import "./add2e/15-validation-sockets.mjs";
 import "./add2e/16-preparation-display.mjs";
 import "./add2e/17-movement-xp.mjs";
+import "./add2e/18-token-state-overlay.mjs";
