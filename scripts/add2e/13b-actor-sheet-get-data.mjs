@@ -248,6 +248,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
 
   const sorts = items.filter(i => i.type === "sort");
   const add2eObjectMagicPowersForHbs = [];
+  const add2eObjectMagicItemsForHbs = [];
   const magicItemTypes = ["arme", "armure", "objet", "object", "magic", "objet_magique"];
 
   const hasPowerOnUse = power => String(
@@ -275,10 +276,12 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     const pouvoirs = powerEntries.map(entry => entry.power);
     const chargeInfo = typeof add2eMagicObjectChargeInfo === "function"
       ? add2eMagicObjectChargeInfo(itemSource, pouvoirs)
-      : { current: Number(itemSource.system?.charges ?? 0) || 0, max: Number(itemSource.system?.max_charges ?? itemSource.system?.maxCharges ?? 0) || 0 };
+      : { current: Number(itemSource.system?.charges?.value ?? itemSource.system?.charges ?? 0) || 0, max: Number(itemSource.system?.charges?.max ?? itemSource.system?.max_charges ?? itemSource.system?.maxCharges ?? 0) || 0 };
 
     const maxGlobal = Number(chargeInfo.max) || 0;
+    const currentGlobal = Number(chargeInfo.current) || 0;
     const isGlobal = maxGlobal > 0;
+    const itemPowers = [];
 
     for (const { power: p, index: idx } of powerEntries) {
       let iconImage = p.img;
@@ -289,6 +292,10 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
       const generatedId = typeof add2eMagicPowerGeneratedId === "function" ? add2eMagicPowerGeneratedId(itemSource, idx) : itemSource.id.substring(0, 14) + idx.toString().padStart(2, "0");
       const powerMax = isGlobal ? maxGlobal : (Number(p.max ?? p.maxCharges ?? p.chargesMax ?? p.charges_max ?? p.charges ?? 1) || 1);
       const onUse = String(p.onUse ?? p.onuse ?? p.on_use ?? p.script ?? p.macro ?? p.objetMagicOnUse ?? p.fallbackOnUse ?? p.onUseSortPath ?? "").trim();
+      const powerCharges = isGlobal
+        ? currentGlobal
+        : (Number(itemSource.getFlag?.("add2e", `charges_${idx}`) ?? p.charges ?? p.uses ?? powerMax) || 0);
+      const cost = Number(p.cout ?? p.cost ?? p.chargeCost ?? 0) || 0;
 
       const fakeSpellData = {
         _id: generatedId,
@@ -307,7 +314,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
           sourceItemName: itemSource.name,
           sourceItemDescription: itemSource.system?.description || "",
           powerIndex: idx,
-          cost: p.cout || p.cost || 0,
+          cost,
           max: powerMax,
           isGlobalCharge: isGlobal,
           onUse,
@@ -324,15 +331,46 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
         if (key === "memorizedCount") {
           if (isGlobal) {
             const val = itemSource.getFlag("add2e", "global_charges");
-            return (val !== undefined) ? val : chargeInfo.current;
+            return (val !== undefined) ? val : currentGlobal;
           }
           const charges = itemSource.getFlag("add2e", `charges_${idx}`);
-          return (charges !== undefined) ? charges : powerMax;
+          return (charges !== undefined) ? charges : powerCharges;
         }
         return null;
       };
 
+      const powerForHbs = {
+        id: virtualSpell.id || virtualSpell._id,
+        name: virtualSpell.name || "Pouvoir",
+        img: virtualSpell.img || "icons/svg/aura.svg",
+        niveau: Number(virtualSpell.system?.niveau ?? 1) || 1,
+        description: virtualSpell.system?.description || "",
+        sourceItemId: itemSource.id,
+        sourceItemName: itemSource.name,
+        sourceItemDescription: itemSource.system?.description || "",
+        powerIndex: idx,
+        charges: Number(virtualSpell.getFlag?.("add2e", "memorizedCount") ?? powerCharges) || 0,
+        max: powerMax,
+        cost,
+        onUse,
+        onuse: onUse,
+        on_use: onUse
+      };
+
       add2eObjectMagicPowersForHbs.push(virtualSpell);
+      itemPowers.push(powerForHbs);
+    }
+
+    if (itemPowers.length) {
+      add2eObjectMagicItemsForHbs.push({
+        id: itemSource.id,
+        name: itemSource.name,
+        img: itemSource.img || "icons/svg/aura.svg",
+        description: itemSource.system?.description || "",
+        charges: isGlobal ? currentGlobal : null,
+        max: isGlobal ? maxGlobal : null,
+        powers: itemPowers
+      });
     }
   }
 
@@ -353,6 +391,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     onuse: power.system?.onuse || power.system?.onUse || power.system?.on_use || "",
     on_use: power.system?.on_use || power.system?.onUse || power.system?.onuse || ""
   }));
+  data.add2eObjectMagicItems = add2eObjectMagicItemsForHbs;
 
   const sortsParNiveau = {};
   for (const sort of sorts) {
