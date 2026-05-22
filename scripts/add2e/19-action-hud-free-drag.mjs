@@ -1,13 +1,13 @@
 // ADD2E — Déplacement libre et repli du HUD d'action
-// Version : 2026-05-22-v2-free-drag-collapse
+// Version : 2026-05-22-v3-free-drag-stable-menu-collapse
 //
 // Complète add2e-action-hud.mjs sans le réécrire.
 // - force la position sauvegardée après chaque rendu du HUD ;
-// - permet de déplacer le HUD depuis toute zone non interactive ;
-// - clic sur l'onglet déjà actif : replie/déplie le menu ;
-// - clic sur la flèche : replie/déplie tout le HUD sauf la barre de contrôle.
+// - remplace le drag interne par un seul drag stable capturé ici ;
+// - clic sur l'onglet déjà actif : masque seulement le panneau de menu ;
+// - clic sur la flèche : même repli visuel que l'onglet actif, avec onglets + en-tête visibles.
 
-const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-22-v2-free-drag-collapse";
+const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-22-v3-free-drag-stable-menu-collapse";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_STORAGE_KEY = "add2e.actionHud.state.v8";
 const ADD2E_HUD_DRAG_TAG = "[ADD2E][ACTION_HUD][FREE_DRAG]";
@@ -44,6 +44,7 @@ function add2eHudFreeInjectStyle() {
       right: auto !important;
       bottom: auto !important;
       touch-action: none;
+      user-select: none;
     }
 
     #${ADD2E_HUD_ID} .a2e-hud-shell,
@@ -60,35 +61,16 @@ function add2eHudFreeInjectStyle() {
     #${ADD2E_HUD_ID} [data-action],
     #${ADD2E_HUD_ID} [data-hud-tab] {
       touch-action: auto;
+      user-select: auto;
     }
 
-    #${ADD2E_HUD_ID}.a2e-hud-menu-retracted .a2e-hud-menu-panel {
+    #${ADD2E_HUD_ID}.a2e-hud-menu-retracted .a2e-hud-menu-panel,
+    #${ADD2E_HUD_ID}.collapsed .a2e-hud-menu-panel {
       display: none !important;
     }
 
-    #${ADD2E_HUD_ID}.a2e-hud-full-collapsed {
-      min-width: 260px !important;
-      width: min(var(--add2e-hud-free-width, 360px), 420px) !important;
-    }
-
-    #${ADD2E_HUD_ID}.a2e-hud-full-collapsed .a2e-hud-menu-panel,
-    #${ADD2E_HUD_ID}.a2e-hud-full-collapsed .a2e-hud-tabs {
-      display: none !important;
-    }
-
-    #${ADD2E_HUD_ID}.a2e-hud-full-collapsed .a2e-hud-header {
-      grid-template-columns: minmax(0, 1fr) auto auto !important;
-      min-height: 42px !important;
-      padding: 6px 8px !important;
-    }
-
-    #${ADD2E_HUD_ID}.a2e-hud-full-collapsed .a2e-hud-portrait,
-    #${ADD2E_HUD_ID}.a2e-hud-full-collapsed .a2e-hud-subtitle,
-    #${ADD2E_HUD_ID}.a2e-hud-full-collapsed .a2e-hud-metrics {
-      display: none !important;
-    }
-
-    #${ADD2E_HUD_ID}.a2e-hud-full-collapsed .a2e-hud-icon-btn i {
+    #${ADD2E_HUD_ID}.a2e-hud-menu-retracted .a2e-hud-icon-btn i,
+    #${ADD2E_HUD_ID}.collapsed .a2e-hud-icon-btn i {
       transform: rotate(180deg);
     }
 
@@ -127,7 +109,8 @@ function add2eHudFreeConstrainToViewport(hud, left, top) {
 }
 
 function add2eHudFreeForceStoredGeometry(hud) {
-  if (!hud) return;
+  if (!hud || hud.dataset.add2eFreeDragging === "1") return;
+
   const state = add2eHudFreeReadState();
   const left = Number(state.left);
   const top = Number(state.top);
@@ -144,14 +127,29 @@ function add2eHudFreeForceStoredGeometry(hud) {
 function add2eHudFreeApplyCollapseState(hud) {
   if (!hud) return;
   const state = add2eHudFreeReadState();
-  hud.classList.toggle("a2e-hud-menu-retracted", state.menuRetracted === true && state.fullCollapsed !== true);
-  hud.classList.toggle("a2e-hud-full-collapsed", state.fullCollapsed === true);
+  hud.classList.toggle("a2e-hud-menu-retracted", state.menuRetracted === true);
 }
 
 function add2eHudFreeApplyState(hud) {
   if (!hud) return;
   add2eHudFreeForceStoredGeometry(hud);
   add2eHudFreeApplyCollapseState(hud);
+}
+
+function add2eHudFreeToggleMenu(hud) {
+  const state = add2eHudFreeReadState();
+  const next = state.menuRetracted !== true;
+  add2eHudFreeSaveState({ menuRetracted: next, fullCollapsed: false });
+  hud.classList.toggle("a2e-hud-menu-retracted", next);
+  hud.classList.toggle("collapsed", next);
+  add2eHudFreeApplyCssVars(hud);
+}
+
+function add2eHudFreeOpenMenu(hud) {
+  add2eHudFreeSaveState({ menuRetracted: false, fullCollapsed: false });
+  hud.classList.remove("a2e-hud-menu-retracted");
+  hud.classList.remove("collapsed");
+  add2eHudFreeApplyCssVars(hud);
 }
 
 function add2eHudFreeInstallOnHud(hud) {
@@ -165,15 +163,13 @@ function add2eHudFreeInstallOnHud(hud) {
     const tab = ev.target.closest?.("[data-hud-tab]");
     if (tab) {
       const isActive = tab.classList.contains("active");
-      const state = add2eHudFreeReadState();
       if (isActive) {
         ev.preventDefault();
         ev.stopPropagation();
         ev.stopImmediatePropagation?.();
-        add2eHudFreeSaveState({ menuRetracted: state.menuRetracted !== true, fullCollapsed: false });
-        add2eHudFreeApplyState(hud);
+        add2eHudFreeToggleMenu(hud);
       } else {
-        add2eHudFreeSaveState({ menuRetracted: false, fullCollapsed: false });
+        add2eHudFreeOpenMenu(hud);
       }
       return;
     }
@@ -183,9 +179,7 @@ function add2eHudFreeInstallOnHud(hud) {
       ev.preventDefault();
       ev.stopPropagation();
       ev.stopImmediatePropagation?.();
-      const state = add2eHudFreeReadState();
-      add2eHudFreeSaveState({ fullCollapsed: state.fullCollapsed !== true, menuRetracted: false });
-      add2eHudFreeApplyState(hud);
+      add2eHudFreeToggleMenu(hud);
     }
   }, true);
 
@@ -197,6 +191,7 @@ function add2eHudFreeInstallOnHud(hud) {
     ev.stopPropagation();
     ev.stopImmediatePropagation?.();
 
+    hud.dataset.add2eFreeDragging = "1";
     const rect = hud.getBoundingClientRect();
     const start = { x: ev.clientX, y: ev.clientY, left: rect.left, top: rect.top };
     let moved = false;
@@ -214,6 +209,8 @@ function add2eHudFreeInstallOnHud(hud) {
     const up = () => {
       window.removeEventListener("pointermove", move, true);
       window.removeEventListener("pointerup", up, true);
+      delete hud.dataset.add2eFreeDragging;
+
       if (moved) {
         const rectAfter = hud.getBoundingClientRect();
         add2eHudFreeSaveState({
