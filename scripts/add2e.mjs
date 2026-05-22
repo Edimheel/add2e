@@ -3,6 +3,7 @@
  * Point d'entrée ADD2E.
  * Fichier découpé en modules dans scripts/add2e/*.mjs.
  */
+import "./add2e-initiative.mjs";
 import "./add2e/00-legacy-global-helpers.mjs";
 import "./add2e/spell-dialog-ui.mjs";
 import "./add2e/item-sheet-registration.mjs";
