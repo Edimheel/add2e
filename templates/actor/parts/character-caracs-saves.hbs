@@ -1,0 +1,23 @@
+    <div class="a2e-character-saves-layout">
+      <section class="a2e-panel a2e-characteristics-always">
+      <h2>
+        Caractéristiques
+        <i class="fas fa-dice roll-caracs-btn" style="margin-left:0.35em;color:#8e44ad;cursor:pointer;" title="Tirer les caractéristiques"></i>
+      </h2>
+
+      <div class="a2e-panel-body">
+        <table class="a2e-carac-table a2e-carac-table-clean">
+          <tbody>
+            {{> "systems/add2e/templates/actor/parts/carac-force.hbs"}}
+            {{> "systems/add2e/templates/actor/parts/carac-dexterite.hbs"}}
+            {{> "systems/add2e/templates/actor/parts/carac-constitution.hbs"}}
+            {{> "systems/add2e/templates/actor/parts/carac-intelligence.hbs"}}
+            {{> "systems/add2e/templates/actor/parts/carac-sagesse.hbs"}}
+            {{> "systems/add2e/templates/actor/parts/carac-charisme.hbs"}}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    {{> "systems/add2e/templates/actor/parts/character-saves.hbs"}}
+    </div>
