@@ -8,6 +8,7 @@ import "./add2e/00-legacy-global-helpers.mjs";
 import "./add2e/spell-dialog-ui.mjs";
 import "./add2e/item-sheet-registration.mjs";
 import "./add2e/handlebars-helpers.mjs";
+import "./add2e/character-sheet-templates.mjs";
 import "./add2e/01-macros-base-caracs.mjs";
 import "./add2e/02-spell-sync.mjs";
 import "./add2e/02b-spell-sync-dedupe.mjs";
