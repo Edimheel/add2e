@@ -105,9 +105,23 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.magicDefenseTooltip
   Handlebars.registerHelper("magicDefenseTooltip", function(listeObjets, listeArmures) {
     const normalize = value => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const isEquipped = item => item?.system?.equipee === true || item?.system?.equipped === true;
-    const isMagic = item => item?.system?.magique === true || item?.system?.categorie === "objet_magique" || item?.flags?.add2e?.isMagicItem === true;
-    const hasDefensiveName = item => /protection|defense|bracelet|anneau|cape|robe|bouclier|armure|ca\s*\d|classe d.armure/.test(normalize(item?.name));
-    const hasDefensiveData = item => {
+    const isFixedAC = item => {
+      const system = item?.system || {};
+      const effectText = normalize(JSON.stringify({
+        add2eEffects: system.add2eEffects,
+        effetsPassifs: system.effetsPassifs,
+        effects: system.effects,
+        tags: system.tags,
+        effectTags: system.effectTags
+      }));
+      return system.ac_fixe !== undefined
+        || system.fixedAC !== undefined
+        || system.fixed_ac !== undefined
+        || system.setAC !== undefined
+        || /ac_fixe|fixedac|fixed_ac|setac|classe_armure_fixe|classe d.armure fixe/.test(effectText);
+    };
+    const hasAdditiveACBonus = item => {
+      if (isFixedAC(item)) return false;
       const system = item?.system || {};
       const effectText = normalize(JSON.stringify({
         add2eEffects: system.add2eEffects,
@@ -118,18 +132,15 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.magicDefenseTooltip
       }));
       return Number(system.bonus_ac || 0) !== 0
         || Number(system.ac_bonus || 0) !== 0
-        || Number(system.bonus_sauvegarde || 0) !== 0
-        || Number(system.save_bonus || 0) !== 0
-        || system.ac_fixe !== undefined
-        || system.fixedAC !== undefined
-        || /bonus_ac|ac_fixe|fixedac|classe_armure|classe d.armure|sauvegarde|protection|defense/.test(effectText);
+        || Number(system.ca_bonus || 0) !== 0
+        || /bonus_ac|ac_bonus|ca_bonus|armorclassbonus|armor_class_bonus/.test(effectText);
     };
 
     const sources = [...(listeObjets || []), ...(listeArmures || [])]
-      .filter(item => isEquipped(item) && isMagic(item) && (hasDefensiveName(item) || hasDefensiveData(item)))
+      .filter(item => isEquipped(item) && hasAdditiveACBonus(item))
       .map(item => item.name)
       .filter(Boolean);
 
-    return sources.length ? sources.join("\n") : "Aucun objet magique défensif identifié.";
+    return sources.length ? sources.join("\n") : "Aucun bonus magique additionnel de CA identifié.";
   });
 }
