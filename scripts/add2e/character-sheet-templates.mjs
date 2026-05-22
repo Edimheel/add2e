@@ -3,6 +3,13 @@
 const ADD2E_CHARACTER_SHEET_PARTIALS = [
   "systems/add2e/templates/actor/parts/character-header.hbs",
   "systems/add2e/templates/actor/parts/character-caracs-saves.hbs",
+  "systems/add2e/templates/actor/parts/carac-force.hbs",
+  "systems/add2e/templates/actor/parts/carac-dexterite.hbs",
+  "systems/add2e/templates/actor/parts/carac-constitution.hbs",
+  "systems/add2e/templates/actor/parts/carac-intelligence.hbs",
+  "systems/add2e/templates/actor/parts/carac-sagesse.hbs",
+  "systems/add2e/templates/actor/parts/carac-charisme.hbs",
+  "systems/add2e/templates/actor/parts/character-saves.hbs",
   "systems/add2e/templates/actor/parts/character-tabs.hbs",
   "systems/add2e/templates/actor/parts/tab-resume.hbs",
   "systems/add2e/templates/actor/parts/tab-combat.hbs",
