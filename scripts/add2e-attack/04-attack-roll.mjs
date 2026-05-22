@@ -22,6 +22,15 @@ import {
   add2eGetAttackAbilityModifier,
   add2eAttackAbilityLabel
 } from "./03-attack-rules.mjs";
+import {
+  add2eAttackReadStrictNumber as add2eReadStrictNumber
+} from "./04c-attack-roll-state.mjs";
+import {
+  add2eAttackComputeCharacterDisplayedCA
+} from "./04d-attack-roll-defense.mjs";
+import {
+  add2eAttackComputeActiveAttackModifiers
+} from "./04e-attack-roll-modifiers.mjs";
 
 /**
  * Script principal d'attaque AD&D2e
@@ -419,174 +428,7 @@ if (isDistanceWeapon) {
             // --- 1. THAC0 ---
             const sys = actor.system || {};
 
-            const add2eReadStrictNumber = (value) => {
-              if (value === undefined || value === null || value === "") return null;
-              const n = Number(value);
-              return Number.isFinite(n) ? n : null;
-            };
-
-            const add2eNormalizeAttackText = (value) => String(value ?? "")
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-              .replace(/[’']/g, "")
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, "_")
-              .replace(/_+/g, "_")
-              .replace(/^_|_$/g, "");
-
-            const add2eAttackReadFirstNumber = (...values) => {
-              for (const v of values) {
-                const n = add2eReadStrictNumber(v);
-                if (n !== null) return n;
-              }
-              return null;
-            };
-
-            const add2eAttackIsEquipped = (item) => {
-              const sysItem = item?.system ?? {};
-              return sysItem.equipee === true || sysItem.equipped === true || sysItem.portee === true || sysItem.worn === true;
-            };
-
-            const add2eAttackItemTags = (item) => {
-              const sysItem = item?.system ?? {};
-              const raw = [
-                item?.name,
-                sysItem.nom,
-                sysItem.categorie,
-                sysItem.type,
-                ...(Array.isArray(sysItem.tags) ? sysItem.tags : []),
-                ...(Array.isArray(sysItem.effectTags) ? sysItem.effectTags : [])
-              ];
-              return raw.map(add2eNormalizeAttackText).filter(Boolean);
-            };
-
-            const add2eAttackItemHasAnyTag = (item, ...needles) => {
-              const text = add2eAttackItemTags(item).join(" ");
-              return needles.some(n => text.includes(add2eNormalizeAttackText(n)));
-            };
-
-            const add2eAttackDexDefenseFromScore = (score) => {
-              const dex = Number(score);
-              if (!Number.isFinite(dex)) return 0;
-              if (dex <= 3) return 4;
-              if (dex === 4) return 3;
-              if (dex === 5) return 2;
-              if (dex === 6) return 1;
-              if (dex <= 14) return 0;
-              if (dex === 15) return -1;
-              if (dex === 16) return -2;
-              if (dex === 17) return -3;
-              return -4;
-            };
-
-            const add2eAttackGetDexDefenseMod = (targetActor) => {
-              const s = targetActor?.system ?? {};
-
-              const direct = add2eAttackReadFirstNumber(
-                s.dex_defense,
-                s.dexDefense,
-                s.ca_defense,
-                s.caDefense,
-                s.defense_ca,
-                s.defenseCA,
-                s.dexterite_defense,
-                s.dexteriteDefense,
-                s.dexterite_ca_defense,
-                s.mod_dex_defense,
-                s.modDexDefense,
-                s?.caracs?.dexterite?.ca,
-                s?.caracs?.dexterite?.defense,
-                s?.caracs?.dex?.ca,
-                s?.caracs?.dex?.defense,
-                s?.abilities?.dex?.defense,
-                s?.abilities?.dexterite?.defense
-              );
-              if (direct !== null) return { value: direct, source: "stored-dex-defense" };
-
-              const score = add2eAttackReadFirstNumber(
-                s.dexterite,
-                s.dexterite_base,
-                s.dex,
-                s.dex_base,
-                s.dexterity,
-                s.dexterity_base,
-                s?.caracs?.dexterite?.value,
-                s?.caracs?.dexterite?.base,
-                s?.abilities?.dex?.value,
-                s?.abilities?.dex?.base
-              );
-
-              return {
-                value: add2eAttackDexDefenseFromScore(score ?? 10),
-                source: score === null ? "dex-default-10" : `dex-score-${score}`
-              };
-            };
-
-            const add2eAttackGetArmorBaseCA = (targetActor) => {
-              let best = 10;
-              let source = "base-10";
-
-              for (const item of targetActor?.items ?? []) {
-                if (item?.type !== "armure") continue;
-                if (!add2eAttackIsEquipped(item)) continue;
-                if (add2eAttackItemHasAnyTag(item, "bouclier", "shield", "heaume", "casque", "helmet")) continue;
-
-                const si = item.system ?? {};
-                const itemCA = add2eAttackReadFirstNumber(si.ca, si.ac, si.armorClass, si.ca_base, si.base_ca, si.caTotal, si.ca_total);
-                if (itemCA !== null && itemCA < best) {
-                  best = itemCA;
-                  source = `armure:${item.name}`;
-                }
-              }
-
-              return { value: best, source };
-            };
-
-            const add2eAttackGetShieldAdjustment = (targetActor) => {
-              let total = 0;
-              const sources = [];
-
-              for (const item of targetActor?.items ?? []) {
-                if (item?.type !== "armure") continue;
-                if (!add2eAttackIsEquipped(item)) continue;
-                if (!add2eAttackItemHasAnyTag(item, "bouclier", "shield")) continue;
-
-                const si = item.system ?? {};
-                const raw = add2eAttackReadFirstNumber(si.bonus_ca, si.bonus_ac, si.ca_bonus, si.ac_bonus, si.mod_ca, si.mod_ac);
-                const adj = raw === null ? -1 : (raw > 0 ? -raw : raw);
-                total += adj;
-                sources.push(`${item.name}:${adj}`);
-              }
-
-              return { value: total, source: sources.length ? sources.join(", ") : "none" };
-            };
-
-            const add2eAttackComputeCharacterDisplayedCA = (targetActor) => {
-              const s = targetActor?.system ?? {};
-              const armor = add2eAttackGetArmorBaseCA(targetActor);
-              const dex = add2eAttackGetDexDefenseMod(targetActor);
-              const shield = add2eAttackGetShieldAdjustment(targetActor);
-
-              const total = armor.value + dex.value + shield.value;
-              const stored = {
-                ca: s.ca,
-                armorClass: s.armorClass,
-                ca_total: s.ca_total,
-                ca_naturel: s.ca_naturel
-              };
-
-              return {
-                caTotal: total,
-                armorBase: armor.value,
-                armorSource: armor.source,
-                dexMod: dex.value,
-                dexSource: dex.source,
-                shieldMod: shield.value,
-                shieldSource: shield.source,
-                stored
-              };
-            };
-
+            // Helpers extraits dans 04c/04d.
             let thaco = null;
 
             if (actor.type === "personnage") {
@@ -670,95 +512,21 @@ if (isDistanceWeapon) {
               modCaracDegats
             });
 
-            let bonusToucheEffets = 0;
-let bonusDegatsEffets = 0;
-let bonusRacialVs = 0;
+            let {
+              bonusToucheEffets,
+              bonusDegatsEffets,
+              bonusRacialVs,
+              targetTags
+            } = add2eAttackComputeActiveAttackModifiers({ actor, cible, combatProfile });
 
-if (typeof Add2eEffectsEngine !== "undefined") {
-  const typeCible = cible.system.type_monstre || cible.system.race || "";
-  bonusRacialVs = Add2eEffectsEngine.getBonusToucheVs(actor, typeCible);
-
-  const activeTags = Add2eEffectsEngine.getActiveTags(actor) ?? [];
-
-  const targetTags = new Set();
-  const pushTargetTag = (value) => {
-    if (Array.isArray(value)) {
-      for (const v of value) pushTargetTag(v);
-      return;
-    }
-
-    if (typeof value !== "string") return;
-
-    for (const part of value.split(/[,;|]/)) {
-      const n = add2eNormalizeAttackTag(part);
-      if (!n) continue;
-
-      targetTags.add(n);
-      targetTags.add(n.replace(/^race:/, ""));
-      targetTags.add(n.replace(/^type:/, ""));
-      targetTags.add(n.replace(/^type_monstre:/, ""));
-      targetTags.add(n.replace(/^creature:/, ""));
-    }
-  };
-
-  pushTargetTag(cible?.name);
-  pushTargetTag(cible?.system?.race);
-  pushTargetTag(cible?.system?.type);
-  pushTargetTag(cible?.system?.type_monstre);
-  pushTargetTag(cible?.system?.categorie);
-  pushTargetTag(cible?.system?.tags);
-  pushTargetTag(cible?.system?.effectTags);
-  pushTargetTag(cible?.flags?.add2e?.tags);
-
-  for (const rawTag of activeTags) {
-    const t = add2eNormalizeAttackTag(rawTag);
-
-    // Bonus global : Bénédiction / Malédiction
-    if (t.startsWith("bonus_attaque:")) {
-      bonusToucheEffets += Number(t.split(":")[1]) || 0;
-      continue;
-    }
-
-    // Bonus conditionnel selon un tag générique de l’arme :
-    // bonus_touche:epee:1 matche famille_arme:epee, type_arme:epee ou arme:epee.
-    if (t.startsWith("bonus_touche:")) {
-      const parts = t.split(":");
-      const matcher = parts[1];
-      const valeur = Number(parts[2]) || 0;
-
-      if (matcher && add2eTagSetMatches(combatProfile.tagSet, matcher)) {
-        bonusToucheEffets += valeur;
-      }
-      continue;
-    }
-
-    // Bonus générique aux dégâts selon la cible.
-    // Format : bonus_degats_vs:<tag_cible>:<nombre|niveau>
-    // Exemple Ranger : bonus_degats_vs:orque:niveau.
-    if (t.startsWith("bonus_degats_vs:")) {
-      const parts = t.split(":");
-      const matcher = add2eNormalizeAttackTag(parts[1]);
-      const valeurRaw = String(parts[2] ?? "").trim().toLowerCase();
-
-      if (matcher && targetTags.has(matcher)) {
-        const valeur = valeurRaw === "niveau"
-          ? (Number(actor.system?.niveau) || 1)
-          : (Number(valeurRaw) || 0);
-
-        bonusDegatsEffets += valeur;
-      }
-    }
-  }
-
-  if (bonusDegatsEffets !== 0) {
-    console.log("[ADD2E][ATTAQUE][BONUS DEGATS VS CIBLE]", {
-      acteur: actor.name,
-      cible: cible?.name,
-      targetTags: [...targetTags],
-      bonusDegatsEffets
-    });
-  }
-}
+            if (bonusDegatsEffets !== 0) {
+              console.log("[ADD2E][ATTAQUE][BONUS DEGATS VS CIBLE]", {
+                acteur: actor.name,
+                cible: cible?.name,
+                targetTags: [...targetTags],
+                bonusDegatsEffets
+              });
+            }
 
 // =======================
 // DETAIL BONUS TOUCHER
