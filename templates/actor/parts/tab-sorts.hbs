@@ -13,45 +13,102 @@
             {{/if}}
           </h2>
           <div class="a2e-panel-body">
-            {{#if add2eObjectMagicPowers.length}}
+            {{#if add2eObjectMagicItems.length}}
               <div class="a2e-panel add2e-object-magic-panel" style="box-shadow:none;">
                 <h3>Objets magiques</h3>
                 <div class="a2e-panel-body">
-                  <table class="sort-table add2e-object-magic-table">
-                    <thead>
-                      <tr>
-                        <th style="width:42px;"></th>
-                        <th>Objet</th>
-                        <th style="width:120px;">Charges</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {{#each add2eObjectMagicPowers as |power|}}
-                        {{#if power.onUse}}
-                          <tr class="sort-row add2e-object-magic-power-row" data-sort-id="{{power.id}}">
-                            <td class="sort-drag">
-                              <img class="sort-cast-img" data-sort-id="{{power.id}}" src="{{power.img}}" title="Activer {{#if power.sourceItemName}}{{power.sourceItemName}}{{else}}{{power.name}}{{/if}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
-                            </td>
-                            <td>
-                              <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{power.id}}" title="Afficher / masquer la description">{{#if power.sourceItemName}}{{power.sourceItemName}}{{else}}{{power.name}}{{/if}}</a>
-                            </td>
-                            <td>
-                              {{#if power.max}}{{power.charges}} / {{power.max}}{{else}}—{{/if}}
-                            </td>
-                          </tr>
-                          <tr id="desc-chat-{{power.id}}" class="sort-description">
-                            <td colspan="3" class="sort-description-fullcell">
-                              <div class="a2e-small sort-description-content">
-                                {{#if power.sourceItemDescription}}{{{power.sourceItemDescription}}}{{else}}{{{power.description}}}{{/if}}
-                              </div>
-                            </td>
-                          </tr>
+                  {{#each add2eObjectMagicItems as |item|}}
+                    <div class="a2e-panel add2e-object-magic-item" style="box-shadow:none;margin-bottom:8px;">
+                      <h3>
+                        <img src="{{item.img}}" alt="{{item.name}}" style="width:26px;height:26px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:6px;">
+                        {{item.name}}
+                        {{#if item.max}}
+                          <span class="sort-memorize-badge" style="float:right;">Charges : {{item.charges}} / {{item.max}}</span>
                         {{/if}}
-                      {{/each}}
-                    </tbody>
-                  </table>
+                      </h3>
+                      <div class="a2e-panel-body">
+                        {{#if item.description}}
+                          <div class="a2e-small sort-description-content" style="margin-bottom:8px;">
+                            {{{item.description}}}
+                          </div>
+                        {{/if}}
+                        <table class="sort-table add2e-object-magic-table">
+                          <thead>
+                            <tr>
+                              <th style="width:42px;"></th>
+                              <th>Pouvoir</th>
+                              <th style="width:90px;">Coût</th>
+                              <th style="width:120px;">Charges</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {{#each item.powers as |power|}}
+                              {{#if power.onUse}}
+                                <tr class="sort-row add2e-object-magic-power-row" data-sort-id="{{power.id}}">
+                                  <td class="sort-drag">
+                                    <img class="sort-cast-img" data-sort-id="{{power.id}}" src="{{power.img}}" title="Activer {{power.name}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                                  </td>
+                                  <td>
+                                    <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{power.id}}" title="Afficher / masquer la description">{{power.name}}</a>
+                                  </td>
+                                  <td>{{#if power.cost}}{{power.cost}}{{else}}—{{/if}}</td>
+                                  <td>{{#if power.max}}{{power.charges}} / {{power.max}}{{else}}—{{/if}}</td>
+                                </tr>
+                                <tr id="desc-chat-{{power.id}}" class="sort-description">
+                                  <td colspan="4" class="sort-description-fullcell">
+                                    <div class="a2e-small sort-description-content">
+                                      {{{power.description}}}
+                                    </div>
+                                  </td>
+                                </tr>
+                              {{/if}}
+                            {{/each}}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  {{/each}}
                 </div>
               </div>
+            {{else}}
+              {{#if add2eObjectMagicPowers.length}}
+                <div class="a2e-panel add2e-object-magic-panel" style="box-shadow:none;">
+                  <h3>Objets magiques</h3>
+                  <div class="a2e-panel-body">
+                    <table class="sort-table add2e-object-magic-table">
+                      <thead>
+                        <tr>
+                          <th style="width:42px;"></th>
+                          <th>Objet</th>
+                          <th style="width:120px;">Charges</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {{#each add2eObjectMagicPowers as |power|}}
+                          {{#if power.onUse}}
+                            <tr class="sort-row add2e-object-magic-power-row" data-sort-id="{{power.id}}">
+                              <td class="sort-drag">
+                                <img class="sort-cast-img" data-sort-id="{{power.id}}" src="{{power.img}}" title="Activer {{#if power.sourceItemName}}{{power.sourceItemName}}{{else}}{{power.name}}{{/if}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                              </td>
+                              <td>
+                                <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{power.id}}" title="Afficher / masquer la description">{{#if power.sourceItemName}}{{power.sourceItemName}}{{else}}{{power.name}}{{/if}}</a>
+                              </td>
+                              <td>{{#if power.max}}{{power.charges}} / {{power.max}}{{else}}—{{/if}}</td>
+                            </tr>
+                            <tr id="desc-chat-{{power.id}}" class="sort-description">
+                              <td colspan="3" class="sort-description-fullcell">
+                                <div class="a2e-small sort-description-content">
+                                  {{#if power.sourceItemDescription}}{{{power.sourceItemDescription}}}{{else}}{{{power.description}}}{{/if}}
+                                </div>
+                              </td>
+                            </tr>
+                          {{/if}}
+                        {{/each}}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              {{/if}}
             {{/if}}
 
             {{#if niveauxSorts.length}}
