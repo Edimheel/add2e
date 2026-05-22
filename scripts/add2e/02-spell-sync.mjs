@@ -1,9 +1,9 @@
 // ============================================================
 // ADD2E — Synchronisation automatique des sorts depuis add2e.sorts
-// Version : 2026-05-22-spell-sync-v5-cache-diagnostics
+// Version : 2026-05-22-spell-sync-v6-merge-duplicate-lists
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-05-22-spell-sync-v5-cache-diagnostics";
+const ADD2E_SPELL_SYNC_VERSION = "2026-05-22-spell-sync-v6-merge-duplicate-lists";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 function add2eSpellSyncClone(value) {
@@ -104,6 +104,13 @@ function add2eSpellSyncSpellLists(system = {}) {
     ...add2eSpellSyncArray(system.effectTags)
   ];
   return [...new Set(raw.map(add2eSpellSyncNormalize).filter(Boolean))];
+}
+
+function add2eSpellSyncSetEntryLists(entry, lists) {
+  const merged = [...new Set((lists ?? []).map(add2eSpellSyncNormalize).filter(Boolean))].sort();
+  entry.lists = merged;
+  foundry.utils.setProperty(entry.data, "system.spellLists", merged);
+  foundry.utils.setProperty(entry.data, "flags.add2e.spellListsResolved", merged);
 }
 
 function add2eSpellSyncNumber(value) {
@@ -394,14 +401,19 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
       skipped.push({ name: data.name, level, lists, reason: !stableKey || stableKey === "0|" ? "invalid-key" : level < 1 ? "invalid-level" : "missing-list" });
       continue;
     }
+
     if (byKey.has(stableKey)) {
-      duplicateKeys.push({ key: stableKey, kept: byKey.get(stableKey)?.name, skipped: data.name });
+      const existingEntry = byKey.get(stableKey);
+      const before = existingEntry.lists.join("/");
+      add2eSpellSyncSetEntryLists(existingEntry, [...existingEntry.lists, ...lists]);
+      duplicateKeys.push({ key: stableKey, kept: existingEntry.name, merged: data.name, before, after: existingEntry.lists.join("/") });
       continue;
     }
 
     delete data._id;
     data.folder = null;
-    const entry = { name: data.name, img: data.img, type: data.type, level, lists, stableKey, data };
+    const entry = { name: data.name, img: data.img, type: data.type, level, lists: [], stableKey, data };
+    add2eSpellSyncSetEntryLists(entry, lists);
     byKey.set(stableKey, entry);
     entries.push(entry);
   }
@@ -409,9 +421,9 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
   entries.sort((a, b) => a.level - b.level || String(a.name).localeCompare(String(b.name), "fr"));
   const cache = { cacheKey, builtAt: Date.now(), entries, count: entries.length, duplicateCount: duplicateKeys.length, duplicateKeys, skippedCount: skipped.length, skipped };
   globalThis.ADD2E_SPELL_SYNC_CACHE = cache;
-  console.info("[ADD2E][SPELL_SYNC][CACHE_READY]", { version: ADD2E_SPELL_SYNC_VERSION, pack: pack.collection, entries: entries.length, duplicatesSkipped: duplicateKeys.length, skipped: skipped.length, ms: Math.round(performance.now() - t0) });
+  console.info("[ADD2E][SPELL_SYNC][CACHE_READY]", { version: ADD2E_SPELL_SYNC_VERSION, pack: pack.collection, entries: entries.length, duplicatesMerged: duplicateKeys.length, skipped: skipped.length, ms: Math.round(performance.now() - t0) });
   if (skipped.length) console.warn("[ADD2E][SPELL_SYNC][CACHE_SKIPPED]", skipped.slice(0, 80));
-  if (duplicateKeys.length) console.warn("[ADD2E][SPELL_SYNC][CACHE_DUPLICATES_SKIPPED]", duplicateKeys.slice(0, 80));
+  if (duplicateKeys.length) console.info("[ADD2E][SPELL_SYNC][CACHE_DUPLICATES_MERGED]", duplicateKeys.slice(0, 80));
   return cache;
 }
 
