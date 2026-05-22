@@ -1,26 +1,21 @@
-// ADD2E — Déplacement libre et repli du HUD d'action
-// Version : 2026-05-22-v4-global-capture-collapse
+// ADD2E — Correctif HUD : déplacement libre + repli fiable
+// Version : 2026-05-22-v5-pointerdown-collapse
 //
-// Complète add2e-action-hud.mjs sans le réécrire.
-// - force la position sauvegardée après chaque rendu du HUD ;
-// - remplace le drag interne par un seul drag stable capturé ici ;
-// - clic sur l'onglet déjà actif : masque seulement le panneau de menu ;
-// - clic sur la flèche : même repli visuel que l'onglet actif, avec onglets + en-tête visibles.
+// Ce module complète add2e-action-hud.mjs.
+// Point important : le repli est capturé sur pointerdown, avant les handlers click internes
+// du HUD. Cela évite que le rendu du HUD annule immédiatement la classe collapsed.
 
-const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-22-v4-global-capture-collapse";
+const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-22-v5-pointerdown-collapse";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_STORAGE_KEY = "add2e.actionHud.state.v8";
-const ADD2E_HUD_DRAG_TAG = "[ADD2E][ACTION_HUD][FREE_DRAG]";
+const ADD2E_HUD_TAG = "[ADD2E][ACTION_HUD][FIX]";
 
 globalThis.ADD2E_ACTION_HUD_FREE_DRAG_VERSION = ADD2E_ACTION_HUD_FREE_DRAG_VERSION;
 
-function add2eHudFreeClamp(value, min, max) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return min;
-  return Math.max(min, Math.min(max, n));
-}
+let add2eHudSuppressClickUntil = 0;
+let add2eHudDragging = false;
 
-function add2eHudFreeReadState() {
+function add2eHudFixReadState() {
   try {
     const raw = JSON.parse(localStorage.getItem(ADD2E_HUD_STORAGE_KEY) || "null");
     if (raw && typeof raw === "object") return raw;
@@ -28,17 +23,31 @@ function add2eHudFreeReadState() {
   return {};
 }
 
-function add2eHudFreeSaveState(partial) {
+function add2eHudFixSaveState(partial) {
   try {
-    const current = add2eHudFreeReadState();
+    const current = add2eHudFixReadState();
     localStorage.setItem(ADD2E_HUD_STORAGE_KEY, JSON.stringify({ ...current, ...partial }));
   } catch (_err) {}
 }
 
-function add2eHudFreeInjectStyle() {
-  if (document.getElementById("add2e-action-hud-free-drag-style")) return;
+function add2eHudFixClamp(n, min, max) {
+  n = Number(n);
+  if (!Number.isFinite(n)) return min;
+  return Math.max(min, Math.min(max, n));
+}
+
+function add2eHudFixHud() {
+  return document.getElementById(ADD2E_HUD_ID);
+}
+
+function add2eHudFixPanel(hud) {
+  return hud?.querySelector?.(".a2e-hud-menu-panel") ?? null;
+}
+
+function add2eHudFixInjectStyle() {
+  if (document.getElementById("add2e-action-hud-fix-style")) return;
   const style = document.createElement("style");
-  style.id = "add2e-action-hud-free-drag-style";
+  style.id = "add2e-action-hud-fix-style";
   style.textContent = `
     #${ADD2E_HUD_ID} {
       right: auto !important;
@@ -47,37 +56,31 @@ function add2eHudFreeInjectStyle() {
       user-select: none;
     }
 
+    #${ADD2E_HUD_ID}.collapsed .a2e-hud-menu-panel,
+    #${ADD2E_HUD_ID}.a2e-hud-menu-retracted .a2e-hud-menu-panel {
+      display: none !important;
+    }
+
+    #${ADD2E_HUD_ID}.collapsed .a2e-hud-icon-btn i,
+    #${ADD2E_HUD_ID}.a2e-hud-menu-retracted .a2e-hud-icon-btn i {
+      transform: rotate(180deg);
+    }
+
     #${ADD2E_HUD_ID} .a2e-hud-shell,
     #${ADD2E_HUD_ID} .a2e-hud-header {
       cursor: move;
     }
 
     #${ADD2E_HUD_ID} button,
-    #${ADD2E_HUD_ID} input,
-    #${ADD2E_HUD_ID} select,
-    #${ADD2E_HUD_ID} textarea,
-    #${ADD2E_HUD_ID} a,
-    #${ADD2E_HUD_ID} [data-resize-handle],
+    #${ADD2E_HUD_ID} [data-hud-tab],
     #${ADD2E_HUD_ID} [data-action],
-    #${ADD2E_HUD_ID} [data-hud-tab] {
-      touch-action: auto;
+    #${ADD2E_HUD_ID} [data-resize-handle] {
       user-select: auto;
+      touch-action: auto;
     }
 
-    #${ADD2E_HUD_ID}.a2e-hud-menu-retracted .a2e-hud-menu-panel,
-    #${ADD2E_HUD_ID}.collapsed .a2e-hud-menu-panel {
-      display: none !important;
-    }
-
-    #${ADD2E_HUD_ID}.a2e-hud-menu-retracted .a2e-hud-icon-btn i,
-    #${ADD2E_HUD_ID}.collapsed .a2e-hud-icon-btn i {
-      transform: rotate(180deg);
-    }
-
-    @media (max-width: 760px) {
+    @media (max-width:760px) {
       #${ADD2E_HUD_ID} {
-        left: var(--add2e-hud-free-left, 8px) !important;
-        top: var(--add2e-hud-free-top, 120px) !important;
         right: auto !important;
         width: var(--add2e-hud-free-width, 560px) !important;
         min-width: 280px !important;
@@ -88,139 +91,112 @@ function add2eHudFreeInjectStyle() {
   document.head.appendChild(style);
 }
 
-function add2eHudFreeIsInteractiveTarget(target) {
-  return Boolean(target?.closest?.("button,input,select,textarea,a,[data-resize-handle],[data-action],[data-hud-tab]"));
-}
-
-function add2eHudFreeApplyCssVars(hud) {
+function add2eHudFixSetRetracted(hud, retracted, reason = "manual") {
   if (!hud) return;
-  hud.style.setProperty("--add2e-hud-free-left", hud.style.left || `${hud.offsetLeft || 8}px`);
-  hud.style.setProperty("--add2e-hud-free-top", hud.style.top || `${hud.offsetTop || 120}px`);
-  hud.style.setProperty("--add2e-hud-free-width", hud.style.width || `${hud.offsetWidth || 560}px`);
+  const panel = add2eHudFixPanel(hud);
+
+  hud.classList.toggle("collapsed", retracted);
+  hud.classList.toggle("a2e-hud-menu-retracted", retracted);
+
+  if (panel) {
+    if (retracted) panel.style.setProperty("display", "none", "important");
+    else panel.style.removeProperty("display");
+  }
+
+  add2eHudFixSaveState({ menuRetracted: retracted, hudCollapsed: retracted });
+  console.log(`${ADD2E_HUD_TAG}[COLLAPSE]`, { retracted, reason, panelDisplay: panel ? getComputedStyle(panel).display : null });
 }
 
-function add2eHudFreeConstrainToViewport(hud, left, top) {
-  const marginVisible = 36;
-  const width = Number(hud?.offsetWidth || 360);
-  return {
-    left: add2eHudFreeClamp(left, -width + marginVisible, window.innerWidth - marginVisible),
-    top: add2eHudFreeClamp(top, 0, window.innerHeight - marginVisible)
-  };
+function add2eHudFixToggleRetracted(hud, reason) {
+  const state = add2eHudFixReadState();
+  const currentlyRetracted = hud?.classList?.contains("collapsed") || hud?.classList?.contains("a2e-hud-menu-retracted") || state.menuRetracted === true || state.hudCollapsed === true;
+  add2eHudFixSetRetracted(hud, !currentlyRetracted, reason);
 }
 
-function add2eHudFreeForceStoredGeometry(hud) {
-  if (!hud || hud.dataset.add2eFreeDragging === "1") return;
+function add2eHudFixApplyState(hud) {
+  if (!hud || add2eHudDragging) return;
+  const state = add2eHudFixReadState();
 
-  const state = add2eHudFreeReadState();
-  const left = Number(state.left);
-  const top = Number(state.top);
-  const width = Number(state.width);
-
-  if (Number.isFinite(left)) hud.style.setProperty("left", `${left}px`, "important");
-  if (Number.isFinite(top)) hud.style.setProperty("top", `${top}px`, "important");
-  if (Number.isFinite(width)) hud.style.setProperty("width", `${width}px`, "important");
+  if (Number.isFinite(Number(state.left))) hud.style.setProperty("left", `${Number(state.left)}px`, "important");
+  if (Number.isFinite(Number(state.top))) hud.style.setProperty("top", `${Number(state.top)}px`, "important");
+  if (Number.isFinite(Number(state.width))) hud.style.setProperty("width", `${Number(state.width)}px`, "important");
   hud.style.setProperty("right", "auto", "important");
   hud.style.setProperty("bottom", "auto", "important");
-  add2eHudFreeApplyCssVars(hud);
+
+  hud.style.setProperty("--add2e-hud-free-width", hud.style.width || `${hud.offsetWidth || 560}px`);
+  add2eHudFixSetRetracted(hud, state.menuRetracted === true || state.hudCollapsed === true, "apply-state");
 }
 
-function add2eHudFreeApplyCollapseState(hud) {
-  if (!hud) return;
-  const state = add2eHudFreeReadState();
-  const retracted = state.menuRetracted === true;
-  hud.classList.toggle("a2e-hud-menu-retracted", retracted);
-  hud.classList.toggle("collapsed", retracted);
-}
-
-function add2eHudFreeApplyState(hud) {
-  if (!hud) return;
-  add2eHudFreeForceStoredGeometry(hud);
-  add2eHudFreeApplyCollapseState(hud);
-}
-
-function add2eHudFreeToggleMenu(hud) {
-  if (!hud) return;
-  const state = add2eHudFreeReadState();
-  const next = state.menuRetracted !== true;
-  add2eHudFreeSaveState({ menuRetracted: next, fullCollapsed: false });
-  hud.classList.toggle("a2e-hud-menu-retracted", next);
-  hud.classList.toggle("collapsed", next);
-  add2eHudFreeApplyCssVars(hud);
-  console.debug?.(`${ADD2E_HUD_DRAG_TAG}[COLLAPSE]`, { retracted: next });
-}
-
-function add2eHudFreeOpenMenu(hud) {
-  if (!hud) return;
-  add2eHudFreeSaveState({ menuRetracted: false, fullCollapsed: false });
-  hud.classList.remove("a2e-hud-menu-retracted");
-  hud.classList.remove("collapsed");
-  add2eHudFreeApplyCssVars(hud);
-}
-
-function add2eHudFreeHandleClick(ev) {
-  const hud = ev.target?.closest?.(`#${ADD2E_HUD_ID}`);
-  if (!hud) return;
-
-  const tab = ev.target.closest?.("[data-hud-tab]");
-  if (tab) {
-    const isActive = tab.classList.contains("active");
-    if (isActive) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      ev.stopImmediatePropagation?.();
-      add2eHudFreeToggleMenu(hud);
-    } else {
-      add2eHudFreeOpenMenu(hud);
-    }
-    return;
-  }
-
-  const collapse = ev.target.closest?.('[data-action="toggle-collapse"]');
-  if (collapse) {
-    ev.preventDefault();
-    ev.stopPropagation();
-    ev.stopImmediatePropagation?.();
-    add2eHudFreeToggleMenu(hud);
-  }
-}
-
-function add2eHudFreeStartDrag(ev) {
-  const hud = ev.target?.closest?.(`#${ADD2E_HUD_ID}`);
-  if (!hud) return;
-  if (ev.button !== 0) return;
-  if (add2eHudFreeIsInteractiveTarget(ev.target)) return;
-
+function add2eHudFixPrevent(ev) {
   ev.preventDefault();
   ev.stopPropagation();
   ev.stopImmediatePropagation?.();
+  add2eHudSuppressClickUntil = Date.now() + 450;
+}
 
-  hud.dataset.add2eFreeDragging = "1";
+function add2eHudFixPointerControls(ev) {
+  const hud = ev.target?.closest?.(`#${ADD2E_HUD_ID}`);
+  if (!hud || ev.button !== 0) return false;
+
+  const collapseButton = ev.target.closest?.('[data-action="toggle-collapse"]');
+  if (collapseButton) {
+    add2eHudFixPrevent(ev);
+    add2eHudFixToggleRetracted(hud, "collapse-button-pointerdown");
+    return true;
+  }
+
+  const tab = ev.target.closest?.("[data-hud-tab]");
+  if (tab) {
+    const active = tab.classList.contains("active");
+    if (active) {
+      add2eHudFixPrevent(ev);
+      add2eHudFixToggleRetracted(hud, "active-tab-pointerdown");
+      return true;
+    }
+    add2eHudFixSetRetracted(hud, false, "switch-tab-pointerdown");
+  }
+
+  return false;
+}
+
+function add2eHudFixIsDragForbidden(target) {
+  return Boolean(target?.closest?.("button,a,input,select,textarea,[data-action],[data-hud-tab],[data-resize-handle]"));
+}
+
+function add2eHudFixStartDrag(ev) {
+  const hud = ev.target?.closest?.(`#${ADD2E_HUD_ID}`);
+  if (!hud || ev.button !== 0) return;
+  if (add2eHudFixIsDragForbidden(ev.target)) return;
+
+  add2eHudFixPrevent(ev);
+  add2eHudDragging = true;
+
   const rect = hud.getBoundingClientRect();
-  const start = { x: ev.clientX, y: ev.clientY, left: rect.left, top: rect.top };
+  const startX = ev.clientX;
+  const startY = ev.clientY;
+  const startLeft = rect.left;
+  const startTop = rect.top;
   let moved = false;
 
   const move = e => {
     moved = true;
-    const pos = add2eHudFreeConstrainToViewport(hud, start.left + (e.clientX - start.x), start.top + (e.clientY - start.y));
-    hud.style.setProperty("left", `${Math.round(pos.left)}px`, "important");
-    hud.style.setProperty("top", `${Math.round(pos.top)}px`, "important");
+    const visible = 42;
+    const nextLeft = add2eHudFixClamp(startLeft + e.clientX - startX, -hud.offsetWidth + visible, window.innerWidth - visible);
+    const nextTop = add2eHudFixClamp(startTop + e.clientY - startY, 0, window.innerHeight - visible);
+    hud.style.setProperty("left", `${Math.round(nextLeft)}px`, "important");
+    hud.style.setProperty("top", `${Math.round(nextTop)}px`, "important");
     hud.style.setProperty("right", "auto", "important");
     hud.style.setProperty("bottom", "auto", "important");
-    add2eHudFreeApplyCssVars(hud);
   };
 
   const up = () => {
     window.removeEventListener("pointermove", move, true);
     window.removeEventListener("pointerup", up, true);
-    delete hud.dataset.add2eFreeDragging;
-
+    add2eHudDragging = false;
     if (moved) {
-      const rectAfter = hud.getBoundingClientRect();
-      add2eHudFreeSaveState({
-        left: Math.round(rectAfter.left),
-        top: Math.round(rectAfter.top),
-        width: Math.round(hud.offsetWidth || rectAfter.width || 560)
-      });
+      const r = hud.getBoundingClientRect();
+      add2eHudFixSaveState({ left: Math.round(r.left), top: Math.round(r.top), width: Math.round(hud.offsetWidth || r.width || 560) });
+      console.log(`${ADD2E_HUD_TAG}[DRAG_SAVE]`, { left: Math.round(r.left), top: Math.round(r.top), width: Math.round(hud.offsetWidth || r.width || 560) });
     }
   };
 
@@ -228,52 +204,60 @@ function add2eHudFreeStartDrag(ev) {
   window.addEventListener("pointerup", up, true);
 }
 
-function add2eHudFreeInstallOnHud(hud) {
-  if (!hud) return;
-  add2eHudFreeApplyState(hud);
+function add2eHudFixPointerDown(ev) {
+  if (add2eHudFixPointerControls(ev)) return;
+  add2eHudFixStartDrag(ev);
 }
 
-function add2eHudFreeInstall() {
-  add2eHudFreeInjectStyle();
-  const hud = document.getElementById(ADD2E_HUD_ID);
-  if (hud) add2eHudFreeInstallOnHud(hud);
+function add2eHudFixClick(ev) {
+  if (Date.now() < add2eHudSuppressClickUntil && ev.target?.closest?.(`#${ADD2E_HUD_ID}`)) {
+    add2eHudFixPrevent(ev);
+  }
 }
 
-function add2eHudFreeDebug() {
-  const hud = document.getElementById(ADD2E_HUD_ID);
+function add2eHudFixInstall() {
+  add2eHudFixInjectStyle();
+  const hud = add2eHudFixHud();
+  if (hud) add2eHudFixApplyState(hud);
+}
+
+function add2eHudFixDebug() {
+  const hud = add2eHudFixHud();
+  const panel = add2eHudFixPanel(hud);
   return {
     version: ADD2E_ACTION_HUD_FREE_DRAG_VERSION,
     hud: Boolean(hud),
     classes: hud ? [...hud.classList] : [],
-    state: add2eHudFreeReadState(),
-    menuPanelDisplay: hud ? getComputedStyle(hud.querySelector(".a2e-hud-menu-panel") ?? hud).display : null
+    state: add2eHudFixReadState(),
+    panelInlineDisplay: panel?.style?.display ?? null,
+    panelComputedDisplay: panel ? getComputedStyle(panel).display : null,
+    activeTab: hud?.querySelector?.("[data-hud-tab].active")?.dataset?.hudTab ?? null
   };
 }
 
-globalThis.add2eHudFreeDebug = add2eHudFreeDebug;
+globalThis.add2eHudFixDebug = add2eHudFixDebug;
+globalThis.add2eHudForceRetract = () => add2eHudFixSetRetracted(add2eHudFixHud(), true, "console-force");
+globalThis.add2eHudForceOpen = () => add2eHudFixSetRetracted(add2eHudFixHud(), false, "console-force");
+
+document.addEventListener("pointerdown", add2eHudFixPointerDown, true);
+document.addEventListener("click", add2eHudFixClick, true);
 
 Hooks.once("ready", () => {
-  document.addEventListener("click", add2eHudFreeHandleClick, true);
-  document.addEventListener("pointerdown", add2eHudFreeStartDrag, true);
+  add2eHudFixInstall();
 
-  add2eHudFreeInstall();
-
-  const observer = new MutationObserver(() => {
-    const hud = document.getElementById(ADD2E_HUD_ID);
-    if (hud) add2eHudFreeInstallOnHud(hud);
-  });
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "style"] });
+  const observer = new MutationObserver(() => add2eHudFixInstall());
+  observer.observe(document.body, { childList: true, subtree: true });
 
   window.addEventListener("resize", () => {
-    const hud = document.getElementById(ADD2E_HUD_ID);
+    const hud = add2eHudFixHud();
     if (!hud) return;
     const rect = hud.getBoundingClientRect();
-    const pos = add2eHudFreeConstrainToViewport(hud, rect.left, rect.top);
-    hud.style.setProperty("left", `${Math.round(pos.left)}px`, "important");
-    hud.style.setProperty("top", `${Math.round(pos.top)}px`, "important");
-    add2eHudFreeApplyCssVars(hud);
-    add2eHudFreeSaveState({ left: Math.round(pos.left), top: Math.round(pos.top), width: Math.round(hud.offsetWidth || 560) });
+    const left = add2eHudFixClamp(rect.left, -hud.offsetWidth + 42, window.innerWidth - 42);
+    const top = add2eHudFixClamp(rect.top, 0, window.innerHeight - 42);
+    hud.style.setProperty("left", `${Math.round(left)}px`, "important");
+    hud.style.setProperty("top", `${Math.round(top)}px`, "important");
+    add2eHudFixSaveState({ left: Math.round(left), top: Math.round(top), width: Math.round(hud.offsetWidth || 560) });
   });
 });
 
-console.log(`${ADD2E_HUD_DRAG_TAG} Module chargé`, ADD2E_ACTION_HUD_FREE_DRAG_VERSION);
+console.log(`${ADD2E_HUD_TAG} Module chargé`, ADD2E_ACTION_HUD_FREE_DRAG_VERSION);
