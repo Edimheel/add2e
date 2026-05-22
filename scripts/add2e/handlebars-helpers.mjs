@@ -101,48 +101,10 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.length) {
   Handlebars.registerHelper('length', function(x) { return x ? x.length : 0; });
 }
 
-if (typeof Handlebars !== "undefined" && !Handlebars.helpers.magicDefenseTooltip) {
-  Handlebars.registerHelper("magicDefenseTooltip", function(listeObjets) {
-    const normalize = value => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const isEquipped = item => item?.system?.equipee === true || item?.system?.equipped === true;
-    const isFixedAC = item => {
-      const system = item?.system || {};
-      const effectText = normalize(JSON.stringify({
-        add2eEffects: system.add2eEffects,
-        effetsPassifs: system.effetsPassifs,
-        effects: system.effects,
-        tags: system.tags,
-        effectTags: system.effectTags
-      }));
-      return system.ac_fixe !== undefined
-        || system.fixedAC !== undefined
-        || system.fixed_ac !== undefined
-        || system.setAC !== undefined
-        || /ac_fixe|fixedac|fixed_ac|setac|classe_armure_fixe|classe d.armure fixe/.test(effectText);
-    };
-    const hasAdditiveACBonus = item => {
-      if (isFixedAC(item)) return false;
-      const system = item?.system || {};
-      const name = normalize(item?.name);
-      const effectText = normalize(JSON.stringify({
-        add2eEffects: system.add2eEffects,
-        effetsPassifs: system.effetsPassifs,
-        effects: system.effects,
-        tags: system.tags,
-        effectTags: system.effectTags
-      }));
-      return /^anneau de protection\b/.test(name)
-        || Number(system.bonus_ac || 0) !== 0
-        || Number(system.ac_bonus || 0) !== 0
-        || Number(system.ca_bonus || 0) !== 0
-        || /bonus_ac|ac_bonus|ca_bonus|armorclassbonus|armor_class_bonus/.test(effectText);
-    };
-
-    const sources = (listeObjets || [])
-      .filter(item => isEquipped(item) && String(item.type || "") === "objet" && hasAdditiveACBonus(item))
-      .map(item => item.name)
-      .filter(Boolean);
-
-    return sources.length ? sources.join("\n") : "Aucun bonus magique additionnel de CA hors armure/bouclier identifié.";
+if (typeof Handlebars !== "undefined") {
+  Handlebars.registerHelper("joinLines", function(value, fallback) {
+    if (Array.isArray(value) && value.length) return value.filter(Boolean).join("\n");
+    if (typeof value === "string" && value.trim()) return value;
+    return typeof fallback === "string" ? fallback : "";
   });
 }
