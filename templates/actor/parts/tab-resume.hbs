@@ -1,0 +1,159 @@
+      <section class='a2e-tab-content tab tab-resume {{#if (eq activeTab "resume")}}active{{/if}}' data-group="primary" data-tab="resume">
+        <div class="a2e-summary-dashboard">
+          <div>
+            <div class="a2e-summary-metrics">
+              <div class="a2e-summary-card">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                  <label>CA</label>
+                  <strong>{{combatDefense.ac_totale}}</strong>
+                  <small>physique {{combatDefense.ac_naturelle}}</small>
+                </div>
+              </div>
+
+              <div class="a2e-summary-card">
+                <i class="fas fa-crosshairs"></i>
+                <div>
+                  <label>THAC0</label>
+                  <strong>{{combatDefense.thaco}}</strong>
+                  <small>attaque de base</small>
+                </div>
+              </div>
+
+              <div class="a2e-summary-card">
+                <i class="fas fa-running"></i>
+                <div>
+                  <label>Mouvement</label>
+                  <strong>{{#if system.movement}}{{system.movement}}{{else}}{{actor.system.movement}}{{/if}} m</strong>
+                  <small>déplacement</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="a2e-panel">
+              <h2><i class="fas fa-swords"></i> Attaque rapide</h2>
+              <div class="a2e-panel-body">
+                {{#if actor.system.arme_equipee}}
+                  <div class="a2e-summary-attack-list">
+                    {{#each listeArmes as |arme|}}
+                      {{#if arme.system.equipee}}
+                        <div class="a2e-summary-weapon item" data-item-id="{{arme._id}}">
+                          <img class="arme-img-attack" data-item-id="{{arme._id}}" src="{{arme.img}}" title="Attaquer avec {{arme.name}}">
+                          <div>
+                            <div class="a2e-summary-weapon-name">{{arme.name}}</div>
+                            <div class="a2e-summary-weapon-meta">
+                              <span><b>Dégâts</b> {{arme.system.dégâts.contre_moyen}} / {{arme.system.dégâts.contre_grand}}</span>
+                              <span><b>Type</b> {{arme.system.type_degats}}</span>
+                              <span><b>Toucher</b> {{../combatDefense.bonus_toucher}}</span>
+                              <span><b>Dégâts bonus</b> {{../combatDefense.bonus_degats}}</span>
+                            </div>
+                          </div>
+                          <button type="button" class="a2e-summary-attack-button arme-img-attack" data-item-id="{{arme._id}}">
+                            <i class="fas fa-dice-d20"></i>&nbsp;Attaquer
+                          </button>
+                        </div>
+                      {{/if}}
+                    {{/each}}
+                  </div>
+                {{else}}
+                  <p class="a2e-muted">Aucune arme équipée.</p>
+                {{/if}}
+              </div>
+            </div>
+
+            <div class="a2e-grid-2">
+              <div class="a2e-panel">
+                <h2><i class="fas fa-shield-alt"></i> Défense équipée</h2>
+                <div class="a2e-panel-body">
+                  <div class="a2e-summary-pills">
+                    <span class="a2e-summary-pill">Armure : {{{combatDefense.armure}}}</span>
+                    <span class="a2e-summary-pill">Bouclier : {{{combatDefense.bouclier}}}</span>
+                    <span class="a2e-summary-pill">Heaume : {{{combatDefense.heaume}}}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="a2e-panel">
+                <h2><i class="fas fa-magic"></i> Préparations</h2>
+                <div class="a2e-panel-body">
+                  {{#if progressionCourante.spellsPerLevel}}
+                    <div class="a2e-summary-pills a2e-prep-summary">
+                      {{#each progressionCourante.spellsPerLevel as |slots idx|}}
+                        {{#if slots}}
+                          {{#with (lookup ../sortsMemorizedByLevel (add idx 1))}}
+                            <span class="a2e-summary-pill a2e-prep-pill">
+                              <b>N{{add idx 1}}</b>
+                              <span>{{count}} / {{max}}</span>
+                            </span>
+                          {{else}}
+                            <span class="a2e-summary-pill a2e-prep-pill">
+                              <b>N{{add idx 1}}</b>
+                              <span>0 / {{slots}}</span>
+                            </span>
+                          {{/with}}
+                        {{/if}}
+                      {{/each}}
+                    </div>
+                  {{else}}
+                    <p class="a2e-muted">Aucun emplacement de sort.</p>
+                  {{/if}}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="a2e-panel">
+              <h2><i class="fas fa-id-card"></i> Classe / race</h2>
+              <div class="a2e-panel-body a2e-small">
+                <div class="a2e-summary-pills" style="margin-bottom:8px;">
+                  <span class="a2e-summary-pill">{{actor.system.race}}</span>
+                  <span class="a2e-summary-pill">{{actor.system.classe}} niv. {{actor.system.niveau}}</span>
+                  <span class="a2e-summary-pill">{{actor.system.alignement}}</span>
+                </div>
+
+                {{#if actor.system.details_race.capacites.length}}
+                  <h3>Race</h3>
+                  <ul class="a2e-summary-simple-list">
+                    {{#each actor.system.details_race.capacites}}
+                      <li>{{this}}</li>
+                    {{/each}}
+                  </ul>
+                {{/if}}
+
+                {{#if actor.system.details_classe.specialAbilities.length}}
+                  <h3>Classe</h3>
+                  <ul class="a2e-summary-simple-list">
+                    {{#each actor.system.details_classe.specialAbilities}}
+                      <li>{{this}}</li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class="a2e-muted">Aucune capacité spéciale renseignée.</p>
+                {{/if}}
+              </div>
+            </div>
+
+            <div class="a2e-panel">
+              <h2><i class="fas fa-sparkles"></i> Effets actifs</h2>
+              <div class="a2e-panel-body">
+                {{#if activeEffectsList.length}}
+                  <div class="a2e-summary-effects">
+                    {{#each activeEffectsList as |eff|}}
+                      <div class="a2e-summary-effect">
+                        <img src="{{eff.img}}" alt="{{eff.name}}">
+                        <div>
+                          <strong>{{eff.name}}</strong><br>
+                          <small>{{#if eff.duration}}{{eff.duration}}{{else}}Durée permanente ou non renseignée{{/if}}</small>
+                        </div>
+                      </div>
+                    {{/each}}
+                  </div>
+                {{else}}
+                  <p class="a2e-muted">Aucun effet actif.</p>
+                {{/if}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
