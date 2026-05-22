@@ -1,0 +1,32 @@
+      <section class='a2e-tab-content tab tab-sorts {{#if (eq activeTab "sorts")}}active{{/if}}' data-group="primary" data-tab="sorts">
+        <div class="a2e-panel">
+          <h2>Sorts</h2>
+          <div class="a2e-panel-body">
+            {{#if niveauxSorts.length}}
+              {{#each niveauxSorts as |niv|}}
+                <div class="a2e-panel" style="box-shadow:none;">
+                  <h3>Niveau {{niv}}</h3>
+                  <div class="a2e-panel-body">
+                    <table class="sort-table">
+                      <thead><tr><th>Préparer</th><th></th><th>Sort</th><th>École</th><th>Actions</th></tr></thead>
+                      <tbody>
+                        {{#each (lookup ../sortsParNiveau niv) as |sort|}}
+                          <tr class="sort-row">
+                            <td><span class="sort-memorize-badge">{{getFlag sort "add2e.memorizedCount"}}</span></td>
+                            <td><img class="sort-cast-img" data-sort-id="{{sort._id}}" src="{{sort.img}}" title="Lancer {{sort.name}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;"></td>
+                            <td><a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{sort._id}}">{{sort.name}}</a></td>
+                            <td>{{sort.system.école}}</td>
+                            <td></td>
+                          </tr>
+                        {{/each}}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              {{/each}}
+            {{else}}
+              <p class="a2e-muted">Aucun sort disponible.</p>
+            {{/if}}
+          </div>
+        </div>
+      </section>
