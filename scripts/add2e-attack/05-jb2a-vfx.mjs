@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés.
-// Version : 2026-05-22-v6-injonction-command
+// Version : 2026-05-22-v7-protection
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-22-v6-injonction-command";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-22-v7-protection";
 
 const ADD2E_JB2A_PRESET_CANDIDATES = {
   divine: [
@@ -25,6 +25,20 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
     "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_016_Red_600x600.webm",
     "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_005_Red_600x600.webm",
     "modules/jb2a_patreon/Library/Generic/Token_Stage/TokenStageHex01_01_Regular_Red_400x400.webm"
+  ],
+  protection: [
+    "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Yellow_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Yellow_400x400.webm",
+    "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Blue_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Blue_400x400.webm",
+    "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_YellowWhite_Target_400x400.webm"
+  ],
+  protection_dark: [
+    "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Purple_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Purple_400x400.webm",
+    "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Red_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Red_400x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_016_Red_600x600.webm"
   ],
   command: [
     "modules/jb2a_patreon/Library/Generic/Energy/DodecahedronRuneAbove_01_Dark_Purple_600x600.webm",
@@ -91,6 +105,8 @@ const ADD2E_SPELL_KEY_TO_JB2A_PRESET = {
   malediction: "curse",
   injonction: "command",
   commandement: "command",
+  protection_contre_le_mal: "protection",
+  protection_contre_le_bien: "protection_dark",
   aquagenese: "water",
   creation_d_eau: "water",
   destruction_eau: "dry",
