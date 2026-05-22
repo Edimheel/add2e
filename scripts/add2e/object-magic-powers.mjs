@@ -33,9 +33,6 @@ function add2eObjectMagicNormalizeTag(value) {
     .replace(/_+/g, "_");
 }
 
-// ============================================================
-// ADD2E — Exécution directe des pouvoirs d'objets magiques
-// ============================================================
 export function add2eObjectPowerOnUsePath(power) {
   return String(
     power?.onUse ??
@@ -204,13 +201,11 @@ export async function add2eExecuteObjectMagicPower(actor, itemSource, power, idx
     if (result !== false && cost > 0) await add2eObjectPowerSetCharges(itemSource, power, idx, current - cost);
 
     if (result !== false) {
-      console.log("[ADD2E][OBJET_MAGIQUE][POUVOIR_OK]", { actor: actor.name, item: itemSource.name, power: powerName, onUse, cost });
       sheet?._add2eRememberActiveTab?.();
       sheet?.render?.(false);
       return true;
     }
 
-    console.log("[ADD2E][OBJET_MAGIQUE][POUVOIR_ANNULE]", { actor: actor.name, item: itemSource.name, power: powerName, onUse });
     return false;
   } catch (err) {
     console.error("[ADD2E][OBJET_MAGIQUE][POUVOIR_ERREUR]", { actor: actor.name, item: itemSource.name, power: powerName, onUse, err });
@@ -219,14 +214,13 @@ export async function add2eExecuteObjectMagicPower(actor, itemSource, power, idx
   }
 }
 
-// ============================================================
-// ADD2E — Collecte / affichage des objets magiques activables
-// ============================================================
 export function add2eMagicItemEquippedOrUsable(item) {
-  return !!item;
+  const sys = item?.system ?? {};
+  return sys.equipee === true || sys.equipped === true;
 }
 
 export function add2eMagicObjectRawPowers(item) {
+  if (!add2eMagicItemEquippedOrUsable(item)) return [];
   const sys = item?.system ?? {};
   return sys.pouvoirs
     ?? sys.powers
@@ -321,9 +315,6 @@ export function add2eUiCollectObjectMagicGroups(actor) {
     const type = String(item?.type ?? "").toLowerCase();
     if (!["arme", "armure", "objet", "object", "magic", "objet_magique"].includes(type)) return false;
     if (!add2eMagicItemEquippedOrUsable(item)) return false;
-
-    // Critère strict : seuls les objets ayant un pouvoir avec script onUse sont affichés.
-    // Les armes +1, armures +1 et bonus passifs ne doivent pas apparaître dans l'onglet Sorts.
     return add2eMagicObjectActivePowerEntries(item).length > 0;
   }) ?? [];
 
@@ -429,11 +420,7 @@ export function add2eUiBuildObjectMagicSection(actor) {
 
 export function add2eUiInjectObjectMagicSection(spellContainer, actor) {
   if (!spellContainer || !actor) return;
-
-  if (spellContainer.matches?.(".item, a.item, .sheet-tabs, .tabs, nav")) {
-    console.warn("[ADD2E][OBJETS_MAGIQUES][UI] Conteneur invalide, injection annulée.", spellContainer);
-    return;
-  }
+  if (spellContainer.matches?.(".item, a.item, .sheet-tabs, .tabs, nav")) return;
 
   spellContainer.querySelectorAll(".add2e-object-magic-panel").forEach(el => el.remove());
 
