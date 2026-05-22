@@ -30,17 +30,20 @@
                         {{#if power.onUse}}
                           <tr class="sort-row add2e-object-magic-power-row" data-sort-id="{{power.id}}">
                             <td class="sort-drag">
-                              <img class="sort-cast-img" data-sort-id="{{power.id}}" src="{{power.img}}" title="Activer {{power.sourceItemName}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                              <img class="sort-cast-img" data-sort-id="{{power.id}}" src="{{power.img}}" title="Activer {{#if power.sourceItemName}}{{power.sourceItemName}}{{else}}{{power.name}}{{/if}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
                             </td>
                             <td>
-                              <a class="sort-name-link" data-sort-id="{{power.id}}" title="Activer {{power.sourceItemName}}">{{power.sourceItemName}}</a>
+                              <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{power.id}}" title="Afficher / masquer la description">{{#if power.sourceItemName}}{{power.sourceItemName}}{{else}}{{power.name}}{{/if}}</a>
                             </td>
                             <td>
-                              {{#if power.max}}
-                                {{power.charges}} / {{power.max}}
-                              {{else}}
-                                —
-                              {{/if}}
+                              {{#if power.max}}{{power.charges}} / {{power.max}}{{else}}—{{/if}}
+                            </td>
+                          </tr>
+                          <tr id="desc-chat-{{power.id}}" class="sort-description">
+                            <td colspan="3" class="sort-description-fullcell">
+                              <div class="a2e-small sort-description-content">
+                                {{#if power.sourceItemDescription}}{{{power.sourceItemDescription}}}{{else}}{{{power.description}}}{{/if}}
+                              </div>
                             </td>
                           </tr>
                         {{/if}}
