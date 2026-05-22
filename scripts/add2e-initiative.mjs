@@ -3,7 +3,7 @@
 // Règle gérée ici : initiative simple au d6, ordre ascendant.
 // Surprise volontairement non gérée dans ce module.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-22-init-independent-v1";
+const ADD2E_INITIATIVE_VERSION = "2026-05-22-init-independent-v2";
 const TAG = "[ADD2E][INIT]";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
@@ -147,6 +147,13 @@ function add2eScheduleInitiativeSort(combat = game.combat) {
   }, 100);
 }
 
+function add2eExposeInitiativeGlobals() {
+  globalThis.add2eConfigureInitiative = add2eConfigureInitiative;
+  globalThis.add2eSortInitiativeAscending = add2eSortInitiativeAscending;
+  globalThis.add2eScheduleInitiativeSort = add2eScheduleInitiativeSort;
+  globalThis.triInitiativeAscendant = add2eSortInitiativeAscending;
+}
+
 function add2eInstallInitiativeHooks() {
   Hooks.on("updateCombatant", (combatant, changes, options, userId) => {
     if (options?.add2eInitiativeSort) return;
@@ -185,12 +192,8 @@ Hooks.once("init", add2eConfigureInitiative);
 Hooks.once("ready", () => {
   add2eConfigureInitiative();
   add2eRemoveLegacyInitiativeHooks();
+  add2eExposeInitiativeGlobals();
 });
 
+add2eExposeInitiativeGlobals();
 add2eInstallInitiativeHooks();
-
-globalThis.add2eConfigureInitiative = add2eConfigureInitiative;
-globalThis.add2eSortInitiativeAscending = add2eSortInitiativeAscending;
-globalThis.add2eScheduleInitiativeSort = add2eScheduleInitiativeSort;
-// Compatibilité console avec l'ancien nom, sans garder l'ancien code.
-globalThis.triInitiativeAscendant = add2eSortInitiativeAscending;
