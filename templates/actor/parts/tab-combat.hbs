@@ -1,0 +1,99 @@
+      <section class='a2e-tab-content tab tab-combat {{#if (eq activeTab "combat")}}active{{/if}}' data-group="primary" data-tab="combat">
+        <div class="a2e-grid-2">
+          <div class="a2e-panel">
+            <h2>Défense</h2>
+            <div class="a2e-panel-body">
+              <table class="a2e-table">
+                <tbody>
+                  <tr><th>CA naturelle / physique</th><td>{{combatDefense.ac_naturelle}}</td></tr>
+                  <tr><th>CA totale</th><td><b>{{combatDefense.ac_totale}}</b></td></tr>
+                  <tr><th>Armure</th><td>{{{combatDefense.armure}}}</td></tr>
+                  <tr><th>Bouclier</th><td>{{{combatDefense.bouclier}}}</td></tr>
+                  <tr><th>Heaume</th><td>{{{combatDefense.heaume}}}</td></tr>
+                  <tr><th>Mod. DEX défense</th><td>{{actor.system.dex_def}}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="a2e-panel">
+            <h2>Arme équipée</h2>
+            <div class="a2e-panel-body">
+              <table class="a2e-table">
+                <tbody>
+                  <tr><th>Arme</th><td>{{{combatDefense.arme}}}</td></tr>
+                  <tr><th>Dégâts</th><td>{{combatDefense.degats}}</td></tr>
+                  <tr><th>Bonus toucher</th><td>{{combatDefense.bonus_toucher}}</td></tr>
+                  <tr><th>Bonus dégâts</th><td>{{combatDefense.bonus_degats}}</td></tr>
+                  <tr><th>THAC0</th><td>{{combatDefense.thaco}}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="a2e-panel">
+          <h2>Armes</h2>
+          <div class="a2e-panel-body">
+            {{#if listeArmes.length}}
+              <table class="a2e-table arme-table">
+                <thead>
+                  <tr><th></th><th>Arme</th><th>Équipée</th><th>Dégâts</th><th>Type</th><th>Bonus toucher</th><th>Bonus dégâts</th><th>Facteur</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {{#each listeArmes as |arme|}}
+                    <tr class="item" data-item-id="{{arme._id}}">
+                      <td><img class="arme-img-attack" data-item-id="{{arme._id}}" src="{{arme.img}}" title="Attaquer avec {{arme.name}}" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;"></td>
+                      <td><b>{{arme.name}}</b></td>
+                      <td>{{#if arme.system.equipee}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td>
+                      <td>{{arme.system.dégâts.contre_moyen}} / {{arme.system.dégâts.contre_grand}}</td>
+                      <td>{{arme.system.type_degats}}</td>
+                      <td>{{arme.system.bonus_hit}}</td>
+                      <td>{{arme.system.bonus_dom}}</td>
+                      <td>{{arme.system.facteur_rapidité}}</td>
+                      <td>
+                        <div class="a2e-actions">
+                          <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if arme.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{arme._id}}" title="{{#if arme.system.equipee}}Équipée — cliquer pour retirer{{else}}Non équipée — cliquer pour équiper{{/if}}"><i class="fas fa-swords"></i></a>
+                          <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{arme._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                          <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{arme._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="a2e-muted">Aucune arme.</p>
+            {{/if}}
+          </div>
+        </div>
+
+        <div class="a2e-panel">
+          <h2>Armures, boucliers et heaumes</h2>
+          <div class="a2e-panel-body">
+            {{#if listeArmures.length}}
+              <table class="a2e-table">
+                <thead><tr><th>Nom</th><th>CA</th><th>Bonus CA</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {{#each listeArmures as |armure|}}
+                    <tr class="item" data-item-id="{{armure._id}}">
+                      <td><b>{{armure.name}}</b></td>
+                      <td>{{armure.system.ac}}</td>
+                      <td>{{armure.system.bonus_ac}}</td>
+                      <td>
+                        <div class="a2e-actions">
+                          <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if armure.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{armure._id}}" title="{{#if armure.system.equipee}}Équipée — cliquer pour retirer{{else}}Non équipée — cliquer pour équiper{{/if}}"><i class="fas fa-shield-alt"></i></a>
+                          <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{armure._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                          <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{armure._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="a2e-muted">Aucune armure.</p>
+            {{/if}}
+          </div>
+        </div>
+      </section>
