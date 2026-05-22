@@ -153,6 +153,9 @@ add2eInstallHudDiagnostics();
   await add2eImportAttackModule("./add2e-attack/05-jb2a-vfx.mjs", "05-jb2a-vfx");
   await add2eImportAttackModule("./add2e-attack/06-cast-spell.mjs", "06-cast-spell");
   await add2eImportAttackModule("./add2e-attack/04a-attack-roll-bootstrap.mjs", "04a-attack-roll-bootstrap");
+  await add2eImportAttackModule("./add2e-attack/04c-attack-roll-state.mjs", "04c-attack-roll-state");
+  await add2eImportAttackModule("./add2e-attack/04d-attack-roll-defense.mjs", "04d-attack-roll-defense");
+  await add2eImportAttackModule("./add2e-attack/04e-attack-roll-modifiers.mjs", "04e-attack-roll-modifiers");
   await add2eImportAttackModule("./add2e-attack/04b-attack-roll-core.mjs", "04b-attack-roll-core");
 
   console.log("ADD2E | add2e-attack modulaire chargé", {
