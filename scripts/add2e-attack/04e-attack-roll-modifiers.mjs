@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-22-target-defensive-modifiers-v2";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-attack-gates-v1";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -132,6 +132,126 @@ function add2eAttackTagSetHasPrefix(tagSet, prefix) {
   return false;
 }
 
+function add2eAttackGetActiveTargetEffectTags(cible) {
+  const tags = new Set();
+  if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getActiveTags === "function") {
+    add2eAttackPushNormalizedTag(tags, Add2eEffectsEngine.getActiveTags(cible) ?? []);
+  }
+  return tags;
+}
+
+function add2eAttackGetSaveVsSpells(actor) {
+  const sys = actor?.system ?? {};
+  const candidates = [
+    sys.sauvegarde_sortileges,
+    sys.sauvegardes?.sortileges,
+    sys.sauvegardes?.sorts,
+    sys.saves?.sorts,
+    sys.calculatedSaves?.sorts,
+    sys.jp_sort,
+    sys.jp_sorts,
+    sys.jp?.sorts,
+    sys.jp?.sortileges
+  ];
+
+  for (const raw of candidates) {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+
+  return NaN;
+}
+
+async function add2eAttackRollSaveVsSpells(actor, bonus = 0) {
+  const saveVal = add2eAttackGetSaveVsSpells(actor);
+  if (!Number.isFinite(saveVal) || saveVal <= 0) {
+    return { canRoll: false, saveVal: NaN, roll: null, total: 0, success: false };
+  }
+
+  const formula = Number(bonus) ? `1d20${Number(bonus) >= 0 ? "+" : ""}${Number(bonus)}` : "1d20";
+  const roll = await new Roll(formula).evaluate({ async: true });
+  if (game.dice3d) await game.dice3d.showForRoll(roll);
+
+  return {
+    canRoll: true,
+    saveVal,
+    roll,
+    total: roll.total,
+    success: roll.total >= saveVal
+  };
+}
+
+async function add2eAttackCreateGateChat({ actor, cible, title, result, allowed }) {
+  const color = allowed ? "#2f8f46" : "#b33a2e";
+  const label = allowed ? "attaque autorisee" : "attaque annulee";
+  const details = result?.canRoll
+    ? `Jet : <b>${result.total}</b> / seuil sauvegarde : <b>${result.saveVal}</b>`
+    : "Sauvegarde introuvable : attaque autorisee par securite.";
+
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content: `
+      <div class="add2e-chat-card" style="font-family:var(--font-primary);background:#fff;border:1px solid #d0d7de;border-radius:8px;padding:9px;">
+        <div style="font-weight:900;color:#5d3d0d;margin-bottom:4px;">${title}</div>
+        <div><b>${actor?.name ?? "Attaquant"}</b> tente d'attaquer <b>${cible?.name ?? "la cible"}</b>.</div>
+        <div style="margin-top:6px;color:${color};font-weight:900;text-transform:uppercase;">${label}</div>
+        <div style="font-size:.92em;color:#333;margin-top:4px;">${details}</div>
+      </div>`
+  });
+}
+
+export async function add2eAttackResolveTargetAttackGate({ actor, cible, source = "attack-roll" } = {}) {
+  if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target" };
+
+  const targetEffectTags = add2eAttackGetActiveTargetEffectTags(cible);
+  const hasSanctuary =
+    targetEffectTags.has("protection:sanctuaire") ||
+    targetEffectTags.has("etat:sanctuaire") ||
+    targetEffectTags.has("defense:sanctuaire") ||
+    targetEffectTags.has("attaque_contre_cible:jp_annule");
+
+  const hasSaveNegatesAttack =
+    targetEffectTags.has("attaque_contre_cible:jp_annule") ||
+    targetEffectTags.has("jp:annule") ||
+    targetEffectTags.has("jet:sauvegarde_annule");
+
+  if (!hasSanctuary && !hasSaveNegatesAttack) {
+    return { allowed: true, reason: "no-target-attack-gate", targetEffectTags };
+  }
+
+  const save = await add2eAttackRollSaveVsSpells(actor, 0);
+
+  if (!save.canRoll) {
+    console.warn("[ADD2E][ATTAQUE][TARGET_GATE][NO_SAVE]", {
+      source,
+      attaquant: actor?.name,
+      cible: cible?.name,
+      targetEffectTags: [...targetEffectTags]
+    });
+    await add2eAttackCreateGateChat({ actor, cible, title: "Sanctuaire", result: save, allowed: true });
+    return { allowed: true, reason: "save-missing", save, targetEffectTags };
+  }
+
+  const allowed = !!save.success;
+  await add2eAttackCreateGateChat({ actor, cible, title: "Sanctuaire", result: save, allowed });
+
+  console.log("[ADD2E][ATTAQUE][TARGET_GATE]", {
+    source,
+    attaquant: actor?.name,
+    cible: cible?.name,
+    allowed,
+    save,
+    targetEffectTags: [...targetEffectTags]
+  });
+
+  return {
+    allowed,
+    reason: allowed ? "save-success" : "save-failed",
+    save,
+    targetEffectTags
+  };
+}
+
 export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible }) {
   let value = 0;
   const details = [];
@@ -141,8 +261,7 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
   }
 
   const attackerTags = add2eAttackBuildActorTagSet(actor);
-  const targetEffectTags = new Set();
-  add2eAttackPushNormalizedTag(targetEffectTags, Add2eEffectsEngine.getActiveTags(cible) ?? []);
+  const targetEffectTags = add2eAttackGetActiveTargetEffectTags(cible);
 
   const isEvil = add2eAttackIsEvilTagSet(attackerTags);
   const hasProtectionSpecificMalus =
