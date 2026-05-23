@@ -1,5 +1,5 @@
 // ADD2E — onUse Clerc niveau 1 : Résistance au Froid
-// Version : 2026-05-05-clerc-n1-resistance-au-froid-v1
+// Version : 2026-05-23-clerc-n1-resistance-au-froid-v2
 // Retour attendu par le moteur ADD2E : true = sort consommé, false = sort non consommé.
 
 const ADD2E_SORT_CONFIG = {
@@ -10,13 +10,19 @@ const ADD2E_SORT_CONFIG = {
   description: "Ce sort protège la créature touchée contre les effets du froid naturel ou magique. La durée est d’un tour par niveau du clerc.",
   effect_rounds: "10*level",
   effectTags: [
-    "sort:resistance_au_froid",
     "classe:clerc",
     "liste:clerc",
     "niveau:1",
+    "sort:resistance_au_froid",
+    "ecole:alteration",
     "resistance:froid",
-    "bonus:sauvegarde:froid",
-    "etat:resistance_froid"
+    "etat:resistance_froid",
+    "bonus_js_vs:froid:3",
+    "bonus_save_vs:froid:3",
+    "degats_froid_si_save_rate:moitie",
+    "degats_froid_si_save_reussi:quart",
+    "temperature:froid_naturel:-18",
+    "duree:1_tour_par_niveau"
   ]
 };
 
@@ -148,14 +154,6 @@ if (!targets.length) {
 const level = add2eCasterLevel(actor);
 const rounds = add2eRoundCount(ADD2E_SORT_CONFIG.effect_rounds, level);
 
-console.log(`${ADD2E_ONUSE_TAG}[START]`, {
-  sort: ADD2E_SORT_CONFIG.name,
-  actor: actor?.name,
-  level,
-  rounds,
-  targets: targets.map(t => t.name)
-});
-
 for (const t of targets) {
   await add2eApplyTaggedEffect(t.actor, {
     name: ADD2E_SORT_CONFIG.name,
@@ -169,11 +167,11 @@ for (const t of targets) {
 await add2eChat(ADD2E_SORT_CONFIG.name, `
   <p>Résistance au froid appliquée.</p>
   <p>Durée mécanique : <b>${rounds}</b> round(s), soit <b>1 tour par niveau</b>.</p>
-  <p>La cible bénéficie de la protection contre le froid selon la règle du sort.</p>
+  <p>La cible bénéficie de +3 au jet de protection contre le froid magique. En cas d’échec, les dégâts de froid sont réduits de moitié ; en cas de réussite, ils sont réduits au quart.</p>
 `, null, {
   targetLabel: targets.map(t => t.name).join(", "),
   outcome: "RÉSISTANCE AU FROID",
-  rule: "Protège contre le froid naturel et accorde une protection contre les effets de froid magique selon les règles. Durée : 1 tour par niveau du clerc."
+  rule: "Protège contre le froid naturel jusqu’à environ -18°C. Contre le froid magique ou intense : +3 au jet de protection ; dégâts réduits de moitié si le jet échoue, au quart si le jet réussit. Durée : 1 tour par niveau du clerc."
 });
 
 return true;
