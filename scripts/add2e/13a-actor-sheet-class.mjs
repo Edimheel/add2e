@@ -3,7 +3,7 @@
 // Les modules 13b à 13f gardent leurs méthodes legacy découpées ; un pont temporaire
 // fournit uniquement les appels V1 attendus pendant leur chargement, sans hériter d'ActorSheet V1.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-migration-v3";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-migration-v4-render-parts";
 
 const ADD2E_APP_API = foundry?.applications?.api ?? {};
 const ADD2E_SHEETS_API = foundry?.applications?.sheets ?? {};
@@ -33,17 +33,37 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
   static DEFAULT_OPTIONS = {
     id: "add2e-personnage-{id}",
-    classes: ["add2e", "sheet", "actor", "personnage"],
+    classes: ["add2e", "sheet", "actor", "personnage", "add2e-character-v2-app"],
     tag: "form",
     position: { width: 1050, height: 900 },
     window: { title: "ADD2e Personnage", resizable: true },
-    form: { submitOnChange: true, closeOnSubmit: false },
+    form: {
+      submitOnChange: true,
+      closeOnSubmit: false,
+      handler: Add2eActorSheet._add2eSubmitForm
+    },
     actions: {}
   };
 
   static PARTS = {
-    main: { template: "systems/add2e/templates/actor/character-sheet.hbs" }
+    form: { template: "systems/add2e/templates/actor/character-sheet.hbs" }
   };
+
+  static async _add2eSubmitForm(event, form, formData) {
+    const app = this;
+    const actor = app?.actor ?? app?.document;
+    if (!actor?.update) return;
+
+    const expanded = foundry.utils.expandObject(formData?.object ?? {});
+    const updateData = {};
+
+    if (expanded.system) updateData.system = expanded.system;
+    if (typeof expanded.name === "string" && expanded.name.trim()) updateData.name = expanded.name.trim();
+    if (typeof expanded.img === "string") updateData.img = expanded.img;
+    if (expanded.flags) updateData.flags = expanded.flags;
+
+    if (Object.keys(updateData).length) await actor.update(updateData);
+  }
 
   get actor() { return this.document; }
   get object() { return this.document; }
@@ -123,7 +143,8 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
 // Pont legacy temporaire : les modules 13b/13c/13d/13e sont encore écrits
 // avec ActorSheet.prototype.*. On remplace globalThis.ActorSheet uniquement
-// pendant le chargement de ces modules, puis 13f restaure le global d'origine.
+// pendant le chargement de ces modules. Ce pont doit rester disponible tant que
+// ces méthodes n'ont pas été réécrites pour ne plus appeler ActorSheet.prototype.
 const ADD2E_ACTOR_SHEET_LEGACY_BRIDGE = {
   prototype: {
     getData: async function getData() { return this._add2eNativeGetData(); },
