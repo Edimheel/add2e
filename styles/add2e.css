@@ -291,3 +291,188 @@
   transform: translateY(-1px) !important;
   box-shadow: 0 3px 7px rgba(0,0,0,.24) !important;
 }
+
+/* --- ADD2E DialogV2 : fenêtre d'attaque --- */
+.application.add2e-attack-dialog,
+.application.add2e.add2e-attack-dialog,
+.add2e-attack-dialog {
+  min-width: 660px !important;
+}
+
+.application.add2e-attack-dialog .window-content,
+.application.add2e.add2e-attack-dialog .window-content,
+.add2e-attack-dialog .window-content {
+  padding: 12px !important;
+  background: linear-gradient(180deg, #fff8df, #f3e2b5) !important;
+  color: #2f250c !important;
+}
+
+.application.add2e-attack-dialog .dialog-content,
+.application.add2e.add2e-attack-dialog .dialog-content,
+.add2e-attack-dialog .dialog-content {
+  padding: 0 !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-form,
+.application.add2e.add2e-attack-dialog .add2e-attack-form,
+.add2e-attack-dialog .add2e-attack-form {
+  display: grid !important;
+  gap: 10px !important;
+  color: #2f250c !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-top,
+.application.add2e.add2e-attack-dialog .add2e-attack-top,
+.add2e-attack-dialog .add2e-attack-top {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-box,
+.application.add2e.add2e-attack-dialog .add2e-attack-box,
+.add2e-attack-dialog .add2e-attack-box,
+.application.add2e-attack-dialog .add2e-attack-line,
+.application.add2e.add2e-attack-dialog .add2e-attack-line,
+.add2e-attack-dialog .add2e-attack-line,
+.application.add2e-attack-dialog .add2e-check,
+.application.add2e.add2e-attack-dialog .add2e-check,
+.add2e-attack-dialog .add2e-check {
+  border: 1px solid #d9bf73 !important;
+  border-radius: 10px !important;
+  background: #fffdf4 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55) !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-box,
+.application.add2e.add2e-attack-dialog .add2e-attack-box,
+.add2e-attack-dialog .add2e-attack-box {
+  padding: 9px 11px !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-label,
+.application.add2e.add2e-attack-dialog .add2e-attack-label,
+.add2e-attack-dialog .add2e-attack-label {
+  font-size: .76rem !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .02em !important;
+  color: #5d3d0d !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-name,
+.application.add2e.add2e-attack-dialog .add2e-attack-name,
+.add2e-attack-dialog .add2e-attack-name {
+  font-size: 1.05rem !important;
+  font-weight: 950 !important;
+  margin-top: 2px !important;
+  color: #2f250c !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-pill,
+.application.add2e.add2e-attack-dialog .add2e-attack-pill,
+.add2e-attack-dialog .add2e-attack-pill {
+  display: inline-flex !important;
+  margin: 5px 4px 0 0 !important;
+  padding: 3px 8px !important;
+  border: 1px solid #d4af55 !important;
+  border-radius: 999px !important;
+  background: #fff3c7 !important;
+  color: #5d3d0d !important;
+  font-weight: 850 !important;
+  line-height: 1.25 !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-arrow,
+.application.add2e.add2e-attack-dialog .add2e-attack-arrow,
+.add2e-attack-dialog .add2e-attack-arrow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.8rem !important;
+  color: #5d3d0d !important;
+  font-weight: 950 !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-line,
+.application.add2e.add2e-attack-dialog .add2e-attack-line,
+.add2e-attack-dialog .add2e-attack-line {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 9px 11px !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-line label,
+.application.add2e.add2e-attack-dialog .add2e-attack-line label,
+.add2e-attack-dialog .add2e-attack-line label,
+.application.add2e-attack-dialog .add2e-check-title,
+.application.add2e.add2e-attack-dialog .add2e-check-title,
+.add2e-attack-dialog .add2e-check-title {
+  font-weight: 950 !important;
+  color: #3b2a0f !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-line input[type="number"],
+.application.add2e.add2e-attack-dialog .add2e-attack-line input[type="number"],
+.add2e-attack-dialog .add2e-attack-line input[type="number"] {
+  width: 76px !important;
+  flex: 0 0 76px !important;
+  border: 1px solid #d9bf73 !important;
+  border-radius: 8px !important;
+  background: #fffaf0 !important;
+  color: #2f250c !important;
+  padding: 6px 8px !important;
+  font-weight: 950 !important;
+  text-align: center !important;
+}
+
+.application.add2e-attack-dialog #add2e-position-zone,
+.application.add2e.add2e-attack-dialog #add2e-position-zone,
+.add2e-attack-dialog #add2e-position-zone {
+  width: 170px !important;
+  border: 1px solid #d9bf73 !important;
+  border-radius: 8px !important;
+  background: #fffaf0 !important;
+  color: #2f250c !important;
+  padding: 6px 8px !important;
+  font-weight: 950 !important;
+}
+
+.application.add2e-attack-dialog .add2e-special-grid,
+.application.add2e.add2e-attack-dialog .add2e-special-grid,
+.add2e-attack-dialog .add2e-special-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.application.add2e-attack-dialog .add2e-check,
+.application.add2e.add2e-attack-dialog .add2e-check,
+.add2e-attack-dialog .add2e-check {
+  display: grid !important;
+  grid-template-columns: 24px 1fr !important;
+  gap: 9px !important;
+  align-items: center !important;
+  background: #fff8e8 !important;
+  padding: 9px 10px !important;
+}
+
+.application.add2e-attack-dialog .add2e-check input[type="checkbox"],
+.application.add2e.add2e-attack-dialog .add2e-check input[type="checkbox"],
+.add2e-attack-dialog .add2e-check input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.application.add2e-attack-dialog .add2e-check-meta,
+.application.add2e.add2e-attack-dialog .add2e-check-meta,
+.add2e-attack-dialog .add2e-check-meta {
+  display: block !important;
+  margin-top: 2px !important;
+  font-size: .86rem !important;
+  color: #6b5a2a !important;
+  font-weight: 850 !important;
+}
