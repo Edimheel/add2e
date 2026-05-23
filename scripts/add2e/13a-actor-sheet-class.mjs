@@ -1,5 +1,8 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE ==========
-class Add2eActorSheet extends ActorSheet {
+const ADD2E_ACTOR_SHEET_V1 = foundry.appv1?.sheets?.ActorSheet;
+if (!ADD2E_ACTOR_SHEET_V1) throw new Error("[ADD2E] foundry.appv1.sheets.ActorSheet introuvable.");
+
+class Add2eActorSheet extends ADD2E_ACTOR_SHEET_V1 {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["add2e", "sheet", "actor", "personnage"],
