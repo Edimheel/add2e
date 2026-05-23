@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-22-target-defensive-modifiers-v1";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-22-target-defensive-modifiers-v2";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -124,6 +124,14 @@ function add2eAttackParseSignedValue(rawValue, defaultValue = 0) {
   return Number.isFinite(n) ? n : defaultValue;
 }
 
+function add2eAttackTagSetHasPrefix(tagSet, prefix) {
+  const p = add2eNormalizeAttackTag(prefix);
+  for (const tag of tagSet) {
+    if (tag.startsWith(p)) return true;
+  }
+  return false;
+}
+
 export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible }) {
   let value = 0;
   const details = [];
@@ -137,6 +145,9 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
   add2eAttackPushNormalizedTag(targetEffectTags, Add2eEffectsEngine.getActiveTags(cible) ?? []);
 
   const isEvil = add2eAttackIsEvilTagSet(attackerTags);
+  const hasProtectionSpecificMalus =
+    targetEffectTags.has("protection:mal") &&
+    add2eAttackTagSetHasPrefix(targetEffectTags, "malus_attaque_creature_mauvaise:");
 
   for (const rawTag of targetEffectTags) {
     const tag = add2eNormalizeAttackTag(rawTag);
@@ -144,7 +155,11 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
 
     // Format simple : malus_toucher_ennemi:2
     // Applique un malus general a tout attaquant ennemi qui frappe la cible protegee.
+    // Si le meme effet porte aussi un tag specifique de Protection contre le Mal,
+    // on laisse le tag specifique gerer le cas pour eviter un double -2.
     if (tag.startsWith("malus_toucher_ennemi:") || tag.startsWith("malus_attaque_ennemi:")) {
+      if (hasProtectionSpecificMalus) continue;
+
       const amount = Math.abs(add2eAttackParseSignedValue(tag.split(":")[1], 0));
       if (amount) {
         value -= amount;
