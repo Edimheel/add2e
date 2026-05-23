@@ -1,9 +1,9 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Migration complète hors appv1 : la feuille personnage utilise l'API V2.
-// Les modules 13b à 13f gardent leurs méthodes legacy découpées ; un pont local
-// fournit uniquement les appels V1 attendus par ces modules, sans hériter d'ActorSheet V1.
+// Les modules 13b à 13f gardent leurs méthodes legacy découpées ; un pont temporaire
+// fournit uniquement les appels V1 attendus pendant leur chargement, sans hériter d'ActorSheet V1.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-migration-v2";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-migration-v3";
 
 const ADD2E_APP_API = foundry?.applications?.api ?? {};
 const ADD2E_SHEETS_API = foundry?.applications?.sheets ?? {};
@@ -35,38 +35,19 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     id: "add2e-personnage-{id}",
     classes: ["add2e", "sheet", "actor", "personnage"],
     tag: "form",
-    position: {
-      width: 1050,
-      height: 900
-    },
-    window: {
-      title: "ADD2e Personnage",
-      resizable: true
-    },
-    form: {
-      submitOnChange: true,
-      closeOnSubmit: false
-    },
+    position: { width: 1050, height: 900 },
+    window: { title: "ADD2e Personnage", resizable: true },
+    form: { submitOnChange: true, closeOnSubmit: false },
     actions: {}
   };
 
   static PARTS = {
-    main: {
-      template: "systems/add2e/templates/actor/character-sheet.hbs"
-    }
+    main: { template: "systems/add2e/templates/actor/character-sheet.hbs" }
   };
 
-  get actor() {
-    return this.document;
-  }
-
-  get object() {
-    return this.document;
-  }
-
-  get isEditable() {
-    return this.options?.editable ?? this.document?.isOwner ?? false;
-  }
+  get actor() { return this.document; }
+  get object() { return this.document; }
+  get isEditable() { return this.options?.editable ?? this.document?.isOwner ?? false; }
 
   async _prepareContext(options = {}) {
     const context = await this.getData(options);
@@ -78,33 +59,21 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     return context;
   }
 
-  async _preparePartContext(partId, context, options = {}) {
-    return context;
-  }
+  async _preparePartContext(_partId, context, _options = {}) { return context; }
 
   async _onRender(context, options = {}) {
     await super._onRender?.(context, options);
     const html = add2eAsJQuery(add2eGetElementForLegacy(this));
     if (!html.length) return;
 
-    try {
-      this.activateListeners?.(html);
-    } catch (err) {
-      console.warn("[ADD2E][ACTOR_SHEET_V2][LISTENERS] Erreur activateListeners", err);
-    }
+    try { this.activateListeners?.(html); }
+    catch (err) { console.warn("[ADD2E][ACTOR_SHEET_V2][LISTENERS] Erreur activateListeners", err); }
 
-    try {
-      add2eEnhanceCharacterSheetUi?.(this, html);
-    } catch (_err) {}
-
-    try {
-      this._add2eActivateTab?.(this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume", html);
-    } catch (_err) {}
+    try { add2eEnhanceCharacterSheetUi?.(this, html); } catch (_err) {}
+    try { this._add2eActivateTab?.(this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume", html); } catch (_err) {}
   }
 
-  async _onDrop(event) {
-    return this._add2eNativeOnDrop(event);
-  }
+  async _onDrop(event) { return this._add2eNativeOnDrop(event); }
 
   async _add2eNativeOnDrop(event) {
     event?.preventDefault?.();
@@ -140,48 +109,38 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     return super.render(renderOptions);
   }
 
-  _add2eGetNativeActiveTab() {
-    return this._add2eActiveTab || this._add2eReadStoredTab?.() || null;
-  }
-
-  _add2eSetNativeActiveTab(tab) {
-    if (!tab) return;
-    this._add2eActiveTab = tab;
-  }
+  _add2eGetNativeActiveTab() { return this._add2eActiveTab || this._add2eReadStoredTab?.() || null; }
+  _add2eSetNativeActiveTab(tab) { if (tab) this._add2eActiveTab = tab; }
 
   _onChangeTab(event, tabs, active) {
     super._onChangeTab?.(event, tabs, active);
     if (!active) return;
     this._add2eActiveTab = active;
     this._add2eSetNativeActiveTab(active);
-    try {
-      sessionStorage.setItem(this._add2eTabStorageKey(), active);
-    } catch (_e) {}
+    try { sessionStorage.setItem(this._add2eTabStorageKey(), active); } catch (_e) {}
   }
 }
 
-// Pont legacy strictement limité aux modules ADD2E 13b/13c/13d/13e qui appellent
-// encore ActorSheet.prototype.* après le découpage historique du fichier.
+// Pont legacy temporaire : les modules 13b/13c/13d/13e sont encore écrits
+// avec ActorSheet.prototype.*. On remplace globalThis.ActorSheet uniquement
+// pendant le chargement de ces modules, puis 13f restaure le global d'origine.
 const ADD2E_ACTOR_SHEET_LEGACY_BRIDGE = {
   prototype: {
-    getData: async function getData() {
-      return this._add2eNativeGetData();
-    },
-    activateListeners: function activateListeners(html) {
-      return this._add2eNativeActivateListeners?.(html);
-    },
-    render: function render(force = false, options = {}) {
-      return this._add2eNativeRender(force, options);
-    },
-    _onDrop: async function _onDrop(event) {
-      return this._add2eNativeOnDrop(event);
-    }
+    getData: async function getData() { return this._add2eNativeGetData(); },
+    activateListeners: function activateListeners(html) { return this._add2eNativeActivateListeners?.(html); },
+    render: function render(force = false, options = {}) { return this._add2eNativeRender(force, options); },
+    _onDrop: async function _onDrop(event) { return this._add2eNativeOnDrop(event); }
   }
 };
 
 try {
   globalThis.ADD2E_ACTOR_SHEET_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
   globalThis.ADD2E_ACTOR_SHEET_LEGACY_BRIDGE = ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
+  if (!globalThis.ADD2E_ACTOR_SHEET_ORIGINAL_GLOBAL_RECORDED) {
+    globalThis.ADD2E_ACTOR_SHEET_ORIGINAL_GLOBAL_RECORDED = true;
+    globalThis.ADD2E_ORIGINAL_ACTOR_SHEET_GLOBAL = globalThis.ActorSheet ?? null;
+  }
+  globalThis.ActorSheet = ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
   globalThis.Add2eActorSheet = Add2eActorSheet;
 } catch (_e) {}
 
