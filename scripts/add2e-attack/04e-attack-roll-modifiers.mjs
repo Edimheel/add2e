@@ -3,32 +3,18 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v7-structured-monster-saves";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v8-clean-sanctuary-chat";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
-
-  if (Array.isArray(value)) {
-    for (const v of value) add2eAttackPushNormalizedTag(set, v);
-    return;
-  }
-
-  if (value instanceof Set) {
-    for (const v of value) add2eAttackPushNormalizedTag(set, v);
-    return;
-  }
-
-  if (typeof value === "object") {
-    for (const v of Object.values(value)) add2eAttackPushNormalizedTag(set, v);
-    return;
-  }
-
+  if (Array.isArray(value)) return void value.forEach(v => add2eAttackPushNormalizedTag(set, v));
+  if (value instanceof Set) return void [...value].forEach(v => add2eAttackPushNormalizedTag(set, v));
+  if (typeof value === "object") return void Object.values(value).forEach(v => add2eAttackPushNormalizedTag(set, v));
   if (typeof value !== "string") return;
 
   for (const part of value.split(/[,;|]/)) {
     const n = add2eNormalizeAttackTag(part);
     if (!n) continue;
-
     set.add(n);
     set.add(n.replace(/^race:/, ""));
     set.add(n.replace(/^type:/, ""));
@@ -41,7 +27,6 @@ function add2eAttackPushNormalizedTag(set, value) {
 
 export function add2eAttackBuildTargetTagSet(cible) {
   const targetTags = new Set();
-
   add2eAttackPushNormalizedTag(targetTags, cible?.name);
   add2eAttackPushNormalizedTag(targetTags, cible?.type);
   add2eAttackPushNormalizedTag(targetTags, cible?.system?.race);
@@ -54,17 +39,14 @@ export function add2eAttackBuildTargetTagSet(cible) {
   add2eAttackPushNormalizedTag(targetTags, cible?.system?.tags);
   add2eAttackPushNormalizedTag(targetTags, cible?.system?.effectTags);
   add2eAttackPushNormalizedTag(targetTags, cible?.flags?.add2e?.tags);
-
   if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getActiveTags === "function") {
     add2eAttackPushNormalizedTag(targetTags, Add2eEffectsEngine.getActiveTags(cible) ?? []);
   }
-
   return targetTags;
 }
 
 export function add2eAttackBuildActorTagSet(actor) {
   const actorTags = new Set();
-
   add2eAttackPushNormalizedTag(actorTags, actor?.name);
   add2eAttackPushNormalizedTag(actorTags, actor?.type);
   add2eAttackPushNormalizedTag(actorTags, actor?.system?.race);
@@ -77,11 +59,9 @@ export function add2eAttackBuildActorTagSet(actor) {
   add2eAttackPushNormalizedTag(actorTags, actor?.system?.tags);
   add2eAttackPushNormalizedTag(actorTags, actor?.system?.effectTags);
   add2eAttackPushNormalizedTag(actorTags, actor?.flags?.add2e?.tags);
-
   if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getActiveTags === "function") {
     add2eAttackPushNormalizedTag(actorTags, Add2eEffectsEngine.getActiveTags(actor) ?? []);
   }
-
   return actorTags;
 }
 
@@ -89,7 +69,6 @@ function add2eAttackTagSetHasMatcher(tagSet, matcher) {
   const m = add2eNormalizeAttackTag(matcher);
   if (!m) return false;
   if (tagSet.has(m)) return true;
-
   const stripped = m
     .replace(/^race:/, "")
     .replace(/^type:/, "")
@@ -97,15 +76,12 @@ function add2eAttackTagSetHasMatcher(tagSet, matcher) {
     .replace(/^creature:/, "")
     .replace(/^alignement:/, "")
     .replace(/^alignment:/, "");
-
   if (tagSet.has(stripped)) return true;
-
   for (const tag of tagSet) {
     if (tag === m || tag === stripped) return true;
     if (tag.endsWith(`:${m}`) || tag.endsWith(`:${stripped}`)) return true;
     if (tag.includes(m) || tag.includes(stripped)) return true;
   }
-
   return false;
 }
 
@@ -131,9 +107,7 @@ function add2eAttackReadPositiveNumber(value) {
 
 function add2eAttackTagSetHasPrefix(tagSet, prefix) {
   const p = add2eNormalizeAttackTag(prefix);
-  for (const tag of tagSet) {
-    if (tag.startsWith(p)) return true;
-  }
+  for (const tag of tagSet) if (tag.startsWith(p)) return true;
   return false;
 }
 
@@ -157,18 +131,14 @@ function add2eAttackEscapeHtml(value) {
 function add2eAttackInstallSanctuaryChatSuppressor() {
   if (globalThis.ADD2E_SANCTUARY_CHAT_SUPPRESSOR_INSTALLED) return;
   if (typeof ChatMessage === "undefined" || typeof ChatMessage.create !== "function") return;
-
   const originalCreate = ChatMessage.create.bind(ChatMessage);
-
   ChatMessage.create = async function add2eSanctuaryAwareChatCreate(data = {}, options = {}) {
     try {
       const ctx = globalThis.ADD2E_SANCTUARY_SUPPRESS_NEXT_ATTACK_CARD;
       const content = String(data?.content ?? "");
-
       if (ctx && Date.now() <= ctx.until && content.includes("tente de frapper")) {
         const attackerOk = !ctx.attackerName || content.includes(ctx.attackerName);
         const targetOk = !ctx.targetName || content.includes(ctx.targetName);
-
         if (attackerOk && targetOk) {
           console.log("[ADD2E][ATTAQUE][SANCTUAIRE][ATTACK_CARD_SUPPRESSED]", ctx);
           globalThis.ADD2E_SANCTUARY_SUPPRESS_NEXT_ATTACK_CARD = null;
@@ -178,10 +148,8 @@ function add2eAttackInstallSanctuaryChatSuppressor() {
     } catch (err) {
       console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][CHAT_SUPPRESS_ERROR]", err);
     }
-
     return originalCreate(data, options);
   };
-
   globalThis.ADD2E_SANCTUARY_CHAT_SUPPRESSOR_INSTALLED = true;
   console.log("[ADD2E][ATTAQUE][SANCTUAIRE][CHAT_SUPPRESSOR_INSTALLED]");
 }
@@ -189,7 +157,6 @@ function add2eAttackInstallSanctuaryChatSuppressor() {
 function add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed }) {
   try {
     if (typeof ChatMessage === "undefined" || typeof ChatMessage.create !== "function") return;
-
     const actorName = add2eAttackEscapeHtml(actor?.name ?? "Attaquant");
     const targetName = add2eAttackEscapeHtml(cible?.name ?? "Cible");
     const ok = !!allowed;
@@ -198,10 +165,10 @@ function add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed }) {
     const label = ok ? "SANCTUAIRE FRANCHI" : "ATTAQUE BLOQUEE PAR SANCTUAIRE";
     const result = save?.canRoll
       ? `Jet de protection contre les sorts : <b>${add2eAttackEscapeHtml(save.total)}</b> / seuil <b>${add2eAttackEscapeHtml(save.saveVal)}</b>`
-      : "Jet de protection contre les sorts introuvable : donnees du monstre a corriger.";
+      : "Le sanctuaire protege la cible.";
     const conclusion = save?.canRoll
       ? (ok ? "La sauvegarde reussit : l'attaque continue." : "La sauvegarde echoue : l'attaque est annulee.")
-      : "Aucune valeur structuree de sauvegarde n'a ete trouvee : l'attaque est annulee par securite.";
+      : "L'attaque est annulee.";
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor }),
@@ -221,9 +188,7 @@ function add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed }) {
 function add2eAttackGetSaveVsSpells(actor) {
   const sys = actor?.system ?? {};
 
-  // AD&D 2e / ADD2E export : [mort/paralysie/poison, baguettes, petrification, souffle, sorts]
-  // Pour le vampire exporte : "savingThrows": "Guerrier 8 DV", sauvegardes = [10,12,11,12,13]
-  // Le JP contre les sorts est donc l'index 4, soit 13.
+  // ADD2E export : [mort/paralysie/poison, baguettes, petrification, souffle, sorts]
   if (Array.isArray(sys.sauvegardes)) {
     const byArray = add2eAttackReadPositiveNumber(sys.sauvegardes[4]);
     if (byArray !== null) {
@@ -268,36 +233,34 @@ function add2eAttackGetSaveVsSpells(actor) {
     acteur: actor?.name,
     type: actor?.type,
     savingThrows: sys.savingThrows ?? null,
-    sauvegardes: sys.sauvegardes ?? null,
-    note: "Aucun fallback par tag jp_meme_type:x : corriger le JSON si la sauvegarde manque."
+    sauvegardes: sys.sauvegardes ?? null
   });
-
   return NaN;
+}
+
+function add2eAttackRollD20Sync() {
+  const rng = globalThis.CONFIG?.Dice?.randomUniform;
+  const raw = typeof rng === "function" ? rng() : Math.random();
+  return Math.max(1, Math.min(20, Math.floor(raw * 20) + 1));
 }
 
 function add2eAttackRollSaveVsSpellsSync(actor, bonus = 0) {
   const saveVal = add2eAttackGetSaveVsSpells(actor);
   if (!Number.isFinite(saveVal) || saveVal <= 0) {
-    return { canRoll: false, saveVal: NaN, total: 0, success: false, note: "save-missing" };
+    return { canRoll: false, saveVal: NaN, total: 0, d20: 0, success: false, note: "save-missing" };
   }
 
-  try {
-    const formula = Number(bonus) ? `1d20${Number(bonus) >= 0 ? "+" : ""}${Number(bonus)}` : "1d20";
-    const roll = new Roll(formula);
-    if (typeof roll.evaluateSync === "function") roll.evaluateSync();
-    else roll.evaluate({ async: false });
-    if (game.dice3d) game.dice3d.showForRoll(roll);
-    return {
-      canRoll: true,
-      saveVal,
-      roll,
-      total: roll.total,
-      success: roll.total >= saveVal
-    };
-  } catch (err) {
-    console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][SAVE_SYNC_ERROR]", err);
-    return { canRoll: false, saveVal, total: 0, success: false, note: "save-roll-error" };
-  }
+  const d20 = add2eAttackRollD20Sync();
+  const total = d20 + (Number(bonus) || 0);
+  return {
+    canRoll: true,
+    saveVal,
+    roll: null,
+    d20,
+    total,
+    bonus: Number(bonus) || 0,
+    success: total >= saveVal
+  };
 }
 
 function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags }) {
@@ -307,20 +270,18 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
     targetEffectTags.has("defense:sanctuaire") ||
     targetEffectTags.has("attaque_contre_cible:jp_annule") ||
     targetEffectTags.has("jet:sauvegarde_annule");
-
   if (!hasSanctuary) return { value: 0, details: [], gate: null };
 
   const save = add2eAttackRollSaveVsSpellsSync(actor, 0);
 
   if (!save.canRoll) {
-    const msg = "Sanctuaire : sauvegarde contre les sorts introuvable, attaque annulee ; corriger le JSON du monstre";
+    const msg = "Sanctuaire : attaque annulee";
     console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][NO_SAVE]", {
       attaquant: actor?.name,
       cible: cible?.name,
       save,
       targetEffectTags: [...targetEffectTags]
     });
-
     globalThis.ADD2E_SANCTUARY_SUPPRESS_NEXT_ATTACK_CARD = {
       attackerName: actor?.name ?? "",
       targetName: cible?.name ?? "",
@@ -328,7 +289,6 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
       save,
       reason: "sanctuary-save-missing"
     };
-
     add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed: false });
     return { value: -999, details: [msg], gate: { allowed: false, save } };
   }
@@ -349,9 +309,7 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
     save,
     reason: "sanctuary-save-failed"
   };
-
   add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed: false });
-
   return {
     value: -999,
     details: [`Sanctuaire : JP rate (${save.total}/${save.saveVal}), attaque annulee`],
@@ -361,10 +319,8 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
 
 export async function add2eAttackResolveTargetAttackGate({ actor, cible, source = "attack-roll" } = {}) {
   if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target" };
-
   const targetEffectTags = add2eAttackGetActiveTargetEffectTags(cible);
   const sanctuary = add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags });
-
   console.log("[ADD2E][ATTAQUE][TARGET_GATE]", {
     source,
     attaquant: actor?.name,
@@ -373,7 +329,6 @@ export async function add2eAttackResolveTargetAttackGate({ actor, cible, source 
     details: sanctuary.details,
     targetEffectTags: [...targetEffectTags]
   });
-
   return {
     allowed: sanctuary.gate?.allowed !== false,
     reason: sanctuary.gate?.allowed === false ? "save-failed" : "allowed",
@@ -385,14 +340,12 @@ export async function add2eAttackResolveTargetAttackGate({ actor, cible, source 
 export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible }) {
   let value = 0;
   const details = [];
-
   if (!actor || !cible || typeof Add2eEffectsEngine === "undefined" || typeof Add2eEffectsEngine.getActiveTags !== "function") {
     return { value, details, attackerTags: new Set(), targetEffectTags: new Set() };
   }
 
   const attackerTags = add2eAttackBuildActorTagSet(actor);
   const targetEffectTags = add2eAttackGetActiveTargetEffectTags(cible);
-
   const sanctuary = add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags });
   if (sanctuary.value !== 0 || sanctuary.details.length) {
     value += sanctuary.value;
@@ -400,9 +353,7 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
   }
 
   const isEvil = add2eAttackIsEvilTagSet(attackerTags);
-  const hasProtectionSpecificMalus =
-    targetEffectTags.has("protection:mal") &&
-    add2eAttackTagSetHasPrefix(targetEffectTags, "malus_attaque_creature_mauvaise:");
+  const hasProtectionSpecificMalus = targetEffectTags.has("protection:mal") && add2eAttackTagSetHasPrefix(targetEffectTags, "malus_attaque_creature_mauvaise:");
 
   for (const rawTag of targetEffectTags) {
     const tag = add2eNormalizeAttackTag(rawTag);
@@ -410,7 +361,6 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
 
     if (tag.startsWith("malus_toucher_ennemi:") || tag.startsWith("malus_attaque_ennemi:")) {
       if (hasProtectionSpecificMalus) continue;
-
       const amount = Math.abs(add2eAttackParseSignedValue(tag.split(":")[1], 0));
       if (amount) {
         value -= amount;
@@ -432,7 +382,6 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
       const parts = tag.split(":");
       const amount = Math.abs(add2eAttackParseSignedValue(parts.at(-1), 0));
       const matcher = parts.slice(1, -1).join(":");
-
       if (amount && matcher && add2eAttackTagSetHasMatcher(attackerTags, matcher)) {
         value -= amount;
         details.push(`Effet defensif cible (${matcher}) : -${amount} au toucher`);
@@ -448,7 +397,6 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
       }
     }
   }
-
   return { value, details, attackerTags, targetEffectTags };
 }
 
@@ -462,39 +410,27 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
   if (typeof Add2eEffectsEngine !== "undefined") {
     const typeCible = cible?.system?.type_monstre || cible?.system?.race || "";
     bonusRacialVs = Add2eEffectsEngine.getBonusToucheVs(actor, typeCible);
-
     const activeTags = Add2eEffectsEngine.getActiveTags(actor) ?? [];
 
     for (const rawTag of activeTags) {
       const t = add2eNormalizeAttackTag(rawTag);
-
       if (t.startsWith("bonus_attaque:")) {
         bonusToucheEffets += Number(t.split(":")[1]) || 0;
         continue;
       }
-
       if (t.startsWith("bonus_touche:")) {
         const parts = t.split(":");
         const matcher = parts[1];
         const valeur = Number(parts[2]) || 0;
-
-        if (matcher && add2eTagSetMatches(combatProfile.tagSet, matcher)) {
-          bonusToucheEffets += valeur;
-        }
+        if (matcher && add2eTagSetMatches(combatProfile.tagSet, matcher)) bonusToucheEffets += valeur;
         continue;
       }
-
       if (t.startsWith("bonus_degats_vs:")) {
         const parts = t.split(":");
         const matcher = add2eNormalizeAttackTag(parts[1]);
         const valeurRaw = String(parts[2] ?? "").trim().toLowerCase();
-
         if (matcher && targetTags.has(matcher)) {
-          const valeur = valeurRaw === "niveau"
-            ? (Number(actor?.system?.niveau) || 1)
-            : (Number(valeurRaw) || 0);
-
-          bonusDegatsEffets += valeur;
+          bonusDegatsEffets += valeurRaw === "niveau" ? (Number(actor?.system?.niveau) || 1) : (Number(valeurRaw) || 0);
         }
       }
     }
@@ -503,7 +439,6 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     if (targetDefensive.value !== 0 || targetDefensive.details.length) {
       bonusToucheEffets += targetDefensive.value;
       targetDefensiveAttackDetails = targetDefensive.details;
-
       console.log("[ADD2E][ATTAQUE][EFFETS_DEFENSIFS_CIBLE]", {
         attaquant: actor?.name,
         cible: cible?.name,
@@ -515,17 +450,9 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     }
   }
 
-  return {
-    bonusToucheEffets,
-    bonusDegatsEffets,
-    bonusRacialVs,
-    targetTags,
-    targetDefensiveAttackDetails
-  };
+  return { bonusToucheEffets, bonusDegatsEffets, bonusRacialVs, targetTags, targetDefensiveAttackDetails };
 }
 
 add2eAttackInstallSanctuaryChatSuppressor();
-
 globalThis.ADD2E_ATTACK_MODIFIERS_VERSION = ADD2E_ATTACK_MODIFIERS_VERSION;
-
 console.log("[ADD2E][ATTACK][04E][MODIFIERS_LOADED]", ADD2E_ATTACK_MODIFIERS_VERSION);
