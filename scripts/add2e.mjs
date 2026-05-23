@@ -29,3 +29,4 @@ import "./add2e/16-preparation-display.mjs";
 import "./add2e/17-movement-xp.mjs";
 import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/19-action-hud-free-drag.mjs";
+import "./add2e/20-session-xp.mjs";
