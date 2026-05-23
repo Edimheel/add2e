@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v6-sanctuary-normalized-save-tags";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v7-structured-monster-saves";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -124,6 +124,11 @@ function add2eAttackParseSignedValue(rawValue, defaultValue = 0) {
   return Number.isFinite(n) ? n : defaultValue;
 }
 
+function add2eAttackReadPositiveNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 function add2eAttackTagSetHasPrefix(tagSet, prefix) {
   const p = add2eNormalizeAttackTag(prefix);
   for (const tag of tagSet) {
@@ -193,10 +198,10 @@ function add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed }) {
     const label = ok ? "SANCTUAIRE FRANCHI" : "ATTAQUE BLOQUEE PAR SANCTUAIRE";
     const result = save?.canRoll
       ? `Jet de protection contre les sorts : <b>${add2eAttackEscapeHtml(save.total)}</b> / seuil <b>${add2eAttackEscapeHtml(save.saveVal)}</b>`
-      : "Jet de protection introuvable : attaque autorisee par securite.";
+      : "Jet de protection contre les sorts introuvable : donnees du monstre a corriger.";
     const conclusion = save?.canRoll
       ? (ok ? "La sauvegarde reussit : l'attaque continue." : "La sauvegarde echoue : l'attaque est annulee.")
-      : "La sauvegarde est introuvable : l'attaque continue par securite.";
+      : "Aucune valeur structuree de sauvegarde n'a ete trouvee : l'attaque est annulee par securite.";
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor }),
@@ -215,8 +220,27 @@ function add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed }) {
 
 function add2eAttackGetSaveVsSpells(actor) {
   const sys = actor?.system ?? {};
+
+  // AD&D 2e / ADD2E export : [mort/paralysie/poison, baguettes, petrification, souffle, sorts]
+  // Pour le vampire exporte : "savingThrows": "Guerrier 8 DV", sauvegardes = [10,12,11,12,13]
+  // Le JP contre les sorts est donc l'index 4, soit 13.
+  if (Array.isArray(sys.sauvegardes)) {
+    const byArray = add2eAttackReadPositiveNumber(sys.sauvegardes[4]);
+    if (byArray !== null) {
+      console.log("[ADD2E][ATTAQUE][SANCTUAIRE][SAVE_FROM_STRUCTURED_ARRAY]", {
+        acteur: actor?.name,
+        savingThrows: sys.savingThrows ?? null,
+        sauvegardes: sys.sauvegardes,
+        index: 4,
+        saveVal: byArray
+      });
+      return byArray;
+    }
+  }
+
   const candidates = [
     sys.sauvegarde_sortileges,
+    sys.sauvegarde_sorts,
     sys.sauvegardes?.sortileges,
     sys.sauvegardes?.sorts,
     sys.saves?.sorts,
@@ -228,39 +252,25 @@ function add2eAttackGetSaveVsSpells(actor) {
     sys.calculatedSaves?.spells,
     sys.jp_sort,
     sys.jp_sorts,
-    sys.jp_meme_type,
-    sys.jp_meme_type_sort,
     sys.jp?.sorts,
     sys.jp?.sortileges,
-    sys.jp?.meme_type,
     sys.jet_protection?.sorts,
     sys.jet_protection?.sortileges,
-    sys.jetProtection?.sorts,
-    sys.savingThrow,
-    sys.save
+    sys.jetProtection?.sorts
   ];
 
   for (const raw of candidates) {
-    const n = Number(raw);
-    if (Number.isFinite(n) && n > 0) return n;
+    const n = add2eAttackReadPositiveNumber(raw);
+    if (n !== null) return n;
   }
 
-  const actorTags = add2eAttackBuildActorTagSet(actor);
-  for (const tag of actorTags) {
-    const normalized = String(tag);
-    const match = normalized.match(/^(jp_meme_type|jp_same_type|jp_sort|jp_sorts|save_sorts|save_spell|saving_throw|sauvegarde_sortileges|sauvegarde_sorts)(?::|_)(\d+)$/);
-    if (!match) continue;
-
-    const n = Number(match[2]);
-    if (Number.isFinite(n) && n > 0) {
-      console.log("[ADD2E][ATTAQUE][SANCTUAIRE][SAVE_FROM_TAG]", {
-        acteur: actor?.name,
-        tag: normalized,
-        saveVal: n
-      });
-      return n;
-    }
-  }
+  console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][SAVE_STRUCTURED_MISSING]", {
+    acteur: actor?.name,
+    type: actor?.type,
+    savingThrows: sys.savingThrows ?? null,
+    sauvegardes: sys.sauvegardes ?? null,
+    note: "Aucun fallback par tag jp_meme_type:x : corriger le JSON si la sauvegarde manque."
+  });
 
   return NaN;
 }
@@ -268,7 +278,7 @@ function add2eAttackGetSaveVsSpells(actor) {
 function add2eAttackRollSaveVsSpellsSync(actor, bonus = 0) {
   const saveVal = add2eAttackGetSaveVsSpells(actor);
   if (!Number.isFinite(saveVal) || saveVal <= 0) {
-    return { canRoll: false, saveVal: NaN, total: 0, success: true, note: "save-missing" };
+    return { canRoll: false, saveVal: NaN, total: 0, success: false, note: "save-missing" };
   }
 
   try {
@@ -286,7 +296,7 @@ function add2eAttackRollSaveVsSpellsSync(actor, bonus = 0) {
     };
   } catch (err) {
     console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][SAVE_SYNC_ERROR]", err);
-    return { canRoll: false, saveVal, total: 0, success: true, note: "save-roll-error" };
+    return { canRoll: false, saveVal, total: 0, success: false, note: "save-roll-error" };
   }
 }
 
@@ -303,15 +313,24 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
   const save = add2eAttackRollSaveVsSpellsSync(actor, 0);
 
   if (!save.canRoll) {
-    const msg = "Sanctuaire : sauvegarde contre les sorts introuvable, attaque autorisee par securite";
+    const msg = "Sanctuaire : sauvegarde contre les sorts introuvable, attaque annulee ; corriger le JSON du monstre";
     console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][NO_SAVE]", {
       attaquant: actor?.name,
       cible: cible?.name,
       save,
       targetEffectTags: [...targetEffectTags]
     });
-    add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed: true });
-    return { value: 0, details: [msg], gate: { allowed: true, save } };
+
+    globalThis.ADD2E_SANCTUARY_SUPPRESS_NEXT_ATTACK_CARD = {
+      attackerName: actor?.name ?? "",
+      targetName: cible?.name ?? "",
+      until: Date.now() + 5000,
+      save,
+      reason: "sanctuary-save-missing"
+    };
+
+    add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed: false });
+    return { value: -999, details: [msg], gate: { allowed: false, save } };
   }
 
   if (save.success) {
