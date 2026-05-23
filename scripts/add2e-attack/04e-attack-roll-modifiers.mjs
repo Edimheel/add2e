@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v3-sanctuary-same-path";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v4-monster-saves";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -147,16 +147,45 @@ function add2eAttackGetSaveVsSpells(actor) {
     sys.sauvegardes?.sortileges,
     sys.sauvegardes?.sorts,
     sys.saves?.sorts,
+    sys.saves?.spell,
+    sys.saves?.spells,
+    sys.saves?.magic,
     sys.calculatedSaves?.sorts,
+    sys.calculatedSaves?.spell,
+    sys.calculatedSaves?.spells,
     sys.jp_sort,
     sys.jp_sorts,
+    sys.jp_meme_type,
+    sys.jp_meme_type_sort,
     sys.jp?.sorts,
-    sys.jp?.sortileges
+    sys.jp?.sortileges,
+    sys.jp?.meme_type,
+    sys.jet_protection?.sorts,
+    sys.jet_protection?.sortileges,
+    sys.jetProtection?.sorts,
+    sys.savingThrow,
+    sys.save
   ];
 
   for (const raw of candidates) {
     const n = Number(raw);
     if (Number.isFinite(n) && n > 0) return n;
+  }
+
+  const actorTags = add2eAttackBuildActorTagSet(actor);
+  for (const tag of actorTags) {
+    const match = String(tag).match(/^(jp_meme_type|jp_same_type|jp_sort|jp_sorts|save_sorts|save_spell|saving_throw|sauvegarde_sortileges|sauvegarde_sorts):(\d+)$/);
+    if (!match) continue;
+
+    const n = Number(match[2]);
+    if (Number.isFinite(n) && n > 0) {
+      console.log("[ADD2E][ATTAQUE][SANCTUAIRE][SAVE_FROM_TAG]", {
+        acteur: actor?.name,
+        tag,
+        saveVal: n
+      });
+      return n;
+    }
   }
 
   return NaN;
