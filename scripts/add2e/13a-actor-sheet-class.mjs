@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-full-v1-css-inject";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-full-v1-css-close";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -43,6 +43,25 @@ function add2eEnsureApplicationV2CharacterCss() {
   } catch (err) {
     console.warn("[ADD2E][ACTOR_SHEET][APPLICATION_V2_CSS] injection impossible", err);
     return false;
+  }
+}
+
+function add2eBindApplicationV2Close(sheet) {
+  try {
+    const root = add2eGetElementForApplicationV2(sheet);
+    if (!root || root.dataset.add2eCloseBound === "1") return;
+    root.dataset.add2eCloseBound = "1";
+
+    root.addEventListener("click", ev => {
+      const btn = ev.target?.closest?.('[data-action="close"], .header-control.close, .window-header .close, .window-close');
+      if (!btn || !root.contains(btn)) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      ev.stopImmediatePropagation?.();
+      sheet.close({ force: true });
+    }, true);
+  } catch (err) {
+    console.warn("[ADD2E][ACTOR_SHEET][APPLICATION_V2_CLOSE] binding impossible", err);
   }
 }
 
@@ -103,6 +122,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
   async _onRender(context, options = {}) {
     await super._onRender?.(context, options);
     add2eEnsureApplicationV2CharacterCss();
+    add2eBindApplicationV2Close(this);
     const html = add2eAsJQuery(add2eGetElementForApplicationV2(this));
     if (!html.length) return;
 
@@ -111,6 +131,15 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
     try { add2eEnhanceCharacterSheetUi?.(this, html); } catch (_err) {}
     try { this._add2eActivateTab?.(this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume", html); } catch (_err) {}
+  }
+
+  async close(options = {}) {
+    this._add2eClosing = true;
+    try {
+      return await super.close(options);
+    } finally {
+      this._add2eClosing = false;
+    }
   }
 
   async _onDrop(event) {
@@ -136,6 +165,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
   }
 
   _add2eNativeRender(force = false, options = {}) {
+    if (this._add2eClosing) return this;
     const renderOptions = (typeof force === "object" && force !== null)
       ? force
       : { ...(options ?? {}), force: !!force };
@@ -158,6 +188,7 @@ try {
   globalThis.ADD2E_ACTOR_SHEET_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
   globalThis.ADD2E_ACTOR_SHEET_V2_CSS_PATH = ADD2E_ACTOR_SHEET_V2_CSS_PATH;
   globalThis.add2eEnsureApplicationV2CharacterCss = add2eEnsureApplicationV2CharacterCss;
+  globalThis.add2eBindApplicationV2Close = add2eBindApplicationV2Close;
   globalThis.Add2eActorSheet = Add2eActorSheet;
   delete globalThis.ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
 } catch (_e) {}
