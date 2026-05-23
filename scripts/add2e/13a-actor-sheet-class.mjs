@@ -1,7 +1,9 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-full-v1";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-full-v1-css-inject";
+const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
+const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
 const ADD2E_APP_API = foundry?.applications?.api ?? {};
 const ADD2E_SHEETS_API = foundry?.applications?.sheets ?? {};
@@ -24,6 +26,24 @@ function add2eGetElementForApplicationV2(sheet) {
   const el = sheet?.element;
   if (!el) return null;
   return el.jquery ? el[0] : el;
+}
+
+function add2eEnsureApplicationV2CharacterCss() {
+  try {
+    if (document.getElementById(ADD2E_ACTOR_SHEET_V2_CSS_ID)) return true;
+    const href = `${ADD2E_ACTOR_SHEET_V2_CSS_PATH}?v=${encodeURIComponent(ADD2E_ACTOR_SHEET_V2_VERSION)}`;
+    const link = document.createElement("link");
+    link.id = ADD2E_ACTOR_SHEET_V2_CSS_ID;
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    link.href = href;
+    document.head.appendChild(link);
+    console.log("[ADD2E][ACTOR_SHEET][APPLICATION_V2_CSS] injected", href);
+    return true;
+  } catch (err) {
+    console.warn("[ADD2E][ACTOR_SHEET][APPLICATION_V2_CSS] injection impossible", err);
+    return false;
+  }
 }
 
 class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
@@ -68,6 +88,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
   get isEditable() { return this.options?.editable ?? this.document?.isOwner ?? false; }
 
   async _prepareContext(options = {}) {
+    add2eEnsureApplicationV2CharacterCss();
     const context = await this.getData(options);
     context.document = this.document;
     context.actor = this.document;
@@ -81,6 +102,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
   async _onRender(context, options = {}) {
     await super._onRender?.(context, options);
+    add2eEnsureApplicationV2CharacterCss();
     const html = add2eAsJQuery(add2eGetElementForApplicationV2(this));
     if (!html.length) return;
 
@@ -134,8 +156,11 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
 try {
   globalThis.ADD2E_ACTOR_SHEET_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
+  globalThis.ADD2E_ACTOR_SHEET_V2_CSS_PATH = ADD2E_ACTOR_SHEET_V2_CSS_PATH;
+  globalThis.add2eEnsureApplicationV2CharacterCss = add2eEnsureApplicationV2CharacterCss;
   globalThis.Add2eActorSheet = Add2eActorSheet;
   delete globalThis.ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
 } catch (_e) {}
 
+add2eEnsureApplicationV2CharacterCss();
 console.log("[ADD2E][ACTOR_SHEET][APPLICATION_V2_FULL]", ADD2E_ACTOR_SHEET_V2_VERSION);
