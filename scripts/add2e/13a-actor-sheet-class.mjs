@@ -3,7 +3,7 @@
 // Les modules 13b à 13f gardent leurs méthodes legacy découpées ; un pont local
 // fournit uniquement les appels V1 attendus par ces modules, sans hériter d'ActorSheet V1.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-migration-v1";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-migration-v2";
 
 const ADD2E_APP_API = foundry?.applications?.api ?? {};
 const ADD2E_SHEETS_API = foundry?.applications?.sheets ?? {};
@@ -162,7 +162,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
 // Pont legacy strictement limité aux modules ADD2E 13b/13c/13d/13e qui appellent
 // encore ActorSheet.prototype.* après le découpage historique du fichier.
-const ADD2E_LEGACY_ACTOR_SHEET_BRIDGE = {
+const ADD2E_ACTOR_SHEET_LEGACY_BRIDGE = {
   prototype: {
     getData: async function getData() {
       return this._add2eNativeGetData();
@@ -181,8 +181,7 @@ const ADD2E_LEGACY_ACTOR_SHEET_BRIDGE = {
 
 try {
   globalThis.ADD2E_ACTOR_SHEET_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
-  globalThis.ADD2E_ORIGINAL_ACTOR_SHEET_GLOBAL = globalThis.ActorSheet ?? null;
-  globalThis.ActorSheet = ADD2E_LEGACY_ACTOR_SHEET_BRIDGE;
+  globalThis.ADD2E_ACTOR_SHEET_LEGACY_BRIDGE = ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
   globalThis.Add2eActorSheet = Add2eActorSheet;
 } catch (_e) {}
 
