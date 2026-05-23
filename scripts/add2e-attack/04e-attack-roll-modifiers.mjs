@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-attack-gates-v1";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v3-sanctuary-same-path";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -162,92 +162,92 @@ function add2eAttackGetSaveVsSpells(actor) {
   return NaN;
 }
 
-async function add2eAttackRollSaveVsSpells(actor, bonus = 0) {
+function add2eAttackRollSaveVsSpellsSync(actor, bonus = 0) {
   const saveVal = add2eAttackGetSaveVsSpells(actor);
   if (!Number.isFinite(saveVal) || saveVal <= 0) {
-    return { canRoll: false, saveVal: NaN, roll: null, total: 0, success: false };
+    return { canRoll: false, saveVal: NaN, total: 0, success: true, note: "save-missing" };
   }
 
-  const formula = Number(bonus) ? `1d20${Number(bonus) >= 0 ? "+" : ""}${Number(bonus)}` : "1d20";
-  const roll = await new Roll(formula).evaluate({ async: true });
-  if (game.dice3d) await game.dice3d.showForRoll(roll);
-
-  return {
-    canRoll: true,
-    saveVal,
-    roll,
-    total: roll.total,
-    success: roll.total >= saveVal
-  };
+  try {
+    const formula = Number(bonus) ? `1d20${Number(bonus) >= 0 ? "+" : ""}${Number(bonus)}` : "1d20";
+    const roll = new Roll(formula);
+    roll.evaluate({ async: false });
+    if (game.dice3d) game.dice3d.showForRoll(roll);
+    return {
+      canRoll: true,
+      saveVal,
+      roll,
+      total: roll.total,
+      success: roll.total >= saveVal
+    };
+  } catch (err) {
+    console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][SAVE_SYNC_ERROR]", err);
+    return { canRoll: false, saveVal, total: 0, success: true, note: "save-roll-error" };
+  }
 }
 
-async function add2eAttackCreateGateChat({ actor, cible, title, result, allowed }) {
-  const color = allowed ? "#2f8f46" : "#b33a2e";
-  const label = allowed ? "attaque autorisee" : "attaque annulee";
-  const details = result?.canRoll
-    ? `Jet : <b>${result.total}</b> / seuil sauvegarde : <b>${result.saveVal}</b>`
-    : "Sauvegarde introuvable : attaque autorisee par securite.";
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: `
-      <div class="add2e-chat-card" style="font-family:var(--font-primary);background:#fff;border:1px solid #d0d7de;border-radius:8px;padding:9px;">
-        <div style="font-weight:900;color:#5d3d0d;margin-bottom:4px;">${title}</div>
-        <div><b>${actor?.name ?? "Attaquant"}</b> tente d'attaquer <b>${cible?.name ?? "la cible"}</b>.</div>
-        <div style="margin-top:6px;color:${color};font-weight:900;text-transform:uppercase;">${label}</div>
-        <div style="font-size:.92em;color:#333;margin-top:4px;">${details}</div>
-      </div>`
-  });
-}
-
-export async function add2eAttackResolveTargetAttackGate({ actor, cible, source = "attack-roll" } = {}) {
-  if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target" };
-
-  const targetEffectTags = add2eAttackGetActiveTargetEffectTags(cible);
+function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags }) {
   const hasSanctuary =
     targetEffectTags.has("protection:sanctuaire") ||
     targetEffectTags.has("etat:sanctuaire") ||
     targetEffectTags.has("defense:sanctuaire") ||
-    targetEffectTags.has("attaque_contre_cible:jp_annule");
-
-  const hasSaveNegatesAttack =
     targetEffectTags.has("attaque_contre_cible:jp_annule") ||
-    targetEffectTags.has("jp:annule") ||
     targetEffectTags.has("jet:sauvegarde_annule");
 
-  if (!hasSanctuary && !hasSaveNegatesAttack) {
-    return { allowed: true, reason: "no-target-attack-gate", targetEffectTags };
-  }
+  if (!hasSanctuary) return { value: 0, details: [], gate: null };
 
-  const save = await add2eAttackRollSaveVsSpells(actor, 0);
+  const save = add2eAttackRollSaveVsSpellsSync(actor, 0);
 
   if (!save.canRoll) {
-    console.warn("[ADD2E][ATTAQUE][TARGET_GATE][NO_SAVE]", {
-      source,
+    const msg = "Sanctuaire : sauvegarde contre les sorts introuvable, attaque autorisee par securite";
+    console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][NO_SAVE]", {
       attaquant: actor?.name,
       cible: cible?.name,
+      save,
       targetEffectTags: [...targetEffectTags]
     });
-    await add2eAttackCreateGateChat({ actor, cible, title: "Sanctuaire", result: save, allowed: true });
-    return { allowed: true, reason: "save-missing", save, targetEffectTags };
+    return { value: 0, details: [msg], gate: { allowed: true, save } };
   }
 
-  const allowed = !!save.success;
-  await add2eAttackCreateGateChat({ actor, cible, title: "Sanctuaire", result: save, allowed });
+  if (save.success) {
+    return {
+      value: 0,
+      details: [`Sanctuaire : JP reussi (${save.total}/${save.saveVal}), attaque autorisee`],
+      gate: { allowed: true, save }
+    };
+  }
+
+  // Meme chemin que Protection contre le Mal : on agit dans les modificateurs d'attaque.
+  // -999 rend l'attaque impossible sans devoir modifier 04b ni ajouter un wrapper.
+  return {
+    value: -999,
+    details: [`Sanctuaire : JP rate (${save.total}/${save.saveVal}), attaque annulee`],
+    gate: { allowed: false, save }
+  };
+}
+
+// Export conserve pour evolution ulterieure : si 04-attack-roll.mjs appelle un vrai gate pre-jet,
+// cette fonction pourra annuler avant le d20. Pour l'instant, le chemin actif reste le meme que
+// Protection contre le Mal : add2eAttackComputeActiveAttackModifiers().
+export async function add2eAttackResolveTargetAttackGate({ actor, cible, source = "attack-roll" } = {}) {
+  if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target" };
+
+  const targetEffectTags = add2eAttackGetActiveTargetEffectTags(cible);
+  const sanctuary = add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags });
 
   console.log("[ADD2E][ATTAQUE][TARGET_GATE]", {
     source,
     attaquant: actor?.name,
     cible: cible?.name,
-    allowed,
-    save,
+    gate: sanctuary.gate,
+    details: sanctuary.details,
     targetEffectTags: [...targetEffectTags]
   });
 
   return {
-    allowed,
-    reason: allowed ? "save-success" : "save-failed",
-    save,
+    allowed: sanctuary.gate?.allowed !== false,
+    reason: sanctuary.gate?.allowed === false ? "save-failed" : "allowed",
+    save: sanctuary.gate?.save ?? null,
     targetEffectTags
   };
 }
@@ -263,6 +263,12 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
   const attackerTags = add2eAttackBuildActorTagSet(actor);
   const targetEffectTags = add2eAttackGetActiveTargetEffectTags(cible);
 
+  const sanctuary = add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags });
+  if (sanctuary.value !== 0 || sanctuary.details.length) {
+    value += sanctuary.value;
+    details.push(...sanctuary.details);
+  }
+
   const isEvil = add2eAttackIsEvilTagSet(attackerTags);
   const hasProtectionSpecificMalus =
     targetEffectTags.has("protection:mal") &&
@@ -272,10 +278,6 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
     const tag = add2eNormalizeAttackTag(rawTag);
     if (!tag) continue;
 
-    // Format simple : malus_toucher_ennemi:2
-    // Applique un malus general a tout attaquant ennemi qui frappe la cible protegee.
-    // Si le meme effet porte aussi un tag specifique de Protection contre le Mal,
-    // on laisse le tag specifique gerer le cas pour eviter un double -2.
     if (tag.startsWith("malus_toucher_ennemi:") || tag.startsWith("malus_attaque_ennemi:")) {
       if (hasProtectionSpecificMalus) continue;
 
@@ -287,7 +289,6 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
       continue;
     }
 
-    // Format explicite pour Protection contre le Mal et variantes similaires.
     if (tag.startsWith("malus_attaque_creature_mauvaise:")) {
       const amount = Math.abs(add2eAttackParseSignedValue(tag.split(":")[1], 0));
       if (amount && isEvil) {
@@ -297,10 +298,6 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
       continue;
     }
 
-    // Formats generiques :
-    // malus_attaque_vs:<tag_attaquant>:<valeur>
-    // malus_toucher_vs:<tag_attaquant>:<valeur>
-    // Exemple : malus_attaque_vs:alignement:mauvais:2
     if (tag.startsWith("malus_attaque_vs:") || tag.startsWith("malus_toucher_vs:")) {
       const parts = tag.split(":");
       const amount = Math.abs(add2eAttackParseSignedValue(parts.at(-1), 0));
@@ -313,8 +310,6 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
       continue;
     }
 
-    // Format volontairement signe : bonus_attaque_ennemi:-2
-    // Permet de modeliser d'autres sorts sans creer un nouveau code specifique.
     if (tag.startsWith("bonus_attaque_ennemi:")) {
       const amount = add2eAttackParseSignedValue(tag.split(":")[1], 0);
       if (amount) {
@@ -375,7 +370,7 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     }
 
     const targetDefensive = add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible });
-    if (targetDefensive.value !== 0) {
+    if (targetDefensive.value !== 0 || targetDefensive.details.length) {
       bonusToucheEffets += targetDefensive.value;
       targetDefensiveAttackDetails = targetDefensive.details;
 
