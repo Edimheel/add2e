@@ -52,25 +52,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   const cible = cibleToken ? cibleToken.actor : null;
   if (!cibleToken) return ui.notifications.warn("Aucune cible sélectionnée !");
 
-  console.log("[ADD2E][ATTAQUE][SCENE_TOKEN_SOURCE][V25]", {
-    attaquant: actor?.name,
-    attaquantActorId: actor?.id,
-    attaquantTokenId: actor?.token?.id ?? null,
-    srcTokenId: srcToken?.id ?? null,
-    cible: cible?.name,
-    cibleActorId: cible?.id,
-    cibleTokenId: cibleToken?.id,
-    cibleEstActeurDeToken: !!cible?.token,
-    cibleSystemStocke: {
-      ca_total: cible?.system?.ca_total,
-      ca_naturel: cible?.system?.ca_naturel,
-      armorClass: cible?.system?.armorClass,
-      ca: cible?.system?.ca,
-      dexterite: cible?.system?.dexterite,
-      dexterite_base: cible?.system?.dexterite_base
-    }
-  });
-// =======================
+ // =======================
 // CONTRÔLE DISTANCE AVANT DIALOGUE
 // =======================
 const isDistanceWeapon = (arme.system.portee_courte ?? 0) > 0;
@@ -130,26 +112,6 @@ if (isDistanceWeapon) {
   const assassinationInfo = add2eGetAssassinationInfo(actor, cible);
   const backArcInfo = add2eGetBackArcInfo(srcToken, cibleToken);
 
-  console.log("[ADD2E][ATTAQUE][POSITION][AUTO][V25]", {
-    attaquant: actor?.name,
-    cible: cible?.name,
-    srcToken: srcToken?.name,
-    cibleToken: cibleToken?.name,
-    zone: backArcInfo?.zone,
-    label: backArcInfo?.label,
-    targetRotation: backArcInfo?.targetRotation,
-    targetFrontAngle: backArcInfo?.targetFrontAngle,
-    targetBackAngle: backArcInfo?.targetBackAngle,
-    angleTargetToAttacker: backArcInfo?.angleTargetToAttacker,
-    diffFront: backArcInfo?.diffFront,
-    diffBack: backArcInfo?.diffBack,
-    isFront: backArcInfo?.isFront,
-    isFlank: backArcInfo?.isFlank,
-    isRearFlank: backArcInfo?.isRearFlank,
-    isBehind: backArcInfo?.isBehind,
-    note: "Diagnostic uniquement : la position réellement appliquée est choisie dans la fenêtre d’attaque."
-  });
-
   // La rotation des illustrations de token n'est pas une donnée fiable de facing :
   // certaines images regardent déjà vers le haut/bas sans que document.rotation change.
   // On affiche donc le diagnostic automatique, mais la résolution applique par défaut FACE.
@@ -160,24 +122,6 @@ if (isDistanceWeapon) {
   const specialAttackPositionCompatible = auContact;
   const canUseBackstab = backstabInfo.available && backstabInfo.multiplier > 1 && specialAttackWeaponCompatible && specialAttackPositionCompatible;
   const canUseAssassination = assassinationInfo.available && assassinationInfo.score > 0 && specialAttackWeaponCompatible && specialAttackPositionCompatible;
-
-  console.log("[ADD2E][ATTAQUE][SOURNOISE/ASSASSINAT][ELIGIBILITE]", {
-    acteur: actor.name,
-    arme: arme.name,
-    auContact,
-    isDistanceWeapon,
-    positionAuto: backArcInfo,
-    positionParDefaut: defaultPositionInfo,
-    positionAttackAdjustment,
-    combatProfile: preCombatProfile,
-    classeVoleurOuAssassin: add2eAttackIsThiefLikeClass(add2eGetActorClassSystemForAttack(actor), actor),
-    backstabInfo,
-    assassinationInfo,
-    specialAttackWeaponCompatible,
-    specialAttackPositionCompatible,
-    canUseBackstab,
-    canUseAssassination
-  });
 
   const attackDistanceLabel = auContact
     ? "Contact"
@@ -389,15 +333,6 @@ if (isDistanceWeapon) {
             const assassinatMod = Number(dlgHtml.find("#add2e-assassinat-mod").val()) || 0;
             const categorieArme = arme.system.categorie || "melee";
 
-            console.log("[ADD2E][ATTAQUE][POSITION][APPLIQUEE][V25]", {
-              attaquant: actor?.name,
-              cible: cible?.name,
-              selectedPositionZone,
-              activePositionInfo,
-              activePositionAttackAdjustment,
-              auto: backArcInfo
-            });
-
             // --- Calcul portée et malus ---
             let dist = 0, malusPortee = 0, descPortee = "", typePortee = "Contact";
             const isDistance = (arme.system.portee_courte ?? 0) > 0;
@@ -501,16 +436,6 @@ if (isDistanceWeapon) {
             if (combatProfile.degatsCarac) {
               modCaracDegats = add2eGetAttackAbilityModifier(actor, combatProfile.degatsCarac, "degats");
             }
-
-            console.log("[ADD2E][ATTAQUE][PROFIL COMBAT TAGS]", {
-              acteur: actor.name,
-              arme: arme.name,
-              tags: combatProfile.tags,
-              toucherCarac: combatProfile.toucherCarac,
-              degatsCarac: combatProfile.degatsCarac,
-              modCaracToucher,
-              modCaracDegats
-            });
 
             let {
               bonusToucheEffets,
@@ -657,22 +582,6 @@ let totalBonusToucher =
             }
 
             caFinaleCible = caBaseCible;
-
-            console.log("[ADD2E][ATTAQUE][CA][STRICT_SOURCE][V25]", {
-              cible: nomCible,
-              type: cible.type,
-              source: caSourceCible,
-              attaqueContact: isTouchAttack,
-              caBaseCible,
-              caFinaleCible,
-              computed: caComputedDetails,
-              valeursStockeesSurToken: {
-                ca_total: sysCible.ca_total,
-                ca_naturel: sysCible.ca_naturel,
-                armorClass: sysCible.armorClass,
-                ca: sysCible.ca
-              }
-            });
 
             const caAvantPosition = caFinaleCible;
             if (activePositionAttackAdjustment.caAdjustment !== 0) {
