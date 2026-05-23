@@ -1,10 +1,28 @@
 // scripts/add2e-attack/04a-attack-roll-bootstrap.mjs
 // ADD2E - Attaque 04a : initialisation du groupe de modules d'attaque.
-// Aucun calcul metier ici : ce fichier sert de point de passage avant 04b+.
+// Aucun calcul métier ici : ce fichier sert de point de passage avant 04b+.
 
-export const ADD2E_ATTACK_ROLL_SPLIT_VERSION = "2026-05-23-attack-roll-split-v2-silent-stale-ca";
+export const ADD2E_ATTACK_ROLL_SPLIT_VERSION = "2026-05-23-attack-roll-split-v3-appv1-actorsheet-alias";
 
 globalThis.ADD2E_ATTACK_ROLL_SPLIT_VERSION = ADD2E_ATTACK_ROLL_SPLIT_VERSION;
+
+function add2eInstallAppV1ActorSheetAlias() {
+  if (globalThis.ADD2E_APPV1_ACTORSHEET_ALIAS_INSTALLED) return;
+
+  const ActorSheetV1 = foundry?.appv1?.sheets?.ActorSheet;
+  if (!ActorSheetV1) return;
+
+  try {
+    Object.defineProperty(globalThis, "ActorSheet", {
+      value: ActorSheetV1,
+      configurable: true,
+      writable: true
+    });
+    globalThis.ADD2E_APPV1_ACTORSHEET_ALIAS_INSTALLED = true;
+  } catch (err) {
+    console.warn("[ADD2E][APPV1_ALIAS][ACTORSHEET_FAILED]", err);
+  }
+}
 
 function add2eInstallAttackConsoleNoiseFilter() {
   if (globalThis.ADD2E_ATTACK_CONSOLE_NOISE_FILTER_INSTALLED) return;
@@ -19,6 +37,5 @@ function add2eInstallAttackConsoleNoiseFilter() {
   globalThis.ADD2E_ATTACK_CONSOLE_NOISE_FILTER_INSTALLED = true;
 }
 
+add2eInstallAppV1ActorSheetAlias();
 add2eInstallAttackConsoleNoiseFilter();
-
-console.log("[ADD2E][ATTACK][04A][BOOTSTRAP_LOADED]", ADD2E_ATTACK_ROLL_SPLIT_VERSION);
