@@ -2,7 +2,7 @@
 // ADD2E - Attaque 04a : initialisation du groupe de modules d'attaque.
 // Aucun calcul métier ici : ce fichier sert de point de passage avant 04b+.
 
-export const ADD2E_ATTACK_ROLL_SPLIT_VERSION = "2026-05-23-attack-roll-split-v3-appv1-actorsheet-alias";
+export const ADD2E_ATTACK_ROLL_SPLIT_VERSION = "2026-05-23-attack-roll-split-v4-silent-known-v1-sheet-warnings";
 
 globalThis.ADD2E_ATTACK_ROLL_SPLIT_VERSION = ADD2E_ATTACK_ROLL_SPLIT_VERSION;
 
@@ -30,7 +30,13 @@ function add2eInstallAttackConsoleNoiseFilter() {
 
   console.warn = (...args) => {
     const first = String(args?.[0] ?? "");
-    if (first.includes("[ADD2E][ATTAQUE][CA][TOKEN_STORED_CA_STALE]")) return;
+    const stack = String(args?.[0]?.stack ?? args?.[1]?.stack ?? "");
+    const text = `${first}\n${stack}`;
+
+    if (text.includes("[ADD2E][ATTAQUE][CA][TOKEN_STORED_CA_STALE]")) return;
+    if (text.includes('You are accessing the global "ActorSheet"')) return;
+    if (text.includes("The V1 Application framework is deprecated") && text.includes("Add2eActorSheet")) return;
+
     return originalWarn(...args);
   };
 
