@@ -32,6 +32,66 @@ import {
   add2eAttackComputeActiveAttackModifiers
 } from "./04e-attack-roll-modifiers.mjs";
 
+function add2eAttackFormAdapter(form) {
+  return {
+    find(selector) {
+      const el = form?.querySelector?.(selector) ?? null;
+      return {
+        val: () => el?.value ?? "",
+        is: (expr) => expr === ":checked" ? !!el?.checked : !!el?.matches?.(expr)
+      };
+    }
+  };
+}
+
+async function add2eAttackOpenDialogV2({ title, content, width, classes, defaultAction, onOk }) {
+  const DialogV2 = foundry.applications?.api?.DialogV2;
+
+  if (DialogV2?.wait) {
+    return await DialogV2.wait({
+      window: { title, classes: classes ?? [] },
+      position: { width: width ?? 660 },
+      content,
+      buttons: [
+        {
+          action: "ok",
+          label: "Lancer l'attaque",
+          default: defaultAction === "ok",
+          callback: async (event, button, dialog) => {
+            const form = button?.form ?? dialog?.element?.querySelector?.("form") ?? document.querySelector("form.add2e-attack-form");
+            return await onOk(add2eAttackFormAdapter(form));
+          }
+        },
+        {
+          action: "cancel",
+          label: "Annuler",
+          callback: () => false
+        }
+      ],
+      default: defaultAction ?? "ok",
+      rejectClose: false
+    });
+  }
+
+  return await new Promise((resolve) => {
+    new Dialog({
+      title,
+      content,
+      buttons: {
+        ok: {
+          label: "Lancer l'attaque",
+          callback: async (dlgHtml) => resolve(await onOk(dlgHtml))
+        },
+        cancel: { label: "Annuler", callback: () => resolve(false) }
+      },
+      default: defaultAction ?? "ok"
+    }, {
+      width: width ?? 660,
+      classes: classes ?? []
+    }).render(true);
+  });
+}
+
 /**
  * Script principal d'attaque AD&D2e
  */
@@ -43,8 +103,6 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   if (!arme) return ui.notifications.warn("Arme introuvable !");
   if (!arme.system.equipee) return ui.notifications.warn(`L'arme "${arme.name}" n'est pas équipée !`);
 
-  // Si l'attaque part depuis une fiche de token non lié, actor.token.object est la vraie source scène.
-  // actor.getActiveTokens()[0] peut pointer sur un autre token du même acteur ou sur l'acteur de base.
   const srcToken = actor?.token?.object ?? actor.getActiveTokens()[0];
   const chatImg = srcToken?.document.texture.src || actor.img;
 
@@ -52,9 +110,6 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   const cible = cibleToken ? cibleToken.actor : null;
   if (!cibleToken) return ui.notifications.warn("Aucune cible sélectionnée !");
 
- // =======================
-// CONTRÔLE DISTANCE AVANT DIALOGUE
-// =======================
 const isDistanceWeapon = (arme.system.portee_courte ?? 0) > 0;
 
 let distanceCible = 0;
@@ -63,24 +118,17 @@ let auContact = false;
 try {
   if (srcToken && cibleToken) {
     distanceCible = add2eMeasureTokenGridDistance(srcToken, cibleToken, { gridSpaces: true });
-
-    // Calcul du contact même pour les armes possédant une portée.
-    // Exemple : dague utilisable au contact ET parfois lancée.
     const gridSize = canvas.grid.size;
-
     const sLeft = srcToken.document.x / gridSize;
     const sTop = srcToken.document.y / gridSize;
     const sRight = sLeft + (srcToken.document.width || 1);
     const sBottom = sTop + (srcToken.document.height || 1);
-
     const tLeft = cibleToken.document.x / gridSize;
     const tTop = cibleToken.document.y / gridSize;
     const tRight = tLeft + (cibleToken.document.width || 1);
     const tBottom = tTop + (cibleToken.document.height || 1);
-
     const gapX = Math.max(0, tLeft - sRight, sLeft - tRight);
     const gapY = Math.max(0, tTop - sBottom, sTop - tBottom);
-
     auContact = gapX <= 0.01 && gapY <= 0.01;
   }
 } catch (e) {
@@ -89,18 +137,13 @@ try {
   auContact = false;
 }
 
-// Arme strictement de contact : bloquée au-delà du contact.
-// Les armes avec portée peuvent encore être utilisées à distance, mais les options
-// attaque sournoise/assassinat ne seront proposées que si la cible est au contact.
 if (!isDistanceWeapon && !auContact) {
   ui.notifications.error("Cible trop éloignée pour une arme de contact.");
   return;
 }
 
-// Arme à distance : bloquée hors portée longue
 if (isDistanceWeapon) {
   const porteeLongue = Number(arme.system.portee_longue) || 0;
-
   if (porteeLongue > 0 && distanceCible > porteeLongue) {
     ui.notifications.error("Cible hors de portée.");
     return;
@@ -111,11 +154,6 @@ if (isDistanceWeapon) {
   const backstabInfo = add2eGetBackstabInfo(actor);
   const assassinationInfo = add2eGetAssassinationInfo(actor, cible);
   const backArcInfo = add2eGetBackArcInfo(srcToken, cibleToken);
-
-  // La rotation des illustrations de token n'est pas une donnée fiable de facing :
-  // certaines images regardent déjà vers le haut/bas sans que document.rotation change.
-  // On affiche donc le diagnostic automatique, mais la résolution applique par défaut FACE.
-  // Le MJ/joueur choisit explicitement Flanc/Dos dans la fenêtre si la situation le justifie.
   const defaultPositionInfo = add2eBuildManualPositionInfo("front", backArcInfo);
   const positionAttackAdjustment = add2eBuildPositionAttackAdjustment(cible, defaultPositionInfo);
   const specialAttackWeaponCompatible = !preCombatProfile.isProjectilePropulse;
@@ -127,121 +165,24 @@ if (isDistanceWeapon) {
     ? "Contact"
     : (isDistanceWeapon ? `${Number(distanceCible || 0).toFixed(1)} cases` : "Hors contact");
 
-  const backstabStatusLabel = canUseBackstab
-    ? `Disponible : +4 toucher, dégâts ×${backstabInfo.multiplier}`
-    : (backstabInfo.available
-      ? "Non disponible : pas dans le dos, hors contact ou arme non compatible"
-      : "Non disponible : aucune progression de frappe dans le dos");
-
-  const assassinationStatusLabel = canUseAssassination
-    ? `Disponible : ${assassinationInfo.score}% contre cible niv. ${assassinationInfo.targetLevel} si l’attaque touche`
-    : (assassinationInfo.available
-      ? "Non disponible : pas dans le dos, hors contact ou arme non compatible"
-      : "Non disponible : aucune compétence d’assassinat");
-
   const specialOptionsVisible = canUseBackstab || canUseAssassination || backstabInfo.available || assassinationInfo.available;
 
-  return new Promise((resolve) => {
-    new Dialog({
-      title: "Bonus/Malus d’attaque",
-      content: `
+  const dialogContent = `
         <style>
-          .add2e-attack-form {
-            --a2e-gold: #b88924;
-            --a2e-dark: #5d3d0d;
-            --a2e-line: #d9bf73;
-            --a2e-bg: #fff8df;
-            display: grid;
-            gap: 8px;
-            color: #2f250c;
-          }
-          .add2e-attack-top {
-            display: grid;
-            grid-template-columns: 1fr 36px 1fr;
-            gap: 8px;
-            align-items: center;
-          }
-          .add2e-attack-box {
-            border: 1px solid var(--a2e-line);
-            border-radius: 9px;
-            background: #fffdf4;
-            padding: 8px 10px;
-          }
-          .add2e-attack-label {
-            font-size: .76rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            color: var(--a2e-dark);
-          }
-          .add2e-attack-name {
-            font-size: 1.05rem;
-            font-weight: 900;
-            margin-top: 2px;
-          }
-          .add2e-attack-pill {
-            display: inline-flex;
-            margin-top: 5px;
-            padding: 2px 7px;
-            border: 1px solid #d4af55;
-            border-radius: 999px;
-            background: #fff3c7;
-            font-weight: 800;
-            color: var(--a2e-dark);
-          }
-          .add2e-attack-arrow {
-            text-align: center;
-            font-size: 1.7rem;
-            color: var(--a2e-dark);
-          }
-          .add2e-attack-line {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border: 1px solid var(--a2e-line);
-            border-radius: 9px;
-            background: #fffdf4;
-            padding: 8px 10px;
-          }
-          .add2e-attack-line label,
-          .add2e-check-title {
-            font-weight: 900;
-            color: #3b2a0f;
-          }
-          .add2e-attack-line input[type="number"] {
-            width: 74px;
-            border: 1px solid var(--a2e-line);
-            border-radius: 7px;
-            background: #fffaf0;
-            padding: 5px 7px;
-            font-weight: 900;
-            text-align: center;
-          }
-          .add2e-special-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-          }
-          .add2e-check {
-            display: grid;
-            grid-template-columns: 24px 1fr;
-            gap: 8px;
-            align-items: center;
-            border: 1px solid var(--a2e-line);
-            border-radius: 9px;
-            background: #fff8e8;
-            padding: 9px 10px;
-          }
-          .add2e-check input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-          }
-          .add2e-check-meta {
-            margin-top: 2px;
-            font-size: .86rem;
-            color: #6b5a2a;
-            font-weight: 800;
-          }
+          .add2e-attack-form { --a2e-gold: #b88924; --a2e-dark: #5d3d0d; --a2e-line: #d9bf73; --a2e-bg: #fff8df; display: grid; gap: 8px; color: #2f250c; }
+          .add2e-attack-top { display: grid; grid-template-columns: 1fr 36px 1fr; gap: 8px; align-items: center; }
+          .add2e-attack-box { border: 1px solid var(--a2e-line); border-radius: 9px; background: #fffdf4; padding: 8px 10px; }
+          .add2e-attack-label { font-size: .76rem; font-weight: 900; text-transform: uppercase; color: var(--a2e-dark); }
+          .add2e-attack-name { font-size: 1.05rem; font-weight: 900; margin-top: 2px; }
+          .add2e-attack-pill { display: inline-flex; margin-top: 5px; padding: 2px 7px; border: 1px solid #d4af55; border-radius: 999px; background: #fff3c7; font-weight: 800; color: var(--a2e-dark); }
+          .add2e-attack-arrow { text-align: center; font-size: 1.7rem; color: var(--a2e-dark); }
+          .add2e-attack-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--a2e-line); border-radius: 9px; background: #fffdf4; padding: 8px 10px; }
+          .add2e-attack-line label, .add2e-check-title { font-weight: 900; color: #3b2a0f; }
+          .add2e-attack-line input[type="number"] { width: 74px; border: 1px solid var(--a2e-line); border-radius: 7px; background: #fffaf0; padding: 5px 7px; font-weight: 900; text-align: center; }
+          .add2e-special-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+          .add2e-check { display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: center; border: 1px solid var(--a2e-line); border-radius: 9px; background: #fff8e8; padding: 9px 10px; }
+          .add2e-check input[type="checkbox"] { width: 18px; height: 18px; }
+          .add2e-check-meta { margin-top: 2px; font-size: .86rem; color: #6b5a2a; font-weight: 800; }
         </style>
 
         <form class="add2e-attack-form">
@@ -293,37 +234,26 @@ if (isDistanceWeapon) {
             ${canUseBackstab ? `
             <label class="add2e-check">
               <input type="checkbox" id="add2e-backstab">
-              <span>
-                <span class="add2e-check-title">Attaque sournoise</span>
-                <span class="add2e-check-meta">+4 toucher · dégâts ×${backstabInfo.multiplier}</span>
-              </span>
-            </label>
-            ` : ""}
-
+              <span><span class="add2e-check-title">Attaque sournoise</span><span class="add2e-check-meta">+4 toucher · dégâts ×${backstabInfo.multiplier}</span></span>
+            </label>` : ""}
             ${canUseAssassination ? `
             <label class="add2e-check">
               <input type="checkbox" id="add2e-assassinat-confirm">
-              <span>
-                <span class="add2e-check-title">Assassinat</span>
-                <span class="add2e-check-meta">${assassinationInfo.score}% si l’attaque touche</span>
-              </span>
-            </label>
-            ` : ""}
+              <span><span class="add2e-check-title">Assassinat</span><span class="add2e-check-meta">${assassinationInfo.score}% si l’attaque touche</span></span>
+            </label>` : ""}
           </div>
-
-          ${canUseAssassination ? `
-          <div class="add2e-attack-line">
-            <label for="add2e-assassinat-mod">Modificateur assassinat</label>
-            <input id="add2e-assassinat-mod" type="number" value="0" step="1">
-          </div>
-          ` : ""}
+          ${canUseAssassination ? `<div class="add2e-attack-line"><label for="add2e-assassinat-mod">Modificateur assassinat</label><input id="add2e-assassinat-mod" type="number" value="0" step="1"></div>` : ""}
           ` : ""}
         </form>
-      `,
-      buttons: {
-        ok: {
-          label: "Lancer l'attaque",
-          callback: async (dlgHtml) => {
+      `;
+
+  return await add2eAttackOpenDialogV2({
+    title: "Bonus/Malus d’attaque",
+    content: dialogContent,
+    width: 660,
+    classes: ["add2e", "add2e-attack-dialog"],
+    defaultAction: "ok",
+    onOk: async (dlgHtml) => {
             const userBonus = Number(dlgHtml.find("#add2e-bonus-attaque").val()) || 0;
             const selectedPositionZone = String(dlgHtml.find("#add2e-position-zone").val() || "front");
             const activePositionInfo = add2eResolveSelectedPositionInfo(selectedPositionZone, backArcInfo);
@@ -333,7 +263,6 @@ if (isDistanceWeapon) {
             const assassinatMod = Number(dlgHtml.find("#add2e-assassinat-mod").val()) || 0;
             const categorieArme = arme.system.categorie || "melee";
 
-            // --- Calcul portée et malus ---
             let dist = 0, malusPortee = 0, descPortee = "", typePortee = "Contact";
             const isDistance = (arme.system.portee_courte ?? 0) > 0;
 
@@ -341,14 +270,9 @@ if (isDistanceWeapon) {
               const pC = Number(arme.system.portee_courte) || 0;
               const pM = Number(arme.system.portee_moyenne) || 0;
               const pL = Number(arme.system.portee_longue) || 0;
-
               if (srcToken && cibleToken) {
-                try {
-                  const d = add2eMeasureTokenGridDistance(srcToken, cibleToken, { gridSpaces: true });
-                  dist = d;
-                } catch (e) { dist = 0; }
+                try { dist = add2eMeasureTokenGridDistance(srcToken, cibleToken, { gridSpaces: true }); } catch (e) { dist = 0; }
               }
-
               if (auContact) { descPortee = "Contact"; typePortee = "Contact"; }
               else if (dist <= pC) { descPortee = "Courte"; typePortee = "Courte"; }
               else if (dist <= pM) { descPortee = "Moyenne"; typePortee = "Moyenne"; malusPortee = -2; }
@@ -360,63 +284,36 @@ if (isDistanceWeapon) {
               typePortee = "Contact";
             }
 
-            // --- 1. THAC0 ---
             const sys = actor.system || {};
-
-            // Helpers extraits dans 04c/04d.
             let thaco = null;
-
             if (actor.type === "personnage") {
               const classeItem = actor.items?.find(i => i.type === "classe");
               const niv = Number(sys.niveau) || 1;
-              const prog = Array.isArray(classeItem?.system?.progression)
-                ? classeItem.system.progression[niv - 1]
-                : null;
-
+              const prog = Array.isArray(classeItem?.system?.progression) ? classeItem.system.progression[niv - 1] : null;
               if (prog && prog.thac0 !== undefined && prog.thac0 !== null && prog.thac0 !== "") {
                 thaco = add2eReadStrictNumber(prog.thac0);
                 if (thaco === null) {
                   ui.notifications.error(`${actor.name} : progression de classe invalide, thac0 non numérique au niveau ${niv}.`);
-                  console.error("[ADD2E][ATTAQUE][THAC0][INVALID_CLASS_PROGRESSION]", {
-                    acteur: actor.name,
-                    classe: classeItem?.name,
-                    niveau: niv,
-                    valeur: prog.thac0,
-                    progression: prog
-                  });
-                  resolve(false);
-                  return;
+                  console.error("[ADD2E][ATTAQUE][THAC0][INVALID_CLASS_PROGRESSION]", { acteur: actor.name, classe: classeItem?.name, niveau: niv, valeur: prog.thac0, progression: prog });
+                  return false;
                 }
               } else {
                 thaco = add2eReadStrictNumber(sys.thac0);
                 if (thaco === null) {
                   ui.notifications.error(`${actor.name} : THAC0 absent. Corrige system.thac0 ou la progression de classe.`);
-                  console.error("[ADD2E][ATTAQUE][THAC0][MISSING_PERSONNAGE]", {
-                    acteur: actor.name,
-                    attendu: "system.thac0 ou item classe system.progression[niveau-1].thac0",
-                    system: sys,
-                    classe: classeItem?.name,
-                    classeSystem: classeItem?.system
-                  });
-                  resolve(false);
-                  return;
+                  console.error("[ADD2E][ATTAQUE][THAC0][MISSING_PERSONNAGE]", { acteur: actor.name, attendu: "system.thac0 ou item classe system.progression[niveau-1].thac0", system: sys, classe: classeItem?.name, classeSystem: classeItem?.system });
+                  return false;
                 }
               }
             } else {
               thaco = add2eReadStrictNumber(sys.thac0);
               if (thaco === null) {
                 ui.notifications.error(`${actor.name} : THAC0 monstre absent. Corrige le JSON du monstre : system.thac0.`);
-                console.error("[ADD2E][ATTAQUE][THAC0][MISSING_MONSTER]", {
-                  acteur: actor.name,
-                  attendu: "system.thac0",
-                  system: sys
-                });
-                resolve(false);
-                return;
+                console.error("[ADD2E][ATTAQUE][THAC0][MISSING_MONSTER]", { acteur: actor.name, attendu: "system.thac0", system: sys });
+                return false;
               }
             }
 
-            // --- 2. BONUS ATTAQUE ---
             let bonusHit = Number(arme.system.bonus_hit || 0);
             let bonusDom = Number(arme.system.bonus_dom || 0);
             if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function") {
@@ -425,116 +322,42 @@ if (isDistanceWeapon) {
             }
             let modCaracToucher = 0;
             let modCaracDegats = 0;
-
             const combatProfile = add2eGetCombatStatProfile(arme);
             const modCaracToucherLabel = add2eAttackAbilityLabel(combatProfile.toucherCarac);
+            if (combatProfile.toucherCarac) modCaracToucher = add2eGetAttackAbilityModifier(actor, combatProfile.toucherCarac, "toucher");
+            if (combatProfile.degatsCarac) modCaracDegats = add2eGetAttackAbilityModifier(actor, combatProfile.degatsCarac, "degats");
 
-            if (combatProfile.toucherCarac) {
-              modCaracToucher = add2eGetAttackAbilityModifier(actor, combatProfile.toucherCarac, "toucher");
-            }
+            let { bonusToucheEffets, bonusDegatsEffets, bonusRacialVs, targetTags } = add2eAttackComputeActiveAttackModifiers({ actor, cible, combatProfile });
+            if (bonusDegatsEffets !== 0) console.log("[ADD2E][ATTAQUE][BONUS DEGATS VS CIBLE]", { acteur: actor.name, cible: cible?.name, targetTags: [...targetTags], bonusDegatsEffets });
 
-            if (combatProfile.degatsCarac) {
-              modCaracDegats = add2eGetAttackAbilityModifier(actor, combatProfile.degatsCarac, "degats");
-            }
-
-            let {
-              bonusToucheEffets,
-              bonusDegatsEffets,
-              bonusRacialVs,
-              targetTags
-            } = add2eAttackComputeActiveAttackModifiers({ actor, cible, combatProfile });
-
-            if (bonusDegatsEffets !== 0) {
-              console.log("[ADD2E][ATTAQUE][BONUS DEGATS VS CIBLE]", {
-                acteur: actor.name,
-                cible: cible?.name,
-                targetTags: [...targetTags],
-                bonusDegatsEffets
-              });
-            }
-
-// =======================
-// DETAIL BONUS TOUCHER
-// =======================
 let bonusDetails = [];
-
-if (modCaracToucher !== 0) {
-  bonusDetails.push({ label: "Caractéristique", value: modCaracToucher });
-}
-
-if (bonusHit !== 0) {
-  bonusDetails.push({ label: "Arme", value: bonusHit });
-}
-
-if (malusPortee !== 0) {
-  bonusDetails.push({ label: "Portée", value: malusPortee });
-}
-
-if (userBonus !== 0) {
-  bonusDetails.push({ label: "Bonus temporaire", value: userBonus });
-}
-
-if (bonusToucheEffets !== 0) {
-  bonusDetails.push({ label: "Effets actifs", value: bonusToucheEffets });
-}
-
-if (bonusRacialVs !== 0) {
-  bonusDetails.push({ label: "Bonus racial / ennemi", value: bonusRacialVs });
-}
-
-if (bonusDegatsEffets !== 0) {
-  bonusDetails.push({ label: "Bonus dégâts vs cible", value: bonusDegatsEffets });
-}
-
+if (modCaracToucher !== 0) bonusDetails.push({ label: "Caractéristique", value: modCaracToucher });
+if (bonusHit !== 0) bonusDetails.push({ label: "Arme", value: bonusHit });
+if (malusPortee !== 0) bonusDetails.push({ label: "Portée", value: malusPortee });
+if (userBonus !== 0) bonusDetails.push({ label: "Bonus temporaire", value: userBonus });
+if (bonusToucheEffets !== 0) bonusDetails.push({ label: "Effets actifs", value: bonusToucheEffets });
+if (bonusRacialVs !== 0) bonusDetails.push({ label: "Bonus racial / ennemi", value: bonusRacialVs });
+if (bonusDegatsEffets !== 0) bonusDetails.push({ label: "Bonus dégâts vs cible", value: bonusDegatsEffets });
 const bonusAttaqueSournoise = useBackstab ? 4 : 0;
-if (bonusAttaqueSournoise !== 0) {
-  bonusDetails.push({ label: "Attaque sournoise", value: bonusAttaqueSournoise });
-}
-
+if (bonusAttaqueSournoise !== 0) bonusDetails.push({ label: "Attaque sournoise", value: bonusAttaqueSournoise });
 const bonusPositionToucher = !useBackstab ? (Number(activePositionAttackAdjustment.hitBonus) || 0) : 0;
-if (bonusPositionToucher !== 0) {
-  bonusDetails.push({ label: "Position", value: bonusPositionToucher });
-}
+if (bonusPositionToucher !== 0) bonusDetails.push({ label: "Position", value: bonusPositionToucher });
+let totalBonusToucher = modCaracToucher + bonusHit + malusPortee + userBonus + bonusToucheEffets + bonusRacialVs + bonusAttaqueSournoise + bonusPositionToucher;
+let totalBonusDegats = modCaracDegats + bonusDom + (Number(bonusDegatsEffets) || 0);
 
-let totalBonusToucher =
-  modCaracToucher +
-  bonusHit +
-  malusPortee +
-  userBonus +
-  bonusToucheEffets +
-  bonusRacialVs +
-  bonusAttaqueSournoise +
-  bonusPositionToucher;
-  let totalBonusDegats = modCaracDegats + bonusDom + (Number(bonusDegatsEffets) || 0);
-
-            // --- 3. CA CIBLE ---
-            const isTouchAttack =
-              add2eTagSetHas(combatProfile.tags, "arme:toucher", "type_arme:toucher", "attaque:toucher", "attaque_speciale:toucher", "attaque_speciale:contact") ||
-              /\b(toucher|touch)\b/i.test(String(arme?.name ?? ""));
-
+            const isTouchAttack = add2eTagSetHas(combatProfile.tags, "arme:toucher", "type_arme:toucher", "attaque:toucher", "attaque_speciale:toucher", "attaque_speciale:contact") || /\b(toucher|touch)\b/i.test(String(arme?.name ?? ""));
             let sysCible = cible.system || {};
             let nomCible = cible.name;
             let tailleCible = (sysCible.taille || sysCible.size || "M").toUpperCase();
-
             let caBaseCible = null;
             let caFinaleCible = null;
             let caSourceCible = "";
-
             let caComputedDetails = null;
 
             if (cible.type === "personnage") {
               if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
-                caComputedDetails = Add2eEffectsEngine.getMagicPassiveDefense(cible, {
-                  source: "attack-roll",
-                  attacker: actor?.name,
-                  weapon: arme?.name
-                });
-                caComputedDetails.stored = {
-                  ca: sysCible.ca,
-                  armorClass: sysCible.armorClass,
-                  ca_total: sysCible.ca_total,
-                  ca_naturel: sysCible.ca_naturel
-                };
+                caComputedDetails = Add2eEffectsEngine.getMagicPassiveDefense(cible, { source: "attack-roll", attacker: actor?.name, weapon: arme?.name });
+                caComputedDetails.stored = { ca: sysCible.ca, armorClass: sysCible.armorClass, ca_total: sysCible.ca_total, ca_naturel: sysCible.ca_naturel };
                 caSourceCible = "effects-engine:magic-passive-defense";
                 caBaseCible = caComputedDetails.caTotal;
               } else {
@@ -542,20 +365,9 @@ let totalBonusToucher =
                 caSourceCible = "computed-token-scene:armor+dexDefense+shield";
                 caBaseCible = caComputedDetails.caTotal;
               }
-
-              const storedNums = Object.fromEntries(
-                Object.entries(caComputedDetails.stored).map(([k, v]) => [k, add2eReadStrictNumber(v)])
-              );
-
+              const storedNums = Object.fromEntries(Object.entries(caComputedDetails.stored).map(([k, v]) => [k, add2eReadStrictNumber(v)]));
               if (storedNums.ca_total !== null && storedNums.ca_total !== caBaseCible) {
-                console.warn("[ADD2E][ATTAQUE][CA][TOKEN_STORED_CA_STALE][V25]", {
-                  cible: nomCible,
-                  attaqueContact: isTouchAttack,
-                  caUtilisee: caBaseCible,
-                  formule: caComputedDetails,
-                  valeursStockeesSurToken: caComputedDetails.stored,
-                  note: "system.ca_total du token est ignoré car il ne correspond pas à la CA affichée/calculée."
-                });
+                console.warn("[ADD2E][ATTAQUE][CA][TOKEN_STORED_CA_STALE][V25]", { cible: nomCible, attaqueContact: isTouchAttack, caUtilisee: caBaseCible, formule: caComputedDetails, valeursStockeesSurToken: caComputedDetails.stored, note: "system.ca_total du token est ignoré car il ne correspond pas à la CA affichée/calculée." });
               }
             } else {
               caSourceCible = "system.armorClass";
@@ -564,42 +376,18 @@ let totalBonusToucher =
 
             if (caBaseCible === null) {
               ui.notifications.error(`${nomCible} : CA absente. Corrige le JSON / les données acteur : ${caSourceCible}.`);
-              console.error("[ADD2E][ATTAQUE][CA][MISSING_OR_INVALID]", {
-                cible: nomCible,
-                type: cible.type,
-                attendu: caSourceCible,
-                attaqueContact: isTouchAttack,
-                valeurs: {
-                  ca: sysCible.ca,
-                  armorClass: sysCible.armorClass,
-                  ca_total: sysCible.ca_total,
-                  ca_naturel: sysCible.ca_naturel
-                },
-                system: sysCible
-              });
-              resolve(false);
-              return;
+              console.error("[ADD2E][ATTAQUE][CA][MISSING_OR_INVALID]", { cible: nomCible, type: cible.type, attendu: caSourceCible, attaqueContact: isTouchAttack, valeurs: { ca: sysCible.ca, armorClass: sysCible.armorClass, ca_total: sysCible.ca_total, ca_naturel: sysCible.ca_naturel }, system: sysCible });
+              return false;
             }
 
             caFinaleCible = caBaseCible;
-
             const caAvantPosition = caFinaleCible;
-            if (activePositionAttackAdjustment.caAdjustment !== 0) {
-              caFinaleCible += activePositionAttackAdjustment.caAdjustment;
-            }
+            if (activePositionAttackAdjustment.caAdjustment !== 0) caFinaleCible += activePositionAttackAdjustment.caAdjustment;
 
-            // --- 4. TYPE D'ARMURE ---
             let typeArmureCible = caBaseCible;
             if (cible.items) {
-              const armurePortee = cible.items.find(i =>
-                i.type === "armure" && i.system.equipee &&
-                !i.name.toLowerCase().includes("bouclier") &&
-                !i.name.toLowerCase().includes("heaume") &&
-                !i.name.toLowerCase().includes("casque")
-              );
-              if (armurePortee && typeof armurePortee.system.ac === "number") {
-                typeArmureCible = Number(armurePortee.system.ac);
-              }
+              const armurePortee = cible.items.find(i => i.type === "armure" && i.system.equipee && !i.name.toLowerCase().includes("bouclier") && !i.name.toLowerCase().includes("heaume") && !i.name.toLowerCase().includes("casque"));
+              if (armurePortee && typeof armurePortee.system.ac === "number") typeArmureCible = Number(armurePortee.system.ac);
             }
             typeArmureCible = Math.max(2, Math.min(10, Math.round(Number(typeArmureCible))));
 
@@ -607,14 +395,10 @@ let totalBonusToucher =
             if (Array.isArray(arme.system.ajustement_ca)) {
               let idx = typeArmureCible - 2;
               if (idx < 0) idx = 0; if (idx > 8) idx = 8;
-              if (idx < arme.system.ajustement_ca.length) {
-                ajustementCA = Number(arme.system.ajustement_ca[idx]) || 0;
-              }
+              if (idx < arme.system.ajustement_ca.length) ajustementCA = Number(arme.system.ajustement_ca[idx]) || 0;
             }
 
-            // --- 5. RESOLUTION ---
             let valeurPourToucher = thaco - caFinaleCible - ajustementCA;
-
             const roll = await (new Roll("1d20")).evaluate();
             if (game.dice3d) await game.dice3d.showForRoll(roll);
             await new Promise(r => setTimeout(r, 300));
@@ -625,7 +409,6 @@ let totalBonusToucher =
             const estTouche = (d20 === 20) || (d20 !== 1 && d20 >= seuilFinalD20);
             const finalResult = estTouche;
 
-            // Dégâts
             let degats = 0;
             let degatsAvantMultiplicateur = 0;
             let formulaDegats = "1d6";
@@ -638,160 +421,31 @@ let totalBonusToucher =
               const isGrand = ["G", "L", "LARGE"].includes(tailleCible);
               let rawDmg = isGrand ? arme.system.dégâts?.contre_grand : arme.system.dégâts?.contre_moyen;
               if (!rawDmg) rawDmg = "1d6";
-
               formulaDegats = plageToRollFormula(rawDmg);
-
-              if (totalBonusDegats !== 0) {
-                formulaDegats += (totalBonusDegats > 0 ? `+${totalBonusDegats}` : `${totalBonusDegats}`);
-              }
-
+              if (totalBonusDegats !== 0) formulaDegats += (totalBonusDegats > 0 ? `+${totalBonusDegats}` : `${totalBonusDegats}`);
               const rDmg = await (new Roll(formulaDegats)).evaluate();
-
               if (game.dice3d) await game.dice3d.showForRoll(rDmg);
               await new Promise(r => setTimeout(r, 300));
-
               degatsAvantMultiplicateur = Math.max(1, rDmg.total);
-              degats = backstabMultiplier > 1
-                ? Math.max(1, degatsAvantMultiplicateur * backstabMultiplier)
-                : degatsAvantMultiplicateur;
-              detailsDegats = backstabMultiplier > 1
-                ? `${rDmg.result} × ${backstabMultiplier}`
-                : rDmg.result;
-
-              if (useAssassination) {
-                assassinatResult = await add2eRollAssassinationForAttack({
-                  actor,
-                  score: assassinationInfo.score,
-                  situational: assassinatMod
-                });
-              }
-
-              if (cible) {
-                await add2eApplyDamage({ cible, montant: degats, source: arme.name, lanceur: actor, silent: true });
-              }
+              degats = backstabMultiplier > 1 ? Math.max(1, degatsAvantMultiplicateur * backstabMultiplier) : degatsAvantMultiplicateur;
+              detailsDegats = backstabMultiplier > 1 ? `${rDmg.result} × ${backstabMultiplier}` : rDmg.result;
+              if (useAssassination) assassinatResult = await add2eRollAssassinationForAttack({ actor, score: assassinationInfo.score, situational: assassinatMod });
+              if (cible) await add2eApplyDamage({ cible, montant: degats, source: arme.name, lanceur: actor, silent: true });
             }
 
             const colorResult = finalResult ? "#2ecc71" : "#e74c3c";
             const textResult = finalResult ? "TOUCHÉ !" : "Raté.";
             const iconResult = finalResult ? "fa-check" : "fa-times";
-
             const signeBonus = totalBonusToucher >= 0 ? "+" : "";
             const calculSimple = `<b>${d20}</b> <span style="color:#888;font-size:0.8em;">(d20)</span> ${signeBonus} ${totalBonusToucher} = <b style="font-size:1.1em;">${totalAuToucher}</b>`;
 
-            let chatContent = `
-            <div class="add2e-chat-card" style="font-family:var(--font-primary); background:#fff; border:1px solid #aaa; border-radius:5px; padding:5px;">
-               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                  <div style="text-align:center;">
-                     <img src="${actor.img || 'icons/svg/mystery-man.svg'}" style="width:48px;height:48px;border-radius:5px;border:1px solid #333;">
-                     <div style="font-weight:bold; font-size:0.9em; margin-top:2px;">${actor.name}</div>
-                     <div style="font-size:0.8em; color:#666;">${arme.name}</div>
-                  </div>
-                  <div style="font-size:2em; color:#aaa;">&rarr;</div>
-                  <div style="text-align:center;">
-                     <img src="${cible.img || 'icons/svg/mystery-man.svg'}" style="width:48px;height:48px;border-radius:5px;border:1px solid #333;">
-                     <div style="font-weight:bold; font-size:0.9em; margin-top:2px;">${nomCible}</div>
-                  </div>
-               </div>
+            let chatContent = `<div class="add2e-chat-card" style="font-family:var(--font-primary); background:#fff; border:1px solid #aaa; border-radius:5px; padding:5px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><div style="text-align:center;"><img src="${actor.img || 'icons/svg/mystery-man.svg'}" style="width:48px;height:48px;border-radius:5px;border:1px solid #333;"><div style="font-weight:bold; font-size:0.9em; margin-top:2px;">${actor.name}</div><div style="font-size:0.8em; color:#666;">${arme.name}</div></div><div style="font-size:2em; color:#aaa;">&rarr;</div><div style="text-align:center;"><img src="${cible.img || 'icons/svg/mystery-man.svg'}" style="width:48px;height:48px;border-radius:5px;border:1px solid #333;"><div style="font-weight:bold; font-size:0.9em; margin-top:2px;">${nomCible}</div></div></div><div style="text-align:center; font-size:1em; margin-bottom:10px;">${actor.name} tente de frapper <b>${nomCible}</b> avec sa <b>${arme.name}</b> !</div><div style="text-align:center; color:#666; font-size:0.9em; margin-bottom:5px;">Portée: <b>${descPortee}</b> — ${typePortee}</div><div style="background:#f1f5f9; padding:8px; border-radius:5px; text-align:center; margin-bottom:10px; font-size:1.1em;"><i class="fas fa-dice-d20"></i> ${calculSimple}</div><div style="text-align:center; margin-bottom:10px;">Seuil à atteindre au d20 : <span style="font-weight:bold; color:#d35400;">${seuilFinalD20}</span></div><div style="text-align:center; margin-bottom:10px; font-size:1.4em; font-weight:bold; color:${colorResult};"><i class="fas ${iconResult}"></i> ${textResult}</div>${finalResult ? `<div style="text-align:center; border-top:1px dashed #ccc; padding-top:5px; margin-bottom:10px;"><span style="font-size:1.2em;">Dégâts : <b>${degats}</b></span><div style="font-size:0.8em; color:#7f8c8d;">(${formulaDegats} -> ${detailsDegats})</div>${useBackstab ? `<div style="font-size:0.9em;color:#7a4b00;font-weight:700;margin-top:0.25em;">Attaque sournoise : dégâts ×${backstabMultiplier}</div>` : ""}${activePositionAttackAdjustment.details.length ? `<div style="font-size:0.82em;color:#6b5a2a;font-weight:700;margin-top:0.25em;">Position : ${activePositionAttackAdjustment.details.join(" · ")}</div>` : ""}</div>` : ''}${assassinatResult ? `<div style="border:1px solid ${assassinatResult.success ? "#1f8f4d" : "#b3261e"}; background:${assassinatResult.success ? "#eefaf2" : "#fff1f0"}; border-radius:6px; padding:7px; margin-bottom:10px; text-align:center;"><div style="font-weight:900;color:${assassinatResult.success ? "#1f8f4d" : "#b3261e"};">Assassinat ${assassinatResult.success ? "réussi" : "échoué"}</div><div style="font-size:0.92em;">Jet : <b>${assassinatResult.total}</b> / Score : <b>${assassinatResult.finalScore}%</b></div><div style="font-size:0.82em;color:#666;">${assassinationInfo.breakdownTitle}${assassinatResult.situational ? ` | Situation ${assassinatResult.situational >= 0 ? "+" : ""}${assassinatResult.situational}%` : ""}</div></div>` : ""}<details style="margin-top:8px; font-size:1.05em; color:#333;"><summary style="cursor:pointer; font-weight:bold; font-size:1.1em;">Détails simples du jet</summary><div style="margin-top:8px; line-height:1.55; background:#f8fafc; border:1px solid #d0d7de; border-radius:6px; padding:8px;"><div><b>Base THAC0 :</b> ${thaco}</div><div><b>Classe d’armure cible :</b> ${caFinaleCible}${activePositionAttackAdjustment.caAdjustment ? ` <span style="color:#7a4b00;">(position : ${caAvantPosition} → ${caFinaleCible})</span>` : ""}</div>${activePositionAttackAdjustment.details.length ? `<div><b>Position :</b> ${activePositionAttackAdjustment.details.join(" ; ")}</div>` : ""}<div><b>Seuil sans modificateur :</b> ${valeurPourToucher}</div><hr style="margin:6px 0;"><div><b>Modificateur ${modCaracToucherLabel} :</b> ${modCaracToucher >= 0 ? "+" : ""}${modCaracToucher}</div><div><b>Modificateur magique arme :</b> ${bonusHit >= 0 ? "+" : ""}${bonusHit}</div><div><b>Modificateur effets actifs :</b> ${bonusToucheEffets >= 0 ? "+" : ""}${bonusToucheEffets}</div><div><b>Modificateur portée :</b> ${malusPortee >= 0 ? "+" : ""}${malusPortee} (${descPortee})</div><div><b>Modificateur temporaire :</b> ${userBonus >= 0 ? "+" : ""}${userBonus}</div>${useBackstab ? `<div><b>Attaque sournoise :</b> +4 toucher, dégâts ×${backstabMultiplier}</div>` : ""}${useAssassination ? `<div><b>Assassinat :</b> ${assassinationInfo.score}%${assassinatMod ? ` (${assassinatMod >= 0 ? "+" : ""}${assassinatMod} situation)` : ""}</div>` : ""}<div><b>Modificateur armure / arme :</b> ${ajustementCA >= 0 ? "+" : ""}${ajustementCA}</div><hr style="margin:6px 0;"><div style="font-size:1.15em;"><b>Total modificateur :</b><span style="font-weight:bold; color:#2563eb;"> ${totalBonusToucher >= 0 ? "+" : ""}${totalBonusToucher}</span></div><div style="font-size:1.15em;"><b>Seuil final au d20 :</b><span style="font-weight:bold; color:#15803d;"> ${seuilFinalD20}</span></div></div></details></div>`;
 
-               <div style="text-align:center; font-size:1em; margin-bottom:10px;">
-                  ${actor.name} tente de frapper <b>${nomCible}</b> avec sa <b>${arme.name}</b> !
-               </div>
-
-               <div style="text-align:center; color:#666; font-size:0.9em; margin-bottom:5px;">
-                  Portée: <b>${descPortee}</b> — ${typePortee}
-               </div>
-
-               <div style="background:#f1f5f9; padding:8px; border-radius:5px; text-align:center; margin-bottom:10px; font-size:1.1em;">
-                   <i class="fas fa-dice-d20"></i> ${calculSimple}
-               </div>
-
-               <div style="text-align:center; margin-bottom:10px;">
-                   Seuil à atteindre au d20 : <span style="font-weight:bold; color:#d35400;">${seuilFinalD20}</span>
-               </div>
-
-               <div style="text-align:center; margin-bottom:10px; font-size:1.4em; font-weight:bold; color:${colorResult};">
-                   <i class="fas ${iconResult}"></i> ${textResult}
-               </div>
-
-               ${finalResult ? `
-               <div style="text-align:center; border-top:1px dashed #ccc; padding-top:5px; margin-bottom:10px;">
-                   <span style="font-size:1.2em;">Dégâts : <b>${degats}</b></span>
-                   <div style="font-size:0.8em; color:#7f8c8d;">(${formulaDegats} -> ${detailsDegats})</div>
-                   ${useBackstab ? `<div style="font-size:0.9em;color:#7a4b00;font-weight:700;margin-top:0.25em;">Attaque sournoise : dégâts ×${backstabMultiplier}</div>` : ""}
-                   ${activePositionAttackAdjustment.details.length ? `<div style="font-size:0.82em;color:#6b5a2a;font-weight:700;margin-top:0.25em;">Position : ${activePositionAttackAdjustment.details.join(" · ")}</div>` : ""}
-               </div>` : ''}
-
-               ${assassinatResult ? `
-               <div style="border:1px solid ${assassinatResult.success ? "#1f8f4d" : "#b3261e"}; background:${assassinatResult.success ? "#eefaf2" : "#fff1f0"}; border-radius:6px; padding:7px; margin-bottom:10px; text-align:center;">
-                 <div style="font-weight:900;color:${assassinatResult.success ? "#1f8f4d" : "#b3261e"};">Assassinat ${assassinatResult.success ? "réussi" : "échoué"}</div>
-                 <div style="font-size:0.92em;">Jet : <b>${assassinatResult.total}</b> / Score : <b>${assassinatResult.finalScore}%</b></div>
-                 <div style="font-size:0.82em;color:#666;">${assassinationInfo.breakdownTitle}${assassinatResult.situational ? ` | Situation ${assassinatResult.situational >= 0 ? "+" : ""}${assassinatResult.situational}%` : ""}</div>
-               </div>
-               ` : ""}
-
-               <details style="margin-top:8px; font-size:1.05em; color:#333;">
-  <summary style="cursor:pointer; font-weight:bold; font-size:1.1em;">
-    Détails simples du jet
-  </summary>
-
-  <div style="margin-top:8px; line-height:1.55; background:#f8fafc; border:1px solid #d0d7de; border-radius:6px; padding:8px;">
-
-    <div><b>Base THAC0 :</b> ${thaco}</div>
-    <div><b>Classe d’armure cible :</b> ${caFinaleCible}${activePositionAttackAdjustment.caAdjustment ? ` <span style="color:#7a4b00;">(position : ${caAvantPosition} → ${caFinaleCible})</span>` : ""}</div>
-    ${activePositionAttackAdjustment.details.length ? `<div><b>Position :</b> ${activePositionAttackAdjustment.details.join(" ; ")}</div>` : ""}
-    <div><b>Seuil sans modificateur :</b> ${valeurPourToucher}</div>
-
-    <hr style="margin:6px 0;">
-
-    <div><b>Modificateur ${modCaracToucherLabel} :</b> ${modCaracToucher >= 0 ? "+" : ""}${modCaracToucher}</div>
-    <div><b>Modificateur magique arme :</b> ${bonusHit >= 0 ? "+" : ""}${bonusHit}</div>
-    <div><b>Modificateur effets actifs :</b> ${bonusToucheEffets >= 0 ? "+" : ""}${bonusToucheEffets}</div>
-    <div><b>Modificateur portée :</b> ${malusPortee >= 0 ? "+" : ""}${malusPortee} (${descPortee})</div>
-    <div><b>Modificateur temporaire :</b> ${userBonus >= 0 ? "+" : ""}${userBonus}</div>
-    ${useBackstab ? `<div><b>Attaque sournoise :</b> +4 toucher, dégâts ×${backstabMultiplier}</div>` : ""}
-    ${useAssassination ? `<div><b>Assassinat :</b> ${assassinationInfo.score}%${assassinatMod ? ` (${assassinatMod >= 0 ? "+" : ""}${assassinatMod} situation)` : ""}</div>` : ""}
-    <div><b>Modificateur armure / arme :</b> ${ajustementCA >= 0 ? "+" : ""}${ajustementCA}</div>
-
-    <hr style="margin:6px 0;">
-
-    <div style="font-size:1.15em;">
-      <b>Total modificateur :</b>
-      <span style="font-weight:bold; color:#2563eb;">
-        ${totalBonusToucher >= 0 ? "+" : ""}${totalBonusToucher}
-      </span>
-    </div>
-
-    <div style="font-size:1.15em;">
-      <b>Seuil final au d20 :</b>
-      <span style="font-weight:bold; color:#15803d;">
-        ${seuilFinalD20}
-      </span>
-    </div>
-
-  </div>
-</details>
-            </div>
-            `;
-
-            await ChatMessage.create({
-              speaker: ChatMessage.getSpeaker({ actor }),
-              content: chatContent,
-              avatar: chatImg
-            });
-
+            await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: chatContent, avatar: chatImg });
             await add2eConsumeOneUseWeaponAfterAttack(actor, arme);
-
-            resolve();
+            return true;
           }
-        },
-        cancel: { label: "Annuler" }
-      },
-      default: "ok"
-    }, {
-      width: 660,
-      classes: ["add2e", "add2e-attack-dialog"]
-    }).render(true);
-  });
+    });
 }
 
 globalThis.add2eAttackRoll = add2eAttackRoll;
