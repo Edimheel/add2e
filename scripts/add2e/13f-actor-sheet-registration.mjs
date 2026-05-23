@@ -13,15 +13,8 @@ Actors.registerSheet("add2e", globalThis.Add2eActorSheet, {
 // Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
 try { globalThis.Add2eActorSheet = globalThis.Add2eActorSheet; } catch (_e) {}
 
-// Le pont ActorSheet n'est utile que pendant le chargement des modules 13b à 13e.
-// On restaure le global d'origine juste après l'enregistrement pour éviter tout effet de bord.
-try {
-  if (globalThis.ActorSheet === globalThis.ADD2E_ACTOR_SHEET_LEGACY_BRIDGE) {
-    if (globalThis.ADD2E_ORIGINAL_ACTOR_SHEET_GLOBAL) globalThis.ActorSheet = globalThis.ADD2E_ORIGINAL_ACTOR_SHEET_GLOBAL;
-    else delete globalThis.ActorSheet;
-  }
-} catch (err) {
-  console.warn("[ADD2E][ACTOR_SHEET][APPLICATION_V2] Restauration ActorSheet impossible", err);
-}
-
+// NOTE : les modules 13b/13c/13d/13e appellent encore ActorSheet.prototype.*
+// dans leurs méthodes de prototype. Ces références sont résolues à l'exécution.
+// Le pont défini dans 13a doit donc rester disponible tant que ces méthodes
+// n'auront pas été réécrites directement vers ADD2E_ACTOR_SHEET_LEGACY_BRIDGE.
 console.log("[ADD2E][ACTOR_SHEET][REGISTERED]", globalThis.ADD2E_ACTOR_SHEET_V2_VERSION || "application-v2");
