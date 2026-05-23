@@ -22,7 +22,8 @@
 ],
   "styles": [
     "styles/add2e.css",
-    "styles/character-sheet.css"
+    "styles/character-sheet.css",
+    "styles/application-v2-character-sheet.css"
   ],
  "documentTypes": {
   "Actor": {
