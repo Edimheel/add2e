@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v5-sanctuary-card";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v6-sanctuary-normalized-save-tags";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -194,6 +194,9 @@ function add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed }) {
     const result = save?.canRoll
       ? `Jet de protection contre les sorts : <b>${add2eAttackEscapeHtml(save.total)}</b> / seuil <b>${add2eAttackEscapeHtml(save.saveVal)}</b>`
       : "Jet de protection introuvable : attaque autorisee par securite.";
+    const conclusion = save?.canRoll
+      ? (ok ? "La sauvegarde reussit : l'attaque continue." : "La sauvegarde echoue : l'attaque est annulee.")
+      : "La sauvegarde est introuvable : l'attaque continue par securite.";
 
     ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor }),
@@ -202,7 +205,7 @@ function add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed }) {
           <div style="font-weight:900;color:${color};font-size:1.05em;margin-bottom:5px;">${label}</div>
           <div><b>${actorName}</b> tente d'attaquer <b>${targetName}</b>.</div>
           <div style="margin-top:5px;">${result}</div>
-          <div style="margin-top:5px;font-weight:800;color:${color};">${ok ? "La sauvegarde reussit : l'attaque continue." : "La sauvegarde echoue : l'attaque est annulee."}</div>
+          <div style="margin-top:5px;font-weight:800;color:${color};">${conclusion}</div>
         </div>`
     });
   } catch (err) {
@@ -244,14 +247,15 @@ function add2eAttackGetSaveVsSpells(actor) {
 
   const actorTags = add2eAttackBuildActorTagSet(actor);
   for (const tag of actorTags) {
-    const match = String(tag).match(/^(jp_meme_type|jp_same_type|jp_sort|jp_sorts|save_sorts|save_spell|saving_throw|sauvegarde_sortileges|sauvegarde_sorts):(\d+)$/);
+    const normalized = String(tag);
+    const match = normalized.match(/^(jp_meme_type|jp_same_type|jp_sort|jp_sorts|save_sorts|save_spell|saving_throw|sauvegarde_sortileges|sauvegarde_sorts)(?::|_)(\d+)$/);
     if (!match) continue;
 
     const n = Number(match[2]);
     if (Number.isFinite(n) && n > 0) {
       console.log("[ADD2E][ATTAQUE][SANCTUAIRE][SAVE_FROM_TAG]", {
         acteur: actor?.name,
-        tag,
+        tag: normalized,
         saveVal: n
       });
       return n;
@@ -329,8 +333,6 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
 
   add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed: false });
 
-  // Meme chemin que Protection contre le Mal : on agit dans les modificateurs d'attaque.
-  // -999 rend l'attaque impossible ; le patch ChatMessage supprime ensuite la carte d'attaque normale.
   return {
     value: -999,
     details: [`Sanctuaire : JP rate (${save.total}/${save.saveVal}), attaque annulee`],
