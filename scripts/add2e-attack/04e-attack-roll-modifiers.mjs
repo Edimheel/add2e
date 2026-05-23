@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v4-monster-saves";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v5-sanctuary-card";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -140,6 +140,76 @@ function add2eAttackGetActiveTargetEffectTags(cible) {
   return tags;
 }
 
+function add2eAttackEscapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function add2eAttackInstallSanctuaryChatSuppressor() {
+  if (globalThis.ADD2E_SANCTUARY_CHAT_SUPPRESSOR_INSTALLED) return;
+  if (typeof ChatMessage === "undefined" || typeof ChatMessage.create !== "function") return;
+
+  const originalCreate = ChatMessage.create.bind(ChatMessage);
+
+  ChatMessage.create = async function add2eSanctuaryAwareChatCreate(data = {}, options = {}) {
+    try {
+      const ctx = globalThis.ADD2E_SANCTUARY_SUPPRESS_NEXT_ATTACK_CARD;
+      const content = String(data?.content ?? "");
+
+      if (ctx && Date.now() <= ctx.until && content.includes("tente de frapper")) {
+        const attackerOk = !ctx.attackerName || content.includes(ctx.attackerName);
+        const targetOk = !ctx.targetName || content.includes(ctx.targetName);
+
+        if (attackerOk && targetOk) {
+          console.log("[ADD2E][ATTAQUE][SANCTUAIRE][ATTACK_CARD_SUPPRESSED]", ctx);
+          globalThis.ADD2E_SANCTUARY_SUPPRESS_NEXT_ATTACK_CARD = null;
+          return null;
+        }
+      }
+    } catch (err) {
+      console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][CHAT_SUPPRESS_ERROR]", err);
+    }
+
+    return originalCreate(data, options);
+  };
+
+  globalThis.ADD2E_SANCTUARY_CHAT_SUPPRESSOR_INSTALLED = true;
+  console.log("[ADD2E][ATTAQUE][SANCTUAIRE][CHAT_SUPPRESSOR_INSTALLED]");
+}
+
+function add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed }) {
+  try {
+    if (typeof ChatMessage === "undefined" || typeof ChatMessage.create !== "function") return;
+
+    const actorName = add2eAttackEscapeHtml(actor?.name ?? "Attaquant");
+    const targetName = add2eAttackEscapeHtml(cible?.name ?? "Cible");
+    const ok = !!allowed;
+    const color = ok ? "#2f8f46" : "#b33a2e";
+    const bg = ok ? "#eefaf2" : "#fff1f0";
+    const label = ok ? "SANCTUAIRE FRANCHI" : "ATTAQUE BLOQUEE PAR SANCTUAIRE";
+    const result = save?.canRoll
+      ? `Jet de protection contre les sorts : <b>${add2eAttackEscapeHtml(save.total)}</b> / seuil <b>${add2eAttackEscapeHtml(save.saveVal)}</b>`
+      : "Jet de protection introuvable : attaque autorisee par securite.";
+
+    ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor }),
+      content: `
+        <div class="add2e-chat-card add2e-sanctuary-card" style="font-family:var(--font-primary);background:${bg};border:1px solid ${color};border-radius:8px;padding:9px;">
+          <div style="font-weight:900;color:${color};font-size:1.05em;margin-bottom:5px;">${label}</div>
+          <div><b>${actorName}</b> tente d'attaquer <b>${targetName}</b>.</div>
+          <div style="margin-top:5px;">${result}</div>
+          <div style="margin-top:5px;font-weight:800;color:${color};">${ok ? "La sauvegarde reussit : l'attaque continue." : "La sauvegarde echoue : l'attaque est annulee."}</div>
+        </div>`
+    });
+  } catch (err) {
+    console.warn("[ADD2E][ATTAQUE][SANCTUAIRE][CHAT_ERROR]", err);
+  }
+}
+
 function add2eAttackGetSaveVsSpells(actor) {
   const sys = actor?.system ?? {};
   const candidates = [
@@ -200,7 +270,8 @@ function add2eAttackRollSaveVsSpellsSync(actor, bonus = 0) {
   try {
     const formula = Number(bonus) ? `1d20${Number(bonus) >= 0 ? "+" : ""}${Number(bonus)}` : "1d20";
     const roll = new Roll(formula);
-    roll.evaluate({ async: false });
+    if (typeof roll.evaluateSync === "function") roll.evaluateSync();
+    else roll.evaluate({ async: false });
     if (game.dice3d) game.dice3d.showForRoll(roll);
     return {
       canRoll: true,
@@ -235,10 +306,12 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
       save,
       targetEffectTags: [...targetEffectTags]
     });
+    add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed: true });
     return { value: 0, details: [msg], gate: { allowed: true, save } };
   }
 
   if (save.success) {
+    add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed: true });
     return {
       value: 0,
       details: [`Sanctuaire : JP reussi (${save.total}/${save.saveVal}), attaque autorisee`],
@@ -246,8 +319,18 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
     };
   }
 
+  globalThis.ADD2E_SANCTUARY_SUPPRESS_NEXT_ATTACK_CARD = {
+    attackerName: actor?.name ?? "",
+    targetName: cible?.name ?? "",
+    until: Date.now() + 5000,
+    save,
+    reason: "sanctuary-save-failed"
+  };
+
+  add2eAttackCreateSanctuaryChat({ actor, cible, save, allowed: false });
+
   // Meme chemin que Protection contre le Mal : on agit dans les modificateurs d'attaque.
-  // -999 rend l'attaque impossible sans devoir modifier 04b ni ajouter un wrapper.
+  // -999 rend l'attaque impossible ; le patch ChatMessage supprime ensuite la carte d'attaque normale.
   return {
     value: -999,
     details: [`Sanctuaire : JP rate (${save.total}/${save.saveVal}), attaque annulee`],
@@ -255,9 +338,6 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
   };
 }
 
-// Export conserve pour evolution ulterieure : si 04-attack-roll.mjs appelle un vrai gate pre-jet,
-// cette fonction pourra annuler avant le d20. Pour l'instant, le chemin actif reste le meme que
-// Protection contre le Mal : add2eAttackComputeActiveAttackModifiers().
 export async function add2eAttackResolveTargetAttackGate({ actor, cible, source = "attack-roll" } = {}) {
   if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target" };
 
@@ -422,6 +502,8 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     targetDefensiveAttackDetails
   };
 }
+
+add2eAttackInstallSanctuaryChatSuppressor();
 
 globalThis.ADD2E_ATTACK_MODIFIERS_VERSION = ADD2E_ATTACK_MODIFIERS_VERSION;
 
