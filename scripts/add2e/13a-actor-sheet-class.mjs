@@ -1,9 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
-// Migration complète hors appv1 : la feuille personnage utilise l'API V2.
-// Les modules 13b à 13f gardent leurs méthodes legacy découpées ; un pont temporaire
-// fournit uniquement les appels V1 attendus pendant leur chargement, sans hériter d'ActorSheet V1.
+// Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-migration-v4-render-parts";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-23-application-v2-full-v1";
 
 const ADD2E_APP_API = foundry?.applications?.api ?? {};
 const ADD2E_SHEETS_API = foundry?.applications?.sheets ?? {};
@@ -22,7 +20,7 @@ function add2eAsJQuery(element) {
   return element.jquery ? element : $(element);
 }
 
-function add2eGetElementForLegacy(sheet) {
+function add2eGetElementForApplicationV2(sheet) {
   const el = sheet?.element;
   if (!el) return null;
   return el.jquery ? el[0] : el;
@@ -46,7 +44,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
   };
 
   static PARTS = {
-    form: { template: "systems/add2e/templates/actor/character-sheet.hbs" }
+    main: { template: "systems/add2e/templates/actor/character-sheet.hbs" }
   };
 
   static async _add2eSubmitForm(event, form, formData) {
@@ -83,7 +81,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
   async _onRender(context, options = {}) {
     await super._onRender?.(context, options);
-    const html = add2eAsJQuery(add2eGetElementForLegacy(this));
+    const html = add2eAsJQuery(add2eGetElementForApplicationV2(this));
     if (!html.length) return;
 
     try { this.activateListeners?.(html); }
@@ -93,16 +91,9 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     try { this._add2eActivateTab?.(this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume", html); } catch (_err) {}
   }
 
-  async _onDrop(event) { return this._add2eNativeOnDrop(event); }
-
-  async _add2eNativeOnDrop(event) {
+  async _onDrop(event) {
     event?.preventDefault?.();
     return false;
-  }
-
-  _add2eNativeActivateListeners(_html) {
-    // ApplicationV2 ne possède pas activateListeners. Les handlers ADD2E sont
-    // branchés dans 13d depuis _onRender avec un objet jQuery de compatibilité.
   }
 
   _add2eNativeGetData() {
@@ -141,28 +132,10 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
   }
 }
 
-// Pont legacy temporaire : les modules 13b/13c/13d/13e sont encore écrits
-// avec ActorSheet.prototype.*. On remplace globalThis.ActorSheet uniquement
-// pendant le chargement de ces modules. Ce pont doit rester disponible tant que
-// ces méthodes n'ont pas été réécrites pour ne plus appeler ActorSheet.prototype.
-const ADD2E_ACTOR_SHEET_LEGACY_BRIDGE = {
-  prototype: {
-    getData: async function getData() { return this._add2eNativeGetData(); },
-    activateListeners: function activateListeners(html) { return this._add2eNativeActivateListeners?.(html); },
-    render: function render(force = false, options = {}) { return this._add2eNativeRender(force, options); },
-    _onDrop: async function _onDrop(event) { return this._add2eNativeOnDrop(event); }
-  }
-};
-
 try {
   globalThis.ADD2E_ACTOR_SHEET_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
-  globalThis.ADD2E_ACTOR_SHEET_LEGACY_BRIDGE = ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
-  if (!globalThis.ADD2E_ACTOR_SHEET_ORIGINAL_GLOBAL_RECORDED) {
-    globalThis.ADD2E_ACTOR_SHEET_ORIGINAL_GLOBAL_RECORDED = true;
-    globalThis.ADD2E_ORIGINAL_ACTOR_SHEET_GLOBAL = globalThis.ActorSheet ?? null;
-  }
-  globalThis.ActorSheet = ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
   globalThis.Add2eActorSheet = Add2eActorSheet;
+  delete globalThis.ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
 } catch (_e) {}
 
-console.log("[ADD2E][ACTOR_SHEET][APPLICATION_V2]", ADD2E_ACTOR_SHEET_V2_VERSION);
+console.log("[ADD2E][ACTOR_SHEET][APPLICATION_V2_FULL]", ADD2E_ACTOR_SHEET_V2_VERSION);
