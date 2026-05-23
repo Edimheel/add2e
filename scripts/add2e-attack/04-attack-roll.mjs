@@ -49,7 +49,8 @@ async function add2eAttackOpenDialogV2({ title, content, width, classes, default
 
   if (DialogV2?.wait) {
     return await DialogV2.wait({
-      window: { title, classes: classes ?? [] },
+      window: { title },
+      classes: classes ?? [],
       position: { width: width ?? 660 },
       content,
       buttons: [
