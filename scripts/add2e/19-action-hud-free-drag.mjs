@@ -1,5 +1,5 @@
 // ADD2E — Correctif HUD : déplacement libre + repli fiable
-// Version : 2026-05-22-v10-inside-screen-bottom-anchor
+// Version : 2026-05-24-v11-combatant-priority-bottom-anchor
 //
 // Ce module complète add2e-action-hud.mjs.
 // Le repli est capturé sur pointerdown, avant les handlers click internes du HUD.
@@ -8,8 +8,9 @@
 // Le HUD ne peut plus sortir de l'écran.
 // Lors du repli/ouverture, le bas du HUD reste ancré : le panneau se replie vers le haut.
 // Le redimensionnement manuel est capturé ici pour éviter les sauts provoqués par les handlers concurrents.
+// En combat, le HUD suit toujours le combattant actif et non le token sélectionné.
 
-const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-22-v10-inside-screen-bottom-anchor";
+const ADD2E_ACTION_HUD_FREE_DRAG_VERSION = "2026-05-24-v11-combatant-priority-bottom-anchor";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_STORAGE_KEY = "add2e.actionHud.state.v8";
 const ADD2E_HUD_TAG = "[ADD2E][ACTION_HUD][FIX]";
@@ -369,12 +370,98 @@ function add2eHudFixOnResize() {
   }
 }
 
+const ADD2E_ACTION_HUD_COMBAT_PRIORITY_VERSION = "2026-05-24-v1-active-combatant-wins";
+globalThis.ADD2E_ACTION_HUD_COMBAT_PRIORITY_VERSION = ADD2E_ACTION_HUD_COMBAT_PRIORITY_VERSION;
+
+function add2eHudFixCombatantById(combat, id) {
+  if (!combat || !id) return null;
+  return combat.combatants?.get?.(id)
+    ?? combat.combatants?.find?.(c => c.id === id)
+    ?? combat.turns?.find?.(c => c.id === id)
+    ?? null;
+}
+
+function add2eHudFixCombatantByTurn(combat, turn) {
+  const index = Number(turn);
+  if (!combat || !Number.isInteger(index) || index < 0) return null;
+  return combat.turns?.[index]
+    ?? Array.from(combat.combatants ?? [])[index]
+    ?? null;
+}
+
+function add2eHudFixCurrentCombatant(combat = game.combat) {
+  if (!combat) return null;
+  const currentId = combat.current?.combatantId ?? combat.combatantId ?? null;
+  return add2eHudFixCombatantById(combat, currentId)
+    ?? combat.combatant
+    ?? add2eHudFixCombatantByTurn(combat, combat.current?.turn ?? combat.turn)
+    ?? combat.combatants?.find?.(c => c.active === true)
+    ?? null;
+}
+
+function add2eHudFixTokenFromCombatant(combatant) {
+  if (!combatant) return null;
+  try {
+    if (combatant.token?.object) return combatant.token.object;
+    if (combatant.tokenId && canvas?.tokens?.get) return canvas.tokens.get(combatant.tokenId) ?? null;
+    if (combatant.token?.id && canvas?.tokens?.get) return canvas.tokens.get(combatant.token.id) ?? null;
+  } catch (_err) {}
+  return null;
+}
+
+function add2eHudFixCanShowCombatActor(actor) {
+  if (!actor) return false;
+  const type = String(actor.type ?? "").toLowerCase();
+  if (type === "personnage") return game.user?.isGM || actor.isOwner || actor.testUserPermission?.(game.user, "OWNER");
+  if (type === "monster") return game.user?.isGM === true;
+  return false;
+}
+
+function add2eHudFixFollowCurrentCombatant(combat = game.combat, { forceOpen = false, reason = "combat-sync" } = {}) {
+  if (!combat) return false;
+  const hudExists = Boolean(add2eHudFixHud());
+  if (!forceOpen && !hudExists) return false;
+
+  const combatant = add2eHudFixCurrentCombatant(combat);
+  const actor = combatant?.actor ?? null;
+  if (!add2eHudFixCanShowCombatActor(actor)) {
+    if (hudExists && typeof globalThis.add2eCloseActionHud === "function") globalThis.add2eCloseActionHud();
+    return false;
+  }
+
+  if (typeof globalThis.add2eRenderActionHud !== "function") return false;
+  globalThis.add2eRenderActionHud(actor, add2eHudFixTokenFromCombatant(combatant));
+  const hud = add2eHudFixHud();
+  if (hud) add2eHudFixApplyState(hud);
+  console.log(`${ADD2E_HUD_TAG}[COMBATANT_PRIORITY]`, { reason, combatant: combatant?.name, actor: actor?.name });
+  return true;
+}
+
+function add2eHudFixScheduleCombatFollow(combat = game.combat, options = {}) {
+  if (!combat) return;
+  for (const delay of [80, 180, 340]) {
+    window.setTimeout(() => add2eHudFixFollowCurrentCombatant(combat, options), delay);
+  }
+}
+
+function add2eHudFixIsCombatTurnChange(changes = {}) {
+  return foundry.utils.hasProperty(changes, "turn")
+    || foundry.utils.hasProperty(changes, "round")
+    || foundry.utils.hasProperty(changes, "current")
+    || foundry.utils.hasProperty(changes, "current.turn")
+    || foundry.utils.hasProperty(changes, "current.round")
+    || foundry.utils.hasProperty(changes, "current.combatantId")
+    || foundry.utils.hasProperty(changes, "combatantId");
+}
+
 function add2eHudFixDebug() {
   const hud = add2eHudFixHud();
   const panel = add2eHudFixPanel(hud);
   const rect = hud?.getBoundingClientRect?.();
+  const combatant = add2eHudFixCurrentCombatant(game.combat);
   return {
     version: ADD2E_ACTION_HUD_FREE_DRAG_VERSION,
+    combatPriorityVersion: ADD2E_ACTION_HUD_COMBAT_PRIORITY_VERSION,
     hud: Boolean(hud),
     classes: hud ? [...hud.classList] : [],
     state: add2eHudFixReadState(),
@@ -383,22 +470,45 @@ function add2eHudFixDebug() {
     panelComputedDisplay: panel ? getComputedStyle(panel).display : null,
     activeTab: hud?.querySelector?.("[data-hud-tab].active")?.dataset?.hudTab ?? null,
     resizing: add2eHudResizing,
-    dragging: add2eHudDragging
+    dragging: add2eHudDragging,
+    combatant: combatant ? { id: combatant.id, name: combatant.name, actor: combatant.actor?.name, actorType: combatant.actor?.type } : null
   };
 }
 
 globalThis.add2eHudFixDebug = add2eHudFixDebug;
 globalThis.add2eHudForceRetract = () => add2eHudFixSetRetracted(add2eHudFixHud(), true, "console-force", { save: true, log: true });
 globalThis.add2eHudForceOpen = () => add2eHudFixSetRetracted(add2eHudFixHud(), false, "console-force", { save: true, log: true });
+globalThis.add2eHudFollowCurrentCombatant = () => add2eHudFixFollowCurrentCombatant(game.combat, { forceOpen: true, reason: "console-force" });
 
 document.addEventListener("pointerdown", add2eHudFixPointerDown, true);
 document.addEventListener("click", add2eHudFixClick, true);
+
+Hooks.on("controlToken", () => {
+  if (game.combat) add2eHudFixScheduleCombatFollow(game.combat, { reason: "controlToken-combat-lock" });
+});
+
+Hooks.on("updateCombat", (combat, changes) => {
+  if (!add2eHudFixIsCombatTurnChange(changes ?? {})) return;
+  add2eHudFixScheduleCombatFollow(combat, { forceOpen: true, reason: "updateCombat" });
+});
+
+Hooks.on("combatTurn", combat => add2eHudFixScheduleCombatFollow(combat, { forceOpen: true, reason: "combatTurn" }));
+Hooks.on("combatRound", combat => add2eHudFixScheduleCombatFollow(combat, { forceOpen: true, reason: "combatRound" }));
+Hooks.on("combatStart", combat => add2eHudFixScheduleCombatFollow(combat, { forceOpen: true, reason: "combatStart" }));
+Hooks.on("createCombatant", combatant => { if (combatant?.combat === game.combat) add2eHudFixScheduleCombatFollow(game.combat, { forceOpen: true, reason: "createCombatant" }); });
+Hooks.on("updateCombatant", combatant => { if (combatant?.combat === game.combat) add2eHudFixScheduleCombatFollow(game.combat, { forceOpen: true, reason: "updateCombatant" }); });
+Hooks.on("deleteCombatant", combatant => { if (combatant?.combat === game.combat) add2eHudFixScheduleCombatFollow(game.combat, { forceOpen: true, reason: "deleteCombatant" }); });
 
 Hooks.once("ready", () => {
   add2eHudFixInstall();
   const observer = new MutationObserver(() => add2eHudFixScheduleInstall());
   observer.observe(document.body, { childList: true, subtree: true });
   window.addEventListener("resize", add2eHudFixOnResize);
+  game.add2e = game.add2e ?? {};
+  game.add2e.actionHudFreeDragVersion = ADD2E_ACTION_HUD_FREE_DRAG_VERSION;
+  game.add2e.actionHudCombatPriorityVersion = ADD2E_ACTION_HUD_COMBAT_PRIORITY_VERSION;
+  game.add2e.followCurrentCombatantHud = globalThis.add2eHudFollowCurrentCombatant;
+  if (game.combat) add2eHudFixScheduleCombatFollow(game.combat, { forceOpen: true, reason: "ready" });
 });
 
 console.log(`${ADD2E_HUD_TAG} Module chargé`, ADD2E_ACTION_HUD_FREE_DRAG_VERSION);
