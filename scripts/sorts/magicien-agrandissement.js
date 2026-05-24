@@ -1,11 +1,12 @@
 // ADD2E — onUse Magicien : Agrandissement / Retrecissement
-// Version : 2026-05-24-magicien-agrandissement-v1
+// Version : 2026-05-24-magicien-agrandissement-v2-token-scale
 // Retour attendu : true = sort consomme, false = sort non consomme.
 
 const ADD2E_SORT_NAME = "Agrandissement";
 const ADD2E_SORT_SLUG = "agrandissement";
 const ADD2E_SORT_LEVEL = 1;
 const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][AGRANDISSEMENT]";
+const ADD2E_AGRANDISSEMENT_RULE = "Agrandissement : portee 1/2 pouce par niveau, duree 1 tour par niveau, jet de protection annule si cible non consentante. La taille, le poids et la force effective varient de 10% par niveau, jusqu'a un maximum de 50%. L'inverse, Retrecissement, reduit dans les memes proportions.";
 
 function add2eHtmlEscape(value) {
   const div = document.createElement("div");
@@ -185,14 +186,73 @@ function add2eEffectTags({ mode, level, pct, bonusAttaque, bonusDegats }) {
   return tags;
 }
 
-async function add2eApplyEffect(targetActor, { mode, level, pct, bonusAttaque, bonusDegats }) {
+function add2eRoundSize(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 1;
+  return Math.max(0.2, Math.round(n * 1000) / 1000);
+}
+
+async function add2eApplyTokenScale(targetToken, { mode, pct, effectId }) {
+  const doc = targetToken?.document;
+  if (!doc) return null;
+
+  const isShrink = mode === "retrecissement";
+  const factor = isShrink ? Math.max(0.2, 1 - (pct / 100)) : 1 + (pct / 100);
+  const oldWidth = Number(doc.width ?? 1) || 1;
+  const oldHeight = Number(doc.height ?? 1) || 1;
+  const oldScaleX = Number(doc.texture?.scaleX ?? 1) || 1;
+  const oldScaleY = Number(doc.texture?.scaleY ?? 1) || 1;
+  const gridSize = Number(canvas?.scene?.grid?.size ?? 0) || 0;
+  const newWidth = add2eRoundSize(oldWidth * factor);
+  const newHeight = add2eRoundSize(oldHeight * factor);
+  const newScaleX = add2eRoundSize(oldScaleX * factor);
+  const newScaleY = add2eRoundSize(oldScaleY * factor);
+  const updateData = {
+    width: newWidth,
+    height: newHeight,
+    "texture.scaleX": newScaleX,
+    "texture.scaleY": newScaleY,
+    "flags.add2e.agrandissement": {
+      effectId: effectId ?? null,
+      mode,
+      pct,
+      factor,
+      previous: {
+        width: oldWidth,
+        height: oldHeight,
+        scaleX: oldScaleX,
+        scaleY: oldScaleY,
+        x: Number(doc.x ?? 0) || 0,
+        y: Number(doc.y ?? 0) || 0
+      },
+      current: {
+        width: newWidth,
+        height: newHeight,
+        scaleX: newScaleX,
+        scaleY: newScaleY
+      }
+    }
+  };
+
+  if (gridSize > 0) {
+    updateData.x = Math.round((Number(doc.x ?? 0) || 0) + ((oldWidth - newWidth) * gridSize / 2));
+    updateData.y = Math.round((Number(doc.y ?? 0) || 0) + ((oldHeight - newHeight) * gridSize / 2));
+  }
+
+  await doc.update(updateData);
+  return { factor, oldWidth, oldHeight, oldScaleX, oldScaleY, newWidth, newHeight, newScaleX, newScaleY };
+}
+
+async function add2eApplyEffect(targetToken, { mode, level, pct, bonusAttaque, bonusDegats }) {
+  const targetActor = targetToken?.actor;
+  if (!targetActor) return null;
+
   const currentItem = add2eGetItem();
   const isShrink = mode === "retrecissement";
   const rounds = Math.max(10, level * 10);
   const name = isShrink ? "Retrecissement" : "Agrandissement";
   const tags = add2eEffectTags({ mode, level, pct, bonusAttaque, bonusDegats });
-
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
+  const created = await targetActor.createEmbeddedDocuments("ActiveEffect", [{
     name,
     img: currentItem?.img || "icons/svg/growth.svg",
     disabled: false,
@@ -210,7 +270,8 @@ async function add2eApplyEffect(targetActor, { mode, level, pct, bonusAttaque, b
     flags: { add2e: { tags } }
   }]);
 
-  return tags;
+  const tokenScale = await add2eApplyTokenScale(targetToken, { mode, pct, effectId: created?.[0]?.id ?? null });
+  return { tags, tokenScale, effectId: created?.[0]?.id ?? null };
 }
 
 async function add2eChat(title, html, speakerToken = null, options = {}) {
@@ -223,7 +284,7 @@ async function add2eChat(title, html, speakerToken = null, options = {}) {
   const spellImg = currentItem?.img ?? "icons/svg/book.svg";
   const targetLabel = options.targetLabel ?? casterName;
   const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? "Agrandissement : portee 1/2 pouce par niveau, duree 1 tour par niveau, jet de protection annule si cible non consentante.";
+  const rule = options.rule ?? ADD2E_AGRANDISSEMENT_RULE;
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
@@ -281,6 +342,7 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
 const applied = [];
 const resisted = [];
 const missingSave = [];
+const tokenScaled = [];
 
 for (const target of targets) {
   const targetActor = target?.actor;
@@ -306,7 +368,7 @@ for (const target of targets) {
     }
   }
 
-  await add2eApplyEffect(targetActor, {
+  const result = await add2eApplyEffect(target, {
     mode: choice.mode,
     level,
     pct,
@@ -314,6 +376,7 @@ for (const target of targets) {
     bonusDegats: choice.bonusDegats
   });
   applied.push(target.name);
+  if (result?.tokenScale) tokenScaled.push(`${target.name} x${Math.round(result.tokenScale.factor * 100) / 100}`);
 }
 
 const modeLabel = choice.mode === "retrecissement" ? "Retrecissement" : "Agrandissement";
@@ -325,13 +388,14 @@ await add2eChat(modeLabel, `
   <p><b>${add2eHtmlEscape(modeLabel)}</b> : variation temporaire de <b>${pct}%</b>.</p>
   <p>Duree : <b>${level * 10} rounds</b> (${level} tour(s)).</p>
   ${applied.length ? `<p>Effet applique : <b>${applied.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
+  ${tokenScaled.length ? `<p>Token redimensionne : <b>${tokenScaled.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
   ${resisted.length ? `<p>Jet de protection reussi, effet annule : <b>${resisted.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
   ${missingSave.length ? `<p>Jet de protection introuvable, effet non applique : <b>${missingSave.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
   ${bonusLines.length ? `<p>Modificateurs MD : <b>${bonusLines.map(add2eHtmlEscape).join(" ; ")}</b></p>` : ""}
 `, null, {
   outcome: applied.length ? "EFFET ACTIF" : "EFFET ANNULE",
   targetLabel: targets.map(t => t.name).join(", "),
-  rule: "Agrandissement : portee 1/2 pouce par niveau, duree 1 tour par niveau, jet de protection annule si cible non consentante. La variation appliquee est 10% par niveau, maximum 50%."
+  rule: ADD2E_AGRANDISSEMENT_RULE
 });
 
 return true;
