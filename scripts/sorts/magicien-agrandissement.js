@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Agrandissement / Retrecissement
-// Version : 2026-05-24-magicien-agrandissement-v2-token-scale
+// Version : 2026-05-24-magicien-agrandissement-v3-player-gm-relay
 // Retour attendu : true = sort consomme, false = sort non consomme.
 
 const ADD2E_SORT_NAME = "Agrandissement";
@@ -192,7 +192,51 @@ function add2eRoundSize(value) {
   return Math.max(0.2, Math.round(n * 1000) / 1000);
 }
 
-async function add2eApplyTokenScale(targetToken, { mode, pct, effectId }) {
+function add2eCanModifyActor(actorDoc) {
+  if (!actorDoc) return false;
+  if (game.user?.isGM) return true;
+  return !!actorDoc.isOwner || actorDoc.testUserPermission?.(game.user, "OWNER") === true;
+}
+
+function add2eCanUpdateToken(tokenDoc) {
+  if (!tokenDoc) return false;
+  if (game.user?.isGM) return true;
+  try {
+    if (typeof tokenDoc.canUserModify === "function") return tokenDoc.canUserModify(game.user, "update");
+  } catch (_err) {}
+  return false;
+}
+
+function add2eSocketPayloadForTarget(targetToken, extra = {}) {
+  return {
+    sceneId: targetToken?.document?.parent?.id ?? targetToken?.scene?.id ?? canvas?.scene?.id ?? null,
+    tokenId: targetToken?.document?.id ?? targetToken?.id ?? null,
+    actorId: targetToken?.actor?.id ?? null,
+    actorUuid: targetToken?.actor?.uuid ?? null,
+    ...extra
+  };
+}
+
+function add2eEmitGMOperation(operation, payload) {
+  if (!game.socket) {
+    ui.notifications?.error(`${ADD2E_SORT_NAME} : socket Foundry indisponible, effet non applique.`);
+    return false;
+  }
+  const activeGM = game.users?.activeGM ?? game.users?.find?.(u => u.active && u.isGM) ?? null;
+  if (!game.user?.isGM && !activeGM) {
+    ui.notifications?.error(`${ADD2E_SORT_NAME} : aucun MJ actif pour appliquer l'effet.`);
+    return false;
+  }
+  game.socket.emit("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation,
+    payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() }
+  });
+  console.log(`${ADD2E_ONUSE_TAG}[GM_RELAY_EMIT]`, { operation, payload });
+  return true;
+}
+
+function add2eBuildTokenScaleUpdate(targetToken, { mode, pct, effectId }) {
   const doc = targetToken?.document;
   if (!doc) return null;
 
@@ -202,6 +246,8 @@ async function add2eApplyTokenScale(targetToken, { mode, pct, effectId }) {
   const oldHeight = Number(doc.height ?? 1) || 1;
   const oldScaleX = Number(doc.texture?.scaleX ?? 1) || 1;
   const oldScaleY = Number(doc.texture?.scaleY ?? 1) || 1;
+  const oldX = Number(doc.x ?? 0) || 0;
+  const oldY = Number(doc.y ?? 0) || 0;
   const gridSize = Number(canvas?.scene?.grid?.size ?? 0) || 0;
   const newWidth = add2eRoundSize(oldWidth * factor);
   const newHeight = add2eRoundSize(oldHeight * factor);
@@ -222,8 +268,8 @@ async function add2eApplyTokenScale(targetToken, { mode, pct, effectId }) {
         height: oldHeight,
         scaleX: oldScaleX,
         scaleY: oldScaleY,
-        x: Number(doc.x ?? 0) || 0,
-        y: Number(doc.y ?? 0) || 0
+        x: oldX,
+        y: oldY
       },
       current: {
         width: newWidth,
@@ -235,12 +281,46 @@ async function add2eApplyTokenScale(targetToken, { mode, pct, effectId }) {
   };
 
   if (gridSize > 0) {
-    updateData.x = Math.round((Number(doc.x ?? 0) || 0) + ((oldWidth - newWidth) * gridSize / 2));
-    updateData.y = Math.round((Number(doc.y ?? 0) || 0) + ((oldHeight - newHeight) * gridSize / 2));
+    updateData.x = Math.round(oldX + ((oldWidth - newWidth) * gridSize / 2));
+    updateData.y = Math.round(oldY + ((oldHeight - newHeight) * gridSize / 2));
   }
 
-  await doc.update(updateData);
-  return { factor, oldWidth, oldHeight, oldScaleX, oldScaleY, newWidth, newHeight, newScaleX, newScaleY };
+  return { updateData, stats: { factor, newWidth, newHeight, newScaleX, newScaleY } };
+}
+
+async function add2eApplyTokenScale(targetToken, { mode, pct, effectId }) {
+  const built = add2eBuildTokenScaleUpdate(targetToken, { mode, pct, effectId });
+  if (!built) return null;
+
+  const tokenDoc = targetToken.document;
+  if (add2eCanUpdateToken(tokenDoc)) {
+    await tokenDoc.update(built.updateData);
+    return { ...built.stats, mode: "direct" };
+  }
+
+  const emitted = add2eEmitGMOperation("updateToken", add2eSocketPayloadForTarget(targetToken, {
+    updateData: built.updateData,
+    source: ADD2E_SORT_SLUG
+  }));
+
+  return emitted ? { ...built.stats, mode: "gm-relay" } : null;
+}
+
+async function add2eCreateEffectOnTarget(targetToken, effectData) {
+  const targetActor = targetToken?.actor;
+  if (!targetActor) return { created: [], mode: "missing-actor" };
+
+  if (add2eCanModifyActor(targetActor)) {
+    const created = await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+    return { created, mode: "direct" };
+  }
+
+  const emitted = add2eEmitGMOperation("createActiveEffect", add2eSocketPayloadForTarget(targetToken, {
+    effectData,
+    source: ADD2E_SORT_SLUG
+  }));
+
+  return { created: [], mode: emitted ? "gm-relay" : "failed" };
 }
 
 async function add2eApplyEffect(targetToken, { mode, level, pct, bonusAttaque, bonusDegats }) {
@@ -252,7 +332,7 @@ async function add2eApplyEffect(targetToken, { mode, level, pct, bonusAttaque, b
   const rounds = Math.max(10, level * 10);
   const name = isShrink ? "Retrecissement" : "Agrandissement";
   const tags = add2eEffectTags({ mode, level, pct, bonusAttaque, bonusDegats });
-  const created = await targetActor.createEmbeddedDocuments("ActiveEffect", [{
+  const effectData = {
     name,
     img: currentItem?.img || "icons/svg/growth.svg",
     disabled: false,
@@ -268,10 +348,22 @@ async function add2eApplyEffect(targetToken, { mode, level, pct, bonusAttaque, b
     },
     description: `${name} : variation temporaire de taille de ${pct}%. Duree ${rounds} rounds.`,
     flags: { add2e: { tags } }
-  }]);
+  };
 
-  const tokenScale = await add2eApplyTokenScale(targetToken, { mode, pct, effectId: created?.[0]?.id ?? null });
-  return { tags, tokenScale, effectId: created?.[0]?.id ?? null };
+  const effectResult = await add2eCreateEffectOnTarget(targetToken, effectData);
+  const effectId = effectResult.created?.[0]?.id ?? null;
+  const tokenScale = await add2eApplyTokenScale(targetToken, { mode, pct, effectId });
+
+  console.log(`${ADD2E_ONUSE_TAG}[APPLY_EFFECT]`, {
+    target: targetToken?.name,
+    actor: targetActor?.name,
+    effectMode: effectResult.mode,
+    tokenScaleMode: tokenScale?.mode ?? null,
+    effectId,
+    tags
+  });
+
+  return { tags, tokenScale, effectId, effectMode: effectResult.mode };
 }
 
 async function add2eChat(title, html, speakerToken = null, options = {}) {
@@ -343,6 +435,7 @@ const applied = [];
 const resisted = [];
 const missingSave = [];
 const tokenScaled = [];
+const relayed = [];
 
 for (const target of targets) {
   const targetActor = target?.actor;
@@ -377,6 +470,7 @@ for (const target of targets) {
   });
   applied.push(target.name);
   if (result?.tokenScale) tokenScaled.push(`${target.name} x${Math.round(result.tokenScale.factor * 100) / 100}`);
+  if (result?.effectMode === "gm-relay" || result?.tokenScale?.mode === "gm-relay") relayed.push(target.name);
 }
 
 const modeLabel = choice.mode === "retrecissement" ? "Retrecissement" : "Agrandissement";
@@ -389,6 +483,7 @@ await add2eChat(modeLabel, `
   <p>Duree : <b>${level * 10} rounds</b> (${level} tour(s)).</p>
   ${applied.length ? `<p>Effet applique : <b>${applied.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
   ${tokenScaled.length ? `<p>Token redimensionne : <b>${tokenScaled.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
+  ${relayed.length ? `<p>Application via relais MJ : <b>${relayed.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
   ${resisted.length ? `<p>Jet de protection reussi, effet annule : <b>${resisted.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
   ${missingSave.length ? `<p>Jet de protection introuvable, effet non applique : <b>${missingSave.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
   ${bonusLines.length ? `<p>Modificateurs MD : <b>${bonusLines.map(add2eHtmlEscape).join(" ; ")}</b></p>` : ""}
