@@ -60,6 +60,151 @@ function add2eRemoveLegacyClassSheetValidationHook() {
 
 add2eRemoveLegacyClassSheetValidationHook();
 
+// ADD2E — Feuille monstre : réenregistrement en vraie Document Sheet V2.
+// Pourquoi ici : add2e.mjs est chargé avant monster-sheet.mjs ; le hook ready permet
+// de récupérer la classe existante déjà enregistrée, puis de la réenregistrer sur
+// ActorSheetV2/DocumentSheetV2 sans créer de nouveau script ni modifier system.json.
+const ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION = "2026-05-24-monster-sheet-document-v2-reregister-v1";
+globalThis.ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION = ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION;
+
+function add2eMonsterSheetGetDocumentBase() {
+  const appApi = foundry?.applications?.api ?? {};
+  const sheetsApi = foundry?.applications?.sheets ?? {};
+  const mixin = appApi.HandlebarsApplicationMixin;
+  const base = sheetsApi.ActorSheetV2 ?? sheetsApi.DocumentSheetV2 ?? appApi.DocumentSheetV2;
+  if (!mixin || !base) return null;
+  return mixin(base);
+}
+
+function add2eMonsterSheetCandidateClass(value) {
+  if (!value) return null;
+  if (typeof value === "function" && value.name === "Add2eMonsterSheet") return value;
+  if (typeof value === "object") {
+    if (typeof value.cls === "function" && value.cls.name === "Add2eMonsterSheet") return value.cls;
+    if (typeof value.sheetClass === "function" && value.sheetClass.name === "Add2eMonsterSheet") return value.sheetClass;
+    for (const child of Object.values(value)) {
+      const found = add2eMonsterSheetCandidateClass(child);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function add2eFindRegisteredMonsterSheetClass() {
+  return add2eMonsterSheetCandidateClass(CONFIG?.Actor?.sheetClasses?.monster ?? null)
+    ?? add2eMonsterSheetCandidateClass(CONFIG?.Actor?.sheetClasses?.Actor?.monster ?? null)
+    ?? null;
+}
+
+function add2eRegisterMonsterDocumentSheetV2() {
+  const OriginalMonsterSheet = add2eFindRegisteredMonsterSheetClass();
+  const MonsterSheetBase = add2eMonsterSheetGetDocumentBase();
+  const ActorsCollection = foundry?.documents?.collections?.Actors;
+
+  if (!OriginalMonsterSheet || !MonsterSheetBase || !ActorsCollection?.registerSheet) {
+    console.warn("[ADD2E][MONSTER_SHEET_V2_FIX][SKIP] Base ou feuille monstre introuvable", {
+      version: ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION,
+      hasOriginal: Boolean(OriginalMonsterSheet),
+      hasBase: Boolean(MonsterSheetBase),
+      hasRegister: Boolean(ActorsCollection?.registerSheet)
+    });
+    return false;
+  }
+
+  if (OriginalMonsterSheet.__add2eDocumentSheetV2 === true) return true;
+
+  class Add2eMonsterDocumentSheetV2 extends MonsterSheetBase {
+    static ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION = ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION;
+    static DEFAULT_OPTIONS = {
+      id: "add2e-monster-sheet-{id}",
+      classes: ["add2e", "sheet", "actor", "monster", "add2e-monster-v2-document-sheet"],
+      tag: "form",
+      window: { title: "ADD2e Descartes (FR) - Monstre", resizable: true },
+      position: { width: 720, height: 850 },
+      form: {
+        submitOnChange: true,
+        closeOnSubmit: false,
+        handler: Add2eMonsterDocumentSheetV2._add2eSubmitForm
+      },
+      actions: {}
+    };
+
+    static PARTS = {
+      main: { template: "systems/add2e/templates/actor/monster-sheet.hbs" }
+    };
+
+    static async _add2eSubmitForm(event, form, formData) {
+      const app = this;
+      const actor = app?.actor ?? app?.document;
+      if (!actor?.update) return;
+      const expanded = foundry.utils.expandObject(formData?.object ?? {});
+      const updateData = {};
+      if (expanded.system) updateData.system = expanded.system;
+      if (typeof expanded.name === "string" && expanded.name.trim()) updateData.name = expanded.name.trim();
+      if (typeof expanded.img === "string") updateData.img = expanded.img;
+      if (expanded.flags) updateData.flags = expanded.flags;
+      if (Object.keys(updateData).length) await actor.update(updateData);
+    }
+
+    get actor() { return this.document; }
+    get object() { return this.document; }
+    get editable() { return this.document?.isOwner === true || game.user?.isGM === true; }
+
+    async _prepareContext(options = {}) {
+      const context = await this.getData(options);
+      context.actor = this.document;
+      context.object = this.document;
+      context.document = this.document;
+      context.system = this.document?.system ?? {};
+      context.items = this.document?.items ?? [];
+      context.effects = this.document?.effects ?? [];
+      context.editable = this.editable;
+      context.owner = this.document?.isOwner ?? false;
+      context.limited = this.document?.limited ?? false;
+      context.options = this.options ?? {};
+      return context;
+    }
+
+    async _preparePartContext(_partId, context, _options = {}) { return context; }
+
+    async _onRender(context, options = {}) {
+      await super._onRender?.(context, options);
+      const root = this.element;
+      if (!root) return;
+      try { this.activateListeners(root); }
+      catch (err) { console.warn("[ADD2E][MONSTER_SHEET_V2_FIX][LISTENERS]", err); }
+    }
+  }
+
+  for (const name of Object.getOwnPropertyNames(OriginalMonsterSheet.prototype)) {
+    if (["constructor", "render", "_renderHTML", "_replaceHTML"].includes(name)) continue;
+    const descriptor = Object.getOwnPropertyDescriptor(OriginalMonsterSheet.prototype, name);
+    if (descriptor) Object.defineProperty(Add2eMonsterDocumentSheetV2.prototype, name, descriptor);
+  }
+
+  Add2eMonsterDocumentSheetV2.__add2eDocumentSheetV2 = true;
+  Add2eMonsterDocumentSheetV2.__add2eOriginalMonsterSheet = OriginalMonsterSheet;
+
+  try { ActorsCollection.unregisterSheet?.("add2e", OriginalMonsterSheet, { types: ["monster"] }); }
+  catch (_err) {}
+
+  ActorsCollection.registerSheet("add2e", Add2eMonsterDocumentSheetV2, {
+    types: ["monster"],
+    makeDefault: true,
+    label: "ADD2e Descartes (FR) - Monstre"
+  });
+
+  globalThis.Add2eMonsterDocumentSheetV2 = Add2eMonsterDocumentSheetV2;
+  game.add2e = game.add2e ?? {};
+  game.add2e.monsterSheetDocumentV2FixVersion = ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION;
+  game.add2e.monsterSheetClass = Add2eMonsterDocumentSheetV2;
+
+  console.log("[ADD2E][MONSTER_SHEET_V2_FIX][REGISTERED]", ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION);
+  return true;
+}
+
+Hooks.once("ready", () => window.setTimeout(add2eRegisterMonsterDocumentSheetV2, 0));
+
 // ADD2E — Règle de liaison des tokens
 // Personnage = token lié ; Monstre = token non lié.
 const ADD2E_TOKEN_LINK_RULE_VERSION = "2026-05-24-token-link-rule-v1";
@@ -208,117 +353,4 @@ Hooks.once("ready", () => {
   globalThis.add2eMigrateTokenLinkRule = add2eMigrateTokenLinkRule;
 
   if (game.user?.isGM) window.setTimeout(() => add2eMigrateTokenLinkRule().catch(() => null), 500);
-});
-
-// ADD2E — HUD maison : suivi du combattant actif
-// Le HUD suit maintenant aussi les changements Foundry V13 stockés dans combat.current.
-const ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION = "2026-05-24-action-hud-combat-turn-sync-v2-current";
-globalThis.ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION = ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION;
-
-function add2eCombatHudElement() {
-  return document.getElementById("add2e-action-hud");
-}
-
-function add2eCombatHudCombatantById(combat, id) {
-  if (!combat || !id) return null;
-  return combat.combatants?.get?.(id)
-    ?? combat.combatants?.find?.(c => c.id === id)
-    ?? combat.turns?.find?.(c => c.id === id)
-    ?? null;
-}
-
-function add2eCombatHudCombatantByTurn(combat, turn) {
-  const index = Number(turn);
-  if (!combat || !Number.isInteger(index) || index < 0) return null;
-  return combat.turns?.[index]
-    ?? Array.from(combat.combatants ?? [])[index]
-    ?? null;
-}
-
-function add2eCombatHudCurrentCombatant(combat = game.combat) {
-  if (!combat) return null;
-
-  const currentId = combat.current?.combatantId ?? combat.combatantId ?? null;
-  return add2eCombatHudCombatantById(combat, currentId)
-    ?? combat.combatant
-    ?? add2eCombatHudCombatantByTurn(combat, combat.current?.turn ?? combat.turn)
-    ?? combat.combatants?.find?.(c => c.active === true)
-    ?? null;
-}
-
-function add2eCombatHudTokenFromCombatant(combatant) {
-  if (!combatant) return null;
-  try {
-    if (combatant.token?.object) return combatant.token.object;
-    if (combatant.tokenId && canvas?.tokens?.get) return canvas.tokens.get(combatant.tokenId) ?? null;
-    if (combatant.token?.id && canvas?.tokens?.get) return canvas.tokens.get(combatant.token.id) ?? null;
-  } catch (_err) {}
-  return null;
-}
-
-function add2eCombatHudCanShowActor(actor) {
-  if (!actor) return false;
-  const type = String(actor.type ?? "").toLowerCase();
-  if (type === "personnage") return game.user.isGM || actor.isOwner || actor.testUserPermission?.(game.user, "OWNER");
-  if (type === "monster") return game.user.isGM;
-  return false;
-}
-
-function add2eCombatHudFollowCurrent(combat = game.combat, { forceOpen = false } = {}) {
-  const hudExists = !!add2eCombatHudElement();
-  if (!forceOpen && !hudExists) return false;
-
-  const combatant = add2eCombatHudCurrentCombatant(combat);
-  const actor = combatant?.actor ?? null;
-  if (!add2eCombatHudCanShowActor(actor)) {
-    if (hudExists) globalThis.add2eCloseActionHud?.();
-    return false;
-  }
-
-  if (typeof globalThis.add2eRenderActionHud !== "function") return false;
-  globalThis.add2eRenderActionHud(actor, add2eCombatHudTokenFromCombatant(combatant));
-  return true;
-}
-
-function add2eCombatHudScheduleFollow(combat = game.combat, options = {}) {
-  window.setTimeout(() => add2eCombatHudFollowCurrent(combat, options), 60);
-  window.setTimeout(() => add2eCombatHudFollowCurrent(combat, options), 180);
-}
-
-function add2eCombatHudIsTurnChange(changes = {}) {
-  return foundry.utils.hasProperty(changes, "turn")
-    || foundry.utils.hasProperty(changes, "round")
-    || foundry.utils.hasProperty(changes, "current")
-    || foundry.utils.hasProperty(changes, "current.turn")
-    || foundry.utils.hasProperty(changes, "current.round")
-    || foundry.utils.hasProperty(changes, "current.combatantId")
-    || foundry.utils.hasProperty(changes, "combatantId");
-}
-
-Hooks.on("updateCombat", (combat, changes) => {
-  if (!add2eCombatHudIsTurnChange(changes ?? {})) return;
-  add2eCombatHudScheduleFollow(combat);
-});
-
-Hooks.on("combatTurn", combat => add2eCombatHudScheduleFollow(combat));
-Hooks.on("combatRound", combat => add2eCombatHudScheduleFollow(combat));
-Hooks.on("combatStart", combat => add2eCombatHudScheduleFollow(combat));
-
-Hooks.on("createCombatant", combatant => {
-  if (combatant?.combat === game.combat) add2eCombatHudScheduleFollow(game.combat);
-});
-
-Hooks.on("updateCombatant", combatant => {
-  if (combatant?.combat === game.combat) add2eCombatHudScheduleFollow(game.combat);
-});
-
-Hooks.on("deleteCombatant", combatant => {
-  if (combatant?.combat === game.combat) add2eCombatHudScheduleFollow(game.combat);
-});
-
-Hooks.once("ready", () => {
-  globalThis.add2eHudFollowCurrentCombatant = () => add2eCombatHudFollowCurrent(game.combat, { forceOpen: true });
-  game.add2e = game.add2e ?? {};
-  game.add2e.actionHudCombatSyncVersion = ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION;
-  game.add2e.followCurrentCombatantHud = globalThis.add2eHudFollowCurrentCombatant;
 });
