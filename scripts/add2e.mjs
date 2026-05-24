@@ -31,6 +31,35 @@ import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/19-action-hud-free-drag.mjs";
 import "./add2e/20-session-xp.mjs";
 
+// ADD2E — neutralisation du contrôle legacy qui instancie ItemSheet V1 au démarrage.
+function add2eRemoveLegacyClassSheetValidationHook() {
+  const stores = [Hooks.events, Hooks._hooks].filter(Boolean);
+  for (const store of stores) {
+    const readyHooks = store.ready;
+    if (!Array.isArray(readyHooks)) continue;
+
+    for (let i = readyHooks.length - 1; i >= 0; i--) {
+      const hook = readyHooks[i];
+      const fn = hook?.fn ?? hook;
+      if (typeof fn !== "function") continue;
+
+      let source = "";
+      try { source = Function.prototype.toString.call(fn); }
+      catch (_e) { source = ""; }
+
+      if (
+        source.includes("Contrôle Item.classe") &&
+        source.includes("exampleWorldClassSheet") &&
+        source.includes("exampleEmbeddedClassSheet")
+      ) {
+        readyHooks.splice(i, 1);
+      }
+    }
+  }
+}
+
+add2eRemoveLegacyClassSheetValidationHook();
+
 // ADD2E — Règle de liaison des tokens
 // Personnage = token lié ; Monstre = token non lié.
 const ADD2E_TOKEN_LINK_RULE_VERSION = "2026-05-24-token-link-rule-v1";
