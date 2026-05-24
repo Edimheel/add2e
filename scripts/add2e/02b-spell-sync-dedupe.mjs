@@ -4,7 +4,6 @@
 
 const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-05-19-spell-sync-dedupe-v3-name-level-cleanup";
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
-console.log("[ADD2E][SPELL_SYNC_DEDUPE][VERSION]", ADD2E_SPELL_SYNC_DEDUPE_VERSION);
 
 const ADD2E_SPELL_SYNC_DEDUPE_RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set
   ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING
@@ -38,8 +37,6 @@ function add2eSpellDedupeKey(itemLike) {
   const name = add2eSpellDedupeNormalize(itemLike?.name ?? sys.nom ?? sys.name ?? "");
   const level = add2eSpellDedupeLevel(sys);
 
-  // Clé volontairement simple : sur une fiche d'acteur, un même sort ne doit pas exister deux fois
-  // uniquement parce que les champs spellLists/classe sont différents ou incomplets après import.
   if (!name) return "";
   return `${level}|${name}`;
 }
@@ -50,8 +47,6 @@ function add2eSpellDedupeSortWeight(item) {
   const source = String(item?._stats?.compendiumSource ?? item?.flags?.core?.sourceId ?? "");
   const created = Number(item?._stats?.createdTime ?? 0) || 0;
 
-  // On garde de préférence la copie préparée, puis celle avec image, puis celle liée à un compendium,
-  // puis la plus ancienne pour stabiliser le résultat.
   return [prepared > 0 ? 0 : 1, hasImg ? 0 : 1, source ? 0 : 1, created || Number.MAX_SAFE_INTEGER];
 }
 
@@ -78,38 +73,14 @@ async function add2eSafeDeleteDuplicateActorSpellIds(actor, ids, reason = "manua
   const existingIds = uniqueIds.filter(id => actor.items?.get?.(id));
   const missingIds = uniqueIds.filter(id => !actor.items?.get?.(id));
 
-  if (missingIds.length) {
-    console.warn("[ADD2E][SPELL_SYNC_DEDUPE][MISSING_SKIPPED] Sorts déjà absents, suppression ignorée", {
-      actor: actor?.name,
-      reason,
-      count: missingIds.length,
-      ids: missingIds
-    });
-  }
-
   if (!existingIds.length) {
     return { deleted: 0, skippedMissing: missingIds.length, requested: uniqueIds.length };
   }
-
-  console.warn("[ADD2E][SPELL_SYNC_DEDUPE][DELETE] Suppression de sorts doublons", {
-    actor: actor.name,
-    reason,
-    count: existingIds.length,
-    ids: existingIds
-  });
 
   try {
     await actor.deleteEmbeddedDocuments("Item", existingIds, { add2eInternal: true, add2eDedupe: true });
     return { deleted: existingIds.length, skippedMissing: missingIds.length, requested: uniqueIds.length };
   } catch (err) {
-    const msg = String(err?.message ?? err ?? "");
-    console.warn("[ADD2E][SPELL_SYNC_DEDUPE][BULK_DELETE_FAILED] Suppression groupée échouée, fallback un par un", {
-      actor: actor?.name,
-      reason,
-      message: msg,
-      ids: existingIds
-    });
-
     let deleted = 0;
     let skippedMissing = missingIds.length;
 
@@ -117,11 +88,6 @@ async function add2eSafeDeleteDuplicateActorSpellIds(actor, ids, reason = "manua
       const item = actor.items?.get?.(id);
       if (!item) {
         skippedMissing += 1;
-        console.warn("[ADD2E][SPELL_SYNC_DEDUPE][FALLBACK_MISSING] Sort déjà absent", {
-          actor: actor?.name,
-          reason,
-          id
-        });
         continue;
       }
 
@@ -130,26 +96,11 @@ async function add2eSafeDeleteDuplicateActorSpellIds(actor, ids, reason = "manua
         deleted += 1;
       } catch (oneErr) {
         const oneMsg = String(oneErr?.message ?? oneErr ?? "");
-        if (oneMsg.includes("does not exist")) {
-          skippedMissing += 1;
-          console.warn("[ADD2E][SPELL_SYNC_DEDUPE][FALLBACK_ALREADY_GONE] Sort déjà supprimé", {
-            actor: actor?.name,
-            reason,
-            id
-          });
-          continue;
-        }
-
-        console.error("[ADD2E][SPELL_SYNC_DEDUPE][FALLBACK_DELETE_ERROR] Suppression impossible", {
-          actor: actor?.name,
-          reason,
-          id,
-          error: oneErr
-        });
+        if (oneMsg.includes("does not exist")) skippedMissing += 1;
       }
     }
 
-    return { deleted, skippedMissing, requested: uniqueIds.length };
+    return { deleted, skippedMissing, requested: uniqueIds.length, error: String(err?.message ?? err ?? "") };
   }
 }
 
@@ -157,13 +108,7 @@ async function add2eRemoveDuplicateActorSpells(actor, reason = "manual") {
   if (!actor || actor.type !== "personnage") return { deleted: 0 };
 
   const runKey = add2eSpellDedupeRunKey(actor);
-  if (ADD2E_SPELL_SYNC_DEDUPE_RUNNING.has(runKey)) {
-    console.debug("[ADD2E][SPELL_SYNC_DEDUPE][SKIP_RUNNING] Nettoyage déjà en cours", {
-      actor: actor.name,
-      reason
-    });
-    return { deleted: 0, skippedRunning: true };
-  }
+  if (ADD2E_SPELL_SYNC_DEDUPE_RUNNING.has(runKey)) return { deleted: 0, skippedRunning: true };
 
   ADD2E_SPELL_SYNC_DEDUPE_RUNNING.add(runKey);
 
@@ -179,18 +124,10 @@ async function add2eRemoveDuplicateActorSpells(actor, reason = "manual") {
 
     const toDelete = [];
 
-    for (const [key, spells] of byKey.entries()) {
+    for (const spells of byKey.values()) {
       if (spells.length < 2) continue;
       const sorted = [...spells].sort(add2eSpellDedupeCompareKeep);
-      const keep = sorted[0];
       const duplicates = sorted.slice(1);
-      console.warn("[ADD2E][SPELL_SYNC_DEDUPE][DUPLICATE_GROUP]", {
-        actor: actor.name,
-        reason,
-        key,
-        keep: { id: keep.id, name: keep.name, img: keep.img },
-        delete: duplicates.map(s => ({ id: s.id, name: s.name, img: s.img, ecole: add2eSpellDedupeSchool(s.system) }))
-      });
       toDelete.push(...duplicates.map(s => s.id));
     }
 
@@ -219,7 +156,6 @@ async function add2eRemoveDuplicateSpellsEverywhere(reason = "manual-all-actors"
     results.push({ actor: actor.name, ...result });
   }
 
-  console.warn("[ADD2E][SPELL_SYNC_DEDUPE][ALL_ACTORS_DONE]", { actors, deleted, results });
   ui.notifications?.info?.(`ADD2E : nettoyage terminé (${deleted} sort(s) doublon(s) supprimé(s)).`);
   return { actors, deleted, results };
 }
@@ -234,15 +170,12 @@ function add2eInstallSpellSyncDedupeWrapper() {
     try {
       const cleanup = await add2eRemoveDuplicateActorSpells(actor, `sync-${options?.mode || "replace"}`);
       if (cleanup.deleted > 0) result.deleted = (Number(result.deleted) || 0) + cleanup.deleted;
-    } catch (err) {
-      console.warn("[ADD2E][SPELL_SYNC_DEDUPE][ERROR] Nettoyage post-sync impossible", err);
-    }
+    } catch (_err) {}
     return result;
   };
 
   wrapped._add2eDedupeWrapped = true;
   globalThis.add2eSyncActorSpellsFromClass = wrapped;
-  console.log("[ADD2E][SPELL_SYNC_DEDUPE] Wrapper add2eSyncActorSpellsFromClass installé.");
   return true;
 }
 
