@@ -103,7 +103,6 @@ Hooks.on("deleteItem", async (item, options, userId) => {
 });
 // =========================================================
 // ADD2E — RELAIS MJ GÉNÉRIQUE POUR LES SCRIPTS DE SORTS
-// À placer tout en bas de scripts/add2e.mjs
 // Ne contient aucune logique spécifique à un sort.
 // =========================================================
 Hooks.once("ready", () => {
@@ -143,6 +142,102 @@ Hooks.once("ready", () => {
     }
 
     return null;
+  }
+
+  function add2eRelayArray(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.flatMap(add2eRelayArray).filter(Boolean);
+    if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
+    return [value];
+  }
+
+  function add2eRelayNormalize(value) {
+    return String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[’']/g, "")
+      .replace(/[\s\-]+/g, "_")
+      .replace(/_+/g, "_");
+  }
+
+  function readHpMax(actorDoc) {
+    const sys = actorDoc?.system ?? {};
+    return Number(sys.points_de_coup)
+      || Number(sys.pv_max)
+      || Number(sys.points_de_vie)
+      || Number(sys.hp?.max)
+      || Number(sys.attributes?.hp?.max)
+      || 0;
+  }
+
+  function readHpCurrent(actorDoc, max = 0) {
+    const sys = actorDoc?.system ?? {};
+    for (const raw of [sys.pdv, sys.pv, sys.hp?.value, sys.attributes?.hp?.value]) {
+      if (raw === undefined || raw === null || raw === "") continue;
+      const n = Number(raw);
+      if (Number.isFinite(n)) return n;
+    }
+    return Number(max) || 0;
+  }
+
+  async function applyDamage(payload) {
+    const targetActor = await resolveActor(payload);
+    if (!targetActor) {
+      console.warn("[ADD2E][GM-RELAY][applyDamage] acteur introuvable :", payload);
+      return;
+    }
+
+    const amount = Math.abs(Number(payload.montant) || 0);
+    if (!amount) return;
+    const isHeal = String(payload.type ?? "").toLowerCase().includes("soin") || Number(payload.montant) < 0;
+    const max = readHpMax(targetActor);
+    const current = readHpCurrent(targetActor, max);
+    const next = isHeal ? Math.min(max || current + amount, current + amount) : current - amount;
+
+    console.log("[ADD2E][GM-RELAY][applyDamage] update :", {
+      actor: targetActor.name,
+      type: payload.type,
+      montant: payload.montant,
+      current,
+      max,
+      next,
+      details: payload.details
+    });
+
+    await targetActor.update({ "system.pdv": next }, { add2eReason: "gm-relay-apply-damage", add2eDetails: payload.details });
+  }
+
+  async function deleteActiveEffects(payload) {
+    const targetActor = await resolveActor(payload);
+    if (!targetActor) {
+      console.warn("[ADD2E][GM-RELAY][deleteActiveEffects] acteur introuvable :", payload);
+      return;
+    }
+
+    const ids = new Set(add2eRelayArray(payload.effectIds).filter(Boolean));
+    const tagNorms = add2eRelayArray(payload.tags).map(add2eRelayNormalize);
+    const nameNorms = add2eRelayArray(payload.names).map(add2eRelayNormalize);
+
+    if (tagNorms.length || nameNorms.length) {
+      for (const effect of targetActor.effects ?? []) {
+        const tags = add2eRelayArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(add2eRelayNormalize);
+        const name = add2eRelayNormalize(effect.name);
+        if (tagNorms.some(t => tags.includes(t)) || nameNorms.some(n => name.includes(n))) ids.add(effect.id);
+      }
+    }
+
+    const finalIds = [...ids].filter(Boolean);
+    if (!finalIds.length) return;
+
+    console.log("[ADD2E][GM-RELAY][deleteActiveEffects] suppression :", {
+      actor: targetActor.name,
+      ids: finalIds,
+      tags: payload.tags,
+      names: payload.names
+    });
+
+    await targetActor.deleteEmbeddedDocuments("ActiveEffect", finalIds);
   }
 
   function findAmbientLight(scene, payload) {
@@ -200,140 +295,48 @@ Hooks.once("ready", () => {
 
   game.socket.on("system.add2e", async data => {
     console.log("[ADD2E SOCKET][RECU]", {
-  user: game.user.name,
-  isGM: game.user.isGM,
-  data
-});
-    // -----------------------------------------------------
-    // Appliquer un ActiveEffect sur un acteur cible
-    // IMPORTANT : ce bloc doit rester tout en haut du socket,
-    // juste après le log [ADD2E SOCKET][RECU].
-    // -----------------------------------------------------
+      user: game.user.name,
+      isGM: game.user.isGM,
+      data
+    });
+
+    // Compatibilité legacy : ancien protocole direct applyActiveEffect.
     if (data.type === "applyActiveEffect") {
       if (!game.user.isGM) return;
-
-      console.log("[ADD2E SOCKET][applyActiveEffect][START]", data);
-
-      let targetActor = null;
-
-      // 1. UUID complet Actor / ActorDelta / Token Actor
-      if (data.actorUuid) {
-        try {
-          const doc = await fromUuid(data.actorUuid);
-
-          console.log("[ADD2E SOCKET][applyActiveEffect][fromUuid]", {
-            actorUuid: data.actorUuid,
-            documentName: doc?.documentName,
-            name: doc?.name,
-            uuid: doc?.uuid,
-            doc
-          });
-
-          if (doc?.documentName === "Actor") {
-            targetActor = doc;
-          }
-          else if (doc?.documentName === "ActorDelta") {
-            targetActor = doc.parent?.actor ?? null;
-          }
-        } catch (e) {
-          console.warn("[ADD2E SOCKET][applyActiveEffect] actorUuid invalide :", data.actorUuid, e);
-        }
-      }
-
-      // 2. Scène + token
-      if (!targetActor && data.sceneId && data.tokenId) {
-        const scene = game.scenes.get(data.sceneId);
-        const tokenDoc = scene?.tokens?.get(data.tokenId);
-
-        console.log("[ADD2E SOCKET][applyActiveEffect][sceneToken]", {
-          sceneId: data.sceneId,
-          tokenId: data.tokenId,
-          sceneName: scene?.name,
-          tokenName: tokenDoc?.name,
-          tokenActor: tokenDoc?.actor
-        });
-
-        if (tokenDoc?.actor) {
-          targetActor = tokenDoc.actor;
-        }
-      }
-
-      // 3. Token actif sur canvas
-      if (!targetActor && data.tokenId && canvas?.tokens) {
-        const token = canvas.tokens.get(data.tokenId);
-
-        console.log("[ADD2E SOCKET][applyActiveEffect][canvasToken]", {
-          tokenId: data.tokenId,
-          tokenName: token?.name,
-          tokenActor: token?.actor
-        });
-
-        if (token?.actor) {
-          targetActor = token.actor;
-        }
-      }
-
-      // 4. Acteur monde lié
-      if (!targetActor && data.actorId) {
-        targetActor = game.actors.get(data.actorId);
-
-        console.log("[ADD2E SOCKET][applyActiveEffect][worldActor]", {
-          actorId: data.actorId,
-          actor: targetActor
-        });
-      }
-
+      const targetActor = await resolveActor(data);
       if (!targetActor) {
         console.warn("[ADD2E SOCKET][applyActiveEffect] ACTEUR CIBLE INTROUVABLE", data);
         return;
       }
-
       const effectData = foundry.utils.deepClone(data.effectData || {});
-
       if (!effectData.name && effectData.label) effectData.name = effectData.label;
       if (!effectData.label && effectData.name) effectData.label = effectData.name;
-
       effectData.flags ??= {};
       effectData.flags.add2e ??= {};
       effectData.flags.add2e.appliedBySocket = true;
       effectData.flags.add2e.appliedByGM = game.user.id;
       effectData.flags.add2e.appliedAt = Date.now();
-
-      console.log("[ADD2E SOCKET][applyActiveEffect] APPLICATION SUR ACTEUR", {
-        actorName: targetActor.name,
-        actorId: targetActor.id,
-        actorUuid: targetActor.uuid,
-        actorDocumentName: targetActor.documentName,
-        effectData
-      });
-
-      try {
-        const created = await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
-
-        console.log("[ADD2E SOCKET][applyActiveEffect] EFFET CRÉÉ", {
-          actor: targetActor.name,
-          created
-        });
-      } catch (e) {
-        console.error("[ADD2E SOCKET][applyActiveEffect] ERREUR CREATE ActiveEffect", {
-          actor: targetActor,
-          effectData,
-          error: e
-        });
-      }
-
+      await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
       return;
     }
+
     if (!data || data.type !== "ADD2E_GM_OPERATION") return;
     if (!isResponsibleGM()) return;
 
     const operation = data.operation;
     const payload = data.payload ?? {};
 
-    console.log("[ADD2E][GM-RELAY] opération reçue :", {
-      operation,
-      payload
-    });
+    console.log("[ADD2E][GM-RELAY] opération reçue :", { operation, payload });
+
+    if (operation === "applyDamage") {
+      await applyDamage(payload);
+      return;
+    }
+
+    if (operation === "deleteActiveEffects") {
+      await deleteActiveEffects(payload);
+      return;
+    }
 
     // -----------------------------------------------------
     // Créer une lumière ambiante
