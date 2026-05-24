@@ -81,17 +81,11 @@ async function add2eMigrateTokenLinkRule({ force = false } = {}) {
 
   const settingKey = "tokenLinkRuleMigrationVersion";
   const current = game.settings.get("add2e", settingKey);
-  if (!force && current === ADD2E_TOKEN_LINK_RULE_VERSION) {
-    console.log("[ADD2E][TOKEN_LINK][MIGRATE][SKIP]", { version: ADD2E_TOKEN_LINK_RULE_VERSION });
-    return { skipped: "already-done", version: ADD2E_TOKEN_LINK_RULE_VERSION };
-  }
+  if (!force && current === ADD2E_TOKEN_LINK_RULE_VERSION) return { skipped: "already-done", version: ADD2E_TOKEN_LINK_RULE_VERSION };
 
   const actorUpdates = [];
   for (const actor of game.actors ?? []) {
-    const changed = await add2eEnforceActorPrototype(actor).catch(err => {
-      console.warn("[ADD2E][TOKEN_LINK][ACTOR][ERROR]", actor?.name, err);
-      return false;
-    });
+    const changed = await add2eEnforceActorPrototype(actor).catch(() => false);
     if (changed) actorUpdates.push({ id: actor.id, name: actor.name, type: actor.type, actorLink: actor.prototypeToken?.actorLink });
   }
 
@@ -104,15 +98,12 @@ async function add2eMigrateTokenLinkRule({ force = false } = {}) {
     }
     if (!updates.length) continue;
 
-    await scene.updateEmbeddedDocuments("Token", updates, { add2eReason: "token-link-rule-scene-migration" })
-      .catch(err => console.warn("[ADD2E][TOKEN_LINK][SCENE][ERROR]", scene?.name, err));
+    await scene.updateEmbeddedDocuments("Token", updates, { add2eReason: "token-link-rule-scene-migration" }).catch(() => null);
     sceneUpdates.push({ id: scene.id, name: scene.name, count: updates.length });
   }
 
   await game.settings.set("add2e", settingKey, ADD2E_TOKEN_LINK_RULE_VERSION);
-  const result = { version: ADD2E_TOKEN_LINK_RULE_VERSION, actorUpdates, sceneUpdates };
-  console.log("[ADD2E][TOKEN_LINK][MIGRATE][DONE]", result);
-  return result;
+  return { version: ADD2E_TOKEN_LINK_RULE_VERSION, actorUpdates, sceneUpdates };
 }
 
 function add2eAuditTokenLinkRule() {
@@ -133,8 +124,6 @@ function add2eAuditTokenLinkRule() {
       });
     }
   }
-  console.table(rows);
-  console.log("[ADD2E][TOKEN_LINK][AUDIT]", rows);
   return rows;
 }
 
@@ -157,7 +146,7 @@ Hooks.on("preCreateActor", actor => {
 
 Hooks.on("createActor", actor => {
   if (!game.user?.isGM) return;
-  add2eEnforceActorPrototype(actor).catch(err => console.warn("[ADD2E][TOKEN_LINK][CREATE_ACTOR][ERROR]", actor?.name, err));
+  add2eEnforceActorPrototype(actor).catch(() => null);
 });
 
 Hooks.on("preCreateToken", tokenDoc => {
@@ -189,9 +178,7 @@ Hooks.once("ready", () => {
   globalThis.add2eAuditTokenLinkRule = add2eAuditTokenLinkRule;
   globalThis.add2eMigrateTokenLinkRule = add2eMigrateTokenLinkRule;
 
-  if (game.user?.isGM) {
-    window.setTimeout(() => add2eMigrateTokenLinkRule().catch(err => console.warn("[ADD2E][TOKEN_LINK][MIGRATE][ERROR]", err)), 500);
-  }
+  if (game.user?.isGM) window.setTimeout(() => add2eMigrateTokenLinkRule().catch(() => null), 500);
 });
 
 // ADD2E — HUD maison : suivi du combattant actif
@@ -264,5 +251,4 @@ Hooks.once("ready", () => {
   game.add2e = game.add2e ?? {};
   game.add2e.actionHudCombatSyncVersion = ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION;
   game.add2e.followCurrentCombatantHud = globalThis.add2eHudFollowCurrentCombatant;
-  console.log("[ADD2E][ACTION_HUD][COMBAT_SYNC]", ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION);
 });
