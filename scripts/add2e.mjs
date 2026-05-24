@@ -31,6 +31,7 @@ import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/19-action-hud-free-drag.mjs";
 import "./add2e/20-session-xp.mjs";
 import "./add2e/21-session-xp-v13-fix.mjs";
+import "./add2e/22-session-xp-ui-v2.mjs";
 
 // ADD2E — HUD maison : suivi du combattant actif
 // Pas de nouveau fichier : ce patch complète les scripts HUD existants chargés ci-dessus.
