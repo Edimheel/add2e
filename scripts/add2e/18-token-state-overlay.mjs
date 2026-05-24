@@ -1,31 +1,90 @@
-// ADD2E — Overlay plein token pour inconscience et mort
-// Version : 2026-05-24-v2-no-deprecated-token-status-apis
+// ADD2E — Icônes d'état façon DnD5e pour Mort et Inconscient
+// Version : 2026-05-24-dnd5e-style-status-icons-v1
+//
+// Principe repris du système DnD5e :
+// - Inconscient est un état/condition avec sa propre icône.
+// - Mort est un statut séparé avec le special DEFEATED.
+// - Les icônes sont gérées par CONFIG.statusEffects et actor.toggleStatusEffect.
+// - Pas d'overlay PIXI plein token, pas d'accès déprécié TokenDocument#effects / overlayEffect.
 
-const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-24-v2-no-deprecated-token-status-apis";
+const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-24-dnd5e-style-status-icons-v1";
 globalThis.ADD2E_TOKEN_STATE_OVERLAY_VERSION = ADD2E_TOKEN_STATE_OVERLAY_VERSION;
 
-const ADD2E_STATE_OVERLAY = {
+globalThis.ADD2E_TOKEN_STATUS_ICON_VERSION = ADD2E_TOKEN_STATE_OVERLAY_VERSION;
+
+const ADD2E_STATUS_EFFECTS = {
   dead: {
-    priority: 20,
-    label: "Mort",
-    iconIds: ["dead", "mort"],
-    fallbackIcon: "icons/svg/skull.svg",
-    namePattern: /\b(dead|mort|decede|décédé)\b/i,
-    tint: 0xffffff,
-    alpha: 0.88
+    id: "dead",
+    name: "Mort",
+    img: "icons/svg/skull.svg",
+    icon: "icons/svg/skull.svg",
+    special: "DEFEATED",
+    order: 1,
+    neverBlockMovement: true,
+    flags: { add2e: { hpState: "dead" } }
   },
   unconscious: {
-    priority: 10,
-    label: "Inconscient",
-    iconIds: ["unconscious", "inconscient", "sleep", "sleeping"],
-    fallbackIcon: "icons/svg/unconscious.svg",
-    namePattern: /\b(unconscious|inconscient|inconsciente|sommeil|endormi)\b/i,
-    tint: 0xffffff,
-    alpha: 0.82
+    id: "unconscious",
+    name: "Inconscient",
+    img: "icons/svg/unconscious.svg",
+    icon: "icons/svg/unconscious.svg",
+    statuses: ["incapacitated"],
+    riders: ["prone"],
+    flags: { add2e: { hpState: "unconscious" } }
   }
 };
 
-const textureCache = new Map();
+function add2eNormalizeStatusId(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function add2eStatusAliases(effect) {
+  return [
+    effect?.id,
+    effect?._id,
+    effect?.name,
+    effect?.flags?.core?.statusId,
+    effect?.flags?.add2e?.hpState
+  ].map(add2eNormalizeStatusId).filter(Boolean);
+}
+
+function add2eStatusConfigIndex(statuses, id) {
+  const wanted = add2eNormalizeStatusId(id);
+  return statuses.findIndex(effect => add2eStatusAliases(effect).includes(wanted));
+}
+
+function add2eMergeStatusConfig(base, patch) {
+  return foundry.utils.mergeObject(
+    foundry.utils.deepClone(base ?? {}),
+    foundry.utils.deepClone(patch ?? {}),
+    { inplace: false, insertKeys: true, overwrite: true }
+  );
+}
+
+function add2eRegisterStatusEffect(effect) {
+  if (!effect?.id) return false;
+
+  const statuses = Array.isArray(CONFIG.statusEffects) ? CONFIG.statusEffects : [];
+  const index = add2eStatusConfigIndex(statuses, effect.id);
+
+  if (index >= 0) statuses[index] = add2eMergeStatusConfig(statuses[index], effect);
+  else statuses.push(foundry.utils.deepClone(effect));
+
+  CONFIG.statusEffects = statuses;
+  return true;
+}
+
+function add2eRegisterHpStatusEffects() {
+  add2eRegisterStatusEffect(ADD2E_STATUS_EFFECTS.dead);
+  add2eRegisterStatusEffect(ADD2E_STATUS_EFFECTS.unconscious);
+}
 
 function add2eReadNumber(...values) {
   for (const value of values) {
@@ -39,83 +98,6 @@ function add2eReadNumber(...values) {
     if (Number.isFinite(n)) return n;
   }
   return null;
-}
-
-function add2eNormalizeStatus(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_|_$/g, "");
-}
-
-function add2eStatusConfigIcon(statusId, fallbackIcon) {
-  const wanted = new Set([statusId, ...ADD2E_STATE_OVERLAY[statusId].iconIds].map(add2eNormalizeStatus));
-  const statuses = Array.isArray(CONFIG?.statusEffects) ? CONFIG.statusEffects : [];
-  const found = statuses.find(st => {
-    const ids = [st.id, st._id, st.name].map(add2eNormalizeStatus);
-    return ids.some(id => wanted.has(id));
-  });
-  return found?.img || found?.icon || fallbackIcon;
-}
-
-async function add2eLoadTexture(src) {
-  if (!src) return null;
-  if (textureCache.has(src)) return textureCache.get(src);
-
-  try {
-    const texture = typeof foundry?.canvas?.loadTexture === "function"
-      ? await foundry.canvas.loadTexture(src)
-      : PIXI.Texture.from(src);
-
-    textureCache.set(src, texture);
-    return texture;
-  } catch (_err) {
-    return null;
-  }
-}
-
-function add2eEffectStatusIds(effect) {
-  const out = new Set();
-  if (!effect) return out;
-
-  for (const source of [
-    effect.statuses,
-    effect.flags?.core?.statusId,
-    effect.flags?.core?.statuses,
-    effect.flags?.add2e?.statusId,
-    effect.flags?.add2e?.status,
-    effect.name
-  ]) {
-    if (!source) continue;
-    if (source instanceof Set || Array.isArray(source)) {
-      for (const v of source) out.add(add2eNormalizeStatus(v));
-    } else {
-      out.add(add2eNormalizeStatus(source));
-    }
-  }
-
-  return out;
-}
-
-function add2eHasStateStatus(token, stateId) {
-  const conf = ADD2E_STATE_OVERLAY[stateId];
-  const wanted = new Set(conf.iconIds.map(add2eNormalizeStatus));
-
-  for (const effect of token?.actor?.effects ?? []) {
-    if (effect?.disabled) continue;
-    const ids = add2eEffectStatusIds(effect);
-    for (const id of ids) {
-      if (wanted.has(id)) return true;
-      if (conf.namePattern.test(id)) return true;
-    }
-    if (conf.namePattern.test(effect.name ?? "")) return true;
-  }
-
-  return false;
 }
 
 function add2eActorCurrentHp(actor) {
@@ -134,97 +116,98 @@ function add2eActorCurrentHp(actor) {
   );
 }
 
-function add2eTokenState(token) {
-  if (!token?.actor) return null;
-
-  if (add2eHasStateStatus(token, "dead")) return "dead";
-  if (add2eHasStateStatus(token, "unconscious")) return "unconscious";
-
-  const hp = add2eActorCurrentHp(token.actor);
-  if (Number.isFinite(hp)) {
-    if (hp <= -10) return "dead";
-    if (hp <= 0) return "unconscious";
-  }
-
+function add2eActorHpState(actor) {
+  if (!actor) return null;
+  const hp = add2eActorCurrentHp(actor);
+  if (!Number.isFinite(hp)) return null;
+  if (hp <= -11) return "dead";
+  if (hp <= 0) return "unconscious";
   return null;
 }
 
-function add2eRemoveOverlay(token) {
-  const existing = token?.__add2eStateOverlay;
-  if (!existing) return;
-  try { existing.destroy({ children: true }); } catch (_err) {}
-  token.__add2eStateOverlay = null;
-  token.__add2eStateOverlayState = null;
+function add2eHasStatus(actor, statusId) {
+  const wanted = add2eNormalizeStatusId(statusId);
+  for (const effect of actor?.effects ?? []) {
+    if (effect?.disabled) continue;
+    if (effect?.statuses instanceof Set && effect.statuses.has(statusId)) return true;
+    if (Array.isArray(effect?.statuses) && effect.statuses.includes(statusId)) return true;
+    if (add2eStatusAliases(effect).includes(wanted)) return true;
+  }
+  return false;
 }
 
-function add2eLayoutOverlay(token, sprite) {
-  const w = Number(token?.w || token?.bounds?.width || canvas?.grid?.size || 100);
-  const h = Number(token?.h || token?.bounds?.height || canvas?.grid?.size || 100);
-  sprite.x = 0;
-  sprite.y = 0;
-  sprite.width = w;
-  sprite.height = h;
-  sprite.anchor?.set?.(0);
-  sprite.eventMode = "none";
-  sprite.interactive = false;
-  sprite.zIndex = 9999;
+async function add2eSetActorStatus(actor, statusId, active, overlay = false) {
+  if (!actor || typeof actor.toggleStatusEffect !== "function") return false;
+  const current = add2eHasStatus(actor, statusId);
+  if (current === active) return false;
+  await actor.toggleStatusEffect(statusId, { active, overlay });
+  return true;
 }
 
-async function add2eApplyOverlay(token) {
-  if (!token || token.destroyed || !token.actor) return;
-  const state = add2eTokenState(token);
-  if (!state) {
-    add2eRemoveOverlay(token);
-    return;
+async function add2eSyncActorHpStatus(actor) {
+  if (!game.user?.isGM || !actor) return null;
+
+  const state = add2eActorHpState(actor);
+
+  if (state === "dead") {
+    await add2eSetActorStatus(actor, "unconscious", false, false);
+    await add2eSetActorStatus(actor, "dead", true, true);
+  } else if (state === "unconscious") {
+    await add2eSetActorStatus(actor, "dead", false, false);
+    await add2eSetActorStatus(actor, "unconscious", true, true);
+  } else {
+    await add2eSetActorStatus(actor, "dead", false, false);
+    await add2eSetActorStatus(actor, "unconscious", false, false);
   }
 
-  if (token.__add2eStateOverlay && token.__add2eStateOverlayState === state) {
-    add2eLayoutOverlay(token, token.__add2eStateOverlay);
-    return;
-  }
+  return state;
+}
 
-  add2eRemoveOverlay(token);
-
-  const conf = ADD2E_STATE_OVERLAY[state];
-  const icon = add2eStatusConfigIcon(state, conf.fallbackIcon);
-  const texture = await add2eLoadTexture(icon);
-  if (!texture || token.destroyed) return;
-
-  const sprite = new PIXI.Sprite(texture);
-  sprite.name = `add2e-${state}-full-token-overlay`;
-  sprite.alpha = conf.alpha;
-  sprite.tint = conf.tint;
-  add2eLayoutOverlay(token, sprite);
-
-  token.sortableChildren = true;
-  token.addChild(sprite);
-  token.__add2eStateOverlay = sprite;
-  token.__add2eStateOverlayState = state;
+function add2eUpdateChangesContainHp(changes = {}) {
+  const paths = [
+    "system.pdv",
+    "system.pv",
+    "system.pv_courant",
+    "system.pvCourant",
+    "system.points_de_vie",
+    "system.points_de_vie_courants",
+    "system.points_de_coup_courants",
+    "system.hp.value",
+    "system.hp.current",
+    "system.attributes.hp.value"
+  ];
+  return paths.some(path => foundry.utils.hasProperty(changes, path));
 }
 
 function add2eRefreshTokenOverlay(token) {
-  setTimeout(() => add2eApplyOverlay(token), 0);
+  if (!token?.actor) return;
+  add2eSyncActorHpStatus(token.actor).catch(() => null);
 }
 
 function add2eRefreshActorTokens(actor) {
-  if (!canvas?.tokens?.placeables?.length || !actor) return;
-  for (const token of canvas.tokens.placeables) {
-    if (token.actor?.id === actor.id) add2eRefreshTokenOverlay(token);
-  }
+  add2eSyncActorHpStatus(actor).catch(() => null);
 }
 
-Hooks.on("drawToken", token => add2eRefreshTokenOverlay(token));
-Hooks.on("refreshToken", token => add2eRefreshTokenOverlay(token));
-Hooks.on("updateToken", tokenDoc => add2eRefreshTokenOverlay(tokenDoc?.object));
-Hooks.on("deleteToken", tokenDoc => add2eRemoveOverlay(tokenDoc?.object));
-Hooks.on("updateActor", actor => add2eRefreshActorTokens(actor));
-Hooks.on("createActiveEffect", effect => add2eRefreshActorTokens(effect?.parent));
-Hooks.on("updateActiveEffect", effect => add2eRefreshActorTokens(effect?.parent));
-Hooks.on("deleteActiveEffect", effect => add2eRefreshActorTokens(effect?.parent));
+Hooks.once("init", add2eRegisterHpStatusEffects);
+Hooks.once("setup", add2eRegisterHpStatusEffects);
+Hooks.once("ready", add2eRegisterHpStatusEffects);
 
-Hooks.once("canvasReady", () => {
-  for (const token of canvas?.tokens?.placeables ?? []) add2eRefreshTokenOverlay(token);
+Hooks.on("updateActor", (actor, changes = {}, options = {}) => {
+  if (options?.add2eHpStatusSync) return;
+  if (!add2eUpdateChangesContainHp(changes)) return;
+  add2eSyncActorHpStatus(actor).catch(() => null);
 });
 
+Hooks.once("canvasReady", () => {
+  if (!game.user?.isGM) return;
+  for (const token of canvas?.tokens?.placeables ?? []) {
+    if (token?.actor) add2eSyncActorHpStatus(token.actor).catch(() => null);
+  }
+});
+
+try { globalThis.ADD2E_STATUS_EFFECTS = ADD2E_STATUS_EFFECTS; } catch (_e) {}
+try { globalThis.add2eRegisterHpStatusEffects = add2eRegisterHpStatusEffects; } catch (_e) {}
+try { globalThis.add2eActorHpState = add2eActorHpState; } catch (_e) {}
+try { globalThis.add2eSyncActorHpStatus = add2eSyncActorHpStatus; } catch (_e) {}
 try { globalThis.add2eRefreshTokenOverlay = add2eRefreshTokenOverlay; } catch (_e) {}
 try { globalThis.add2eRefreshActorTokens = add2eRefreshActorTokens; } catch (_e) {}
