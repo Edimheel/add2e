@@ -1,5 +1,5 @@
 // ADD2E — XP de session automatisée — ApplicationV2
-// Version : 2026-05-24-session-xp-v2-single-file
+// Version : 2026-05-24-session-xp-v2-single-file-token-sync
 //
 // Règles :
 // - Les monstres ne montent jamais de niveau.
@@ -9,8 +9,9 @@
 // - Le bilan XP est une ApplicationV2 native, sans Dialog V1.
 // - Le bouton de scène utilise SceneControlTool#onChange, pas onClick.
 // - L'XP est appliquée uniquement aux acteurs type "personnage".
+// - Les tokens non liés des personnages reçoivent aussi la même XP.
 
-const VERSION = "2026-05-24-session-xp-v2-single-file";
+const VERSION = "2026-05-24-session-xp-v2-single-file-token-sync";
 const TAG = "[ADD2E][SESSION_XP]";
 const FLAG_SCOPE = "add2e";
 const FLAG_LEDGER = "sessionXpLedger";
@@ -78,14 +79,7 @@ function actorHpValue(actor) {
 }
 
 function changedHpValue(changes, fallback) {
-  const paths = [
-    "system.pdv",
-    "system.pv",
-    "system.hp",
-    "system.hp.value",
-    "system.points_de_vie",
-    "system.hitPoints"
-  ];
+  const paths = ["system.pdv", "system.pv", "system.hp", "system.hp.value", "system.points_de_vie", "system.hitPoints"];
   for (const path of paths) {
     if (foundry.utils.hasProperty(changes, path)) return num(foundry.utils.getProperty(changes, path), fallback);
   }
@@ -416,36 +410,113 @@ async function markSourcesApplied(selectedSources, reason) {
   await saveLedger(ledger);
 }
 
+function unlinkedTokenDocsForActor(actor) {
+  const rows = [];
+  if (!actor?.id) return rows;
+
+  for (const scene of game.scenes ?? []) {
+    for (const tokenDoc of scene.tokens ?? []) {
+      if (tokenDoc.actorId !== actor.id) continue;
+      if (tokenDoc.actorLink === true) continue;
+      const tokenActor = tokenDoc.actor;
+      if (!tokenActor || tokenActor.type !== "personnage") continue;
+      rows.push({ scene, tokenDoc, tokenActor });
+    }
+  }
+
+  return rows;
+}
+
+async function syncXpToUnlinkedTokens(actor, xpValue) {
+  const updates = [];
+  const rows = unlinkedTokenDocsForActor(actor);
+
+  for (const row of rows) {
+    const before = Math.max(0, Math.floor(num(row.tokenActor.system?.xp, 0)));
+    try {
+      await row.tokenActor.update({ "system.xp": xpValue }, { add2eReason: "session-xp-token-sync" });
+      const after = Math.max(0, Math.floor(num(row.tokenActor.system?.xp, xpValue)));
+      updates.push({ scene: row.scene.name, token: row.tokenDoc.name, before, after, ok: after === xpValue });
+    } catch (err) {
+      updates.push({ scene: row.scene.name, token: row.tokenDoc.name, before, after: before, ok: false, error: err?.message ?? String(err) });
+      warn("[TOKEN_SYNC][ERROR]", { actor: actor.name, scene: row.scene.name, token: row.tokenDoc.name, err });
+    }
+  }
+
+  if (updates.length) log("[TOKEN_SYNC][DONE]", { actor: actor.name, xp: xpValue, tokens: updates });
+  return updates;
+}
+
+function refreshActorAndTokenSheets(actor) {
+  const actorId = actor?.id;
+  for (const app of Object.values(ui.windows ?? {})) {
+    try {
+      const appActor = app?.actor ?? app?.document;
+      if (!appActor) continue;
+      const sameWorldActor = appActor.id === actorId;
+      const sameBaseActor = appActor.isToken && appActor.prototypeToken?.actorId === actorId;
+      const sameTokenBase = appActor.isToken && appActor.token?.actorId === actorId;
+      if (sameWorldActor || sameBaseActor || sameTokenBase) app.render(false);
+    } catch (_e) {}
+  }
+}
+
 async function awardCharacterXp(actor, total, reason) {
   const before = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
   const amount = Math.max(0, Math.floor(num(total, 0)));
   const expectedAfter = before + amount;
   log("[AWARD][START]", { actor: actor.name, before, amount, expectedAfter });
+
   await actor.update({ "system.xp": expectedAfter }, { add2eReason: "session-xp-v2" });
+
   const liveActor = game.actors.get(actor.id) ?? actor;
-  let after = Math.max(0, Math.floor(num(liveActor.system?.xp, expectedAfter)));
+  const after = Math.max(0, Math.floor(num(liveActor.system?.xp, expectedAfter)));
   if (after !== expectedAfter) warn("[AWARD][VERIFY]", { actor: actor.name, before, amount, expectedAfter, after });
-  log("[AWARD][DONE]", { actor: actor.name, before, amount, expectedAfter, after });
-  return { before, after, expectedAfter };
+
+  const tokenSync = await syncXpToUnlinkedTokens(liveActor, after);
+  refreshActorAndTokenSheets(liveActor);
+
+  log("[AWARD][DONE]", { actor: actor.name, before, amount, expectedAfter, after, tokenSync });
+  return { before, after, expectedAfter, tokenSync };
 }
 
 async function applySessionXp(data) {
   if (!game.user?.isGM) return ui.notifications.warn("Seul le MJ peut appliquer l'XP de session.");
   if (data.sourceTotal <= 0) return ui.notifications.warn("Le total d'XP est à 0.");
   if (!data.recipients.length) return ui.notifications.warn("Aucun personnage destinataire sélectionné.");
+
   const distribution = computeDistribution(data);
   const results = [];
+
   for (const row of distribution) {
     const awarded = await awardCharacterXp(row.actor, row.total, data.reason);
-    results.push({ actor: game.actors.get(row.actor.id) ?? row.actor, before: awarded.before, after: awarded.after, expectedAfter: awarded.expectedAfter, gained: row.total, base: row.base, percentBonus: row.percentBonus, bonusFlat: row.bonusFlat });
+    results.push({
+      actor: game.actors.get(row.actor.id) ?? row.actor,
+      before: awarded.before,
+      after: awarded.after,
+      expectedAfter: awarded.expectedAfter,
+      gained: row.total,
+      base: row.base,
+      percentBonus: row.percentBonus,
+      bonusFlat: row.bonusFlat,
+      tokenSync: awarded.tokenSync ?? []
+    });
   }
+
   await markSourcesApplied(data.selectedSources, data.reason);
+
   const monsterLines = data.selectedSources.map(row => `<li>${esc(row.monsterName)} : <b>${row.xp.toLocaleString()}</b> PX${row.sceneName ? ` <small>(${esc(row.sceneName)})</small>` : ""}</li>`).join("");
-  const resultLines = results.map(row => `<li>${esc(row.actor.name)} : +<b>${row.gained.toLocaleString()}</b> XP <small>(base ${row.base.toLocaleString()}${row.percentBonus ? `, bonus % ${row.percentBonus.toLocaleString()}` : ""}${row.bonusFlat ? `, bonus fixe ${row.bonusFlat.toLocaleString()}` : ""})</small> — ${row.before.toLocaleString()} → ${row.after.toLocaleString()}</li>`).join("");
-  await ChatMessage.create({ content: `<div class="add2e-xp-session-chat" style="border:2px solid #a87924;border-radius:10px;background:#fff8df;padding:.75em .95em;color:#2b1b0c;"><h2 style="margin:.1em 0 .45em;color:#7d331f;">Bilan XP de session</h2><p><b>Total réparti :</b> ${data.sourceTotal.toLocaleString()} XP</p><p><b>Monstres :</b> ${data.monsterXp.toLocaleString()} XP — <b>Objectifs :</b> ${data.objectivesXp.toLocaleString()} XP — <b>Trésors :</b> ${data.treasureXp.toLocaleString()} XP — <b>Bonus MJ :</b> ${data.gmBonusXp.toLocaleString()} XP</p><details open><summary><b>Sources</b></summary><ul>${monsterLines || "<li>Aucune source monstre.</li>"}</ul></details><details open><summary><b>Répartition</b></summary><ul>${resultLines}</ul></details></div>` });
-  for (const app of Object.values(ui.windows ?? {})) {
-    try { if (app?.actor?.type === "personnage" && results.some(r => r.actor.id === app.actor.id)) app.render(false); } catch (_e) {}
-  }
+  const resultLines = results.map(row => {
+    const tokenNote = row.tokenSync?.length ? ` <small>— tokens synchronisés : ${row.tokenSync.length}</small>` : "";
+    return `<li>${esc(row.actor.name)} : +<b>${row.gained.toLocaleString()}</b> XP <small>(base ${row.base.toLocaleString()}${row.percentBonus ? `, bonus % ${row.percentBonus.toLocaleString()}` : ""}${row.bonusFlat ? `, bonus fixe ${row.bonusFlat.toLocaleString()}` : ""})</small> — ${row.before.toLocaleString()} → ${row.after.toLocaleString()}${tokenNote}</li>`;
+  }).join("");
+
+  await ChatMessage.create({
+    content: `<div class="add2e-xp-session-chat" style="border:2px solid #a87924;border-radius:10px;background:#fff8df;padding:.75em .95em;color:#2b1b0c;"><h2 style="margin:.1em 0 .45em;color:#7d331f;">Bilan XP de session</h2><p><b>Total réparti :</b> ${data.sourceTotal.toLocaleString()} XP</p><p><b>Monstres :</b> ${data.monsterXp.toLocaleString()} XP — <b>Objectifs :</b> ${data.objectivesXp.toLocaleString()} XP — <b>Trésors :</b> ${data.treasureXp.toLocaleString()} XP — <b>Bonus MJ :</b> ${data.gmBonusXp.toLocaleString()} XP</p><details open><summary><b>Sources</b></summary><ul>${monsterLines || "<li>Aucune source monstre.</li>"}</ul></details><details open><summary><b>Répartition</b></summary><ul>${resultLines}</ul></details></div>`
+  });
+
+  for (const row of results) refreshActorAndTokenSheets(row.actor);
+
   ui.notifications.info("XP de session appliquée. Les sources utilisées sont maintenant masquées.");
   log("[APPLIED]", { data, distribution, results });
   return { data, distribution, results };
@@ -645,3 +716,4 @@ globalThis.add2eSessionXpLedger = currentLedger;
 globalThis.add2eClearSessionXpLedger = clearSessionXpLedger;
 globalThis.add2eInstallXpSceneButton = installSceneControlButton;
 globalThis.add2eInjectXpActorDirectoryButton = injectActorDirectoryButton;
+globalThis.add2eSyncXpToUnlinkedTokens = syncXpToUnlinkedTokens;
