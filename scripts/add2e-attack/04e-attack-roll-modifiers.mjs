@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-23-target-defensive-modifiers-v8-clean-sanctuary-chat";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-05-24-active-effect-tags-v9";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -317,6 +317,29 @@ function add2eAttackComputeSanctuaryModifier({ actor, cible, targetEffectTags })
   };
 }
 
+function add2eAttackApplyFlatActiveTagModifier({ tag, prefix, label, accumulator }) {
+  if (!tag.startsWith(prefix)) return false;
+  const amount = add2eAttackParseSignedValue(tag.slice(prefix.length), 0);
+  if (!amount) return true;
+  accumulator.value += amount;
+  accumulator.details.push(`${label} : ${amount >= 0 ? "+" : ""}${amount}`);
+  return true;
+}
+
+function add2eAttackApplySignedFlatTags({ tag, touch, damage }) {
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "bonus_attaque:", label: "Effet actif au toucher", accumulator: touch })) return true;
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "bonus_toucher:", label: "Effet actif au toucher", accumulator: touch })) return true;
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "bonus:toucher:", label: "Effet actif au toucher", accumulator: touch })) return true;
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "malus_attaque:", label: "Effet actif au toucher", accumulator: touch })) return true;
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "malus_toucher:", label: "Effet actif au toucher", accumulator: touch })) return true;
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "malus:toucher:", label: "Effet actif au toucher", accumulator: touch })) return true;
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "bonus_degats:", label: "Effet actif aux degats", accumulator: damage })) return true;
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "bonus:degats:", label: "Effet actif aux degats", accumulator: damage })) return true;
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "malus_degats:", label: "Effet actif aux degats", accumulator: damage })) return true;
+  if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "malus:degats:", label: "Effet actif aux degats", accumulator: damage })) return true;
+  return false;
+}
+
 export async function add2eAttackResolveTargetAttackGate({ actor, cible, source = "attack-roll" } = {}) {
   if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target" };
   const targetEffectTags = add2eAttackGetActiveTargetEffectTags(cible);
@@ -411,13 +434,15 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     const typeCible = cible?.system?.type_monstre || cible?.system?.race || "";
     bonusRacialVs = Add2eEffectsEngine.getBonusToucheVs(actor, typeCible);
     const activeTags = Add2eEffectsEngine.getActiveTags(actor) ?? [];
+    const touch = { value: 0, details: [] };
+    const damage = { value: 0, details: [] };
 
     for (const rawTag of activeTags) {
       const t = add2eNormalizeAttackTag(rawTag);
-      if (t.startsWith("bonus_attaque:")) {
-        bonusToucheEffets += Number(t.split(":")[1]) || 0;
-        continue;
-      }
+      if (!t) continue;
+
+      if (add2eAttackApplySignedFlatTags({ tag: t, touch, damage })) continue;
+
       if (t.startsWith("bonus_touche:")) {
         const parts = t.split(":");
         const matcher = parts[1];
@@ -434,6 +459,9 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
         }
       }
     }
+
+    if (touch.value) bonusToucheEffets += touch.value;
+    if (damage.value) bonusDegatsEffets += damage.value;
 
     const targetDefensive = add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible });
     if (targetDefensive.value !== 0 || targetDefensive.details.length) {
