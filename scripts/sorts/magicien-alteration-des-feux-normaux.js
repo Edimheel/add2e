@@ -1,22 +1,25 @@
 // ADD2E — onUse Magicien : Altération des feux normaux
-// Version : 2026-05-05-magicien-n1-9-v2
-// Retour attendu : true = sort consommé, false = sort non consommé.
+// Version : 2026-05-24-magicien-alteration-feux-normaux-v1
+//
+// Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
+// - return true  => sort réellement lancé, le slot mémorisé réservé est consommé ;
+// - return false => annulation / cible invalide, le slot mémorisé réservé est remboursé.
+// La consommation du slot n'est PAS faite ici : elle est centralisée dans add2eCastSpell.
+
+const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][ALTERATION_FEUX_NORMAUX]";
 
 const ADD2E_SORT_CONFIG = {
-  "name": "Altération des feux normaux",
-  "slug": "alteration_des_feux_normaux",
-  "level": 1,
-  "kind": "terrain",
-  "description": "Altération des feux normaux modifie une zone, un terrain, une matière, un mur, une porte ou un environnement. Les dimensions et conséquences exactes sont fixées par le MD.",
-  "dice": null,
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Altération des feux normaux"
-    }
-  ]
+  name: "Altération des feux normaux",
+  slug: "alteration_des_feux_normaux",
+  level: 1,
+  school: "Altération",
+  rangeText: "1/2\" par niveau",
+  durationText: "1 round par niveau",
+  castingTimeText: "1 segment",
+  saveText: "Aucun",
+  areaText: "feu de 90 cm de diamètre maximum",
+  maxDiameterCm: 90
 };
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN]";
 
 function add2eHtmlEscape(value) {
   const div = document.createElement("div");
@@ -24,145 +27,257 @@ function add2eHtmlEscape(value) {
   return div.innerHTML;
 }
 
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
+function add2eCasterLevel(actorDoc) {
+  return Number(
+    actorDoc?.system?.niveau ??
+    actorDoc?.system?.level ??
+    actorDoc?.system?.details?.niveau ??
+    actorDoc?.system?.details?.level ??
+    1
+  ) || 1;
 }
 
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
+function add2eGetCasterToken(actorDoc) {
+  return token ?? canvas?.tokens?.controlled?.find(t => t.actor?.id === actorDoc?.id) ?? actorDoc?.getActiveTokens?.()?.[0] ?? canvas?.tokens?.controlled?.[0] ?? null;
 }
 
-function add2eDamageFormula(raw, level) {
-  const s = String(raw || "1d6");
-  if (s === "leveld3") return `${Math.max(1, level)}d3`;
-  if (s === "leveld4+level") return `${Math.max(1, level)}d4+${level}`;
-  if (s === "leveld6") return `${Math.max(1, Math.min(10, level))}d6`;
-  if (s === "1d8+level") return `1d8+${level}`;
-  if (s === "1d6+level") return `1d6+${level}`;
-  if (s === "special" || s === "variable") return "1d20";
-  return s;
+function add2eGetTargets() {
+  return Array.from(game.user?.targets ?? []);
 }
 
-function add2eRoundCount(level) {
-  return Math.max(1, level);
+function add2eEffectDuration(level) {
+  return {
+    rounds: Math.max(1, level),
+    startRound: game.combat?.round ?? null,
+    startTime: game.time?.worldTime ?? null,
+    combat: game.combat?.id ?? null
+  };
 }
 
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
+async function add2eAskAlterationFeuxNormaux() {
+  return await new Promise(resolve => {
+    let done = false;
+    const finish = value => {
+      if (done) return;
+      done = true;
+      resolve(value);
+    };
+
+    new Dialog({
+      title: ADD2E_SORT_CONFIG.name,
+      content: `
+        <form class="add2e-dialog add2e-alteration-feux-dialog">
+          <p><b>${add2eHtmlEscape(ADD2E_SORT_CONFIG.name)}</b> modifie une source de feu normal sans changer sa chaleur.</p>
+
+          <div class="form-group">
+            <label>Effet</label>
+            <select name="mode">
+              <option value="increase">Augmenter le feu / la lumière</option>
+              <option value="reduce">Réduire le feu / la lumière</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Source de feu visée</label>
+            <input type="text" name="source" placeholder="Ex. torche, lanterne, brasero, feu de camp..." />
+          </div>
+
+          <div class="form-group">
+            <label>Note MD</label>
+            <textarea name="note" rows="3" placeholder="Précision de scène, combustible, emplacement, visibilité..."></textarea>
+          </div>
+
+          <p style="font-size:12px;opacity:.85;margin-top:6px;">
+            Zone maximale : feu normal de 90 cm de diamètre. La chaleur n'est pas modifiée.
+          </p>
+        </form>
+      `,
+      buttons: {
+        cast: {
+          label: "Lancer",
+          callback: html => finish({
+            mode: String(html.find("[name='mode']").val() ?? "increase"),
+            source: String(html.find("[name='source']").val() ?? "").trim(),
+            note: String(html.find("[name='note']").val() ?? "").trim()
+          })
+        },
+        cancel: {
+          label: "Annuler",
+          callback: () => finish(null)
+        }
+      },
+      default: "cast",
+      close: () => finish(null)
+    }).render(true);
+  });
 }
 
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
+async function add2eApplyFireEffect(targetActor, choice, level) {
+  if (!targetActor) return false;
+
+  const modeTag = choice.mode === "reduce" ? "reduction" : "augmentation";
+  const effectName = choice.mode === "reduce" ? "Feu normal réduit" : "Feu normal augmenté";
+  const durationRounds = Math.max(1, level);
+
+  const tags = [
+    "classe:magicien",
+    "liste:magicien",
+    "niveau:1",
+    "sort:alteration_des_feux_normaux",
+    "ecole:alteration",
+    "type:environnement",
+    "type:feu",
+    "feu:normal",
+    `mode:${modeTag}`,
+    "chaleur:inchangee",
+    choice.mode === "reduce" ? "combustible:demi_consommation" : "combustible:double_consommation",
+    choice.mode === "reduce" ? "luminosite:allumette" : "luminosite:lumiere",
+    "diametre_max_cm:90",
+    "duree:1_round_par_niveau",
+    `duree_rounds:${durationRounds}`,
+    "jet_sauvegarde:aucun",
+    "memorisation:consommation_dispatcher"
+  ];
+
+  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
+    name: effectName,
+    img: item?.img || "icons/magic/fire/flame-burning-orange.webp",
+    disabled: false,
+    transfer: false,
+    type: "base",
+    system: {},
+    changes: [],
+    duration: add2eEffectDuration(level),
+    description: [
+      `${effectName} par ${ADD2E_SORT_CONFIG.name}.`,
+      `Source : ${choice.source || "source de feu normal indiquée par le MD"}.`,
+      `Durée : ${ADD2E_SORT_CONFIG.durationText}.`,
+      "La chaleur dégagée n'est pas modifiée.",
+      choice.note ? `Note : ${choice.note}` : ""
+    ].filter(Boolean).join("\n"),
+    flags: {
+      add2e: {
+        tags,
+        spell: {
+          slug: ADD2E_SORT_CONFIG.slug,
+          name: ADD2E_SORT_CONFIG.name,
+          level: ADD2E_SORT_CONFIG.level,
+          school: ADD2E_SORT_CONFIG.school,
+          mode: modeTag,
+          source: choice.source ?? "",
+          maxDiameterCm: ADD2E_SORT_CONFIG.maxDiameterCm,
+          heatChanged: false,
+          casterLevel: level,
+          durationRounds,
+          sourceItemId: item?.id ?? null,
+          sourceItemUuid: item?.uuid ?? null,
+          note: choice.note ?? ""
+        }
+      }
+    }
+  }]);
+
+  return true;
 }
 
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? add2eGetCasterToken();
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
-  const spellName = item?.name ?? title ?? "Sort de magicien";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? "";
+async function add2eChatAlterationFeuxNormaux(actorDoc, choice, targets, level, appliedTargets) {
+  const casterToken = add2eGetCasterToken(actorDoc);
+  const casterName = actorDoc?.name ?? casterToken?.name ?? "Magicien";
+  const casterImg = casterToken?.document?.texture?.src ?? actorDoc?.img ?? "icons/svg/mystery-man.svg";
+  const spellImg = item?.img ?? "icons/magic/fire/flame-burning-orange.webp";
+  const modeLabel = choice.mode === "reduce" ? "Réduction du feu" : "Augmentation du feu";
+  const sourceLabel = choice.source || (appliedTargets.length ? appliedTargets.map(t => t.name).join(", ") : "Source de feu indiquée par le MD");
+  const durationRounds = Math.max(1, level);
+
+  const luminosity = choice.mode === "reduce"
+    ? "taille et lumière ramenées à l'intensité d'une allumette"
+    : "taille et lumière portées jusqu'à l'intensité d'un sort de lumière";
+
+  const fuel = choice.mode === "reduce"
+    ? "consommation du combustible divisée par deux"
+    : "consommation du combustible doublée";
+
   await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
+    speaker: ChatMessage.getSpeaker({ actor: actorDoc, token: casterToken }),
     content: `
-      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
+      <div class="add2e-chat-card add2e-magicien-sort add2e-sort-alteration-feux"
+           style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
         <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
           <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
           <div style="flex:1;line-height:1.05;">
             <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(spellName)}</div>
+            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(ADD2E_SORT_CONFIG.name)}</div>
           </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Sort profane</div>
+          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. 1</div>
           <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
         </div>
+
         <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eHtmlEscape(targetLabel)}</div>
+          <div style="font-size:13px;margin:0 0 6px 0;"><b>Source :</b> ${add2eHtmlEscape(sourceLabel)}</div>
+
           <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(outcome)}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
+            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(modeLabel)}</div>
+            <div style="font-size:13px;line-height:1.35;text-align:left;">
+              <p style="margin:.25em 0;"><b>Lumière :</b> ${add2eHtmlEscape(luminosity)}.</p>
+              <p style="margin:.25em 0;"><b>Combustible :</b> ${add2eHtmlEscape(fuel)}.</p>
+              <p style="margin:.25em 0;"><b>Chaleur :</b> inchangée.</p>
+              <p style="margin:.25em 0;"><b>Durée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.durationText)} (${durationRounds} round${durationRounds > 1 ? "s" : ""}).</p>
+              ${choice.note ? `<p style="margin:.25em 0;"><b>Note :</b> ${add2eHtmlEscape(choice.note)}</p>` : ""}
+            </div>
           </div>
+
           <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
             <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
+            <div style="margin-top:5px;font-size:12px;line-height:1.35;">
+              <p><b>Portée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.rangeText)} — <b>Zone :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.areaText)}.</p>
+              <p><b>Incantation :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.castingTimeText)} — <b>Jet de protection :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.saveText)}.</p>
+              <p>Le sort ne fonctionne normalement pas sous l'eau, sauf dans les limites d'un sort d'eau aérée.</p>
+              <p>Le slot mémorisé est consommé par le dispatcher ADD2E uniquement si ce script retourne <code>true</code>.</p>
+            </div>
           </details>
         </div>
       </div>`
   });
 }
 
-async function add2eApplyEffect(targetActor, name, tags, rounds = 0) {
-  if (!targetActor) return false;
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
-    name,
-    img: item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [],
-    duration: { rounds: rounds || undefined, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-    description: ADD2E_SORT_CONFIG.description,
-    flags: { add2e: { tags } }
-  }]);
-  return true;
+const choice = await add2eAskAlterationFeuxNormaux();
+if (!choice) {
+  console.log(`${ADD2E_ONUSE_TAG}[CANCEL] Sort annulé : remboursement du slot mémorisé par le dispatcher.`);
+  return false;
 }
 
-async function add2eAskNote(config) {
-  const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
-  if (!needsNote) return { mode: "normal", note: "" };
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = v => { if (!done) { done = true; resolve(v); } };
-    const buttons = {};
-    for (const m of config.modes ?? [{id:"normal",label:config.name}]) {
-      buttons[m.id] = { label: m.label, callback: html => finish({ mode:m.id, note: html.find("[name='note']").val() ?? "" }) };
-    }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-    new Dialog({
-      title: config.name,
-      content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
-      buttons,
-      default: Object.keys(buttons)[0],
-      close: () => finish(null)
-    }).render(true);
-  });
+if (!choice.source && !add2eGetTargets().length) {
+  ui.notifications?.warn?.("Altération des feux normaux : indique une source de feu ou cible un token/acteur représentant la source.");
+  console.warn(`${ADD2E_ONUSE_TAG}[NO_SOURCE] Aucune source de feu indiquée.`);
+  return false;
 }
-
-const choice = await add2eAskNote(ADD2E_SORT_CONFIG);
-if (!choice) return false;
 
 const level = add2eCasterLevel(actor);
-const targets = add2eGetTargets({ fallbackCaster: ADD2E_SORT_CONFIG.kind !== "damage" });
-const baseTags = [`sort:${ADD2E_SORT_CONFIG.slug}`, "classe:magicien", "liste:magicien", `niveau:${ADD2E_SORT_CONFIG.level}`, `type:${ADD2E_SORT_CONFIG.kind}`];
+const targets = add2eGetTargets();
+const appliedTargets = [];
 
-console.log(`${ADD2E_ONUSE_TAG}[START]`, { sort: ADD2E_SORT_CONFIG.name, actor: actor?.name, level, targets: targets.map(t => t.name), mode: choice.mode });
+console.log(`${ADD2E_ONUSE_TAG}[START]`, {
+  actor: actor?.name,
+  sort: item?.name,
+  level,
+  choice,
+  targets: targets.map(t => ({ name: t.name, actor: t.actor?.name }))
+});
 
-if (ADD2E_SORT_CONFIG.kind === "damage") {
-  const formula = add2eDamageFormula(ADD2E_SORT_CONFIG.dice, level);
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: ADD2E_SORT_CONFIG.name });
-  await add2eChat(ADD2E_SORT_CONFIG.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
+for (const target of targets) {
+  if (!target?.actor) continue;
+  const ok = await add2eApplyFireEffect(target.actor, choice, level);
+  if (ok) appliedTargets.push(target);
 }
 
-if (["condition","protection"].includes(ADD2E_SORT_CONFIG.kind)) {
-  for (const t of targets) await add2eApplyEffect(t.actor, ADD2E_SORT_CONFIG.name, baseTags, add2eRoundCount(level));
-  await add2eChat(ADD2E_SORT_CONFIG.name, `<p>Effet actif appliqué à : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>`, null, { outcome: "EFFET ACTIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
-}
+await add2eChatAlterationFeuxNormaux(actor, choice, targets, level, appliedTargets);
 
-await add2eChat(ADD2E_SORT_CONFIG.name, `
-  <p>${add2eHtmlEscape(ADD2E_SORT_CONFIG.description)}</p>
-  ${choice.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-`, null, { outcome: ADD2E_SORT_CONFIG.name.toUpperCase(), rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
+console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
+  consumedByDispatcher: true,
+  appliedTargets: appliedTargets.map(t => t.name),
+  mode: choice.mode,
+  source: choice.source,
+  durationRounds: Math.max(1, level)
+});
+
 return true;
