@@ -1,6 +1,6 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-24-v13-stable-combat-actor-refresh
+// Version : 2026-05-24-v14-tabs-expand-save-cells
 //
 // Source unique de vérité du HUD :
 // - hors combat : clic token => HUD du token contrôlé ;
@@ -8,10 +8,10 @@
 // - combat tracker : clic combattant => HUD du combattant cliqué ;
 // - les refresh updateActor/item/effect rafraîchissent l'acteur déjà affiché, jamais le token sélectionné.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-24-v13-stable-combat-actor-refresh";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-24-v14-tabs-expand-save-cells";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
-const STORAGE_KEY = "add2e.actionHud.state.v13";
+const STORAGE_KEY = "add2e.actionHud.state.v14";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -64,7 +64,7 @@ function add2eHudDefaultState() {
 function add2eHudLoadState() {
   if (add2eHudState) return add2eHudState;
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem("add2e.actionHud.state.v12") || localStorage.getItem("add2e.actionHud.state.v8") || "null");
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem("add2e.actionHud.state.v13") || localStorage.getItem("add2e.actionHud.state.v12") || localStorage.getItem("add2e.actionHud.state.v8") || "null");
     if (raw && typeof raw === "object") {
       add2eHudState = {
         left: add2eHudClamp(Number(raw.left) || 116, 8, Math.max(8, window.innerWidth - 80)),
@@ -184,7 +184,7 @@ function add2eHudRangeText(item) {
 }
 
 function add2eHudInjectStyle() {
-  if (document.getElementById("add2e-action-hud-style")) return;
+  document.getElementById("add2e-action-hud-style")?.remove();
   const style = document.createElement("style");
   style.id = "add2e-action-hud-style";
   style.textContent = `
@@ -201,8 +201,11 @@ function add2eHudInjectStyle() {
     #${HUD_ID} .a2e-hud-icon-btn,#${HUD_ID} .a2e-hud-resize{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;} #${HUD_ID} .a2e-hud-resize{cursor:nwse-resize!important;}
     #${HUD_ID} .a2e-hud-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);} #${HUD_ID} .a2e-hud-row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px;} #${HUD_ID} .a2e-hud-row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25);}
     #${HUD_ID} .a2e-hud-row-title{color:#fff4cf;font-weight:900;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #${HUD_ID} .a2e-hud-row-meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px;} #${HUD_ID} .a2e-hud-action{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap;} #${HUD_ID} .a2e-hud-action:disabled{opacity:.45;cursor:not-allowed;}
-    #${HUD_ID} .a2e-hud-empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center;} #${HUD_ID} .a2e-hud-ability-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;} #${HUD_ID} .a2e-hud-ability{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:7px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);} #${HUD_ID} .a2e-hud-ability b{color:#fff4cf;font-size:1.15em;} #${HUD_ID} .a2e-hud-ability span{display:block;color:#c8ad6e;font-size:.76em;font-weight:800;}
-    #${HUD_ID} button,#${HUD_ID} [data-hud-tab],#${HUD_ID} [data-action]{user-select:auto;touch-action:auto;} @media(max-width:760px){#${HUD_ID}{left:8px!important;right:8px;width:auto!important;min-width:0;max-width:calc(100vw - 16px)!important;}#${HUD_ID} .a2e-hud-ability-grid{grid-template-columns:repeat(2,1fr);}}
+    #${HUD_ID} .a2e-hud-empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center;}
+    #${HUD_ID} .a2e-hud-ability-grid,#${HUD_ID} .a2e-hud-save-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+    #${HUD_ID} .a2e-hud-ability,#${HUD_ID} .a2e-hud-save-cell{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:7px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);min-height:50px;}
+    #${HUD_ID} .a2e-hud-ability b,#${HUD_ID} .a2e-hud-save-cell b{color:#fff4cf;font-size:1.15em;} #${HUD_ID} .a2e-hud-ability span,#${HUD_ID} .a2e-hud-save-cell span{display:block;color:#c8ad6e;font-size:.76em;font-weight:800;} #${HUD_ID} .a2e-hud-save-cell b{font-size:1.02em;}
+    #${HUD_ID} button,#${HUD_ID} [data-hud-tab],#${HUD_ID} [data-action]{user-select:auto;touch-action:auto;} @media(max-width:760px){#${HUD_ID}{left:8px!important;right:8px;width:auto!important;min-width:0;max-width:calc(100vw - 16px)!important;}#${HUD_ID} .a2e-hud-ability-grid,#${HUD_ID} .a2e-hud-save-grid{grid-template-columns:repeat(2,1fr);}}
   `;
   document.head.appendChild(style);
 }
@@ -224,7 +227,7 @@ function add2eHudFeatureRows(actor) {
 }
 function add2eHudSaveRows(actor) {
   const saves = add2eHudSavingThrows(actor);
-  return ADD2E_HUD_SAVE_FULL_NAMES.map((label, idx) => `<div class="a2e-hud-row compact"><div><div class="a2e-hud-row-title">${add2eHudEscape(label)}</div><div class="a2e-hud-row-meta"><span>Seuil ${add2eHudEscape(saves[idx] || "—")} ou plus</span></div></div><button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button></div>`).join("");
+  return `<div class="a2e-hud-save-grid">${ADD2E_HUD_SAVE_FULL_NAMES.map((label, idx) => `<div class="a2e-hud-save-cell"><div><b>${add2eHudEscape(saves[idx] || "—")}</b><span>${add2eHudEscape(label)}</span></div><button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button></div>`).join("")}</div>`;
 }
 function add2eHudAbilityRows(actor) {
   return `<div class="a2e-hud-ability-grid">${ADD2E_HUD_CARACS.map(c => `<div class="a2e-hud-ability"><div><b>${c.label} ${add2eHudAbilityValue(actor, c.key)}</b><span>${add2eHudEscape(c.title)}</span></div><button type="button" class="a2e-hud-action" data-action="roll-ability" data-ability="${c.key}">Jet</button></div>`).join("")}</div>`;
@@ -341,7 +344,13 @@ function add2eHudBindCombatTracker(app, html) {
 }
 
 function add2eBindHudEvents(hud, actor) {
-  hud.querySelectorAll("[data-hud-tab]").forEach(btn => btn.addEventListener("click", ev => { ev.preventDefault(); add2eHudActiveTab = btn.dataset.hudTab || "attaques"; add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason: "tab" }); }));
+  hud.querySelectorAll("[data-hud-tab]").forEach(btn => btn.addEventListener("click", ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    add2eHudActiveTab = btn.dataset.hudTab || "attaques";
+    add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason: "tab" });
+    window.setTimeout(() => add2eHudSetRetracted(add2eHudElement(), false, { save: true }), 0);
+  }));
   hud.querySelectorAll("[data-action]").forEach(btn => btn.addEventListener("click", async ev => {
     if (add2eHudNow() < add2eHudSuppressClickUntil) { ev.preventDefault(); ev.stopPropagation(); return; }
     ev.preventDefault(); ev.stopPropagation();
@@ -425,7 +434,7 @@ Hooks.once("init", () => {
     add2eHudForceOpen: () => add2eHudSetRetracted(add2eHudElement(), false),
     add2eHudForceRetract: () => add2eHudSetRetracted(add2eHudElement(), true),
     add2eHudFixDebug: () => ({ version: ADD2E_ACTION_HUD_VERSION, hud: !!add2eHudElement(), actorId: add2eHudActorId, actor: game.actors.get(add2eHudActorId)?.name ?? null, activeTab: add2eHudActiveTab, state: add2eHudLoadState(), combatant: add2eHudCurrentCombatant(game.combat)?.name ?? null, selected: canvas?.tokens?.controlled?.map?.(t => t.name) ?? [] }),
-    add2eHudCheck: () => ({ version: ADD2E_ACTION_HUD_VERSION, actorId: add2eHudActorId, actor: game.actors.get(add2eHudActorId)?.name ?? null, activeTab: add2eHudActiveTab, attackRoll: typeof globalThis.add2eAttackRoll, castSpell: typeof globalThis.add2eCastSpell, featureOnUse: typeof globalThis.add2eExecuteClassFeatureOnUse, hud: !!add2eHudElement() })
+    add2eHudCheck: () => ({ version: ADD2E_ACTION_HUD_VERSION, actorId: add2eHudActorId, actor: game.actors.get(add2eHudActorId)?.name ?? null, activeTab: add2eHudActiveTab, retracted: add2eHudLoadState().menuRetracted, attackRoll: typeof globalThis.add2eAttackRoll, castSpell: typeof globalThis.add2eCastSpell, featureOnUse: typeof globalThis.add2eExecuteClassFeatureOnUse, hud: !!add2eHudElement() })
   });
   console.log(`${TAG}[INIT]`, ADD2E_ACTION_HUD_VERSION);
 });
