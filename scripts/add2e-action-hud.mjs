@@ -1,17 +1,17 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-24-v12-single-file-combat-tracker
+// Version : 2026-05-24-v13-stable-combat-actor-refresh
 //
 // Source unique de vérité du HUD :
 // - hors combat : clic token => HUD du token contrôlé ;
 // - en combat : changement de tour => HUD du combattant actif si le HUD est déjà ouvert ;
-// - en combat tracker : clic combattant => HUD du combattant cliqué ;
-// - déplacement, resize, repli vers le haut et contrainte écran gérés ici.
+// - combat tracker : clic combattant => HUD du combattant cliqué ;
+// - les refresh updateActor/item/effect rafraîchissent l'acteur déjà affiché, jamais le token sélectionné.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-24-v12-single-file-combat-tracker";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-24-v13-stable-combat-actor-refresh";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
-const STORAGE_KEY = "add2e.actionHud.state.v12";
+const STORAGE_KEY = "add2e.actionHud.state.v13";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -23,17 +23,15 @@ let add2eHudManualIntentUntil = 0;
 let add2eHudApplyScheduled = false;
 
 const ADD2E_HUD_CARACS = [
-  { key: "force", label: "FOR", title: "Force", icon: "fa-dumbbell", color: "#4ab878" },
-  { key: "dexterite", label: "DEX", title: "Dextérité", icon: "fa-running", color: "#f3aa3c" },
-  { key: "constitution", label: "CON", title: "Constitution", icon: "fa-heartbeat", color: "#e74c3c" },
-  { key: "intelligence", label: "INT", title: "Intelligence", icon: "fa-brain", color: "#2980b9" },
-  { key: "sagesse", label: "SAG", title: "Sagesse", icon: "fa-eye", color: "#9b59b6" },
-  { key: "charisme", label: "CHA", title: "Charisme", icon: "fa-theater-masks", color: "#e056fd" }
+  { key: "force", label: "FOR", title: "Force" },
+  { key: "dexterite", label: "DEX", title: "Dextérité" },
+  { key: "constitution", label: "CON", title: "Constitution" },
+  { key: "intelligence", label: "INT", title: "Intelligence" },
+  { key: "sagesse", label: "SAG", title: "Sagesse" },
+  { key: "charisme", label: "CHA", title: "Charisme" }
 ];
 const ADD2E_HUD_SAVE_NAMES = ["Paralysie", "Pétrification", "Baguettes", "Souffles", "Sorts"];
 const ADD2E_HUD_SAVE_FULL_NAMES = ["Paralysie / poison / mort", "Pétrification / métamorphose", "Baguettes", "Souffles", "Sorts"];
-const ADD2E_HUD_SAVE_ICONS = ["fa-skull-crossbones", "fa-mountain", "fa-magic", "fa-fire", "fa-scroll"];
-const ADD2E_HUD_SAVE_COLORS = ["#c48642", "#6394e8", "#b12f95", "#e67e22", "#a173d9"];
 
 function add2eHudEscape(value) {
   try { return foundry.utils.escapeHTML(String(value ?? "")); }
@@ -57,6 +55,8 @@ function add2eHudNumber(value, fallback = 0) {
 }
 function add2eHudClamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 function add2eHudNow() { return Date.now(); }
+function add2eHudElement() { return document.getElementById(HUD_ID); }
+function add2eHudPanel(hud = add2eHudElement()) { return hud?.querySelector?.(".a2e-hud-menu-panel") ?? null; }
 
 function add2eHudDefaultState() {
   return { left: 116, top: Math.max(20, window.innerHeight - 360 - 22), width: 560, maxMenuHeight: 320, menuRetracted: false };
@@ -64,7 +64,7 @@ function add2eHudDefaultState() {
 function add2eHudLoadState() {
   if (add2eHudState) return add2eHudState;
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem("add2e.actionHud.state.v8") || "null");
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem("add2e.actionHud.state.v12") || localStorage.getItem("add2e.actionHud.state.v8") || "null");
     if (raw && typeof raw === "object") {
       add2eHudState = {
         left: add2eHudClamp(Number(raw.left) || 116, 8, Math.max(8, window.innerWidth - 80)),
@@ -84,8 +84,6 @@ function add2eHudSaveState(partial = {}) {
   Object.assign(s, partial);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (_e) {}
 }
-function add2eHudElement() { return document.getElementById(HUD_ID); }
-function add2eHudPanel(hud = add2eHudElement()) { return hud?.querySelector?.(".a2e-hud-menu-panel") ?? null; }
 
 function add2eHudCanUseActor(actor) {
   if (!actor) return false;
@@ -103,6 +101,19 @@ function add2eHudIsRelevant(actor) {
 function add2eHudSelectedActorAndToken() {
   const token = canvas?.tokens?.controlled?.[0] ?? null;
   return { actor: token?.actor ?? game.user?.character ?? null, token };
+}
+function add2eHudTokenForActor(actor) {
+  if (!actor) return null;
+  const selected = canvas?.tokens?.controlled?.find?.(t => t?.actor?.id === actor.id) ?? null;
+  if (selected) return selected;
+  const combatant = game.combat?.combatants?.find?.(c => c?.actor?.id === actor.id) ?? game.combat?.turns?.find?.(c => c?.actor?.id === actor.id) ?? null;
+  const combatToken = add2eHudTokenFromCombatant(combatant);
+  if (combatToken) return combatToken;
+  return actor.getActiveTokens?.()[0] ?? null;
+}
+function add2eHudRerenderActor(actor, reason) {
+  if (!actor || actor.id !== add2eHudActorId) return false;
+  return add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason });
 }
 
 function add2eHudFindItem(actor, itemId) { return actor?.items?.get?.(itemId) ?? actor?.items?.find?.(i => String(i.id ?? i._id) === String(itemId)) ?? null; }
@@ -180,12 +191,12 @@ function add2eHudInjectStyle() {
     #${HUD_ID}{position:fixed;z-index:100;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;min-width:360px;resize:none;right:auto!important;bottom:auto!important;touch-action:none;user-select:none;}
     #${HUD_ID}.collapsed .a2e-hud-menu-panel,#${HUD_ID}.a2e-hud-menu-retracted .a2e-hud-menu-panel{display:none!important;}
     #${HUD_ID}.collapsed .a2e-hud-icon-btn i,#${HUD_ID}.a2e-hud-menu-retracted .a2e-hud-icon-btn i{transform:rotate(180deg);}
-    #${HUD_ID} .a2e-hud-shell{display:flex;flex-direction:column;justify-content:flex-end;border:1px solid #8a611d;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 15% 0%,rgba(213,147,45,.28),transparent 36%),linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,230,160,.12);backdrop-filter:blur(3px);}
+    #${HUD_ID} .a2e-hud-shell{display:flex;flex-direction:column;justify-content:flex-end;border:1px solid #8a611d;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 15% 0%,rgba(213,147,45,.28),transparent 36%),linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,230,160,.12);}
     #${HUD_ID} .a2e-hud-menu-panel{flex:0 1 auto!important;min-height:0!important;max-height:var(--a2e-hud-menu-max,320px)!important;padding:9px!important;overflow-y:auto!important;border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.12);display:block!important;}
     #${HUD_ID} .a2e-hud-section{display:none!important;} #${HUD_ID} .a2e-hud-section.active{display:grid!important;gap:7px!important;align-content:start!important;margin-top:0!important;}
     #${HUD_ID} .a2e-hud-tabs{flex:0 0 auto;display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.18);} #${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.78em;font-weight:900;cursor:pointer;} #${HUD_ID} .a2e-hud-tab.active{color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e);}
     #${HUD_ID} .a2e-hud-header{flex:0 0 auto;display:grid;grid-template-columns:74px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));cursor:move;user-select:none;}
-    #${HUD_ID} .a2e-hud-portrait{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #c4973f;background:#111;box-shadow:0 2px 8px rgba(0,0,0,.45);pointer-events:none;} #${HUD_ID} .a2e-hud-name{color:#fff4cf;font-size:1.12em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #${HUD_ID} .a2e-hud-subtitle{color:#d8bd78;font-size:.82em;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #${HUD_ID} .a2e-hud-portrait{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #c4973f;background:#111;} #${HUD_ID} .a2e-hud-name{color:#fff4cf;font-size:1.12em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #${HUD_ID} .a2e-hud-subtitle{color:#d8bd78;font-size:.82em;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     #${HUD_ID} .a2e-hud-metrics{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;} #${HUD_ID} .a2e-hud-pill{display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:2px 7px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.78em;font-weight:850;white-space:nowrap;}
     #${HUD_ID} .a2e-hud-icon-btn,#${HUD_ID} .a2e-hud-resize{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;} #${HUD_ID} .a2e-hud-resize{cursor:nwse-resize!important;}
     #${HUD_ID} .a2e-hud-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);} #${HUD_ID} .a2e-hud-row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px;} #${HUD_ID} .a2e-hud-row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25);}
@@ -330,7 +341,7 @@ function add2eHudBindCombatTracker(app, html) {
 }
 
 function add2eBindHudEvents(hud, actor) {
-  hud.querySelectorAll("[data-hud-tab]").forEach(btn => btn.addEventListener("click", ev => { ev.preventDefault(); add2eHudActiveTab = btn.dataset.hudTab || "attaques"; add2eRenderActionHud(actor, null, { reason: "tab" }); }));
+  hud.querySelectorAll("[data-hud-tab]").forEach(btn => btn.addEventListener("click", ev => { ev.preventDefault(); add2eHudActiveTab = btn.dataset.hudTab || "attaques"; add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason: "tab" }); }));
   hud.querySelectorAll("[data-action]").forEach(btn => btn.addEventListener("click", async ev => {
     if (add2eHudNow() < add2eHudSuppressClickUntil) { ev.preventDefault(); ev.stopPropagation(); return; }
     ev.preventDefault(); ev.stopPropagation();
@@ -402,9 +413,9 @@ async function add2eHudRollSaveLikeSheet(actor, idx) {
 Hooks.once("init", () => {
   game.add2e = game.add2e ?? {};
   game.add2e.actionHudVersion = ADD2E_ACTION_HUD_VERSION;
-  game.add2e.openActionHud = (actor = null) => { const s = add2eHudSelectedActorAndToken(); return add2eRenderActionHud(actor ?? s.actor, s.token, { reason: "api-open" }); };
+  game.add2e.openActionHud = (actor = null) => { const s = add2eHudSelectedActorAndToken(); return add2eRenderActionHud(actor ?? s.actor, actor ? add2eHudTokenForActor(actor) : s.token, { reason: "api-open" }); };
   game.add2e.closeActionHud = add2eCloseActionHud;
-  game.add2e.refreshActionHud = () => add2eRefreshActionHud("api-refresh");
+  game.add2e.refreshActionHud = () => add2eHudActorId ? add2eHudRerenderActor(game.actors.get(add2eHudActorId), "api-refresh-current") : add2eRefreshActionHud("api-refresh");
   game.add2e.followCurrentCombatantHud = () => add2eHudFollowCurrentCombatant(game.combat, { forceOpen: true, reason: "api-force-combatant" });
   Object.assign(globalThis, {
     add2eRenderActionHud,
@@ -413,8 +424,8 @@ Hooks.once("init", () => {
     add2eHudFollowCurrentCombatant: game.add2e.followCurrentCombatantHud,
     add2eHudForceOpen: () => add2eHudSetRetracted(add2eHudElement(), false),
     add2eHudForceRetract: () => add2eHudSetRetracted(add2eHudElement(), true),
-    add2eHudFixDebug: () => ({ version: ADD2E_ACTION_HUD_VERSION, hud: !!add2eHudElement(), actorId: add2eHudActorId, activeTab: add2eHudActiveTab, state: add2eHudLoadState(), combatant: add2eHudCurrentCombatant(game.combat)?.name ?? null }),
-    add2eHudCheck: () => ({ version: ADD2E_ACTION_HUD_VERSION, actorId: add2eHudActorId, activeTab: add2eHudActiveTab, attackRoll: typeof globalThis.add2eAttackRoll, castSpell: typeof globalThis.add2eCastSpell, featureOnUse: typeof globalThis.add2eExecuteClassFeatureOnUse, hud: !!add2eHudElement() })
+    add2eHudFixDebug: () => ({ version: ADD2E_ACTION_HUD_VERSION, hud: !!add2eHudElement(), actorId: add2eHudActorId, actor: game.actors.get(add2eHudActorId)?.name ?? null, activeTab: add2eHudActiveTab, state: add2eHudLoadState(), combatant: add2eHudCurrentCombatant(game.combat)?.name ?? null, selected: canvas?.tokens?.controlled?.map?.(t => t.name) ?? [] }),
+    add2eHudCheck: () => ({ version: ADD2E_ACTION_HUD_VERSION, actorId: add2eHudActorId, actor: game.actors.get(add2eHudActorId)?.name ?? null, activeTab: add2eHudActiveTab, attackRoll: typeof globalThis.add2eAttackRoll, castSpell: typeof globalThis.add2eCastSpell, featureOnUse: typeof globalThis.add2eExecuteClassFeatureOnUse, hud: !!add2eHudElement() })
   });
   console.log(`${TAG}[INIT]`, ADD2E_ACTION_HUD_VERSION);
 });
@@ -432,7 +443,12 @@ Hooks.on("updateCombat", (combat, changes) => { if (add2eHudIsCombatTurnChange(c
 Hooks.on("combatTurn", combat => add2eHudScheduleCombatFollow(combat, { forceOpen: false, reason: "combatTurn" }));
 Hooks.on("combatRound", combat => add2eHudScheduleCombatFollow(combat, { forceOpen: false, reason: "combatRound" }));
 Hooks.on("combatStart", combat => add2eHudScheduleCombatFollow(combat, { forceOpen: false, reason: "combatStart" }));
-Hooks.on("updateActor", actor => { if (actor?.id === add2eHudActorId) window.setTimeout(() => add2eRefreshActionHud("updateActor"), 60); });
-for (const hookName of ["createItem", "updateItem", "deleteItem", "createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) Hooks.on(hookName, doc => { if (doc?.parent?.id === add2eHudActorId) window.setTimeout(() => add2eRefreshActionHud(hookName), 60); });
+Hooks.on("updateActor", actor => { if (actor?.id === add2eHudActorId) window.setTimeout(() => add2eHudRerenderActor(actor, "updateActor-current"), 60); });
+for (const hookName of ["createItem", "updateItem", "deleteItem", "createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
+  Hooks.on(hookName, doc => {
+    const actor = doc?.parent;
+    if (actor?.id === add2eHudActorId) window.setTimeout(() => add2eHudRerenderActor(actor, `${hookName}-current`), 60);
+  });
+}
 
 export { add2eRenderActionHud, add2eRefreshActionHud, add2eCloseActionHud };
