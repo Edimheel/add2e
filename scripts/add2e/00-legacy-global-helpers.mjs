@@ -2,7 +2,7 @@
 // ADD2E — Helpers globaux encore utilisés par la feuille legacy
 // ============================================================
 
-const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-05-24-legacy-global-helpers-v2-player-spell-damage-relay";
+const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-05-24-legacy-global-helpers-v3-gm-operation-only";
 globalThis.ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = ADD2E_LEGACY_GLOBAL_HELPERS_VERSION;
 console.log("[ADD2E][LEGACY_GLOBAL_HELPERS][VERSION]", ADD2E_LEGACY_GLOBAL_HELPERS_VERSION);
 
@@ -106,11 +106,19 @@ if (typeof globalThis.add2eRegisterImgPicker !== "function") {
 }
 
 // ============================================================
-// ADD2E — Dégâts / soins compatibles joueur via socket MJ
+// ADD2E — Helpers d'écriture propres pour scripts onUse
+// Un seul protocole socket : ADD2E_GM_OPERATION.
+// La réception MJ reste centralisée dans scripts/add2e/15-validation-sockets.mjs.
 // ============================================================
 
-const ADD2E_PLAYER_SPELL_DAMAGE_RELAY_VERSION = "2026-05-24-player-spell-damage-relay-v1";
-globalThis.ADD2E_PLAYER_SPELL_DAMAGE_RELAY_VERSION = ADD2E_PLAYER_SPELL_DAMAGE_RELAY_VERSION;
+const ADD2E_SPELL_GM_HELPERS_VERSION = "2026-05-24-spell-gm-helpers-v1";
+globalThis.ADD2E_SPELL_GM_HELPERS_VERSION = ADD2E_SPELL_GM_HELPERS_VERSION;
+
+function add2eHasDirectActorWrite(actorDoc) {
+  if (!actorDoc) return false;
+  if (game.user?.isGM) return true;
+  return !!actorDoc.isOwner || actorDoc.testUserPermission?.(game.user, "OWNER") === true;
+}
 
 function add2eReadHpMax(actorDoc) {
   const sys = actorDoc?.system ?? {};
@@ -124,31 +132,12 @@ function add2eReadHpMax(actorDoc) {
 
 function add2eReadHpCurrent(actorDoc, max = 0) {
   const sys = actorDoc?.system ?? {};
-  const candidates = [
-    sys.pdv,
-    sys.pv,
-    sys.hp?.value,
-    sys.attributes?.hp?.value
-  ];
-  for (const raw of candidates) {
+  for (const raw of [sys.pdv, sys.pv, sys.hp?.value, sys.attributes?.hp?.value]) {
     if (raw === undefined || raw === null || raw === "") continue;
     const n = Number(raw);
     if (Number.isFinite(n)) return n;
   }
   return Number(max) || 0;
-}
-
-function add2eResolveDamageActor(payload = {}) {
-  if (payload.actorId) {
-    const actorById = game.actors?.get?.(payload.actorId);
-    if (actorById) return actorById;
-  }
-  if (payload.sceneId && payload.tokenId) {
-    const scene = game.scenes?.get?.(payload.sceneId) ?? canvas?.scene ?? null;
-    const tokenDoc = scene?.tokens?.get?.(payload.tokenId) ?? null;
-    if (tokenDoc?.actor) return tokenDoc.actor;
-  }
-  return null;
 }
 
 async function add2eApplyDamageDirect({ actorDoc, montant = 0, type = "degats", details = "" } = {}) {
@@ -161,21 +150,12 @@ async function add2eApplyDamageDirect({ actorDoc, montant = 0, type = "degats", 
   const current = add2eReadHpCurrent(actorDoc, max);
   const next = isHeal ? Math.min(max || current + amount, current + amount) : current - amount;
 
-  await actorDoc.update({ "system.pdv": next }, { add2eReason: "spell-damage-relay", add2eDetails: details });
-  console.log("[ADD2E][DAMAGE_RELAY][APPLIED]", {
-    actor: actorDoc.name,
-    type,
-    montant,
-    amount,
-    current,
-    max,
-    next,
-    details
-  });
+  await actorDoc.update({ "system.pdv": next }, { add2eReason: "spell-apply-damage", add2eDetails: details });
+  console.log("[ADD2E][SPELL_GM_HELPERS][APPLY_DAMAGE_DIRECT]", { actor: actorDoc.name, type, montant, current, max, next, details });
   return true;
 }
 
-function add2eDamagePayloadFromTarget(cible, data = {}) {
+function add2ePayloadFromTarget(cible, data = {}) {
   const tokenDoc = cible?.document ?? cible?.token?.document ?? null;
   const actorDoc = cible?.actor ?? cible;
   return {
@@ -187,49 +167,61 @@ function add2eDamagePayloadFromTarget(cible, data = {}) {
   };
 }
 
+function add2eEmitGMOperation(operation, payload = {}) {
+  const activeGM = game.users?.activeGM ?? game.users?.find?.(u => u.active && u.isGM) ?? null;
+  if (!game.socket || (!game.user?.isGM && !activeGM)) return false;
+  game.socket.emit("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation,
+    payload: { ...payload, fromUserId: game.user.id, sentAt: Date.now() }
+  });
+  console.log("[ADD2E][SPELL_GM_HELPERS][GM_OPERATION_EMIT]", { operation, payload });
+  return true;
+}
+
 if (typeof globalThis.add2eApplyDamage !== "function") {
   globalThis.add2eApplyDamage = async function add2eApplyDamage({ cible, montant = 0, type = "degats", details = "" } = {}) {
     const actorDoc = cible?.actor ?? cible;
     if (!actorDoc) return false;
+    if (add2eHasDirectActorWrite(actorDoc)) return await add2eApplyDamageDirect({ actorDoc, montant, type, details });
 
-    const canDirect = game.user?.isGM || actorDoc.isOwner || actorDoc.testUserPermission?.(game.user, "OWNER") === true;
-    if (canDirect) return await add2eApplyDamageDirect({ actorDoc, montant, type, details });
-
-    const activeGM = game.users?.activeGM ?? game.users?.find?.(u => u.active && u.isGM) ?? null;
-    if (!activeGM || !game.socket) {
-      ui.notifications?.error(`ADD2E : aucun MJ actif pour appliquer ${details || type}.`);
-      return false;
-    }
-
-    const payload = add2eDamagePayloadFromTarget(cible, { montant, type, details, fromUserId: game.user.id, sentAt: Date.now() });
-    console.log("[ADD2E][DAMAGE_RELAY][EMIT]", payload);
-    game.socket.emit("system.add2e", { type: "ADD2E_APPLY_DAMAGE", payload });
-    return true;
+    const ok = add2eEmitGMOperation("applyDamage", add2ePayloadFromTarget(cible, { montant, type, details }));
+    if (!ok) ui.notifications?.error(`ADD2E : aucun MJ actif pour appliquer ${details || type}.`);
+    return ok;
   };
 }
 
-Hooks.once("ready", () => {
-  if (globalThis.ADD2E_PLAYER_SPELL_DAMAGE_RELAY_REGISTERED) return;
-  globalThis.ADD2E_PLAYER_SPELL_DAMAGE_RELAY_REGISTERED = true;
+if (typeof globalThis.add2eDeleteActiveEffects !== "function") {
+  globalThis.add2eDeleteActiveEffects = async function add2eDeleteActiveEffects({ actor, effects = [], ids = [], tags = [], names = [] } = {}) {
+    const actorDoc = actor;
+    if (!actorDoc) return { deleted: 0, blocked: true };
+    const wantedIds = [...ids, ...effects.map(e => e?.id).filter(Boolean)].filter(Boolean);
 
-  game.socket?.on("system.add2e", async data => {
-    if (!data || data.type !== "ADD2E_APPLY_DAMAGE") return;
-    if (!game.user?.isGM) return;
-
-    const payload = data.payload ?? {};
-    const actorDoc = add2eResolveDamageActor(payload);
-    if (!actorDoc) {
-      console.warn("[ADD2E][DAMAGE_RELAY][ACTOR_NOT_FOUND]", payload);
-      return;
+    if (add2eHasDirectActorWrite(actorDoc)) {
+      let finalIds = [...wantedIds];
+      if (tags.length || names.length) {
+        const tagNorms = tags.map(add2eLegacyNormalize);
+        const nameNorms = names.map(add2eLegacyNormalize);
+        for (const effect of actorDoc.effects ?? []) {
+          const eTags = add2eLegacyArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(add2eLegacyNormalize);
+          const eName = add2eLegacyNormalize(effect.name);
+          if (tagNorms.some(t => eTags.includes(t)) || nameNorms.some(n => eName.includes(n))) finalIds.push(effect.id);
+        }
+      }
+      finalIds = [...new Set(finalIds)].filter(Boolean);
+      if (finalIds.length) await actorDoc.deleteEmbeddedDocuments("ActiveEffect", finalIds);
+      return { deleted: finalIds.length, blocked: false };
     }
 
-    await add2eApplyDamageDirect({
-      actorDoc,
-      montant: payload.montant,
-      type: payload.type,
-      details: payload.details
-    }).catch(err => console.error("[ADD2E][DAMAGE_RELAY][ERROR]", err, payload));
-  });
+    const ok = add2eEmitGMOperation("deleteActiveEffects", {
+      actorUuid: actorDoc.uuid,
+      actorId: actorDoc.id,
+      effectIds: wantedIds,
+      tags,
+      names
+    });
+    return { deleted: 0, blocked: !ok, relayed: ok };
+  };
+}
 
-  console.log("[ADD2E][DAMAGE_RELAY][READY]", ADD2E_PLAYER_SPELL_DAMAGE_RELAY_VERSION);
-});
+console.log("[ADD2E][SPELL_GM_HELPERS][READY]", ADD2E_SPELL_GM_HELPERS_VERSION);
