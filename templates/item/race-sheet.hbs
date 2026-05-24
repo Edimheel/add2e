@@ -1,124 +1,78 @@
-<form class="race-sheet-modern relative min-h-[80vh] p-0">
-  <!-- Background SVG, centré, flou -->
-  <div class="absolute inset-0 pointer-events-none z-0"
-       style="background: url('assets/race-bg.svg') center/cover no-repeat; opacity: 0.5;"></div>
-
-  <div class="relative z-10 max-w-3xl mx-auto py-8 flex flex-col gap-8">
-    <!-- Header (icône + nom) -->
-    <div class="flex items-center gap-6 bg-white/50 dark:bg-neutral-900/70 rounded-2xl shadow-lg p-6 backdrop-blur-md">
-<img src="{{item.img}}" alt="Icône {{item.name}}" data-edit="img" class="w-24 h-24 rounded-full shadow border-4 border-white dark:border-neutral-700 object-cover cursor-pointer"/>
-<div class="flex-1">
-  <input type="text" name="name" value="{{item.name}}" class="block w-full text-3xl font-extrabold bg-transparent border-none focus:ring-0 focus:outline-none text-neutral-900 dark:text-white"/>
-  <div class="text-sm text-neutral-500 dark:text-neutral-400">Type : {{item.type}}</div>
-  <textarea name="system.description" placeholder="Brève description..." class="w-full bg-transparent text-neutral-600 dark:text-neutral-200 border-none mt-2 min-h-[2.2rem] font-medium resize-none">{{system.description}}</textarea>
-</div>
-
-    </div>
-
-    <!-- Bonus/malus de caractéristiques -->
-    <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
-      <h3 class="font-semibold text-xl mb-2">Bonus/Malus de caractéristiques</h3>
-      <div class="grid grid-cols-2 gap-3">
-        {{#each system.bonus_caracteristiques}}
-          <label class="flex items-center gap-2">
-            <span class="capitalize text-neutral-600 dark:text-neutral-300">{{@key}}</span>
-            <input type="number" name="system.bonus_caracteristiques.{{@key}}" value="{{this}}" class="w-12 bg-neutral-100 dark:bg-neutral-700/70 rounded text-right text-neutral-800 dark:text-white border-none"/>
-          </label>
-        {{/each}}
+<form class="{{cssClass}} add2e-item-v2-sheet add2e-race-sheet" autocomplete="off">
+  <style>
+    .add2e-race-sheet{--gold:#d0b16b;--panel:#fffdf7;--soft:#fff8df;--accent:#2f6f55;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(135deg,#f8efd7 0%,#e4d7b0 100%);color:#2f241c}.add2e-race-sheet *{box-sizing:border-box}.add2e-race-sheet .sheet-header{display:flex;gap:12px;align-items:flex-start;padding:10px;border-bottom:1px solid var(--gold);background:rgba(255,248,224,.72);flex:0 0 auto}.add2e-race-sheet .profile-img{width:96px;height:96px;object-fit:cover;border:1px solid #7a5a28;border-radius:50%;background:#111;cursor:pointer}.add2e-race-sheet .header-fields{flex:1;display:grid;gap:7px;min-width:0}.add2e-race-sheet h1{margin:0}.add2e-race-sheet input,.add2e-race-sheet textarea,.add2e-race-sheet select{width:100%;border:1px solid #b9a15d;border-radius:5px;background:#fffaf0;color:#1d1606;padding:5px 7px}.add2e-race-sheet label span{display:block;font-weight:800;color:#6f4b12;font-size:.78rem;text-transform:uppercase;letter-spacing:.02em;margin-bottom:2px}.add2e-race-sheet .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.add2e-race-sheet .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.add2e-race-sheet .sheet-tabs{display:flex;gap:4px;padding:8px 10px 0;margin:0;background:rgba(250,242,216,.85);border-bottom:1px solid var(--gold);overflow-x:auto;flex:0 0 auto}.add2e-race-sheet .sheet-tabs .item{padding:7px 12px;border:1px solid var(--gold);border-bottom:0;border-radius:7px 7px 0 0;background:#fffdf4;color:#6f4b12;font-weight:900;text-decoration:none;white-space:nowrap;cursor:pointer}.add2e-race-sheet .sheet-tabs .item.active{background:linear-gradient(180deg,#3f8a66,#235842);color:#fff;border-color:#235842}.add2e-race-sheet .sheet-body{flex:1 1 auto;min-height:0;overflow:auto;padding:12px}.add2e-race-sheet .content.hidden{display:none!important}.add2e-race-sheet .content.active{display:block}.add2e-race-sheet fieldset{border:1px solid var(--gold);border-radius:8px;background:var(--panel);padding:10px;margin:0 0 12px}.add2e-race-sheet legend{font-weight:900;color:#6f4b12;padding:0 6px}.add2e-race-sheet textarea{min-height:110px;resize:vertical}.add2e-race-sheet .row{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin-bottom:7px}.add2e-race-sheet .mini-grid{display:grid;grid-template-columns:1fr 78px 78px;gap:6px;align-items:center;margin-bottom:6px}.add2e-race-sheet .cap-row{margin-bottom:6px}.add2e-race-sheet .muted{color:#7f704d;font-style:italic}.add2e-race-sheet .note{font-size:.85em;color:#6f6040;margin-top:4px}
+  </style>
+  <header class="sheet-header">
+    <img class="profile-img" src="{{img}}" alt="Icône {{item.name}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <h1><input type="text" name="name" value="{{item.name}}" placeholder="Nom de la race" style="font-size:1.3rem;font-weight:900;"/></h1>
+      <div class="grid-3">
+        <label><span>Type</span><input type="text" value="{{item.type}}" disabled/></label>
+        <label><span>Mouvement</span><input type="text" name="system.movement" value="{{system.movement}}"/></label>
+        <label><span>Taille</span><input type="text" name="system.taille" value="{{system.taille}}"/></label>
       </div>
-    </section>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Colonne 1 : Capacités, Limites, Langues -->
-      <div class="flex flex-col gap-6">
-
-        <!-- Capacités raciales -->
-        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
-          <h3 class="font-semibold text-xl mb-2">Capacités raciales</h3>
-          <ul class="flex flex-col gap-2">
-            {{#each system.capacites}}
-              <li>
-                <input type="text" name="system.capacites.{{@index}}" value="{{this}}" class="w-full bg-neutral-100 dark:bg-neutral-700/70 text-neutral-800 dark:text-white rounded px-2 py-1 border-none"/>
-              </li>
-            {{/each}}
-            <li>
-              <input type="text" name="system.capacites.NEW" value="" class="w-full bg-neutral-200 dark:bg-neutral-700/60 text-neutral-800 dark:text-white rounded px-2 py-1 border-none" placeholder="+ Ajouter une capacité"/>
-            </li>
-          </ul>
-        </section>
-
-        <!-- Limites de classe -->
-        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
-          <h3 class="font-semibold text-xl mb-2">Limites de classes</h3>
-          <div class="flex flex-col gap-2">
-            {{#each system.limites_classes}}
-              <label class="flex items-center gap-3">
-                <span class="w-28 capitalize text-neutral-600 dark:text-neutral-300">{{@key}}</span>
-                <input type="text" name="system.limites_classes.{{@key}}" value="{{this}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 border-none text-neutral-800 dark:text-white"/>
-              </label>
-            {{/each}}
-          </div>
-        </section>
-
-        <!-- Langues -->
-        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
-          <h3 class="font-semibold text-xl mb-2">Langues connues</h3>
-          <textarea name="system.langues" class="w-full bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 min-h-[2.5rem] text-neutral-800 dark:text-white" placeholder="Langues séparées par une virgule">{{system.langues}}</textarea>
-        </section>
-
-      </div>
-
-      <!-- Colonne 2 : Caractéristiques, Autres infos -->
-      <div class="flex flex-col gap-6">
-
-        <!-- Caractéristiques min/max -->
-        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5">
-          <h3 class="font-semibold text-xl mb-2">Caractéristiques min/max</h3>
-          <div class="flex flex-col gap-2">
-            {{#each system.min_caracteristiques}}
-              <label class="flex items-center gap-2">
-                <span class="capitalize w-20 text-neutral-600 dark:text-neutral-300">{{@key}}</span>
-                <input type="number" name="system.min_caracteristiques.{{@key}}" value="{{this}}" class="w-12 bg-neutral-100 dark:bg-neutral-700/70 rounded text-right text-neutral-800 dark:text-white border-none"/>
-                <span class="text-neutral-400">/</span>
-                <input type="number" name="system.max_caracteristiques.{{@key}}" value="{{lookup ../system.max_caracteristiques @key}}" class="w-12 bg-neutral-100 dark:bg-neutral-700/70 rounded text-right text-neutral-800 dark:text-white border-none"/>
-              </label>
-            {{/each}}
-          </div>
-        </section>
-
-        <!-- Infos techniques -->
-        <section class="bg-white/70 dark:bg-neutral-800/70 rounded-xl shadow p-5 flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <span class="w-32 text-neutral-600 dark:text-neutral-300">Mouvement</span>
-            <input type="text" name="system.movement" value="{{system.movement}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 text-neutral-800 dark:text-white border-none"/>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-32 text-neutral-600 dark:text-neutral-300">Taille</span>
-            <input type="text" name="system.taille" value="{{system.taille}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 text-neutral-800 dark:text-white border-none"/>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-32 text-neutral-600 dark:text-neutral-300">Âge départ</span>
-            <input type="text" name="system.âge_debut" value="{{system.âge_debut}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 text-neutral-800 dark:text-white border-none"/>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-32 text-neutral-600 dark:text-neutral-300">Esp. de vie</span>
-            <input type="text" name="system.espérance_vie" value="{{system.espérance_vie}}" class="flex-1 bg-neutral-100 dark:bg-neutral-700/70 rounded px-2 py-1 text-neutral-800 dark:text-white border-none"/>
-          </div>
-        </section>
-      </div>
+      <label><span>Description courte</span><textarea name="system.description" rows="2" placeholder="Brève description...">{{system.description}}</textarea></label>
     </div>
-
-    <!-- Description longue & notes MJ -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <section class="bg-white/80 dark:bg-neutral-800/80 rounded-2xl shadow p-5 flex flex-col">
-        <h3 class="font-semibold text-xl mb-2">Description détaillée</h3>
-        <textarea name="system.description_longue" class="w-full min-h-[6rem] bg-transparent text-neutral-700 dark:text-neutral-200 border-none rounded p-2 resize-vertical" placeholder="Description détaillée...">{{system.description_longue}}</textarea>
-      </section>
-
-      <section class="bg-white/80 dark:bg-neutral-800/80 rounded-2xl shadow p-5 flex flex-col">
-        <h3 class="font-semibold text-xl mb-2">Notes MJ / Références</h3>
-        <textarea name="system.note_md" class="w-full min-h-[4rem] bg-transparent text-neutral-500 dark:text-neutral-400 border-none rounded p-2 resize-vertical" placeholder="Zone MJ, sources, errata...">{{system.note_md}}</textarea>
-      </section>
+  </header>
+  <nav class="tabs sheet-tabs" data-group="primary">
+    <a class="item active" data-tab="resume">Résumé</a>
+    <a class="item" data-tab="caracs">Caractéristiques</a>
+    <a class="item" data-tab="capacites">Capacités</a>
+    <a class="item" data-tab="classes">Classes</a>
+    <a class="item" data-tab="description">Description</a>
+  </nav>
+  <section class="sheet-body">
+    <div class="content active" data-tab="resume">
+      <fieldset><legend>Informations générales</legend>
+        <div class="grid-2">
+          <label><span>Langues connues</span><textarea name="system.langues" rows="4" placeholder="Langues séparées par une virgule">{{system.langues}}</textarea></label>
+          <div>
+            <label><span>Âge départ</span><input type="text" name="system.âge_debut" value="{{system.âge_debut}}"/></label>
+            <label style="margin-top:8px;"><span>Espérance de vie</span><input type="text" name="system.espérance_vie" value="{{system.espérance_vie}}"/></label>
+          </div>
+        </div>
+      </fieldset>
     </div>
-  </div>
+    <div class="content hidden" data-tab="caracs">
+      <fieldset><legend>Bonus / malus de caractéristiques</legend>
+        <div class="grid-2">
+          {{#each system.bonus_caracteristiques}}
+            <label><span>{{@key}}</span><input type="number" name="system.bonus_caracteristiques.{{@key}}" value="{{this}}"/></label>
+          {{/each}}
+        </div>
+        <div class="grid-2" style="margin-top:8px;">
+          <label><span>Nouvelle carac</span><input type="text" name="system.bonus_caracteristiques.NEW_KEY" value="" placeholder="force"/></label>
+          <label><span>Valeur</span><input type="number" name="system.bonus_caracteristiques.NEW_VAL" value="0"/></label>
+        </div>
+      </fieldset>
+      <fieldset><legend>Minimum / maximum</legend>
+        {{#each system.min_caracteristiques}}
+          <div class="mini-grid">
+            <strong>{{@key}}</strong>
+            <input type="number" name="system.min_caracteristiques.{{@key}}" value="{{this}}" title="Minimum"/>
+            <input type="number" name="system.max_caracteristiques.{{@key}}" value="{{lookup ../system.max_caracteristiques @key}}" title="Maximum"/>
+          </div>
+        {{else}}<p class="muted">Aucune limite de caractéristique définie.</p>{{/each}}
+      </fieldset>
+    </div>
+    <div class="content hidden" data-tab="capacites">
+      <fieldset><legend>Capacités raciales</legend>
+        {{#each system.capacites}}
+          <div class="cap-row"><input type="text" name="system.capacites.{{@index}}" value="{{this}}"/></div>
+        {{else}}<p class="muted">Aucune capacité définie.</p>{{/each}}
+        <div class="cap-row"><input type="text" name="system.capacites.NEW" value="" placeholder="+ Ajouter une capacité"/></div>
+      </fieldset>
+    </div>
+    <div class="content hidden" data-tab="classes">
+      <fieldset><legend>Limites de classes</legend>
+        {{#each system.limites_classes}}
+          <div class="row"><strong>{{@key}}</strong><input type="text" name="system.limites_classes.{{@key}}" value="{{this}}"/></div>
+        {{else}}<p class="muted">Aucune limite de classe définie.</p>{{/each}}
+      </fieldset>
+    </div>
+    <div class="content hidden" data-tab="description">
+      <fieldset><legend>Description détaillée</legend><textarea name="system.description_longue" rows="10" placeholder="Description détaillée...">{{system.description_longue}}</textarea></fieldset>
+      <fieldset><legend>Notes MJ / Références</legend><textarea name="system.note_md" rows="8" placeholder="Zone MJ, sources, errata...">{{system.note_md}}</textarea></fieldset>
+    </div>
+  </section>
 </form>
