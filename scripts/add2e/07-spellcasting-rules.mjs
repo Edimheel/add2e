@@ -17,9 +17,7 @@ function add2eRerenderActorSheet(actor, force = true) {
         return true;
       }
     }
-  } catch (err) {
-    console.warn("[ADD2E][SHEET][RERENDER] ui.windows impossible", err);
-  }
+  } catch (_err) {}
 
   // Ne pas utiliser actor.sheet.render ici : cela peut instancier/ouvrir la feuille
   // ou provoquer un scroll parasite quand l'action vient d'un bouton déjà visible.
@@ -349,8 +347,6 @@ function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
   const lvl = Number(spellLevel) || 1;
   let total = 0;
 
-  const details = [];
-
   for (const s of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
     if (add2eIsObjectMagicSpellForPreparation(s)) continue;
 
@@ -358,20 +354,8 @@ function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
     if (sLvl !== lvl) continue;
     const sEntry = add2eGetSpellEntryForSpell(actor, s);
     if (sEntry && add2eNormalizeSpellKey(sEntry.key) === key) {
-      const count = add2eGetMemorizedCountForEntry(s, entry);
-      total += count;
-      if (count) details.push({ id: s.id, name: s.name, count });
+      total += add2eGetMemorizedCountForEntry(s, entry);
     }
-  }
-
-  if (details.length) {
-    console.log("[ADD2E][SPELL_PREP][COUNT]", {
-      actor: actor?.name,
-      entry: entry?.label || key,
-      spellLevel: lvl,
-      total,
-      details
-    });
   }
 
   return total;
@@ -469,7 +453,7 @@ function add2eResolveFxToken(target) {
   if (target.center && target.document) return target;
   if (target.object?.center && target.object?.document) return target.object;
   if (target.documentName === "Token") return target.object ?? canvas.tokens?.get?.(target.id) ?? null;
-  if (target.documentName === "Actor") return target.getActiveTokens?.()[0] ?? null;
+  if (target.documentName === "Actor") return target.getActiveTokens?.[0] ?? null;
   if (target.actor && target.document) return target;
   return null;
 }
@@ -488,9 +472,7 @@ async function add2ePlayNativeSpellFx(preset, target, options = {}) {
     } else if (typeof canvas.controls?.ping === "function") {
       canvas.controls.ping(point, { style: "pulse", color, size: options.size || 96, duration: options.duration || 700 });
     }
-  } catch (err) {
-    console.warn("[ADD2E][SPELL_FX][PING] impossible", { preset, err });
-  }
+  } catch (_err) {}
 
   try {
     if (canvas.interface?.createScrollingText) {
@@ -505,9 +487,7 @@ async function add2ePlayNativeSpellFx(preset, target, options = {}) {
         duration: options.durationText || 900
       });
     }
-  } catch (err) {
-    console.warn("[ADD2E][SPELL_FX][TEXT] impossible", { preset, err });
-  }
+  } catch (_err) {}
 
   return true;
 }
@@ -545,7 +525,6 @@ if (!globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) {
 }
 
 try { globalThis.add2ePlayNativeSpellFx = add2ePlayNativeSpellFx; } catch (_e) {}
-console.log("[ADD2E][SPELL_FX][VERSION]", globalThis.ADD2E_SPELL_FX_VERSION);
 
 // Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
 try { globalThis.add2eRerenderActorSheet = add2eRerenderActorSheet; } catch (_e) {}
