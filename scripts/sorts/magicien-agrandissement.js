@@ -1,22 +1,11 @@
-// ADD2E — onUse Magicien : Agrandissement
-// Version : 2026-05-05-magicien-n1-9-v2
-// Retour attendu : true = sort consommé, false = sort non consommé.
+// ADD2E — onUse Magicien : Agrandissement / Retrecissement
+// Version : 2026-05-24-magicien-agrandissement-v1
+// Retour attendu : true = sort consomme, false = sort non consomme.
 
-const ADD2E_SORT_CONFIG = {
-  "name": "Agrandissement",
-  "slug": "agrandissement",
-  "level": 1,
-  "kind": "condition",
-  "description": "Agrandissement applique un état ou une transformation : charme, peur, invisibilité, paralysie, rapidité, ralentissement, métamorphose ou effet comparable. Le script pose un effet actif de suivi.",
-  "dice": null,
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Agrandissement"
-    }
-  ]
-};
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN]";
+const ADD2E_SORT_NAME = "Agrandissement";
+const ADD2E_SORT_SLUG = "agrandissement";
+const ADD2E_SORT_LEVEL = 1;
+const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][AGRANDISSEMENT]";
 
 function add2eHtmlEscape(value) {
   const div = document.createElement("div");
@@ -24,51 +13,218 @@ function add2eHtmlEscape(value) {
   return div.innerHTML;
 }
 
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
+function add2eGetGlobal(name) {
+  try { return globalThis?.[name]; } catch (_) { return undefined; }
 }
 
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
+function add2eGetItem() {
+  return (typeof item !== "undefined" && item) ? item : add2eGetGlobal("item") ?? null;
 }
 
-function add2eDamageFormula(raw, level) {
-  const s = String(raw || "1d6");
-  if (s === "leveld3") return `${Math.max(1, level)}d3`;
-  if (s === "leveld4+level") return `${Math.max(1, level)}d4+${level}`;
-  if (s === "leveld6") return `${Math.max(1, Math.min(10, level))}d6`;
-  if (s === "1d8+level") return `1d8+${level}`;
-  if (s === "1d6+level") return `1d6+${level}`;
-  if (s === "special" || s === "variable") return "1d20";
-  return s;
-}
-
-function add2eRoundCount(level) {
-  return Math.max(1, level);
+function add2eGetActor() {
+  if (typeof actor !== "undefined" && actor) return actor;
+  const t = add2eGetCasterToken();
+  return t?.actor ?? add2eGetGlobal("actor") ?? null;
 }
 
 function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
+  if (typeof token !== "undefined" && token) return token;
+  const args0 = (typeof args !== "undefined" && Array.isArray(args)) ? args[0] : null;
+  return args0?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
+}
+
+function add2eCasterLevel(casterActor) {
+  const sys = casterActor?.system ?? {};
+  const candidates = [
+    sys.niveau,
+    sys.level,
+    sys.details?.niveau,
+    sys.details?.level,
+    sys.details_classe?.niveau,
+    sys.details_classe?.level
+  ];
+  for (const raw of candidates) {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) return Math.max(1, Math.floor(n));
+  }
+  return 1;
 }
 
 function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
+  const targets = Array.from(game.user?.targets ?? []);
   if (targets.length) return targets;
   const casterToken = add2eGetCasterToken();
   return (fallbackCaster && casterToken) ? [casterToken] : [];
 }
 
+function add2eReadSaveVsSpells(targetActor) {
+  const sys = targetActor?.system ?? {};
+  const candidates = [
+    Array.isArray(sys.sauvegardes) ? sys.sauvegardes[4] : null,
+    Array.isArray(sys.savingThrows) ? sys.savingThrows[4] : null,
+    sys.sauvegarde_sortileges,
+    sys.sauvegarde_sorts,
+    sys.sauvegardes?.sortileges,
+    sys.sauvegardes?.sorts,
+    sys.saves?.sorts,
+    sys.saves?.spell,
+    sys.saves?.spells,
+    sys.saves?.magic,
+    sys.calculatedSaves?.sorts,
+    sys.calculatedSaves?.spell,
+    sys.calculatedSaves?.spells,
+    sys.jp_sort,
+    sys.jp_sorts,
+    sys.jp?.sorts,
+    sys.jp?.sortileges,
+    sys.jet_protection?.sorts,
+    sys.jet_protection?.sortileges,
+    sys.jetProtection?.sorts
+  ];
+  for (const raw of candidates) {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return NaN;
+}
+
+async function add2eRollSaveVsSpells(targetActor) {
+  const saveVal = add2eReadSaveVsSpells(targetActor);
+  if (!Number.isFinite(saveVal) || saveVal <= 0) {
+    return { canRoll: false, saveVal: NaN, roll: null, total: 0, success: false };
+  }
+  const roll = await new Roll("1d20").evaluate();
+  return {
+    canRoll: true,
+    saveVal,
+    roll,
+    total: Number(roll.total) || 0,
+    success: (Number(roll.total) || 0) >= saveVal
+  };
+}
+
+async function add2eAskAgrandissement(level) {
+  const pct = Math.min(50, Math.max(10, level * 10));
+  return await new Promise(resolve => {
+    let done = false;
+    const finish = value => { if (!done) { done = true; resolve(value); } };
+    new Dialog({
+      title: "Agrandissement / Retrecissement",
+      content: `
+        <form>
+          <p><b>Agrandissement</b> modifie temporairement la taille de 10% par niveau, jusqu'a 50%.</p>
+          <div class="form-group">
+            <label>Mode</label>
+            <select name="mode">
+              <option value="agrandissement">Agrandissement</option>
+              <option value="retrecissement">Retrecissement</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Variation calculee</label>
+            <input type="text" value="${pct}%" disabled />
+          </div>
+          <div class="form-group">
+            <label>Cible consentante</label>
+            <input type="checkbox" name="consentante" checked />
+          </div>
+          <div class="form-group">
+            <label>Modificateur toucher applique par le MD</label>
+            <input type="number" name="bonusAttaque" value="0" step="1" />
+          </div>
+          <div class="form-group">
+            <label>Modificateur degats applique par le MD</label>
+            <input type="number" name="bonusDegats" value="0" step="1" />
+          </div>
+          <p style="font-size:12px;opacity:.85;">Si la cible n'est pas consentante, un jet de protection contre les sorts annule l'effet.</p>
+        </form>`,
+      buttons: {
+        cast: {
+          label: "Lancer le sort",
+          callback: html => finish({
+            mode: String(html.find("[name='mode']").val() || "agrandissement"),
+            consentante: !!html.find("[name='consentante']").prop("checked"),
+            bonusAttaque: Number(html.find("[name='bonusAttaque']").val()) || 0,
+            bonusDegats: Number(html.find("[name='bonusDegats']").val()) || 0
+          })
+        },
+        cancel: { label: "Annuler", callback: () => finish(null) }
+      },
+      default: "cast",
+      close: () => finish(null)
+    }).render(true);
+  });
+}
+
+function add2eEffectTags({ mode, level, pct, bonusAttaque, bonusDegats }) {
+  const isShrink = mode === "retrecissement";
+  const tags = [
+    `sort:${ADD2E_SORT_SLUG}`,
+    "classe:magicien",
+    "liste:magicien",
+    `niveau:${ADD2E_SORT_LEVEL}`,
+    "ecole:alteration",
+    "type:taille",
+    "reversible:retrecissement",
+    isShrink ? "etat:retrecissement" : "etat:agrandissement",
+    isShrink ? "taille:reduite" : "taille:agrandie",
+    isShrink ? "poids:reduit" : "poids:augmente",
+    isShrink ? "force_effective:reduite" : "force_effective:augmentee",
+    `variation_taille_pct:${pct}`,
+    `duree_rounds:${level * 10}`
+  ];
+
+  if (bonusAttaque) {
+    tags.push(`bonus_attaque:${bonusAttaque}`);
+    tags.push(`bonus:toucher:${bonusAttaque}`);
+  }
+  if (bonusDegats) {
+    tags.push(`bonus_degats:${bonusDegats}`);
+    tags.push(`bonus:degats:${bonusDegats}`);
+  }
+  return tags;
+}
+
+async function add2eApplyEffect(targetActor, { mode, level, pct, bonusAttaque, bonusDegats }) {
+  const currentItem = add2eGetItem();
+  const isShrink = mode === "retrecissement";
+  const rounds = Math.max(10, level * 10);
+  const name = isShrink ? "Retrecissement" : "Agrandissement";
+  const tags = add2eEffectTags({ mode, level, pct, bonusAttaque, bonusDegats });
+
+  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
+    name,
+    img: currentItem?.img || "icons/svg/growth.svg",
+    disabled: false,
+    transfer: false,
+    type: "base",
+    system: {},
+    changes: [],
+    duration: {
+      rounds,
+      startRound: game.combat?.round ?? null,
+      startTime: game.time?.worldTime ?? null,
+      combat: game.combat?.id ?? null
+    },
+    description: `${name} : variation temporaire de taille de ${pct}%. Duree ${rounds} rounds.`,
+    flags: { add2e: { tags } }
+  }]);
+
+  return tags;
+}
+
 async function add2eChat(title, html, speakerToken = null, options = {}) {
   const casterToken = speakerToken ?? add2eGetCasterToken();
-  const casterActor = actor ?? casterToken?.actor ?? null;
+  const casterActor = add2eGetActor() ?? casterToken?.actor ?? null;
+  const currentItem = add2eGetItem();
   const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
-  const spellName = item?.name ?? title ?? "Sort de magicien";
+  const spellName = currentItem?.name ?? title ?? ADD2E_SORT_NAME;
   const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
+  const spellImg = currentItem?.img ?? "icons/svg/book.svg";
+  const targetLabel = options.targetLabel ?? casterName;
   const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? "";
+  const rule = options.rule ?? "Agrandissement : portee 1/2 pouce par niveau, duree 1 tour par niveau, jet de protection annule si cible non consentante.";
+
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
     content: `
@@ -89,80 +245,93 @@ async function add2eChat(title, html, speakerToken = null, options = {}) {
             <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
           </div>
           <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
+            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Regle appliquee</summary>
+            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${add2eHtmlEscape(rule)}</div>
           </details>
         </div>
       </div>`
   });
 }
 
-async function add2eApplyEffect(targetActor, name, tags, rounds = 0) {
-  if (!targetActor) return false;
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
-    name,
-    img: item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [],
-    duration: { rounds: rounds || undefined, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-    description: ADD2E_SORT_CONFIG.description,
-    flags: { add2e: { tags } }
-  }]);
-  return true;
+const casterActor = add2eGetActor();
+if (!casterActor) {
+  ui.notifications?.warn("Agrandissement : aucun lanceur trouve.");
+  return false;
 }
 
-async function add2eAskNote(config) {
-  const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
-  if (!needsNote) return { mode: "normal", note: "" };
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = v => { if (!done) { done = true; resolve(v); } };
-    const buttons = {};
-    for (const m of config.modes ?? [{id:"normal",label:config.name}]) {
-      buttons[m.id] = { label: m.label, callback: html => finish({ mode:m.id, note: html.find("[name='note']").val() ?? "" }) };
-    }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-    new Dialog({
-      title: config.name,
-      content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
-      buttons,
-      default: Object.keys(buttons)[0],
-      close: () => finish(null)
-    }).render(true);
-  });
-}
-
-const choice = await add2eAskNote(ADD2E_SORT_CONFIG);
+const level = add2eCasterLevel(casterActor);
+const pct = Math.min(50, Math.max(10, level * 10));
+const choice = await add2eAskAgrandissement(level);
 if (!choice) return false;
 
-const level = add2eCasterLevel(actor);
-const targets = add2eGetTargets({ fallbackCaster: ADD2E_SORT_CONFIG.kind !== "damage" });
-const baseTags = [`sort:${ADD2E_SORT_CONFIG.slug}`, "classe:magicien", "liste:magicien", `niveau:${ADD2E_SORT_CONFIG.level}`, `type:${ADD2E_SORT_CONFIG.kind}`];
-
-console.log(`${ADD2E_ONUSE_TAG}[START]`, { sort: ADD2E_SORT_CONFIG.name, actor: actor?.name, level, targets: targets.map(t => t.name), mode: choice.mode });
-
-if (ADD2E_SORT_CONFIG.kind === "damage") {
-  const formula = add2eDamageFormula(ADD2E_SORT_CONFIG.dice, level);
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: ADD2E_SORT_CONFIG.name });
-  await add2eChat(ADD2E_SORT_CONFIG.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
+const targets = add2eGetTargets({ fallbackCaster: true });
+if (!targets.length) {
+  ui.notifications?.warn("Agrandissement : aucune cible trouvee.");
+  return false;
 }
 
-if (["condition","protection"].includes(ADD2E_SORT_CONFIG.kind)) {
-  for (const t of targets) await add2eApplyEffect(t.actor, ADD2E_SORT_CONFIG.name, baseTags, add2eRoundCount(level));
-  await add2eChat(ADD2E_SORT_CONFIG.name, `<p>Effet actif appliqué à : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>`, null, { outcome: "EFFET ACTIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
+console.log(`${ADD2E_ONUSE_TAG}[START]`, {
+  actor: casterActor?.name,
+  level,
+  pct,
+  targets: targets.map(t => t.name),
+  choice
+});
+
+const applied = [];
+const resisted = [];
+const missingSave = [];
+
+for (const target of targets) {
+  const targetActor = target?.actor;
+  if (!targetActor) continue;
+
+  if (!choice.consentante) {
+    const save = await add2eRollSaveVsSpells(targetActor);
+    if (save.roll) {
+      await save.roll.toMessage({
+        speaker: ChatMessage.getSpeaker({ actor: targetActor, token: target }),
+        flavor: `${targetActor.name} — Jet de protection contre les sorts (${ADD2E_SORT_NAME})`
+      });
+    }
+
+    if (!save.canRoll) {
+      missingSave.push(target.name);
+      continue;
+    }
+
+    if (save.success) {
+      resisted.push(`${target.name} (${save.total}/${save.saveVal})`);
+      continue;
+    }
+  }
+
+  await add2eApplyEffect(targetActor, {
+    mode: choice.mode,
+    level,
+    pct,
+    bonusAttaque: choice.bonusAttaque,
+    bonusDegats: choice.bonusDegats
+  });
+  applied.push(target.name);
 }
 
-await add2eChat(ADD2E_SORT_CONFIG.name, `
-  <p>${add2eHtmlEscape(ADD2E_SORT_CONFIG.description)}</p>
-  ${choice.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-`, null, { outcome: ADD2E_SORT_CONFIG.name.toUpperCase(), rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
+const modeLabel = choice.mode === "retrecissement" ? "Retrecissement" : "Agrandissement";
+const bonusLines = [];
+if (choice.bonusAttaque) bonusLines.push(`Toucher : ${choice.bonusAttaque >= 0 ? "+" : ""}${choice.bonusAttaque}`);
+if (choice.bonusDegats) bonusLines.push(`Degats : ${choice.bonusDegats >= 0 ? "+" : ""}${choice.bonusDegats}`);
+
+await add2eChat(modeLabel, `
+  <p><b>${add2eHtmlEscape(modeLabel)}</b> : variation temporaire de <b>${pct}%</b>.</p>
+  <p>Duree : <b>${level * 10} rounds</b> (${level} tour(s)).</p>
+  ${applied.length ? `<p>Effet applique : <b>${applied.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
+  ${resisted.length ? `<p>Jet de protection reussi, effet annule : <b>${resisted.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
+  ${missingSave.length ? `<p>Jet de protection introuvable, effet non applique : <b>${missingSave.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
+  ${bonusLines.length ? `<p>Modificateurs MD : <b>${bonusLines.map(add2eHtmlEscape).join(" ; ")}</b></p>` : ""}
+`, null, {
+  outcome: applied.length ? "EFFET ACTIF" : "EFFET ANNULE",
+  targetLabel: targets.map(t => t.name).join(", "),
+  rule: "Agrandissement : portee 1/2 pouce par niveau, duree 1 tour par niveau, jet de protection annule si cible non consentante. La variation appliquee est 10% par niveau, maximum 50%."
+});
+
 return true;
