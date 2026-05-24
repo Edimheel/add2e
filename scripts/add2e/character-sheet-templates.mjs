@@ -21,5 +21,5 @@ const ADD2E_CHARACTER_SHEET_PARTIALS = [
 ];
 
 Hooks.once("init", async () => {
-  await loadTemplates(ADD2E_CHARACTER_SHEET_PARTIALS);
+  await foundry.applications.handlebars.loadTemplates(ADD2E_CHARACTER_SHEET_PARTIALS);
 });
