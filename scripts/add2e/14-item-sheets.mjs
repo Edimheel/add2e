@@ -1,8 +1,22 @@
-const ADD2E_ITEM_SHEETS_VERSION = "2026-05-20-descriptions-html-v1";
+const ADD2E_ITEM_SHEETS_VERSION = "2026-05-24-item-sheets-application-v2";
 globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
 
+const { ApplicationV2 } = foundry.applications.api;
+
+function add2eItemsCollection() {
+  return foundry.documents.collections.Items;
+}
+
 function add2eGetTextEditorImplementation() {
-  return foundry?.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor ?? null;
+  return foundry.applications.ux.TextEditor?.implementation ?? null;
+}
+
+function add2eGetFilePickerClass() {
+  return foundry.applications.apps.FilePicker ?? null;
+}
+
+async function add2eRenderTemplate(path, data) {
+  return foundry.applications.handlebars.renderTemplate(path, data);
 }
 
 async function add2eEnrichDescription(raw, item = null) {
@@ -12,111 +26,227 @@ async function add2eEnrichDescription(raw, item = null) {
   if (!editor?.enrichHTML) return text;
   try {
     return await editor.enrichHTML(text, { async: true, relativeTo: item ?? undefined });
-  } catch (err) {
-    console.warn("[ADD2E][ITEM_SHEET][DESCRIPTION_HTML] Échec enrichissement", err);
+  } catch (_err) {
     return text;
   }
 }
 
-class Add2eArmureSheet extends ItemSheet {
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      classes: ["add2e", "sheet", "item", "armure"],
-      template: "systems/add2e/templates/item/armure-sheet.hbs",
-      width: 500,
-      height: 430,
-      resizable: true
-    });
-  }
-  async getData() {
-    const data = await super.getData();
-    data.system = data.item.system;
-    data.img = this.item.img || "icons/svg/mystery-man.svg";
-    data.descriptionHTML = await add2eEnrichDescription(data.system?.description, this.item);
-    return data;
+function add2ePlainValue(value) {
+  if (value === "on") return true;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return value;
+}
+
+function add2eCollectFormData(root) {
+  const form = root?.matches?.("form") ? root : root?.querySelector?.("form");
+  if (!form) return {};
+
+  const flat = Object.fromEntries(new FormData(form).entries());
+
+  for (const checkbox of form.querySelectorAll('input[type="checkbox"][name]')) {
+    flat[checkbox.name] = checkbox.checked;
   }
 
-  activateListeners(html) {
-    super.activateListeners(html);
-    add2eRegisterImgPicker(html, this);
-    html.find(".toggle-equip").on("click", async ev => {
+  for (const [key, value] of Object.entries(flat)) flat[key] = add2ePlainValue(value);
+  return foundry.utils.expandObject(flat);
+}
+
+function add2eMergeCleanName(item, updateData) {
+  if (!updateData || typeof updateData !== "object") return updateData;
+  if (Object.prototype.hasOwnProperty.call(updateData, "name")) {
+    updateData.name = String(updateData.name ?? "").trim() || item?.name || "Item";
+  }
+  return updateData;
+}
+
+function add2eRegisterImgPicker(root, sheet) {
+  const item = sheet?.item ?? sheet?.document ?? sheet?.object;
+  if (!root?.querySelector || !item) return;
+
+  for (const img of root.querySelectorAll('img[data-edit="img"]')) {
+    img.addEventListener("click", ev => {
       ev.preventDefault();
-      const value = !this.item.system.equipee;
-      await this.item.update({ "system.equipee": value });
-      this.render(false);
+      const FilePicker = add2eGetFilePickerClass();
+      if (!FilePicker) return;
+      new FilePicker({
+        type: "image",
+        current: item.img,
+        callback: path => {
+          item.update({ img: path });
+          img.src = path;
+          root.querySelector('input[name="img"]')?.setAttribute("value", path);
+        }
+      }).render(true);
     });
   }
 }
+
+function add2eToArrayForSheet(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(v => v !== undefined && v !== null && String(v).trim() !== "");
+  if (typeof value === "object") return Object.values(value).filter(v => v !== undefined && v !== null && String(v).trim() !== "");
+  if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
+  return [];
+}
+
+class Add2eItemSheetV2 extends ApplicationV2 {
+  static TEMPLATE = "";
+  static DEFAULT_OPTIONS = {
+    classes: ["add2e", "sheet", "item"],
+    tag: "section",
+    window: { title: "ADD2E Item", resizable: true },
+    position: { width: 500, height: 500 }
+  };
+
+  constructor(document, options = {}) {
+    super({
+      id: `add2e-${document?.type ?? "item"}-sheet-${document?.id ?? foundry.utils.randomID()}`,
+      ...options
+    });
+    this.object = document;
+    this.document = document;
+    this.item = document;
+  }
+
+  get title() {
+    return this.item?.name ?? super.title;
+  }
+
+  get editable() {
+    return this.item?.isOwner === true || game.user?.isGM === true;
+  }
+
+  async getData(_options = {}) {
+    const item = this.item;
+    const system = item?.system ?? {};
+    return {
+      item,
+      document: item,
+      object: item,
+      system,
+      editable: this.editable,
+      owner: item?.isOwner,
+      limited: item?.limited,
+      options: this.options,
+      name: item?.name ?? "",
+      img: item?.img || "icons/svg/mystery-man.svg",
+      descriptionHTML: await add2eEnrichDescription(system?.description, item)
+    };
+  }
+
+  async _renderHTML(_context, options) {
+    const data = await this.getData(options);
+    const html = await add2eRenderTemplate(this.constructor.TEMPLATE, data);
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    return wrapper;
+  }
+
+  _replaceHTML(result, content, _options) {
+    content.replaceChildren(...result.childNodes);
+    this.activateListeners(content);
+  }
+
+  activateListeners(content) {
+    const root = content instanceof HTMLElement ? content : content?.[0];
+    if (!root) return;
+    add2eRegisterImgPicker(root, this);
+    this._activateAutoSubmit(root);
+  }
+
+  _activateAutoSubmit(root) {
+    const form = root.matches?.("form") ? root : root.querySelector?.("form");
+    if (!form || !this.editable) return;
+
+    const submit = async event => {
+      event?.preventDefault?.();
+      const updateData = add2eMergeCleanName(this.item, add2eCollectFormData(form));
+      await this._updateObject(event, updateData);
+    };
+
+    form.addEventListener("submit", submit);
+    for (const input of form.querySelectorAll("input, textarea, select")) {
+      input.addEventListener("change", submit);
+    }
+  }
+
+  async _updateObject(_event, updateData) {
+    if (!this.item || !this.editable) return;
+    await this.item.update(updateData);
+  }
+}
+
+class Add2eArmureSheet extends Add2eItemSheetV2 {
+  static TEMPLATE = "systems/add2e/templates/item/armure-sheet.hbs";
+  static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
+    classes: ["add2e", "sheet", "item", "armure"],
+    window: { title: "ADD2E Armure", resizable: true },
+    position: { width: 500, height: 430 }
+  }, { inplace: false });
+
+  activateListeners(content) {
+    super.activateListeners(content);
+    const root = content instanceof HTMLElement ? content : content?.[0];
+    root?.querySelector?.(".toggle-equip")?.addEventListener("click", async ev => {
+      ev.preventDefault();
+      await this.item.update({ "system.equipee": !this.item.system.equipee });
+      this.render({ force: true });
+    });
+  }
+}
+
 globalThis.Add2eArmureSheet = Add2eArmureSheet;
-Items.registerSheet("add2e", Add2eArmureSheet, {
+add2eItemsCollection().registerSheet("add2e", Add2eArmureSheet, {
   types: ["armure"],
   makeDefault: true,
   label: "ADD2e Armure"
 });
 
-class Add2eObjetSheet extends ItemSheet {
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      classes: ["add2e", "sheet", "item", "objet", "objet-magique"],
-      template: "systems/add2e/templates/item/objet-sheet.hbs",
-      width: 760,
-      height: "auto",
-      resizable: true,
-      tabs: [{ navSelector: ".tabs", contentSelector: ".sheet-body", initial: "resume" }]
-    });
-  }
+class Add2eObjetSheet extends Add2eItemSheetV2 {
+  static TEMPLATE = "systems/add2e/templates/item/objet-sheet.hbs";
+  static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
+    classes: ["add2e", "sheet", "item", "objet", "objet-magique"],
+    window: { title: "ADD2E Objet", resizable: true },
+    position: { width: 760, height: 720 }
+  }, { inplace: false });
 
   async getData(options = {}) {
     const data = await super.getData(options);
-    const item = this.item ?? this.object;
-    const system = item?.system ?? {};
-
-    const toArray = value => {
-      if (!value) return [];
-      if (Array.isArray(value)) return value.filter(v => v !== undefined && v !== null && String(v).trim() !== "");
-      if (typeof value === "object") return Object.values(value).filter(v => v !== undefined && v !== null && String(v).trim() !== "");
-      if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
-      return [];
-    };
-
+    const system = data.system ?? {};
     const powersRaw = system.pouvoirs ?? system.powers ?? system.pouvoirsMagiques ?? system.magicalPowers ?? [];
-    const pouvoirs = Array.isArray(powersRaw)
+    data.pouvoirs = Array.isArray(powersRaw)
       ? powersRaw.filter(p => p && typeof p === "object")
       : (powersRaw && typeof powersRaw === "object" ? Object.values(powersRaw).filter(p => p && typeof p === "object") : []);
-
-    data.item = item;
-    data.system = system;
-    data.img = item?.img || "icons/svg/mystery-man.svg";
-    data.pouvoirs = pouvoirs;
-    data.tags = toArray(system.tags);
-    data.effectTags = toArray(system.effectTags ?? system.effets ?? system.effects);
+    data.tags = add2eToArrayForSheet(system.tags);
+    data.effectTags = add2eToArrayForSheet(system.effectTags ?? system.effets ?? system.effects);
     data.charges = {
       value: Number(system.charges?.value ?? system.chargesValeur ?? system.current_charges ?? system.currentCharges ?? 0) || 0,
       max: Number(system.charges?.max ?? system.max_charges ?? system.maxCharges ?? system.charges_max ?? 0) || 0
     };
     data.isMagicItem = system.magique === true || system.magic === true || String(system.categorie ?? "").toLowerCase().includes("magique");
-    data.descriptionHTML = await add2eEnrichDescription(system.description, item);
-
     return data;
   }
 
-  activateListeners(html) {
-    super.activateListeners(html);
-    add2eRegisterImgPicker(html, this);
-
-    html.find(".tabs a").off("click.add2e-objet-tab").on("click.add2e-objet-tab", ev => {
-      ev.preventDefault();
-      const tab = ev.currentTarget.dataset.tab;
-      html.find(".tabs a").removeClass("active");
-      html.find(ev.currentTarget).addClass("active");
-      html.find(".sheet-body .content").addClass("hidden");
-      html.find(`.sheet-body .content[data-tab="${tab}"]`).removeClass("hidden");
-    });
+  activateListeners(content) {
+    super.activateListeners(content);
+    const root = content instanceof HTMLElement ? content : content?.[0];
+    if (!root) return;
+    for (const tabLink of root.querySelectorAll(".tabs a")) {
+      tabLink.addEventListener("click", ev => {
+        ev.preventDefault();
+        const tab = ev.currentTarget.dataset.tab;
+        root.querySelectorAll(".tabs a").forEach(a => a.classList.remove("active"));
+        ev.currentTarget.classList.add("active");
+        root.querySelectorAll(".sheet-body .content").forEach(c => c.classList.add("hidden"));
+        root.querySelector(`.sheet-body .content[data-tab="${CSS.escape(tab)}"]`)?.classList.remove("hidden");
+      });
+    }
   }
 }
 
 globalThis.Add2eObjetSheet = Add2eObjetSheet;
-Items.registerSheet("add2e", Add2eObjetSheet, {
+add2eItemsCollection().registerSheet("add2e", Add2eObjetSheet, {
   types: ["objet"],
   makeDefault: true,
   canConfigure: true,
@@ -124,129 +254,88 @@ Items.registerSheet("add2e", Add2eObjetSheet, {
   label: "ADD2e Objet"
 });
 
-class Add2eArmeSheet extends ItemSheet {
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      classes: ["add2e", "sheet", "item", "arme"],
-      template: "systems/add2e/templates/item/arme-sheet.hbs",
-      width: 500,
-      height: 400,
-      resizable: true
-    });
-  }
-  async getData() {
-    const data = await super.getData();
-    data.system = data.item.system;
-    data.img = this.item.img || "icons/svg/mystery-man.svg";
-    data.descriptionHTML = await add2eEnrichDescription(data.system?.description, this.item);
-    return data;
-  }
-  activateListeners(html) {
-    super.activateListeners(html);
-    add2eRegisterImgPicker(html, this);
-  }
+class Add2eArmeSheet extends Add2eItemSheetV2 {
+  static TEMPLATE = "systems/add2e/templates/item/arme-sheet.hbs";
+  static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
+    classes: ["add2e", "sheet", "item", "arme"],
+    window: { title: "ADD2E Arme", resizable: true },
+    position: { width: 500, height: 400 }
+  }, { inplace: false });
 }
+
 globalThis.Add2eArmeSheet = Add2eArmeSheet;
-Items.registerSheet("add2e", Add2eArmeSheet, {
+add2eItemsCollection().registerSheet("add2e", Add2eArmeSheet, {
   types: ["arme"],
   makeDefault: true,
   label: "ADD2e Arme"
 });
 
-class Add2eSortSheet extends ItemSheet {
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      classes: ["add2e", "sheet", "item", "sort"],
-      template: "systems/add2e/templates/item/sort-sheet.hbs",
-      width: 500,
-      height: "auto",
-      resizable: true
-    });
-  }
+class Add2eSortSheet extends Add2eItemSheetV2 {
+  static TEMPLATE = "systems/add2e/templates/item/sort-sheet.hbs";
+  static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
+    classes: ["add2e", "sheet", "item", "sort"],
+    window: { title: "ADD2E Sort", resizable: true },
+    position: { width: 500, height: 620 }
+  }, { inplace: false });
 
-  async getData() {
-    const data = await super.getData();
-    data.name = this.item?.name ?? "";
-    data.img = this.item?.img ?? "icons/svg/mystery-man.svg";
-    data.system = this.item?.system ?? {};
-
+  async getData(options = {}) {
+    const data = await super.getData(options);
     data.system.number ??= "";
     data.system.diet ??= "";
     data.system.encounterTable ??= "";
-
     data.listeArmes = [];
     data.listeArmures = [];
     data.listeSorts = [];
 
-    if (this.item?.parent && this.item.parent.documentName === "Actor") {
+    if (this.item?.parent?.documentName === "Actor") {
       const actorItems = this.item.parent.items || [];
       data.listeArmes = actorItems.filter(i => i.type === "arme");
       data.listeArmures = actorItems.filter(i => i.type === "armure");
       data.listeSorts = actorItems.filter(i => i.type === "sort");
     }
 
-    const sorts = data.listeSorts ?? [];
     const sortsParNiveau = {};
-    for (const sort of sorts) {
+    for (const sort of data.listeSorts) {
       let niveau = Number(sort.system?.niveau || sort.system?.level || 1);
       if (!niveau || isNaN(niveau)) niveau = 1;
       if (!sortsParNiveau[niveau]) sortsParNiveau[niveau] = [];
       sortsParNiveau[niveau].push(sort);
     }
-    const niveauxSorts = Object.keys(sortsParNiveau).map(Number).sort((a, b) => a - b);
-
     data.sortsParNiveau = sortsParNiveau;
-    data.niveauxSorts = niveauxSorts;
+    data.niveauxSorts = Object.keys(sortsParNiveau).map(Number).sort((a, b) => a - b);
     data.sortsMemorizedByLevel = {};
-
     return data;
   }
-
-  activateListeners(html) {
-    super.activateListeners(html);
-    add2eRegisterImgPicker(html, this);
-  }
 }
+
 globalThis.Add2eSortSheet = Add2eSortSheet;
-Items.registerSheet("add2e", Add2eSortSheet, {
+add2eItemsCollection().registerSheet("add2e", Add2eSortSheet, {
   types: ["sort"],
   makeDefault: true,
   label: "ADD2e Sort"
 });
 
-class Add2eRaceSheet extends ItemSheet {
-  static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
-      classes: ["add2e", "sheet", "item", "race-sheet-modern"],
-      template: "systems/add2e/templates/item/race-sheet.hbs",
-      width: 700,
-      height: "auto",
-      resizable: true,
-      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "main" }],
-      scrollY: [".sheet-body"]
-    });
-  }
+class Add2eRaceSheet extends Add2eItemSheetV2 {
+  static TEMPLATE = "systems/add2e/templates/item/race-sheet.hbs";
+  static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
+    classes: ["add2e", "sheet", "item", "race-sheet-modern"],
+    window: { title: "ADD2E Race", resizable: true },
+    position: { width: 700, height: 720 }
+  }, { inplace: false });
 
-  async getData() {
-    const data = await super.getData();
-    data.system = data.system || data.item?.system || {};
-
-    const toArray = obj =>
-      Array.isArray(obj)
-        ? obj
-        : typeof obj === "object" && obj !== null
-          ? Object.entries(obj)
-            .filter(([k]) => !["NEW", "NEW_KEY", "NEW_VAL"].includes(k))
-            .filter(([k, v]) => v !== "" && v !== null && v !== undefined)
-            .map(([_, v]) => v)
-          : [];
+  async getData(options = {}) {
+    const data = await super.getData(options);
+    const toArray = obj => Array.isArray(obj)
+      ? obj
+      : typeof obj === "object" && obj !== null
+        ? Object.entries(obj).filter(([k, v]) => !["NEW", "NEW_KEY", "NEW_VAL"].includes(k) && v !== "" && v !== null && v !== undefined).map(([, v]) => v)
+        : [];
 
     data.system.capacites = toArray(data.system.capacites);
     if (typeof data.system.limites_classes !== "object" || Array.isArray(data.system.limites_classes)) data.system.limites_classes = {};
     if (typeof data.system.min_caracteristiques !== "object" || Array.isArray(data.system.min_caracteristiques)) data.system.min_caracteristiques = {};
     if (typeof data.system.max_caracteristiques !== "object" || Array.isArray(data.system.max_caracteristiques)) data.system.max_caracteristiques = {};
     if (typeof data.system.bonus_caracteristiques !== "object" || Array.isArray(data.system.bonus_caracteristiques)) data.system.bonus_caracteristiques = {};
-
     data.system.description ??= "";
     data.system.description_longue ??= "";
     data.system.note_md ??= "";
@@ -255,57 +344,33 @@ class Add2eRaceSheet extends ItemSheet {
     data.system.taille ??= "";
     data.system["âge_debut"] ??= "";
     data.system["espérance_vie"] ??= "";
-
     return data;
   }
 
-  activateListeners(html) {
-    super.activateListeners(html);
-
-    html.find('img[data-edit="img"]').off().on('click', ev => {
-      ev.preventDefault();
-      new FilePicker({
-        type: "image",
-        current: this.item.img,
-        callback: path => {
-          this.item.update({ img: path });
-          html.find('img[data-edit="img"]').attr('src', path);
-          html.find('input[name="img"]').val(path);
-        }
-      }).render(true);
-    });
-
-    html.find('input, textarea, select').on('change', async (event) => {
-      event.preventDefault();
-      const form = html.find('form')[0] || html[0];
-      const formData = new FormData(form);
-      let updateData = foundry.utils.expandObject(Object.fromEntries(formData));
-
-      if (updateData.system?.bonus_caracteristiques?.NEW_KEY) {
-        const k = updateData.system.bonus_caracteristiques.NEW_KEY.trim();
-        const v = Number(updateData.system.bonus_caracteristiques.NEW_VAL) || 0;
-        if (k) updateData[`system.bonus_caracteristiques.${k}`] = v;
-        delete updateData.system.bonus_caracteristiques.NEW_KEY;
-        delete updateData.system.bonus_caracteristiques.NEW_VAL;
+  async _updateObject(event, updateData) {
+    if (updateData.system?.bonus_caracteristiques?.NEW_KEY) {
+      const k = String(updateData.system.bonus_caracteristiques.NEW_KEY ?? "").trim();
+      const v = Number(updateData.system.bonus_caracteristiques.NEW_VAL) || 0;
+      if (k) updateData[`system.bonus_caracteristiques.${k}`] = v;
+      delete updateData.system.bonus_caracteristiques.NEW_KEY;
+      delete updateData.system.bonus_caracteristiques.NEW_VAL;
+    }
+    if (updateData.system?.capacites?.NEW) {
+      const newCap = String(updateData.system.capacites.NEW ?? "").trim();
+      if (newCap) {
+        const caps = Array.isArray(this.item.system.capacites) ? [...this.item.system.capacites] : [];
+        caps.push(newCap);
+        updateData["system.capacites"] = caps;
       }
-      if (updateData.system?.capacites?.NEW) {
-        const newCap = updateData.system.capacites.NEW.trim();
-        if (newCap) {
-          const caps = this.item.system.capacites ? [...this.item.system.capacites] : [];
-          caps.push(newCap);
-          updateData['system.capacites'] = caps;
-        }
-        delete updateData.system.capacites.NEW;
-      }
-
-      await this.item.update(updateData);
-      this.render(false);
-    });
+      delete updateData.system.capacites.NEW;
+    }
+    await super._updateObject(event, updateData);
+    this.render({ force: true });
   }
 }
 
 globalThis.Add2eRaceSheet = Add2eRaceSheet;
-Items.registerSheet("add2e", Add2eRaceSheet, {
+add2eItemsCollection().registerSheet("add2e", Add2eRaceSheet, {
   types: ["race"],
   makeDefault: true,
   label: "ADD2e Race"
