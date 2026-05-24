@@ -1,4 +1,4 @@
-const ADD2E_ITEM_SHEETS_VERSION = "2026-05-24-item-sheets-application-v2";
+const ADD2E_ITEM_SHEETS_VERSION = "2026-05-24-item-sheets-application-v2-directory-fix";
 globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -115,6 +115,11 @@ class Add2eItemSheetV2 extends ApplicationV2 {
 
   get editable() {
     return this.item?.isOwner === true || game.user?.isGM === true;
+  }
+
+  render(options = {}) {
+    if (typeof options === "boolean") return super.render({ force: options });
+    return super.render(options);
   }
 
   async getData(_options = {}) {
@@ -376,8 +381,63 @@ add2eItemsCollection().registerSheet("add2e", Add2eRaceSheet, {
   label: "ADD2e Race"
 });
 
+const ADD2E_ITEM_SHEET_V2_BY_TYPE = {
+  armure: Add2eArmureSheet,
+  objet: Add2eObjetSheet,
+  arme: Add2eArmeSheet,
+  sort: Add2eSortSheet,
+  race: Add2eRaceSheet
+};
+
+function add2eCreateItemSheetV2Fallback(item) {
+  if (!item || item.documentName !== "Item") return null;
+  const SheetClass = ADD2E_ITEM_SHEET_V2_BY_TYPE[item.type] ?? null;
+  if (!SheetClass) return null;
+  return new SheetClass(item);
+}
+
+function add2eFindPropertyDescriptor(proto, property) {
+  let cur = proto;
+  while (cur) {
+    const desc = Object.getOwnPropertyDescriptor(cur, property);
+    if (desc) return desc;
+    cur = Object.getPrototypeOf(cur);
+  }
+  return null;
+}
+
+function add2eInstallItemSheetV2FallbackGetter() {
+  const ItemDocument = foundry.documents.Item;
+  const proto = ItemDocument?.prototype;
+  if (!proto || proto._add2eItemSheetV2FallbackInstalled) return;
+
+  const originalSheetDescriptor = add2eFindPropertyDescriptor(proto, "sheet");
+  const originalGetter = originalSheetDescriptor?.get ?? null;
+
+  Object.defineProperty(proto, "sheet", {
+    configurable: true,
+    get() {
+      let sheet = null;
+      if (originalGetter) {
+        try { sheet = originalGetter.call(this); }
+        catch (_err) { sheet = null; }
+      }
+      return sheet ?? add2eCreateItemSheetV2Fallback(this);
+    }
+  });
+
+  Object.defineProperty(proto, "_add2eItemSheetV2FallbackInstalled", {
+    configurable: true,
+    value: true
+  });
+}
+
+Hooks.once("ready", add2eInstallItemSheetV2FallbackGetter);
+
+try { globalThis.Add2eItemSheetV2 = Add2eItemSheetV2; } catch (_e) {}
 try { globalThis.Add2eArmureSheet = Add2eArmureSheet; } catch (_e) {}
 try { globalThis.Add2eObjetSheet = Add2eObjetSheet; } catch (_e) {}
 try { globalThis.Add2eArmeSheet = Add2eArmeSheet; } catch (_e) {}
 try { globalThis.Add2eSortSheet = Add2eSortSheet; } catch (_e) {}
 try { globalThis.Add2eRaceSheet = Add2eRaceSheet; } catch (_e) {}
+try { globalThis.add2eInstallItemSheetV2FallbackGetter = add2eInstallItemSheetV2FallbackGetter; } catch (_e) {}
