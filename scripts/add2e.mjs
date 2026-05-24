@@ -61,10 +61,10 @@ function add2eRemoveLegacyClassSheetValidationHook() {
 add2eRemoveLegacyClassSheetValidationHook();
 
 // ADD2E — Feuille monstre : réenregistrement en vraie Document Sheet V2.
-// Pourquoi ici : add2e.mjs est chargé avant monster-sheet.mjs ; le hook ready permet
-// de récupérer la classe existante déjà enregistrée, puis de la réenregistrer sur
-// ActorSheetV2/DocumentSheetV2 sans créer de nouveau script ni modifier system.json.
-const ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION = "2026-05-24-monster-sheet-document-v2-reregister-v1";
+// Pourquoi ici : add2e.mjs est chargé avant monster-sheet.mjs. On importe explicitement
+// l'export Add2eMonsterSheet après chargement, puis on le réenregistre sur
+// ActorSheetV2/DocumentSheetV2 sans nouveau script ni modification de system.json.
+const ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION = "2026-05-24-monster-sheet-document-v2-reregister-v2-import";
 globalThis.ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION = ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION;
 
 function add2eMonsterSheetGetDocumentBase() {
@@ -76,28 +76,20 @@ function add2eMonsterSheetGetDocumentBase() {
   return mixin(base);
 }
 
-function add2eMonsterSheetCandidateClass(value) {
-  if (!value) return null;
-  if (typeof value === "function" && value.name === "Add2eMonsterSheet") return value;
-  if (typeof value === "object") {
-    if (typeof value.cls === "function" && value.cls.name === "Add2eMonsterSheet") return value.cls;
-    if (typeof value.sheetClass === "function" && value.sheetClass.name === "Add2eMonsterSheet") return value.sheetClass;
-    for (const child of Object.values(value)) {
-      const found = add2eMonsterSheetCandidateClass(child);
-      if (found) return found;
-    }
+async function add2eLoadOriginalMonsterSheetClass() {
+  if (typeof globalThis.Add2eMonsterSheet === "function") return globalThis.Add2eMonsterSheet;
+  try {
+    const module = await import("./monster-sheet.mjs");
+    if (typeof module?.Add2eMonsterSheet === "function") return module.Add2eMonsterSheet;
+  } catch (err) {
+    console.warn("[ADD2E][MONSTER_SHEET_V2_FIX][IMPORT_ERROR]", err);
   }
+  if (typeof globalThis.Add2eMonsterSheet === "function") return globalThis.Add2eMonsterSheet;
   return null;
 }
 
-function add2eFindRegisteredMonsterSheetClass() {
-  return add2eMonsterSheetCandidateClass(CONFIG?.Actor?.sheetClasses?.monster ?? null)
-    ?? add2eMonsterSheetCandidateClass(CONFIG?.Actor?.sheetClasses?.Actor?.monster ?? null)
-    ?? null;
-}
-
-function add2eRegisterMonsterDocumentSheetV2() {
-  const OriginalMonsterSheet = add2eFindRegisteredMonsterSheetClass();
+async function add2eRegisterMonsterDocumentSheetV2() {
+  const OriginalMonsterSheet = await add2eLoadOriginalMonsterSheetClass();
   const MonsterSheetBase = add2eMonsterSheetGetDocumentBase();
   const ActorsCollection = foundry?.documents?.collections?.Actors;
 
@@ -194,6 +186,15 @@ function add2eRegisterMonsterDocumentSheetV2() {
     label: "ADD2e Descartes (FR) - Monstre"
   });
 
+  for (const actor of game.actors ?? []) {
+    if (actor?.type !== "monster") continue;
+    try {
+      if (actor._sheet) delete actor._sheet;
+    } catch (_err) {
+      try { actor._sheet = null; } catch (_e) {}
+    }
+  }
+
   globalThis.Add2eMonsterDocumentSheetV2 = Add2eMonsterDocumentSheetV2;
   game.add2e = game.add2e ?? {};
   game.add2e.monsterSheetDocumentV2FixVersion = ADD2E_MONSTER_SHEET_DOCUMENT_V2_FIX_VERSION;
@@ -203,7 +204,7 @@ function add2eRegisterMonsterDocumentSheetV2() {
   return true;
 }
 
-Hooks.once("ready", () => window.setTimeout(add2eRegisterMonsterDocumentSheetV2, 0));
+Hooks.once("ready", () => window.setTimeout(() => add2eRegisterMonsterDocumentSheetV2().catch(err => console.error("[ADD2E][MONSTER_SHEET_V2_FIX][ERROR]", err)), 0));
 
 // ADD2E — Règle de liaison des tokens
 // Personnage = token lié ; Monstre = token non lié.
