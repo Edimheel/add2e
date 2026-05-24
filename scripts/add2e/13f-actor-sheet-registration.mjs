@@ -4,7 +4,7 @@ if (!globalThis.Add2eActorSheet) {
   throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant l'enregistrement de la sheet.");
 }
 
-Actors.registerSheet("add2e", globalThis.Add2eActorSheet, {
+foundry.documents.collections.Actors.registerSheet("add2e", globalThis.Add2eActorSheet, {
   types: ["personnage"],
   makeDefault: true,
   label: "ADD2e Personnage"
@@ -17,4 +17,3 @@ try { globalThis.Add2eActorSheet = globalThis.Add2eActorSheet; } catch (_e) {}
 // dans leurs méthodes de prototype. Ces références sont résolues à l'exécution.
 // Le pont défini dans 13a doit donc rester disponible tant que ces méthodes
 // n'auront pas été réécrites directement vers ADD2E_ACTOR_SHEET_LEGACY_BRIDGE.
-console.log("[ADD2E][ACTOR_SHEET][REGISTERED]", globalThis.ADD2E_ACTOR_SHEET_V2_VERSION || "application-v2");
