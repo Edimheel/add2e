@@ -3,6 +3,7 @@
 
 import "./13a-actor-sheet-class.mjs";
 import "./13b-actor-sheet-get-data.mjs";
+import "./13b-actor-sheet-object-magic-postprocess.mjs";
 import "./13c-actor-sheet-caracs-pv-tabs-render.mjs";
 import "./13d-actor-sheet-listeners.mjs";
 import "./13e-actor-sheet-drop.mjs";
