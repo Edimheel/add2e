@@ -1,1 +1,5 @@
-2026/05/21-10:04:06.027950 7f674fdfc0 Delete type=3 #1
+2026/05/23-22:42:13.572946 7f6b7eefc0 Log #43: 0 ops saved to Table #44 OK
+2026/05/23-22:42:13.573053 7f6b7eefc0 Archiving /data/Data/systems/add2e/packs/objets-magiques/000043.log: OK
+2026/05/23-22:42:13.587571 7f6b7eefc0 Table #32: 306 entries OK
+2026/05/23-22:42:13.587900 7f6b7eefc0 Archiving /data/Data/systems/add2e/packs/objets-magiques/MANIFEST-000042: OK
+2026/05/23-22:42:13.595296 7f6b7eefc0 **** Repaired leveldb /data/Data/systems/add2e/packs/objets-magiques; recovered 1 files; 729621 bytes. Some data may have been lost. ****
