@@ -1,12 +1,13 @@
 // ADD2E — Correctif XP session Foundry v13
-// Version : 2026-05-24-session-xp-v13-fix-v1
+// Version : 2026-05-24-session-xp-v13-fix-v2-onchange
 //
 // Corrige :
 // - bouton MJ invisible si getSceneControlButtons fournit tools en objet/Map au lieu d'un tableau ;
 // - détection 0 PV trop tardive si faite en updateActor au lieu de preUpdateActor ;
-// - bouton de secours dans le répertoire des acteurs.
+// - bouton de secours dans le répertoire des acteurs ;
+// - suppression de SceneControlTool#onClick déprécié : utilisation de onChange.
 
-const VERSION = "2026-05-24-session-xp-v13-fix-v1";
+const VERSION = "2026-05-24-session-xp-v13-fix-v2-onchange";
 const TAG = "[ADD2E][SESSION_XP_V13_FIX]";
 
 function log(label, data = {}) {
@@ -86,6 +87,15 @@ function queueRecord(actor, options = {}) {
   }, 0);
 }
 
+function openXpSessionFromTool() {
+  try {
+    globalThis.add2eOpenXpSession?.();
+  } catch (err) {
+    console.error(`${TAG}[OPEN][ERROR]`, err);
+    ui.notifications.error("Ouverture du bilan XP impossible. Voir console.");
+  }
+}
+
 function xpToolDefinition() {
   return {
     name: "add2e-session-xp",
@@ -93,7 +103,7 @@ function xpToolDefinition() {
     icon: "fas fa-coins",
     button: true,
     visible: game.user?.isGM === true,
-    onClick: () => globalThis.add2eOpenXpSession?.()
+    onChange: () => openXpSessionFromTool()
   };
 }
 
@@ -105,17 +115,32 @@ function installToolInControl(control, tool = xpToolDefinition()) {
   if (!control) return false;
 
   if (Array.isArray(control.tools)) {
-    if (!hasToolArray(control.tools, tool.name)) control.tools.push(tool);
+    const existing = control.tools.find(t => t?.name === tool.name || t?.id === tool.name);
+    if (existing) {
+      delete existing.onClick;
+      existing.onChange = tool.onChange;
+      existing.button = true;
+    } else control.tools.push(tool);
     return true;
   }
 
   if (control.tools instanceof Map) {
-    if (!control.tools.has(tool.name)) control.tools.set(tool.name, tool);
+    const existing = control.tools.get(tool.name);
+    if (existing) {
+      delete existing.onClick;
+      existing.onChange = tool.onChange;
+      existing.button = true;
+    } else control.tools.set(tool.name, tool);
     return true;
   }
 
   if (control.tools && typeof control.tools === "object") {
-    if (!control.tools[tool.name]) control.tools[tool.name] = tool;
+    const existing = control.tools[tool.name];
+    if (existing) {
+      delete existing.onClick;
+      existing.onChange = tool.onChange;
+      existing.button = true;
+    } else control.tools[tool.name] = tool;
     return true;
   }
 
@@ -174,7 +199,7 @@ function injectActorDirectoryButton(app, html) {
   btn.addEventListener("click", ev => {
     ev.preventDefault();
     ev.stopPropagation();
-    globalThis.add2eOpenXpSession?.();
+    openXpSessionFromTool();
   });
 
   target.prepend(btn);
