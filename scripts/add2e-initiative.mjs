@@ -3,7 +3,7 @@
 // Règle gérée ici : initiative simple au d6, ordre ascendant.
 // Surprise volontairement non gérée dans ce module.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-22-init-independent-v5-d6-background";
+const ADD2E_INITIATIVE_VERSION = "2026-05-24-init-independent-v6-d6-combatant-only";
 const TAG = "[ADD2E][INIT]";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 
@@ -172,17 +172,20 @@ function add2eMakeD6Image() {
   return img;
 }
 
-function add2ePatchInitiativeButtonBackground(button) {
-  if (!button) return false;
-
-  const currentBg = String(button.style?.backgroundImage || getComputedStyle(button).backgroundImage || "");
-  const hasD20Background = currentBg.includes("d20") || currentBg.includes("d20-highlight.svg");
-  const isInitiativeRollButton =
+function add2eIsCombatantInitiativeButton(button) {
+  if (!button?.closest) return false;
+  const row = button.closest(".combatant, li[data-combatant-id], [data-combatant-id]");
+  if (!row) return false;
+  const isRollAction =
     button.matches?.("button.combatant-control.roll") ||
-    button.matches?.("button.combat-control") ||
+    button.matches?.("[data-action='rollInitiative']") ||
+    button.matches?.("[data-control='rollInitiative']") ||
     button.classList?.contains("roll");
+  return !!isRollAction;
+}
 
-  if (!isInitiativeRollButton && !hasD20Background) return false;
+function add2ePatchInitiativeButtonBackground(button) {
+  if (!add2eIsCombatantInitiativeButton(button)) return false;
 
   button.style.setProperty("background-image", `url('${ADD2E_INITIATIVE_D6_ICON}')`, "important");
   button.style.setProperty("background-size", "contain", "important");
@@ -196,27 +199,14 @@ function add2ePatchInitiativeButtonBackground(button) {
 function add2ePatchOneInitiativeElement(el) {
   if (!el) return false;
 
-  if (el.matches?.("button.combatant-control.roll, button.combat-control")) {
-    return add2ePatchInitiativeButtonBackground(el);
-  }
+  const button = el.matches?.("button, a")
+    ? el
+    : el.closest?.("button, a") ?? el.querySelector?.("button, a");
+  if (!add2eIsCombatantInitiativeButton(button)) return false;
 
-  if (el.matches?.("i.fa-dice-d20")) {
-    el.replaceWith(add2eMakeD6Image());
-    return true;
-  }
-
-  const icon = el.querySelector?.("i.fa-dice-d20");
-  if (icon) {
-    icon.replaceWith(add2eMakeD6Image());
-    el.dataset.add2eD6InitiativeIcon = "1";
-    el.title = el.title || "Lancer l'initiative ADD2E (1d6)";
-    return true;
-  }
-
-  const button = el.closest?.("button.combatant-control.roll, button.combat-control") ?? el.querySelector?.("button.combatant-control.roll, button.combat-control");
-  if (button) return add2ePatchInitiativeButtonBackground(button);
-
-  return false;
+  const icon = button.querySelector?.("i.fa-dice-d20");
+  if (icon && !button.querySelector(".add2e-init-d6-icon")) icon.replaceWith(add2eMakeD6Image());
+  return add2ePatchInitiativeButtonBackground(button);
 }
 
 function add2ePatchCombatTrackerInitiativeIcons(root = document) {
@@ -224,24 +214,21 @@ function add2ePatchCombatTrackerInitiativeIcons(root = document) {
     const scope = root?.jquery ? root[0] : root;
     if (!scope?.querySelectorAll) return 0;
 
+    // IMPORTANT : uniquement les boutons d'initiative par combattant visibles dans le tracker.
+    // On ne touche pas aux boutons globaux rollAll/rollNPC ni aux autres dés d20 de l'interface.
     const selectors = [
-      "#combat-tracker i.fa-dice-d20",
-      "#combat i.fa-dice-d20",
-      ".combat-sidebar i.fa-dice-d20",
-      "[id^='combat'] i.fa-dice-d20",
-      "#combat-tracker button.combatant-control.roll",
-      "#combat-tracker button.combat-control",
-      "#combat button.combatant-control.roll",
-      "#combat button.combat-control",
-      ".combat-sidebar button.combatant-control.roll",
-      ".combat-sidebar button.combat-control",
-      "[id^='combat'] button.combatant-control.roll",
-      "[id^='combat'] button.combat-control",
-      "button.combatant-control.roll[data-action='rollInitiative']",
-      "button.combatant-control.roll[data-action]",
-      "button.combat-control[data-action='rollAll']",
-      "button.combat-control[data-action='rollNPC']",
-      "button.combat-control[aria-label*='Lancer']"
+      "#combat-tracker .combatant button.combatant-control.roll",
+      "#combat .combatant button.combatant-control.roll",
+      ".combat-sidebar .combatant button.combatant-control.roll",
+      "#combat-tracker [data-combatant-id] button.combatant-control.roll",
+      "#combat [data-combatant-id] button.combatant-control.roll",
+      ".combat-sidebar [data-combatant-id] button.combatant-control.roll",
+      "#combat-tracker .combatant [data-action='rollInitiative']",
+      "#combat .combatant [data-action='rollInitiative']",
+      ".combat-sidebar .combatant [data-action='rollInitiative']",
+      "#combat-tracker [data-combatant-id] [data-action='rollInitiative']",
+      "#combat [data-combatant-id] [data-action='rollInitiative']",
+      ".combat-sidebar [data-combatant-id] [data-action='rollInitiative']"
     ];
 
     const elements = new Set();
