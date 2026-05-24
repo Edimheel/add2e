@@ -211,17 +211,39 @@ Hooks.once("ready", () => {
 });
 
 // ADD2E — HUD maison : suivi du combattant actif
-// Pas de nouveau fichier : ce patch complète les scripts HUD existants chargés ci-dessus.
-const ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION = "2026-05-24-action-hud-combat-turn-sync-inline-v1";
+// Le HUD suit maintenant aussi les changements Foundry V13 stockés dans combat.current.
+const ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION = "2026-05-24-action-hud-combat-turn-sync-v2-current";
 globalThis.ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION = ADD2E_ACTION_HUD_COMBAT_SYNC_VERSION;
 
 function add2eCombatHudElement() {
   return document.getElementById("add2e-action-hud");
 }
 
+function add2eCombatHudCombatantById(combat, id) {
+  if (!combat || !id) return null;
+  return combat.combatants?.get?.(id)
+    ?? combat.combatants?.find?.(c => c.id === id)
+    ?? combat.turns?.find?.(c => c.id === id)
+    ?? null;
+}
+
+function add2eCombatHudCombatantByTurn(combat, turn) {
+  const index = Number(turn);
+  if (!combat || !Number.isInteger(index) || index < 0) return null;
+  return combat.turns?.[index]
+    ?? Array.from(combat.combatants ?? [])[index]
+    ?? null;
+}
+
 function add2eCombatHudCurrentCombatant(combat = game.combat) {
   if (!combat) return null;
-  return combat.combatant ?? combat.combatants?.get?.(combat.current?.combatantId) ?? null;
+
+  const currentId = combat.current?.combatantId ?? combat.combatantId ?? null;
+  return add2eCombatHudCombatantById(combat, currentId)
+    ?? combat.combatant
+    ?? add2eCombatHudCombatantByTurn(combat, combat.current?.turn ?? combat.turn)
+    ?? combat.combatants?.find?.(c => c.active === true)
+    ?? null;
 }
 
 function add2eCombatHudTokenFromCombatant(combatant) {
@@ -259,15 +281,34 @@ function add2eCombatHudFollowCurrent(combat = game.combat, { forceOpen = false }
 }
 
 function add2eCombatHudScheduleFollow(combat = game.combat, options = {}) {
-  window.setTimeout(() => add2eCombatHudFollowCurrent(combat, options), 80);
+  window.setTimeout(() => add2eCombatHudFollowCurrent(combat, options), 60);
+  window.setTimeout(() => add2eCombatHudFollowCurrent(combat, options), 180);
+}
+
+function add2eCombatHudIsTurnChange(changes = {}) {
+  return foundry.utils.hasProperty(changes, "turn")
+    || foundry.utils.hasProperty(changes, "round")
+    || foundry.utils.hasProperty(changes, "current")
+    || foundry.utils.hasProperty(changes, "current.turn")
+    || foundry.utils.hasProperty(changes, "current.round")
+    || foundry.utils.hasProperty(changes, "current.combatantId")
+    || foundry.utils.hasProperty(changes, "combatantId");
 }
 
 Hooks.on("updateCombat", (combat, changes) => {
-  if (!foundry.utils.hasProperty(changes ?? {}, "turn") && !foundry.utils.hasProperty(changes ?? {}, "round")) return;
+  if (!add2eCombatHudIsTurnChange(changes ?? {})) return;
   add2eCombatHudScheduleFollow(combat);
 });
 
+Hooks.on("combatTurn", combat => add2eCombatHudScheduleFollow(combat));
+Hooks.on("combatRound", combat => add2eCombatHudScheduleFollow(combat));
+Hooks.on("combatStart", combat => add2eCombatHudScheduleFollow(combat));
+
 Hooks.on("createCombatant", combatant => {
+  if (combatant?.combat === game.combat) add2eCombatHudScheduleFollow(game.combat);
+});
+
+Hooks.on("updateCombatant", combatant => {
   if (combatant?.combat === game.combat) add2eCombatHudScheduleFollow(game.combat);
 });
 
