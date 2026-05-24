@@ -1,4 +1,4 @@
-const ADD2E_ITEM_SHEETS_VERSION = "2026-05-24-item-sheets-application-v2-directory-fix";
+const ADD2E_ITEM_SHEETS_VERSION = "2026-05-24-item-sheets-application-v2-layout-v2";
 globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -90,6 +90,98 @@ function add2eToArrayForSheet(value) {
   return [];
 }
 
+function add2eRootFromContent(content) {
+  if (content instanceof HTMLElement) return content;
+  if (content?.[0] instanceof HTMLElement) return content[0];
+  return null;
+}
+
+function add2eCurrentActiveTab(root) {
+  return root.querySelector(".sheet-tabs .active[data-tab], .tabs .active[data-tab]")?.dataset?.tab
+    ?? root.querySelector(".tab.active[data-tab], .content:not(.hidden)[data-tab]")?.dataset?.tab
+    ?? root.querySelector(".sheet-tabs [data-tab], .tabs [data-tab]")?.dataset?.tab
+    ?? root.querySelector("[data-tab]")?.dataset?.tab
+    ?? "";
+}
+
+function add2eActivateSheetTab(root, tab) {
+  if (!root || !tab) return;
+
+  root.querySelectorAll(".sheet-tabs [data-tab], .tabs [data-tab]").forEach(link => {
+    link.classList.toggle("active", link.dataset.tab === tab);
+  });
+
+  root.querySelectorAll(".sheet-body .tab[data-tab], .sheet-body .content[data-tab], .tab[data-tab], .content[data-tab]").forEach(panel => {
+    const active = panel.dataset.tab === tab;
+    panel.classList.toggle("active", active);
+    panel.classList.toggle("hidden", !active);
+    panel.style.display = active ? "" : "none";
+  });
+}
+
+function add2eInstallSheetTabs(root) {
+  if (!root?.querySelector) return;
+  const links = [...root.querySelectorAll(".sheet-tabs [data-tab], .tabs [data-tab]")];
+  if (!links.length) return;
+
+  const initial = add2eCurrentActiveTab(root);
+  add2eActivateSheetTab(root, initial);
+
+  for (const link of links) {
+    link.addEventListener("click", ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      add2eActivateSheetTab(root, ev.currentTarget.dataset.tab);
+    });
+  }
+}
+
+function add2eApplyV2SheetLayout(root, app) {
+  if (!root?.querySelector) return;
+
+  const content = app?.element?.querySelector?.(".window-content")
+    ?? root.closest?.(".window-content")
+    ?? root.parentElement;
+
+  if (content) {
+    content.style.overflow = "hidden";
+    content.style.padding = "0";
+    content.style.minHeight = "0";
+  }
+
+  const form = root.matches?.("form") ? root : root.querySelector?.("form");
+  const sheetRoot = form ?? root.firstElementChild ?? root;
+
+  if (sheetRoot) {
+    sheetRoot.classList.add("add2e-v2-sheet-layout");
+    sheetRoot.style.height = "100%";
+    sheetRoot.style.minHeight = "0";
+    sheetRoot.style.display = "flex";
+    sheetRoot.style.flexDirection = "column";
+    sheetRoot.style.overflow = "hidden";
+  }
+
+  const header = sheetRoot?.querySelector?.(".sheet-header, header");
+  const tabs = sheetRoot?.querySelector?.(".sheet-tabs, .tabs");
+  const body = sheetRoot?.querySelector?.(".sheet-body");
+
+  if (header) header.style.flex = "0 0 auto";
+  if (tabs) tabs.style.flex = "0 0 auto";
+
+  if (body) {
+    body.style.flex = "1 1 auto";
+    body.style.minHeight = "0";
+    body.style.overflow = "auto";
+    body.style.position = "relative";
+  } else if (sheetRoot) {
+    sheetRoot.style.overflow = "auto";
+  }
+
+  for (const panel of sheetRoot?.querySelectorAll?.(".sheet-body .tab, .sheet-body .content") ?? []) {
+    panel.style.maxWidth = "100%";
+  }
+}
+
 class Add2eItemSheetV2 extends ApplicationV2 {
   static TEMPLATE = "";
   static DEFAULT_OPTIONS = {
@@ -134,6 +226,7 @@ class Add2eItemSheetV2 extends ApplicationV2 {
       owner: item?.isOwner,
       limited: item?.limited,
       options: this.options,
+      cssClass: this.editable ? "editable" : "locked",
       name: item?.name ?? "",
       img: item?.img || "icons/svg/mystery-man.svg",
       descriptionHTML: await add2eEnrichDescription(system?.description, item)
@@ -144,18 +237,22 @@ class Add2eItemSheetV2 extends ApplicationV2 {
     const data = await this.getData(options);
     const html = await add2eRenderTemplate(this.constructor.TEMPLATE, data);
     const wrapper = document.createElement("div");
+    wrapper.classList.add("add2e-v2-render-root");
     wrapper.innerHTML = html;
     return wrapper;
   }
 
   _replaceHTML(result, content, _options) {
     content.replaceChildren(...result.childNodes);
+    add2eApplyV2SheetLayout(add2eRootFromContent(content), this);
     this.activateListeners(content);
   }
 
   activateListeners(content) {
-    const root = content instanceof HTMLElement ? content : content?.[0];
+    const root = add2eRootFromContent(content);
     if (!root) return;
+    add2eApplyV2SheetLayout(root, this);
+    add2eInstallSheetTabs(root);
     add2eRegisterImgPicker(root, this);
     this._activateAutoSubmit(root);
   }
@@ -187,12 +284,12 @@ class Add2eArmureSheet extends Add2eItemSheetV2 {
   static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
     classes: ["add2e", "sheet", "item", "armure"],
     window: { title: "ADD2E Armure", resizable: true },
-    position: { width: 500, height: 430 }
+    position: { width: 560, height: 520 }
   }, { inplace: false });
 
   activateListeners(content) {
     super.activateListeners(content);
-    const root = content instanceof HTMLElement ? content : content?.[0];
+    const root = add2eRootFromContent(content);
     root?.querySelector?.(".toggle-equip")?.addEventListener("click", async ev => {
       ev.preventDefault();
       await this.item.update({ "system.equipee": !this.item.system.equipee });
@@ -213,7 +310,7 @@ class Add2eObjetSheet extends Add2eItemSheetV2 {
   static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
     classes: ["add2e", "sheet", "item", "objet", "objet-magique"],
     window: { title: "ADD2E Objet", resizable: true },
-    position: { width: 760, height: 720 }
+    position: { width: 820, height: 760 }
   }, { inplace: false });
 
   async getData(options = {}) {
@@ -232,22 +329,6 @@ class Add2eObjetSheet extends Add2eItemSheetV2 {
     data.isMagicItem = system.magique === true || system.magic === true || String(system.categorie ?? "").toLowerCase().includes("magique");
     return data;
   }
-
-  activateListeners(content) {
-    super.activateListeners(content);
-    const root = content instanceof HTMLElement ? content : content?.[0];
-    if (!root) return;
-    for (const tabLink of root.querySelectorAll(".tabs a")) {
-      tabLink.addEventListener("click", ev => {
-        ev.preventDefault();
-        const tab = ev.currentTarget.dataset.tab;
-        root.querySelectorAll(".tabs a").forEach(a => a.classList.remove("active"));
-        ev.currentTarget.classList.add("active");
-        root.querySelectorAll(".sheet-body .content").forEach(c => c.classList.add("hidden"));
-        root.querySelector(`.sheet-body .content[data-tab="${CSS.escape(tab)}"]`)?.classList.remove("hidden");
-      });
-    }
-  }
 }
 
 globalThis.Add2eObjetSheet = Add2eObjetSheet;
@@ -264,7 +345,7 @@ class Add2eArmeSheet extends Add2eItemSheetV2 {
   static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
     classes: ["add2e", "sheet", "item", "arme"],
     window: { title: "ADD2E Arme", resizable: true },
-    position: { width: 500, height: 400 }
+    position: { width: 560, height: 520 }
   }, { inplace: false });
 }
 
@@ -280,7 +361,7 @@ class Add2eSortSheet extends Add2eItemSheetV2 {
   static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
     classes: ["add2e", "sheet", "item", "sort"],
     window: { title: "ADD2E Sort", resizable: true },
-    position: { width: 500, height: 620 }
+    position: { width: 640, height: 720 }
   }, { inplace: false });
 
   async getData(options = {}) {
@@ -325,7 +406,7 @@ class Add2eRaceSheet extends Add2eItemSheetV2 {
   static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
     classes: ["add2e", "sheet", "item", "race-sheet-modern"],
     window: { title: "ADD2E Race", resizable: true },
-    position: { width: 700, height: 720 }
+    position: { width: 760, height: 760 }
   }, { inplace: false });
 
   async getData(options = {}) {
