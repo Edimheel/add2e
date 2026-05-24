@@ -1,5 +1,5 @@
 // ADD2E — Interface XP session V2
-// Version : 2026-05-24-session-xp-ui-v2
+// Version : 2026-05-24-session-xp-ui-v2-fix-award
 //
 // Remplace l'ouverture de fenêtre XP exposée par 20-session-xp.mjs :
 // - fenêtre plus large, scroll vertical, tables compactes ;
@@ -7,14 +7,19 @@
 // - lecture fiable des lignes via dataset au lieu de name + CSS.escape ;
 // - répartition fiable vers tous les personnages cochés ;
 // - les sources appliquées sont masquées à la réouverture ;
-// - bouton de réinitialisation du registre.
+// - bouton de réinitialisation du registre ;
+// - application XP via add2eAwardXp quand disponible pour passer par le moteur XP du système.
 
-const VERSION = "2026-05-24-session-xp-ui-v2";
+const VERSION = "2026-05-24-session-xp-ui-v2-fix-award";
 const TAG = "[ADD2E][SESSION_XP_UI_V2]";
 const FLAG_LEDGER = "sessionXpLedger";
 
 function log(label, data = {}) {
   console.log(`${TAG}${label}`, data);
+}
+
+function warn(label, data = {}) {
+  console.warn(`${TAG}${label}`, data);
 }
 
 function num(value, fallback = 0) {
@@ -289,6 +294,39 @@ async function markSourcesApplied(selectedSources, reason) {
   await saveLedger(ledger);
 }
 
+async function awardCharacterXp(actor, total, reason) {
+  const before = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
+  const expectedAfter = before + Math.max(0, Math.floor(num(total, 0)));
+
+  if (typeof globalThis.add2eAwardXp === "function") {
+    await globalThis.add2eAwardXp(actor, total, { reason, percentBonus: 0 });
+  } else {
+    await actor.update({ "system.xp": expectedAfter }, { add2eReason: "session-xp-v2-fallback" });
+  }
+
+  const liveActor = game.actors.get(actor.id) ?? actor;
+  let after = Math.max(0, Math.floor(num(liveActor.system?.xp, actor.system?.xp ?? expectedAfter)));
+
+  if (after < expectedAfter) {
+    warn("[AWARD][VERIFY_RETRY] XP non conforme après moteur, retry direct", {
+      actor: actor.name,
+      before,
+      total,
+      expectedAfter,
+      after
+    });
+    await liveActor.update({ "system.xp": expectedAfter }, { add2eReason: "session-xp-v2-retry" });
+    after = Math.max(0, Math.floor(num((game.actors.get(actor.id) ?? liveActor).system?.xp, expectedAfter)));
+  }
+
+  if (after < expectedAfter) {
+    ui.notifications.warn(`${actor.name} : l'XP n'a pas été mise à jour comme attendu (${after} au lieu de ${expectedAfter}). Voir console.`);
+    warn("[AWARD][FAILED]", { actor: actor.name, before, total, expectedAfter, after });
+  }
+
+  return { before, after, expectedAfter };
+}
+
 async function applySessionXpV2(data) {
   if (!game.user?.isGM) return ui.notifications.warn("Seul le MJ peut appliquer l'XP de session.");
   if (data.sourceTotal <= 0) return ui.notifications.warn("Le total d'XP est à 0.");
@@ -298,11 +336,17 @@ async function applySessionXpV2(data) {
   const results = [];
 
   for (const row of distribution) {
-    const before = Math.max(0, Math.floor(num(row.actor.system?.xp, 0)));
-    const afterTarget = before + row.total;
-    await row.actor.update({ "system.xp": afterTarget }, { add2eReason: "session-xp-v2" });
-    const after = Math.max(0, Math.floor(num(row.actor.system?.xp, afterTarget)));
-    results.push({ actor: row.actor, before, after, gained: row.total, base: row.base, percentBonus: row.percentBonus, bonusFlat: row.bonusFlat });
+    const awarded = await awardCharacterXp(row.actor, row.total, data.reason);
+    results.push({
+      actor: game.actors.get(row.actor.id) ?? row.actor,
+      before: awarded.before,
+      after: awarded.after,
+      expectedAfter: awarded.expectedAfter,
+      gained: row.total,
+      base: row.base,
+      percentBonus: row.percentBonus,
+      bonusFlat: row.bonusFlat
+    });
   }
 
   await markSourcesApplied(data.selectedSources, data.reason);
@@ -319,6 +363,12 @@ async function applySessionXpV2(data) {
       <details open><summary><b>Répartition</b></summary><ul>${resultLines}</ul></details>
     </div>`
   });
+
+  for (const app of Object.values(ui.windows ?? {})) {
+    try {
+      if (app?.actor?.type === "personnage" && results.some(r => r.actor.id === app.actor.id)) app.render(false);
+    } catch (_e) {}
+  }
 
   ui.notifications.info("XP de session appliquée. Les sources utilisées sont maintenant masquées.");
   log("[APPLIED]", { data, distribution, results });
@@ -381,7 +431,7 @@ Hooks.once("ready", () => {
   globalThis.ADD2E_SESSION_XP_UI_V2_VERSION = VERSION;
   globalThis.add2eOpenXpSession = openSessionXpDialogV2;
   globalThis.add2eApplySessionXpV2 = applySessionXpV2;
-  log("[READY]", { version: VERSION });
+  log("[READY]", { version: VERSION, awardEngine: typeof globalThis.add2eAwardXp });
 });
 
 // Exposition immédiate si le fichier est importé après ready via reload partiel.
