@@ -1,7 +1,7 @@
 // ADD2E — Overlay plein token pour inconscience et mort
-// Version : 2026-05-22-v1-full-token-state-overlay
+// Version : 2026-05-24-v2-no-deprecated-token-status-apis
 
-const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-22-v1-full-token-state-overlay";
+const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-24-v2-no-deprecated-token-status-apis";
 globalThis.ADD2E_TOKEN_STATE_OVERLAY_VERSION = ADD2E_TOKEN_STATE_OVERLAY_VERSION;
 
 const ADD2E_STATE_OVERLAY = {
@@ -56,7 +56,7 @@ function add2eStatusConfigIcon(statusId, fallbackIcon) {
   const wanted = new Set([statusId, ...ADD2E_STATE_OVERLAY[statusId].iconIds].map(add2eNormalizeStatus));
   const statuses = Array.isArray(CONFIG?.statusEffects) ? CONFIG.statusEffects : [];
   const found = statuses.find(st => {
-    const ids = [st.id, st._id, st.name, st.label].map(add2eNormalizeStatus);
+    const ids = [st.id, st._id, st.name].map(add2eNormalizeStatus);
     return ids.some(id => wanted.has(id));
   });
   return found?.img || found?.icon || fallbackIcon;
@@ -67,15 +67,13 @@ async function add2eLoadTexture(src) {
   if (textureCache.has(src)) return textureCache.get(src);
 
   try {
-    let texture = null;
-    if (typeof globalThis.loadTexture === "function") texture = await globalThis.loadTexture(src);
-    else if (typeof foundry?.canvas?.loadTexture === "function") texture = await foundry.canvas.loadTexture(src);
-    else texture = PIXI.Texture.from(src);
+    const texture = typeof foundry?.canvas?.loadTexture === "function"
+      ? await foundry.canvas.loadTexture(src)
+      : PIXI.Texture.from(src);
 
     textureCache.set(src, texture);
     return texture;
-  } catch (err) {
-    console.warn("[ADD2E][TOKEN_STATE_OVERLAY] Texture introuvable", { src, err });
+  } catch (_err) {
     return null;
   }
 }
@@ -90,8 +88,7 @@ function add2eEffectStatusIds(effect) {
     effect.flags?.core?.statuses,
     effect.flags?.add2e?.statusId,
     effect.flags?.add2e?.status,
-    effect.name,
-    effect.label
+    effect.name
   ]) {
     if (!source) continue;
     if (source instanceof Set || Array.isArray(source)) {
@@ -104,30 +101,9 @@ function add2eEffectStatusIds(effect) {
   return out;
 }
 
-function add2eTokenDocumentStatusIds(token) {
-  const out = new Set();
-  const doc = token?.document;
-  for (const source of [doc?.effects, doc?.overlayEffect]) {
-    if (!source) continue;
-    if (Array.isArray(source)) {
-      for (const v of source) out.add(add2eNormalizeStatus(v));
-    } else {
-      out.add(add2eNormalizeStatus(source));
-    }
-  }
-  return out;
-}
-
 function add2eHasStateStatus(token, stateId) {
   const conf = ADD2E_STATE_OVERLAY[stateId];
   const wanted = new Set(conf.iconIds.map(add2eNormalizeStatus));
-
-  const tokenStatuses = add2eTokenDocumentStatusIds(token);
-  for (const id of tokenStatuses) {
-    if (wanted.has(id)) return true;
-    if (stateId === "dead" && /skull|dead|mort/.test(id)) return true;
-    if (stateId === "unconscious" && /unconscious|inconscient|sleep|sleeping/.test(id)) return true;
-  }
 
   for (const effect of token?.actor?.effects ?? []) {
     if (effect?.disabled) continue;
@@ -136,7 +112,7 @@ function add2eHasStateStatus(token, stateId) {
       if (wanted.has(id)) return true;
       if (conf.namePattern.test(id)) return true;
     }
-    if (conf.namePattern.test(effect.name ?? effect.label ?? "")) return true;
+    if (conf.namePattern.test(effect.name ?? "")) return true;
   }
 
   return false;
@@ -250,4 +226,5 @@ Hooks.once("canvasReady", () => {
   for (const token of canvas?.tokens?.placeables ?? []) add2eRefreshTokenOverlay(token);
 });
 
-console.log("[ADD2E][TOKEN_STATE_OVERLAY] Module chargé", ADD2E_TOKEN_STATE_OVERLAY_VERSION);
+try { globalThis.add2eRefreshTokenOverlay = add2eRefreshTokenOverlay; } catch (_e) {}
+try { globalThis.add2eRefreshActorTokens = add2eRefreshActorTokens; } catch (_e) {}
