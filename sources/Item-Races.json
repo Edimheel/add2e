@@ -1,0 +1,1398 @@
+{
+  "exporter": "ADD2E folder export",
+  "version": "2026-05-20-export-folder-dropdown-v1",
+  "exportedAt": "2026-05-24T15:21:36.034Z",
+  "world": "test",
+  "system": "add2e",
+  "systemVersion": "0.1.14",
+  "folder": {
+    "id": "U2lknhPsNDXeVax4",
+    "name": "Races",
+    "type": "Item",
+    "path": "Races"
+  },
+  "folders": [
+    {
+      "id": "U2lknhPsNDXeVax4",
+      "name": "Races",
+      "type": "Item",
+      "path": "Races",
+      "parent": null
+    }
+  ],
+  "count": 8,
+  "documents": [
+    {
+      "name": "Demi-elfe",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Demi-elfe.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 0,
+          "dexterite": 0,
+          "constitution": 0,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 36,
+        "capacites": {
+          "0": "Infravision 18 m",
+          "1": "Résistance au sommeil et aux charmes (30%)",
+          "2": "Détection portes secrètes/dérobées accrue",
+          "3": "Multiclassage autorisé selon les règles de campagne",
+          "4": "Langues supplémentaires selon intelligence"
+        },
+        "description": "",
+        "langues": [
+          "elfe",
+          "commun",
+          "gnome",
+          "petite-gens",
+          "gobelin",
+          "hobgobelin",
+          "orque",
+          "gnoll"
+        ],
+        "movement": "",
+        "taille": "",
+        "âge_debut": "",
+        "espérance_vie": "",
+        "description_longue": "",
+        "note_md": "",
+        "label": "Demi-elfe",
+        "hitDie": null,
+        "hpFormula": "",
+        "primaryAbility": "",
+        "specialAbilities": "",
+        "tags": [
+          "race:demi_elfe"
+        ],
+        "effectTags": [
+          "infravision:18",
+          "resistance:charme:30",
+          "resistance:sommeil:30",
+          "detection:portes_secretes:1"
+        ],
+        "weaponRestriction": {},
+        "armorRestriction": {},
+        "casterType": "",
+        "casterAbility": "",
+        "spellcasting": {},
+        "spellLists": [],
+        "spellAccessRequirements": [],
+        "spellcastingNote": "",
+        "classFeatures": [],
+        "progression": [],
+        "titlesByLevel": [],
+        "attacksPerRound": [],
+        "savingThrows": [],
+        "strengthAdjustments": [],
+        "slug": "demi_elfe",
+        "vitesse_deplacement": 36,
+        "identityTags": [
+          "race:demi_elfe"
+        ],
+        "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+      },
+      "effects": [
+        {
+          "name": "Vision et perception demi-elfiques",
+          "img": "icons/svg/eye.svg",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "infravision:18",
+                "detection:portes_secretes:1"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "zR5UqKovmeByz9mc",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Résistance aux charmes et sommeil",
+          "img": "icons/svg/aura.svg",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "resistance:charme:30",
+                "resistance:sommeil:30"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "Le Demi-elfe a 30% de résistance contre les sorts de charme et de sommeil.",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "eFrSiYGA58XOHWTj",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        }
+      ],
+      "folder": "U2lknhPsNDXeVax4",
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.races.Item.VhCSGRHzx4VxAvSd",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1778135835191,
+        "modifiedTime": 1778135835191,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      },
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "_id": "CqRJ2r9kOru2BPvM",
+      "sort": 0
+    },
+    {
+      "name": "Demi-orque",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Demi-orc.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 1,
+          "dexterite": 0,
+          "constitution": 1,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": -2
+        },
+        "vitesse": 36,
+        "capacites": {
+          "0": "Infravision 18 m",
+          "1": "Peut passer pour humain selon les circonstances de campagne",
+          "2": "Souvent mal accepté par les elfes et les nains",
+          "3": "Multiclassage autorisé selon les règles de campagne"
+        },
+        "description": "",
+        "langues": [
+          "commun",
+          "orque"
+        ],
+        "movement": "",
+        "taille": "",
+        "âge_debut": "",
+        "espérance_vie": "",
+        "description_longue": "",
+        "note_md": "",
+        "label": "Demi-orque",
+        "hitDie": null,
+        "hpFormula": "",
+        "primaryAbility": "",
+        "specialAbilities": "",
+        "tags": [
+          "race:demi_orque"
+        ],
+        "effectTags": [
+          "infravision:18"
+        ],
+        "weaponRestriction": {},
+        "armorRestriction": {},
+        "casterType": "",
+        "casterAbility": "",
+        "spellcasting": {},
+        "spellLists": [],
+        "spellAccessRequirements": [],
+        "spellcastingNote": "",
+        "classFeatures": [],
+        "progression": [],
+        "titlesByLevel": [],
+        "attacksPerRound": [],
+        "savingThrows": [],
+        "strengthAdjustments": [],
+        "slug": "demi_orque",
+        "vitesse_deplacement": 36,
+        "identityTags": [
+          "race:demi_orque"
+        ],
+        "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+      },
+      "effects": [
+        {
+          "name": "Infravision demi-orque",
+          "img": "icons/svg/eye.svg",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "infravision:18"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "Peut voir dans l'obscurité jusqu'à 18 m via l'infravision.",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "mN5k633VhUgeJfKf",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        }
+      ],
+      "folder": "U2lknhPsNDXeVax4",
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.races.Item.U3q1eHmqP6MxpatE",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1778135835191,
+        "modifiedTime": 1778135835191,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      },
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "_id": "6BomXjN6iBAy9qRm",
+      "sort": 0
+    },
+    {
+      "name": "Elfe",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Elfe.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 0,
+          "dexterite": 1,
+          "constitution": -1,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 36,
+        "capacites": {
+          "0": "Infravision 18 m",
+          "1": "Résistance au sommeil et charmes (90%)",
+          "2": "Bonus +1 à l'attaque avec arcs et épées courtes/longues",
+          "3": "Détection portes secrètes/dérobées accrue",
+          "4": "Langues supplémentaires selon intelligence",
+          "NEW": ""
+        },
+        "description": "",
+        "langues": "elfe,commun,gnome,petite-gens,gobelin,hobgobelin,orque,gnoll",
+        "movement": "",
+        "taille": "",
+        "âge_debut": "",
+        "espérance_vie": "",
+        "description_longue": "",
+        "note_md": "",
+        "label": "Elfe",
+        "hitDie": null,
+        "hpFormula": "",
+        "primaryAbility": "",
+        "specialAbilities": "",
+        "tags": [
+          "race:elfe"
+        ],
+        "effectTags": [
+          "infravision:18",
+          "resistance:charme:90",
+          "resistance:sommeil:90",
+          "bonus_touche:arc:1",
+          "bonus_touche:epee_courte:1",
+          "bonus_touche:epee_longue:1",
+          "detection:portes_secretes:1"
+        ],
+        "weaponRestriction": {},
+        "armorRestriction": {},
+        "casterType": "",
+        "casterAbility": "",
+        "spellcasting": {},
+        "spellLists": [],
+        "spellAccessRequirements": [],
+        "spellcastingNote": "",
+        "classFeatures": [],
+        "progression": [],
+        "titlesByLevel": [],
+        "attacksPerRound": [],
+        "savingThrows": [],
+        "strengthAdjustments": [],
+        "slug": "elfe",
+        "vitesse_deplacement": 36,
+        "identityTags": [
+          "race:elfe"
+        ],
+        "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+      },
+      "effects": [
+        {
+          "name": "Vision et perception elfiques",
+          "img": "icons/svg/eye.svg",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "infravision:18",
+                "detection:portes_secretes:1"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "Ym0453VF0Pi346rP",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Résistance aux charmes et sommeil",
+          "img": "icons/svg/aura.svg",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "resistance:charme:90",
+                "resistance:sommeil:90"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "_id": "ULNGsI3h2HZBKpn1",
+          "type": "base",
+          "system": {},
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Bonus à l'attaque arcs et épées",
+          "img": "icons/svg/aura.svg",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "bonus_touche:arc:1",
+                "bonus_touche:epee_courte:1",
+                "bonus_touche:epee_longue:1"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "_id": "kVgJD4oLG4zJumb2",
+          "type": "base",
+          "system": {},
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        }
+      ],
+      "folder": "U2lknhPsNDXeVax4",
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.races.Item.3X2mZj8AMI3wWuty",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1778135835191,
+        "modifiedTime": 1778135835191,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      },
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "_id": "6cO87z9xptgwXUMZ",
+      "sort": 0
+    },
+    {
+      "name": "Gnome",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Gnome.webp",
+      "system": {
+        "bonus_caracteristiques": {},
+        "vitesse": 18,
+        "capacites": {
+          "0": "Infravision 18 m",
+          "1": "Résistance à la magie (bonus selon constitution)",
+          "2": "Bonus attaque contre kobolds et gobelins",
+          "3": "Malus pour gnolls, goblours, ogres, trolls, ogres mages, géants, titans (pour les toucher)",
+          "4": "Détection minière exceptionnelle",
+          "5": "Langues supplémentaires limitées à 2",
+          "NEW": ""
+        },
+        "description": "",
+        "langues": "",
+        "movement": "",
+        "taille": "",
+        "âge_debut": "",
+        "espérance_vie": "",
+        "description_longue": "",
+        "note_md": ""
+      },
+      "effects": [
+        {
+          "name": "Bonus sauvegarde magie et poison (constitution)",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "bonus_save_vs:magie:const",
+                "bonus_save_vs:baguette:const"
+              ]
+            }
+          },
+          "_id": "KXa9sl29zVBHLBQk",
+          "img": null,
+          "type": "base",
+          "system": {},
+          "changes": [],
+          "disabled": false,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "description": "",
+          "origin": null,
+          "tint": "#ffffff",
+          "transfer": true,
+          "statuses": [],
+          "sort": 0,
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Bonus attaque contre kobolds et gobelins",
+          "description": "+1 au toucher contre kobolds et gobelins.",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "bonus_touche_vs:kobold:1",
+                "bonus_touche_vs:gobelin:1"
+              ]
+            }
+          },
+          "_id": "8oeRUPbYDrb0xlfT",
+          "img": null,
+          "type": "base",
+          "system": {},
+          "changes": [],
+          "disabled": false,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "origin": null,
+          "tint": "#ffffff",
+          "transfer": true,
+          "statuses": [],
+          "sort": 0,
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Malus pour être touché par certains adversaires",
+          "description": "-4 au toucher pour les gnolls, goblours, ogres, trolls, ogres mages, géants et titans qui attaquent le gnome.",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "bonus_ca_vs:gnoll:-4",
+                "bonus_ca_vs:goblour:-4",
+                "bonus_ca_vs:ogre:-4",
+                "bonus_ca_vs:troll:-4",
+                "bonus_ca_vs:ogre_mage:-4",
+                "bonus_ca_vs:geant:-4",
+                "bonus_ca_vs:titan:-4"
+              ]
+            }
+          },
+          "_id": "lDQLdZdxj1g6cLsg",
+          "img": null,
+          "type": "base",
+          "system": {},
+          "changes": [],
+          "disabled": false,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "origin": null,
+          "tint": "#ffffff",
+          "transfer": true,
+          "statuses": [],
+          "sort": 0,
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        }
+      ],
+      "folder": "U2lknhPsNDXeVax4",
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.races.Item.fJMQ7pVPwiFuZFFl",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1778135835191,
+        "modifiedTime": 1778135835191,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      },
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "_id": "BvCuJJgNUEo3v428",
+      "sort": 0
+    },
+    {
+      "name": "Humain",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Humain.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 0,
+          "dexterite": 0,
+          "constitution": 0,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 36,
+        "capacites": {
+          "0": "Aucune limite de niveau ou de classe.",
+          "1": "Pas d'infravision.",
+          "2": "Pas de multiclassage.",
+          "3": "Pas de multiclassage racial selon les règles de base",
+          "NEW": ""
+        },
+        "description": "",
+        "langues": "",
+        "movement": "",
+        "taille": "",
+        "âge_debut": "",
+        "espérance_vie": "",
+        "description_longue": "",
+        "note_md": "",
+        "label": "Humain",
+        "hitDie": null,
+        "hpFormula": "",
+        "primaryAbility": "",
+        "specialAbilities": "",
+        "tags": [
+          "race:humain"
+        ],
+        "effectTags": [],
+        "weaponRestriction": {},
+        "armorRestriction": {},
+        "casterType": "",
+        "casterAbility": "",
+        "spellcasting": {},
+        "spellLists": [],
+        "spellAccessRequirements": [],
+        "spellcastingNote": "",
+        "classFeatures": [],
+        "progression": [],
+        "titlesByLevel": [],
+        "attacksPerRound": [],
+        "savingThrows": [],
+        "strengthAdjustments": [],
+        "slug": "humain",
+        "vitesse_deplacement": 36,
+        "identityTags": [
+          "race:humain"
+        ],
+        "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+      },
+      "effects": [],
+      "folder": "U2lknhPsNDXeVax4",
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.races.Item.Fq7HfFKuy9P20ZbM",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1778135835191,
+        "modifiedTime": 1778135835191,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      },
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "_id": "wCLHJcmUutyyMuup",
+      "sort": 0
+    },
+    {
+      "name": "Kender",
+      "type": "race",
+      "img": "icons/creatures/mammals/humanoid-halfling-green.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": -1,
+          "dexterite": 1,
+          "constitution": 0,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 24,
+        "capacites": {
+          "0": "Intrépidité : immunité à la peur",
+          "1": "Insulte : peut provoquer ou distraire une cible selon le script racial",
+          "2": "Résistance au poison selon les règles de campagne",
+          "3": "Langues : commun, kenderspeak, patois",
+          "4": "Curiosité et absence de peur typiques des Kenders",
+          "NEW": ""
+        },
+        "thief_adjustments": {
+          "pick_pockets": 5,
+          "open_locks": 5,
+          "find_remove_traps": 5,
+          "move_silently": 10,
+          "hide_in_shadows": 10,
+          "detect_noise": 5,
+          "climb_walls": 5,
+          "read_languages": -5
+        },
+        "onUse": "scripts/kender.js",
+        "description": "Petits, curieux et intrépides, les Kenders parcourent Krynn poussés par une envie irrépressible d'explorer.",
+        "langues": "commun,kenderspeak,patois",
+        "movement": "",
+        "taille": "",
+        "âge_debut": "",
+        "espérance_vie": "",
+        "description_longue": "",
+        "note_md": "",
+        "label": "Kender",
+        "hitDie": null,
+        "hpFormula": "",
+        "primaryAbility": "",
+        "specialAbilities": "",
+        "tags": [
+          "race:kender"
+        ],
+        "effectTags": [
+          "immunite:peur",
+          "bonus_save_vs:peur:4",
+          "resistance:poison:1"
+        ],
+        "weaponRestriction": {},
+        "armorRestriction": {},
+        "casterType": "",
+        "casterAbility": "",
+        "spellcasting": {},
+        "spellLists": [],
+        "spellAccessRequirements": [],
+        "spellcastingNote": "",
+        "classFeatures": [],
+        "progression": [],
+        "titlesByLevel": [],
+        "attacksPerRound": [],
+        "savingThrows": [],
+        "strengthAdjustments": [],
+        "slug": "kender",
+        "vitesse_deplacement": 24,
+        "identityTags": [
+          "race:kender"
+        ],
+        "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues, ajustements raciaux et effets raciaux. Il ne porte aucune restriction de classe."
+      },
+      "effects": [
+        {
+          "name": "Immunité à la peur",
+          "img": "icons/magic/control/fear-fright-white.webp",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "immunite:peur"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "6klFPawoD9r6awHC",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Bonus JS vs peur",
+          "img": "icons/magic/defensive/shield-barrier-glowing-triangle-purple.webp",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "bonus_save_vs:peur:4"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "Vm1PWImAGS7z1hKM",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Résistance au poison",
+          "img": "icons/magic/nature/root-vine-entangle-poison-green.webp",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "resistance:poison:1"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "Wcp6EiANqtt19vQP",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        }
+      ],
+      "folder": "U2lknhPsNDXeVax4",
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.races.Item.LSKRV2CX0LTAzgad",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1778135835191,
+        "modifiedTime": 1778135835191,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      },
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "_id": "foHsiJbhg1bQEnET",
+      "sort": 0
+    },
+    {
+      "name": "Nain",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/nain.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 0,
+          "dexterite": 0,
+          "constitution": 1,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": -1
+        },
+        "vitesse": 18,
+        "capacites": {
+          "0": "Infravision 18 m",
+          "1": "Bonus aux sauvegardes contre le poison et la magie selon la constitution",
+          "2": "Bonus +1 à l'attaque contre les gobelinoïdes",
+          "3": "Difficulté accrue à être touché par les géants",
+          "4": "Multiclassage possible selon les règles de campagne",
+          "NEW": ""
+        },
+        "description": "",
+        "langues": "nain,gnome,gobelin,kobold,orque,commun",
+        "movement": "",
+        "taille": "",
+        "âge_debut": "",
+        "espérance_vie": "",
+        "description_longue": "",
+        "note_md": "",
+        "label": "Nain",
+        "hitDie": null,
+        "hpFormula": "",
+        "primaryAbility": "",
+        "specialAbilities": "",
+        "tags": [
+          "race:nain"
+        ],
+        "effectTags": [
+          "infravision:18",
+          "bonus_save_vs:magie:const",
+          "bonus_save_vs:poison:const",
+          "bonus_touche_vs:goblinoide:1",
+          "bonus_ca_vs:geant:4"
+        ],
+        "weaponRestriction": {},
+        "armorRestriction": {},
+        "casterType": "",
+        "casterAbility": "",
+        "spellcasting": {},
+        "spellLists": [],
+        "spellAccessRequirements": [],
+        "spellcastingNote": "",
+        "classFeatures": [],
+        "progression": [],
+        "titlesByLevel": [],
+        "attacksPerRound": [],
+        "savingThrows": [],
+        "strengthAdjustments": [],
+        "slug": "nain",
+        "vitesse_deplacement": 18,
+        "identityTags": [
+          "race:nain"
+        ],
+        "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+      },
+      "effects": [
+        {
+          "name": "Bonus sauvegarde magie et poison (constitution)",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "bonus_save_vs:magie:const",
+                "bonus_save_vs:poison:const"
+              ]
+            }
+          },
+          "_id": "0rlbm10FHHLLZqlp",
+          "img": "icons/svg/shield.svg",
+          "type": "base",
+          "system": {},
+          "changes": [],
+          "disabled": false,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "description": "",
+          "origin": null,
+          "tint": "#ffffff",
+          "transfer": false,
+          "statuses": [],
+          "sort": 0,
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Bonus attaque contre gobelinoïdes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "bonus_touche_vs:goblinoide:1"
+              ]
+            }
+          },
+          "_id": "BdZiphiWgo1doqxK",
+          "img": "icons/svg/aura.svg",
+          "type": "base",
+          "system": {},
+          "changes": [],
+          "disabled": false,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "description": "",
+          "origin": null,
+          "tint": "#ffffff",
+          "transfer": false,
+          "statuses": [],
+          "sort": 0,
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Difficulté à être touché par les géants",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "bonus_ca_vs:geant:4"
+              ]
+            }
+          },
+          "_id": "cQzJacZFTOeyAyBd",
+          "img": "icons/svg/shield.svg",
+          "type": "base",
+          "system": {},
+          "changes": [],
+          "disabled": false,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "description": "",
+          "origin": null,
+          "tint": "#ffffff",
+          "transfer": false,
+          "statuses": [],
+          "sort": 0,
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        }
+      ],
+      "folder": "U2lknhPsNDXeVax4",
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.races.Item.q084oXUcY4muxM7o",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.14",
+        "createdTime": 1778135835191,
+        "modifiedTime": 1779137891746,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      },
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "_id": "Hy8oWjUtvf7JwUZ5",
+      "sort": 0
+    },
+    {
+      "name": "Petite-gens",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/petite_gens.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": -1,
+          "dexterite": 1,
+          "constitution": 0,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 18,
+        "capacites": {
+          "0": "Infravision 9 m selon l’ascendance",
+          "1": "Détection des pentes avec concentration",
+          "2": "Sens de l’orientation avec concentration",
+          "3": "Très discrets : forte chance de surprendre",
+          "4": "Bonus de sauvegarde contre magie, baguettes et poison selon constitution",
+          "5": "Langues supplémentaires selon intelligence",
+          "NEW": ""
+        },
+        "description": "",
+        "langues": "commun,petite-gens,gnome,elfe",
+        "movement": "",
+        "taille": "",
+        "âge_debut": "",
+        "espérance_vie": "",
+        "description_longue": "",
+        "note_md": "",
+        "label": "Petite-gens",
+        "hitDie": null,
+        "hpFormula": "",
+        "primaryAbility": "",
+        "specialAbilities": "",
+        "tags": [
+          "race:petite_gens",
+          "race:petite_gen"
+        ],
+        "effectTags": [
+          "infravision:9",
+          "detection:pente:3_sur_4",
+          "detection:direction:1_sur_2",
+          "surprise:discretion:4_sur_6",
+          "bonus_save_vs:magie:const",
+          "bonus_save_vs:baguette:const",
+          "bonus_save_vs:poison:const"
+        ],
+        "weaponRestriction": {},
+        "armorRestriction": {},
+        "casterType": "",
+        "casterAbility": "",
+        "spellcasting": {},
+        "spellLists": [],
+        "spellAccessRequirements": [],
+        "spellcastingNote": "",
+        "classFeatures": [],
+        "progression": [],
+        "titlesByLevel": [],
+        "attacksPerRound": [],
+        "savingThrows": [],
+        "strengthAdjustments": [],
+        "slug": "petite_gens",
+        "vitesse_deplacement": 18,
+        "identityTags": [
+          "race:petite_gens",
+          "race:petite_gen"
+        ],
+        "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+      },
+      "effects": [
+        {
+          "name": "Vision et sens des Petite-gens",
+          "img": "icons/svg/eye.svg",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "infravision:9",
+                "detection:pente:3_sur_4",
+                "detection:direction:1_sur_2"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "Infravision selon l’ascendance et sens naturels des pentes et de la direction avec concentration.",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "rzYopO68eVssyuw8",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Discrétion des Petite-gens",
+          "img": "icons/svg/stealth.svg",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "surprise:discretion:4_sur_6"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "Les Petite-gens sont naturellement discrets et surprennent plus facilement leurs adversaires.",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "LfYBorOHlyYdjH80",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        },
+        {
+          "name": "Bonus sauvegarde magie et poison (constitution)",
+          "img": "icons/svg/shield.svg",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "bonus_save_vs:magie:const",
+                "bonus_save_vs:baguette:const",
+                "bonus_save_vs:poison:const"
+              ]
+            }
+          },
+          "disabled": false,
+          "transfer": false,
+          "changes": [],
+          "origin": null,
+          "duration": {
+            "startTime": null,
+            "combat": null
+          },
+          "type": "base",
+          "system": {},
+          "description": "Bonus racial aux jets de sauvegarde contre la magie, les baguettes et le poison selon la constitution.",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "_id": "QS1Vi1S6GFvd3oDW",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "13.351",
+            "systemId": "add2e",
+            "systemVersion": "0.1.12",
+            "lastModifiedBy": null
+          }
+        }
+      ],
+      "folder": "U2lknhPsNDXeVax4",
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.races.Item.zraRWdZGW4QWA1fR",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1778135835191,
+        "modifiedTime": 1778135835191,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      },
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "_id": "orXAjKNK7nnVE7N2",
+      "sort": 0
+    }
+  ]
+}
