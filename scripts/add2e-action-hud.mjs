@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v22-syntax-safe-effects-rolls
+// Version : 2026-05-25-v23-clickable-roll-icons
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v22-syntax-safe-effects-rolls";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v23-clickable-roll-icons";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v22";
+const STORAGE_KEY = "add2e.actionHud.state.v23";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -72,6 +72,7 @@ function add2eHudLoadState() {
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v22")
       || localStorage.getItem("add2e.actionHud.state.v21")
       || localStorage.getItem("add2e.actionHud.state.v20")
       || localStorage.getItem("add2e.actionHud.state.v19")
@@ -335,21 +336,47 @@ function add2eHudInjectStyle() {
     #${HUD_ID} .a2e-hud-shell{display:flex;flex-direction:column;justify-content:flex-end;border:1px solid #8a611d;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 15% 0%,rgba(213,147,45,.28),transparent 36%),linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,230,160,.12);}
     #${HUD_ID} .a2e-hud-menu-panel{flex:0 1 auto!important;min-height:0!important;max-height:var(--a2e-hud-menu-max,320px)!important;padding:9px!important;overflow-y:auto!important;border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.12);display:block!important;}
     #${HUD_ID} .a2e-hud-section{display:none!important;} #${HUD_ID} .a2e-hud-section.active{display:grid!important;gap:7px!important;align-content:start!important;margin-top:0!important;}
-    #${HUD_ID} .a2e-hud-tabs{flex:0 0 auto;display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.18);} #${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.74em;font-weight:900;cursor:pointer;} #${HUD_ID} .a2e-hud-tab.active{color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e);}
-    #${HUD_ID} .a2e-hud-header{flex:0 0 auto;display:grid;grid-template-columns:74px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));cursor:move;user-select:none;} #${HUD_ID} .a2e-hud-header[data-drag-handle="1"]{touch-action:none;}
-    #${HUD_ID} .a2e-hud-portrait{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #c4973f;background:#111;} #${HUD_ID} .a2e-hud-name{color:#fff4cf;font-size:1.12em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #${HUD_ID} .a2e-hud-subtitle{color:#d8bd78;font-size:.82em;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    #${HUD_ID} .a2e-hud-metrics{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;} #${HUD_ID} .a2e-hud-pill{display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:2px 7px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.78em;font-weight:850;white-space:nowrap;}
-    #${HUD_ID} .a2e-hud-icon-btn,#${HUD_ID} .a2e-hud-resize{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;} #${HUD_ID} .a2e-hud-resize{cursor:nwse-resize!important;}
-    #${HUD_ID} .a2e-hud-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);} #${HUD_ID} .a2e-hud-row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px;} #${HUD_ID} .a2e-hud-row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25);}
+    #${HUD_ID} .a2e-hud-tabs{flex:0 0 auto;display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.18);}
+    #${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.74em;font-weight:900;cursor:pointer;}
+    #${HUD_ID} .a2e-hud-tab.active{color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e);}
+    #${HUD_ID} .a2e-hud-header{flex:0 0 auto;display:grid;grid-template-columns:74px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));cursor:move;user-select:none;}
+    #${HUD_ID} .a2e-hud-header[data-drag-handle="1"]{touch-action:none;}
+    #${HUD_ID} .a2e-hud-portrait{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #c4973f;background:#111;}
+    #${HUD_ID} .a2e-hud-name{color:#fff4cf;font-size:1.12em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #${HUD_ID} .a2e-hud-subtitle{color:#d8bd78;font-size:.82em;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #${HUD_ID} .a2e-hud-metrics{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+    #${HUD_ID} .a2e-hud-pill{display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:2px 7px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.78em;font-weight:850;white-space:nowrap;}
+    #${HUD_ID} .a2e-hud-icon-btn,#${HUD_ID} .a2e-hud-resize{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;}
+    #${HUD_ID} .a2e-hud-resize{cursor:nwse-resize!important;}
+    #${HUD_ID} .a2e-hud-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);}
+    #${HUD_ID} .a2e-hud-row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px;}
+    #${HUD_ID} .a2e-hud-row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25);}
     #${HUD_ID} .a2e-hud-effect-row.spell-effect{background:linear-gradient(135deg,rgba(72,48,142,.42),rgba(34,24,76,.22));border-color:rgba(157,126,255,.72);}
-    #${HUD_ID} .a2e-hud-row-title{color:#fff4cf;font-weight:900;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #${HUD_ID} .a2e-hud-row-meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px;} #${HUD_ID} .a2e-hud-action{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap;} #${HUD_ID} .a2e-hud-action:disabled{opacity:.45;cursor:not-allowed;}
+    #${HUD_ID} .a2e-hud-row-title{color:#fff4cf;font-weight:900;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #${HUD_ID} .a2e-hud-row-meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px;}
+    #${HUD_ID} .a2e-hud-action{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap;}
     #${HUD_ID} .a2e-hud-empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center;}
     #${HUD_ID} .a2e-hud-ability-grid,#${HUD_ID} .a2e-hud-save-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
-    #${HUD_ID} .a2e-hud-ability,#${HUD_ID} .a2e-hud-save-cell{position:relative;overflow:hidden;display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:7px;align-items:center;min-height:62px;padding:8px;border:1px solid rgba(214,176,90,.38);border-radius:12px;background:rgba(255,250,235,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 3px 10px rgba(0,0,0,.18);}
-    #${HUD_ID} .a2e-hud-ability::before,#${HUD_ID} .a2e-hud-save-cell::before{content:"";position:absolute;inset:0;opacity:.16;pointer-events:none;background:radial-gradient(circle at 20% 0%,#fff,transparent 34%);} #${HUD_ID} .a2e-hud-cell-icon{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.14);color:#fff2c0;} #${HUD_ID} .a2e-hud-cell-main{min-width:0;} #${HUD_ID} .a2e-hud-cell-main span{display:block;color:rgba(255,246,214,.82);font-size:.72em;font-weight:850;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} #${HUD_ID} .a2e-hud-cell-main b{display:block;color:#fff;font-size:1.18em;line-height:1.1;margin-top:3px;text-shadow:0 1px 2px rgba(0,0,0,.45);}
-    #${HUD_ID} .carac-force{background:linear-gradient(135deg,rgba(135,40,28,.55),rgba(58,24,18,.25));border-color:rgba(233,111,77,.70);} #${HUD_ID} .carac-dexterite{background:linear-gradient(135deg,rgba(42,112,59,.55),rgba(20,54,36,.25));border-color:rgba(116,221,127,.70);} #${HUD_ID} .carac-constitution{background:linear-gradient(135deg,rgba(151,89,28,.55),rgba(77,45,18,.25));border-color:rgba(239,171,82,.70);} #${HUD_ID} .carac-intelligence{background:linear-gradient(135deg,rgba(45,79,151,.55),rgba(18,37,77,.25));border-color:rgba(119,163,255,.70);} #${HUD_ID} .carac-sagesse{background:linear-gradient(135deg,rgba(96,62,151,.55),rgba(48,31,80,.25));border-color:rgba(190,145,255,.70);} #${HUD_ID} .carac-charisme{background:linear-gradient(135deg,rgba(147,50,116,.55),rgba(80,23,61,.25));border-color:rgba(255,132,217,.70);}
-    #${HUD_ID} .save-save0{background:linear-gradient(135deg,rgba(99,38,38,.54),rgba(47,22,22,.25));border-color:rgba(230,104,104,.70);} #${HUD_ID} .save-save1{background:linear-gradient(135deg,rgba(88,84,73,.54),rgba(45,42,35,.25));border-color:rgba(198,190,159,.70);} #${HUD_ID} .save-save2{background:linear-gradient(135deg,rgba(112,74,35,.54),rgba(54,35,18,.25));border-color:rgba(239,181,97,.70);} #${HUD_ID} .save-save3{background:linear-gradient(135deg,rgba(36,98,119,.54),rgba(17,48,61,.25));border-color:rgba(102,213,239,.70);} #${HUD_ID} .save-save4{background:linear-gradient(135deg,rgba(65,52,133,.54),rgba(34,27,75,.25));border-color:rgba(154,136,255,.70);}
-    #${HUD_ID} button,#${HUD_ID} [data-hud-tab],#${HUD_ID} [data-action]{user-select:auto;touch-action:auto;} @media(max-width:760px){#${HUD_ID}{left:8px!important;right:8px;width:auto!important;min-width:0;max-width:calc(100vw - 16px)!important;}#${HUD_ID} .a2e-hud-ability-grid,#${HUD_ID} .a2e-hud-save-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    #${HUD_ID} .a2e-hud-ability,#${HUD_ID} .a2e-hud-save-cell{position:relative;overflow:hidden;display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px;align-items:center;min-height:62px;padding:8px;border:1px solid rgba(214,176,90,.38);border-radius:12px;background:rgba(255,250,235,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 3px 10px rgba(0,0,0,.18);}
+    #${HUD_ID} .a2e-hud-ability::before,#${HUD_ID} .a2e-hud-save-cell::before{content:"";position:absolute;inset:0;opacity:.16;pointer-events:none;background:radial-gradient(circle at 20% 0%,#fff,transparent 34%);}
+    #${HUD_ID} .a2e-hud-roll-icon{position:relative;z-index:1;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:11px;background:rgba(0,0,0,.26);border:1px solid rgba(255,255,255,.22);color:#fff2c0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.22);}
+    #${HUD_ID} .a2e-hud-roll-icon:hover{filter:brightness(1.18);transform:translateY(-1px);}
+    #${HUD_ID} .a2e-hud-cell-main{position:relative;z-index:1;min-width:0;}
+    #${HUD_ID} .a2e-hud-cell-main b{display:block;color:#fff;font-size:1.28em;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #${HUD_ID} .a2e-hud-cell-main span{display:block;color:rgba(255,246,214,.82);font-size:.70em;font-weight:850;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+    #${HUD_ID} .carac-force{background:linear-gradient(135deg,rgba(135,40,28,.55),rgba(58,24,18,.25));border-color:rgba(233,111,77,.70);}
+    #${HUD_ID} .carac-dexterite{background:linear-gradient(135deg,rgba(42,112,59,.55),rgba(20,54,36,.25));border-color:rgba(116,221,127,.70);}
+    #${HUD_ID} .carac-constitution{background:linear-gradient(135deg,rgba(151,89,28,.55),rgba(77,45,18,.25));border-color:rgba(239,171,82,.70);}
+    #${HUD_ID} .carac-intelligence{background:linear-gradient(135deg,rgba(45,79,151,.55),rgba(18,37,77,.25));border-color:rgba(119,163,255,.70);}
+    #${HUD_ID} .carac-sagesse{background:linear-gradient(135deg,rgba(96,62,151,.55),rgba(48,31,80,.25));border-color:rgba(190,145,255,.70);}
+    #${HUD_ID} .carac-charisme{background:linear-gradient(135deg,rgba(147,50,116,.55),rgba(80,23,61,.25));border-color:rgba(255,132,217,.70);}
+    #${HUD_ID} .save-save0{background:linear-gradient(135deg,rgba(99,38,38,.54),rgba(47,22,22,.25));border-color:rgba(230,104,104,.70);}
+    #${HUD_ID} .save-save1{background:linear-gradient(135deg,rgba(88,84,73,.54),rgba(45,42,35,.25));border-color:rgba(198,190,159,.70);}
+    #${HUD_ID} .save-save2{background:linear-gradient(135deg,rgba(112,74,35,.54),rgba(54,35,18,.25));border-color:rgba(239,181,97,.70);}
+    #${HUD_ID} .save-save3{background:linear-gradient(135deg,rgba(36,98,119,.54),rgba(17,48,61,.25));border-color:rgba(102,213,239,.70);}
+    #${HUD_ID} .save-save4{background:linear-gradient(135deg,rgba(65,52,133,.54),rgba(34,27,75,.25));border-color:rgba(154,136,255,.70);}
+    #${HUD_ID} button,#${HUD_ID} [data-hud-tab],#${HUD_ID} [data-action]{user-select:auto;touch-action:auto;}
+    @media(max-width:760px){#${HUD_ID}{left:8px!important;right:8px;width:auto!important;min-width:0;max-width:calc(100vw - 16px)!important;}#${HUD_ID} .a2e-hud-ability-grid,#${HUD_ID} .a2e-hud-save-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
   `;
   document.head.appendChild(style);
 }
@@ -381,10 +408,10 @@ function add2eHudEffectRows(actor) {
 }
 function add2eHudSaveRows(actor) {
   const saves = add2eHudSavingThrows(actor);
-  return `<div class="a2e-hud-save-grid">${ADD2E_HUD_SAVE_DATA.map((s, idx) => `<div class="a2e-hud-save-cell save-${s.cls}"><div class="a2e-hud-cell-icon"><i class="fas ${s.icon}"></i></div><div class="a2e-hud-cell-main"><span>${add2eHudEscape(s.full)}</span><b>${add2eHudEscape(saves[idx] || "—")}</b></div><button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button></div>`).join("")}</div>`;
+  return `<div class="a2e-hud-save-grid">${ADD2E_HUD_SAVE_DATA.map((s, idx) => `<div class="a2e-hud-save-cell save-${s.cls}" title="${add2eHudEscape(s.full)}"><button type="button" class="a2e-hud-roll-icon" data-action="roll-save" data-save-index="${idx}" aria-label="Jet ${add2eHudEscape(s.label)}"><i class="fas ${s.icon}"></i></button><div class="a2e-hud-cell-main"><b>${add2eHudEscape(s.label)} ${add2eHudEscape(saves[idx] || "—")}</b></div></div>`).join("")}</div>`;
 }
 function add2eHudAbilityRows(actor) {
-  return `<div class="a2e-hud-ability-grid">${ADD2E_HUD_CARACS.map(c => `<div class="a2e-hud-ability carac-${c.cls}"><div class="a2e-hud-cell-icon"><i class="fas ${c.icon}"></i></div><div class="a2e-hud-cell-main"><span>${add2eHudEscape(c.title)}</span><b>${c.label} ${add2eHudAbilityValue(actor, c.key)}</b></div><button type="button" class="a2e-hud-action" data-action="roll-ability" data-ability="${c.key}">Jet</button></div>`).join("")}</div>`;
+  return `<div class="a2e-hud-ability-grid">${ADD2E_HUD_CARACS.map(c => `<div class="a2e-hud-ability carac-${c.cls}" title="${add2eHudEscape(c.title)}"><button type="button" class="a2e-hud-roll-icon" data-action="roll-ability" data-ability="${c.key}" aria-label="Jet ${add2eHudEscape(c.title)}"><i class="fas ${c.icon}"></i></button><div class="a2e-hud-cell-main"><b>${c.label} ${add2eHudAbilityValue(actor, c.key)}</b></div></div>`).join("")}</div>`;
 }
 function add2eHudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
@@ -561,6 +588,30 @@ async function add2eHudOpenEffect(actor, effectId) {
   if (effect.sheet?.render) return effect.sheet.render(true);
   return ui.notifications.warn("La fiche de cet effet ne peut pas être ouverte.");
 }
+function add2eHudFindOpenActorSheetElement(actor) {
+  if (!actor?.id) return null;
+  const roots = [...document.querySelectorAll(`.application[data-document-id="${actor.id}"], .app[data-document-id="${actor.id}"], [data-actor-id="${actor.id}"], [data-document-id="${actor.id}"]`)];
+  return roots.find(el => el?.offsetParent !== null) ?? roots[0] ?? null;
+}
+async function add2eHudTrySheetRollClick(kind, actor, payload) {
+  const root = add2eHudFindOpenActorSheetElement(actor);
+  if (!root) return false;
+  const keys = kind === "ability"
+    ? [payload.key, payload.carac, payload.label, payload.title].map(add2eHudNormalize).filter(Boolean)
+    : [payload.label, payload.save, String(payload.index), String(payload.saveIndex)].map(add2eHudNormalize).filter(Boolean);
+  const candidates = [...root.querySelectorAll("button,a,[role='button'],i,span")]
+    .filter(el => !el.closest?.(`#${HUD_ID}`));
+  for (const el of candidates) {
+    const text = add2eHudNormalize(el.textContent || el.title || el.getAttribute("aria-label") || "");
+    const data = add2eHudNormalize(Object.entries(el.dataset ?? {}).map(([k, v]) => `${k}:${v}`).join(" "));
+    const hay = `${text} ${data}`;
+    if (!/(roll|jet|carac|caracteristique|sauvegarde|save)/.test(hay)) continue;
+    if (!keys.some(k => k && hay.includes(k))) continue;
+    el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+    return true;
+  }
+  return false;
+}
 async function add2eHudDelegateRoll(kind, actor, payload) {
   const candidates = kind === "ability" ? [
     globalThis.add2eRollAbility,
@@ -590,7 +641,7 @@ async function add2eHudDelegateRoll(kind, actor, payload) {
       catch (_err2) { console.debug(`${TAG}[ROLL_DELEGATE_SKIP]`, { kind, fn: fn.name, err: err1 }); }
     }
   }
-  return false;
+  return add2eHudTrySheetRollClick(kind, actor, payload);
 }
 async function add2eHudRollAbilityLikeSheet(actor, carac) {
   const data = ADD2E_HUD_CARACS.find(c => c.key === carac) ?? { key: carac, label: carac?.toUpperCase?.() ?? "CAR", title: carac };
@@ -600,7 +651,7 @@ async function add2eHudRollAbilityLikeSheet(actor, carac) {
   const roll = await new Roll("1d20").evaluate({ async: true });
   if (game.dice3d) await game.dice3d.showForRoll(roll);
   const ok = roll.total <= val;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test add2e-roll-card"><h3>Jet de caractéristique — ${add2eHudEscape(data.title)}</h3><p>Seuil : <b>${val}</b></p><p>Résultat : <b>${roll.total}</b></p><p><b>${ok ? "Réussite" : "Échec"}</b></p></div>` });
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test add2e-roll-card"><h3>Jet de caractéristique — ${add2eHudEscape(data.label)}</h3><p>Seuil : <b>${val}</b></p><p>Résultat : <b>${roll.total}</b></p><p><b>${ok ? "Réussite" : "Échec"}</b></p></div>` });
 }
 async function add2eHudRollSaveLikeSheet(actor, idx) {
   const data = ADD2E_HUD_SAVE_DATA[idx] ?? { label: `Sauvegarde ${idx + 1}` };
