@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-25-application-v2-token-header-v4-single-clear-control";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-25-application-v2-token-header-v5-icon-only";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -246,7 +246,7 @@ function add2eEnsureTokenHeaderControl(sheet) {
     button.dataset.add2eTokenMode = target.mode;
     button.title = target.title;
     button.setAttribute("aria-label", target.title);
-    button.innerHTML = `<i class="fa-solid ${target.mode === "scene-token" ? "fa-location-dot" : "fa-user-circle"}"></i><span class="add2e-token-config-label">${target.label}</span>`;
+    button.innerHTML = `<i class="fa-solid ${target.mode === "scene-token" ? "fa-location-dot" : "fa-user-circle"}"></i>`;
 
     if (button.dataset.add2eTokenBound !== "1") {
       button.dataset.add2eTokenBound = "1";
