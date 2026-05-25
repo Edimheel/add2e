@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v23-clickable-roll-icons
+// Version : 2026-05-25-v24-sheet-roll-delegation-only
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v23-clickable-roll-icons";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v24-sheet-roll-delegation-only";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v23";
+const STORAGE_KEY = "add2e.actionHud.state.v24";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -26,13 +26,12 @@ const ADD2E_HUD_CARACS = [
   { key: "charisme", label: "CHA", title: "Charisme", icon: "fa-comments", cls: "charisme" }
 ];
 const ADD2E_HUD_SAVE_DATA = [
-  { label: "Paralysie", full: "Paralysie / poison / mort", icon: "fa-skull", cls: "save0" },
+  { label: "Paralysie", full: "Paralysie / poison / mort", icon: "fa-skull-crossbones", cls: "save0" },
   { label: "Pétrification", full: "Pétrification / métamorphose", icon: "fa-mountain", cls: "save1" },
   { label: "Baguettes", full: "Baguettes", icon: "fa-magic", cls: "save2" },
-  { label: "Souffles", full: "Souffles", icon: "fa-wind", cls: "save3" },
-  { label: "Sorts", full: "Sorts", icon: "fa-hat-wizard", cls: "save4" }
+  { label: "Souffles", full: "Souffles", icon: "fa-fire", cls: "save3" },
+  { label: "Sorts", full: "Sorts", icon: "fa-scroll", cls: "save4" }
 ];
-const ADD2E_HUD_SAVE_NAMES = ADD2E_HUD_SAVE_DATA.map(s => s.label);
 
 function add2eHudEscape(value) {
   try { return foundry.utils.escapeHTML(String(value ?? "")); }
@@ -72,6 +71,7 @@ function add2eHudLoadState() {
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v23")
       || localStorage.getItem("add2e.actionHud.state.v22")
       || localStorage.getItem("add2e.actionHud.state.v21")
       || localStorage.getItem("add2e.actionHud.state.v20")
@@ -117,11 +117,7 @@ function add2eHudClampGeometry(hud = add2eHudElement()) {
 function add2eHudSaveGeometryFromElement(hud = add2eHudElement()) {
   if (!hud) return;
   const r = hud.getBoundingClientRect();
-  add2eHudSaveState({
-    left: Math.round(r.left),
-    bottom: Math.round(Math.max(8, window.innerHeight - r.bottom)),
-    width: Math.round(hud.offsetWidth || r.width || 560)
-  });
+  add2eHudSaveState({ left: Math.round(r.left), bottom: Math.round(Math.max(8, window.innerHeight - r.bottom)), width: Math.round(hud.offsetWidth || r.width || 560) });
 }
 function add2eHudApplyGeometry(hud = add2eHudElement(), { force = false } = {}) {
   if (!hud || (!force && (add2eHudDragging || add2eHudResizing))) return;
@@ -363,7 +359,6 @@ function add2eHudInjectStyle() {
     #${HUD_ID} .a2e-hud-roll-icon:hover{filter:brightness(1.18);transform:translateY(-1px);}
     #${HUD_ID} .a2e-hud-cell-main{position:relative;z-index:1;min-width:0;}
     #${HUD_ID} .a2e-hud-cell-main b{display:block;color:#fff;font-size:1.28em;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    #${HUD_ID} .a2e-hud-cell-main span{display:block;color:rgba(255,246,214,.82);font-size:.70em;font-weight:850;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
     #${HUD_ID} .carac-force{background:linear-gradient(135deg,rgba(135,40,28,.55),rgba(58,24,18,.25));border-color:rgba(233,111,77,.70);}
     #${HUD_ID} .carac-dexterite{background:linear-gradient(135deg,rgba(42,112,59,.55),rgba(20,54,36,.25));border-color:rgba(116,221,127,.70);}
     #${HUD_ID} .carac-constitution{background:linear-gradient(135deg,rgba(151,89,28,.55),rgba(77,45,18,.25));border-color:rgba(239,171,82,.70);}
@@ -588,84 +583,35 @@ async function add2eHudOpenEffect(actor, effectId) {
   if (effect.sheet?.render) return effect.sheet.render(true);
   return ui.notifications.warn("La fiche de cet effet ne peut pas être ouverte.");
 }
-function add2eHudFindOpenActorSheetElement(actor) {
-  if (!actor?.id) return null;
-  const roots = [...document.querySelectorAll(`.application[data-document-id="${actor.id}"], .app[data-document-id="${actor.id}"], [data-actor-id="${actor.id}"], [data-document-id="${actor.id}"]`)];
-  return roots.find(el => el?.offsetParent !== null) ?? roots[0] ?? null;
+function add2eHudFindSheetRollButton(actor, selector) {
+  const candidates = [...document.querySelectorAll(selector)].filter(el => !el.closest?.(`#${HUD_ID}`));
+  if (!candidates.length) return null;
+  const visible = candidates.filter(el => el.offsetParent !== null);
+  const pool = visible.length ? visible : candidates;
+  if (!actor?.id) return pool[0] ?? null;
+  return pool.find(el => {
+    const root = el.closest?.(".application, .app, .window-app, form, .sheet");
+    if (!root) return true;
+    const rootText = root.textContent ?? "";
+    const rootDoc = root.dataset?.documentId ?? root.dataset?.actorId ?? "";
+    return rootDoc === actor.id || rootText.includes(actor.name);
+  }) ?? pool[0] ?? null;
 }
-async function add2eHudTrySheetRollClick(kind, actor, payload) {
-  const root = add2eHudFindOpenActorSheetElement(actor);
-  if (!root) return false;
-  const keys = kind === "ability"
-    ? [payload.key, payload.carac, payload.label, payload.title].map(add2eHudNormalize).filter(Boolean)
-    : [payload.label, payload.save, String(payload.index), String(payload.saveIndex)].map(add2eHudNormalize).filter(Boolean);
-  const candidates = [...root.querySelectorAll("button,a,[role='button'],i,span")]
-    .filter(el => !el.closest?.(`#${HUD_ID}`));
-  for (const el of candidates) {
-    const text = add2eHudNormalize(el.textContent || el.title || el.getAttribute("aria-label") || "");
-    const data = add2eHudNormalize(Object.entries(el.dataset ?? {}).map(([k, v]) => `${k}:${v}`).join(" "));
-    const hay = `${text} ${data}`;
-    if (!/(roll|jet|carac|caracteristique|sauvegarde|save)/.test(hay)) continue;
-    if (!keys.some(k => k && hay.includes(k))) continue;
-    el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
-    return true;
+function add2eHudDispatchExistingSheetRoll(actor, selector, label) {
+  const button = add2eHudFindSheetRollButton(actor, selector);
+  if (!button) {
+    ui.notifications.warn(`${label} : ouvre la feuille de personnage pour utiliser le moteur de jet existant.`);
+    console.warn(`${TAG}[ROLL_DELEGATE_MISSING]`, { actor: actor?.name, selector, label });
+    return false;
   }
-  return false;
-}
-async function add2eHudDelegateRoll(kind, actor, payload) {
-  const candidates = kind === "ability" ? [
-    globalThis.add2eRollAbility,
-    globalThis.add2eRollCharacteristic,
-    globalThis.add2eRollCarac,
-    globalThis.add2eJetCaracteristique,
-    game.add2e?.rollAbility,
-    game.add2e?.rollCharacteristic,
-    game.add2e?.rollCarac,
-    actor?.rollAbility,
-    actor?.rollCharacteristic,
-    actor?.rollCarac
-  ] : [
-    globalThis.add2eRollSave,
-    globalThis.add2eRollSavingThrow,
-    globalThis.add2eJetSauvegarde,
-    game.add2e?.rollSave,
-    game.add2e?.rollSavingThrow,
-    actor?.rollSave,
-    actor?.rollSavingThrow
-  ];
-  for (const fn of candidates) {
-    if (typeof fn !== "function") continue;
-    try { await fn.call(actor, actor, payload); return true; }
-    catch (err1) {
-      try { await fn.call(actor, payload); return true; }
-      catch (_err2) { console.debug(`${TAG}[ROLL_DELEGATE_SKIP]`, { kind, fn: fn.name, err: err1 }); }
-    }
-  }
-  return add2eHudTrySheetRollClick(kind, actor, payload);
+  button.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+  return true;
 }
 async function add2eHudRollAbilityLikeSheet(actor, carac) {
-  const data = ADD2E_HUD_CARACS.find(c => c.key === carac) ?? { key: carac, label: carac?.toUpperCase?.() ?? "CAR", title: carac };
-  const delegated = await add2eHudDelegateRoll("ability", actor, { ability: carac, carac, key: carac, label: data.label, title: data.title, source: "hud" });
-  if (delegated) return;
-  const val = add2eHudAbilityValue(actor, carac);
-  const roll = await new Roll("1d20").evaluate({ async: true });
-  if (game.dice3d) await game.dice3d.showForRoll(roll);
-  const ok = roll.total <= val;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test add2e-roll-card"><h3>Jet de caractéristique — ${add2eHudEscape(data.label)}</h3><p>Seuil : <b>${val}</b></p><p>Résultat : <b>${roll.total}</b></p><p><b>${ok ? "Réussite" : "Échec"}</b></p></div>` });
+  return add2eHudDispatchExistingSheetRoll(actor, `.roll-stat[data-stat="${CSS.escape(String(carac))}"]`, `Jet ${carac}`);
 }
 async function add2eHudRollSaveLikeSheet(actor, idx) {
-  const data = ADD2E_HUD_SAVE_DATA[idx] ?? { label: `Sauvegarde ${idx + 1}` };
-  const delegated = await add2eHudDelegateRoll("save", actor, { index: idx, saveIndex: idx, save: data.label, label: data.label, source: "hud" });
-  if (delegated) return;
-  const saves = add2eHudSavingThrows(actor);
-  const seuil = Number(saves[idx]);
-  if (!seuil) return ui.notifications.warn("Aucune valeur pour ce jet.");
-  const roll = await new Roll("1d20").evaluate({ async: true });
-  if (game.dice3d) await game.dice3d.showForRoll(roll);
-  let bonus = 0;
-  try { bonus = Number(globalThis.Add2eEffectsEngine?.analyze?.(actor, { type: "save", vsType: data.label, frontale: true })?.bonus_save || 0); } catch (_e) {}
-  const total = Number(roll.total || 0) + bonus;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test add2e-roll-card"><h3>Jet de sauvegarde — ${add2eHudEscape(data.label)}</h3><p>Seuil : <b>${seuil}</b></p><p>Résultat : <b>${roll.total}</b>${bonus ? ` + ${bonus} = <b>${total}</b>` : ""}</p><p><b>${total >= seuil ? "Réussite" : "Échec"}</b></p></div>` });
+  return add2eHudDispatchExistingSheetRoll(actor, `.roll-save[data-save="${Number(idx)}"]`, `Jet de sauvegarde ${idx + 1}`);
 }
 
 Hooks.once("init", () => {
