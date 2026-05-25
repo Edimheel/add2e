@@ -1,6 +1,6 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v15-drag-toggle-temporary-effects
+// Version : 2026-05-25-v16-bottom-anchor-filter-passive-effects
 //
 // Source unique de vérité du HUD :
 // - hors combat : clic token => HUD du token contrôlé ;
@@ -8,10 +8,10 @@
 // - combat tracker : clic combattant => HUD du combattant cliqué ;
 // - les refresh updateActor/item/effect rafraîchissent l'acteur déjà affiché, jamais le token sélectionné.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v15-drag-toggle-temporary-effects";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v16-bottom-anchor-filter-passive-effects";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
-const STORAGE_KEY = "add2e.actionHud.state.v15";
+const STORAGE_KEY = "add2e.actionHud.state.v16";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -69,6 +69,7 @@ function add2eHudLoadState() {
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v15")
       || localStorage.getItem("add2e.actionHud.state.v14")
       || localStorage.getItem("add2e.actionHud.state.v13")
       || localStorage.getItem("add2e.actionHud.state.v12")
@@ -169,25 +170,47 @@ function add2eHudNormalize(value) {
 }
 function add2eHudEffectTags(effect) {
   const flags = effect?.flags?.add2e ?? {};
-  const raw = [effect?.name, flags.type, flags.category, flags.source, ...(add2eHudArray(flags.tags)), ...(add2eHudArray(flags.effectTags)), ...(add2eHudArray(effect?.statuses))];
+  const raw = [effect?.name, flags.type, flags.category, flags.source, flags.sourceType, flags.sourceItemType, flags.sourceItemId, ...(add2eHudArray(flags.tags)), ...(add2eHudArray(flags.effectTags)), ...(add2eHudArray(effect?.statuses))];
   return raw.map(add2eHudNormalize).filter(Boolean);
+}
+function add2eHudEffectOriginItem(actor, effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  const directId = flags.sourceItemId ?? flags.itemId ?? flags.originItemId ?? null;
+  if (directId && actor?.items?.get?.(directId)) return actor.items.get(directId);
+  const origin = String(effect?.origin ?? "");
+  const itemId = origin.match(/\.Item\.([A-Za-z0-9]{16})/)?.[1] ?? origin.match(/Item\.([A-Za-z0-9]{16})/)?.[1] ?? null;
+  if (itemId && actor?.items?.get?.(itemId)) return actor.items.get(itemId);
+  return null;
+}
+function add2eHudIsRaceOrClassEffect(actor, effect) {
+  const tags = new Set(add2eHudEffectTags(effect));
+  const joined = [...tags].join(" ");
+  if (tags.has("race") || tags.has("racial") || tags.has("raciaux") || tags.has("raciale") || tags.has("classe") || tags.has("class") || tags.has("class_feature")) return true;
+  if (joined.includes("race:") || joined.includes("source:race") || joined.includes("type:race") || joined.includes("classe:") || joined.includes("source:classe") || joined.includes("type:classe")) return true;
+  const item = add2eHudEffectOriginItem(actor, effect);
+  const itemType = String(item?.type ?? "").toLowerCase();
+  if (["race", "classe", "class"].includes(itemType)) return true;
+  const origin = add2eHudNormalize(effect?.origin ?? "");
+  if (origin.includes("race") || origin.includes("classe") || origin.includes("class")) return true;
+  return false;
 }
 function add2eHudEffectHasDuration(effect) {
   const d = effect?.duration ?? {};
   const values = [d.rounds, d.turns, d.seconds, d.startRound, d.startTurn, d.startTime, d.combat, d.endTime];
   return values.some(v => v !== undefined && v !== null && v !== "" && !(Number(v) === 0 && [d.rounds, d.turns, d.seconds].includes(v)));
 }
-function add2eHudIsPermanentEffect(effect) {
+function add2eHudIsPermanentEffect(effect, actor = null) {
   const tags = add2eHudEffectTags(effect).join(" ");
+  if (actor && add2eHudIsRaceOrClassEffect(actor, effect)) return true;
   if (effect?.transfer === true) return true;
-  if (tags.includes("permanent") || tags.includes("passif") || tags.includes("passive") || tags.includes("racial") || tags.includes("classe")) return true;
+  if (tags.includes("permanent") || tags.includes("passif") || tags.includes("passive") || tags.includes("racial") || tags.includes("raciale") || tags.includes("raciaux") || tags.includes("classe") || tags.includes("class_feature")) return true;
   if (!add2eHudEffectHasDuration(effect) && !add2eHudArray(effect?.statuses).length) return true;
   return false;
 }
 function add2eHudTemporaryEffects(actor) {
   return [...(actor?.effects ?? [])]
     .filter(e => e && e.disabled !== true)
-    .filter(e => !add2eHudIsPermanentEffect(e));
+    .filter(e => !add2eHudIsPermanentEffect(e, actor));
 }
 function add2eHudAbilityValue(actor, key) {
   const direct = Number(actor?.system?.[key]);
@@ -335,10 +358,11 @@ function add2eHudSetRetracted(hud, retracted, { save = true } = {}) {
 }
 function add2eHudApplyState(hud) { add2eHudApplyGeometry(hud); add2eHudSetRetracted(hud, add2eHudLoadState().menuRetracted === true, { save: false }); }
 
-function add2eRenderActionHud(actor = null, token = null, { reason = "render" } = {}) {
+function add2eRenderActionHud(actor = null, token = null, { reason = "render", preserveBottom = null } = {}) {
   if (add2eHudDragging || add2eHudResizing) return false;
   add2eHudInjectStyle();
   const existing = add2eHudElement();
+  const bottomAnchor = Number.isFinite(Number(preserveBottom)) ? Number(preserveBottom) : existing?.getBoundingClientRect?.().bottom;
   if (!add2eHudIsRelevant(actor)) { existing?.remove(); add2eHudActorId = null; return false; }
   add2eHudActorId = actor.id;
   if (!ADD2E_HUD_TABS.includes(add2eHudActiveTab)) add2eHudActiveTab = "attaques";
@@ -348,6 +372,7 @@ function add2eRenderActionHud(actor = null, token = null, { reason = "render" } 
   if (!existing) document.body.appendChild(hud);
   add2eHudApplyState(hud);
   add2eBindHudEvents(hud, actor);
+  if (Number.isFinite(Number(bottomAnchor))) requestAnimationFrame(() => add2eHudPreserveBottom(hud, Number(bottomAnchor), { save: true }));
   console.log(`${TAG}[RENDER]`, { reason, actor: actor.name, token: token?.name ?? null });
   return true;
 }
@@ -403,13 +428,18 @@ function add2eBindHudEvents(hud, actor) {
     ev.stopPropagation();
     const clicked = btn.dataset.hudTab || "attaques";
     const currentHud = add2eHudElement() ?? hud;
+    const bottom = currentHud?.getBoundingClientRect?.().bottom;
     if (add2eHudActiveTab === clicked && !add2eHudIsRetracted(currentHud)) {
       add2eHudSetRetracted(currentHud, true, { save: true });
       return;
     }
     add2eHudActiveTab = clicked;
-    add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason: "tab" });
-    window.setTimeout(() => add2eHudSetRetracted(add2eHudElement(), false, { save: true }), 0);
+    add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason: "tab", preserveBottom: bottom });
+    window.setTimeout(() => {
+      const h = add2eHudElement();
+      add2eHudSetRetracted(h, false, { save: true });
+      if (Number.isFinite(Number(bottom))) requestAnimationFrame(() => add2eHudPreserveBottom(h, Number(bottom), { save: true }));
+    }, 0);
   }));
   hud.querySelectorAll("[data-action]").forEach(btn => btn.addEventListener("click", async ev => {
     if (add2eHudNow() < add2eHudSuppressClickUntil) { ev.preventDefault(); ev.stopPropagation(); return; }
