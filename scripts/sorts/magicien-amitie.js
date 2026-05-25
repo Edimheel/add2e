@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Amitié
-// Version : 2026-05-25-magicien-amitie-zone-cases-v2
+// Version : 2026-05-25-magicien-amitie-zone-visible-v3
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -109,6 +109,8 @@ async function add2eChooseZone(level, casterToken) {
   const radiusCells = add2eAreaRadiusGridCells(level);
   const diameterCells = Math.max(1, radiusCells * 2);
   const casterCenter = casterToken ? add2eTokenCenter(casterToken) : null;
+  const zoneFillColor = "#b36bff";
+  const zoneOutlineColor = "#fff2a8";
 
   const location = await warpgate.crosshairs.show({
     size: diameterCells,
@@ -116,10 +118,25 @@ async function add2eChooseZone(level, casterToken) {
     drawOutline: true,
     drawIcon: true,
     lockSize: true,
+    rememberControlled: true,
     icon: ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.imgFallback,
     label: `${ADD2E_SORT_CONFIG.name} — rayon ${add2eAreaRadiusText(level)}`,
-    fillColor: "#8e63c7",
-    outlineColor: "#5b3f8c",
+    labelOffset: { x: 0, y: -24 },
+    tag: "add2e-amitie-zone",
+    fillColor: zoneFillColor,
+    fillAlpha: 0.42,
+    fillOpacity: 0.42,
+    outlineColor: zoneOutlineColor,
+    outlineAlpha: 1,
+    outlineWidth: 4,
+    borderColor: zoneOutlineColor,
+    borderAlpha: 1,
+    borderWidth: 4,
+    crosshair: {
+      color: zoneOutlineColor,
+      alpha: 1,
+      width: 4
+    },
     x: casterCenter?.x,
     y: casterCenter?.y
   });
