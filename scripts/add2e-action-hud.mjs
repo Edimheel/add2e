@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v17-bottom-fixed-refresh-safe
+// Version : 2026-05-25-v18-top-drag-bottom-locked
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v17-bottom-fixed-refresh-safe";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v18-top-drag-bottom-locked";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v17";
+const STORAGE_KEY = "add2e.actionHud.state.v18";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -55,7 +55,7 @@ function add2eHudPanel(hud = add2eHudElement()) { return hud?.querySelector?.(".
 function add2eHudIsRetracted(hud = add2eHudElement()) { return Boolean(hud?.classList?.contains("collapsed") || hud?.classList?.contains("a2e-hud-menu-retracted")); }
 
 function add2eHudDefaultState() {
-  return { left: 116, bottom: 22, width: 560, maxMenuHeight: 320, menuRetracted: false };
+  return { left: 116, top: Math.max(20, window.innerHeight - 360 - 22), width: 560, maxMenuHeight: 320, menuRetracted: false };
 }
 function add2eHudLoadState() {
   if (add2eHudState) return add2eHudState;
@@ -63,6 +63,7 @@ function add2eHudLoadState() {
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v17")
       || localStorage.getItem("add2e.actionHud.state.v16")
       || localStorage.getItem("add2e.actionHud.state.v15")
       || localStorage.getItem("add2e.actionHud.state.v14")
@@ -72,12 +73,12 @@ function add2eHudLoadState() {
       || "null"
     );
     if (raw && typeof raw === "object") {
-      const rawWidth = add2eHudClamp(Number(raw.width) || 560, 360, Math.max(380, window.innerWidth - 16));
-      const fallbackBottom = window.innerHeight - (Number(raw.top) || Math.max(20, window.innerHeight - 360 - 22)) - 140;
+      const width = add2eHudClamp(Number(raw.width) || 560, 360, Math.max(380, window.innerWidth - 16));
+      const topFromBottom = window.innerHeight - Number(raw.bottom ?? 22) - 140;
       state = {
-        left: add2eHudClamp(Number(raw.left) || 116, 8, Math.max(8, window.innerWidth - rawWidth - 8)),
-        bottom: add2eHudClamp(Number(raw.bottom ?? fallbackBottom) || 22, 8, Math.max(8, window.innerHeight - 80)),
-        width: rawWidth,
+        left: add2eHudClamp(Number(raw.left) || 116, 8, Math.max(8, window.innerWidth - width - 8)),
+        top: add2eHudClamp(Number(raw.top ?? topFromBottom) || 120, 8, Math.max(8, window.innerHeight - 80)),
+        width,
         maxMenuHeight: add2eHudClamp(Number(raw.maxMenuHeight) || 320, 110, Math.max(140, window.innerHeight - 130)),
         menuRetracted: raw.menuRetracted === true || raw.hudCollapsed === true
       };
@@ -91,38 +92,42 @@ function add2eHudSaveState(partial = {}) {
   Object.assign(s, partial);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (_e) {}
 }
-function add2eHudClampStateToViewport(hud = add2eHudElement()) {
-  const s = add2eHudLoadState();
-  const width = add2eHudClamp(Number(s.width) || 560, 360, Math.max(380, window.innerWidth - 16));
-  const rect = hud?.getBoundingClientRect?.();
-  const height = rect?.height || 140;
-  s.width = width;
-  s.left = add2eHudClamp(Number(s.left) || 116, 8, Math.max(8, window.innerWidth - width - 8));
-  s.bottom = add2eHudClamp(Number(s.bottom) || 22, 8, Math.max(8, window.innerHeight - height - 8));
-  s.maxMenuHeight = add2eHudClamp(Number(s.maxMenuHeight) || 320, 110, Math.max(140, window.innerHeight - 130));
-  return s;
-}
-function add2eHudApplyGeometry(hud) {
-  if (!hud || add2eHudDragging || add2eHudResizing) return;
-  const s = add2eHudClampStateToViewport(hud);
-  hud.style.setProperty("left", `${Math.round(s.left)}px`, "important");
-  hud.style.setProperty("bottom", `${Math.round(s.bottom)}px`, "important");
-  hud.style.setProperty("top", "auto", "important");
-  hud.style.setProperty("right", "auto", "important");
-  hud.style.setProperty("width", `${Math.round(s.width)}px`, "important");
-  hud.style.setProperty("--a2e-hud-menu-max", `${Math.round(s.maxMenuHeight)}px`);
+function add2eHudBottom(hud = add2eHudElement()) {
+  return hud?.getBoundingClientRect ? hud.getBoundingClientRect().bottom : null;
 }
 function add2eHudSaveGeometryFromElement(hud = add2eHudElement()) {
   if (!hud) return;
   const r = hud.getBoundingClientRect();
-  add2eHudSaveState({
-    left: Math.round(r.left),
-    bottom: Math.round(Math.max(8, window.innerHeight - r.bottom)),
-    width: Math.round(hud.offsetWidth || r.width || 560)
-  });
+  add2eHudSaveState({ left: Math.round(r.left), top: Math.round(r.top), width: Math.round(hud.offsetWidth || r.width || 560) });
+}
+function add2eHudApplyPosition(hud, left, top) {
+  if (!hud) return;
+  hud.style.setProperty("left", `${Math.round(left)}px`, "important");
+  hud.style.setProperty("top", `${Math.round(top)}px`, "important");
+  hud.style.setProperty("right", "auto", "important");
+  hud.style.setProperty("bottom", "auto", "important");
+}
+function add2eHudConstrainTopForCurrentHeight(hud, top) {
+  const h = hud?.getBoundingClientRect?.().height || 140;
+  return add2eHudClamp(top, 8, Math.max(8, window.innerHeight - h - 8));
+}
+function add2eHudApplyGeometry(hud, { anchorBottom = null } = {}) {
+  if (!hud || add2eHudDragging || add2eHudResizing) return;
+  const s = add2eHudLoadState();
+  s.width = add2eHudClamp(Number(s.width) || 560, 360, Math.max(380, window.innerWidth - 16));
+  s.left = add2eHudClamp(Number(s.left) || 116, 8, Math.max(8, window.innerWidth - s.width - 8));
+  s.maxMenuHeight = add2eHudClamp(Number(s.maxMenuHeight) || 320, 110, Math.max(140, window.innerHeight - 130));
+  hud.style.setProperty("width", `${Math.round(s.width)}px`, "important");
+  hud.style.setProperty("--a2e-hud-menu-max", `${Math.round(s.maxMenuHeight)}px`);
+  let top = Number(s.top) || 120;
+  if (Number.isFinite(Number(anchorBottom))) top = Number(anchorBottom) - (hud.getBoundingClientRect().height || 140);
+  top = add2eHudConstrainTopForCurrentHeight(hud, top);
+  add2eHudApplyPosition(hud, s.left, top);
+  s.top = Math.round(top);
 }
 function add2eHudSetRetracted(hud, retracted, { save = true } = {}) {
   if (!hud) return;
+  const bottom = add2eHudBottom(hud);
   hud.classList.toggle("collapsed", retracted);
   hud.classList.toggle("a2e-hud-menu-retracted", retracted);
   const panel = add2eHudPanel(hud);
@@ -130,12 +135,19 @@ function add2eHudSetRetracted(hud, retracted, { save = true } = {}) {
     if (retracted) panel.style.setProperty("display", "none", "important");
     else panel.style.removeProperty("display");
   }
-  add2eHudApplyGeometry(hud);
+  add2eHudApplyGeometry(hud, { anchorBottom: bottom });
   if (save) add2eHudSaveState({ menuRetracted: retracted });
 }
-function add2eHudApplyState(hud) {
-  add2eHudSetRetracted(hud, add2eHudLoadState().menuRetracted === true, { save: false });
-  add2eHudApplyGeometry(hud);
+function add2eHudApplyState(hud, { anchorBottom = null } = {}) {
+  const retracted = add2eHudLoadState().menuRetracted === true;
+  hud.classList.toggle("collapsed", retracted);
+  hud.classList.toggle("a2e-hud-menu-retracted", retracted);
+  const panel = add2eHudPanel(hud);
+  if (panel) {
+    if (retracted) panel.style.setProperty("display", "none", "important");
+    else panel.style.removeProperty("display");
+  }
+  add2eHudApplyGeometry(hud, { anchorBottom });
 }
 
 function add2eHudCanUseActor(actor) {
@@ -174,7 +186,6 @@ function add2eHudTokenForActor(actor) {
 function add2eHudRerenderActor(actor, reason) {
   if (!actor || actor.id !== add2eHudActorId) return false;
   if (add2eHudDragging || add2eHudResizing) return false;
-  add2eHudSaveGeometryFromElement();
   return add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason });
 }
 
@@ -306,7 +317,7 @@ function add2eHudInjectStyle() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-    #${HUD_ID}{position:fixed;z-index:100;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;min-width:360px;resize:none;right:auto!important;top:auto!important;touch-action:none;user-select:none;}
+    #${HUD_ID}{position:fixed;z-index:100;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;min-width:360px;resize:none;right:auto!important;bottom:auto!important;touch-action:none;user-select:none;}
     #${HUD_ID}.collapsed .a2e-hud-menu-panel,#${HUD_ID}.a2e-hud-menu-retracted .a2e-hud-menu-panel{display:none!important;}
     #${HUD_ID}.collapsed .a2e-hud-icon-btn i,#${HUD_ID}.a2e-hud-menu-retracted .a2e-hud-icon-btn i{transform:rotate(180deg);}
     #${HUD_ID} .a2e-hud-shell{display:flex;flex-direction:column;justify-content:flex-end;border:1px solid #8a611d;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 15% 0%,rgba(213,147,45,.28),transparent 36%),linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,230,160,.12);}
@@ -371,7 +382,7 @@ function add2eRenderActionHud(actor = null, token = null, { reason = "render" } 
   if (add2eHudDragging || add2eHudResizing) return false;
   add2eHudInjectStyle();
   const existing = add2eHudElement();
-  if (existing) add2eHudSaveGeometryFromElement(existing);
+  const bottom = add2eHudBottom(existing);
   if (!add2eHudIsRelevant(actor)) { existing?.remove(); add2eHudActorId = null; return false; }
   add2eHudActorId = actor.id;
   if (!ADD2E_HUD_TABS.includes(add2eHudActiveTab)) add2eHudActiveTab = "attaques";
@@ -379,7 +390,7 @@ function add2eRenderActionHud(actor = null, token = null, { reason = "render" } 
   hud.id = HUD_ID;
   hud.innerHTML = add2eHudHtml(actor, token);
   if (!existing) document.body.appendChild(hud);
-  add2eHudApplyState(hud);
+  add2eHudApplyState(hud, { anchorBottom: bottom });
   add2eBindHudEvents(hud, actor);
   console.log(`${TAG}[RENDER]`, { reason, actor: actor.name, token: token?.name ?? null });
   return true;
@@ -427,7 +438,6 @@ function add2eBindHudEvents(hud, actor) {
   hud.querySelectorAll("[data-hud-tab]").forEach(btn => btn.addEventListener("click", ev => {
     ev.preventDefault();
     ev.stopPropagation();
-    add2eHudSaveGeometryFromElement(hud);
     const clicked = btn.dataset.hudTab || "attaques";
     if (add2eHudActiveTab === clicked && !add2eHudIsRetracted(hud)) return add2eHudSetRetracted(hud, true, { save: true });
     add2eHudActiveTab = clicked;
@@ -457,11 +467,12 @@ function add2eHudStartResize(ev) {
   add2eHudPreventPointer(ev); add2eHudResizing = true;
   try { handle.setPointerCapture?.(ev.pointerId); } catch (_e) {}
   const start = { x: ev.clientX, y: ev.clientY, ...add2eHudLoadState(), rect: hud.getBoundingClientRect() };
+  const bottom = start.rect.bottom;
   const move = e => {
     const s = add2eHudLoadState();
     s.width = add2eHudClamp(start.width + e.clientX - start.x, 360, Math.max(360, window.innerWidth - start.rect.left - 8));
     s.maxMenuHeight = add2eHudClamp(start.maxMenuHeight + e.clientY - start.y, 110, Math.max(140, window.innerHeight - start.rect.top - 8));
-    add2eHudApplyGeometry(hud);
+    add2eHudApplyGeometry(hud, { anchorBottom: bottom });
   };
   const up = () => {
     window.removeEventListener("pointermove", move, true);
@@ -469,7 +480,6 @@ function add2eHudStartResize(ev) {
     window.removeEventListener("pointercancel", up, true);
     add2eHudResizing = false;
     add2eHudSaveGeometryFromElement(hud);
-    add2eHudApplyGeometry(hud);
   };
   window.addEventListener("pointermove", move, true);
   window.addEventListener("pointerup", up, true);
@@ -482,13 +492,13 @@ function add2eHudStartDrag(ev) {
   if (!hud || !handle || ev.button !== 0 || add2eHudPointerForbidden(ev.target)) return;
   add2eHudPreventPointer(ev); add2eHudDragging = true;
   try { handle.setPointerCapture?.(ev.pointerId); } catch (_e) {}
-  const s = add2eHudLoadState();
-  const start = { x: ev.clientX, y: ev.clientY, left: s.left, bottom: s.bottom };
+  const r = hud.getBoundingClientRect();
+  const start = { x: ev.clientX, y: ev.clientY, left: r.left, top: r.top };
   const move = e => {
-    const state = add2eHudLoadState();
-    state.left = add2eHudClamp(start.left + e.clientX - start.x, 8, Math.max(8, window.innerWidth - (hud.offsetWidth || state.width) - 8));
-    state.bottom = add2eHudClamp(start.bottom - (e.clientY - start.y), 8, Math.max(8, window.innerHeight - (hud.offsetHeight || 140) - 8));
-    add2eHudApplyGeometry(hud);
+    const s = add2eHudLoadState();
+    s.left = add2eHudClamp(start.left + e.clientX - start.x, 8, Math.max(8, window.innerWidth - (hud.offsetWidth || s.width) - 8));
+    s.top = add2eHudConstrainTopForCurrentHeight(hud, start.top + e.clientY - start.y);
+    add2eHudApplyPosition(hud, s.left, s.top);
   };
   const up = () => {
     window.removeEventListener("pointermove", move, true);
@@ -502,7 +512,7 @@ function add2eHudStartDrag(ev) {
   window.addEventListener("pointercancel", up, true);
 }
 function add2eHudPointerDown(ev) { if (add2eHudStartResize(ev)) return; add2eHudStartDrag(ev); }
-function add2eHudWindowResize() { const hud = add2eHudElement(); if (hud) add2eHudApplyGeometry(hud); }
+function add2eHudWindowResize() { const hud = add2eHudElement(); if (hud) add2eHudApplyGeometry(hud, { anchorBottom: add2eHudBottom(hud) }); }
 function add2eHudScheduleApplyState() { if (!add2eHudDragging && !add2eHudResizing) window.requestAnimationFrame(() => add2eHudApplyGeometry(add2eHudElement())); }
 
 async function add2eHudAttack(actor, itemId) {
