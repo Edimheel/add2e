@@ -293,6 +293,190 @@ Hooks.once("ready", () => {
     return null;
   }
 
+  function add2eTemplateRequestFromEffect(effect) {
+    return effect?.flags?.add2e?.templateRequestId
+      ?? effect?.flags?.add2e?.spell?.templateRequestId
+      ?? effect?.getFlag?.("add2e", "templateRequestId")
+      ?? effect?.getFlag?.("add2e", "spell")?.templateRequestId
+      ?? null;
+  }
+
+  function add2eTemplateSceneFromEffect(effect) {
+    return effect?.flags?.add2e?.templateSceneId
+      ?? effect?.flags?.add2e?.spell?.templateSceneId
+      ?? effect?.getFlag?.("add2e", "templateSceneId")
+      ?? effect?.getFlag?.("add2e", "spell")?.templateSceneId
+      ?? canvas?.scene?.id
+      ?? null;
+  }
+
+  function add2eEffectIsAmitie(effect) {
+    const spellSlug = effect?.flags?.add2e?.spell?.slug ?? effect?.getFlag?.("add2e", "spell")?.slug ?? null;
+    const tags = add2eRelayArray(effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? []).map(add2eRelayNormalize);
+    return spellSlug === "amitie" || tags.includes("sort_amitie") || tags.includes("sort:amitie") || add2eRelayNormalize(effect?.name).includes("amitie");
+  }
+
+  function add2eEffectIsExpired(effect) {
+    if (!effect || effect.disabled) return true;
+    if (effect.isExpired === true) return true;
+
+    const duration = effect.duration ?? {};
+    if (Number.isFinite(Number(duration.remaining)) && Number(duration.remaining) <= 0) return true;
+
+    const rounds = Number(duration.rounds ?? 0);
+    const startRound = Number(duration.startRound ?? 0);
+    const currentRound = Number(game.combat?.round ?? 0);
+    if (rounds > 0 && startRound > 0 && currentRound > 0 && currentRound - startRound >= rounds) return true;
+
+    const seconds = Number(duration.seconds ?? 0);
+    const startTime = Number(duration.startTime ?? 0);
+    const worldTime = Number(game.time?.worldTime ?? 0);
+    if (seconds > 0 && startTime > 0 && worldTime > 0 && worldTime - startTime >= seconds) return true;
+
+    return false;
+  }
+
+  function add2eHasLivingAmitieEffect(templateRequestId) {
+    if (!templateRequestId) return false;
+    for (const actor of game.actors ?? []) {
+      for (const effect of actor.effects ?? []) {
+        if (!add2eEffectIsAmitie(effect)) continue;
+        if (add2eTemplateRequestFromEffect(effect) !== templateRequestId) continue;
+        if (!add2eEffectIsExpired(effect)) return true;
+      }
+    }
+    return false;
+  }
+
+  function findMeasuredTemplates(scene, payload) {
+    if (!scene) return [];
+    const requestId = payload.templateRequestId ?? payload.requestId ?? null;
+    const templateId = payload.templateId ?? null;
+    const spell = payload.spell ?? null;
+
+    return Array.from(scene.templates ?? [])
+      .filter(t => {
+        if (templateId && t.id === templateId) return true;
+        if (requestId && (t.flags?.add2e?.templateRequestId === requestId || t.getFlag?.("add2e", "templateRequestId") === requestId)) return true;
+        if (spell && t.flags?.add2e?.spell === spell && requestId && t.flags?.add2e?.templateRequestId === requestId) return true;
+        return false;
+      });
+  }
+
+  async function createMeasuredTemplate(payload) {
+    const scene = resolveScene(payload.sceneId);
+    if (!scene) {
+      console.warn("[ADD2E][GM-RELAY][createMeasuredTemplate] scène introuvable :", payload);
+      return;
+    }
+
+    const templateData = foundry.utils.deepClone(payload.templateData ?? {});
+    const requestId = payload.templateRequestId ?? templateData.flags?.add2e?.templateRequestId ?? null;
+    if (requestId && findMeasuredTemplates(scene, { templateRequestId: requestId }).length) return;
+
+    templateData.flags ??= {};
+    templateData.flags.add2e ??= {};
+    if (requestId) templateData.flags.add2e.templateRequestId = requestId;
+    if (payload.spell) templateData.flags.add2e.spell = payload.spell;
+    if (payload.spellName) templateData.flags.add2e.spellName = payload.spellName;
+
+    const created = await scene.createEmbeddedDocuments("MeasuredTemplate", [templateData]);
+    console.log("[ADD2E][GM-RELAY][createMeasuredTemplate] créée :", {
+      scene: scene.name,
+      templateId: created?.[0]?.id ?? null,
+      templateRequestId: requestId,
+      spell: payload.spell
+    });
+  }
+
+  async function deleteMeasuredTemplates(payload) {
+    const scene = resolveScene(payload.sceneId);
+    if (!scene) {
+      console.warn("[ADD2E][GM-RELAY][deleteMeasuredTemplates] scène introuvable :", payload);
+      return;
+    }
+
+    const ids = findMeasuredTemplates(scene, payload).map(t => t.id).filter(Boolean);
+    if (!ids.length) return;
+
+    console.log("[ADD2E][GM-RELAY][deleteMeasuredTemplates] suppression :", {
+      scene: scene.name,
+      ids,
+      templateRequestId: payload.templateRequestId,
+      reason: payload.reason
+    });
+
+    await scene.deleteEmbeddedDocuments("MeasuredTemplate", ids);
+  }
+
+  async function cleanupAmitieTemplate(payload) {
+    if (!isResponsibleGM()) return;
+    const requestId = payload?.templateRequestId ?? null;
+    if (!requestId) return;
+    if (add2eHasLivingAmitieEffect(requestId)) return;
+    await deleteMeasuredTemplates(payload);
+  }
+
+  async function cleanupExpiredAmitieTemplates() {
+    if (!isResponsibleGM()) return;
+
+    const scenes = new Set([canvas?.scene, game.scenes?.active].filter(Boolean));
+    for (const scene of scenes) {
+      for (const template of Array.from(scene.templates ?? [])) {
+        const flags = template.flags?.add2e ?? {};
+        if (flags.spell !== "amitie" || !flags.templateRequestId) continue;
+        await cleanupAmitieTemplate({
+          sceneId: scene.id,
+          templateId: template.id,
+          templateRequestId: flags.templateRequestId,
+          spell: "amitie",
+          reason: "expired-effect-check"
+        });
+      }
+    }
+  }
+
+  Hooks.on("deleteActiveEffect", (effect) => {
+    if (!isResponsibleGM()) return;
+    if (!add2eEffectIsAmitie(effect)) return;
+
+    const templateRequestId = add2eTemplateRequestFromEffect(effect);
+    const sceneId = add2eTemplateSceneFromEffect(effect);
+    if (!templateRequestId) return;
+
+    setTimeout(() => cleanupAmitieTemplate({
+      sceneId,
+      templateRequestId,
+      spell: "amitie",
+      reason: "delete-active-effect"
+    }), 100);
+  });
+
+  Hooks.on("updateActiveEffect", (effect) => {
+    if (!isResponsibleGM()) return;
+    if (!add2eEffectIsAmitie(effect)) return;
+    if (!add2eEffectIsExpired(effect)) return;
+
+    const templateRequestId = add2eTemplateRequestFromEffect(effect);
+    const sceneId = add2eTemplateSceneFromEffect(effect);
+    if (!templateRequestId) return;
+
+    setTimeout(() => cleanupAmitieTemplate({
+      sceneId,
+      templateRequestId,
+      spell: "amitie",
+      reason: "update-active-effect-expired"
+    }), 100);
+  });
+
+  Hooks.on("updateCombat", () => {
+    setTimeout(() => cleanupExpiredAmitieTemplates(), 150);
+  });
+
+  Hooks.on("updateWorldTime", () => {
+    setTimeout(() => cleanupExpiredAmitieTemplates(), 150);
+  });
+
   game.socket.on("system.add2e", async data => {
     console.log("[ADD2E SOCKET][RECU]", {
       user: game.user.name,
@@ -335,6 +519,16 @@ Hooks.once("ready", () => {
 
     if (operation === "deleteActiveEffects") {
       await deleteActiveEffects(payload);
+      return;
+    }
+
+    if (operation === "createMeasuredTemplate") {
+      await createMeasuredTemplate(payload);
+      return;
+    }
+
+    if (operation === "deleteMeasuredTemplates") {
+      await cleanupAmitieTemplate(payload);
       return;
     }
 
