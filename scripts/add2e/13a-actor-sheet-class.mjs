@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-25-application-v2-token-header-v2";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-25-application-v2-token-header-v3-scene-token-first";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -65,24 +65,103 @@ function add2eBindApplicationV2Close(sheet) {
   }
 }
 
-function add2eTokenConfigPosition(sheet) {
-  const options = { parent: sheet?.actor ?? sheet?.document ?? null };
+function add2eTokenConfigPosition(sheet, parent = null) {
+  const options = { parent: parent ?? sheet?.actor ?? sheet?.document ?? null };
   const pos = sheet?.position ?? {};
   if (Number.isFinite(pos.top)) options.top = pos.top + 40;
   if (Number.isFinite(pos.left) && Number.isFinite(pos.width)) options.left = pos.left + Math.max(0, Math.floor((pos.width - 460) / 2));
   return options;
 }
 
-async function add2eTryRenderTokenConfig(createApp) {
+function add2eIsTokenDocument(document) {
+  return Boolean(document?.documentName === "Token" || document?.constructor?.documentName === "Token" || document?.object?.document === document);
+}
+
+function add2eSameActor(tokenDocument, actor) {
+  if (!tokenDocument || !actor) return false;
+  const tokenActor = tokenDocument.actor ?? tokenDocument.object?.actor ?? null;
+  return tokenActor === actor || tokenActor?.id === actor.id || tokenDocument.actorId === actor.id;
+}
+
+function add2eResolveSceneTokenDocument(sheet, actor) {
+  const candidates = [];
+  if (add2eIsTokenDocument(sheet?.token)) candidates.push(sheet.token);
+  if (add2eIsTokenDocument(sheet?.options?.token)) candidates.push(sheet.options.token);
+  if (add2eIsTokenDocument(actor?.token)) candidates.push(actor.token);
+  if (add2eIsTokenDocument(actor?.parent) && String(actor?.parent?.documentName ?? "") === "Token") candidates.push(actor.parent);
+
+  for (const token of canvas?.tokens?.controlled ?? []) {
+    if (token?.document) candidates.push(token.document);
+  }
+
+  for (const token of actor?.getActiveTokens?.(false, true) ?? []) {
+    if (token?.document) candidates.push(token.document);
+  }
+
+  for (const tokenDocument of candidates) {
+    if (add2eIsTokenDocument(tokenDocument) && add2eSameActor(tokenDocument, actor)) return tokenDocument;
+  }
+
+  return null;
+}
+
+async function add2eTryRenderTokenConfig(label, createApp) {
   try {
     const app = createApp?.();
     if (!app?.render) return false;
     await app.render(true);
+    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED]", label);
     return true;
   } catch (err) {
-    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][TRY_FAILED]", err);
+    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][TRY_FAILED]", label, err);
     return false;
   }
+}
+
+async function add2eRenderTokenDocumentSheet(tokenDocument, options = {}) {
+  if (!tokenDocument) return false;
+
+  if (tokenDocument.sheet?.render) {
+    try {
+      await tokenDocument.sheet.render(true, options);
+      console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED] document.sheet", {
+        tokenId: tokenDocument.id,
+        sceneId: tokenDocument.parent?.id ?? null
+      });
+      return true;
+    } catch (err) {
+      console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][TOKEN_SHEET_FAILED]", err);
+    }
+  }
+
+  const TokenConfigClass = foundry?.applications?.sheets?.TokenConfig ?? CONFIG?.Token?.sheetClass ?? globalThis.TokenConfig;
+  if (!TokenConfigClass) return false;
+
+  if (await add2eTryRenderTokenConfig("TokenConfig({document})", () => new TokenConfigClass({ document: tokenDocument, ...options }))) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => new TokenConfigClass(tokenDocument, options))) return true;
+  return false;
+}
+
+async function add2eRenderPrototypeTokenDocumentSheet(tokenDocument, actor, options = {}) {
+  if (!tokenDocument) return false;
+
+  if (tokenDocument.sheet?.render) {
+    try {
+      await tokenDocument.sheet.render(true, { parent: actor, ...options });
+      console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED] prototype.document.sheet", { actorId: actor?.id ?? null });
+      return true;
+    } catch (err) {
+      console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][PROTOTYPE_TOKEN_SHEET_FAILED]", err);
+    }
+  }
+
+  const PrototypeTokenConfigClass = foundry?.applications?.sheets?.PrototypeTokenConfig ?? CONFIG?.Token?.prototypeSheetClass ?? globalThis.PrototypeTokenConfig;
+  if (!PrototypeTokenConfigClass) return false;
+
+  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({document,parent})", () => new PrototypeTokenConfigClass({ document: tokenDocument, parent: actor, ...options }))) return true;
+  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({object,parent})", () => new PrototypeTokenConfigClass({ object: tokenDocument, document: tokenDocument, parent: actor, ...options }))) return true;
+  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig(token, options)", () => new PrototypeTokenConfigClass(tokenDocument, { parent: actor, ...options }))) return true;
+  return false;
 }
 
 async function add2eOpenPrototypeTokenConfig(sheet, event = null) {
@@ -90,60 +169,41 @@ async function add2eOpenPrototypeTokenConfig(sheet, event = null) {
   if (!actor) return ui.notifications?.warn?.("Aucun acteur associé à cette feuille.");
 
   if (!(game.user?.isGM || actor.isOwner)) {
-    return ui.notifications?.warn?.("Vous n'avez pas les droits nécessaires pour modifier le prototype de token.");
+    return ui.notifications?.warn?.("Vous n'avez pas les droits nécessaires pour modifier le token.");
   }
 
   event?.preventDefault?.();
   event?.stopPropagation?.();
 
   try {
-    if (typeof sheet._onConfigureToken === "function") {
-      await sheet._onConfigureToken(event);
-      return;
+    const sceneTokenDocument = add2eResolveSceneTokenDocument(sheet, actor);
+    const targetDocument = sceneTokenDocument ?? actor.prototypeToken ?? actor.prototypeTokenDocument ?? null;
+    const mode = sceneTokenDocument ? "scene-token" : "prototype-token";
+
+    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][RESOLVE]", {
+      mode,
+      actorId: actor.id,
+      actorName: actor.name,
+      actorIsToken: actor.isToken,
+      tokenId: targetDocument?.id ?? null,
+      tokenName: targetDocument?.name ?? null,
+      sceneId: targetDocument?.parent?.id ?? null
+    });
+
+    if (!targetDocument) return ui.notifications?.warn?.("Aucun token configurable trouvé pour cet acteur.");
+
+    const options = add2eTokenConfigPosition(sheet, sceneTokenDocument?.parent ?? actor);
+
+    if (sceneTokenDocument) {
+      if (await add2eRenderTokenDocumentSheet(sceneTokenDocument, options)) return;
+      return ui.notifications?.error?.("Impossible d'ouvrir la configuration du token de scène.");
     }
 
-    if (typeof sheet._configureToken === "function") {
-      await sheet._configureToken(event);
-      return;
-    }
-
-    const token = actor.prototypeToken ?? actor.prototypeTokenDocument;
-    if (!token) return ui.notifications?.warn?.("Prototype de token introuvable pour cet acteur.");
-
-    const options = add2eTokenConfigPosition(sheet);
-    const PrototypeTokenConfigClass =
-      foundry?.applications?.sheets?.PrototypeTokenConfig
-      ?? CONFIG?.Token?.prototypeSheetClass
-      ?? globalThis.PrototypeTokenConfig;
-    const TokenConfigClass =
-      foundry?.applications?.sheets?.TokenConfig
-      ?? CONFIG?.Token?.sheetClass
-      ?? globalThis.TokenConfig;
-
-    if (PrototypeTokenConfigClass) {
-      if (await add2eTryRenderTokenConfig(() => new PrototypeTokenConfigClass({ document: token, parent: actor, ...options }))) return;
-      if (await add2eTryRenderTokenConfig(() => new PrototypeTokenConfigClass(token, { parent: actor, ...options }))) return;
-      if (await add2eTryRenderTokenConfig(() => new PrototypeTokenConfigClass(actor, { parent: actor, ...options }))) return;
-    }
-
-    if (token.sheet?.render) {
-      try {
-        await token.sheet.render(true, { parent: actor, ...options });
-        return;
-      } catch (err) {
-        console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][TOKEN_SHEET_FAILED]", err);
-      }
-    }
-
-    if (TokenConfigClass) {
-      if (await add2eTryRenderTokenConfig(() => new TokenConfigClass(token, { parent: actor, ...options }))) return;
-      if (await add2eTryRenderTokenConfig(() => new TokenConfigClass({ document: token, parent: actor, ...options }))) return;
-    }
-
+    if (await add2eRenderPrototypeTokenDocumentSheet(targetDocument, actor, options)) return;
     return ui.notifications?.error?.("Impossible d'ouvrir la configuration du prototype de token.");
   } catch (err) {
     console.error("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][ERROR]", err);
-    return ui.notifications?.error?.("Erreur à l'ouverture du prototype de token. Voir la console.");
+    return ui.notifications?.error?.("Erreur à l'ouverture du token. Voir la console.");
   }
 }
 
@@ -160,8 +220,8 @@ function add2eEnsureTokenHeaderControl(sheet) {
     button.type = "button";
     button.className = "header-control icon fa-solid fa-user-circle add2e-token-config";
     button.dataset.action = "add2e-token-config";
-    button.title = "Configurer le prototype de token";
-    button.setAttribute("aria-label", "Configurer le prototype de token");
+    button.title = "Configurer le token de scène ou le prototype de token";
+    button.setAttribute("aria-label", "Configurer le token");
     button.innerHTML = '<i class="fa-solid fa-user-circle"></i>';
     button.addEventListener("click", ev => add2eOpenPrototypeTokenConfig(sheet, ev), true);
 
@@ -187,7 +247,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
         {
           action: "add2e-token-config",
           icon: "fa-solid fa-user-circle",
-          label: "Prototype de token",
+          label: "Token",
           visible: true
         }
       ]
