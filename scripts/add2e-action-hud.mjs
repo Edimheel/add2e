@@ -1,17 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v16-bottom-anchor-filter-passive-effects
-//
-// Source unique de vérité du HUD :
-// - hors combat : clic token => HUD du token contrôlé ;
-// - en combat : changement de tour => HUD du combattant actif si le HUD est déjà ouvert ;
-// - combat tracker : clic combattant => HUD du combattant cliqué ;
-// - les refresh updateActor/item/effect rafraîchissent l'acteur déjà affiché, jamais le token sélectionné.
+// Version : 2026-05-25-v17-bottom-fixed-refresh-safe
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v16-bottom-anchor-filter-passive-effects";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v17-bottom-fixed-refresh-safe";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
-const STORAGE_KEY = "add2e.actionHud.state.v16";
+const STYLE_ID = "add2e-action-hud-style";
+const STORAGE_KEY = "add2e.actionHud.state.v17";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -20,8 +15,6 @@ let add2eHudDragging = false;
 let add2eHudResizing = false;
 let add2eHudSuppressClickUntil = 0;
 let add2eHudManualIntentUntil = 0;
-let add2eHudApplyScheduled = false;
-let add2eHudPointerCaptureId = null;
 
 const ADD2E_HUD_TABS = ["attaques", "sorts", "capacites", "effets", "sauvegardes", "caracs"];
 const ADD2E_HUD_CARACS = [
@@ -62,13 +55,15 @@ function add2eHudPanel(hud = add2eHudElement()) { return hud?.querySelector?.(".
 function add2eHudIsRetracted(hud = add2eHudElement()) { return Boolean(hud?.classList?.contains("collapsed") || hud?.classList?.contains("a2e-hud-menu-retracted")); }
 
 function add2eHudDefaultState() {
-  return { left: 116, top: Math.max(20, window.innerHeight - 360 - 22), width: 560, maxMenuHeight: 320, menuRetracted: false };
+  return { left: 116, bottom: 22, width: 560, maxMenuHeight: 320, menuRetracted: false };
 }
 function add2eHudLoadState() {
   if (add2eHudState) return add2eHudState;
+  let state = null;
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v16")
       || localStorage.getItem("add2e.actionHud.state.v15")
       || localStorage.getItem("add2e.actionHud.state.v14")
       || localStorage.getItem("add2e.actionHud.state.v13")
@@ -77,23 +72,70 @@ function add2eHudLoadState() {
       || "null"
     );
     if (raw && typeof raw === "object") {
-      add2eHudState = {
-        left: add2eHudClamp(Number(raw.left) || 116, 8, Math.max(8, window.innerWidth - 80)),
-        top: add2eHudClamp(Number(raw.top) || 120, 8, Math.max(8, window.innerHeight - 80)),
-        width: add2eHudClamp(Number(raw.width) || 560, 360, Math.max(380, window.innerWidth - 16)),
+      const rawWidth = add2eHudClamp(Number(raw.width) || 560, 360, Math.max(380, window.innerWidth - 16));
+      const fallbackBottom = window.innerHeight - (Number(raw.top) || Math.max(20, window.innerHeight - 360 - 22)) - 140;
+      state = {
+        left: add2eHudClamp(Number(raw.left) || 116, 8, Math.max(8, window.innerWidth - rawWidth - 8)),
+        bottom: add2eHudClamp(Number(raw.bottom ?? fallbackBottom) || 22, 8, Math.max(8, window.innerHeight - 80)),
+        width: rawWidth,
         maxMenuHeight: add2eHudClamp(Number(raw.maxMenuHeight) || 320, 110, Math.max(140, window.innerHeight - 130)),
         menuRetracted: raw.menuRetracted === true || raw.hudCollapsed === true
       };
-      return add2eHudState;
     }
   } catch (_e) {}
-  add2eHudState = add2eHudDefaultState();
+  add2eHudState = state ?? add2eHudDefaultState();
   return add2eHudState;
 }
 function add2eHudSaveState(partial = {}) {
   const s = add2eHudLoadState();
   Object.assign(s, partial);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (_e) {}
+}
+function add2eHudClampStateToViewport(hud = add2eHudElement()) {
+  const s = add2eHudLoadState();
+  const width = add2eHudClamp(Number(s.width) || 560, 360, Math.max(380, window.innerWidth - 16));
+  const rect = hud?.getBoundingClientRect?.();
+  const height = rect?.height || 140;
+  s.width = width;
+  s.left = add2eHudClamp(Number(s.left) || 116, 8, Math.max(8, window.innerWidth - width - 8));
+  s.bottom = add2eHudClamp(Number(s.bottom) || 22, 8, Math.max(8, window.innerHeight - height - 8));
+  s.maxMenuHeight = add2eHudClamp(Number(s.maxMenuHeight) || 320, 110, Math.max(140, window.innerHeight - 130));
+  return s;
+}
+function add2eHudApplyGeometry(hud) {
+  if (!hud || add2eHudDragging || add2eHudResizing) return;
+  const s = add2eHudClampStateToViewport(hud);
+  hud.style.setProperty("left", `${Math.round(s.left)}px`, "important");
+  hud.style.setProperty("bottom", `${Math.round(s.bottom)}px`, "important");
+  hud.style.setProperty("top", "auto", "important");
+  hud.style.setProperty("right", "auto", "important");
+  hud.style.setProperty("width", `${Math.round(s.width)}px`, "important");
+  hud.style.setProperty("--a2e-hud-menu-max", `${Math.round(s.maxMenuHeight)}px`);
+}
+function add2eHudSaveGeometryFromElement(hud = add2eHudElement()) {
+  if (!hud) return;
+  const r = hud.getBoundingClientRect();
+  add2eHudSaveState({
+    left: Math.round(r.left),
+    bottom: Math.round(Math.max(8, window.innerHeight - r.bottom)),
+    width: Math.round(hud.offsetWidth || r.width || 560)
+  });
+}
+function add2eHudSetRetracted(hud, retracted, { save = true } = {}) {
+  if (!hud) return;
+  hud.classList.toggle("collapsed", retracted);
+  hud.classList.toggle("a2e-hud-menu-retracted", retracted);
+  const panel = add2eHudPanel(hud);
+  if (panel) {
+    if (retracted) panel.style.setProperty("display", "none", "important");
+    else panel.style.removeProperty("display");
+  }
+  add2eHudApplyGeometry(hud);
+  if (save) add2eHudSaveState({ menuRetracted: retracted });
+}
+function add2eHudApplyState(hud) {
+  add2eHudSetRetracted(hud, add2eHudLoadState().menuRetracted === true, { save: false });
+  add2eHudApplyGeometry(hud);
 }
 
 function add2eHudCanUseActor(actor) {
@@ -113,18 +155,26 @@ function add2eHudSelectedActorAndToken() {
   const token = canvas?.tokens?.controlled?.[0] ?? null;
   return { actor: token?.actor ?? game.user?.character ?? null, token };
 }
+function add2eHudCurrentCombatant(combat = game.combat) {
+  if (!combat) return null;
+  const id = combat.current?.combatantId ?? combat.combatantId ?? null;
+  return (id ? combat.combatants?.get?.(id) : null) ?? combat.combatant ?? combat.turns?.[Number(combat.current?.turn ?? combat.turn)] ?? null;
+}
+function add2eHudTokenFromCombatant(combatant) {
+  if (!combatant) return null;
+  return combatant.token?.object ?? (combatant.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? (combatant.token?.id ? canvas?.tokens?.get?.(combatant.token.id) : null) ?? null;
+}
 function add2eHudTokenForActor(actor) {
   if (!actor) return null;
   const selected = canvas?.tokens?.controlled?.find?.(t => t?.actor?.id === actor.id) ?? null;
   if (selected) return selected;
   const combatant = game.combat?.combatants?.find?.(c => c?.actor?.id === actor.id) ?? game.combat?.turns?.find?.(c => c?.actor?.id === actor.id) ?? null;
-  const combatToken = add2eHudTokenFromCombatant(combatant);
-  if (combatToken) return combatToken;
-  return actor.getActiveTokens?.()[0] ?? null;
+  return add2eHudTokenFromCombatant(combatant) ?? actor.getActiveTokens?.()[0] ?? null;
 }
 function add2eHudRerenderActor(actor, reason) {
   if (!actor || actor.id !== add2eHudActorId) return false;
   if (add2eHudDragging || add2eHudResizing) return false;
+  add2eHudSaveGeometryFromElement();
   return add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason });
 }
 
@@ -191,8 +241,7 @@ function add2eHudIsRaceOrClassEffect(actor, effect) {
   const itemType = String(item?.type ?? "").toLowerCase();
   if (["race", "classe", "class"].includes(itemType)) return true;
   const origin = add2eHudNormalize(effect?.origin ?? "");
-  if (origin.includes("race") || origin.includes("classe") || origin.includes("class")) return true;
-  return false;
+  return origin.includes("race") || origin.includes("classe") || origin.includes("class");
 }
 function add2eHudEffectHasDuration(effect) {
   const d = effect?.duration ?? {};
@@ -253,11 +302,11 @@ function add2eHudEffectDurationText(effect) {
 }
 
 function add2eHudInjectStyle() {
-  document.getElementById("add2e-action-hud-style")?.remove();
+  document.getElementById(STYLE_ID)?.remove();
   const style = document.createElement("style");
-  style.id = "add2e-action-hud-style";
+  style.id = STYLE_ID;
   style.textContent = `
-    #${HUD_ID}{position:fixed;z-index:100;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;min-width:360px;resize:none;right:auto!important;bottom:auto!important;touch-action:none;user-select:none;}
+    #${HUD_ID}{position:fixed;z-index:100;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;min-width:360px;resize:none;right:auto!important;top:auto!important;touch-action:none;user-select:none;}
     #${HUD_ID}.collapsed .a2e-hud-menu-panel,#${HUD_ID}.a2e-hud-menu-retracted .a2e-hud-menu-panel{display:none!important;}
     #${HUD_ID}.collapsed .a2e-hud-icon-btn i,#${HUD_ID}.a2e-hud-menu-retracted .a2e-hud-icon-btn i{transform:rotate(180deg);}
     #${HUD_ID} .a2e-hud-shell{display:flex;flex-direction:column;justify-content:flex-end;border:1px solid #8a611d;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 15% 0%,rgba(213,147,45,.28),transparent 36%),linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,230,160,.12);}
@@ -265,7 +314,7 @@ function add2eHudInjectStyle() {
     #${HUD_ID} .a2e-hud-section{display:none!important;} #${HUD_ID} .a2e-hud-section.active{display:grid!important;gap:7px!important;align-content:start!important;margin-top:0!important;}
     #${HUD_ID} .a2e-hud-tabs{flex:0 0 auto;display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.18);} #${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.74em;font-weight:900;cursor:pointer;} #${HUD_ID} .a2e-hud-tab.active{color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e);}
     #${HUD_ID} .a2e-hud-header{flex:0 0 auto;display:grid;grid-template-columns:74px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));cursor:move;user-select:none;}
-    #${HUD_ID} .a2e-hud-header *{pointer-events:auto;} #${HUD_ID} .a2e-hud-header[data-drag-handle="1"]{touch-action:none;}
+    #${HUD_ID} .a2e-hud-header[data-drag-handle="1"]{touch-action:none;}
     #${HUD_ID} .a2e-hud-portrait{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #c4973f;background:#111;} #${HUD_ID} .a2e-hud-name{color:#fff4cf;font-size:1.12em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #${HUD_ID} .a2e-hud-subtitle{color:#d8bd78;font-size:.82em;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     #${HUD_ID} .a2e-hud-metrics{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;} #${HUD_ID} .a2e-hud-pill{display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:2px 7px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.78em;font-weight:850;white-space:nowrap;}
     #${HUD_ID} .a2e-hud-icon-btn,#${HUD_ID} .a2e-hud-resize{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;} #${HUD_ID} .a2e-hud-resize{cursor:nwse-resize!important;}
@@ -318,51 +367,11 @@ function add2eHudHtml(actor, token = null) {
   return `<div class="a2e-hud-shell"><div class="a2e-hud-menu-panel">${section("attaques", add2eHudWeaponRows(actor))}${section("sorts", add2eHudSpellRows(actor))}${section("capacites", add2eHudFeatureRows(actor))}${section("effets", add2eHudEffectRows(actor))}${section("sauvegardes", add2eHudSaveRows(actor))}${section("caracs", add2eHudAbilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="a2e-hud-portrait" src="${add2eHudEscape(img)}" alt="${add2eHudEscape(actor.name)}"><div><div class="a2e-hud-name">${add2eHudEscape(actor.name)}</div><div class="a2e-hud-subtitle">${add2eHudEscape(race)} — ${add2eHudEscape(classe)} ${isMonster ? "DV" : "niv."} ${add2eHudEscape(niveau)}</div><div class="a2e-hud-metrics"><span class="a2e-hud-pill">PV ${add2eHudHp(actor)} / ${add2eHudHpMax(actor)}</span><span class="a2e-hud-pill">CA ${add2eHudEscape(add2eHudArmorClass(actor))}</span><span class="a2e-hud-pill">THAC0 ${add2eHudEscape(add2eHudThaco(actor))}</span></div></div><button type="button" class="a2e-hud-icon-btn" data-action="toggle-collapse" title="Réduire / agrandir"><i class="fas fa-chevron-down"></i></button><button type="button" class="a2e-hud-resize" data-resize-handle="1" title="Redimensionner"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
 }
 
-function add2eHudInsidePosition(hud, left, top) {
-  const margin = 8, rect = hud.getBoundingClientRect();
-  return { left: add2eHudClamp(left, margin, Math.max(margin, window.innerWidth - rect.width - margin)), top: add2eHudClamp(top, margin, Math.max(margin, window.innerHeight - rect.height - margin)) };
-}
-function add2eHudApplyPosition(hud, left, top) { hud.style.setProperty("left", `${Math.round(left)}px`, "important"); hud.style.setProperty("top", `${Math.round(top)}px`, "important"); hud.style.setProperty("right", "auto", "important"); hud.style.setProperty("bottom", "auto", "important"); }
-function add2eHudApplyGeometry(hud, { constrain = true } = {}) {
-  if (!hud || add2eHudDragging || add2eHudResizing) return;
-  const s = add2eHudLoadState();
-  hud.style.setProperty("width", `${Math.round(s.width)}px`, "important");
-  hud.style.setProperty("--a2e-hud-menu-max", `${Math.round(s.maxMenuHeight)}px`);
-  const pos = constrain ? add2eHudInsidePosition(hud, s.left, s.top) : { left: s.left, top: s.top };
-  add2eHudApplyPosition(hud, pos.left, pos.top);
-}
-function add2eHudKeepInside(hud, { save = true } = {}) {
-  if (!hud || add2eHudDragging || add2eHudResizing) return;
-  const r = hud.getBoundingClientRect();
-  const pos = add2eHudInsidePosition(hud, r.left, r.top);
-  add2eHudApplyPosition(hud, pos.left, pos.top);
-  if (save) add2eHudSaveState({ left: Math.round(pos.left), top: Math.round(pos.top), width: Math.round(hud.offsetWidth || r.width || 560) });
-}
-function add2eHudPreserveBottom(hud, bottom, { save = true } = {}) {
-  if (!hud || add2eHudDragging || add2eHudResizing) return;
-  const r = hud.getBoundingClientRect();
-  const desiredTop = add2eHudClamp(Number(bottom), 8 + r.height, window.innerHeight - 8) - r.height;
-  const pos = add2eHudInsidePosition(hud, r.left, desiredTop);
-  add2eHudApplyPosition(hud, pos.left, pos.top);
-  if (save) add2eHudSaveState({ left: Math.round(pos.left), top: Math.round(pos.top), width: Math.round(hud.offsetWidth || r.width || 560) });
-}
-function add2eHudSetRetracted(hud, retracted, { save = true } = {}) {
-  if (!hud) return;
-  const bottom = hud.getBoundingClientRect().bottom;
-  const panel = add2eHudPanel(hud);
-  hud.classList.toggle("collapsed", retracted);
-  hud.classList.toggle("a2e-hud-menu-retracted", retracted);
-  if (panel) { if (retracted) panel.style.setProperty("display", "none", "important"); else panel.style.removeProperty("display"); }
-  requestAnimationFrame(() => add2eHudPreserveBottom(hud, bottom, { save }));
-  if (save) add2eHudSaveState({ menuRetracted: retracted });
-}
-function add2eHudApplyState(hud) { add2eHudApplyGeometry(hud); add2eHudSetRetracted(hud, add2eHudLoadState().menuRetracted === true, { save: false }); }
-
-function add2eRenderActionHud(actor = null, token = null, { reason = "render", preserveBottom = null } = {}) {
+function add2eRenderActionHud(actor = null, token = null, { reason = "render" } = {}) {
   if (add2eHudDragging || add2eHudResizing) return false;
   add2eHudInjectStyle();
   const existing = add2eHudElement();
-  const bottomAnchor = Number.isFinite(Number(preserveBottom)) ? Number(preserveBottom) : existing?.getBoundingClientRect?.().bottom;
+  if (existing) add2eHudSaveGeometryFromElement(existing);
   if (!add2eHudIsRelevant(actor)) { existing?.remove(); add2eHudActorId = null; return false; }
   add2eHudActorId = actor.id;
   if (!ADD2E_HUD_TABS.includes(add2eHudActiveTab)) add2eHudActiveTab = "attaques";
@@ -372,7 +381,6 @@ function add2eRenderActionHud(actor = null, token = null, { reason = "render", p
   if (!existing) document.body.appendChild(hud);
   add2eHudApplyState(hud);
   add2eBindHudEvents(hud, actor);
-  if (Number.isFinite(Number(bottomAnchor))) requestAnimationFrame(() => add2eHudPreserveBottom(hud, Number(bottomAnchor), { save: true }));
   console.log(`${TAG}[RENDER]`, { reason, actor: actor.name, token: token?.name ?? null });
   return true;
 }
@@ -382,15 +390,6 @@ function add2eRefreshActionHud(reason = "refresh") {
 }
 function add2eCloseActionHud() { add2eHudElement()?.remove(); add2eHudActorId = null; }
 
-function add2eHudCurrentCombatant(combat = game.combat) {
-  if (!combat) return null;
-  const id = combat.current?.combatantId ?? combat.combatantId ?? null;
-  return (id ? combat.combatants?.get?.(id) : null) ?? combat.combatant ?? combat.turns?.[Number(combat.current?.turn ?? combat.turn)] ?? null;
-}
-function add2eHudTokenFromCombatant(combatant) {
-  if (!combatant) return null;
-  return combatant.token?.object ?? (combatant.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? (combatant.token?.id ? canvas?.tokens?.get?.(combatant.token.id) : null) ?? null;
-}
 function add2eHudRenderCombatant(combatant, { forceOpen = false, reason = "combatant" } = {}) {
   if (!combatant?.actor) return false;
   if (!forceOpen && !add2eHudElement()) return false;
@@ -400,7 +399,9 @@ function add2eHudFollowCurrentCombatant(combat = game.combat, { forceOpen = fals
   if (add2eHudNow() < add2eHudManualIntentUntil && !reason.includes("force")) return false;
   return add2eHudRenderCombatant(add2eHudCurrentCombatant(combat), { forceOpen, reason });
 }
-function add2eHudScheduleCombatFollow(combat = game.combat, options = {}) { for (const delay of [60, 160, 320]) window.setTimeout(() => add2eHudFollowCurrentCombatant(combat, options), delay); }
+function add2eHudScheduleCombatFollow(combat = game.combat, options = {}) {
+  for (const delay of [60, 160, 320]) window.setTimeout(() => add2eHudFollowCurrentCombatant(combat, options), delay);
+}
 function add2eHudIsCombatTurnChange(changes = {}) {
   return foundry.utils.hasProperty(changes, "turn") || foundry.utils.hasProperty(changes, "round") || foundry.utils.hasProperty(changes, "current") || foundry.utils.hasProperty(changes, "current.turn") || foundry.utils.hasProperty(changes, "current.round") || foundry.utils.hasProperty(changes, "current.combatantId") || foundry.utils.hasProperty(changes, "combatantId");
 }
@@ -426,20 +427,12 @@ function add2eBindHudEvents(hud, actor) {
   hud.querySelectorAll("[data-hud-tab]").forEach(btn => btn.addEventListener("click", ev => {
     ev.preventDefault();
     ev.stopPropagation();
+    add2eHudSaveGeometryFromElement(hud);
     const clicked = btn.dataset.hudTab || "attaques";
-    const currentHud = add2eHudElement() ?? hud;
-    const bottom = currentHud?.getBoundingClientRect?.().bottom;
-    if (add2eHudActiveTab === clicked && !add2eHudIsRetracted(currentHud)) {
-      add2eHudSetRetracted(currentHud, true, { save: true });
-      return;
-    }
+    if (add2eHudActiveTab === clicked && !add2eHudIsRetracted(hud)) return add2eHudSetRetracted(hud, true, { save: true });
     add2eHudActiveTab = clicked;
-    add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason: "tab", preserveBottom: bottom });
-    window.setTimeout(() => {
-      const h = add2eHudElement();
-      add2eHudSetRetracted(h, false, { save: true });
-      if (Number.isFinite(Number(bottom))) requestAnimationFrame(() => add2eHudPreserveBottom(h, Number(bottom), { save: true }));
-    }, 0);
+    add2eRenderActionHud(actor, add2eHudTokenForActor(actor), { reason: "tab" });
+    window.setTimeout(() => add2eHudSetRetracted(add2eHudElement(), false, { save: true }), 0);
   }));
   hud.querySelectorAll("[data-action]").forEach(btn => btn.addEventListener("click", async ev => {
     if (add2eHudNow() < add2eHudSuppressClickUntil) { ev.preventDefault(); ev.stopPropagation(); return; }
@@ -461,31 +454,56 @@ function add2eHudPreventPointer(ev) { ev.preventDefault(); ev.stopPropagation();
 function add2eHudStartResize(ev) {
   const handle = ev.target?.closest?.("[data-resize-handle]"), hud = ev.target?.closest?.(`#${HUD_ID}`);
   if (!handle || !hud || ev.button !== 0) return false;
-  add2eHudPreventPointer(ev); add2eHudResizing = true; add2eHudPointerCaptureId = ev.pointerId;
+  add2eHudPreventPointer(ev); add2eHudResizing = true;
   try { handle.setPointerCapture?.(ev.pointerId); } catch (_e) {}
   const start = { x: ev.clientX, y: ev.clientY, ...add2eHudLoadState(), rect: hud.getBoundingClientRect() };
-  const move = e => { const s = add2eHudLoadState(); s.width = add2eHudClamp(start.width + e.clientX - start.x, 360, Math.max(360, window.innerWidth - start.rect.left - 8)); s.maxMenuHeight = add2eHudClamp(start.maxMenuHeight + e.clientY - start.y, 110, Math.max(140, window.innerHeight - start.rect.top - 8)); hud.style.setProperty("width", `${Math.round(s.width)}px`, "important"); hud.style.setProperty("--a2e-hud-menu-max", `${Math.round(s.maxMenuHeight)}px`); add2eHudApplyPosition(hud, start.rect.left, start.rect.top); };
-  const up = () => { window.removeEventListener("pointermove", move, true); window.removeEventListener("pointerup", up, true); window.removeEventListener("pointercancel", up, true); add2eHudResizing = false; add2eHudPointerCaptureId = null; const r = hud.getBoundingClientRect(); add2eHudSaveState({ left: Math.round(r.left), top: Math.round(r.top), width: Math.round(hud.offsetWidth || r.width || 560), maxMenuHeight: Math.round(add2eHudLoadState().maxMenuHeight) }); add2eHudKeepInside(hud); };
-  window.addEventListener("pointermove", move, true); window.addEventListener("pointerup", up, true); window.addEventListener("pointercancel", up, true); return true;
+  const move = e => {
+    const s = add2eHudLoadState();
+    s.width = add2eHudClamp(start.width + e.clientX - start.x, 360, Math.max(360, window.innerWidth - start.rect.left - 8));
+    s.maxMenuHeight = add2eHudClamp(start.maxMenuHeight + e.clientY - start.y, 110, Math.max(140, window.innerHeight - start.rect.top - 8));
+    add2eHudApplyGeometry(hud);
+  };
+  const up = () => {
+    window.removeEventListener("pointermove", move, true);
+    window.removeEventListener("pointerup", up, true);
+    window.removeEventListener("pointercancel", up, true);
+    add2eHudResizing = false;
+    add2eHudSaveGeometryFromElement(hud);
+    add2eHudApplyGeometry(hud);
+  };
+  window.addEventListener("pointermove", move, true);
+  window.addEventListener("pointerup", up, true);
+  window.addEventListener("pointercancel", up, true);
+  return true;
 }
 function add2eHudStartDrag(ev) {
   const hud = ev.target?.closest?.(`#${HUD_ID}`);
   const handle = ev.target?.closest?.("[data-drag-handle]");
   if (!hud || !handle || ev.button !== 0 || add2eHudPointerForbidden(ev.target)) return;
-  add2eHudPreventPointer(ev); add2eHudDragging = true; add2eHudPointerCaptureId = ev.pointerId;
+  add2eHudPreventPointer(ev); add2eHudDragging = true;
   try { handle.setPointerCapture?.(ev.pointerId); } catch (_e) {}
-  const r = hud.getBoundingClientRect(); const start = { x: ev.clientX, y: ev.clientY, left: r.left, top: r.top };
-  const move = e => { const p = add2eHudInsidePosition(hud, start.left + e.clientX - start.x, start.top + e.clientY - start.y); add2eHudApplyPosition(hud, p.left, p.top); };
-  const up = () => { window.removeEventListener("pointermove", move, true); window.removeEventListener("pointerup", up, true); window.removeEventListener("pointercancel", up, true); add2eHudDragging = false; add2eHudPointerCaptureId = null; const nr = hud.getBoundingClientRect(); add2eHudSaveState({ left: Math.round(nr.left), top: Math.round(nr.top), width: Math.round(hud.offsetWidth || nr.width || 560) }); };
-  window.addEventListener("pointermove", move, true); window.addEventListener("pointerup", up, true); window.addEventListener("pointercancel", up, true);
+  const s = add2eHudLoadState();
+  const start = { x: ev.clientX, y: ev.clientY, left: s.left, bottom: s.bottom };
+  const move = e => {
+    const state = add2eHudLoadState();
+    state.left = add2eHudClamp(start.left + e.clientX - start.x, 8, Math.max(8, window.innerWidth - (hud.offsetWidth || state.width) - 8));
+    state.bottom = add2eHudClamp(start.bottom - (e.clientY - start.y), 8, Math.max(8, window.innerHeight - (hud.offsetHeight || 140) - 8));
+    add2eHudApplyGeometry(hud);
+  };
+  const up = () => {
+    window.removeEventListener("pointermove", move, true);
+    window.removeEventListener("pointerup", up, true);
+    window.removeEventListener("pointercancel", up, true);
+    add2eHudDragging = false;
+    add2eHudSaveGeometryFromElement(hud);
+  };
+  window.addEventListener("pointermove", move, true);
+  window.addEventListener("pointerup", up, true);
+  window.addEventListener("pointercancel", up, true);
 }
 function add2eHudPointerDown(ev) { if (add2eHudStartResize(ev)) return; add2eHudStartDrag(ev); }
-function add2eHudWindowResize() { const hud = add2eHudElement(); if (hud) add2eHudApplyState(hud); }
-function add2eHudScheduleApplyState() {
-  if (add2eHudDragging || add2eHudResizing || add2eHudApplyScheduled) return;
-  add2eHudApplyScheduled = true;
-  requestAnimationFrame(() => { add2eHudApplyScheduled = false; if (add2eHudDragging || add2eHudResizing) return; const hud = add2eHudElement(); if (hud) add2eHudApplyState(hud); });
-}
+function add2eHudWindowResize() { const hud = add2eHudElement(); if (hud) add2eHudApplyGeometry(hud); }
+function add2eHudScheduleApplyState() { if (!add2eHudDragging && !add2eHudResizing) window.requestAnimationFrame(() => add2eHudApplyGeometry(add2eHudElement())); }
 
 async function add2eHudAttack(actor, itemId) {
   const arme = add2eHudFindItem(actor, itemId);
@@ -514,13 +532,23 @@ async function add2eHudOpenEffect(actor, effectId) {
   return ui.notifications.warn("La fiche de cet effet ne peut pas être ouverte.");
 }
 async function add2eHudRollAbilityLikeSheet(actor, carac) {
-  const data = ADD2E_HUD_CARACS.find(c => c.key === carac); const val = add2eHudAbilityValue(actor, carac); const roll = await new Roll("1d20").evaluate({ async: true }); if (game.dice3d) await game.dice3d.showForRoll(roll);
-  const ok = roll.total <= val; return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${data?.label || carac}</b> seuil ${val} | résultat <b>${roll.total}</b> — <b>${ok ? "Réussite" : "Échec"}</b></div>` });
+  const data = ADD2E_HUD_CARACS.find(c => c.key === carac);
+  const val = add2eHudAbilityValue(actor, carac);
+  const roll = await new Roll("1d20").evaluate({ async: true });
+  if (game.dice3d) await game.dice3d.showForRoll(roll);
+  const ok = roll.total <= val;
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${data?.label || carac}</b> seuil ${val} | résultat <b>${roll.total}</b> — <b>${ok ? "Réussite" : "Échec"}</b></div>` });
 }
 async function add2eHudRollSaveLikeSheet(actor, idx) {
-  const saves = add2eHudSavingThrows(actor); const seuil = Number(saves[idx]); if (!seuil) return ui.notifications.warn("Aucune valeur pour ce jet."); const roll = await new Roll("1d20").evaluate({ async: true }); if (game.dice3d) await game.dice3d.showForRoll(roll);
-  let bonus = 0; try { bonus = Number(Add2eEffectsEngine?.analyze?.(actor, { type: "save", vsType: ADD2E_HUD_SAVE_NAMES[idx], frontale: true })?.bonus_save || 0); } catch (_e) {}
-  const total = Number(roll.total || 0) + bonus; return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${ADD2E_HUD_SAVE_NAMES[idx]}</b> seuil ${seuil} | résultat <b>${roll.total}</b>${bonus ? ` + ${bonus} = <b>${total}</b>` : ""} — <b>${total >= seuil ? "Réussite" : "Échec"}</b></div>` });
+  const saves = add2eHudSavingThrows(actor);
+  const seuil = Number(saves[idx]);
+  if (!seuil) return ui.notifications.warn("Aucune valeur pour ce jet.");
+  const roll = await new Roll("1d20").evaluate({ async: true });
+  if (game.dice3d) await game.dice3d.showForRoll(roll);
+  let bonus = 0;
+  try { bonus = Number(Add2eEffectsEngine?.analyze?.(actor, { type: "save", vsType: ADD2E_HUD_SAVE_NAMES[idx], frontale: true })?.bonus_save || 0); } catch (_e) {}
+  const total = Number(roll.total || 0) + bonus;
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${ADD2E_HUD_SAVE_NAMES[idx]}</b> seuil ${seuil} | résultat <b>${roll.total}</b>${bonus ? ` + ${bonus} = <b>${total}</b>` : ""} — <b>${total >= seuil ? "Réussite" : "Échec"}</b></div>` });
 }
 
 Hooks.once("init", () => {
@@ -548,7 +576,8 @@ Hooks.on("canvasReady", () => window.setTimeout(() => add2eRefreshActionHud("can
 Hooks.once("ready", () => {
   document.addEventListener("pointerdown", add2eHudPointerDown, true);
   window.addEventListener("resize", add2eHudWindowResize);
-  const observer = new MutationObserver(add2eHudScheduleApplyState); observer.observe(document.body, { childList: true, subtree: true });
+  const observer = new MutationObserver(add2eHudScheduleApplyState);
+  observer.observe(document.body, { childList: true, subtree: true });
   window.setTimeout(() => add2eRefreshActionHud("ready"), 300);
 });
 Hooks.on("renderCombatTracker", add2eHudBindCombatTracker);
