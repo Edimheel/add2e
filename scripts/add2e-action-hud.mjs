@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v21-effects-polished-roll-delegation
+// Version : 2026-05-25-v22-syntax-safe-effects-rolls
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v21-effects-polished-roll-delegation";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v22-syntax-safe-effects-rolls";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v21";
+const STORAGE_KEY = "add2e.actionHud.state.v22";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -72,6 +72,7 @@ function add2eHudLoadState() {
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v21")
       || localStorage.getItem("add2e.actionHud.state.v20")
       || localStorage.getItem("add2e.actionHud.state.v19")
       || localStorage.getItem("add2e.actionHud.state.v18")
@@ -115,7 +116,11 @@ function add2eHudClampGeometry(hud = add2eHudElement()) {
 function add2eHudSaveGeometryFromElement(hud = add2eHudElement()) {
   if (!hud) return;
   const r = hud.getBoundingClientRect();
-  add2eHudSaveState({ left: Math.round(r.left), bottom: Math.round(Math.max(8, window.innerHeight - r.bottom)), width: Math.round(hud.offsetWidth || r.width || 560) });
+  add2eHudSaveState({
+    left: Math.round(r.left),
+    bottom: Math.round(Math.max(8, window.innerHeight - r.bottom)),
+    width: Math.round(hud.offsetWidth || r.width || 560)
+  });
 }
 function add2eHudApplyGeometry(hud = add2eHudElement(), { force = false } = {}) {
   if (!hud || (!force && (add2eHudDragging || add2eHudResizing))) return;
@@ -232,7 +237,8 @@ function add2eHudEffectTags(effect) {
   const flags = effect?.flags?.add2e ?? {};
   const raw = [effect?.name, effect?.origin, flags.type, flags.category, flags.source, flags.sourceType, flags.sourceItemType, flags.sourceItemId, flags.itemId, flags.originItemId, ...(add2eHudArray(flags.tags)), ...(add2eHudArray(flags.effectTags)), ...(add2eHudArray(effect?.statuses))];
   return raw.map(add2eHudNormalize).filter(Boolean);
-}\nfunction add2eHudEffectOriginItem(actor, effect) {
+}
+function add2eHudEffectOriginItem(actor, effect) {
   const flags = effect?.flags?.add2e ?? {};
   const directId = flags.sourceItemId ?? flags.itemId ?? flags.originItemId ?? null;
   if (directId && actor?.items?.get?.(directId)) return actor.items.get(directId);
