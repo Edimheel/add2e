@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Amitié
-// Version : 2026-05-25-magicien-amitie-zone-sauvegardes-v1
+// Version : 2026-05-25-magicien-amitie-zone-cases-v2
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -55,24 +55,22 @@ function add2eAreaRadiusInches(level) {
   return 1 + Math.max(1, level);
 }
 
+function add2eAreaRadiusGridCells(level) {
+  // Dans le système ADD2E, pour la résolution sur carte Foundry, 1" de rayon = 1 case.
+  // Cela évite de convertir deux fois les unités de scène et d'englober toute la carte.
+  return add2eAreaRadiusInches(level);
+}
+
 function add2eAreaRadiusText(level) {
-  return `${add2eAreaRadiusInches(level)}\"`;
+  return `${add2eAreaRadiusInches(level)}\" (${add2eAreaRadiusGridCells(level)} case${add2eAreaRadiusGridCells(level) > 1 ? "s" : ""})`;
 }
 
-function add2eSceneUnitPerInch() {
-  const units = String(canvas?.scene?.grid?.units ?? "").toLowerCase();
-  if (units.includes("m")) return 3;
-  return 10;
-}
-
-function add2eRadiusSceneDistance(level) {
-  return add2eAreaRadiusInches(level) * add2eSceneUnitPerInch();
+function add2eGridSize() {
+  return Number(canvas?.grid?.size) || Number(canvas?.scene?.grid?.size) || 100;
 }
 
 function add2eRadiusPixels(level) {
-  const gridDistance = Number(canvas?.scene?.grid?.distance) || 5;
-  const gridSize = Number(canvas?.grid?.size) || Number(canvas?.scene?.grid?.size) || 100;
-  return (add2eRadiusSceneDistance(level) / gridDistance) * gridSize;
+  return add2eAreaRadiusGridCells(level) * add2eGridSize();
 }
 
 async function add2eRollFormula(formula) {
@@ -92,7 +90,7 @@ function add2eTokenCenter(tokenDocOrPlaceable) {
   const placeable = tokenDocOrPlaceable?.object ?? tokenDocOrPlaceable;
   if (placeable?.center) return { x: Number(placeable.center.x), y: Number(placeable.center.y) };
   const doc = tokenDocOrPlaceable?.document ?? tokenDocOrPlaceable;
-  const gridSize = Number(canvas?.grid?.size) || Number(canvas?.scene?.grid?.size) || 100;
+  const gridSize = add2eGridSize();
   const width = Number(doc?.width) || 1;
   const height = Number(doc?.height) || 1;
   return {
@@ -108,14 +106,20 @@ async function add2eChooseZone(level, casterToken) {
     return null;
   }
 
-  const gridDistance = Number(canvas?.scene?.grid?.distance) || 5;
-  const diameterGridSpaces = Math.max(1, (add2eRadiusSceneDistance(level) * 2) / gridDistance);
+  const radiusCells = add2eAreaRadiusGridCells(level);
+  const diameterCells = Math.max(1, radiusCells * 2);
   const casterCenter = casterToken ? add2eTokenCenter(casterToken) : null;
 
   const location = await warpgate.crosshairs.show({
-    size: diameterGridSpaces,
+    size: diameterCells,
+    interval: 1,
+    drawOutline: true,
+    drawIcon: true,
+    lockSize: true,
     icon: ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.imgFallback,
     label: `${ADD2E_SORT_CONFIG.name} — rayon ${add2eAreaRadiusText(level)}`,
+    fillColor: "#8e63c7",
+    outlineColor: "#5b3f8c",
     x: casterCenter?.x,
     y: casterCenter?.y
   });
@@ -229,14 +233,7 @@ async function add2eRollTargetSave(actorDoc) {
   const total = Number(roll.total) + bonus;
   const hasSave = Number.isFinite(saveTarget);
   const success = hasSave ? total >= saveTarget : null;
-  return {
-    roll,
-    saveTarget,
-    bonus,
-    total,
-    hasSave,
-    success
-  };
+  return { roll, saveTarget, bonus, total, hasSave, success };
 }
 
 function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modifier, saveData }) {
@@ -246,7 +243,7 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
   const casterSlug = String(casterActor?.id ?? "caster").replace(/[^a-zA-Z0-9_\-]/g, "_");
 
   return {
-    name: favorable ? `Amitié — impression favorable` : `Amitié — irritation`,
+    name: favorable ? "Amitié — impression favorable" : "Amitié — irritation",
     img: ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.imgFallback,
     disabled: false,
     transfer: false,
@@ -301,6 +298,7 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
           casterLevel: level,
           durationRounds: Math.max(1, level),
           areaRadiusInches: add2eAreaRadiusInches(level),
+          areaRadiusGridCells: add2eAreaRadiusGridCells(level),
           sourceItemId: ADD2E_ITEM?.id ?? null,
           sourceItemUuid: ADD2E_ITEM?.uuid ?? null
         }
@@ -518,7 +516,8 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   level,
   zoneCenter,
   radiusInches: add2eAreaRadiusInches(level),
-  radiusSceneDistance: add2eRadiusSceneDistance(level),
+  radiusGridCells: add2eAreaRadiusGridCells(level),
+  radiusPixels: add2eRadiusPixels(level),
   targets: targetTokens.map(t => ({ name: t.name, actor: t.actor?.name }))
 });
 
