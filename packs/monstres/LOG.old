@@ -1,8 +1,7 @@
-2026/05/23-22:42:13.146400 7f6bffefc0 Log #322: 1 ops saved to Table #327 OK
-2026/05/23-22:42:13.146527 7f6bffefc0 Archiving /data/Data/systems/add2e/packs/monstres/000322.log: OK
-2026/05/23-22:42:13.164601 7f6bffefc0 Table #324: 625 entries OK
-2026/05/23-22:42:13.235109 7f6bffefc0 Table #325: 2680 entries OK
-2026/05/23-22:42:13.267342 7f6bffefc0 Table #326: 3167 entries OK
-2026/05/23-22:42:13.267463 7f6bffefc0 Table #327: 1 entries OK
-2026/05/23-22:42:13.267736 7f6bffefc0 Archiving /data/Data/systems/add2e/packs/monstres/MANIFEST-000318: OK
-2026/05/23-22:42:13.273313 7f6bffefc0 **** Repaired leveldb /data/Data/systems/add2e/packs/monstres; recovered 4 files; 5294052 bytes. Some data may have been lost. ****
+2026/05/25-11:26:21.689744 7f6bffefc0 Recovering log #336
+2026/05/25-11:26:21.705828 7f6bffefc0 Delete type=3 #334
+2026/05/25-11:26:21.705903 7f6bffefc0 Delete type=0 #336
+2026/05/25-11:30:01.640307 7f6a260fc0 Level-0 table #341: started
+2026/05/25-11:30:01.640402 7f6a260fc0 Level-0 table #341: 0 bytes OK
+2026/05/25-11:30:01.647252 7f6a260fc0 Delete type=0 #339
+2026/05/25-11:30:01.654261 7f6a260fc0 Manual compaction at level-0 from '!actors!08etNAqgpR9OFpfS' @ 72057594037927935 : 1 .. '!actors.items.effects!zdjfcDssprPoxTNT.jATHRRoo0j0ulcL0.j76Ct2ZTscn55IKg' @ 0 : 0; will stop at (end)
