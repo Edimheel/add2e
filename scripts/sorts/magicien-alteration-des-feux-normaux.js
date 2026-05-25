@@ -1,7 +1,7 @@
 // ADD2E — onUse Magicien : Altération des feux normaux
-// Version : 2026-05-25-magicien-alteration-feux-normaux-chat-only-v1
+// Version : 2026-05-25-magicien-alteration-feux-normaux-chat-only-v2
 //
-// Sort à carte informative uniquement.
+// Sort à carte de chat uniquement.
 // Aucun ActiveEffect, aucun changement d'acteur, aucune cible obligatoire.
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
@@ -80,20 +80,18 @@ async function add2eChatAlterationFeuxNormaux(actorDoc) {
           <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
             <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">Sort lancé</div>
             <div style="font-size:13px;line-height:1.35;text-align:left;">
-              <p style="margin:.25em 0;">Le magicien altère une source de feu normal.</p>
-              <p style="margin:.25em 0;"><b>Effet Foundry :</b> aucun effet technique automatique.</p>
-              <p style="margin:.25em 0;"><b>Résolution :</b> le MD applique l'effet narratif selon la scène.</p>
-              <p style="margin:.25em 0;"><b>Durée indicative :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.durationText)} (${durationRounds} round${durationRounds > 1 ? "s" : ""}).</p>
+              <p style="margin:.25em 0;">Les flammes normales frémissent et se plient à la volonté du magicien.</p>
+              <p style="margin:.25em 0;">Leur éclat change d'intensité, sans que leur chaleur ne soit altérée.</p>
+              <p style="margin:.25em 0;"><b>Durée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.durationText)} (${durationRounds} round${durationRounds > 1 ? "s" : ""}).</p>
             </div>
           </div>
 
           <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Informations du sort</summary>
+            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
             <div style="margin-top:5px;font-size:12px;line-height:1.35;">
               <p><b>École :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.school)} — <b>Portée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.rangeText)}.</p>
               <p><b>Zone :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.areaText)}.</p>
               <p><b>Incantation :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.castingTimeText)} — <b>Jet de sauvegarde :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.saveText)}.</p>
-              <p>Le slot mémorisé est consommé par le dispatcher ADD2E, car ce script retourne <code>true</code>.</p>
             </div>
           </details>
         </div>
