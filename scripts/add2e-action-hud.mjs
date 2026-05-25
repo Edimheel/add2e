@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v18-top-drag-bottom-locked
+// Version : 2026-05-25-v19-persist-drag-bottom-locked
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v18-top-drag-bottom-locked";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v19-persist-drag-bottom-locked";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v18";
+const STORAGE_KEY = "add2e.actionHud.state.v19";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -63,6 +63,7 @@ function add2eHudLoadState() {
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v18")
       || localStorage.getItem("add2e.actionHud.state.v17")
       || localStorage.getItem("add2e.actionHud.state.v16")
       || localStorage.getItem("add2e.actionHud.state.v15")
@@ -111,8 +112,8 @@ function add2eHudConstrainTopForCurrentHeight(hud, top) {
   const h = hud?.getBoundingClientRect?.().height || 140;
   return add2eHudClamp(top, 8, Math.max(8, window.innerHeight - h - 8));
 }
-function add2eHudApplyGeometry(hud, { anchorBottom = null } = {}) {
-  if (!hud || add2eHudDragging || add2eHudResizing) return;
+function add2eHudApplyGeometry(hud, { anchorBottom = null, force = false } = {}) {
+  if (!hud || (!force && (add2eHudDragging || add2eHudResizing))) return;
   const s = add2eHudLoadState();
   s.width = add2eHudClamp(Number(s.width) || 560, 360, Math.max(380, window.innerWidth - 16));
   s.left = add2eHudClamp(Number(s.left) || 116, 8, Math.max(8, window.innerWidth - s.width - 8));
@@ -135,7 +136,7 @@ function add2eHudSetRetracted(hud, retracted, { save = true } = {}) {
     if (retracted) panel.style.setProperty("display", "none", "important");
     else panel.style.removeProperty("display");
   }
-  add2eHudApplyGeometry(hud, { anchorBottom: bottom });
+  add2eHudApplyGeometry(hud, { anchorBottom: bottom, force: true });
   if (save) add2eHudSaveState({ menuRetracted: retracted });
 }
 function add2eHudApplyState(hud, { anchorBottom = null } = {}) {
@@ -147,7 +148,7 @@ function add2eHudApplyState(hud, { anchorBottom = null } = {}) {
     if (retracted) panel.style.setProperty("display", "none", "important");
     else panel.style.removeProperty("display");
   }
-  add2eHudApplyGeometry(hud, { anchorBottom });
+  add2eHudApplyGeometry(hud, { anchorBottom, force: true });
 }
 
 function add2eHudCanUseActor(actor) {
@@ -472,7 +473,7 @@ function add2eHudStartResize(ev) {
     const s = add2eHudLoadState();
     s.width = add2eHudClamp(start.width + e.clientX - start.x, 360, Math.max(360, window.innerWidth - start.rect.left - 8));
     s.maxMenuHeight = add2eHudClamp(start.maxMenuHeight + e.clientY - start.y, 110, Math.max(140, window.innerHeight - start.rect.top - 8));
-    add2eHudApplyGeometry(hud, { anchorBottom: bottom });
+    add2eHudApplyGeometry(hud, { anchorBottom: bottom, force: true });
   };
   const up = () => {
     window.removeEventListener("pointermove", move, true);
@@ -490,7 +491,8 @@ function add2eHudStartDrag(ev) {
   const hud = ev.target?.closest?.(`#${HUD_ID}`);
   const handle = ev.target?.closest?.("[data-drag-handle]");
   if (!hud || !handle || ev.button !== 0 || add2eHudPointerForbidden(ev.target)) return;
-  add2eHudPreventPointer(ev); add2eHudDragging = true;
+  add2eHudPreventPointer(ev);
+  add2eHudDragging = true;
   try { handle.setPointerCapture?.(ev.pointerId); } catch (_e) {}
   const r = hud.getBoundingClientRect();
   const start = { x: ev.clientX, y: ev.clientY, left: r.left, top: r.top };
@@ -499,20 +501,22 @@ function add2eHudStartDrag(ev) {
     s.left = add2eHudClamp(start.left + e.clientX - start.x, 8, Math.max(8, window.innerWidth - (hud.offsetWidth || s.width) - 8));
     s.top = add2eHudConstrainTopForCurrentHeight(hud, start.top + e.clientY - start.y);
     add2eHudApplyPosition(hud, s.left, s.top);
+    add2eHudSaveState({ left: Math.round(s.left), top: Math.round(s.top), width: Math.round(hud.offsetWidth || hud.getBoundingClientRect().width || s.width) });
   };
   const up = () => {
     window.removeEventListener("pointermove", move, true);
     window.removeEventListener("pointerup", up, true);
     window.removeEventListener("pointercancel", up, true);
-    add2eHudDragging = false;
     add2eHudSaveGeometryFromElement(hud);
+    add2eHudDragging = false;
+    add2eHudApplyGeometry(hud, { force: true });
   };
   window.addEventListener("pointermove", move, true);
   window.addEventListener("pointerup", up, true);
   window.addEventListener("pointercancel", up, true);
 }
 function add2eHudPointerDown(ev) { if (add2eHudStartResize(ev)) return; add2eHudStartDrag(ev); }
-function add2eHudWindowResize() { const hud = add2eHudElement(); if (hud) add2eHudApplyGeometry(hud, { anchorBottom: add2eHudBottom(hud) }); }
+function add2eHudWindowResize() { const hud = add2eHudElement(); if (hud) add2eHudApplyGeometry(hud, { anchorBottom: add2eHudBottom(hud), force: true }); }
 function add2eHudScheduleApplyState() { if (!add2eHudDragging && !add2eHudResizing) window.requestAnimationFrame(() => add2eHudApplyGeometry(add2eHudElement())); }
 
 async function add2eHudAttack(actor, itemId) {
