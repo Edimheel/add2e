@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v19-persist-drag-bottom-locked
+// Version : 2026-05-25-v20-bottom-anchor-draggable
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v19-persist-drag-bottom-locked";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v20-bottom-anchor-draggable";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v19";
+const STORAGE_KEY = "add2e.actionHud.state.v20";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -52,10 +52,11 @@ function add2eHudClamp(value, min, max) { return Math.max(min, Math.min(max, val
 function add2eHudNow() { return Date.now(); }
 function add2eHudElement() { return document.getElementById(HUD_ID); }
 function add2eHudPanel(hud = add2eHudElement()) { return hud?.querySelector?.(".a2e-hud-menu-panel") ?? null; }
+function add2eHudHeader(hud = add2eHudElement()) { return hud?.querySelector?.(".a2e-hud-header") ?? null; }
 function add2eHudIsRetracted(hud = add2eHudElement()) { return Boolean(hud?.classList?.contains("collapsed") || hud?.classList?.contains("a2e-hud-menu-retracted")); }
 
 function add2eHudDefaultState() {
-  return { left: 116, top: Math.max(20, window.innerHeight - 360 - 22), width: 560, maxMenuHeight: 320, menuRetracted: false };
+  return { left: 116, bottom: 22, width: 560, maxMenuHeight: 320, menuRetracted: false };
 }
 function add2eHudLoadState() {
   if (add2eHudState) return add2eHudState;
@@ -63,6 +64,7 @@ function add2eHudLoadState() {
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v19")
       || localStorage.getItem("add2e.actionHud.state.v18")
       || localStorage.getItem("add2e.actionHud.state.v17")
       || localStorage.getItem("add2e.actionHud.state.v16")
@@ -75,12 +77,12 @@ function add2eHudLoadState() {
     );
     if (raw && typeof raw === "object") {
       const width = add2eHudClamp(Number(raw.width) || 560, 360, Math.max(380, window.innerWidth - 16));
-      const topFromBottom = window.innerHeight - Number(raw.bottom ?? 22) - 140;
+      const bottomFromTop = Math.max(8, window.innerHeight - (Number(raw.top) || 120) - 140);
       state = {
         left: add2eHudClamp(Number(raw.left) || 116, 8, Math.max(8, window.innerWidth - width - 8)),
-        top: add2eHudClamp(Number(raw.top ?? topFromBottom) || 120, 8, Math.max(8, window.innerHeight - 80)),
+        bottom: add2eHudClamp(Number(raw.bottom ?? bottomFromTop) || 22, 8, Math.max(8, window.innerHeight - 80)),
         width,
-        maxMenuHeight: add2eHudClamp(Number(raw.maxMenuHeight) || 320, 110, Math.max(140, window.innerHeight - 130)),
+        maxMenuHeight: add2eHudClamp(Number(raw.maxMenuHeight) || 320, 90, Math.max(110, window.innerHeight - 130)),
         menuRetracted: raw.menuRetracted === true || raw.hudCollapsed === true
       };
     }
@@ -93,42 +95,39 @@ function add2eHudSaveState(partial = {}) {
   Object.assign(s, partial);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (_e) {}
 }
-function add2eHudBottom(hud = add2eHudElement()) {
-  return hud?.getBoundingClientRect ? hud.getBoundingClientRect().bottom : null;
+function add2eHudHeaderHeight(hud = add2eHudElement()) {
+  return Math.max(72, add2eHudHeader(hud)?.getBoundingClientRect?.().height || 96);
+}
+function add2eHudClampGeometry(hud = add2eHudElement()) {
+  const s = add2eHudLoadState();
+  const width = add2eHudClamp(Number(s.width) || 560, 360, Math.max(380, window.innerWidth - 16));
+  s.width = width;
+  s.left = add2eHudClamp(Number(s.left) || 116, 8, Math.max(8, window.innerWidth - width - 8));
+  s.bottom = add2eHudClamp(Number(s.bottom) || 22, 8, Math.max(8, window.innerHeight - add2eHudHeaderHeight(hud) - 8));
+  s.maxMenuHeight = add2eHudClamp(Number(s.maxMenuHeight) || 320, 90, Math.max(110, window.innerHeight - add2eHudHeaderHeight(hud) - 50));
+  return s;
 }
 function add2eHudSaveGeometryFromElement(hud = add2eHudElement()) {
   if (!hud) return;
   const r = hud.getBoundingClientRect();
-  add2eHudSaveState({ left: Math.round(r.left), top: Math.round(r.top), width: Math.round(hud.offsetWidth || r.width || 560) });
+  add2eHudSaveState({
+    left: Math.round(r.left),
+    bottom: Math.round(Math.max(8, window.innerHeight - r.bottom)),
+    width: Math.round(hud.offsetWidth || r.width || 560)
+  });
 }
-function add2eHudApplyPosition(hud, left, top) {
-  if (!hud) return;
-  hud.style.setProperty("left", `${Math.round(left)}px`, "important");
-  hud.style.setProperty("top", `${Math.round(top)}px`, "important");
-  hud.style.setProperty("right", "auto", "important");
-  hud.style.setProperty("bottom", "auto", "important");
-}
-function add2eHudConstrainTopForCurrentHeight(hud, top) {
-  const h = hud?.getBoundingClientRect?.().height || 140;
-  return add2eHudClamp(top, 8, Math.max(8, window.innerHeight - h - 8));
-}
-function add2eHudApplyGeometry(hud, { anchorBottom = null, force = false } = {}) {
+function add2eHudApplyGeometry(hud = add2eHudElement(), { force = false } = {}) {
   if (!hud || (!force && (add2eHudDragging || add2eHudResizing))) return;
-  const s = add2eHudLoadState();
-  s.width = add2eHudClamp(Number(s.width) || 560, 360, Math.max(380, window.innerWidth - 16));
-  s.left = add2eHudClamp(Number(s.left) || 116, 8, Math.max(8, window.innerWidth - s.width - 8));
-  s.maxMenuHeight = add2eHudClamp(Number(s.maxMenuHeight) || 320, 110, Math.max(140, window.innerHeight - 130));
+  const s = add2eHudClampGeometry(hud);
+  hud.style.setProperty("left", `${Math.round(s.left)}px`, "important");
+  hud.style.setProperty("bottom", `${Math.round(s.bottom)}px`, "important");
+  hud.style.setProperty("top", "auto", "important");
+  hud.style.setProperty("right", "auto", "important");
   hud.style.setProperty("width", `${Math.round(s.width)}px`, "important");
   hud.style.setProperty("--a2e-hud-menu-max", `${Math.round(s.maxMenuHeight)}px`);
-  let top = Number(s.top) || 120;
-  if (Number.isFinite(Number(anchorBottom))) top = Number(anchorBottom) - (hud.getBoundingClientRect().height || 140);
-  top = add2eHudConstrainTopForCurrentHeight(hud, top);
-  add2eHudApplyPosition(hud, s.left, top);
-  s.top = Math.round(top);
 }
 function add2eHudSetRetracted(hud, retracted, { save = true } = {}) {
   if (!hud) return;
-  const bottom = add2eHudBottom(hud);
   hud.classList.toggle("collapsed", retracted);
   hud.classList.toggle("a2e-hud-menu-retracted", retracted);
   const panel = add2eHudPanel(hud);
@@ -136,10 +135,10 @@ function add2eHudSetRetracted(hud, retracted, { save = true } = {}) {
     if (retracted) panel.style.setProperty("display", "none", "important");
     else panel.style.removeProperty("display");
   }
-  add2eHudApplyGeometry(hud, { anchorBottom: bottom, force: true });
+  add2eHudApplyGeometry(hud, { force: true });
   if (save) add2eHudSaveState({ menuRetracted: retracted });
 }
-function add2eHudApplyState(hud, { anchorBottom = null } = {}) {
+function add2eHudApplyState(hud) {
   const retracted = add2eHudLoadState().menuRetracted === true;
   hud.classList.toggle("collapsed", retracted);
   hud.classList.toggle("a2e-hud-menu-retracted", retracted);
@@ -148,7 +147,7 @@ function add2eHudApplyState(hud, { anchorBottom = null } = {}) {
     if (retracted) panel.style.setProperty("display", "none", "important");
     else panel.style.removeProperty("display");
   }
-  add2eHudApplyGeometry(hud, { anchorBottom, force: true });
+  add2eHudApplyGeometry(hud, { force: true });
 }
 
 function add2eHudCanUseActor(actor) {
@@ -318,7 +317,7 @@ function add2eHudInjectStyle() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-    #${HUD_ID}{position:fixed;z-index:100;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;min-width:360px;resize:none;right:auto!important;bottom:auto!important;touch-action:none;user-select:none;}
+    #${HUD_ID}{position:fixed;z-index:100;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;min-width:360px;resize:none;right:auto!important;top:auto!important;touch-action:none;user-select:none;}
     #${HUD_ID}.collapsed .a2e-hud-menu-panel,#${HUD_ID}.a2e-hud-menu-retracted .a2e-hud-menu-panel{display:none!important;}
     #${HUD_ID}.collapsed .a2e-hud-icon-btn i,#${HUD_ID}.a2e-hud-menu-retracted .a2e-hud-icon-btn i{transform:rotate(180deg);}
     #${HUD_ID} .a2e-hud-shell{display:flex;flex-direction:column;justify-content:flex-end;border:1px solid #8a611d;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 15% 0%,rgba(213,147,45,.28),transparent 36%),linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48),inset 0 0 0 1px rgba(255,230,160,.12);}
@@ -383,7 +382,6 @@ function add2eRenderActionHud(actor = null, token = null, { reason = "render" } 
   if (add2eHudDragging || add2eHudResizing) return false;
   add2eHudInjectStyle();
   const existing = add2eHudElement();
-  const bottom = add2eHudBottom(existing);
   if (!add2eHudIsRelevant(actor)) { existing?.remove(); add2eHudActorId = null; return false; }
   add2eHudActorId = actor.id;
   if (!ADD2E_HUD_TABS.includes(add2eHudActiveTab)) add2eHudActiveTab = "attaques";
@@ -391,7 +389,7 @@ function add2eRenderActionHud(actor = null, token = null, { reason = "render" } 
   hud.id = HUD_ID;
   hud.innerHTML = add2eHudHtml(actor, token);
   if (!existing) document.body.appendChild(hud);
-  add2eHudApplyState(hud, { anchorBottom: bottom });
+  add2eHudApplyState(hud);
   add2eBindHudEvents(hud, actor);
   console.log(`${TAG}[RENDER]`, { reason, actor: actor.name, token: token?.name ?? null });
   return true;
@@ -465,15 +463,15 @@ function add2eHudPreventPointer(ev) { ev.preventDefault(); ev.stopPropagation();
 function add2eHudStartResize(ev) {
   const handle = ev.target?.closest?.("[data-resize-handle]"), hud = ev.target?.closest?.(`#${HUD_ID}`);
   if (!handle || !hud || ev.button !== 0) return false;
-  add2eHudPreventPointer(ev); add2eHudResizing = true;
+  add2eHudPreventPointer(ev);
+  add2eHudResizing = true;
   try { handle.setPointerCapture?.(ev.pointerId); } catch (_e) {}
-  const start = { x: ev.clientX, y: ev.clientY, ...add2eHudLoadState(), rect: hud.getBoundingClientRect() };
-  const bottom = start.rect.bottom;
+  const start = { x: ev.clientX, y: ev.clientY, ...add2eHudLoadState() };
   const move = e => {
     const s = add2eHudLoadState();
-    s.width = add2eHudClamp(start.width + e.clientX - start.x, 360, Math.max(360, window.innerWidth - start.rect.left - 8));
-    s.maxMenuHeight = add2eHudClamp(start.maxMenuHeight + e.clientY - start.y, 110, Math.max(140, window.innerHeight - start.rect.top - 8));
-    add2eHudApplyGeometry(hud, { anchorBottom: bottom, force: true });
+    s.width = add2eHudClamp(start.width + e.clientX - start.x, 360, Math.max(360, window.innerWidth - s.left - 8));
+    s.maxMenuHeight = add2eHudClamp(start.maxMenuHeight + e.clientY - start.y, 90, Math.max(110, window.innerHeight - add2eHudHeaderHeight(hud) - 50));
+    add2eHudApplyGeometry(hud, { force: true });
   };
   const up = () => {
     window.removeEventListener("pointermove", move, true);
@@ -481,6 +479,7 @@ function add2eHudStartResize(ev) {
     window.removeEventListener("pointercancel", up, true);
     add2eHudResizing = false;
     add2eHudSaveGeometryFromElement(hud);
+    add2eHudApplyGeometry(hud, { force: true });
   };
   window.addEventListener("pointermove", move, true);
   window.addEventListener("pointerup", up, true);
@@ -494,14 +493,14 @@ function add2eHudStartDrag(ev) {
   add2eHudPreventPointer(ev);
   add2eHudDragging = true;
   try { handle.setPointerCapture?.(ev.pointerId); } catch (_e) {}
-  const r = hud.getBoundingClientRect();
-  const start = { x: ev.clientX, y: ev.clientY, left: r.left, top: r.top };
+  const s0 = add2eHudLoadState();
+  const start = { x: ev.clientX, y: ev.clientY, left: Number(s0.left) || 116, bottom: Number(s0.bottom) || 22 };
   const move = e => {
     const s = add2eHudLoadState();
     s.left = add2eHudClamp(start.left + e.clientX - start.x, 8, Math.max(8, window.innerWidth - (hud.offsetWidth || s.width) - 8));
-    s.top = add2eHudConstrainTopForCurrentHeight(hud, start.top + e.clientY - start.y);
-    add2eHudApplyPosition(hud, s.left, s.top);
-    add2eHudSaveState({ left: Math.round(s.left), top: Math.round(s.top), width: Math.round(hud.offsetWidth || hud.getBoundingClientRect().width || s.width) });
+    s.bottom = add2eHudClamp(start.bottom - (e.clientY - start.y), 8, Math.max(8, window.innerHeight - add2eHudHeaderHeight(hud) - 8));
+    add2eHudApplyGeometry(hud, { force: true });
+    add2eHudSaveState({ left: Math.round(s.left), bottom: Math.round(s.bottom), width: Math.round(hud.offsetWidth || hud.getBoundingClientRect().width || s.width) });
   };
   const up = () => {
     window.removeEventListener("pointermove", move, true);
@@ -516,7 +515,7 @@ function add2eHudStartDrag(ev) {
   window.addEventListener("pointercancel", up, true);
 }
 function add2eHudPointerDown(ev) { if (add2eHudStartResize(ev)) return; add2eHudStartDrag(ev); }
-function add2eHudWindowResize() { const hud = add2eHudElement(); if (hud) add2eHudApplyGeometry(hud, { anchorBottom: add2eHudBottom(hud), force: true }); }
+function add2eHudWindowResize() { const hud = add2eHudElement(); if (hud) add2eHudApplyGeometry(hud, { force: true }); }
 function add2eHudScheduleApplyState() { if (!add2eHudDragging && !add2eHudResizing) window.requestAnimationFrame(() => add2eHudApplyGeometry(add2eHudElement())); }
 
 async function add2eHudAttack(actor, itemId) {
