@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v20-bottom-anchor-draggable
+// Version : 2026-05-25-v21-effects-polished-roll-delegation
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v20-bottom-anchor-draggable";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v21-effects-polished-roll-delegation";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v20";
+const STORAGE_KEY = "add2e.actionHud.state.v21";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -18,15 +18,21 @@ let add2eHudManualIntentUntil = 0;
 
 const ADD2E_HUD_TABS = ["attaques", "sorts", "capacites", "effets", "sauvegardes", "caracs"];
 const ADD2E_HUD_CARACS = [
-  { key: "force", label: "FOR", title: "Force" },
-  { key: "dexterite", label: "DEX", title: "Dextérité" },
-  { key: "constitution", label: "CON", title: "Constitution" },
-  { key: "intelligence", label: "INT", title: "Intelligence" },
-  { key: "sagesse", label: "SAG", title: "Sagesse" },
-  { key: "charisme", label: "CHA", title: "Charisme" }
+  { key: "force", label: "FOR", title: "Force", icon: "fa-fist-raised", cls: "force" },
+  { key: "dexterite", label: "DEX", title: "Dextérité", icon: "fa-running", cls: "dexterite" },
+  { key: "constitution", label: "CON", title: "Constitution", icon: "fa-heart", cls: "constitution" },
+  { key: "intelligence", label: "INT", title: "Intelligence", icon: "fa-brain", cls: "intelligence" },
+  { key: "sagesse", label: "SAG", title: "Sagesse", icon: "fa-eye", cls: "sagesse" },
+  { key: "charisme", label: "CHA", title: "Charisme", icon: "fa-comments", cls: "charisme" }
 ];
-const ADD2E_HUD_SAVE_NAMES = ["Paralysie", "Pétrification", "Baguettes", "Souffles", "Sorts"];
-const ADD2E_HUD_SAVE_FULL_NAMES = ["Paralysie / poison / mort", "Pétrification / métamorphose", "Baguettes", "Souffles", "Sorts"];
+const ADD2E_HUD_SAVE_DATA = [
+  { label: "Paralysie", full: "Paralysie / poison / mort", icon: "fa-skull", cls: "save0" },
+  { label: "Pétrification", full: "Pétrification / métamorphose", icon: "fa-mountain", cls: "save1" },
+  { label: "Baguettes", full: "Baguettes", icon: "fa-magic", cls: "save2" },
+  { label: "Souffles", full: "Souffles", icon: "fa-wind", cls: "save3" },
+  { label: "Sorts", full: "Sorts", icon: "fa-hat-wizard", cls: "save4" }
+];
+const ADD2E_HUD_SAVE_NAMES = ADD2E_HUD_SAVE_DATA.map(s => s.label);
 
 function add2eHudEscape(value) {
   try { return foundry.utils.escapeHTML(String(value ?? "")); }
@@ -48,22 +54,25 @@ function add2eHudNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 }
+function add2eHudNormalize(value) {
+  return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9:_-]+/g, "_");
+}
 function add2eHudClamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 function add2eHudNow() { return Date.now(); }
 function add2eHudElement() { return document.getElementById(HUD_ID); }
 function add2eHudPanel(hud = add2eHudElement()) { return hud?.querySelector?.(".a2e-hud-menu-panel") ?? null; }
 function add2eHudHeader(hud = add2eHudElement()) { return hud?.querySelector?.(".a2e-hud-header") ?? null; }
+function add2eHudHeaderHeight(hud = add2eHudElement()) { return Math.max(72, add2eHudHeader(hud)?.getBoundingClientRect?.().height || 96); }
 function add2eHudIsRetracted(hud = add2eHudElement()) { return Boolean(hud?.classList?.contains("collapsed") || hud?.classList?.contains("a2e-hud-menu-retracted")); }
 
-function add2eHudDefaultState() {
-  return { left: 116, bottom: 22, width: 560, maxMenuHeight: 320, menuRetracted: false };
-}
+function add2eHudDefaultState() { return { left: 116, bottom: 22, width: 560, maxMenuHeight: 320, menuRetracted: false }; }
 function add2eHudLoadState() {
   if (add2eHudState) return add2eHudState;
   let state = null;
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v20")
       || localStorage.getItem("add2e.actionHud.state.v19")
       || localStorage.getItem("add2e.actionHud.state.v18")
       || localStorage.getItem("add2e.actionHud.state.v17")
@@ -95,14 +104,10 @@ function add2eHudSaveState(partial = {}) {
   Object.assign(s, partial);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (_e) {}
 }
-function add2eHudHeaderHeight(hud = add2eHudElement()) {
-  return Math.max(72, add2eHudHeader(hud)?.getBoundingClientRect?.().height || 96);
-}
 function add2eHudClampGeometry(hud = add2eHudElement()) {
   const s = add2eHudLoadState();
-  const width = add2eHudClamp(Number(s.width) || 560, 360, Math.max(380, window.innerWidth - 16));
-  s.width = width;
-  s.left = add2eHudClamp(Number(s.left) || 116, 8, Math.max(8, window.innerWidth - width - 8));
+  s.width = add2eHudClamp(Number(s.width) || 560, 360, Math.max(380, window.innerWidth - 16));
+  s.left = add2eHudClamp(Number(s.left) || 116, 8, Math.max(8, window.innerWidth - s.width - 8));
   s.bottom = add2eHudClamp(Number(s.bottom) || 22, 8, Math.max(8, window.innerHeight - add2eHudHeaderHeight(hud) - 8));
   s.maxMenuHeight = add2eHudClamp(Number(s.maxMenuHeight) || 320, 90, Math.max(110, window.innerHeight - add2eHudHeaderHeight(hud) - 50));
   return s;
@@ -110,11 +115,7 @@ function add2eHudClampGeometry(hud = add2eHudElement()) {
 function add2eHudSaveGeometryFromElement(hud = add2eHudElement()) {
   if (!hud) return;
   const r = hud.getBoundingClientRect();
-  add2eHudSaveState({
-    left: Math.round(r.left),
-    bottom: Math.round(Math.max(8, window.innerHeight - r.bottom)),
-    width: Math.round(hud.offsetWidth || r.width || 560)
-  });
+  add2eHudSaveState({ left: Math.round(r.left), bottom: Math.round(Math.max(8, window.innerHeight - r.bottom)), width: Math.round(hud.offsetWidth || r.width || 560) });
 }
 function add2eHudApplyGeometry(hud = add2eHudElement(), { force = false } = {}) {
   if (!hud || (!force && (add2eHudDragging || add2eHudResizing))) return;
@@ -226,15 +227,12 @@ function add2eHudClassFeatures(actor) {
     .filter(f => add2eHudIsMonster(actor) || (level >= add2eHudNumber(f.minLevel ?? f.minimumLevel ?? f.niveauMin ?? f.level ?? f.niveau ?? 1, 1) && level <= add2eHudNumber(f.maxLevel ?? f.maximumLevel ?? f.niveauMax ?? f.max ?? 999, 999)))
     .filter(f => { const key = String(f.id ?? f.slug ?? f.name ?? f.label ?? f.nom ?? f.__index); if (seen.has(key)) return false; seen.add(key); return true; });
 }
-function add2eHudNormalize(value) {
-  return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9:_-]+/g, "_");
-}
+
 function add2eHudEffectTags(effect) {
   const flags = effect?.flags?.add2e ?? {};
-  const raw = [effect?.name, flags.type, flags.category, flags.source, flags.sourceType, flags.sourceItemType, flags.sourceItemId, ...(add2eHudArray(flags.tags)), ...(add2eHudArray(flags.effectTags)), ...(add2eHudArray(effect?.statuses))];
+  const raw = [effect?.name, effect?.origin, flags.type, flags.category, flags.source, flags.sourceType, flags.sourceItemType, flags.sourceItemId, flags.itemId, flags.originItemId, ...(add2eHudArray(flags.tags)), ...(add2eHudArray(flags.effectTags)), ...(add2eHudArray(effect?.statuses))];
   return raw.map(add2eHudNormalize).filter(Boolean);
-}
-function add2eHudEffectOriginItem(actor, effect) {
+}\nfunction add2eHudEffectOriginItem(actor, effect) {
   const flags = effect?.flags?.add2e ?? {};
   const directId = flags.sourceItemId ?? flags.itemId ?? flags.originItemId ?? null;
   if (directId && actor?.items?.get?.(directId)) return actor.items.get(directId);
@@ -244,27 +242,33 @@ function add2eHudEffectOriginItem(actor, effect) {
   return null;
 }
 function add2eHudIsRaceOrClassEffect(actor, effect) {
-  const tags = new Set(add2eHudEffectTags(effect));
-  const joined = [...tags].join(" ");
-  if (tags.has("race") || tags.has("racial") || tags.has("raciaux") || tags.has("raciale") || tags.has("classe") || tags.has("class") || tags.has("class_feature")) return true;
-  if (joined.includes("race:") || joined.includes("source:race") || joined.includes("type:race") || joined.includes("classe:") || joined.includes("source:classe") || joined.includes("type:classe")) return true;
+  const tags = add2eHudEffectTags(effect);
+  const joined = tags.join(" ");
+  if (tags.some(t => ["race", "racial", "raciaux", "raciale", "classe", "class", "class_feature"].includes(t))) return true;
+  if (/race:|source:race|type:race|classe:|source:classe|type:classe|class_feature/.test(joined)) return true;
+  const itemType = String(add2eHudEffectOriginItem(actor, effect)?.type ?? "").toLowerCase();
+  return ["race", "classe", "class"].includes(itemType);
+}
+function add2eHudIsSpellEffect(actor, effect) {
   const item = add2eHudEffectOriginItem(actor, effect);
-  const itemType = String(item?.type ?? "").toLowerCase();
-  if (["race", "classe", "class"].includes(itemType)) return true;
-  const origin = add2eHudNormalize(effect?.origin ?? "");
-  return origin.includes("race") || origin.includes("classe") || origin.includes("class");
+  if (String(item?.type ?? "").toLowerCase() === "sort") return true;
+  const tags = add2eHudEffectTags(effect);
+  const joined = tags.join(" ");
+  if (tags.some(t => ["sort", "spell", "magie", "magique", "magical", "sortilege"].includes(t))) return true;
+  if (/source:sort|type:sort|source_spell|spell|sort/.test(joined)) return true;
+  const name = add2eHudNormalize(effect?.name ?? "");
+  return /benediction|aura_magique|nystul|malediction|protection/.test(name);
 }
 function add2eHudEffectHasDuration(effect) {
   const d = effect?.duration ?? {};
-  const values = [d.rounds, d.turns, d.seconds, d.startRound, d.startTurn, d.startTime, d.combat, d.endTime];
-  return values.some(v => v !== undefined && v !== null && v !== "" && !(Number(v) === 0 && [d.rounds, d.turns, d.seconds].includes(v)));
+  return [d.rounds, d.turns, d.seconds, d.startRound, d.startTurn, d.startTime, d.combat, d.endTime].some(v => v !== undefined && v !== null && v !== "" && !(Number(v) === 0 && [d.rounds, d.turns, d.seconds].includes(v)));
 }
 function add2eHudIsPermanentEffect(effect, actor = null) {
-  const tags = add2eHudEffectTags(effect).join(" ");
   if (actor && add2eHudIsRaceOrClassEffect(actor, effect)) return true;
-  if (effect?.transfer === true) return true;
-  if (tags.includes("permanent") || tags.includes("passif") || tags.includes("passive") || tags.includes("racial") || tags.includes("raciale") || tags.includes("raciaux") || tags.includes("classe") || tags.includes("class_feature")) return true;
-  if (!add2eHudEffectHasDuration(effect) && !add2eHudArray(effect?.statuses).length) return true;
+  if (actor && add2eHudIsSpellEffect(actor, effect)) return false;
+  const tags = add2eHudEffectTags(effect).join(" ");
+  if (/permanent|passif|passive|racial|raciale|raciaux|classe|class_feature/.test(tags)) return true;
+  if (effect?.transfer === true && !add2eHudEffectHasDuration(effect) && !add2eHudArray(effect?.statuses).length) return true;
   return false;
 }
 function add2eHudTemporaryEffects(actor) {
@@ -272,6 +276,18 @@ function add2eHudTemporaryEffects(actor) {
     .filter(e => e && e.disabled !== true)
     .filter(e => !add2eHudIsPermanentEffect(e, actor));
 }
+function add2eHudEffectDurationText(effect, actor = null) {
+  const d = effect?.duration ?? {};
+  if (Number(d.rounds) > 0) return `${d.rounds} round${Number(d.rounds) > 1 ? "s" : ""}`;
+  if (Number(d.turns) > 0) return `${d.turns} tour${Number(d.turns) > 1 ? "s" : ""}`;
+  if (Number(d.seconds) > 0) return `${d.seconds} sec.`;
+  if (d.combat) return "Combat";
+  if (d.endTime) return "Temporaire";
+  if (actor && add2eHudIsSpellEffect(actor, effect)) return "Sort actif";
+  if (add2eHudArray(effect?.statuses).length) return "État";
+  return "Actif";
+}
+
 function add2eHudAbilityValue(actor, key) {
   const direct = Number(actor?.system?.[key]);
   if (Number.isFinite(direct)) return direct;
@@ -301,16 +317,6 @@ function add2eHudRangeText(item) {
   const parts = [s.portee_courte ?? s.portee_short, s.portee_moyenne ?? s.portee_medium, s.portee_longue ?? s.portee_long].filter(v => v !== undefined && v !== null && String(v) !== "");
   return parts.length ? parts.join(" / ") : "Contact";
 }
-function add2eHudEffectDurationText(effect) {
-  const d = effect?.duration ?? {};
-  if (Number(d.rounds) > 0) return `${d.rounds} round${Number(d.rounds) > 1 ? "s" : ""}`;
-  if (Number(d.turns) > 0) return `${d.turns} tour${Number(d.turns) > 1 ? "s" : ""}`;
-  if (Number(d.seconds) > 0) return `${d.seconds} sec.`;
-  if (d.combat) return "Combat";
-  if (d.endTime) return "Temporaire";
-  if (add2eHudArray(effect?.statuses).length) return "État";
-  return "Temporaire";
-}
 
 function add2eHudInjectStyle() {
   document.getElementById(STYLE_ID)?.remove();
@@ -324,18 +330,20 @@ function add2eHudInjectStyle() {
     #${HUD_ID} .a2e-hud-menu-panel{flex:0 1 auto!important;min-height:0!important;max-height:var(--a2e-hud-menu-max,320px)!important;padding:9px!important;overflow-y:auto!important;border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.12);display:block!important;}
     #${HUD_ID} .a2e-hud-section{display:none!important;} #${HUD_ID} .a2e-hud-section.active{display:grid!important;gap:7px!important;align-content:start!important;margin-top:0!important;}
     #${HUD_ID} .a2e-hud-tabs{flex:0 0 auto;display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.18);} #${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.74em;font-weight:900;cursor:pointer;} #${HUD_ID} .a2e-hud-tab.active{color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e);}
-    #${HUD_ID} .a2e-hud-header{flex:0 0 auto;display:grid;grid-template-columns:74px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));cursor:move;user-select:none;}
-    #${HUD_ID} .a2e-hud-header[data-drag-handle="1"]{touch-action:none;}
+    #${HUD_ID} .a2e-hud-header{flex:0 0 auto;display:grid;grid-template-columns:74px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));cursor:move;user-select:none;} #${HUD_ID} .a2e-hud-header[data-drag-handle="1"]{touch-action:none;}
     #${HUD_ID} .a2e-hud-portrait{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #c4973f;background:#111;} #${HUD_ID} .a2e-hud-name{color:#fff4cf;font-size:1.12em;font-weight:900;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #${HUD_ID} .a2e-hud-subtitle{color:#d8bd78;font-size:.82em;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     #${HUD_ID} .a2e-hud-metrics{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;} #${HUD_ID} .a2e-hud-pill{display:inline-flex;align-items:center;justify-content:center;min-height:22px;padding:2px 7px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.78em;font-weight:850;white-space:nowrap;}
     #${HUD_ID} .a2e-hud-icon-btn,#${HUD_ID} .a2e-hud-resize{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer;} #${HUD_ID} .a2e-hud-resize{cursor:nwse-resize!important;}
     #${HUD_ID} .a2e-hud-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:48px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);} #${HUD_ID} .a2e-hud-row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px;} #${HUD_ID} .a2e-hud-row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25);}
+    #${HUD_ID} .a2e-hud-effect-row.spell-effect{background:linear-gradient(135deg,rgba(72,48,142,.42),rgba(34,24,76,.22));border-color:rgba(157,126,255,.72);}
     #${HUD_ID} .a2e-hud-row-title{color:#fff4cf;font-weight:900;line-height:1.08;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} #${HUD_ID} .a2e-hud-row-meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px;} #${HUD_ID} .a2e-hud-action{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap;} #${HUD_ID} .a2e-hud-action:disabled{opacity:.45;cursor:not-allowed;}
     #${HUD_ID} .a2e-hud-empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center;}
-    #${HUD_ID} .a2e-hud-ability-grid,#${HUD_ID} .a2e-hud-save-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
-    #${HUD_ID} .a2e-hud-ability,#${HUD_ID} .a2e-hud-save-cell{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:7px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07);min-height:50px;}
-    #${HUD_ID} .a2e-hud-ability b,#${HUD_ID} .a2e-hud-save-cell b{color:#fff4cf;font-size:1.15em;} #${HUD_ID} .a2e-hud-ability span,#${HUD_ID} .a2e-hud-save-cell span{display:block;color:#c8ad6e;font-size:.76em;font-weight:800;} #${HUD_ID} .a2e-hud-save-cell b{font-size:1.02em;}
-    #${HUD_ID} button,#${HUD_ID} [data-hud-tab],#${HUD_ID} [data-action]{user-select:auto;touch-action:auto;} @media(max-width:760px){#${HUD_ID}{left:8px!important;right:8px;width:auto!important;min-width:0;max-width:calc(100vw - 16px)!important;}#${HUD_ID} .a2e-hud-ability-grid,#${HUD_ID} .a2e-hud-save-grid{grid-template-columns:repeat(2,1fr);}}
+    #${HUD_ID} .a2e-hud-ability-grid,#${HUD_ID} .a2e-hud-save-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+    #${HUD_ID} .a2e-hud-ability,#${HUD_ID} .a2e-hud-save-cell{position:relative;overflow:hidden;display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:7px;align-items:center;min-height:62px;padding:8px;border:1px solid rgba(214,176,90,.38);border-radius:12px;background:rgba(255,250,235,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 3px 10px rgba(0,0,0,.18);}
+    #${HUD_ID} .a2e-hud-ability::before,#${HUD_ID} .a2e-hud-save-cell::before{content:"";position:absolute;inset:0;opacity:.16;pointer-events:none;background:radial-gradient(circle at 20% 0%,#fff,transparent 34%);} #${HUD_ID} .a2e-hud-cell-icon{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.14);color:#fff2c0;} #${HUD_ID} .a2e-hud-cell-main{min-width:0;} #${HUD_ID} .a2e-hud-cell-main span{display:block;color:rgba(255,246,214,.82);font-size:.72em;font-weight:850;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} #${HUD_ID} .a2e-hud-cell-main b{display:block;color:#fff;font-size:1.18em;line-height:1.1;margin-top:3px;text-shadow:0 1px 2px rgba(0,0,0,.45);}
+    #${HUD_ID} .carac-force{background:linear-gradient(135deg,rgba(135,40,28,.55),rgba(58,24,18,.25));border-color:rgba(233,111,77,.70);} #${HUD_ID} .carac-dexterite{background:linear-gradient(135deg,rgba(42,112,59,.55),rgba(20,54,36,.25));border-color:rgba(116,221,127,.70);} #${HUD_ID} .carac-constitution{background:linear-gradient(135deg,rgba(151,89,28,.55),rgba(77,45,18,.25));border-color:rgba(239,171,82,.70);} #${HUD_ID} .carac-intelligence{background:linear-gradient(135deg,rgba(45,79,151,.55),rgba(18,37,77,.25));border-color:rgba(119,163,255,.70);} #${HUD_ID} .carac-sagesse{background:linear-gradient(135deg,rgba(96,62,151,.55),rgba(48,31,80,.25));border-color:rgba(190,145,255,.70);} #${HUD_ID} .carac-charisme{background:linear-gradient(135deg,rgba(147,50,116,.55),rgba(80,23,61,.25));border-color:rgba(255,132,217,.70);}
+    #${HUD_ID} .save-save0{background:linear-gradient(135deg,rgba(99,38,38,.54),rgba(47,22,22,.25));border-color:rgba(230,104,104,.70);} #${HUD_ID} .save-save1{background:linear-gradient(135deg,rgba(88,84,73,.54),rgba(45,42,35,.25));border-color:rgba(198,190,159,.70);} #${HUD_ID} .save-save2{background:linear-gradient(135deg,rgba(112,74,35,.54),rgba(54,35,18,.25));border-color:rgba(239,181,97,.70);} #${HUD_ID} .save-save3{background:linear-gradient(135deg,rgba(36,98,119,.54),rgba(17,48,61,.25));border-color:rgba(102,213,239,.70);} #${HUD_ID} .save-save4{background:linear-gradient(135deg,rgba(65,52,133,.54),rgba(34,27,75,.25));border-color:rgba(154,136,255,.70);}
+    #${HUD_ID} button,#${HUD_ID} [data-hud-tab],#${HUD_ID} [data-action]{user-select:auto;touch-action:auto;} @media(max-width:760px){#${HUD_ID}{left:8px!important;right:8px;width:auto!important;min-width:0;max-width:calc(100vw - 16px)!important;}#${HUD_ID} .a2e-hud-ability-grid,#${HUD_ID} .a2e-hud-save-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
   `;
   document.head.appendChild(style);
 }
@@ -358,14 +366,19 @@ function add2eHudFeatureRows(actor) {
 function add2eHudEffectRows(actor) {
   const rows = add2eHudTemporaryEffects(actor);
   if (!rows.length) return `<div class="a2e-hud-empty">Aucun effet temporaire actif.</div>`;
-  return rows.map(e => `<div class="a2e-hud-row compact" data-effect-id="${add2eHudEscape(e.id)}"><div><div class="a2e-hud-row-title">${add2eHudEscape(e.name ?? "Effet")}</div><div class="a2e-hud-row-meta"><span>${add2eHudEscape(add2eHudEffectDurationText(e))}</span>${add2eHudArray(e.statuses).length ? `<span>${add2eHudEscape(add2eHudArray(e.statuses).join(", "))}</span>` : ""}</div></div><button type="button" class="a2e-hud-action" data-action="open-effect" data-effect-id="${add2eHudEscape(e.id)}">Voir</button></div>`).join("");
+  return rows.map(e => {
+    const spell = add2eHudIsSpellEffect(actor, e);
+    const item = add2eHudEffectOriginItem(actor, e);
+    const img = e.img || item?.img || (spell ? "icons/svg/aura.svg" : "icons/svg/statuses.svg");
+    return `<div class="a2e-hud-row a2e-hud-effect-row ${spell ? "spell-effect" : ""}" data-effect-id="${add2eHudEscape(e.id)}"><img src="${add2eHudEscape(img)}" alt=""><div><div class="a2e-hud-row-title">${add2eHudEscape(e.name ?? "Effet")}</div><div class="a2e-hud-row-meta"><span>${spell ? "Sort" : "Effet"}</span><span>${add2eHudEscape(add2eHudEffectDurationText(e, actor))}</span>${item?.name ? `<span>${add2eHudEscape(item.name)}</span>` : ""}</div></div><button type="button" class="a2e-hud-action" data-action="open-effect" data-effect-id="${add2eHudEscape(e.id)}">Voir</button></div>`;
+  }).join("");
 }
 function add2eHudSaveRows(actor) {
   const saves = add2eHudSavingThrows(actor);
-  return `<div class="a2e-hud-save-grid">${ADD2E_HUD_SAVE_FULL_NAMES.map((label, idx) => `<div class="a2e-hud-save-cell"><div><b>${add2eHudEscape(saves[idx] || "—")}</b><span>${add2eHudEscape(label)}</span></div><button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button></div>`).join("")}</div>`;
+  return `<div class="a2e-hud-save-grid">${ADD2E_HUD_SAVE_DATA.map((s, idx) => `<div class="a2e-hud-save-cell save-${s.cls}"><div class="a2e-hud-cell-icon"><i class="fas ${s.icon}"></i></div><div class="a2e-hud-cell-main"><span>${add2eHudEscape(s.full)}</span><b>${add2eHudEscape(saves[idx] || "—")}</b></div><button type="button" class="a2e-hud-action" data-action="roll-save" data-save-index="${idx}">Jet</button></div>`).join("")}</div>`;
 }
 function add2eHudAbilityRows(actor) {
-  return `<div class="a2e-hud-ability-grid">${ADD2E_HUD_CARACS.map(c => `<div class="a2e-hud-ability"><div><b>${c.label} ${add2eHudAbilityValue(actor, c.key)}</b><span>${add2eHudEscape(c.title)}</span></div><button type="button" class="a2e-hud-action" data-action="roll-ability" data-ability="${c.key}">Jet</button></div>`).join("")}</div>`;
+  return `<div class="a2e-hud-ability-grid">${ADD2E_HUD_CARACS.map(c => `<div class="a2e-hud-ability carac-${c.cls}"><div class="a2e-hud-cell-icon"><i class="fas ${c.icon}"></i></div><div class="a2e-hud-cell-main"><span>${add2eHudEscape(c.title)}</span><b>${c.label} ${add2eHudAbilityValue(actor, c.key)}</b></div><button type="button" class="a2e-hud-action" data-action="roll-ability" data-ability="${c.key}">Jet</button></div>`).join("")}</div>`;
 }
 function add2eHudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
@@ -409,9 +422,7 @@ function add2eHudFollowCurrentCombatant(combat = game.combat, { forceOpen = fals
   if (add2eHudNow() < add2eHudManualIntentUntil && !reason.includes("force")) return false;
   return add2eHudRenderCombatant(add2eHudCurrentCombatant(combat), { forceOpen, reason });
 }
-function add2eHudScheduleCombatFollow(combat = game.combat, options = {}) {
-  for (const delay of [60, 160, 320]) window.setTimeout(() => add2eHudFollowCurrentCombatant(combat, options), delay);
-}
+function add2eHudScheduleCombatFollow(combat = game.combat, options = {}) { for (const delay of [60, 160, 320]) window.setTimeout(() => add2eHudFollowCurrentCombatant(combat, options), delay); }
 function add2eHudIsCombatTurnChange(changes = {}) {
   return foundry.utils.hasProperty(changes, "turn") || foundry.utils.hasProperty(changes, "round") || foundry.utils.hasProperty(changes, "current") || foundry.utils.hasProperty(changes, "current.turn") || foundry.utils.hasProperty(changes, "current.round") || foundry.utils.hasProperty(changes, "current.combatantId") || foundry.utils.hasProperty(changes, "combatantId");
 }
@@ -544,24 +555,60 @@ async function add2eHudOpenEffect(actor, effectId) {
   if (effect.sheet?.render) return effect.sheet.render(true);
   return ui.notifications.warn("La fiche de cet effet ne peut pas être ouverte.");
 }
+async function add2eHudDelegateRoll(kind, actor, payload) {
+  const candidates = kind === "ability" ? [
+    globalThis.add2eRollAbility,
+    globalThis.add2eRollCharacteristic,
+    globalThis.add2eRollCarac,
+    globalThis.add2eJetCaracteristique,
+    game.add2e?.rollAbility,
+    game.add2e?.rollCharacteristic,
+    game.add2e?.rollCarac,
+    actor?.rollAbility,
+    actor?.rollCharacteristic,
+    actor?.rollCarac
+  ] : [
+    globalThis.add2eRollSave,
+    globalThis.add2eRollSavingThrow,
+    globalThis.add2eJetSauvegarde,
+    game.add2e?.rollSave,
+    game.add2e?.rollSavingThrow,
+    actor?.rollSave,
+    actor?.rollSavingThrow
+  ];
+  for (const fn of candidates) {
+    if (typeof fn !== "function") continue;
+    try { await fn.call(actor, actor, payload); return true; }
+    catch (err1) {
+      try { await fn.call(actor, payload); return true; }
+      catch (_err2) { console.debug(`${TAG}[ROLL_DELEGATE_SKIP]`, { kind, fn: fn.name, err: err1 }); }
+    }
+  }
+  return false;
+}
 async function add2eHudRollAbilityLikeSheet(actor, carac) {
-  const data = ADD2E_HUD_CARACS.find(c => c.key === carac);
+  const data = ADD2E_HUD_CARACS.find(c => c.key === carac) ?? { key: carac, label: carac?.toUpperCase?.() ?? "CAR", title: carac };
+  const delegated = await add2eHudDelegateRoll("ability", actor, { ability: carac, carac, key: carac, label: data.label, title: data.title, source: "hud" });
+  if (delegated) return;
   const val = add2eHudAbilityValue(actor, carac);
   const roll = await new Roll("1d20").evaluate({ async: true });
   if (game.dice3d) await game.dice3d.showForRoll(roll);
   const ok = roll.total <= val;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${data?.label || carac}</b> seuil ${val} | résultat <b>${roll.total}</b> — <b>${ok ? "Réussite" : "Échec"}</b></div>` });
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test add2e-roll-card"><h3>Jet de caractéristique — ${add2eHudEscape(data.title)}</h3><p>Seuil : <b>${val}</b></p><p>Résultat : <b>${roll.total}</b></p><p><b>${ok ? "Réussite" : "Échec"}</b></p></div>` });
 }
 async function add2eHudRollSaveLikeSheet(actor, idx) {
+  const data = ADD2E_HUD_SAVE_DATA[idx] ?? { label: `Sauvegarde ${idx + 1}` };
+  const delegated = await add2eHudDelegateRoll("save", actor, { index: idx, saveIndex: idx, save: data.label, label: data.label, source: "hud" });
+  if (delegated) return;
   const saves = add2eHudSavingThrows(actor);
   const seuil = Number(saves[idx]);
   if (!seuil) return ui.notifications.warn("Aucune valeur pour ce jet.");
   const roll = await new Roll("1d20").evaluate({ async: true });
   if (game.dice3d) await game.dice3d.showForRoll(roll);
   let bonus = 0;
-  try { bonus = Number(Add2eEffectsEngine?.analyze?.(actor, { type: "save", vsType: ADD2E_HUD_SAVE_NAMES[idx], frontale: true })?.bonus_save || 0); } catch (_e) {}
+  try { bonus = Number(globalThis.Add2eEffectsEngine?.analyze?.(actor, { type: "save", vsType: data.label, frontale: true })?.bonus_save || 0); } catch (_e) {}
   const total = Number(roll.total || 0) + bonus;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${ADD2E_HUD_SAVE_NAMES[idx]}</b> seuil ${seuil} | résultat <b>${roll.total}</b>${bonus ? ` + ${bonus} = <b>${total}</b>` : ""} — <b>${total >= seuil ? "Réussite" : "Échec"}</b></div>` });
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test add2e-roll-card"><h3>Jet de sauvegarde — ${add2eHudEscape(data.label)}</h3><p>Seuil : <b>${seuil}</b></p><p>Résultat : <b>${roll.total}</b>${bonus ? ` + ${bonus} = <b>${total}</b>` : ""}</p><p><b>${total >= seuil ? "Réussite" : "Échec"}</b></p></div>` });
 }
 
 Hooks.once("init", () => {
