@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v24-sheet-roll-delegation-only
+// Version : 2026-05-25-v25-effects-filter-in-hud
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v24-sheet-roll-delegation-only";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v25-effects-filter-in-hud";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v24";
+const STORAGE_KEY = "add2e.actionHud.state.v25";
 
 let add2eHudActorId = null;
 let add2eHudActiveTab = "attaques";
@@ -54,7 +54,13 @@ function add2eHudNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 function add2eHudNormalize(value) {
-  return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9:_-]+/g, "_");
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9:_-]+/g, "_");
 }
 function add2eHudClamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 function add2eHudNow() { return Date.now(); }
@@ -71,6 +77,7 @@ function add2eHudLoadState() {
   try {
     const raw = JSON.parse(
       localStorage.getItem(STORAGE_KEY)
+      || localStorage.getItem("add2e.actionHud.state.v24")
       || localStorage.getItem("add2e.actionHud.state.v23")
       || localStorage.getItem("add2e.actionHud.state.v22")
       || localStorage.getItem("add2e.actionHud.state.v21")
@@ -262,22 +269,10 @@ function add2eHudIsSpellEffect(actor, effect) {
   const name = add2eHudNormalize(effect?.name ?? "");
   return /benediction|aura_magique|nystul|malediction|protection/.test(name);
 }
-function add2eHudEffectHasDuration(effect) {
-  const d = effect?.duration ?? {};
-  return [d.rounds, d.turns, d.seconds, d.startRound, d.startTurn, d.startTime, d.combat, d.endTime].some(v => v !== undefined && v !== null && v !== "" && !(Number(v) === 0 && [d.rounds, d.turns, d.seconds].includes(v)));
-}
-function add2eHudIsPermanentEffect(effect, actor = null) {
-  if (actor && add2eHudIsRaceOrClassEffect(actor, effect)) return true;
-  if (actor && add2eHudIsSpellEffect(actor, effect)) return false;
-  const tags = add2eHudEffectTags(effect).join(" ");
-  if (/permanent|passif|passive|racial|raciale|raciaux|classe|class_feature/.test(tags)) return true;
-  if (effect?.transfer === true && !add2eHudEffectHasDuration(effect) && !add2eHudArray(effect?.statuses).length) return true;
-  return false;
-}
 function add2eHudTemporaryEffects(actor) {
   return [...(actor?.effects ?? [])]
     .filter(e => e && e.disabled !== true)
-    .filter(e => !add2eHudIsPermanentEffect(e, actor));
+    .filter(e => !add2eHudIsRaceOrClassEffect(actor, e));
 }
 function add2eHudEffectDurationText(effect, actor = null) {
   const d = effect?.duration ?? {};
@@ -393,11 +388,11 @@ function add2eHudFeatureRows(actor) {
 }
 function add2eHudEffectRows(actor) {
   const rows = add2eHudTemporaryEffects(actor);
-  if (!rows.length) return `<div class="a2e-hud-empty">Aucun effet temporaire actif.</div>`;
+  if (!rows.length) return `<div class="a2e-hud-empty">Aucun effet actif.</div>`;
   return rows.map(e => {
     const spell = add2eHudIsSpellEffect(actor, e);
     const item = add2eHudEffectOriginItem(actor, e);
-    const img = e.img || item?.img || (spell ? "icons/svg/aura.svg" : "icons/svg/statuses.svg");
+    const img = e.img || e.icon || item?.img || (spell ? "icons/svg/aura.svg" : "icons/svg/statuses.svg");
     return `<div class="a2e-hud-row a2e-hud-effect-row ${spell ? "spell-effect" : ""}" data-effect-id="${add2eHudEscape(e.id)}"><img src="${add2eHudEscape(img)}" alt=""><div><div class="a2e-hud-row-title">${add2eHudEscape(e.name ?? "Effet")}</div><div class="a2e-hud-row-meta"><span>${spell ? "Sort" : "Effet"}</span><span>${add2eHudEscape(add2eHudEffectDurationText(e, actor))}</span>${item?.name ? `<span>${add2eHudEscape(item.name)}</span>` : ""}</div></div><button type="button" class="a2e-hud-action" data-action="open-effect" data-effect-id="${add2eHudEscape(e.id)}">Voir</button></div>`;
   }).join("");
 }
@@ -598,9 +593,17 @@ function add2eHudFindSheetRollButton(actor, selector) {
   }) ?? pool[0] ?? null;
 }
 function add2eHudDispatchExistingSheetRoll(actor, selector, label) {
+  if (typeof globalThis.add2eRollCharacteristicCard === "function" && selector.includes("roll-stat")) {
+    const carac = selector.match(/data-stat=\"([^\"]+)/)?.[1];
+    if (carac) return globalThis.add2eRollCharacteristicCard(actor, carac);
+  }
+  if (typeof globalThis.add2eRollSaveCard === "function" && selector.includes("roll-save")) {
+    const idx = Number(selector.match(/data-save=\"([^\"]+)/)?.[1]);
+    if (Number.isFinite(idx)) return globalThis.add2eRollSaveCard(actor, idx);
+  }
   const button = add2eHudFindSheetRollButton(actor, selector);
   if (!button) {
-    ui.notifications.warn(`${label} : ouvre la feuille de personnage pour utiliser le moteur de jet existant.`);
+    ui.notifications.warn(`${label} : moteur de jet introuvable.`);
     console.warn(`${TAG}[ROLL_DELEGATE_MISSING]`, { actor: actor?.name, selector, label });
     return false;
   }
@@ -628,6 +631,7 @@ Hooks.once("init", () => {
     add2eHudFollowCurrentCombatant: game.add2e.followCurrentCombatantHud,
     add2eHudForceOpen: () => add2eHudSetRetracted(add2eHudElement(), false),
     add2eHudForceRetract: () => add2eHudSetRetracted(add2eHudElement(), true),
+    add2eHudVisibleEffects: () => add2eHudTemporaryEffects(game.actors.get(add2eHudActorId)).map(e => ({ id: e.id, name: e.name, disabled: e.disabled, origin: e.origin, flags: e.flags?.add2e ?? {}, duration: e.duration ?? {} })),
     add2eHudFixDebug: () => ({ version: ADD2E_ACTION_HUD_VERSION, hud: !!add2eHudElement(), actorId: add2eHudActorId, actor: game.actors.get(add2eHudActorId)?.name ?? null, activeTab: add2eHudActiveTab, state: add2eHudLoadState(), combatant: add2eHudCurrentCombatant(game.combat)?.name ?? null, selected: canvas?.tokens?.controlled?.map?.(t => t.name) ?? [], dragging: add2eHudDragging, resizing: add2eHudResizing }),
     add2eHudCheck: () => ({ version: ADD2E_ACTION_HUD_VERSION, actorId: add2eHudActorId, actor: game.actors.get(add2eHudActorId)?.name ?? null, activeTab: add2eHudActiveTab, retracted: add2eHudLoadState().menuRetracted, attackRoll: typeof globalThis.add2eAttackRoll, castSpell: typeof globalThis.add2eCastSpell, featureOnUse: typeof globalThis.add2eExecuteClassFeatureOnUse, hud: !!add2eHudElement() })
   });
