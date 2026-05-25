@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Aura magique de Nystul
-// Version : 2026-05-25-magicien-aura-magique-nystul-v3-objets-portes
+// Version : 2026-05-25-magicien-aura-magique-nystul-v4-remplace-aura-objet
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -57,7 +57,9 @@ function add2eToArray(value) {
 }
 
 function add2eSpellImg() {
-  return ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.img || ADD2E_SORT_CONFIG.imgFallback;
+  const img = String(ADD2E_ITEM?.img ?? "");
+  if (img && !img.includes("magicien-aura-magique-de-nystul.webp")) return img;
+  return ADD2E_SORT_CONFIG.imgFallback;
 }
 
 function add2eCasterLevel(actorDoc) {
@@ -157,12 +159,23 @@ function add2eEffectIsNystulAura(effect) {
 function add2eEffectMatchesItem(effect, item) {
   if (!effect || !item) return false;
   const spell = effect.flags?.add2e?.spell ?? effect.getFlag?.("add2e", "spell") ?? {};
+  const tags = add2eToArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(add2eNormalize);
   const itemId = spell?.itemId ?? spell?.objectItemId ?? null;
   const itemUuid = spell?.itemUuid ?? spell?.objectItemUuid ?? null;
   const objectName = spell?.objectName ?? "";
   return itemId === item.id
     || itemUuid === item.uuid
-    || add2eNormalize(objectName) === add2eNormalize(item.name);
+    || tags.includes(add2eNormalize(`item_id:${item.id}`))
+    || add2eNormalize(objectName) === add2eNormalize(item.name)
+    || add2eNormalize(effect.name).endsWith(add2eNormalize(item.name));
+}
+
+function add2eEffectMatchesManualObject(effect, objectLabel) {
+  if (!effect || !objectLabel) return false;
+  const spell = effect.flags?.add2e?.spell ?? effect.getFlag?.("add2e", "spell") ?? {};
+  const objectName = spell?.objectName ?? "";
+  return add2eNormalize(objectName) === add2eNormalize(objectLabel)
+    || add2eNormalize(effect.name).endsWith(add2eNormalize(objectLabel));
 }
 
 function add2eItemAuraInfo(actorDoc, item) {
@@ -176,7 +189,7 @@ function add2eItemAuraInfo(actorDoc, item) {
   const spell = effect.flags?.add2e?.spell ?? effect.getFlag?.("add2e", "spell") ?? {};
   const auraType = spell?.auraType ?? "aura_active";
   const school = spell?.apparentSchool ?? "indeterminee";
-  const label = `✨ aura active : ${add2eAuraTypeLabel(auraType)}, ${add2eSchoolLabel(school)}`;
+  const label = `aura active : ${add2eAuraTypeLabel(auraType)}, ${add2eSchoolLabel(school)}`;
   return { active: true, label, effect };
 }
 
@@ -199,6 +212,9 @@ function add2eBuildObjectCandidates(casterActor) {
       const carried = add2eIsItemCarried(item);
       const aura = add2eItemAuraInfo(holder.actor, item);
       const typeLabel = String(item.type ?? "objet");
+      const marker = aura.active ? "✨ " : "• ";
+      const carriedLabel = carried ? ", porté" : "";
+      const auraLabel = aura.active ? ` — ${aura.label}` : "";
 
       candidates.push({
         kind: "item",
@@ -207,7 +223,7 @@ function add2eBuildObjectCandidates(casterActor) {
         item,
         carried,
         aura,
-        label: `${holder.label} — ${item.name} [${typeLabel}${carried ? ", porté" : ""}]${aura.active ? ` — ${aura.label}` : ""}`
+        label: `${marker}${holder.label} — ${item.name} [${typeLabel}${carriedLabel}]${auraLabel}`
       });
     }
   }
@@ -239,6 +255,12 @@ function add2eDialogForm(button, dialog, fallbackId) {
 }
 
 async function add2eAskAuraNystul(casterActor) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) {
+    ui.notifications?.error?.("Aura magique de Nystul : DialogV2 indisponible.");
+    return null;
+  }
+
   const candidates = add2eBuildObjectCandidates(casterActor);
   const formId = `add2e-aura-nystul-${foundry?.utils?.randomID?.(8) ?? Date.now()}`;
   const options = candidates.map((c, index) => `<option value="${index}">${add2eHtmlEscape(c.label)}</option>`).join("");
@@ -246,9 +268,11 @@ async function add2eAskAuraNystul(casterActor) {
   const content = `
     <form id="${formId}" class="add2e-dialog add2e-aura-nystul-dialog">
       <p style="margin:0 0 8px 0;"><b>Objet touché</b></p>
+      <p style="margin:0 0 8px 0;font-size:12px;line-height:1.35;">Le symbole ✨ indique qu'une aura de Nystul est déjà active sur l'objet. Relancer le sort sur cet objet remplace l'aura existante.</p>
+
       <div class="form-group">
         <label>Objet porté ou cible du sort</label>
-        <select name="candidateIndex">${options}</select>
+        <select name="candidateIndex" style="width:100%;">${options}</select>
       </div>
 
       <div class="form-group">
@@ -303,53 +327,24 @@ async function add2eAskAuraNystul(casterActor) {
     };
   };
 
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (DialogV2?.wait) {
-    return await DialogV2.wait({
-      window: { title: ADD2E_SORT_CONFIG.name },
-      content,
-      modal: true,
-      rejectClose: false,
-      buttons: [
-        {
-          action: "cast",
-          label: "Lancer",
-          default: true,
-          callback: (event, button, dialog) => readChoice(add2eDialogForm(button, dialog, formId))
-        },
-        {
-          action: "cancel",
-          label: "Annuler",
-          callback: () => null
-        }
-      ]
-    });
-  }
-
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = value => {
-      if (done) return;
-      done = true;
-      resolve(value);
-    };
-
-    new Dialog({
-      title: ADD2E_SORT_CONFIG.name,
-      content,
-      buttons: {
-        cast: {
-          label: "Lancer",
-          callback: html => finish(readChoice(html[0]?.querySelector?.("form") ?? document.getElementById(formId)))
-        },
-        cancel: {
-          label: "Annuler",
-          callback: () => finish(null)
-        }
+  return await DialogV2.wait({
+    window: { title: ADD2E_SORT_CONFIG.name },
+    content,
+    modal: true,
+    rejectClose: false,
+    buttons: [
+      {
+        action: "cast",
+        label: "Lancer",
+        default: true,
+        callback: (event, button, dialog) => readChoice(add2eDialogForm(button, dialog, formId))
       },
-      default: "cast",
-      close: () => finish(null)
-    }).render(true);
+      {
+        action: "cancel",
+        label: "Annuler",
+        callback: () => null
+      }
+    ]
   });
 }
 
@@ -423,6 +418,45 @@ function add2eBuildAuraEffect({ casterActor, choice, level }) {
   };
 }
 
+function add2eExistingAuraEffectsForChoice(choice) {
+  const targetActor = choice?.carrierActor ?? ADD2E_ACTOR;
+  if (!targetActor) return [];
+  const item = choice?.item ?? null;
+  const objectLabel = choice?.objectLabel ?? "";
+
+  return Array.from(targetActor.effects ?? [])
+    .filter(add2eEffectIsNystulAura)
+    .filter(effect => {
+      if (item && add2eEffectMatchesItem(effect, item)) return true;
+      if (!item && objectLabel && add2eEffectMatchesManualObject(effect, objectLabel)) return true;
+      const spell = effect.flags?.add2e?.spell ?? effect.getFlag?.("add2e", "spell") ?? {};
+      return item && add2eNormalize(spell?.objectName) === "objet_touche";
+    });
+}
+
+async function add2eDeleteExistingAuraEffects(choice) {
+  const targetActor = choice?.carrierActor ?? ADD2E_ACTOR;
+  if (!targetActor) return false;
+
+  const ids = add2eExistingAuraEffectsForChoice(choice).map(e => e.id).filter(Boolean);
+  if (!ids.length) return false;
+
+  if (game.user?.isGM || targetActor.isOwner) {
+    await targetActor.deleteEmbeddedDocuments("ActiveEffect", ids);
+    return true;
+  }
+
+  add2eEmitGmOperation("deleteActiveEffects", {
+    actorUuid: targetActor.uuid,
+    actorId: targetActor.id,
+    effectIds: ids,
+    tags: ["sort:aura_magique_de_nystul"],
+    names: [ADD2E_SORT_CONFIG.name]
+  });
+
+  return true;
+}
+
 async function add2eApplyAuraEffect(choice, effectData) {
   const targetActor = choice?.carrierActor ?? ADD2E_ACTOR;
   if (!targetActor || !effectData) return false;
@@ -448,7 +482,7 @@ async function add2eApplyAuraEffect(choice, effectData) {
   return true;
 }
 
-async function add2eChatAuraNystul(actorDoc, choice, level) {
+async function add2eChatAuraNystul(actorDoc, choice, level, replaced) {
   const casterToken = add2eGetCasterToken(actorDoc);
   const casterName = actorDoc?.name ?? casterToken?.name ?? "Magicien";
   const casterImg = casterToken?.document?.texture?.src ?? actorDoc?.img ?? "icons/svg/mystery-man.svg";
@@ -458,7 +492,7 @@ async function add2eChatAuraNystul(actorDoc, choice, level) {
   const schoolLabel = add2eSchoolLabel(choice.apparentSchool);
   const objectLabel = choice.objectLabel || "Objet touché";
   const carriedBy = choice.carrierActor?.name ? ` porté par ${choice.carrierActor.name}` : "";
-  const already = choice.auraAlreadyActive ? `<p style="margin:.35em 0;font-size:13px;line-height:1.35;">Une aura précédente était déjà perceptible sur cet objet.</p>` : "";
+  const already = replaced ? `<p style="margin:.35em 0;font-size:13px;line-height:1.35;">L'aura précédente de cet objet se dissipe et laisse place à la nouvelle empreinte.</p>` : "";
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: actorDoc, token: casterToken }),
@@ -511,6 +545,7 @@ if (!choice) {
 
 const level = add2eCasterLevel(ADD2E_ACTOR);
 const effectData = add2eBuildAuraEffect({ casterActor: ADD2E_ACTOR, choice, level });
+const replaced = await add2eDeleteExistingAuraEffects(choice);
 const effectRequested = await add2eApplyAuraEffect(choice, effectData);
 
 console.log(`${ADD2E_ONUSE_TAG}[START]`, {
@@ -521,16 +556,18 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   objectLabel: choice.objectLabel,
   item: choice.item?.name ?? null,
   auraAlreadyActive: choice.auraAlreadyActive,
+  replacedExistingAura: replaced,
   auraType: choice.auraType,
   apparentSchool: choice.apparentSchool,
   effectRequested
 });
 
-await add2eChatAuraNystul(ADD2E_ACTOR, choice, level);
+await add2eChatAuraNystul(ADD2E_ACTOR, choice, level, replaced);
 
 console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   consumedByDispatcher: true,
   objectLabel: choice.objectLabel,
+  replacedExistingAura: replaced,
   effectRequested,
   durationDays: Math.max(1, level)
 });
