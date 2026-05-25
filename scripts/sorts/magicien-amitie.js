@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Amitié
-// Version : 2026-05-25-magicien-amitie-charisme-socket-v1
+// Version : 2026-05-25-magicien-amitie-zone-sauvegardes-v1
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -51,8 +51,28 @@ function add2eGetCasterToken(actorDoc) {
     ?? null;
 }
 
+function add2eAreaRadiusInches(level) {
+  return 1 + Math.max(1, level);
+}
+
 function add2eAreaRadiusText(level) {
-  return `${1 + Math.max(1, level)}\"`;
+  return `${add2eAreaRadiusInches(level)}\"`;
+}
+
+function add2eSceneUnitPerInch() {
+  const units = String(canvas?.scene?.grid?.units ?? "").toLowerCase();
+  if (units.includes("m")) return 3;
+  return 10;
+}
+
+function add2eRadiusSceneDistance(level) {
+  return add2eAreaRadiusInches(level) * add2eSceneUnitPerInch();
+}
+
+function add2eRadiusPixels(level) {
+  const gridDistance = Number(canvas?.scene?.grid?.distance) || 5;
+  const gridSize = Number(canvas?.grid?.size) || Number(canvas?.scene?.grid?.size) || 100;
+  return (add2eRadiusSceneDistance(level) / gridDistance) * gridSize;
 }
 
 async function add2eRollFormula(formula) {
@@ -68,60 +88,165 @@ function add2eEffectDuration(level) {
   };
 }
 
-async function add2eAskAmitie() {
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = value => {
-      if (done) return;
-      done = true;
-      resolve(value);
-    };
-
-    new Dialog({
-      title: ADD2E_SORT_CONFIG.name,
-      content: `
-        <form class="add2e-dialog add2e-amitie-dialog">
-          <p><b>${add2eHtmlEscape(ADD2E_SORT_CONFIG.name)}</b></p>
-          <p>Indique le résultat général de la réaction autour du magicien.</p>
-
-          <div class="form-group">
-            <label>Réaction dominante</label>
-            <select name="mode">
-              <option value="favorable">Les créatures sont favorablement impressionnées</option>
-              <option value="irritated">Les créatures résistent et se montrent irritées</option>
-              <option value="neutral">Résolution manuelle par le MD</option>
-            </select>
-          </div>
-        </form>
-      `,
-      buttons: {
-        cast: {
-          label: "Lancer",
-          callback: html => finish({
-            mode: String(html.find("[name='mode']").val() ?? "favorable")
-          })
-        },
-        cancel: {
-          label: "Annuler",
-          callback: () => finish(null)
-        }
-      },
-      default: "cast",
-      close: () => finish(null)
-    }).render(true);
-  });
+function add2eTokenCenter(tokenDocOrPlaceable) {
+  const placeable = tokenDocOrPlaceable?.object ?? tokenDocOrPlaceable;
+  if (placeable?.center) return { x: Number(placeable.center.x), y: Number(placeable.center.y) };
+  const doc = tokenDocOrPlaceable?.document ?? tokenDocOrPlaceable;
+  const gridSize = Number(canvas?.grid?.size) || Number(canvas?.scene?.grid?.size) || 100;
+  const width = Number(doc?.width) || 1;
+  const height = Number(doc?.height) || 1;
+  return {
+    x: Number(doc?.x ?? 0) + (width * gridSize) / 2,
+    y: Number(doc?.y ?? 0) + (height * gridSize) / 2
+  };
 }
 
-function add2eBuildAmitieEffect({ choice, level, roll }) {
-  if (!choice || choice.mode === "neutral" || !roll) return null;
+async function add2eChooseZone(level, casterToken) {
+  if (!globalThis.warpgate?.crosshairs?.show) {
+    ui.notifications?.warn?.("Amitié nécessite Warp Gate pour choisir la zone.");
+    console.warn(`${ADD2E_ONUSE_TAG}[NO_WARPGATE] Warp Gate ou crosshairs indisponible.`);
+    return null;
+  }
 
-  const favorable = choice.mode === "favorable";
-  const amount = Math.max(1, Number(roll.total) || 1);
-  const signedAmount = favorable ? amount : -amount;
-  const mode = foundry?.CONST?.ACTIVE_EFFECT_MODES?.ADD ?? CONST?.ACTIVE_EFFECT_MODES?.ADD ?? 2;
+  const gridDistance = Number(canvas?.scene?.grid?.distance) || 5;
+  const diameterGridSpaces = Math.max(1, (add2eRadiusSceneDistance(level) * 2) / gridDistance);
+  const casterCenter = casterToken ? add2eTokenCenter(casterToken) : null;
+
+  const location = await warpgate.crosshairs.show({
+    size: diameterGridSpaces,
+    icon: ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.imgFallback,
+    label: `${ADD2E_SORT_CONFIG.name} — rayon ${add2eAreaRadiusText(level)}`,
+    x: casterCenter?.x,
+    y: casterCenter?.y
+  });
+
+  if (!location || location.cancelled) return null;
+  return { x: Number(location.x), y: Number(location.y) };
+}
+
+function add2eTokensInZone(center, level, casterToken) {
+  const radiusPx = add2eRadiusPixels(level);
+  const casterId = casterToken?.id ?? casterToken?.document?.id ?? null;
+  return (canvas?.tokens?.placeables ?? [])
+    .filter(t => t?.actor && t.id !== casterId)
+    .filter(t => {
+      const c = add2eTokenCenter(t);
+      const dx = c.x - center.x;
+      const dy = c.y - center.y;
+      return Math.sqrt(dx * dx + dy * dy) <= radiusPx;
+    });
+}
+
+function add2eReadNumber(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    if (typeof value === "object") {
+      const nested = add2eReadNumber(value.value, value.valeur, value.total, value.current, value.max);
+      if (Number.isFinite(nested)) return nested;
+      continue;
+    }
+    const match = String(value).replace(",", ".").match(/-?\d+(?:\.\d+)?/);
+    if (!match) continue;
+    const n = Number(match[0]);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function add2eReadSaveVsSpells(actorDoc) {
+  const s = actorDoc?.system ?? {};
+  const direct = add2eReadNumber(
+    s.sauvegarde_sortileges,
+    s.sauvegarde_sortilege,
+    s.saveSorts,
+    s.saveSpells,
+    s.saves?.sorts,
+    s.saves?.spells,
+    s.savingThrows?.sorts,
+    s.savingThrows?.spells,
+    s.sauvegardes?.sorts,
+    s.sauvegardes?.sortileges
+  );
+  if (Number.isFinite(direct)) return direct;
+
+  if (Array.isArray(s.sauvegardes) && s.sauvegardes.length) {
+    const named = s.sauvegardes.find(x => /sort|spell/i.test(String(x?.type ?? x?.key ?? x?.name ?? x?.label ?? x?.nom ?? "")));
+    const namedValue = add2eReadNumber(named?.value, named?.valeur, named?.total, named?.score);
+    if (Number.isFinite(namedValue)) return namedValue;
+
+    const nums = s.sauvegardes.map(v => add2eReadNumber(v)).filter(Number.isFinite);
+    if (nums.length >= 5) return nums[4];
+    if (nums.length) return nums[nums.length - 1];
+  }
+
+  if (Array.isArray(s.savingThrows) && s.savingThrows.length) {
+    const named = s.savingThrows.find(x => /sort|spell/i.test(String(x?.type ?? x?.key ?? x?.name ?? x?.label ?? x?.nom ?? "")));
+    const namedValue = add2eReadNumber(named?.value, named?.valeur, named?.total, named?.score);
+    if (Number.isFinite(namedValue)) return namedValue;
+
+    const nums = s.savingThrows.map(v => add2eReadNumber(v)).filter(Number.isFinite);
+    if (nums.length >= 5) return nums[4];
+    if (nums.length) return nums[nums.length - 1];
+  }
+
+  for (const raw of [s.savingThrows, s.sauvegardes]) {
+    if (typeof raw !== "string") continue;
+    const labeled = raw.match(/(?:sortil[eè]ges?|sorts?|spells?)\D*(\d+)/i);
+    if (labeled) return Number(labeled[1]);
+    const nums = raw.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
+    if (nums.length >= 5) return nums[4];
+    if (nums.length) return nums[nums.length - 1];
+  }
+
+  return null;
+}
+
+function add2eSaveBonus(actorDoc) {
+  try {
+    const analyzed = globalThis.Add2eEffectsEngine?.analyze?.(actorDoc, {
+      type: "save",
+      vsType: "sort",
+      spell: ADD2E_SORT_CONFIG.slug
+    });
+    return Number(analyzed?.bonus_save) || 0;
+  } catch (_err) {
+    return 0;
+  }
+}
+
+function add2eIsAnimalIntelligenceOrLess(actorDoc) {
+  const s = actorDoc?.system ?? {};
+  const n = add2eReadNumber(s.intelligence, s.int, s.intel, s.mental?.intelligence);
+  if (Number.isFinite(n)) return n <= 2;
+  const text = String(s.intelligence ?? s.intelligenceText ?? s.intelligence_monstre ?? s.description ?? "").toLowerCase();
+  return /animal|non.?intelligent|semi.?intelligent|faible/.test(text);
+}
+
+async function add2eRollTargetSave(actorDoc) {
+  const saveTarget = add2eReadSaveVsSpells(actorDoc);
+  const bonus = add2eSaveBonus(actorDoc);
+  const roll = await add2eRollFormula("1d20");
+  const total = Number(roll.total) + bonus;
+  const hasSave = Number.isFinite(saveTarget);
+  const success = hasSave ? total >= saveTarget : null;
+  return {
+    roll,
+    saveTarget,
+    bonus,
+    total,
+    hasSave,
+    success
+  };
+}
+
+function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modifier, saveData }) {
+  const favorable = choice === "favorable";
+  const signed = favorable ? Math.abs(modifier) : -Math.abs(modifier);
+  const mode = foundry?.CONST?.ACTIVE_EFFECT_MODES?.OVERRIDE ?? CONST?.ACTIVE_EFFECT_MODES?.OVERRIDE ?? 5;
+  const casterSlug = String(casterActor?.id ?? "caster").replace(/[^a-zA-Z0-9_\-]/g, "_");
 
   return {
-    name: favorable ? "Amitié — charisme renforcé" : "Amitié — charisme troublé",
+    name: favorable ? `Amitié — impression favorable` : `Amitié — irritation`,
     img: ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.imgFallback,
     disabled: false,
     transfer: false,
@@ -129,16 +254,16 @@ function add2eBuildAmitieEffect({ choice, level, roll }) {
     system: {},
     changes: [
       {
-        key: "system.charisme",
+        key: `flags.add2e.amitie.${casterSlug}.charismeApparent`,
         mode,
-        value: String(signedAmount),
+        value: String(signed),
         priority: 20
       }
     ],
     duration: add2eEffectDuration(level),
     description: favorable
-      ? `Amitié : charisme modifié de +${amount} pendant ${Math.max(1, level)} round${Math.max(1, level) > 1 ? "s" : ""}.`
-      : `Amitié : charisme modifié de -${amount} pendant ${Math.max(1, level)} round${Math.max(1, level) > 1 ? "s" : ""}.`,
+      ? `${targetToken.name} est favorablement impressionné par ${casterActor?.name ?? "le magicien"}.`
+      : `${targetToken.name} se montre irrité par la présence de ${casterActor?.name ?? "le magicien"}.`,
     flags: {
       add2e: {
         tags: [
@@ -149,9 +274,10 @@ function add2eBuildAmitieEffect({ choice, level, roll }) {
           "ecole:enchantement_charme",
           "type:charme",
           "type:social",
-          "bonus:charisme",
+          `caster:${casterActor?.id ?? ""}`,
+          `caster_uuid:${casterActor?.uuid ?? ""}`,
           favorable ? "reaction:favorable" : "reaction:irritee",
-          favorable ? `bonus_charisme:${amount}` : `malus_charisme:${amount}`,
+          favorable ? `charisme_apparent_lanceur:+${Math.abs(modifier)}` : `charisme_apparent_lanceur:-${Math.abs(modifier)}`,
           "duree:1_round_par_niveau",
           `duree_rounds:${Math.max(1, level)}`,
           "jet_sauvegarde:special"
@@ -161,13 +287,20 @@ function add2eBuildAmitieEffect({ choice, level, roll }) {
           name: ADD2E_SORT_CONFIG.name,
           level: ADD2E_SORT_CONFIG.level,
           school: ADD2E_SORT_CONFIG.school,
-          mode: choice.mode,
-          charismaModifier: signedAmount,
-          rollFormula: favorable ? "2d4" : "1d4",
-          rollTotal: amount,
+          casterId: casterActor?.id ?? null,
+          casterUuid: casterActor?.uuid ?? null,
+          casterName: casterActor?.name ?? "",
+          targetTokenId: targetToken?.id ?? null,
+          targetActorUuid: targetToken?.actor?.uuid ?? null,
+          reaction: favorable ? "favorable" : "irritated",
+          charismaApparentModifier: signed,
+          saveRoll: saveData?.roll?.total ?? null,
+          saveBonus: saveData?.bonus ?? 0,
+          saveTotal: saveData?.total ?? null,
+          saveTarget: saveData?.saveTarget ?? null,
           casterLevel: level,
           durationRounds: Math.max(1, level),
-          areaRadiusInches: 1 + Math.max(1, level),
+          areaRadiusInches: add2eAreaRadiusInches(level),
           sourceItemId: ADD2E_ITEM?.id ?? null,
           sourceItemUuid: ADD2E_ITEM?.uuid ?? null
         }
@@ -176,20 +309,20 @@ function add2eBuildAmitieEffect({ choice, level, roll }) {
   };
 }
 
-async function add2eApplyEffectOnCaster(actorDoc, effectData) {
-  if (!actorDoc || !effectData) return false;
+async function add2eApplyEffectOnTarget(targetToken, effectData) {
+  if (!targetToken?.actor || !effectData) return false;
 
   const payload = {
-    actorUuid: actorDoc.uuid,
-    actorId: actorDoc.id,
+    actorUuid: targetToken.actor.uuid,
+    actorId: targetToken.actor.id,
     sceneId: canvas?.scene?.id ?? null,
-    tokenId: add2eGetCasterToken(actorDoc)?.document?.id ?? add2eGetCasterToken(actorDoc)?.id ?? null,
+    tokenId: targetToken.document?.id ?? targetToken.id ?? null,
     effectData
   };
 
-  if (game.user?.isGM || actorDoc.isOwner) {
+  if (game.user?.isGM || targetToken.actor.isOwner) {
     try {
-      await actorDoc.createEmbeddedDocuments("ActiveEffect", [foundry.utils.duplicate(effectData)]);
+      await targetToken.actor.createEmbeddedDocuments("ActiveEffect", [foundry.utils.duplicate(effectData)]);
       return true;
     } catch (err) {
       console.warn(`${ADD2E_ONUSE_TAG}[DIRECT_EFFECT_FAILED] Passage par relais MJ.`, err);
@@ -205,19 +338,114 @@ async function add2eApplyEffectOnCaster(actorDoc, effectData) {
   return true;
 }
 
-async function add2eChatAmitie(actorDoc, choice, roll) {
+async function add2eResolveAmitieTarget(targetToken, casterActor, level) {
+  if (!targetToken?.actor) return null;
+
+  if (add2eIsAnimalIntelligenceOrLess(targetToken.actor)) {
+    return {
+      token: targetToken,
+      actor: targetToken.actor,
+      status: "ignored",
+      label: "non affecté",
+      modifier: 0,
+      saveData: null,
+      effectRequested: false
+    };
+  }
+
+  const saveData = await add2eRollTargetSave(targetToken.actor);
+
+  if (!saveData.hasSave) {
+    return {
+      token: targetToken,
+      actor: targetToken.actor,
+      status: "manual",
+      label: "à résoudre par le MD",
+      modifier: 0,
+      saveData,
+      effectRequested: false
+    };
+  }
+
+  if (saveData.success) {
+    const modRoll = await add2eRollFormula("1d4");
+    const effectData = add2eBuildTargetEffect({
+      targetToken,
+      casterActor,
+      choice: "irritated",
+      level,
+      modifier: Number(modRoll.total) || 1,
+      saveData
+    });
+    const effectRequested = await add2eApplyEffectOnTarget(targetToken, effectData);
+    return {
+      token: targetToken,
+      actor: targetToken.actor,
+      status: "success",
+      label: "résiste et s’irrite",
+      modifier: -Math.abs(Number(modRoll.total) || 1),
+      saveData,
+      effectRequested
+    };
+  }
+
+  const modRoll = await add2eRollFormula("2d4");
+  const effectData = add2eBuildTargetEffect({
+    targetToken,
+    casterActor,
+    choice: "favorable",
+    level,
+    modifier: Number(modRoll.total) || 1,
+    saveData
+  });
+  const effectRequested = await add2eApplyEffectOnTarget(targetToken, effectData);
+
+  return {
+    token: targetToken,
+    actor: targetToken.actor,
+    status: "failure",
+    label: "favorable",
+    modifier: Math.abs(Number(modRoll.total) || 1),
+    saveData,
+    effectRequested
+  };
+}
+
+function add2eResultLine(result) {
+  const name = add2eHtmlEscape(result?.token?.name ?? result?.actor?.name ?? "Créature");
+  if (result.status === "ignored") {
+    return `<tr><td>${name}</td><td colspan="3">Non affecté</td></tr>`;
+  }
+  if (result.status === "manual") {
+    const rollText = result.saveData?.roll?.total ? `Jet ${result.saveData.roll.total}` : "Jet effectué";
+    return `<tr><td>${name}</td><td>${add2eHtmlEscape(rollText)}</td><td>—</td><td>À résoudre</td></tr>`;
+  }
+
+  const total = Number(result.saveData?.total ?? result.saveData?.roll?.total ?? 0);
+  const bonus = Number(result.saveData?.bonus ?? 0);
+  const seuil = result.saveData?.saveTarget;
+  const mod = Number(result.modifier) || 0;
+  const modText = mod > 0 ? `+${mod}` : `${mod}`;
+
+  return `
+    <tr>
+      <td>${name}</td>
+      <td>${add2eHtmlEscape(String(total))}${bonus ? ` <small>(${bonus > 0 ? "+" : ""}${bonus})</small>` : ""}</td>
+      <td>${add2eHtmlEscape(String(seuil))}</td>
+      <td>${add2eHtmlEscape(result.label)} <b>${add2eHtmlEscape(modText)}</b></td>
+    </tr>`;
+}
+
+async function add2eChatAmitie(actorDoc, center, level, results) {
   const casterToken = add2eGetCasterToken(actorDoc);
   const casterName = actorDoc?.name ?? casterToken?.name ?? "Magicien";
   const casterImg = casterToken?.document?.texture?.src ?? actorDoc?.img ?? "icons/svg/mystery-man.svg";
   const spellImg = ADD2E_ITEM?.img ?? ADD2E_SORT_CONFIG.imgFallback;
-  const level = add2eCasterLevel(actorDoc);
   const durationRounds = Math.max(1, level);
   const radiusText = add2eAreaRadiusText(level);
-
-  let outcome = "L’enchantement se répand autour du magicien.";
-  if (choice?.mode === "favorable" && roll) outcome = `Les paroles du magicien gagnent en chaleur et en assurance. Son charisme apparent augmente de ${add2eHtmlEscape(String(roll.total))}.`;
-  if (choice?.mode === "irritated" && roll) outcome = `Le charme se heurte à une résistance hostile. Son charisme apparent diminue de ${add2eHtmlEscape(String(roll.total))}.`;
-  if (choice?.mode === "neutral") outcome = "L’enchantement trouble les réactions autour du magicien ; le MD en détermine les conséquences.";
+  const tableRows = results.length
+    ? results.map(add2eResultLine).join("\n")
+    : `<tr><td colspan="4">Aucune créature n’est prise dans l’enchantement.</td></tr>`;
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: actorDoc, token: casterToken }),
@@ -235,17 +463,25 @@ async function add2eChatAmitie(actorDoc, choice, roll) {
         </div>
 
         <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">Sort lancé</div>
-            <div style="font-size:13px;line-height:1.35;text-align:left;">
-              <p style="margin:.25em 0;">Le visage du magicien se pare de signes colorés et son aura devient plus marquante.</p>
-              <p style="margin:.25em 0;">${outcome}</p>
-              <p style="margin:.25em 0;"><b>Rayon :</b> ${add2eHtmlEscape(radiusText)} autour du magicien.</p>
-              <p style="margin:.25em 0;"><b>Durée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.durationText)} (${durationRounds} round${durationRounds > 1 ? "s" : ""}).</p>
-            </div>
+          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;">
+            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Enchantement social</div>
+            <p style="margin:.35em 0;font-size:13px;line-height:1.35;">Le visage du magicien se pare de signes colorés et son aura devient plus marquante.</p>
+            <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Rayon :</b> ${add2eHtmlEscape(radiusText)} — <b>Durée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.durationText)} (${durationRounds} round${durationRounds > 1 ? "s" : ""}).</p>
           </div>
 
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
+          <table style="width:100%;border-collapse:collapse;background:#fffaff;border:1px solid #8e63c7;font-size:12px;">
+            <thead>
+              <tr style="background:#e8d9ff;color:#2d2144;">
+                <th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Créature</th>
+                <th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Jet</th>
+                <th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Seuil</th>
+                <th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Réaction</th>
+              </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+
+          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;margin-top:7px;">
             <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
             <div style="margin-top:5px;font-size:12px;line-height:1.35;">
               <p><b>École :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.school)} — <b>Portée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.rangeText)}.</p>
@@ -259,12 +495,6 @@ async function add2eChatAmitie(actorDoc, choice, roll) {
   });
 }
 
-const choice = await add2eAskAmitie();
-if (!choice) {
-  console.log(`${ADD2E_ONUSE_TAG}[CANCEL] Sort annulé : remboursement du slot mémorisé par le dispatcher.`);
-  return false;
-}
-
 if (!ADD2E_ACTOR) {
   ui.notifications?.warn?.("Amitié : acteur lanceur introuvable.");
   console.warn(`${ADD2E_ONUSE_TAG}[NO_ACTOR] Acteur lanceur introuvable.`);
@@ -272,32 +502,44 @@ if (!ADD2E_ACTOR) {
 }
 
 const level = add2eCasterLevel(ADD2E_ACTOR);
-let roll = null;
-if (choice.mode === "favorable") roll = await add2eRollFormula("2d4");
-if (choice.mode === "irritated") roll = await add2eRollFormula("1d4");
+const casterToken = add2eGetCasterToken(ADD2E_ACTOR);
+const zoneCenter = await add2eChooseZone(level, casterToken);
+if (!zoneCenter) {
+  console.log(`${ADD2E_ONUSE_TAG}[CANCEL] Zone annulée : remboursement du slot mémorisé par le dispatcher.`);
+  return false;
+}
 
-const effectData = add2eBuildAmitieEffect({ choice, level, roll });
-const effectRequested = await add2eApplyEffectOnCaster(ADD2E_ACTOR, effectData);
+const targetTokens = add2eTokensInZone(zoneCenter, level, casterToken);
+const results = [];
 
 console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   actor: ADD2E_ACTOR?.name,
   sort: ADD2E_ITEM?.name,
   level,
-  choice,
-  roll: roll?.total ?? null,
-  effectRequested,
-  viaSocketIfNeeded: true
+  zoneCenter,
+  radiusInches: add2eAreaRadiusInches(level),
+  radiusSceneDistance: add2eRadiusSceneDistance(level),
+  targets: targetTokens.map(t => ({ name: t.name, actor: t.actor?.name }))
 });
 
-await add2eChatAmitie(ADD2E_ACTOR, choice, roll);
+for (const targetToken of targetTokens) {
+  const result = await add2eResolveAmitieTarget(targetToken, ADD2E_ACTOR, level);
+  if (result) results.push(result);
+}
+
+await add2eChatAmitie(ADD2E_ACTOR, zoneCenter, level, results);
 
 console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   consumedByDispatcher: true,
-  effectRequested,
-  mode: choice.mode,
-  roll: roll?.total ?? null,
-  durationRounds: Math.max(1, level),
-  areaRadiusInches: 1 + Math.max(1, level)
+  targetCount: targetTokens.length,
+  results: results.map(r => ({
+    token: r.token?.name,
+    status: r.status,
+    saveTotal: r.saveData?.total ?? null,
+    saveTarget: r.saveData?.saveTarget ?? null,
+    modifier: r.modifier,
+    effectRequested: r.effectRequested
+  }))
 });
 
 return true;
