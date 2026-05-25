@@ -1,16 +1,16 @@
 // ADD2E — onUse Magicien : Amitié
-// Version : 2026-05-25-magicien-amitie-v1
+// Version : 2026-05-25-magicien-amitie-charisme-socket-v1
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
-// - return true  => sort réellement lancé, le slot mémorisé réservé est consommé ;
-// - return false => annulation / cible invalide, le slot mémorisé réservé est remboursé.
+// - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
+// - return false => annulation technique, le slot mémorisé réservé est remboursé.
 // La consommation du slot n'est PAS faite ici : elle est centralisée dans add2eCastSpell.
 
 const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][AMITIE]";
 const ADD2E_ACTOR = typeof actor !== "undefined" ? actor : null;
 const ADD2E_ITEM = typeof item !== "undefined" ? item : null;
-const ADD2E_ARGS = typeof args !== "undefined" ? args : [];
 const ADD2E_TOKEN = typeof token !== "undefined" ? token : null;
+const ADD2E_ARGS = typeof args !== "undefined" ? args : [];
 
 const ADD2E_SORT_CONFIG = {
   name: "Amitié",
@@ -51,26 +51,21 @@ function add2eGetCasterToken(actorDoc) {
     ?? null;
 }
 
-function add2eGetTargets() {
-  return Array.from(game.user?.targets ?? []);
+function add2eAreaRadiusText(level) {
+  return `${1 + Math.max(1, level)}\"`;
 }
 
-function add2eDuration(level) {
+async function add2eRollFormula(formula) {
+  return await new Roll(formula).evaluate({ async: true });
+}
+
+function add2eEffectDuration(level) {
   return {
     rounds: Math.max(1, level),
     startRound: game.combat?.round ?? null,
     startTime: game.time?.worldTime ?? null,
     combat: game.combat?.id ?? null
   };
-}
-
-async function add2eRollFormula(formula) {
-  const roll = await new Roll(formula).evaluate();
-  return roll;
-}
-
-function add2eAreaRadiusText(level) {
-  return `${1 + Math.max(1, level)}\"`;
 }
 
 async function add2eAskAmitie() {
@@ -86,33 +81,24 @@ async function add2eAskAmitie() {
       title: ADD2E_SORT_CONFIG.name,
       content: `
         <form class="add2e-dialog add2e-amitie-dialog">
-          <p><b>${add2eHtmlEscape(ADD2E_SORT_CONFIG.name)}</b> modifie temporairement la réaction sociale envers le magicien.</p>
+          <p><b>${add2eHtmlEscape(ADD2E_SORT_CONFIG.name)}</b></p>
+          <p>Indique le résultat général de la réaction autour du magicien.</p>
 
           <div class="form-group">
-            <label>Résultat des jets de protection</label>
+            <label>Réaction dominante</label>
             <select name="mode">
-              <option value="favorable">Créatures affectées : jets ratés, réaction favorable</option>
-              <option value="irritated">Créatures résistantes : jets réussis, réaction irritée</option>
-              <option value="mixed">Résolution mixte / note MD uniquement</option>
+              <option value="favorable">Les créatures sont favorablement impressionnées</option>
+              <option value="irritated">Les créatures résistent et se montrent irritées</option>
+              <option value="neutral">Résolution manuelle par le MD</option>
             </select>
           </div>
-
-          <div class="form-group">
-            <label>Note MD / contexte social</label>
-            <textarea name="note" rows="3" placeholder="Ex. gardes de la porte, négociation avec un marchand, foule dans l’auberge..."></textarea>
-          </div>
-
-          <p style="font-size:12px;opacity:.85;margin-top:6px;">
-            Le sort n'affecte pas les créatures d'intelligence animale ou inférieure.
-          </p>
         </form>
       `,
       buttons: {
         cast: {
           label: "Lancer",
           callback: html => finish({
-            mode: String(html.find("[name='mode']").val() ?? "favorable"),
-            note: String(html.find("[name='note']").val() ?? "").trim()
+            mode: String(html.find("[name='mode']").val() ?? "favorable")
           })
         },
         cancel: {
@@ -126,147 +112,112 @@ async function add2eAskAmitie() {
   });
 }
 
-async function add2eApplyCasterEffect(actorDoc, choice, level, roll) {
-  if (!actorDoc || choice.mode === "mixed" || !roll) return false;
+function add2eBuildAmitieEffect({ choice, level, roll }) {
+  if (!choice || choice.mode === "neutral" || !roll) return null;
 
-  const durationRounds = Math.max(1, level);
   const favorable = choice.mode === "favorable";
-  const mod = Number(roll.total ?? 0) || 0;
-  const signedMod = favorable ? mod : -mod;
-  const effectName = favorable ? "Amitié — Charisme augmenté" : "Amitié — Charisme diminué";
-  const reactionTag = favorable ? "reaction:favorable" : "reaction:irritee";
-  const saveTag = favorable ? "jet_sauvegarde:echec" : "jet_sauvegarde:reussite";
+  const amount = Math.max(1, Number(roll.total) || 1);
+  const signedAmount = favorable ? amount : -amount;
+  const mode = foundry?.CONST?.ACTIVE_EFFECT_MODES?.ADD ?? CONST?.ACTIVE_EFFECT_MODES?.ADD ?? 2;
 
-  const tags = [
-    "classe:magicien",
-    "liste:magicien",
-    "niveau:1",
-    "sort:amitie",
-    "ecole:enchantement_charme",
-    "type:charme",
-    "type:social",
-    "influence:reaction",
-    reactionTag,
-    saveTag,
-    `mod_charisme:${signedMod}`,
-    favorable ? `bonus_charisme:${mod}` : `malus_charisme:${mod}`,
-    `zone_rayon_pouces:${1 + Math.max(1, level)}`,
-    "duree:1_round_par_niveau",
-    `duree_rounds:${durationRounds}`,
-    "jet_sauvegarde:special",
-    "ignore:intelligence_animale_ou_moins",
-    "composante:materielle_visage_craie_suie_vermillon",
-    "memorisation:consommation_dispatcher"
-  ];
-
-  await actorDoc.createEmbeddedDocuments("ActiveEffect", [{
-    name: effectName,
+  return {
+    name: favorable ? "Amitié — charisme renforcé" : "Amitié — charisme troublé",
     img: ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.imgFallback,
     disabled: false,
     transfer: false,
     type: "base",
     system: {},
-    changes: [],
-    duration: add2eDuration(level),
-    description: [
-      favorable
-        ? `Amitié : charisme apparent augmenté de ${mod} point${mod > 1 ? "s" : ""} envers les créatures ayant raté leur jet.`
-        : `Amitié : charisme apparent diminué de ${mod} point${mod > 1 ? "s" : ""} envers les créatures ayant réussi leur jet.`,
-      `Durée : ${ADD2E_SORT_CONFIG.durationText}.`,
-      choice.note ? `Note : ${choice.note}` : ""
-    ].filter(Boolean).join("\n"),
+    changes: [
+      {
+        key: "system.charisme",
+        mode,
+        value: String(signedAmount),
+        priority: 20
+      }
+    ],
+    duration: add2eEffectDuration(level),
+    description: favorable
+      ? `Amitié : charisme modifié de +${amount} pendant ${Math.max(1, level)} round${Math.max(1, level) > 1 ? "s" : ""}.`
+      : `Amitié : charisme modifié de -${amount} pendant ${Math.max(1, level)} round${Math.max(1, level) > 1 ? "s" : ""}.`,
     flags: {
       add2e: {
-        tags,
+        tags: [
+          "classe:magicien",
+          "liste:magicien",
+          "niveau:1",
+          "sort:amitie",
+          "ecole:enchantement_charme",
+          "type:charme",
+          "type:social",
+          "bonus:charisme",
+          favorable ? "reaction:favorable" : "reaction:irritee",
+          favorable ? `bonus_charisme:${amount}` : `malus_charisme:${amount}`,
+          "duree:1_round_par_niveau",
+          `duree_rounds:${Math.max(1, level)}`,
+          "jet_sauvegarde:special"
+        ],
         spell: {
           slug: ADD2E_SORT_CONFIG.slug,
           name: ADD2E_SORT_CONFIG.name,
           level: ADD2E_SORT_CONFIG.level,
           school: ADD2E_SORT_CONFIG.school,
           mode: choice.mode,
-          charismaModifier: signedMod,
+          charismaModifier: signedAmount,
+          rollFormula: favorable ? "2d4" : "1d4",
+          rollTotal: amount,
           casterLevel: level,
-          durationRounds,
+          durationRounds: Math.max(1, level),
           areaRadiusInches: 1 + Math.max(1, level),
           sourceItemId: ADD2E_ITEM?.id ?? null,
-          sourceItemUuid: ADD2E_ITEM?.uuid ?? null,
-          note: choice.note ?? ""
+          sourceItemUuid: ADD2E_ITEM?.uuid ?? null
         }
       }
     }
-  }]);
+  };
+}
+
+async function add2eApplyEffectOnCaster(actorDoc, effectData) {
+  if (!actorDoc || !effectData) return false;
+
+  const payload = {
+    actorUuid: actorDoc.uuid,
+    actorId: actorDoc.id,
+    sceneId: canvas?.scene?.id ?? null,
+    tokenId: add2eGetCasterToken(actorDoc)?.document?.id ?? add2eGetCasterToken(actorDoc)?.id ?? null,
+    effectData
+  };
+
+  if (game.user?.isGM || actorDoc.isOwner) {
+    try {
+      await actorDoc.createEmbeddedDocuments("ActiveEffect", [foundry.utils.duplicate(effectData)]);
+      return true;
+    } catch (err) {
+      console.warn(`${ADD2E_ONUSE_TAG}[DIRECT_EFFECT_FAILED] Passage par relais MJ.`, err);
+    }
+  }
+
+  game.socket?.emit?.("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation: "createActiveEffect",
+    payload
+  });
 
   return true;
 }
 
-async function add2eApplyTargetEffects(targets, choice, level, roll) {
-  if (!targets.length || choice.mode === "mixed") return [];
-
-  const favorable = choice.mode === "favorable";
-  const mod = Number(roll?.total ?? 0) || 0;
-  const durationRounds = Math.max(1, level);
-  const applied = [];
-
-  const effectName = favorable ? "Amitié — réaction favorable" : "Amitié — réaction irritée";
-  const tags = [
-    "classe:magicien",
-    "liste:magicien",
-    "niveau:1",
-    "sort:amitie",
-    "ecole:enchantement_charme",
-    "type:charme",
-    "type:social",
-    "influence:reaction",
-    favorable ? "reaction:favorable" : "reaction:irritee",
-    favorable ? "etat:impression_favorable" : "etat:irrite",
-    favorable ? "attitude:aide_le_magicien" : "attitude:hostile_au_magicien",
-    favorable ? `bonus_charisme_lanceur:${mod}` : `malus_charisme_lanceur:${mod}`,
-    "duree:1_round_par_niveau",
-    `duree_rounds:${durationRounds}`,
-    "jet_sauvegarde:special"
-  ];
-
-  for (const target of targets) {
-    if (!target?.actor) continue;
-    await target.actor.createEmbeddedDocuments("ActiveEffect", [{
-      name: effectName,
-      img: ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.imgFallback,
-      disabled: false,
-      transfer: false,
-      type: "base",
-      system: {},
-      changes: [],
-      duration: add2eDuration(level),
-      description: favorable
-        ? `Amitié : la cible est favorablement impressionnée par ${ADD2E_ACTOR?.name ?? "le magicien"}.`
-        : `Amitié : la cible résiste et se montre irritée envers ${ADD2E_ACTOR?.name ?? "le magicien"}.`,
-      flags: { add2e: { tags } }
-    }]);
-    applied.push(target);
-  }
-
-  return applied;
-}
-
-async function add2eChatAmitie(actorDoc, choice, targets, level, roll, appliedTargets, casterEffectApplied) {
+async function add2eChatAmitie(actorDoc, choice, roll) {
   const casterToken = add2eGetCasterToken(actorDoc);
   const casterName = actorDoc?.name ?? casterToken?.name ?? "Magicien";
   const casterImg = casterToken?.document?.texture?.src ?? actorDoc?.img ?? "icons/svg/mystery-man.svg";
   const spellImg = ADD2E_ITEM?.img ?? ADD2E_SORT_CONFIG.imgFallback;
-  const radiusText = add2eAreaRadiusText(level);
+  const level = add2eCasterLevel(actorDoc);
   const durationRounds = Math.max(1, level);
-  const targetLabel = targets.length ? targets.map(t => t.name).join(", ") : (choice.note || "Créatures dans la sphère, selon MD");
+  const radiusText = add2eAreaRadiusText(level);
 
-  let outcome = "Résolution spéciale";
-  let outcomeBody = "Le MD résout les jets de protection et les réactions créature par créature.";
-
-  if (choice.mode === "favorable") {
-    outcome = "Réaction favorable";
-    outcomeBody = `Jet indicatif : <b>${add2eHtmlEscape(String(roll?.total ?? ""))}</b> sur <b>2d4</b>. Les créatures qui ratent leur jet sont favorablement impressionnées et désirent aider le magicien.`;
-  } else if (choice.mode === "irritated") {
-    outcome = "Réaction irritée";
-    outcomeBody = `Jet indicatif : <b>${add2eHtmlEscape(String(roll?.total ?? ""))}</b> sur <b>1d4</b>. Les créatures qui réussissent leur jet n'apprécient pas la présence du magicien et sont irritées.`;
-  }
+  let outcome = "L’enchantement se répand autour du magicien.";
+  if (choice?.mode === "favorable" && roll) outcome = `Les paroles du magicien gagnent en chaleur et en assurance. Son charisme apparent augmente de ${add2eHtmlEscape(String(roll.total))}.`;
+  if (choice?.mode === "irritated" && roll) outcome = `Le charme se heurte à une résistance hostile. Son charisme apparent diminue de ${add2eHtmlEscape(String(roll.total))}.`;
+  if (choice?.mode === "neutral") outcome = "L’enchantement trouble les réactions autour du magicien ; le MD en détermine les conséquences.";
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: actorDoc, token: casterToken }),
@@ -284,27 +235,23 @@ async function add2eChatAmitie(actorDoc, choice, targets, level, roll, appliedTa
         </div>
 
         <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Zone sociale :</b> ${add2eHtmlEscape(targetLabel)}</div>
-
           <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(outcome)}</div>
+            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">Sort lancé</div>
             <div style="font-size:13px;line-height:1.35;text-align:left;">
-              <p style="margin:.25em 0;">${outcomeBody}</p>
+              <p style="margin:.25em 0;">Le visage du magicien se pare de signes colorés et son aura devient plus marquante.</p>
+              <p style="margin:.25em 0;">${outcome}</p>
               <p style="margin:.25em 0;"><b>Rayon :</b> ${add2eHtmlEscape(radiusText)} autour du magicien.</p>
               <p style="margin:.25em 0;"><b>Durée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.durationText)} (${durationRounds} round${durationRounds > 1 ? "s" : ""}).</p>
-              <p style="margin:.25em 0;"><b>Effets créés :</b> ${casterEffectApplied ? "effet actif sur le magicien" : "aucun effet automatique sur le magicien"}${appliedTargets.length ? `, ${appliedTargets.length} cible(s) marquée(s)` : ""}.</p>
-              ${choice.note ? `<p style="margin:.25em 0;"><b>Note :</b> ${add2eHtmlEscape(choice.note)}</p>` : ""}
             </div>
           </div>
 
           <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle appliquée</summary>
+            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
             <div style="margin-top:5px;font-size:12px;line-height:1.35;">
-              <p><b>Portée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.rangeText)} — <b>Zone :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.areaText)}.</p>
-              <p><b>Composantes :</b> V, S, M — <b>Incantation :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.castingTimeText)} — <b>Jet de protection :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.saveText)}.</p>
-              <p>Échec du jet : charisme apparent du magicien augmenté de 2d4. Réussite du jet : charisme apparent diminué de 1d4. Intelligence animale ou inférieure : aucun effet.</p>
+              <p><b>École :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.school)} — <b>Portée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.rangeText)}.</p>
+              <p><b>Zone :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.areaText)}.</p>
+              <p><b>Composantes :</b> V, S, M — <b>Incantation :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.castingTimeText)} — <b>Jet de sauvegarde :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.saveText)}.</p>
               <p><b>Composante matérielle :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.materialText)} appliqués sur le visage.</p>
-              <p>Le slot mémorisé est consommé par le dispatcher ADD2E uniquement si ce script retourne <code>true</code>.</p>
             </div>
           </details>
         </div>
@@ -325,11 +272,12 @@ if (!ADD2E_ACTOR) {
 }
 
 const level = add2eCasterLevel(ADD2E_ACTOR);
-const targets = add2eGetTargets();
 let roll = null;
-
 if (choice.mode === "favorable") roll = await add2eRollFormula("2d4");
 if (choice.mode === "irritated") roll = await add2eRollFormula("1d4");
+
+const effectData = add2eBuildAmitieEffect({ choice, level, roll });
+const effectRequested = await add2eApplyEffectOnCaster(ADD2E_ACTOR, effectData);
 
 console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   actor: ADD2E_ACTOR?.name,
@@ -337,18 +285,15 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   level,
   choice,
   roll: roll?.total ?? null,
-  targets: targets.map(t => ({ name: t.name, actor: t.actor?.name }))
+  effectRequested,
+  viaSocketIfNeeded: true
 });
 
-const casterEffectApplied = await add2eApplyCasterEffect(ADD2E_ACTOR, choice, level, roll);
-const appliedTargets = await add2eApplyTargetEffects(targets, choice, level, roll);
-
-await add2eChatAmitie(ADD2E_ACTOR, choice, targets, level, roll, appliedTargets, casterEffectApplied);
+await add2eChatAmitie(ADD2E_ACTOR, choice, roll);
 
 console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   consumedByDispatcher: true,
-  casterEffectApplied,
-  appliedTargets: appliedTargets.map(t => t.name),
+  effectRequested,
   mode: choice.mode,
   roll: roll?.total ?? null,
   durationRounds: Math.max(1, level),
