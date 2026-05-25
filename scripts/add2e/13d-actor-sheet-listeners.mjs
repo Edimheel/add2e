@@ -3,13 +3,12 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant activateListeners.");
 
-const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-05-25-sheet-roll-cards-global-v1";
+const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-05-25-sheet-roll-cards-global-v2";
 globalThis.ADD2E_SHEET_ROLL_DELEGATION_VERSION = ADD2E_SHEET_ROLL_DELEGATION_VERSION;
 
-function add2eEvaluateRollSyncSafe(formula) {
+async function add2eEvaluateRollSafe(formula) {
   const roll = new Roll(formula);
-  if (typeof roll.evaluateSync === "function") roll.evaluateSync();
-  else roll.evaluate();
+  await roll.evaluate();
   return roll;
 }
 
@@ -17,7 +16,7 @@ async function add2eRollCharacteristicCard(actor, carac) {
   if (!actor) return ui.notifications.warn("Aucun acteur pour ce jet.");
   const label = carac?.toUpperCase() || "Caractéristique";
   const val = Number(actor.system?.[carac]) || 10;
-  const roll = add2eEvaluateRollSyncSafe("1d20");
+  const roll = await add2eEvaluateRollSafe("1d20");
   if (game.dice3d) await game.dice3d.showForRoll(roll);
 
   const caracIcon = {
@@ -57,7 +56,7 @@ async function add2eRollSaveCard(actor, idx) {
   const valeur = Number(saves[idx]);
   if (!valeur) return ui.notifications.warn("Aucune valeur pour ce jet.");
 
-  const roll = add2eEvaluateRollSyncSafe("1d20");
+  const roll = await add2eEvaluateRollSafe("1d20");
   if (game.dice3d) await game.dice3d.showForRoll(roll);
 
   let bonusSave = 0;
@@ -276,7 +275,7 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
     ev.preventDefault();
     const arme = this.actor.items.find(i => i.type === "arme" && i.system.equipee);
     const facteur = arme ? (Number(arme.system.facteur_rapidité) || 0) : 0;
-    const roll = add2eEvaluateRollSyncSafe("1d6 + " + facteur);
+    const roll = await add2eEvaluateRollSafe("1d6 + " + facteur);
     await this.actor.update({ "system.initiative": roll.total });
 
     const token = this.actor.getActiveTokens()[0];
