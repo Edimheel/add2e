@@ -480,16 +480,17 @@
    ADD2E — Écran de pause personnalisé
    Image locale : /data/Data/systems/add2e/assets/ui/pause_add2e.png
 
-   Pourquoi ici : add2e.css est déjà chargé par system.json. Ce bloc ne cible
-   que l'overlay natif Foundry #pause pour afficher l'image en bas de l'écran
-   sans modifier les feuilles, le HUD ou les dialogues.
+   Objectif :
+   - masquer complètement l'image quand le jeu n'est pas en pause ;
+   - afficher l'image uniquement quand Foundry ajoute #pause.paused ;
+   - placer l'image en bas de l'écran.
    ========================================================================== */
 
 #pause {
+  display: none !important;
   position: fixed !important;
   inset: auto 0 28px 0 !important;
 
-  display: flex !important;
   justify-content: center !important;
   align-items: flex-end !important;
 
@@ -508,6 +509,10 @@
   display: flex !important;
 }
 
+#pause:not(.paused) {
+  display: none !important;
+}
+
 #pause img {
   content: url("../assets/ui/pause_add2e.png");
 
@@ -524,6 +529,10 @@
     drop-shadow(0 0 12px rgba(220, 170, 70, 0.55)) !important;
 
   animation: none !important;
+}
+
+#pause:not(.paused) img {
+  display: none !important;
 }
 
 #pause figcaption,
