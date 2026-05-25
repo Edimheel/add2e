@@ -3,7 +3,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-05-23-drop-application-v2-full-v2-v1-restored";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-05-25-drop-application-v2-objet-drop-v1";
 globalThis.ADD2E_ACTOR_SHEET_DROP_VERSION = ADD2E_ACTOR_SHEET_DROP_VERSION;
 console.log("[ADD2E][DROP][VERSION]", ADD2E_ACTOR_SHEET_DROP_VERSION);
 
@@ -157,7 +157,7 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
     return false;
   }
 
-  const VALID = ["arme", "armure", "sort", "classe", "race"];
+  const VALID = ["arme", "armure", "sort", "classe", "race", "objet"];
   if (!VALID.includes(itemData.type)) {
     console.warn("[ADD2E][DROP][V2] Type item non accepté sur personnage.", { type: itemData.type, name: itemData.name });
     return false;
@@ -335,7 +335,7 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
     await add2eDropPurgeClassContent(this.actor, itemData);
   }
 
-  if (["arme", "armure", "sort"].includes(itemData.type)) {
+  if (["arme", "armure", "sort", "objet"].includes(itemData.type)) {
     if (this.actor.items.some(i => i.name === itemData.name && i.type === itemData.type)) {
       ui.notifications.warn(`"${itemData.name}" est déjà présent sur cet acteur.`);
       return false;
