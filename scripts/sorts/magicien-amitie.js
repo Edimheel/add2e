@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Amitié
-// Version : 2026-05-25-magicien-amitie-zone-visible-v3
+// Version : 2026-05-25-magicien-amitie-gabarit-natif-v4
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -23,13 +23,26 @@ const ADD2E_SORT_CONFIG = {
   saveText: "Spécial",
   areaText: "sphère d’un rayon de 1\" + 1\" par niveau",
   materialText: "craie ou farine blanche, noir de fumée ou suie, vermillon",
+  img: "systems/add2e/assets/icones/sorts/magicien-amitie.webp",
   imgFallback: "icons/magic/control/hypnosis-mesmerism-eye.webp"
 };
+
+function add2eClone(value) {
+  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
+  if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
+  return JSON.parse(JSON.stringify(value));
+}
 
 function add2eHtmlEscape(value) {
   const div = document.createElement("div");
   div.innerText = String(value ?? "");
   return div.innerHTML;
+}
+
+function add2eSpellImg() {
+  const img = ADD2E_ITEM?.img || "";
+  if (img && !String(img).includes("magicien-amitie.webp")) return img;
+  return ADD2E_SORT_CONFIG.imgFallback;
 }
 
 function add2eCasterLevel(actorDoc) {
@@ -56,21 +69,28 @@ function add2eAreaRadiusInches(level) {
 }
 
 function add2eAreaRadiusGridCells(level) {
-  // Dans le système ADD2E, pour la résolution sur carte Foundry, 1" de rayon = 1 case.
-  // Cela évite de convertir deux fois les unités de scène et d'englober toute la carte.
   return add2eAreaRadiusInches(level);
 }
 
 function add2eAreaRadiusText(level) {
-  return `${add2eAreaRadiusInches(level)}\" (${add2eAreaRadiusGridCells(level)} case${add2eAreaRadiusGridCells(level) > 1 ? "s" : ""})`;
+  const cells = add2eAreaRadiusGridCells(level);
+  return `${add2eAreaRadiusInches(level)}\" (${cells} case${cells > 1 ? "s" : ""})`;
 }
 
 function add2eGridSize() {
   return Number(canvas?.grid?.size) || Number(canvas?.scene?.grid?.size) || 100;
 }
 
+function add2eGridDistance() {
+  return Number(canvas?.scene?.grid?.distance) || 5;
+}
+
 function add2eRadiusPixels(level) {
   return add2eAreaRadiusGridCells(level) * add2eGridSize();
+}
+
+function add2eTemplateDistance(level) {
+  return add2eAreaRadiusGridCells(level) * add2eGridDistance();
 }
 
 async function add2eRollFormula(formula) {
@@ -99,50 +119,149 @@ function add2eTokenCenter(tokenDocOrPlaceable) {
   };
 }
 
-async function add2eChooseZone(level, casterToken) {
-  if (!globalThis.warpgate?.crosshairs?.show) {
-    ui.notifications?.warn?.("Amitié nécessite Warp Gate pour choisir la zone.");
-    console.warn(`${ADD2E_ONUSE_TAG}[NO_WARPGATE] Warp Gate ou crosshairs indisponible.`);
+function add2eCanvasEventPosition(event) {
+  try {
+    const point = event?.data?.getLocalPosition?.(canvas.stage)
+      ?? event?.getLocalPosition?.(canvas.stage)
+      ?? null;
+
+    if (point) return { x: Number(point.x), y: Number(point.y) };
+  } catch (_err) {}
+
+  const original = event?.data?.originalEvent ?? event?.nativeEvent ?? event;
+  const rect = canvas?.app?.view?.getBoundingClientRect?.();
+  if (!original || !rect) return null;
+
+  const x = ((original.clientX - rect.left) / rect.width) * canvas.dimensions.width;
+  const y = ((original.clientY - rect.top) / rect.height) * canvas.dimensions.height;
+  return { x, y };
+}
+
+function add2eBuildTemplateData(center, level) {
+  return {
+    t: "circle",
+    user: game.user.id,
+    x: Number(center.x),
+    y: Number(center.y),
+    distance: add2eTemplateDistance(level),
+    direction: 0,
+    fillColor: "#b36bff",
+    borderColor: "#fff2a8",
+    flags: {
+      add2e: {
+        spell: ADD2E_SORT_CONFIG.slug,
+        spellName: ADD2E_SORT_CONFIG.name,
+        radiusGridCells: add2eAreaRadiusGridCells(level),
+        radiusInches: add2eAreaRadiusInches(level),
+        casterId: ADD2E_ACTOR?.id ?? null,
+        casterUuid: ADD2E_ACTOR?.uuid ?? null
+      }
+    }
+  };
+}
+
+async function add2eCreateNativePreviewTemplate(initialCenter, level) {
+  const TemplateDocument = CONFIG?.MeasuredTemplate?.documentClass;
+  const TemplateObject = CONFIG?.MeasuredTemplate?.objectClass;
+  if (!TemplateDocument || !TemplateObject || !canvas?.templates) return null;
+
+  const doc = new TemplateDocument(add2eBuildTemplateData(initialCenter, level), { parent: canvas.scene });
+  const template = new TemplateObject(doc);
+  const previewLayer = canvas.templates.preview ?? canvas.templates;
+
+  await template.draw();
+  previewLayer.addChild(template);
+  template.refresh?.();
+  return template;
+}
+
+async function add2eTryCreateSceneTemplate(templateData, previewTemplate) {
+  if (!canvas?.scene?.createEmbeddedDocuments) return false;
+
+  try {
+    await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [add2eClone(templateData)]);
+    previewTemplate?.destroy?.({ children: true });
+    return true;
+  } catch (err) {
+    console.warn(`${ADD2E_ONUSE_TAG}[TEMPLATE_CREATE_DENIED] Le gabarit reste affiché localement.`, err);
+    setTimeout(() => {
+      try { previewTemplate?.destroy?.({ children: true }); } catch (_err) {}
+    }, 45000);
+    return false;
+  }
+}
+
+async function add2eChooseNativeTemplateZone(level, casterToken) {
+  if (!canvas?.ready || !canvas?.stage || !canvas?.templates) {
+    ui.notifications?.warn?.("Amitié : scène ou canevas indisponible.");
     return null;
   }
 
-  const radiusCells = add2eAreaRadiusGridCells(level);
-  const diameterCells = Math.max(1, radiusCells * 2);
-  const casterCenter = casterToken ? add2eTokenCenter(casterToken) : null;
-  const zoneFillColor = "#b36bff";
-  const zoneOutlineColor = "#fff2a8";
+  const casterCenter = casterToken ? add2eTokenCenter(casterToken) : { x: canvas.dimensions.width / 2, y: canvas.dimensions.height / 2 };
+  const previewTemplate = await add2eCreateNativePreviewTemplate(casterCenter, level);
+  const view = canvas.app?.view;
+  const previousCursor = view?.style?.cursor ?? "";
+  if (view?.style) view.style.cursor = "crosshair";
+  canvas.templates.activate?.();
+  ui.notifications?.info?.("Amitié : cliquez sur la scène pour placer la zone, clic droit pour annuler.");
 
-  const location = await warpgate.crosshairs.show({
-    size: diameterCells,
-    interval: 1,
-    drawOutline: true,
-    drawIcon: true,
-    lockSize: true,
-    rememberControlled: true,
-    icon: ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.imgFallback,
-    label: `${ADD2E_SORT_CONFIG.name} — rayon ${add2eAreaRadiusText(level)}`,
-    labelOffset: { x: 0, y: -24 },
-    tag: "add2e-amitie-zone",
-    fillColor: zoneFillColor,
-    fillAlpha: 0.42,
-    fillOpacity: 0.42,
-    outlineColor: zoneOutlineColor,
-    outlineAlpha: 1,
-    outlineWidth: 4,
-    borderColor: zoneOutlineColor,
-    borderAlpha: 1,
-    borderWidth: 4,
-    crosshair: {
-      color: zoneOutlineColor,
-      alpha: 1,
-      width: 4
-    },
-    x: casterCenter?.x,
-    y: casterCenter?.y
+  return await new Promise(resolve => {
+    let done = false;
+    let current = { ...casterCenter };
+
+    const cleanup = () => {
+      canvas.stage.off("mousemove", onMove);
+      canvas.stage.off("mousedown", onConfirm);
+      canvas.stage.off("rightdown", onCancel);
+      if (view?.style) view.style.cursor = previousCursor;
+    };
+
+    const finish = async value => {
+      if (done) return;
+      done = true;
+      cleanup();
+      if (!value) {
+        try { previewTemplate?.destroy?.({ children: true }); } catch (_err) {}
+        resolve(null);
+        return;
+      }
+
+      const templateData = add2eBuildTemplateData(value, level);
+      const persisted = await add2eTryCreateSceneTemplate(templateData, previewTemplate);
+      resolve({ x: value.x, y: value.y, templateData, persisted });
+    };
+
+    const refresh = pos => {
+      if (!pos) return;
+      current = { x: Number(pos.x), y: Number(pos.y) };
+      previewTemplate?.document?.updateSource?.({ x: current.x, y: current.y });
+      previewTemplate?.refresh?.();
+    };
+
+    const onMove = event => {
+      event?.stopPropagation?.();
+      refresh(add2eCanvasEventPosition(event));
+    };
+
+    const onConfirm = event => {
+      event?.stopPropagation?.();
+      event?.data?.originalEvent?.preventDefault?.();
+      const pos = add2eCanvasEventPosition(event) ?? current;
+      refresh(pos);
+      finish(current);
+    };
+
+    const onCancel = event => {
+      event?.stopPropagation?.();
+      event?.data?.originalEvent?.preventDefault?.();
+      finish(null);
+    };
+
+    canvas.stage.on("mousemove", onMove);
+    canvas.stage.once("mousedown", onConfirm);
+    canvas.stage.once("rightdown", onCancel);
+    refresh(casterCenter);
   });
-
-  if (!location || location.cancelled) return null;
-  return { x: Number(location.x), y: Number(location.y) };
 }
 
 function add2eTokensInZone(center, level, casterToken) {
@@ -256,24 +375,22 @@ async function add2eRollTargetSave(actorDoc) {
 function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modifier, saveData }) {
   const favorable = choice === "favorable";
   const signed = favorable ? Math.abs(modifier) : -Math.abs(modifier);
-  const mode = foundry?.CONST?.ACTIVE_EFFECT_MODES?.OVERRIDE ?? CONST?.ACTIVE_EFFECT_MODES?.OVERRIDE ?? 5;
+  const mode = CONST?.ACTIVE_EFFECT_MODES?.OVERRIDE ?? 5;
   const casterSlug = String(casterActor?.id ?? "caster").replace(/[^a-zA-Z0-9_\-]/g, "_");
 
   return {
     name: favorable ? "Amitié — impression favorable" : "Amitié — irritation",
-    img: ADD2E_ITEM?.img || ADD2E_SORT_CONFIG.imgFallback,
+    img: add2eSpellImg(),
     disabled: false,
     transfer: false,
     type: "base",
     system: {},
-    changes: [
-      {
-        key: `flags.add2e.amitie.${casterSlug}.charismeApparent`,
-        mode,
-        value: String(signed),
-        priority: 20
-      }
-    ],
+    changes: [{
+      key: `flags.add2e.amitie.${casterSlug}.charismeApparent`,
+      mode,
+      value: String(signed),
+      priority: 20
+    }],
     duration: add2eEffectDuration(level),
     description: favorable
       ? `${targetToken.name} est favorablement impressionné par ${casterActor?.name ?? "le magicien"}.`
@@ -337,7 +454,7 @@ async function add2eApplyEffectOnTarget(targetToken, effectData) {
 
   if (game.user?.isGM || targetToken.actor.isOwner) {
     try {
-      await targetToken.actor.createEmbeddedDocuments("ActiveEffect", [foundry.utils.duplicate(effectData)]);
+      await targetToken.actor.createEmbeddedDocuments("ActiveEffect", [add2eClone(effectData)]);
       return true;
     } catch (err) {
       console.warn(`${ADD2E_ONUSE_TAG}[DIRECT_EFFECT_FAILED] Passage par relais MJ.`, err);
@@ -357,80 +474,33 @@ async function add2eResolveAmitieTarget(targetToken, casterActor, level) {
   if (!targetToken?.actor) return null;
 
   if (add2eIsAnimalIntelligenceOrLess(targetToken.actor)) {
-    return {
-      token: targetToken,
-      actor: targetToken.actor,
-      status: "ignored",
-      label: "non affecté",
-      modifier: 0,
-      saveData: null,
-      effectRequested: false
-    };
+    return { token: targetToken, actor: targetToken.actor, status: "ignored", label: "non affecté", modifier: 0, saveData: null, effectRequested: false };
   }
 
   const saveData = await add2eRollTargetSave(targetToken.actor);
 
   if (!saveData.hasSave) {
-    return {
-      token: targetToken,
-      actor: targetToken.actor,
-      status: "manual",
-      label: "à résoudre par le MD",
-      modifier: 0,
-      saveData,
-      effectRequested: false
-    };
+    return { token: targetToken, actor: targetToken.actor, status: "manual", label: "à résoudre par le MD", modifier: 0, saveData, effectRequested: false };
   }
 
   if (saveData.success) {
     const modRoll = await add2eRollFormula("1d4");
-    const effectData = add2eBuildTargetEffect({
-      targetToken,
-      casterActor,
-      choice: "irritated",
-      level,
-      modifier: Number(modRoll.total) || 1,
-      saveData
-    });
+    const modifier = Math.abs(Number(modRoll.total) || 1);
+    const effectData = add2eBuildTargetEffect({ targetToken, casterActor, choice: "irritated", level, modifier, saveData });
     const effectRequested = await add2eApplyEffectOnTarget(targetToken, effectData);
-    return {
-      token: targetToken,
-      actor: targetToken.actor,
-      status: "success",
-      label: "résiste et s’irrite",
-      modifier: -Math.abs(Number(modRoll.total) || 1),
-      saveData,
-      effectRequested
-    };
+    return { token: targetToken, actor: targetToken.actor, status: "success", label: "résiste et s’irrite", modifier: -modifier, saveData, effectRequested };
   }
 
   const modRoll = await add2eRollFormula("2d4");
-  const effectData = add2eBuildTargetEffect({
-    targetToken,
-    casterActor,
-    choice: "favorable",
-    level,
-    modifier: Number(modRoll.total) || 1,
-    saveData
-  });
+  const modifier = Math.abs(Number(modRoll.total) || 1);
+  const effectData = add2eBuildTargetEffect({ targetToken, casterActor, choice: "favorable", level, modifier, saveData });
   const effectRequested = await add2eApplyEffectOnTarget(targetToken, effectData);
-
-  return {
-    token: targetToken,
-    actor: targetToken.actor,
-    status: "failure",
-    label: "favorable",
-    modifier: Math.abs(Number(modRoll.total) || 1),
-    saveData,
-    effectRequested
-  };
+  return { token: targetToken, actor: targetToken.actor, status: "failure", label: "favorable", modifier, saveData, effectRequested };
 }
 
 function add2eResultLine(result) {
   const name = add2eHtmlEscape(result?.token?.name ?? result?.actor?.name ?? "Créature");
-  if (result.status === "ignored") {
-    return `<tr><td>${name}</td><td colspan="3">Non affecté</td></tr>`;
-  }
+  if (result.status === "ignored") return `<tr><td>${name}</td><td colspan="3">Non affecté</td></tr>`;
   if (result.status === "manual") {
     const rollText = result.saveData?.roll?.total ? `Jet ${result.saveData.roll.total}` : "Jet effectué";
     return `<tr><td>${name}</td><td>${add2eHtmlEscape(rollText)}</td><td>—</td><td>À résoudre</td></tr>`;
@@ -442,20 +512,14 @@ function add2eResultLine(result) {
   const mod = Number(result.modifier) || 0;
   const modText = mod > 0 ? `+${mod}` : `${mod}`;
 
-  return `
-    <tr>
-      <td>${name}</td>
-      <td>${add2eHtmlEscape(String(total))}${bonus ? ` <small>(${bonus > 0 ? "+" : ""}${bonus})</small>` : ""}</td>
-      <td>${add2eHtmlEscape(String(seuil))}</td>
-      <td>${add2eHtmlEscape(result.label)} <b>${add2eHtmlEscape(modText)}</b></td>
-    </tr>`;
+  return `<tr><td>${name}</td><td>${add2eHtmlEscape(String(total))}${bonus ? ` <small>(${bonus > 0 ? "+" : ""}${bonus})</small>` : ""}</td><td>${add2eHtmlEscape(String(seuil))}</td><td>${add2eHtmlEscape(result.label)} <b>${add2eHtmlEscape(modText)}</b></td></tr>`;
 }
 
-async function add2eChatAmitie(actorDoc, center, level, results) {
+async function add2eChatAmitie(actorDoc, level, results) {
   const casterToken = add2eGetCasterToken(actorDoc);
   const casterName = actorDoc?.name ?? casterToken?.name ?? "Magicien";
   const casterImg = casterToken?.document?.texture?.src ?? actorDoc?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = ADD2E_ITEM?.img ?? ADD2E_SORT_CONFIG.imgFallback;
+  const spellImg = add2eSpellImg();
   const durationRounds = Math.max(1, level);
   const radiusText = add2eAreaRadiusText(level);
   const tableRows = results.length
@@ -476,26 +540,16 @@ async function add2eChatAmitie(actorDoc, center, level, results) {
           <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. 1</div>
           <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
         </div>
-
         <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
           <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;">
             <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Enchantement social</div>
             <p style="margin:.35em 0;font-size:13px;line-height:1.35;">Le visage du magicien se pare de signes colorés et son aura devient plus marquante.</p>
             <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Rayon :</b> ${add2eHtmlEscape(radiusText)} — <b>Durée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.durationText)} (${durationRounds} round${durationRounds > 1 ? "s" : ""}).</p>
           </div>
-
           <table style="width:100%;border-collapse:collapse;background:#fffaff;border:1px solid #8e63c7;font-size:12px;">
-            <thead>
-              <tr style="background:#e8d9ff;color:#2d2144;">
-                <th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Créature</th>
-                <th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Jet</th>
-                <th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Seuil</th>
-                <th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Réaction</th>
-              </tr>
-            </thead>
+            <thead><tr style="background:#e8d9ff;color:#2d2144;"><th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Créature</th><th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Jet</th><th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Seuil</th><th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Réaction</th></tr></thead>
             <tbody>${tableRows}</tbody>
           </table>
-
           <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;margin-top:7px;">
             <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
             <div style="margin-top:5px;font-size:12px;line-height:1.35;">
@@ -518,20 +572,21 @@ if (!ADD2E_ACTOR) {
 
 const level = add2eCasterLevel(ADD2E_ACTOR);
 const casterToken = add2eGetCasterToken(ADD2E_ACTOR);
-const zoneCenter = await add2eChooseZone(level, casterToken);
-if (!zoneCenter) {
+const zone = await add2eChooseNativeTemplateZone(level, casterToken);
+if (!zone) {
   console.log(`${ADD2E_ONUSE_TAG}[CANCEL] Zone annulée : remboursement du slot mémorisé par le dispatcher.`);
   return false;
 }
 
-const targetTokens = add2eTokensInZone(zoneCenter, level, casterToken);
+const targetTokens = add2eTokensInZone(zone, level, casterToken);
 const results = [];
 
 console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   actor: ADD2E_ACTOR?.name,
   sort: ADD2E_ITEM?.name,
   level,
-  zoneCenter,
+  zoneCenter: { x: zone.x, y: zone.y },
+  templatePersisted: zone.persisted,
   radiusInches: add2eAreaRadiusInches(level),
   radiusGridCells: add2eAreaRadiusGridCells(level),
   radiusPixels: add2eRadiusPixels(level),
@@ -543,11 +598,12 @@ for (const targetToken of targetTokens) {
   if (result) results.push(result);
 }
 
-await add2eChatAmitie(ADD2E_ACTOR, zoneCenter, level, results);
+await add2eChatAmitie(ADD2E_ACTOR, level, results);
 
 console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   consumedByDispatcher: true,
   targetCount: targetTokens.length,
+  templatePersisted: zone.persisted,
   results: results.map(r => ({
     token: r.token?.name,
     status: r.status,
