@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-25-application-v2-token-header-v1";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-25-application-v2-token-header-v2";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -65,6 +65,26 @@ function add2eBindApplicationV2Close(sheet) {
   }
 }
 
+function add2eTokenConfigPosition(sheet) {
+  const options = { parent: sheet?.actor ?? sheet?.document ?? null };
+  const pos = sheet?.position ?? {};
+  if (Number.isFinite(pos.top)) options.top = pos.top + 40;
+  if (Number.isFinite(pos.left) && Number.isFinite(pos.width)) options.left = pos.left + Math.max(0, Math.floor((pos.width - 460) / 2));
+  return options;
+}
+
+async function add2eTryRenderTokenConfig(createApp) {
+  try {
+    const app = createApp?.();
+    if (!app?.render) return false;
+    await app.render(true);
+    return true;
+  } catch (err) {
+    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][TRY_FAILED]", err);
+    return false;
+  }
+}
+
 async function add2eOpenPrototypeTokenConfig(sheet, event = null) {
   const actor = sheet?.actor ?? sheet?.document;
   if (!actor) return ui.notifications?.warn?.("Aucun acteur associé à cette feuille.");
@@ -78,31 +98,48 @@ async function add2eOpenPrototypeTokenConfig(sheet, event = null) {
 
   try {
     if (typeof sheet._onConfigureToken === "function") {
-      return sheet._onConfigureToken(event);
+      await sheet._onConfigureToken(event);
+      return;
     }
 
     if (typeof sheet._configureToken === "function") {
-      return sheet._configureToken(event);
+      await sheet._configureToken(event);
+      return;
     }
 
-    const token = actor.prototypeToken ?? actor.prototypeTokenDocument ?? actor.getActiveTokens?.()?.[0]?.document;
+    const token = actor.prototypeToken ?? actor.prototypeTokenDocument;
     if (!token) return ui.notifications?.warn?.("Prototype de token introuvable pour cet acteur.");
 
+    const options = add2eTokenConfigPosition(sheet);
+    const PrototypeTokenConfigClass =
+      foundry?.applications?.sheets?.PrototypeTokenConfig
+      ?? CONFIG?.Token?.prototypeSheetClass
+      ?? globalThis.PrototypeTokenConfig;
     const TokenConfigClass =
-      CONFIG?.Token?.prototypeSheetClass
+      foundry?.applications?.sheets?.TokenConfig
       ?? CONFIG?.Token?.sheetClass
-      ?? foundry?.applications?.sheets?.TokenConfig
       ?? globalThis.TokenConfig;
 
-    if (TokenConfigClass) {
-      const options = {};
-      const pos = sheet.position ?? {};
-      if (Number.isFinite(pos.top)) options.top = pos.top + 40;
-      if (Number.isFinite(pos.left) && Number.isFinite(pos.width)) options.left = pos.left + Math.max(0, Math.floor((pos.width - 460) / 2));
-      return new TokenConfigClass(token, options).render(true);
+    if (PrototypeTokenConfigClass) {
+      if (await add2eTryRenderTokenConfig(() => new PrototypeTokenConfigClass({ document: token, parent: actor, ...options }))) return;
+      if (await add2eTryRenderTokenConfig(() => new PrototypeTokenConfigClass(token, { parent: actor, ...options }))) return;
+      if (await add2eTryRenderTokenConfig(() => new PrototypeTokenConfigClass(actor, { parent: actor, ...options }))) return;
     }
 
-    if (token.sheet?.render) return token.sheet.render(true);
+    if (token.sheet?.render) {
+      try {
+        await token.sheet.render(true, { parent: actor, ...options });
+        return;
+      } catch (err) {
+        console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][TOKEN_SHEET_FAILED]", err);
+      }
+    }
+
+    if (TokenConfigClass) {
+      if (await add2eTryRenderTokenConfig(() => new TokenConfigClass(token, { parent: actor, ...options }))) return;
+      if (await add2eTryRenderTokenConfig(() => new TokenConfigClass({ document: token, parent: actor, ...options }))) return;
+    }
+
     return ui.notifications?.error?.("Impossible d'ouvrir la configuration du prototype de token.");
   } catch (err) {
     console.error("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][ERROR]", err);
