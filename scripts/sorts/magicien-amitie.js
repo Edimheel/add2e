@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Amitié
-// Version : 2026-05-25-magicien-amitie-gabarit-natif-v4
+// Version : 2026-05-25-magicien-amitie-gabarit-natif-cleanup-v5
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -31,6 +31,12 @@ function add2eClone(value) {
   if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
   if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
   return JSON.parse(JSON.stringify(value));
+}
+
+function add2eRandomId() {
+  return foundry?.utils?.randomID?.(16)
+    ?? globalThis.crypto?.randomUUID?.().replace(/-/g, "").slice(0, 16)
+    ?? `amitie_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 }
 
 function add2eHtmlEscape(value) {
@@ -137,7 +143,7 @@ function add2eCanvasEventPosition(event) {
   return { x, y };
 }
 
-function add2eBuildTemplateData(center, level) {
+function add2eBuildTemplateData(center, level, templateRequestId) {
   return {
     t: "circle",
     user: game.user.id,
@@ -151,21 +157,24 @@ function add2eBuildTemplateData(center, level) {
       add2e: {
         spell: ADD2E_SORT_CONFIG.slug,
         spellName: ADD2E_SORT_CONFIG.name,
+        templateRequestId,
         radiusGridCells: add2eAreaRadiusGridCells(level),
         radiusInches: add2eAreaRadiusInches(level),
         casterId: ADD2E_ACTOR?.id ?? null,
-        casterUuid: ADD2E_ACTOR?.uuid ?? null
+        casterUuid: ADD2E_ACTOR?.uuid ?? null,
+        sourceItemId: ADD2E_ITEM?.id ?? null,
+        sourceItemUuid: ADD2E_ITEM?.uuid ?? null
       }
     }
   };
 }
 
-async function add2eCreateNativePreviewTemplate(initialCenter, level) {
+async function add2eCreateNativePreviewTemplate(initialCenter, level, templateRequestId) {
   const TemplateDocument = CONFIG?.MeasuredTemplate?.documentClass;
   const TemplateObject = CONFIG?.MeasuredTemplate?.objectClass;
   if (!TemplateDocument || !TemplateObject || !canvas?.templates) return null;
 
-  const doc = new TemplateDocument(add2eBuildTemplateData(initialCenter, level), { parent: canvas.scene });
+  const doc = new TemplateDocument(add2eBuildTemplateData(initialCenter, level, templateRequestId), { parent: canvas.scene });
   const template = new TemplateObject(doc);
   const previewLayer = canvas.templates.preview ?? canvas.templates;
 
@@ -175,30 +184,79 @@ async function add2eCreateNativePreviewTemplate(initialCenter, level) {
   return template;
 }
 
-async function add2eTryCreateSceneTemplate(templateData, previewTemplate) {
-  if (!canvas?.scene?.createEmbeddedDocuments) return false;
+function add2eEmitGmOperation(operation, payload) {
+  game.socket?.emit?.("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation,
+    payload
+  });
+}
+
+async function add2eTryCreateSceneTemplate(templateData, previewTemplate, templateRequestId) {
+  if (!canvas?.scene?.createEmbeddedDocuments) {
+    return { persisted: false, templateId: null, via: "none" };
+  }
 
   try {
-    await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [add2eClone(templateData)]);
+    const created = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [add2eClone(templateData)]);
+    const templateId = created?.[0]?.id ?? null;
     previewTemplate?.destroy?.({ children: true });
-    return true;
+    return { persisted: true, templateId, via: "direct" };
   } catch (err) {
-    console.warn(`${ADD2E_ONUSE_TAG}[TEMPLATE_CREATE_DENIED] Le gabarit reste affiché localement.`, err);
+    console.warn(`${ADD2E_ONUSE_TAG}[TEMPLATE_CREATE_DENIED] Création du gabarit demandée au MJ.`, err);
+
+    add2eEmitGmOperation("createMeasuredTemplate", {
+      sceneId: canvas?.scene?.id ?? null,
+      templateData,
+      templateRequestId,
+      spell: ADD2E_SORT_CONFIG.slug,
+      spellName: ADD2E_SORT_CONFIG.name
+    });
+
     setTimeout(() => {
       try { previewTemplate?.destroy?.({ children: true }); } catch (_err) {}
-    }, 45000);
-    return false;
+    }, 1500);
+
+    return { persisted: true, templateId: null, via: "gm-relay" };
   }
 }
 
-async function add2eChooseNativeTemplateZone(level, casterToken) {
+async function add2eDeleteLinkedTemplate(zone, reason = "cleanup") {
+  if (!zone?.templateRequestId) return false;
+
+  const payload = {
+    sceneId: zone.sceneId ?? canvas?.scene?.id ?? null,
+    templateId: zone.templateId ?? null,
+    templateRequestId: zone.templateRequestId,
+    spell: ADD2E_SORT_CONFIG.slug,
+    reason
+  };
+
+  if (game.user?.isGM && canvas?.scene?.deleteEmbeddedDocuments) {
+    const scene = canvas.scene;
+    const ids = Array.from(scene.templates ?? [])
+      .filter(t => t.id === payload.templateId || t.flags?.add2e?.templateRequestId === payload.templateRequestId)
+      .map(t => t.id)
+      .filter(Boolean);
+
+    if (ids.length) {
+      await scene.deleteEmbeddedDocuments("MeasuredTemplate", ids);
+      return true;
+    }
+  }
+
+  add2eEmitGmOperation("deleteMeasuredTemplates", payload);
+  return true;
+}
+
+async function add2eChooseNativeTemplateZone(level, casterToken, templateRequestId) {
   if (!canvas?.ready || !canvas?.stage || !canvas?.templates) {
     ui.notifications?.warn?.("Amitié : scène ou canevas indisponible.");
     return null;
   }
 
   const casterCenter = casterToken ? add2eTokenCenter(casterToken) : { x: canvas.dimensions.width / 2, y: canvas.dimensions.height / 2 };
-  const previewTemplate = await add2eCreateNativePreviewTemplate(casterCenter, level);
+  const previewTemplate = await add2eCreateNativePreviewTemplate(casterCenter, level, templateRequestId);
   const view = canvas.app?.view;
   const previousCursor = view?.style?.cursor ?? "";
   if (view?.style) view.style.cursor = "crosshair";
@@ -226,9 +284,18 @@ async function add2eChooseNativeTemplateZone(level, casterToken) {
         return;
       }
 
-      const templateData = add2eBuildTemplateData(value, level);
-      const persisted = await add2eTryCreateSceneTemplate(templateData, previewTemplate);
-      resolve({ x: value.x, y: value.y, templateData, persisted });
+      const templateData = add2eBuildTemplateData(value, level, templateRequestId);
+      const creation = await add2eTryCreateSceneTemplate(templateData, previewTemplate, templateRequestId);
+      resolve({
+        x: value.x,
+        y: value.y,
+        templateData,
+        templateRequestId,
+        sceneId: canvas?.scene?.id ?? null,
+        persisted: creation.persisted,
+        templateId: creation.templateId,
+        templateVia: creation.via
+      });
     };
 
     const refresh = pos => {
@@ -372,7 +439,7 @@ async function add2eRollTargetSave(actorDoc) {
   return { roll, saveTarget, bonus, total, hasSave, success };
 }
 
-function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modifier, saveData }) {
+function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modifier, saveData, zone }) {
   const favorable = choice === "favorable";
   const signed = favorable ? Math.abs(modifier) : -Math.abs(modifier);
   const mode = CONST?.ACTIVE_EFFECT_MODES?.OVERRIDE ?? 5;
@@ -397,6 +464,9 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
       : `${targetToken.name} se montre irrité par la présence de ${casterActor?.name ?? "le magicien"}.`,
     flags: {
       add2e: {
+        templateRequestId: zone?.templateRequestId ?? null,
+        templateId: zone?.templateId ?? null,
+        templateSceneId: zone?.sceneId ?? canvas?.scene?.id ?? null,
         tags: [
           "classe:magicien",
           "liste:magicien",
@@ -411,7 +481,8 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
           favorable ? `charisme_apparent_lanceur:+${Math.abs(modifier)}` : `charisme_apparent_lanceur:-${Math.abs(modifier)}`,
           "duree:1_round_par_niveau",
           `duree_rounds:${Math.max(1, level)}`,
-          "jet_sauvegarde:special"
+          "jet_sauvegarde:special",
+          `template_request:${zone?.templateRequestId ?? ""}`
         ],
         spell: {
           slug: ADD2E_SORT_CONFIG.slug,
@@ -433,6 +504,9 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
           durationRounds: Math.max(1, level),
           areaRadiusInches: add2eAreaRadiusInches(level),
           areaRadiusGridCells: add2eAreaRadiusGridCells(level),
+          templateRequestId: zone?.templateRequestId ?? null,
+          templateId: zone?.templateId ?? null,
+          templateSceneId: zone?.sceneId ?? canvas?.scene?.id ?? null,
           sourceItemId: ADD2E_ITEM?.id ?? null,
           sourceItemUuid: ADD2E_ITEM?.uuid ?? null
         }
@@ -461,16 +535,11 @@ async function add2eApplyEffectOnTarget(targetToken, effectData) {
     }
   }
 
-  game.socket?.emit?.("system.add2e", {
-    type: "ADD2E_GM_OPERATION",
-    operation: "createActiveEffect",
-    payload
-  });
-
+  add2eEmitGmOperation("createActiveEffect", payload);
   return true;
 }
 
-async function add2eResolveAmitieTarget(targetToken, casterActor, level) {
+async function add2eResolveAmitieTarget(targetToken, casterActor, level, zone) {
   if (!targetToken?.actor) return null;
 
   if (add2eIsAnimalIntelligenceOrLess(targetToken.actor)) {
@@ -486,14 +555,14 @@ async function add2eResolveAmitieTarget(targetToken, casterActor, level) {
   if (saveData.success) {
     const modRoll = await add2eRollFormula("1d4");
     const modifier = Math.abs(Number(modRoll.total) || 1);
-    const effectData = add2eBuildTargetEffect({ targetToken, casterActor, choice: "irritated", level, modifier, saveData });
+    const effectData = add2eBuildTargetEffect({ targetToken, casterActor, choice: "irritated", level, modifier, saveData, zone });
     const effectRequested = await add2eApplyEffectOnTarget(targetToken, effectData);
     return { token: targetToken, actor: targetToken.actor, status: "success", label: "résiste et s’irrite", modifier: -modifier, saveData, effectRequested };
   }
 
   const modRoll = await add2eRollFormula("2d4");
   const modifier = Math.abs(Number(modRoll.total) || 1);
-  const effectData = add2eBuildTargetEffect({ targetToken, casterActor, choice: "favorable", level, modifier, saveData });
+  const effectData = add2eBuildTargetEffect({ targetToken, casterActor, choice: "favorable", level, modifier, saveData, zone });
   const effectRequested = await add2eApplyEffectOnTarget(targetToken, effectData);
   return { token: targetToken, actor: targetToken.actor, status: "failure", label: "favorable", modifier, saveData, effectRequested };
 }
@@ -572,7 +641,8 @@ if (!ADD2E_ACTOR) {
 
 const level = add2eCasterLevel(ADD2E_ACTOR);
 const casterToken = add2eGetCasterToken(ADD2E_ACTOR);
-const zone = await add2eChooseNativeTemplateZone(level, casterToken);
+const templateRequestId = add2eRandomId();
+const zone = await add2eChooseNativeTemplateZone(level, casterToken, templateRequestId);
 if (!zone) {
   console.log(`${ADD2E_ONUSE_TAG}[CANCEL] Zone annulée : remboursement du slot mémorisé par le dispatcher.`);
   return false;
@@ -587,6 +657,9 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   level,
   zoneCenter: { x: zone.x, y: zone.y },
   templatePersisted: zone.persisted,
+  templateVia: zone.templateVia,
+  templateRequestId: zone.templateRequestId,
+  templateId: zone.templateId,
   radiusInches: add2eAreaRadiusInches(level),
   radiusGridCells: add2eAreaRadiusGridCells(level),
   radiusPixels: add2eRadiusPixels(level),
@@ -594,16 +667,22 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
 });
 
 for (const targetToken of targetTokens) {
-  const result = await add2eResolveAmitieTarget(targetToken, ADD2E_ACTOR, level);
+  const result = await add2eResolveAmitieTarget(targetToken, ADD2E_ACTOR, level, zone);
   if (result) results.push(result);
 }
 
 await add2eChatAmitie(ADD2E_ACTOR, level, results);
 
+if (!results.some(r => r.effectRequested)) {
+  await add2eDeleteLinkedTemplate(zone, "no-active-effect");
+}
+
 console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   consumedByDispatcher: true,
   targetCount: targetTokens.length,
   templatePersisted: zone.persisted,
+  templateVia: zone.templateVia,
+  templateRequestId: zone.templateRequestId,
   results: results.map(r => ({
     token: r.token?.name,
     status: r.status,
