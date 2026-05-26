@@ -1,7 +1,7 @@
 // ADD2E — Vendeur système : composants, projectiles et monnaie complète
 // ApplicationV2 + DialogV2, création automatique au premier lancement du monde.
 
-const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v4-gm-socket-ui";
+const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v5-inline-scroll-ui";
 globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
 
 const ADD2E_VENDOR_FLAG_SCOPE = "add2e";
@@ -283,21 +283,25 @@ async function add2eVendorRequestBuy({ vendor, buyer, item, quantity }) {
   if (!vendor || !buyer || !item) return false;
   quantity = Math.max(1, Math.floor(add2eVendorNumber(quantity, 1)));
 
-  const preview = await add2eVendorBuyLocal({ vendor, buyer, item, quantity }, { confirm: true, notify: false });
-  if (preview.cancelled) return false;
-  if (preview.ok) {
-    // Cas MJ ou monde permissif : l'achat a déjà été exécuté localement.
-    ui.notifications?.info?.(preview.message);
-    return true;
-  }
-
-  // Si l'échec local vient probablement d'une permission, le MJ exécutera réellement l'achat.
   const price = add2eVendorResolvePrice(item);
   const total = price.copper * quantity;
+  const stock = add2eVendorQuantity(item);
+  if (stock < quantity) {
+    await add2eVendorAlert("Stock insuffisant", `${item.name} : stock disponible ${stock}.`);
+    return false;
+  }
   if (add2eVendorMoneyToCopper(add2eVendorGetMoney(buyer)) < total) {
     await add2eVendorAlert("Argent insuffisant", `${buyer.name} n’a pas assez d’argent. Prix : ${add2eVendorFormatMoney(total)}.`);
     return false;
   }
+
+  const accepted = await add2eVendorDialog({
+    title: "Confirmer l’achat",
+    content: `<div class="add2e-dialog add2e-vendor-alert"><h3>${add2eVendorEscape(item.name)}</h3><p>Acheter ${quantity} unité(s) pour <strong>${add2eVendorFormatMoney(total)}</strong> ?</p></div>`,
+    yes: "Acheter",
+    no: "Annuler"
+  });
+  if (!accepted) return false;
 
   game.socket?.emit?.("system.add2e", {
     type: "ADD2E_VENDOR_BUY_REQUEST",
@@ -449,7 +453,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
     classes: ["add2e", "add2e-vendor-app"],
     tag: "section",
     window: { title: "Boutique ADD2E", resizable: true },
-    position: { width: 860, height: 680 }
+    position: { width: 920, height: 680 }
   };
 
   constructor({ vendor, buyer } = {}, options = {}) {
@@ -492,45 +496,61 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
 
   async _renderHTML(context, _options = {}) {
     const rows = context.items.map(item => `
-      <tr data-item-id="${item.id}">
-        <td class="add2e-vendor-item">
-          <img src="${add2eVendorEscape(item.img)}" alt="${add2eVendorEscape(item.name)}">
-          <span>${add2eVendorEscape(item.name)}</span>
+      <tr data-item-id="${item.id}" style="border-bottom:1px solid #e0c982;">
+        <td style="padding:6px 8px;min-width:260px;">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <img src="${add2eVendorEscape(item.img)}" alt="${add2eVendorEscape(item.name)}" style="width:38px !important;height:38px !important;min-width:38px !important;max-width:38px !important;max-height:38px !important;object-fit:contain !important;border:1px solid #b98b2d;border-radius:6px;background:#f8edc7;">
+            <span style="font-weight:900;color:#2f250c;white-space:normal;line-height:1.2;">${add2eVendorEscape(item.name)}</span>
+          </div>
         </td>
-        <td>${add2eVendorEscape(item.kind)}</td>
-        <td>${add2eVendorEscape(item.priceLabel)}</td>
-        <td>${item.stock} / ${item.stockMax}</td>
-        <td><input class="add2e-vendor-buy-qty" type="number" min="1" value="1"></td>
-        <td><button type="button" class="add2e-vendor-buy" ${item.stock <= 0 || !context.buyer ? "disabled" : ""}>Acheter</button></td>
-        ${context.isGM ? `<td class="add2e-vendor-stock-cell"><input class="add2e-vendor-stock-qty" type="number" min="0" value="${item.stock}"><button type="button" class="add2e-vendor-stock-set">Stock</button></td>` : ""}
+        <td style="padding:6px 8px;color:#2f250c;font-weight:800;">${add2eVendorEscape(item.kind)}</td>
+        <td style="padding:6px 8px;color:#2f250c;font-weight:900;">${add2eVendorEscape(item.priceLabel)}</td>
+        <td style="padding:6px 8px;color:#2f250c;font-weight:800;">${item.stock} / ${item.stockMax}</td>
+        <td style="padding:6px 8px;"><input class="add2e-vendor-buy-qty" type="number" min="1" value="1" style="width:58px !important;text-align:center;border:1px solid #b98b2d;border-radius:6px;background:#fffaf0;color:#2f250c;font-weight:900;"></td>
+        <td style="padding:6px 8px;"><button type="button" class="add2e-vendor-buy" ${item.stock <= 0 || !context.buyer ? "disabled" : ""} style="border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Acheter</button></td>
+        ${context.isGM ? `<td style="padding:6px 8px;"><input class="add2e-vendor-stock-qty" type="number" min="0" value="${item.stock}" style="width:58px !important;text-align:center;border:1px solid #b98b2d;border-radius:6px;background:#fffaf0;color:#2f250c;font-weight:900;"><button type="button" class="add2e-vendor-stock-set" style="margin-left:6px;border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Stock</button></td>` : ""}
       </tr>`).join("");
 
+    const colCount = context.isGM ? 7 : 6;
     const div = document.createElement("div");
     div.className = "add2e-vendor-root";
+    div.style.cssText = "height:100%;max-height:100%;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(180deg,#fff8df,#ead39b);color:#2f250c;";
     div.innerHTML = `
-      <header class="add2e-vendor-header">
+      <header class="add2e-vendor-header" style="flex:0 0 auto;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #b98b2d;background:linear-gradient(180deg,#5a3511,#2f1b08);color:#ffe7a8;">
         <div>
-          <h2>${add2eVendorEscape(context.vendor?.name ?? "Boutique")}</h2>
-          <p>Acheteur : <strong>${add2eVendorEscape(context.buyer?.name ?? "aucun personnage assigné")}</strong></p>
+          <h2 style="margin:0;color:#ffe7a8;font-weight:950;">${add2eVendorEscape(context.vendor?.name ?? "Boutique")}</h2>
+          <p style="margin:4px 0 0;color:#fff2c2;">Acheteur : <strong>${add2eVendorEscape(context.buyer?.name ?? "aucun personnage assigné")}</strong></p>
         </div>
-        <div class="add2e-vendor-money">${add2eVendorEscape(context.buyerMoneyLabel)}</div>
+        <div class="add2e-vendor-money" style="padding:6px 10px;border:1px solid #d9bf73;border-radius:999px;background:#fff3c7;color:#3a2208;font-weight:950;white-space:nowrap;">${add2eVendorEscape(context.buyerMoneyLabel)}</div>
       </header>
-      <div class="add2e-vendor-toolbar">
-        <button type="button" class="add2e-vendor-filter active" data-filter="all">Tous</button>
-        <button type="button" class="add2e-vendor-filter" data-filter="Composant">Composants</button>
-        <button type="button" class="add2e-vendor-filter" data-filter="Projectile">Projectiles</button>
-        ${context.isGM ? `<button type="button" class="add2e-vendor-restock-all">Tout réapprovisionner</button>` : ""}
+      <div class="add2e-vendor-toolbar" style="flex:0 0 auto;display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid #d9bf73;background:#f6e2ad;">
+        <button type="button" class="add2e-vendor-filter active" data-filter="all" style="border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Tous</button>
+        <button type="button" class="add2e-vendor-filter" data-filter="Composant" style="border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Composants</button>
+        <button type="button" class="add2e-vendor-filter" data-filter="Projectile" style="border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Projectiles</button>
+        ${context.isGM ? `<button type="button" class="add2e-vendor-restock-all" style="margin-left:auto;border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Tout réapprovisionner</button>` : ""}
       </div>
-      <div class="add2e-vendor-table-wrap">
-        <table class="add2e-vendor-table">
-          <thead><tr><th>Article</th><th>Type</th><th>Prix</th><th>Stock</th><th>Qté</th><th>Achat</th>${context.isGM ? "<th>MJ</th>" : ""}</tr></thead>
-          <tbody>${rows || `<tr><td colspan="${context.isGM ? 7 : 6}">Aucun composant ou projectile en stock.</td></tr>`}</tbody>
+      <div class="add2e-vendor-table-wrap" style="flex:1 1 auto;min-height:0;overflow-y:auto !important;overflow-x:hidden;padding:12px 14px 16px;">
+        <table class="add2e-vendor-table" style="width:100%;border-collapse:collapse;background:rgba(255,252,242,.94);border:1px solid #d9bf73;table-layout:auto;">
+          <thead>
+            <tr>
+              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Article</th>
+              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Type</th>
+              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Prix</th>
+              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Stock</th>
+              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Qté</th>
+              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Achat</th>
+              ${context.isGM ? `<th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">MJ</th>` : ""}
+            </tr>
+          </thead>
+          <tbody>${rows || `<tr><td colspan="${colCount}" style="padding:12px;color:#2f250c;">Aucun composant ou projectile en stock.</td></tr>`}</tbody>
         </table>
       </div>`;
     return div;
   }
 
   _replaceHTML(result, content, _options = {}) {
+    content.style.overflow = "hidden";
+    content.style.padding = "0";
     content.replaceChildren(result);
   }
 
@@ -538,6 +558,13 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
     await super._onRender?.(context, options);
     const root = this.element?.querySelector?.(".add2e-vendor-root") ?? this.element;
     if (!root) return;
+
+    const windowContent = this.element?.closest?.(".application")?.querySelector?.(".window-content") ?? this.element?.parentElement;
+    if (windowContent) {
+      windowContent.style.overflow = "hidden";
+      windowContent.style.padding = "0";
+      windowContent.style.background = "linear-gradient(180deg,#fff8df,#ead39b)";
+    }
 
     root.querySelectorAll(".add2e-vendor-buy").forEach(button => {
       button.addEventListener("click", async ev => {
@@ -609,9 +636,9 @@ async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
 }
 
 function add2eBindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV4) return;
+  if (!token || token.__add2eVendorBoundV5) return;
   if (!add2eIsVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV4 = true;
+  token.__add2eVendorBoundV5 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
@@ -634,8 +661,8 @@ function add2eBindAllVendorTokens() {
 }
 
 function add2ePatchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V4) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V4 = true;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V5) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V5 = true;
 
   const TokenClass = globalThis.Token ?? foundry?.canvas?.placeables?.Token;
   const proto = TokenClass?.prototype;
@@ -682,8 +709,8 @@ function add2ePatchVendorTokenClick() {
 
 function add2ePatchActorSheetMoney() {
   const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eVendorMoneySheetV4) return;
-  proto.__add2eVendorMoneySheetV4 = true;
+  if (!proto || proto.__add2eVendorMoneySheetV5) return;
+  proto.__add2eVendorMoneySheetV5 = true;
 
   if (typeof proto.getData === "function") {
     const originalGetData = proto.getData;
@@ -722,8 +749,8 @@ function add2ePatchActorSheetMoney() {
 }
 
 function add2eRegisterVendorSockets() {
-  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V4) return;
-  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V4 = true;
+  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V5) return;
+  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V5 = true;
 
   game.socket?.on?.("system.add2e", async data => {
     if (!data || typeof data !== "object") return;
