@@ -1,7 +1,7 @@
 // ADD2E — Vendeur système : composants, projectiles et monnaie complète
 // ApplicationV2 + DialogV2, création automatique au premier lancement du monde.
 
-const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v8-boutique-image";
+const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v9-mj-open";
 globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
 
 const ADD2E_VENDOR_FLAG_SCOPE = "add2e";
@@ -553,7 +553,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
       vendor: this.vendor,
       buyer: this.buyer,
       buyerMoney: this.buyer ? add2eVendorGetMoney(this.buyer) : add2eVendorMoneyFromObject({}),
-      buyerMoneyLabel: this.buyer ? add2eVendorFormatMoney(add2eVendorGetMoney(this.buyer)) : "Aucun acheteur sélectionné",
+      buyerMoneyLabel: this.buyer ? add2eVendorFormatMoney(add2eVendorGetMoney(this.buyer)) : "Gestion MJ",
       items,
       isGM: game.user?.isGM === true,
       activeFilter: this.activeFilter ?? "all"
@@ -590,7 +590,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
       <header class="add2e-vendor-header" style="flex:0 0 auto;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #b98b2d;background:linear-gradient(180deg,#5a3511,#2f1b08);color:#ffe7a8;">
         <div>
           <h2 style="margin:0;color:#ffe7a8;font-weight:950;">${add2eVendorEscape(context.vendor?.name ?? "Boutique")}</h2>
-          <p style="margin:4px 0 0;color:#fff2c2;">Acheteur : <strong>${add2eVendorEscape(context.buyer?.name ?? "aucun personnage assigné")}</strong></p>
+          <p style="margin:4px 0 0;color:#fff2c2;">Acheteur : <strong>${add2eVendorEscape(context.buyer?.name ?? (context.isGM ? "gestion MJ" : "aucun personnage assigné"))}</strong></p>
         </div>
         <div class="add2e-vendor-money" style="padding:6px 10px;border:1px solid #d9bf73;border-radius:999px;background:#fff3c7;color:#3a2208;font-weight:950;white-space:nowrap;">${add2eVendorEscape(context.buyerMoneyLabel)}</div>
       </header>
@@ -686,7 +686,7 @@ export async function add2eOpenVendor({ vendor = null, buyer = null } = {}) {
   if (!vendor) vendor = await add2eCreateDefaultVendor();
   if (!vendor) return null;
   buyer = buyer ?? add2eVendorGetBuyer({ excludeVendor: true, preferCharacter: true });
-  if (!buyer) {
+  if (!buyer && !game.user?.isGM) {
     await add2eVendorAlert("Aucun acheteur", "Aucun personnage joueur n’est assigné ou sélectionné pour acheter chez ce vendeur.");
     return null;
   }
@@ -698,7 +698,6 @@ export async function add2eOpenVendor({ vendor = null, buyer = null } = {}) {
 async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
   const vendor = token?.actor ?? null;
   if (!add2eIsVendorActor(vendor)) return false;
-  if (singleClick && game.user?.isGM) return false;
 
   const now = Date.now();
   const key = `${vendor.id}:${game.user?.id ?? "user"}`;
@@ -713,9 +712,9 @@ async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
 }
 
 function add2eBindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV8) return;
+  if (!token || token.__add2eVendorBoundV9) return;
   if (!add2eIsVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV8 = true;
+  token.__add2eVendorBoundV9 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
@@ -723,7 +722,7 @@ function add2eBindVendorToken(token) {
   const handler = ev => {
     try {
       ev?.stopPropagation?.();
-      add2eOpenVendorFromToken(token, { singleClick: !game.user?.isGM });
+      add2eOpenVendorFromToken(token, { singleClick: true });
     } catch (err) {
       console.warn("[ADD2E][VENDOR][TOKEN_POINTER]", err);
     }
@@ -738,8 +737,8 @@ function add2eBindAllVendorTokens() {
 }
 
 function add2ePatchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V8) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V8 = true;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V9) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V9 = true;
 
   const TokenClass = globalThis.Token ?? foundry?.canvas?.placeables?.Token;
   const proto = TokenClass?.prototype;
@@ -747,7 +746,7 @@ function add2ePatchVendorTokenClick() {
     const original = proto._onClickLeft;
     proto._onClickLeft = function add2eVendorOnClickLeft(event) {
       try {
-        if (add2eIsVendorActor(this.actor) && !game.user?.isGM) {
+        if (add2eIsVendorActor(this.actor)) {
           add2eOpenVendorFromToken(this, { singleClick: true });
           return;
         }
@@ -777,7 +776,7 @@ function add2ePatchVendorTokenClick() {
   Hooks.on("createToken", () => window.setTimeout(add2eBindAllVendorTokens, 100));
   Hooks.on("updateToken", () => window.setTimeout(add2eBindAllVendorTokens, 100));
   Hooks.on("controlToken", (token, controlled) => {
-    if (controlled && add2eIsVendorActor(token?.actor) && !game.user?.isGM) add2eOpenVendorFromToken(token, { singleClick: true });
+    if (controlled && add2eIsVendorActor(token?.actor)) add2eOpenVendorFromToken(token, { singleClick: true });
   });
   Hooks.on("targetToken", (user, token, targeted) => {
     if (user?.id === game.user?.id && targeted && add2eIsVendorActor(token?.actor)) add2eOpenVendorFromToken(token, { singleClick: true });
@@ -786,8 +785,8 @@ function add2ePatchVendorTokenClick() {
 
 function add2ePatchActorSheetMoney() {
   const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eVendorMoneySheetV8) return;
-  proto.__add2eVendorMoneySheetV8 = true;
+  if (!proto || proto.__add2eVendorMoneySheetV9) return;
+  proto.__add2eVendorMoneySheetV9 = true;
 
   if (typeof proto.getData === "function") {
     const originalGetData = proto.getData;
@@ -826,8 +825,8 @@ function add2ePatchActorSheetMoney() {
 }
 
 function add2eRegisterVendorSockets() {
-  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V8) return;
-  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V8 = true;
+  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V9) return;
+  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V9 = true;
 
   game.socket?.on?.("system.add2e", async data => {
     if (!data || typeof data !== "object") return;
