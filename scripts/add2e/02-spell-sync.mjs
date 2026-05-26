@@ -1,9 +1,9 @@
 // ============================================================
 // ADD2E — Synchronisation automatique des sorts depuis add2e.sorts
-// Version : 2026-05-26-spell-sync-v7-known-spells-by-max-level
+// Version : 2026-05-26-spell-sync-v8-empty-cache-fallback
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-05-26-spell-sync-v7-known-spells-by-max-level";
+const ADD2E_SPELL_SYNC_VERSION = "2026-05-26-spell-sync-v8-empty-cache-fallback";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 function add2eSpellSyncClone(value) {
@@ -42,6 +42,8 @@ function add2eSpellSyncNormalize(value) {
     priests: "clerc",
     pretre: "clerc",
     pretres: "clerc",
+    prêtre: "clerc",
+    prêtres: "clerc",
     druid: "druide",
     druids: "druide",
     druides: "druide",
@@ -59,10 +61,7 @@ function add2eSpellSyncArray(value) {
     for (const key of ["lists", "spellLists", "classes", "classe", "class", "value", "values", "list", "tags", "items"]) {
       if (value[key] !== undefined) return add2eSpellSyncArray(value[key]);
     }
-    const numericValues = Object.keys(value)
-      .filter(k => /^\d+$/.test(k))
-      .sort((a, b) => Number(a) - Number(b))
-      .map(k => value[k]);
+    const numericValues = Object.keys(value).filter(k => /^\d+$/.test(k)).sort((a, b) => Number(a) - Number(b)).map(k => value[k]);
     if (numericValues.length) return add2eSpellSyncArray(numericValues);
   }
   return [value];
@@ -89,7 +88,6 @@ function add2eSpellSyncClassLists(classItem) {
   const className = add2eSpellSyncNormalize(classItem?.name ?? sys.name ?? sys.label ?? sys.nom ?? "");
   if (className.includes("clerc")) lists.push("clerc");
   if (className.includes("druide")) lists.push("druide");
-
   return [...new Set(lists)].filter(v => ["clerc", "druide"].includes(v));
 }
 
@@ -198,7 +196,7 @@ function add2eSpellSyncMaxSpellLevel(classItem, actorLevel) {
   const progression = add2eSpellSyncMaybeJson(sys.progression);
   const rows = Array.isArray(progression) ? progression : [];
   const row = rows.find(r => Number(r?.niveau ?? r?.level) === level) ?? rows[level - 1] ?? null;
-  const maxFromArray = (raw) => {
+  const maxFromArray = raw => {
     const arr = add2eSpellSyncSlotsArray(raw);
     let max = 0;
     arr.forEach((value, index) => {
@@ -206,7 +204,7 @@ function add2eSpellSyncMaxSpellLevel(classItem, actorLevel) {
     });
     return max;
   };
-  const maxFromContainer = (raw) => {
+  const maxFromContainer = raw => {
     raw = add2eSpellSyncMaybeJson(raw);
     if (!raw || typeof raw !== "object") return 0;
     if (Array.isArray(raw)) return maxFromArray(raw);
@@ -282,13 +280,8 @@ function add2eSpellSyncSlotProbe(actor, classLists, spellLevel) {
 function add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, fallbackMaxSpellLevel, options = {}) {
   const lvl = Number(spellLevel) || 0;
   if (lvl < 1) return false;
-
   const max = Number(fallbackMaxSpellLevel) || 0;
   const importMode = options.importMode === true || options.mode === "import";
-
-  // La synchronisation automatique remplit la liste des sorts connus/disponibles.
-  // Les emplacements servent ensuite à la mémorisation/préparation, ils ne doivent
-  // pas empêcher l'ajout du sort si le niveau de sort est accessible par la classe.
   if (importMode) return max > 0 && lvl <= max;
 
   const probe = add2eSpellSyncSlotProbe(actor, classLists, lvl);
@@ -385,6 +378,24 @@ function add2eInvalidateSpellSyncCache() {
   globalThis.ADD2E_SPELL_SYNC_CACHE = null;
 }
 
+async function add2eSpellSyncGetAllCompendiumDocuments(pack) {
+  let docs = [];
+  let typedFailed = false;
+  try {
+    docs = await pack.getDocuments({ type: "sort" });
+  } catch (err) {
+    typedFailed = true;
+    console.warn("[ADD2E][SPELL_SYNC][CACHE_BUILD] getDocuments({type:'sort'}) impossible, fallback getDocuments()", err);
+  }
+
+  if (!Array.isArray(docs) || docs.length === 0) {
+    if (!typedFailed) console.warn("[ADD2E][SPELL_SYNC][CACHE_BUILD] getDocuments({type:'sort'}) a retourné 0 document, fallback getDocuments() complet.");
+    docs = await pack.getDocuments();
+  }
+
+  return Array.isArray(docs) ? docs : [];
+}
+
 async function add2eBuildSpellSyncCache({ force = false } = {}) {
   const pack = game.packs.get("add2e.sorts");
   if (!pack) throw new Error("Compendium de sorts introuvable : add2e.sorts");
@@ -393,20 +404,18 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
   if (!force && existing?.cacheKey === cacheKey && Array.isArray(existing.entries)) return existing;
 
   const t0 = performance.now();
-  let docs = [];
-  try { docs = await pack.getDocuments({ type: "sort" }); }
-  catch (err) {
-    console.warn("[ADD2E][SPELL_SYNC][CACHE_BUILD] getDocuments({type:'sort'}) impossible, fallback getDocuments()", err);
-    docs = await pack.getDocuments();
-  }
-
+  const docs = await add2eSpellSyncGetAllCompendiumDocuments(pack);
   const entries = [];
   const byKey = new Map();
   const duplicateKeys = [];
   const skipped = [];
+  let nonSortDocuments = 0;
 
   for (const doc of docs ?? []) {
-    if (!doc || doc.type !== "sort") continue;
+    if (!doc || doc.type !== "sort") {
+      nonSortDocuments += 1;
+      continue;
+    }
     const data = doc.toObject();
     const system = data.system ?? {};
     const level = add2eSpellSyncSpellLevel(system);
@@ -435,9 +444,9 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
   }
 
   entries.sort((a, b) => a.level - b.level || String(a.name).localeCompare(String(b.name), "fr"));
-  const cache = { cacheKey, builtAt: Date.now(), entries, count: entries.length, duplicateCount: duplicateKeys.length, duplicateKeys, skippedCount: skipped.length, skipped };
+  const cache = { cacheKey, builtAt: Date.now(), entries, count: entries.length, docsCount: docs.length, nonSortDocuments, duplicateCount: duplicateKeys.length, duplicateKeys, skippedCount: skipped.length, skipped };
   globalThis.ADD2E_SPELL_SYNC_CACHE = cache;
-  console.info("[ADD2E][SPELL_SYNC][CACHE_READY]", { version: ADD2E_SPELL_SYNC_VERSION, pack: pack.collection, entries: entries.length, duplicatesMerged: duplicateKeys.length, skipped: skipped.length, ms: Math.round(performance.now() - t0) });
+  console.info("[ADD2E][SPELL_SYNC][CACHE_READY]", { version: ADD2E_SPELL_SYNC_VERSION, pack: pack.collection, docs: docs.length, nonSortDocuments, entries: entries.length, duplicatesMerged: duplicateKeys.length, skipped: skipped.length, ms: Math.round(performance.now() - t0) });
   if (skipped.length) console.warn("[ADD2E][SPELL_SYNC][CACHE_SKIPPED]", skipped.slice(0, 80));
   if (duplicateKeys.length) console.info("[ADD2E][SPELL_SYNC][CACHE_DUPLICATES_MERGED]", duplicateKeys.slice(0, 80));
   return cache;
@@ -528,11 +537,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
       const spellLevel = entry.level;
       if (spellLevel < minSpellLevel) { rejectEntry(entry, "skip-below-min"); continue; }
       if (!add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, maxSpellLevel, { importMode: true })) {
-        rejectEntry(entry, "skip-level-not-accessible", {
-          maxSpellLevel,
-          classLists,
-          slotProbe: add2eSpellSyncSlotProbe(actor, classLists, spellLevel)
-        });
+        rejectEntry(entry, "skip-level-not-accessible", { maxSpellLevel, classLists, slotProbe: add2eSpellSyncSlotProbe(actor, classLists, spellLevel) });
         continue;
       }
       if (!entry.lists.some(list => classListSet.has(list))) { rejectEntry(entry, `skip-list:${entry.lists.join("/") || "none"}`); continue; }
@@ -554,10 +559,10 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
     if (createData.length) await actor.createEmbeddedDocuments("Item", createData, { add2eInternal: true, add2eSpellSync: true });
     await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
     const durationMs = Math.round(performance.now() - t0);
-    const summary = { actor: actor.name, classe: classItem.name, actorLevel, classLists, maxSpellLevel, minSpellLevel, deleted: mode === "replace" ? existingSpellIds.length : 0, imported: createData.length, mode, cacheEntries: cache.entries.length, durationMs, scanStatsByLevel, importedNames: createData.map(s => s.name), rejectedSpells };
+    const summary = { actor: actor.name, classe: classItem.name, actorLevel, classLists, maxSpellLevel, minSpellLevel, deleted: mode === "replace" ? existingSpellIds.length : 0, imported: createData.length, mode, cacheEntries: cache.entries.length, cacheDocs: cache.docsCount, nonSortDocuments: cache.nonSortDocuments, durationMs, scanStatsByLevel, importedNames: createData.map(s => s.name), rejectedSpells };
     console.info("[ADD2E][CLASS_DROP_SPELLS][DONE]", summary);
     if (rejectedSpells.length) console.warn("[ADD2E][CLASS_DROP_SPELLS][REJECTED]", rejectedSpells);
-    return { handled: true, imported: createData.length, deleted: mode === "replace" ? existingSpellIds.length : 0, maxSpellLevel, minSpellLevel, mode, durationMs, rejectedSpells };
+    return { handled: true, imported: createData.length, deleted: mode === "replace" ? existingSpellIds.length : 0, maxSpellLevel, minSpellLevel, mode, durationMs, cacheEntries: cache.entries.length, cacheDocs: cache.docsCount, nonSortDocuments: cache.nonSortDocuments, rejectedSpells };
   } finally {
     add2eSpellSyncCloseWaitMessage(waitDialog);
   }
@@ -630,6 +635,7 @@ try { globalThis.add2eSpellSyncSetLastMax = add2eSpellSyncSetLastMax; } catch (_
 try { globalThis.add2eSpellSyncOpenWaitMessage = add2eSpellSyncOpenWaitMessage; } catch (_e) {}
 try { globalThis.add2eSpellSyncCloseWaitMessage = add2eSpellSyncCloseWaitMessage; } catch (_e) {}
 try { globalThis.add2eSpellSyncMatchesClassLists = add2eSpellSyncMatchesClassLists; } catch (_e) {}
+try { globalThis.add2eSpellSyncGetAllCompendiumDocuments = add2eSpellSyncGetAllCompendiumDocuments; } catch (_e) {}
 try { globalThis.add2eBuildSpellSyncCache = add2eBuildSpellSyncCache; } catch (_e) {}
 try { globalThis.add2eWarmSpellSyncCache = add2eWarmSpellSyncCache; } catch (_e) {}
 try { globalThis.add2eReloadSpellSyncCache = add2eReloadSpellSyncCache; } catch (_e) {}
