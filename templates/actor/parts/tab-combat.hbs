@@ -69,6 +69,45 @@
         </div>
 
         <div class="a2e-panel">
+          <h2>Carquois et projectiles</h2>
+          <div class="a2e-panel-body">
+            <table class="a2e-table add2e-quiver-table">
+              <thead>
+                <tr><th>État</th><th>Projectile</th><th>Type</th><th>Qté</th><th>Bonus</th><th>Récup.</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                {{#each listeObjets as |munition|}}
+                  {{#if (eq munition.system.categorie "munition")}}
+                    <tr class="item add2e-quiver-row" data-item-id="{{munition._id}}">
+                      <td>{{#if munition.system.equipee}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td>
+                      <td><b>{{munition.name}}</b></td>
+                      <td>{{munition.system.sousType}}</td>
+                      <td>{{munition.system.quantite}}</td>
+                      <td>{{munition.system.bonus_hit}} / {{munition.system.bonus_dom}}</td>
+                      <td>{{#if munition.system.recuperable}}{{munition.system.taux_recuperation}}{{else}}Non{{/if}}</td>
+                      <td>
+                        <div class="a2e-actions">
+                          <a class="item-control a2e-action-icon a2e-equip-state-icon {{#if munition.system.equipee}}equip-green{{else}}equip-red{{/if}}"
+                             data-add2e-action="equip-projectile"
+                             data-actor-id="{{../actor._id}}"
+                             data-item-id="{{munition._id}}"
+                             title="{{#if munition.system.equipee}}Projectile équipé{{else}}Équiper ce projectile{{/if}}">
+                            <i class="fas fa-bullseye"></i>
+                          </a>
+                          <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{munition._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                          <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{munition._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/if}}
+                {{/each}}
+              </tbody>
+            </table>
+            <p class="a2e-muted">Seuls les objets avec <code>system.categorie = "munition"</code> apparaissent dans le carquois.</p>
+          </div>
+        </div>
+
+        <div class="a2e-panel">
           <h2>Armures, boucliers et heaumes</h2>
           <div class="a2e-panel-body">
             {{#if listeArmures.length}}
