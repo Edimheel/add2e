@@ -1,7 +1,7 @@
 // ADD2E — Consommables : composants de sorts, projectiles et carquois
-// Phase 2 dev-composant : outils communs, réglages et hooks de restitution.
+// Phase 2/3 dev-composant : outils communs, réglages, carquois et hooks de restitution.
 
-const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase2-v1";
+const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase3-v2";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -55,6 +55,14 @@ function add2eUpdatePath(path, value) {
 function add2eSettingBool(key) {
   try { return !!game.settings.get("add2e", key); }
   catch (_err) { return false; }
+}
+
+function add2eChangeSetsEquippedTrue(changes) {
+  if (!changes) return false;
+  if (changes.system?.equipee === true || changes.system?.equipped === true) return true;
+  if (foundry?.utils?.hasProperty?.(changes, "system.equipee")) return foundry.utils.getProperty(changes, "system.equipee") === true;
+  if (foundry?.utils?.hasProperty?.(changes, "system.equipped")) return foundry.utils.getProperty(changes, "system.equipped") === true;
+  return false;
 }
 
 export function add2eConsumablesSettings() {
@@ -154,7 +162,8 @@ export async function add2eEquipProjectile(actor, projectile) {
   for (const item of actor.items ?? []) {
     if (!add2eIsAmmunition(item)) continue;
     if (add2eAmmoType(item) !== ammoType) continue;
-    updates.push({ _id: item.id, "system.equipee": item.id === projectile.id });
+    const expected = item.id === projectile.id;
+    if (item.system?.equipee !== expected) updates.push({ _id: item.id, "system.equipee": expected });
   }
 
   if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eReason: "equip-projectile" });
@@ -371,6 +380,24 @@ function add2eRegisterConsumableHooks() {
     if (!add2eSettingBool("gestionProjectiles")) return;
     try { await add2eRestoreProjectilesAtCombatEnd(combat); }
     catch (err) { console.warn("[ADD2E][CONSUMABLES][COMBAT_END_RESTORE]", err); }
+  });
+
+  Hooks.on("updateItem", async (item, changes, _options, userId) => {
+    if (globalThis.__ADD2E_CONSUMABLES_EQUIP_GUARD) return;
+    if (userId !== game.user?.id) return;
+    if (!add2eIsAmmunition(item)) return;
+    if (!add2eChangeSetsEquippedTrue(changes)) return;
+    const actor = item.parent;
+    if (!actor?.items || !actor?.updateEmbeddedDocuments) return;
+
+    try {
+      globalThis.__ADD2E_CONSUMABLES_EQUIP_GUARD = true;
+      await add2eEquipProjectile(actor, item);
+    } catch (err) {
+      console.warn("[ADD2E][CONSUMABLES][EQUIP_PROJECTILE_HOOK]", err);
+    } finally {
+      globalThis.__ADD2E_CONSUMABLES_EQUIP_GUARD = false;
+    }
   });
 }
 
