@@ -1,7 +1,7 @@
 // ADD2E — Vendeur système : composants, projectiles et monnaie complète
 // ApplicationV2 + DialogV2, création automatique au premier lancement du monde.
 
-const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v3-token-money";
+const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v4-gm-socket-ui";
 globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
 
 const ADD2E_VENDOR_FLAG_SCOPE = "add2e";
@@ -191,6 +191,12 @@ function add2eVendorGetBuyer({ excludeVendor = true, preferCharacter = true } = 
   return null;
 }
 
+function add2eVendorIsResponsibleGM() {
+  if (!game.user?.isGM) return false;
+  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+  return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
+}
+
 async function add2eVendorDialog({ title = "Marchand", content = "", yes = "Compris", no = "Fermer" } = {}) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (DialogV2?.confirm) {
@@ -241,42 +247,79 @@ async function add2eVendorMergeOrCreateItem(actor, sourceItem, quantity) {
   return created?.[0] ?? null;
 }
 
-async function add2eVendorBuy({ vendor, buyer, item, quantity }) {
-  if (!vendor || !buyer || !item) return false;
-  if (add2eIsVendorActor(buyer)) {
-    await add2eVendorAlert("Acheteur invalide", "Le vendeur ne peut pas acheter dans sa propre boutique. Assigne un personnage au joueur ou sélectionne un personnage joueur.");
-    return false;
-  }
+async function add2eVendorBuyLocal({ vendor, buyer, item, quantity }, { confirm = true, notify = true } = {}) {
+  if (!vendor || !buyer || !item) return { ok: false, message: "Vendeur, acheteur ou article introuvable." };
+  if (add2eIsVendorActor(buyer)) return { ok: false, message: "Le vendeur ne peut pas acheter dans sa propre boutique." };
 
   quantity = Math.max(1, Math.floor(add2eVendorNumber(quantity, 1)));
   const stock = add2eVendorQuantity(item);
-  if (stock < quantity) {
-    await add2eVendorAlert("Stock insuffisant", `${item.name} : stock disponible ${stock}.`);
-    return false;
-  }
+  if (stock < quantity) return { ok: false, message: `${item.name} : stock disponible ${stock}.` };
 
   const price = add2eVendorResolvePrice(item);
   const total = price.copper * quantity;
   const buyerMoney = add2eVendorGetMoney(buyer);
-  if (add2eVendorMoneyToCopper(buyerMoney) < total) {
+  if (add2eVendorMoneyToCopper(buyerMoney) < total) return { ok: false, message: `${buyer.name} n’a pas assez d’argent. Prix : ${add2eVendorFormatMoney(total)}.` };
+
+  if (confirm) {
+    const accepted = await add2eVendorDialog({
+      title: "Confirmer l’achat",
+      content: `<div class="add2e-dialog add2e-vendor-alert"><h3>${add2eVendorEscape(item.name)}</h3><p>Acheter ${quantity} unité(s) pour <strong>${add2eVendorFormatMoney(total)}</strong> ?</p></div>`,
+      yes: "Acheter",
+      no: "Annuler"
+    });
+    if (!accepted) return { ok: false, cancelled: true, message: "Achat annulé." };
+  }
+
+  const paid = await add2eVendorSubtractMoney(buyer, total);
+  if (!paid) return { ok: false, message: "Paiement impossible." };
+  await item.update(add2eVendorSetQuantityPath(stock - quantity), { add2eReason: "vendor-stock-decrease" });
+  await add2eVendorMergeOrCreateItem(buyer, item, quantity);
+  const message = `${buyer.name} achète ${quantity} × ${item.name} pour ${add2eVendorFormatMoney(total)}.`;
+  if (notify) ui.notifications?.info?.(message);
+  return { ok: true, message };
+}
+
+async function add2eVendorRequestBuy({ vendor, buyer, item, quantity }) {
+  if (!vendor || !buyer || !item) return false;
+  quantity = Math.max(1, Math.floor(add2eVendorNumber(quantity, 1)));
+
+  const preview = await add2eVendorBuyLocal({ vendor, buyer, item, quantity }, { confirm: true, notify: false });
+  if (preview.cancelled) return false;
+  if (preview.ok) {
+    // Cas MJ ou monde permissif : l'achat a déjà été exécuté localement.
+    ui.notifications?.info?.(preview.message);
+    return true;
+  }
+
+  // Si l'échec local vient probablement d'une permission, le MJ exécutera réellement l'achat.
+  const price = add2eVendorResolvePrice(item);
+  const total = price.copper * quantity;
+  if (add2eVendorMoneyToCopper(add2eVendorGetMoney(buyer)) < total) {
     await add2eVendorAlert("Argent insuffisant", `${buyer.name} n’a pas assez d’argent. Prix : ${add2eVendorFormatMoney(total)}.`);
     return false;
   }
 
-  const confirmed = await add2eVendorDialog({
-    title: "Confirmer l’achat",
-    content: `<div class="add2e-dialog add2e-vendor-alert"><h3>${add2eVendorEscape(item.name)}</h3><p>Acheter ${quantity} unité(s) pour <strong>${add2eVendorFormatMoney(total)}</strong> ?</p></div>`,
-    yes: "Acheter",
-    no: "Annuler"
+  game.socket?.emit?.("system.add2e", {
+    type: "ADD2E_VENDOR_BUY_REQUEST",
+    requestId: foundry.utils.randomID(),
+    userId: game.user.id,
+    vendorId: vendor.id,
+    buyerId: buyer.id,
+    itemId: item.id,
+    quantity
   });
-  if (!confirmed) return false;
-
-  const paid = await add2eVendorSubtractMoney(buyer, total);
-  if (!paid) return false;
-  await item.update(add2eVendorSetQuantityPath(stock - quantity), { add2eReason: "vendor-stock-decrease" });
-  await add2eVendorMergeOrCreateItem(buyer, item, quantity);
-  ui.notifications?.info?.(`${buyer.name} achète ${quantity} × ${item.name} pour ${add2eVendorFormatMoney(total)}.`);
+  ui.notifications?.info?.("Demande d’achat envoyée au MJ.");
   return true;
+}
+
+async function add2eVendorBuy({ vendor, buyer, item, quantity }) {
+  if (game.user?.isGM) {
+    const result = await add2eVendorBuyLocal({ vendor, buyer, item, quantity }, { confirm: true, notify: true });
+    if (!result.ok && !result.cancelled) await add2eVendorAlert("Achat impossible", result.message);
+    return result.ok;
+  }
+
+  return add2eVendorRequestBuy({ vendor, buyer, item, quantity });
 }
 
 function add2eVendorStockMax(item) {
@@ -478,10 +521,12 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
         <button type="button" class="add2e-vendor-filter" data-filter="Projectile">Projectiles</button>
         ${context.isGM ? `<button type="button" class="add2e-vendor-restock-all">Tout réapprovisionner</button>` : ""}
       </div>
-      <table class="add2e-vendor-table">
-        <thead><tr><th>Article</th><th>Type</th><th>Prix</th><th>Stock</th><th>Qté</th><th>Achat</th>${context.isGM ? "<th>MJ</th>" : ""}</tr></thead>
-        <tbody>${rows || `<tr><td colspan="${context.isGM ? 7 : 6}">Aucun composant ou projectile en stock.</td></tr>`}</tbody>
-      </table>`;
+      <div class="add2e-vendor-table-wrap">
+        <table class="add2e-vendor-table">
+          <thead><tr><th>Article</th><th>Type</th><th>Prix</th><th>Stock</th><th>Qté</th><th>Achat</th>${context.isGM ? "<th>MJ</th>" : ""}</tr></thead>
+          <tbody>${rows || `<tr><td colspan="${context.isGM ? 7 : 6}">Aucun composant ou projectile en stock.</td></tr>`}</tbody>
+        </table>
+      </div>`;
     return div;
   }
 
@@ -564,9 +609,9 @@ async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
 }
 
 function add2eBindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV3) return;
+  if (!token || token.__add2eVendorBoundV4) return;
   if (!add2eIsVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV3 = true;
+  token.__add2eVendorBoundV4 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
@@ -589,8 +634,8 @@ function add2eBindAllVendorTokens() {
 }
 
 function add2ePatchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V3) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V3 = true;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V4) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V4 = true;
 
   const TokenClass = globalThis.Token ?? foundry?.canvas?.placeables?.Token;
   const proto = TokenClass?.prototype;
@@ -637,8 +682,8 @@ function add2ePatchVendorTokenClick() {
 
 function add2ePatchActorSheetMoney() {
   const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eVendorMoneySheetV3) return;
-  proto.__add2eVendorMoneySheetV3 = true;
+  if (!proto || proto.__add2eVendorMoneySheetV4) return;
+  proto.__add2eVendorMoneySheetV4 = true;
 
   if (typeof proto.getData === "function") {
     const originalGetData = proto.getData;
@@ -674,6 +719,45 @@ function add2ePatchActorSheetMoney() {
       });
     };
   }
+}
+
+function add2eRegisterVendorSockets() {
+  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V4) return;
+  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V4 = true;
+
+  game.socket?.on?.("system.add2e", async data => {
+    if (!data || typeof data !== "object") return;
+
+    if (data.type === "ADD2E_VENDOR_BUY_RESULT") {
+      if (data.userId !== game.user?.id) return;
+      if (data.ok) ui.notifications?.info?.(data.message ?? "Achat effectué.");
+      else ui.notifications?.warn?.(data.message ?? "Achat impossible.");
+      return;
+    }
+
+    if (data.type !== "ADD2E_VENDOR_BUY_REQUEST") return;
+    if (!add2eVendorIsResponsibleGM()) return;
+
+    const vendor = game.actors?.get(data.vendorId) ?? null;
+    const buyer = game.actors?.get(data.buyerId) ?? null;
+    const item = vendor?.items?.get(data.itemId) ?? null;
+    let result = { ok: false, message: "Achat impossible." };
+
+    try {
+      result = await add2eVendorBuyLocal({ vendor, buyer, item, quantity: data.quantity }, { confirm: false, notify: false });
+    } catch (err) {
+      console.warn("[ADD2E][VENDOR][SOCKET_BUY_ERROR]", err);
+      result = { ok: false, message: err?.message || "Erreur pendant l'achat." };
+    }
+
+    game.socket?.emit?.("system.add2e", {
+      type: "ADD2E_VENDOR_BUY_RESULT",
+      requestId: data.requestId,
+      userId: data.userId,
+      ok: !!result.ok,
+      message: result.message
+    });
+  });
 }
 
 function add2eRegisterVendorHooks() {
@@ -721,6 +805,7 @@ Hooks.once("ready", async () => {
   globalThis.add2eCreateDefaultVendor = add2eCreateDefaultVendor;
   globalThis.add2eVendorMoney = game.add2e.vendorMoney;
   await add2eEnsureVendorOnFirstWorldLaunch().catch(err => console.warn("[ADD2E][VENDOR][AUTO_CREATE]", err));
+  add2eRegisterVendorSockets();
   add2ePatchActorSheetMoney();
   add2ePatchVendorTokenClick();
   window.setTimeout(add2eBindAllVendorTokens, 500);
