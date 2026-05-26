@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v26b-effects-time-helper-fix
+// Version : 2026-05-25-v27-effects-origin-filter-fix
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v26b-effects-time-helper-fix";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v27-effects-origin-filter-fix";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v26";
+const STORAGE_KEY = "add2e.actionHud.state.v27";
 
 let hudActor = null;
 let hudToken = null;
@@ -76,7 +76,7 @@ function defaultState() { return { left: 116, bottom: 22, width: 560, maxMenuHei
 function loadState() {
   if (state) return state;
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem("add2e.actionHud.state.v25") || "null");
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem("add2e.actionHud.state.v26") || localStorage.getItem("add2e.actionHud.state.v25") || "null");
     state = raw && typeof raw === "object" ? { ...defaultState(), ...raw } : defaultState();
   } catch (_e) { state = defaultState(); }
   return state;
@@ -136,32 +136,44 @@ function collectEffects(actor = currentActor(), token = hudToken) {
   }
   return [...map.values()];
 }
-function effectTags(effect) {
-  const f = effect?.flags?.add2e ?? {};
-  return [effect?.name, effect?.origin, f.type, f.category, f.source, f.sourceType, f.sourceItemType, f.sourceItemId, f.itemId, f.originItemId, ...arr(f.tags), ...arr(f.effectTags), ...arr(effect?.statuses)].map(norm).filter(Boolean);
-}
 function effectOriginItem(actor, effect) {
-  const f = effect?.flags?.add2e ?? {};
-  const directId = f.sourceItemId ?? f.itemId ?? f.originItemId ?? null;
+  const flags = effect?.flags?.add2e ?? {};
+  const directId = flags.sourceItemId ?? flags.itemId ?? flags.originItemId ?? null;
   if (directId && actor?.items?.get?.(directId)) return actor.items.get(directId);
   const origin = String(effect?.origin ?? "");
   const itemId = origin.match(/\.Item\.([A-Za-z0-9]{16})/)?.[1] ?? origin.match(/Item\.([A-Za-z0-9]{16})/)?.[1] ?? null;
   return itemId && actor?.items?.get?.(itemId) ? actor.items.get(itemId) : null;
 }
 function isRaceOrClassEffect(actor, effect) {
-  const tags = effectTags(effect);
-  const joined = tags.join(" ");
-  if (tags.some(t => ["race", "racial", "raciaux", "raciale", "classe", "class", "class_feature"].includes(t))) return true;
-  if (/race:|source:race|type:race|classe:|source:classe|type:classe|class_feature/.test(joined)) return true;
-  return ["race", "classe", "class"].includes(String(effectOriginItem(actor, effect)?.type ?? "").toLowerCase());
+  const item = effectOriginItem(actor, effect);
+  const itemType = String(item?.type ?? "").toLowerCase();
+
+  if (["sort", "arme", "armure", "objet", "object", "objet_magique", "magic", "equipment"].includes(itemType)) return false;
+  if (["race", "classe", "class"].includes(itemType)) return true;
+
+  const flags = effect?.flags?.add2e ?? {};
+  const explicit = [
+    flags.type,
+    flags.category,
+    flags.sourceType,
+    flags.sourceItemType,
+    ...arr(flags.tags),
+    ...arr(flags.effectTags)
+  ].map(norm).filter(Boolean);
+
+  if (explicit.some(t => ["race", "racial", "raciaux", "raciale", "classe", "class", "class_feature"].includes(t))) return true;
+
+  const name = norm(effect?.name ?? "");
+  if (/effets_de_classe|effet_de_classe|class_feature/.test(name)) return true;
+
+  return false;
 }
 function isSpellEffect(actor, effect) {
   const item = effectOriginItem(actor, effect);
   if (String(item?.type ?? "").toLowerCase() === "sort") return true;
-  const tags = effectTags(effect);
-  const joined = tags.join(" ");
+  const flags = effect?.flags?.add2e ?? {};
+  const tags = [flags.type, flags.category, flags.sourceType, flags.sourceItemType, ...arr(flags.tags), ...arr(flags.effectTags)].map(norm).filter(Boolean);
   if (tags.some(t => ["sort", "spell", "magie", "magique", "magical", "sortilege"].includes(t))) return true;
-  if (/source:sort|type:sort|source_spell|spell|sort/.test(joined)) return true;
   return /benediction|aura_magique|nystul|malediction|protection|bouclier/.test(norm(effect?.name ?? ""));
 }
 function visibleEffects(actor = currentActor()) {
@@ -483,9 +495,9 @@ Hooks.once("init", () => {
     add2eHudFollowCurrentCombatant: game.add2e.followCurrentCombatantHud,
     add2eHudForceOpen: () => setRetracted(hud(), false, true),
     add2eHudForceRetract: () => setRetracted(hud(), true, true),
-    add2eHudAllEffects: () => collectEffects(currentActor(), hudToken).map(e => ({ id: e.id, name: e.name, disabled: e.disabled, img: e.img || e.icon, origin: e.origin, flags: e.flags?.add2e ?? {}, duration: e.duration ?? {} })),
-    add2eHudVisibleEffects: () => visibleEffects(currentActor()).map(e => ({ id: e.id, name: e.name, disabled: e.disabled, img: e.img || e.icon, origin: e.origin, flags: e.flags?.add2e ?? {}, duration: e.duration ?? {} })),
-    add2eHudFixDebug: () => ({ version: ADD2E_ACTION_HUD_VERSION, hud: !!hud(), actorId: hudActor?.id ?? null, actor: currentActor()?.name ?? null, activeTab, state: loadState(), selected: canvas?.tokens?.controlled?.map?.(t => t.name) ?? [], effectsAll: collectEffects(currentActor(), hudToken).map(e => e.name), effectsVisible: visibleEffects(currentActor()).map(e => e.name), dragging, resizing }),
+    add2eHudAllEffects: () => collectEffects(currentActor(), hudToken).map(e => ({ id: e.id, name: e.name, disabled: e.disabled, img: e.img || e.icon, origin: e.origin, originItem: effectOriginItem(currentActor(), e)?.name ?? null, originType: effectOriginItem(currentActor(), e)?.type ?? null, flags: e.flags?.add2e ?? {}, duration: e.duration ?? {} })),
+    add2eHudVisibleEffects: () => visibleEffects(currentActor()).map(e => ({ id: e.id, name: e.name, disabled: e.disabled, img: e.img || e.icon, origin: e.origin, originItem: effectOriginItem(currentActor(), e)?.name ?? null, originType: effectOriginItem(currentActor(), e)?.type ?? null, flags: e.flags?.add2e ?? {}, duration: e.duration ?? {} })),
+    add2eHudFixDebug: () => ({ version: ADD2E_ACTION_HUD_VERSION, hud: !!hud(), actorId: hudActor?.id ?? null, actor: currentActor()?.name ?? null, activeTab, state: loadState(), selected: canvas?.tokens?.controlled?.map?.(t => t.name) ?? [], effectsAll: collectEffects(currentActor(), hudToken).map(e => ({ name: e.name, originItem: effectOriginItem(currentActor(), e)?.name ?? null, originType: effectOriginItem(currentActor(), e)?.type ?? null, hiddenRaceClass: isRaceOrClassEffect(currentActor(), e) })), effectsVisible: visibleEffects(currentActor()).map(e => e.name), dragging, resizing }),
     add2eHudCheck: () => ({ version: ADD2E_ACTION_HUD_VERSION, actorId: hudActor?.id ?? null, actor: currentActor()?.name ?? null, activeTab, retracted: loadState().menuRetracted, attackRoll: typeof globalThis.add2eAttackRoll, castSpell: typeof globalThis.add2eCastSpell, featureOnUse: typeof globalThis.add2eExecuteClassFeatureOnUse, hud: !!hud() })
   });
   console.log(`${TAG}[INIT]`, ADD2E_ACTION_HUD_VERSION);
