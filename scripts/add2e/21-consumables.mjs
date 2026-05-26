@@ -1,7 +1,7 @@
 // ADD2E — Consommables : composants de sorts, projectiles et carquois
 // Phase 2/3/4 dev-composant : réglages, carquois, drop de munitions, attaque projectile et restitution.
 
-const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase4-projectiles-v2-no-chat";
+const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase4-projectiles-v3-dialogs";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -60,6 +60,35 @@ function add2eUpdatePath(path, value) {
 function add2eSettingBool(key) {
   try { return !!game.settings.get("add2e", key); }
   catch (_err) { return false; }
+}
+
+async function add2eConsumablesAlert({ title = "Action impossible", message = "Action impossible.", icon = "fa-triangle-exclamation" } = {}) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  const content = `
+    <div class="add2e-dialog add2e-consumable-alert" style="display:flex;gap:12px;align-items:flex-start;">
+      <div style="font-size:28px;color:#8a5a00;"><i class="fas ${icon}"></i></div>
+      <div>
+        <h3 style="margin:0 0 6px 0;">${title}</h3>
+        <p style="margin:0;">${message}</p>
+      </div>
+    </div>`;
+
+  if (DialogV2?.alert) {
+    try {
+      await DialogV2.alert({
+        window: { title },
+        content,
+        ok: { label: "Compris" },
+        modal: true
+      });
+      return true;
+    } catch (err) {
+      console.warn("[ADD2E][CONSUMABLES][DIALOG_ALERT_ERROR]", err);
+    }
+  }
+
+  ui.notifications?.warn?.(message);
+  return false;
 }
 
 function add2eChangeSetsEquippedTrue(changes) {
@@ -192,7 +221,7 @@ export async function add2eReserveProjectile(actor, arme) {
   if (!projectile) return { blocked: true, message: `Aucun projectile équipé pour ${arme?.name ?? "cette arme"}.`, actor, arme, required };
 
   const quantity = add2eQuantity(projectile);
-  if (quantity <= 0) return { blocked: true, message: `${projectile.name} : quantité insuffisante.`, actor, arme, projectile, required };
+  if (quantity <= 0) return { blocked: true, message: `${projectile.name} : il n'en reste plus dans le carquois.`, actor, arme, projectile, required };
 
   return { blocked: false, actor, arme, projectile, required, quantity: 1, before: quantity };
 }
@@ -345,7 +374,11 @@ export async function add2eReserveSpellComponents(actor, sort) {
     reservations.push({ component, item, quantity: component.quantite, before: available });
   }
 
-  if (missing.length) return { blocked: true, actor, sort, components, reservations: [], message: `Composant(s) manquant(s) : ${missing.join(", ")}.` };
+  if (missing.length) {
+    const message = `Composant(s) manquant(s) : ${missing.join(", ")}.`;
+    await add2eConsumablesAlert({ title: "Composant manquant", message, icon: "fa-pouch" });
+    return { blocked: true, actor, sort, components, reservations: [], message };
+  }
 
   for (const reservation of reservations) {
     await reservation.item.update(add2eUpdatePath("system.quantite", reservation.before - reservation.quantity), { add2eReason: "consume-spell-component" });
@@ -482,6 +515,11 @@ function add2eResolveAttackActorAndWeapon(args = {}) {
   return { actor, arme };
 }
 
+function add2eProjectileDialogTitle(reservation) {
+  if (!reservation?.projectile) return "Projectile non équipé";
+  return "Carquois vide";
+}
+
 function add2eWrapAttackRollForProjectiles() {
   if (globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED) return;
   if (typeof globalThis.add2eAttackRoll !== "function") return;
@@ -492,7 +530,11 @@ function add2eWrapAttackRollForProjectiles() {
     const { actor, arme } = add2eResolveAttackActorAndWeapon(args);
     const reservation = await add2eReserveProjectile(actor, arme);
     if (reservation?.blocked) {
-      ui.notifications?.warn?.(reservation.message || "Projectile indisponible.");
+      await add2eConsumablesAlert({
+        title: add2eProjectileDialogTitle(reservation),
+        message: reservation.message || "Projectile indisponible.",
+        icon: "fa-bullseye"
+      });
       return false;
     }
     if (!reservation?.projectile) return await originalAttackRoll.call(this, args);
