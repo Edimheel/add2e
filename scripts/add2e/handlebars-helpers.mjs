@@ -43,6 +43,43 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.formatSortChamp) {
   });
 }
 
+function add2eHbsSlug(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[’']/g, "_")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eHbsAsArray(value) {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  if (typeof value === "object") return Object.values(value);
+  return [value];
+}
+
+function add2eHbsComponentSlug(component) {
+  const s = component?.system ?? {};
+  return add2eHbsSlug(s.slug ?? s.composantSlug ?? s.sousType ?? s.sous_type ?? component?.name ?? "");
+}
+
+function add2eHbsSpellMaterialSlugs(sort) {
+  const s = sort?.system ?? {};
+  const raw = s.composants_materiels ?? s.composantsMateriels ?? s.materialComponents ?? [];
+  const slugs = [];
+  for (const entry of add2eHbsAsArray(raw)) {
+    if (!entry) continue;
+    if (typeof entry === "string") {
+      slugs.push(add2eHbsSlug(entry));
+      continue;
+    }
+    slugs.push(add2eHbsSlug(entry.slug ?? entry.nom ?? entry.name ?? entry.label ?? ""));
+  }
+  return slugs.filter(Boolean);
+}
+
 if (typeof Handlebars !== "undefined") {
   // Capitalise la première lettre
   Handlebars.registerHelper("capitalize", str =>
@@ -119,5 +156,22 @@ if (typeof Handlebars !== "undefined") {
       .filter(Boolean)
       .map(source => String(source).replace(/:\s*[-+]?\d+\s*$/, ""))
       .join("\n");
+  });
+
+  Handlebars.registerHelper("componentSpellNames", function(component, sortsParNiveau) {
+    const componentSlug = add2eHbsComponentSlug(component);
+    if (!componentSlug || !sortsParNiveau || typeof sortsParNiveau !== "object") return "—";
+
+    const spells = [];
+    for (const list of Object.values(sortsParNiveau)) {
+      for (const sort of add2eHbsAsArray(list)) {
+        const slugs = add2eHbsSpellMaterialSlugs(sort);
+        if (slugs.includes(componentSlug)) spells.push(String(sort?.name ?? "Sort"));
+      }
+    }
+
+    if (!spells.length) return "—";
+    const unique = [...new Set(spells)].sort((a, b) => a.localeCompare(b));
+    return unique.join(", ");
   });
 }
