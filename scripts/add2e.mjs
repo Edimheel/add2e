@@ -31,6 +31,32 @@ import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/20-session-xp.mjs";
 import "./add2e/21-consumables.mjs";
 
+const ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION = "2026-05-26-dialog-v2-alert-fallback-v1";
+globalThis.ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION = ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION;
+
+function add2eInstallDialogV2AlertFallback() {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2 || typeof DialogV2.alert === "function" || typeof DialogV2.confirm !== "function") return false;
+
+  DialogV2.alert = async function add2eDialogV2AlertFallback({ window = {}, content = "", ok = {}, modal = true } = {}) {
+    return DialogV2.confirm({
+      window,
+      content,
+      yes: { label: ok?.label || "Compris" },
+      no: { label: "Fermer" },
+      modal
+    });
+  };
+
+  game.add2e = game.add2e ?? {};
+  game.add2e.dialogV2AlertFallbackVersion = ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION;
+  console.log("[ADD2E][DIALOG_V2][ALERT_FALLBACK]", ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION);
+  return true;
+}
+
+Hooks.once("init", () => add2eInstallDialogV2AlertFallback());
+Hooks.once("ready", () => add2eInstallDialogV2AlertFallback());
+
 function add2eRemoveLegacyClassSheetValidationHook() {
   const stores = [Hooks.events, Hooks._hooks].filter(Boolean);
   for (const store of stores) {
