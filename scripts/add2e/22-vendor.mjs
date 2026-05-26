@@ -1,7 +1,7 @@
 // ADD2E — Vendeur système : composants, projectiles et monnaie complète
 // ApplicationV2 + DialogV2, création automatique au premier lancement du monde.
 
-const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v1";
+const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v2-token-click";
 globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
 
 const ADD2E_VENDOR_FLAG_SCOPE = "add2e";
@@ -90,6 +90,10 @@ function add2eVendorStockKind(item) {
   return "Objet";
 }
 
+function add2eIsVendorActor(actor) {
+  return actor?.getFlag?.(ADD2E_VENDOR_FLAG_SCOPE, "isVendor") === true || actor?.name === ADD2E_VENDOR_NAME;
+}
+
 function add2eVendorDefaultStock(item) {
   const name = String(item?.name ?? "").toLowerCase();
   const magical = /\+\d|magique|argent|special|spécial|tueur|venin|poison/.test(name) || add2eVendorTags(item).some(t => /magique|special|spécial/i.test(String(t)));
@@ -176,11 +180,14 @@ function add2eVendorSameItemIdentity(a, b) {
   return String(a?.type ?? "") === String(b?.type ?? "") && add2eVendorSlug(a?.name) === add2eVendorSlug(b?.name);
 }
 
-function add2eVendorGetBuyer() {
-  const controlled = canvas?.tokens?.controlled?.[0]?.actor ?? null;
-  if (controlled?.isOwner || game.user?.isGM) return controlled;
+function add2eVendorGetBuyer({ excludeVendor = true, preferCharacter = true } = {}) {
   const character = game.user?.character ?? null;
-  if (character?.isOwner || game.user?.isGM) return character;
+  if (preferCharacter && character && (!excludeVendor || !add2eIsVendorActor(character)) && (character.isOwner || game.user?.isGM)) return character;
+
+  const controlled = canvas?.tokens?.controlled?.[0]?.actor ?? null;
+  if (controlled && (!excludeVendor || !add2eIsVendorActor(controlled)) && (controlled.isOwner || game.user?.isGM)) return controlled;
+
+  if (!preferCharacter && character && (!excludeVendor || !add2eIsVendorActor(character)) && (character.isOwner || game.user?.isGM)) return character;
   return null;
 }
 
@@ -236,6 +243,11 @@ async function add2eVendorMergeOrCreateItem(actor, sourceItem, quantity) {
 
 async function add2eVendorBuy({ vendor, buyer, item, quantity }) {
   if (!vendor || !buyer || !item) return false;
+  if (add2eIsVendorActor(buyer)) {
+    await add2eVendorAlert("Acheteur invalide", "Le vendeur ne peut pas acheter dans sa propre boutique. Assigne un personnage au joueur ou sélectionne un personnage joueur.");
+    return false;
+  }
+
   quantity = Math.max(1, Math.floor(add2eVendorNumber(quantity, 1)));
   const stock = add2eVendorQuantity(item);
   if (stock < quantity) {
@@ -340,9 +352,7 @@ async function add2eVendorBuildStockData() {
 }
 
 export function add2eFindDefaultVendor() {
-  return Array.from(game.actors ?? []).find(actor => actor.getFlag?.(ADD2E_VENDOR_FLAG_SCOPE, "isVendor") === true)
-    ?? game.actors?.find?.(a => a.name === ADD2E_VENDOR_NAME)
-    ?? null;
+  return Array.from(game.actors ?? []).find(actor => add2eIsVendorActor(actor)) ?? null;
 }
 
 export async function add2eCreateDefaultVendor({ force = false } = {}) {
@@ -351,10 +361,20 @@ export async function add2eCreateDefaultVendor({ force = false } = {}) {
   if (existing && !force) return existing;
 
   const stock = await add2eVendorBuildStockData();
+  const observer = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OBSERVER ?? 2;
   const actor = await Actor.create({
     name: ADD2E_VENDOR_NAME,
     type: "personnage",
     img: "icons/containers/bags/pouch-leather-gold-brown.webp",
+    ownership: { default: observer },
+    prototypeToken: {
+      name: ADD2E_VENDOR_NAME,
+      actorLink: true,
+      disposition: CONST?.TOKEN_DISPOSITIONS?.NEUTRAL ?? 0,
+      displayName: CONST?.TOKEN_DISPLAY_MODES?.OWNER_HOVER ?? 30,
+      displayBars: CONST?.TOKEN_DISPLAY_MODES?.NONE ?? 0,
+      texture: { src: "icons/containers/bags/pouch-leather-gold-brown.webp" }
+    },
     flags: {
       add2e: {
         isVendor: true,
@@ -392,7 +412,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
   constructor({ vendor, buyer } = {}, options = {}) {
     super(options);
     this.vendor = vendor;
-    this.buyer = buyer ?? add2eVendorGetBuyer();
+    this.buyer = buyer ?? add2eVendorGetBuyer({ excludeVendor: true, preferCharacter: true });
   }
 
   get title() {
@@ -448,7 +468,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
       <header class="add2e-vendor-header">
         <div>
           <h2>${add2eVendorEscape(context.vendor?.name ?? "Boutique")}</h2>
-          <p>Acheteur : <strong>${add2eVendorEscape(context.buyer?.name ?? "aucun")}</strong></p>
+          <p>Acheteur : <strong>${add2eVendorEscape(context.buyer?.name ?? "aucun personnage assigné")}</strong></p>
         </div>
         <div class="add2e-vendor-money">${add2eVendorEscape(context.buyerMoneyLabel)}</div>
       </header>
@@ -516,22 +536,83 @@ export async function add2eOpenVendor({ vendor = null, buyer = null } = {}) {
   vendor = vendor ?? add2eFindDefaultVendor();
   if (!vendor) vendor = await add2eCreateDefaultVendor();
   if (!vendor) return null;
-  buyer = buyer ?? add2eVendorGetBuyer();
+  buyer = buyer ?? add2eVendorGetBuyer({ excludeVendor: true, preferCharacter: true });
+  if (!buyer) {
+    await add2eVendorAlert("Aucun acheteur", "Aucun personnage joueur n’est assigné ou sélectionné pour acheter chez ce vendeur.");
+    return null;
+  }
   const app = new Add2eVendorApp({ vendor, buyer });
   app.render({ force: true });
   return app;
 }
 
+async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
+  const vendor = token?.actor ?? null;
+  if (!add2eIsVendorActor(vendor)) return false;
+  if (singleClick && game.user?.isGM) return false;
+
+  const now = Date.now();
+  const key = `${vendor.id}:${game.user?.id ?? "user"}`;
+  const last = globalThis.__ADD2E_VENDOR_LAST_OPEN ?? {};
+  if (last[key] && now - last[key] < 650) return true;
+  last[key] = now;
+  globalThis.__ADD2E_VENDOR_LAST_OPEN = last;
+
+  const buyer = add2eVendorGetBuyer({ excludeVendor: true, preferCharacter: true });
+  await add2eOpenVendor({ vendor, buyer });
+  return true;
+}
+
+function add2ePatchVendorTokenClick() {
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED) return;
+  const TokenClass = globalThis.Token ?? foundry?.canvas?.placeables?.Token;
+  const proto = TokenClass?.prototype;
+  if (!proto) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED = true;
+
+  if (typeof proto._onClickLeft === "function") {
+    const original = proto._onClickLeft;
+    proto._onClickLeft = function add2eVendorOnClickLeft(event) {
+      try {
+        if (add2eIsVendorActor(this.actor) && !game.user?.isGM) {
+          add2eOpenVendorFromToken(this, { singleClick: true });
+          return;
+        }
+      } catch (err) {
+        console.warn("[ADD2E][VENDOR][TOKEN_CLICK]", err);
+      }
+      return original.call(this, event);
+    };
+  }
+
+  if (typeof proto._onClickLeft2 === "function") {
+    const original2 = proto._onClickLeft2;
+    proto._onClickLeft2 = function add2eVendorOnClickLeft2(event) {
+      try {
+        if (add2eIsVendorActor(this.actor)) {
+          add2eOpenVendorFromToken(this, { singleClick: false });
+          return;
+        }
+      } catch (err) {
+        console.warn("[ADD2E][VENDOR][TOKEN_DOUBLE_CLICK]", err);
+      }
+      return original2.call(this, event);
+    };
+  }
+}
+
 function add2eRegisterVendorHooks() {
-  Hooks.on("getActorSheetHeaderButtons", (app, buttons) => {
-    const actor = app?.actor ?? app?.document ?? app?.object;
-    if (!actor?.getFlag || actor.getFlag(ADD2E_VENDOR_FLAG_SCOPE, "isVendor") !== true) return;
-    buttons.unshift({
-      label: "Boutique",
-      class: "add2e-vendor-open",
-      icon: "fas fa-coins",
-      onclick: () => add2eOpenVendor({ vendor: actor })
-    });
+  Hooks.on("renderActorDirectory", (_app, html) => {
+    if (!game.user?.isGM) return;
+    const root = html?.jquery ? html[0] : html;
+    if (!root?.querySelector) return;
+    if (root.querySelector(".add2e-open-default-vendor")) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "add2e-open-default-vendor";
+    button.innerHTML = `<i class="fas fa-coins"></i> Boutique composants/projectiles`;
+    button.addEventListener("click", () => add2eOpenVendor());
+    root.querySelector(".directory-footer")?.prepend(button);
   });
 }
 
@@ -565,5 +646,6 @@ Hooks.once("ready", async () => {
   globalThis.add2eCreateDefaultVendor = add2eCreateDefaultVendor;
   globalThis.add2eVendorMoney = game.add2e.vendorMoney;
   await add2eEnsureVendorOnFirstWorldLaunch().catch(err => console.warn("[ADD2E][VENDOR][AUTO_CREATE]", err));
+  add2ePatchVendorTokenClick();
   add2eVendorLog("ready", ADD2E_VENDOR_VERSION);
 });
