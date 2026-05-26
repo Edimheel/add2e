@@ -29,6 +29,7 @@ import "./add2e/16-preparation-display.mjs";
 import "./add2e/17-movement-xp.mjs";
 import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/20-session-xp.mjs";
+import "./add2e/21-consumables.mjs";
 
 function add2eRemoveLegacyClassSheetValidationHook() {
   const stores = [Hooks.events, Hooks._hooks].filter(Boolean);
@@ -294,6 +295,24 @@ Hooks.once("init", () => {
     config: false,
     type: String,
     default: ""
+  });
+
+  game.settings.register("add2e", "gestionComposantsSorts", {
+    name: "Gestion des composants de sorts",
+    hint: "Consomme les composants matériels lors du lancement des sorts lorsque les sorts et la sacoche sont renseignés.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
+  game.settings.register("add2e", "gestionProjectiles", {
+    name: "Gestion des projectiles",
+    hint: "Consomme les flèches, carreaux, billes et autres munitions équipées dans le carquois lors des attaques à distance.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
   });
 });
 Hooks.on("preCreateActor", actor => { const desired = add2eTokenLinkDesiredForActor(actor); add2eTokenLinkApplySource(actor, desired); return true; });
