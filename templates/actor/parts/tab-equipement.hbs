@@ -1,20 +1,6 @@
       <section class='a2e-tab-content tab tab-equipement {{#if (eq activeTab "equipement")}}active{{/if}}' data-group="primary" data-tab="equipement">
-        <div class="a2e-panel add2e-money-panel" style="max-width:560px;">
-          <h2>Monnaie</h2>
-          <div class="a2e-panel-body">
-            <div class="add2e-money-grid" style="display:grid;grid-template-columns:repeat(5, minmax(64px, 1fr));gap:8px;align-items:end;">
-              <label style="display:grid;gap:2px;">PP <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pp" value="{{add2eVendorMoney.pp}}"></label>
-              <label style="display:grid;gap:2px;">PO <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="po" value="{{add2eVendorMoney.po}}"></label>
-              <label style="display:grid;gap:2px;">PE <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pe" value="{{add2eVendorMoney.pe}}"></label>
-              <label style="display:grid;gap:2px;">PA <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pa" value="{{add2eVendorMoney.pa}}"></label>
-              <label style="display:grid;gap:2px;">PC <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pc" value="{{add2eVendorMoney.pc}}"></label>
-            </div>
-            <p class="a2e-small" style="margin:6px 0 0;"><b>Total :</b> {{add2eVendorMoneyLabel}}</p>
-          </div>
-        </div>
-
-        <div class="a2e-grid-2">
-          <div class="a2e-panel">
+        <div style="display:grid;grid-template-columns:minmax(520px, 1fr) 190px;gap:14px;align-items:start;">
+          <div class="a2e-panel" style="min-width:0;">
             <h2>Objets</h2>
             <div class="a2e-panel-body">
               <a class="a2e-action-icon a2e-action-add objet-create" title="Créer un objet" style="margin-bottom:8px;font-size:1.2em;"><i class="fas fa-plus-circle"></i></a>
@@ -52,6 +38,20 @@
               {{else}}
                 <p class="a2e-muted">Aucun objet.</p>
               {{/if}}
+            </div>
+          </div>
+
+          <div class="a2e-panel add2e-money-panel" style="min-width:170px;">
+            <h2>Monnaie</h2>
+            <div class="a2e-panel-body">
+              <div class="add2e-money-grid" style="display:grid;grid-template-columns:1fr;gap:6px;">
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PP <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pp" value="{{add2eVendorMoney.pp}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PO <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="po" value="{{add2eVendorMoney.po}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PE <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pe" value="{{add2eVendorMoney.pe}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PA <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pa" value="{{add2eVendorMoney.pa}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PC <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pc" value="{{add2eVendorMoney.pc}}"></label>
+              </div>
+              <p class="a2e-small" style="margin:8px 0 0;line-height:1.35;"><b>Total :</b><br>{{add2eVendorMoneyLabel}}</p>
             </div>
           </div>
         </div>
