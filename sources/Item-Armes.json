@@ -1,6 +1,10 @@
 {
   "exporter": "ADD2E folder export",
+<<<<<<< Updated upstream
   "version": "2026-05-20-export-folder-dropdown-v1",
+=======
+  "version": "2026-05-26-armes-carquois-v1",
+>>>>>>> Stashed changes
   "exportedAt": "2026-05-24T15:22:03.894Z",
   "world": "test",
   "system": "add2e",
@@ -24,7 +28,7 @@
   "documents": [
     {
       "name": "Aiguille de sarbacane",
-      "type": "arme",
+      "type": "objet",
       "img": "systems/add2e/assets/icones/armes/Flechette.webp",
       "system": {
         "nom": "Aiguille de sarbacane",
@@ -45,9 +49,15 @@
         "type_degats": "perforant",
         "proprietes": "Perforant",
         "facteur_vitesse": "—",
+<<<<<<< Updated upstream
         "facteur_rapidité": null,
         "categorie": "projectile_propulse",
         "type": "projectile_propulse",
+=======
+        "facteur_rapidité": "—",
+        "categorie": "munition",
+        "type": "munition",
+>>>>>>> Stashed changes
         "portee_short": 15,
         "portee_long": 45,
         "portee_courte": 15,
@@ -67,19 +77,43 @@
         "magique": true,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
+<<<<<<< Updated upstream
         "effectTags": "arme,type_arme:aiguille_de_sarbacane,famille_arme:munition,famille_arme:sarbacane,degat:perforant,usage:distance,usage:projectile_propulse,trait:munition,magique,type_arme:projectile_propulse,jp_meme_type:5",
-        "tags": [
-          "arme",
+=======
+        "effectTags": [
           "type_arme:aiguille_de_sarbacane",
           "famille_arme:munition",
           "famille_arme:sarbacane",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+          "objet",
+          "munition",
+          "munition:aiguille",
+          "famille_munition:sarbacane",
+          "compatible:sarbacane",
+          "munition_requise:aiguille"
+        ],
+>>>>>>> Stashed changes
+        "tags": [
+          "type_arme:aiguille_de_sarbacane",
+          "famille_arme:munition",
+          "famille_arme:sarbacane",
+          "degat:perforant",
+          "usage:distance",
+          "trait:munition",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:aiguille",
+          "famille_munition:sarbacane",
+          "compatible:sarbacane",
+          "munition_requise:aiguille"
+>>>>>>> Stashed changes
         ],
         "famille_arme": [
           "munition",
@@ -95,7 +129,23 @@
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:flechette.",
         "portee_source_reference": "ajustement_ca_reference:flechette",
+<<<<<<< Updated upstream
         "portee_operationnelle": true
+=======
+        "portee_operationnelle": true,
+        "portee_reference_ligne": "flechette",
+        "sousType": "aiguille",
+        "munitionType": "aiguille",
+        "famille_munition": "sarbacane",
+        "compatibleArmes": [
+          "sarbacane"
+        ],
+        "munition_requise": "aiguille",
+        "recuperable": true,
+        "taux_recuperation": 0.6,
+        "consommable": true,
+        "degats_reference_mode": "munition"
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -117,6 +167,26 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "munition",
+            "sousType": "aiguille",
+            "compatible": [
+              "sarbacane"
+            ]
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -196,9 +266,15 @@
           "degat:special",
           "usage:distance",
           "usage:projectile_propulse",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:carreau_poing",
+          "compatible_munition:carreau_poing"
+>>>>>>> Stashed changes
         ],
         "tags": [
           "arme",
@@ -207,9 +283,15 @@
           "degat:special",
           "usage:distance",
           "usage:projectile_propulse",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:carreau_poing",
+          "compatible_munition:carreau_poing"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "arbalete",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -222,7 +304,19 @@
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:arbalete legere.",
         "portee_source_reference": "ajustement_ca_reference:arbalete legere",
+<<<<<<< Updated upstream
         "portee_operationnelle": true
+=======
+        "portee_operationnelle": true,
+        "degats_reference": "carreau_d_arbalete_de_poing",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry.",
+        "munition_requise": "carreau_poing",
+        "munition_par_defaut": "carreau_d_arbalete_de_poing",
+        "utilise_munition": true,
+        "projectileConsomme": true,
+        "carquois": true
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -244,6 +338,24 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "lanceur",
+            "munition_requise": "carreau_poing",
+            "munition_par_defaut": "carreau_d_arbalete_de_poing"
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -324,9 +436,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:carreau_leger",
+          "compatible_munition:carreau_leger"
+>>>>>>> Stashed changes
         ],
         "tags": [
           "arme",
@@ -336,9 +454,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:carreau_leger",
+          "compatible_munition:carreau_leger"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "arbalete",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -349,7 +473,19 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_legere",
         "portee_reference_mode": "exact",
+<<<<<<< Updated upstream
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "carreau_leger",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry.",
+        "munition_requise": "carreau_leger",
+        "munition_par_defaut": "carreau_leger",
+        "utilise_munition": true,
+        "projectileConsomme": true,
+        "carquois": true
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -371,6 +507,24 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "lanceur",
+            "munition_requise": "carreau_leger",
+            "munition_par_defaut": "carreau_leger"
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -451,9 +605,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:carreau_lourd",
+          "compatible_munition:carreau_lourd"
+>>>>>>> Stashed changes
         ],
         "tags": [
           "arme",
@@ -463,9 +623,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:carreau_lourd",
+          "compatible_munition:carreau_lourd"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "arbalete",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -476,7 +642,19 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_lourde",
         "portee_reference_mode": "exact",
+<<<<<<< Updated upstream
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "carreau_lourd",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry.",
+        "munition_requise": "carreau_lourd",
+        "munition_par_defaut": "carreau_lourd",
+        "utilise_munition": true,
+        "projectileConsomme": true,
+        "carquois": true
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -498,6 +676,24 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "lanceur",
+            "munition_requise": "carreau_lourd",
+            "munition_par_defaut": "carreau_lourd"
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -578,9 +774,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:fleche",
+          "compatible_munition:fleche"
+>>>>>>> Stashed changes
         ],
         "tags": [
           "arme",
@@ -590,9 +792,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:fleche",
+          "compatible_munition:fleche"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "arc",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -603,7 +811,19 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_composite_court",
         "portee_reference_mode": "exact",
+<<<<<<< Updated upstream
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "fleche_de_vol",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry.",
+        "munition_requise": "fleche",
+        "munition_par_defaut": "fleche_de_vol",
+        "utilise_munition": true,
+        "projectileConsomme": true,
+        "carquois": true
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -625,6 +845,24 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "lanceur",
+            "munition_requise": "fleche",
+            "munition_par_defaut": "fleche_de_vol"
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -715,9 +953,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:fleche",
+          "compatible_munition:fleche"
+>>>>>>> Stashed changes
         ],
         "tags": [
           "arme",
@@ -727,9 +971,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:fleche",
+          "compatible_munition:fleche"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "arc",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -740,7 +990,19 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_composite_long",
         "portee_reference_mode": "exact",
+<<<<<<< Updated upstream
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "fleche_de_guerre",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry.",
+        "munition_requise": "fleche",
+        "munition_par_defaut": "fleche_de_guerre",
+        "utilise_munition": true,
+        "projectileConsomme": true,
+        "carquois": true
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -762,6 +1024,24 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "lanceur",
+            "munition_requise": "fleche",
+            "munition_par_defaut": "fleche_de_guerre"
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -852,9 +1132,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:fleche",
+          "compatible_munition:fleche"
+>>>>>>> Stashed changes
         ],
         "tags": [
           "arme",
@@ -864,9 +1150,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:fleche",
+          "compatible_munition:fleche"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "arc",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -877,7 +1169,19 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_court",
         "portee_reference_mode": "exact",
+<<<<<<< Updated upstream
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "fleche_de_vol",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry.",
+        "munition_requise": "fleche",
+        "munition_par_defaut": "fleche_de_vol",
+        "utilise_munition": true,
+        "projectileConsomme": true,
+        "carquois": true
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -899,6 +1203,24 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "lanceur",
+            "munition_requise": "fleche",
+            "munition_par_defaut": "fleche_de_vol"
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -989,9 +1311,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:fleche",
+          "compatible_munition:fleche"
+>>>>>>> Stashed changes
         ],
         "tags": [
           "arme",
@@ -1001,9 +1329,15 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:fleche",
+          "compatible_munition:fleche"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "arc",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -1014,7 +1348,19 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_long",
         "portee_reference_mode": "exact",
+<<<<<<< Updated upstream
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "fleche_de_guerre",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry.",
+        "munition_requise": "fleche",
+        "munition_par_defaut": "fleche_de_guerre",
+        "utilise_munition": true,
+        "projectileConsomme": true,
+        "carquois": true
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -1036,6 +1382,24 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "lanceur",
+            "munition_requise": "fleche",
+            "munition_par_defaut": "fleche_de_guerre"
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -1127,9 +1491,15 @@
           "usage:projectile_propulse",
           "trait:feu",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:balle_arquebuse",
+          "compatible_munition:balle_arquebuse"
+>>>>>>> Stashed changes
         ],
         "tags": [
           "arme",
@@ -1140,9 +1510,15 @@
           "usage:projectile_propulse",
           "trait:feu",
           "trait:deux_mains",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "type_arme:projectile_propulse",
+          "munition_requise:balle_arquebuse",
+          "compatible_munition:balle_arquebuse"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "arme_a_feu",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -1155,7 +1531,12 @@
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:arbalete lourde.",
         "portee_source_reference": "ajustement_ca_reference:arbalete lourde",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "munition_requise": "balle_arquebuse",
+        "munition_par_defaut": "balle_arquebuse",
+        "utilise_munition": true,
+        "projectileConsomme": true,
+        "carquois": true
       },
       "effects": [],
       "flags": {
@@ -1177,6 +1558,24 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "lanceur",
+            "munition_requise": "balle_arquebuse",
+            "munition_par_defaut": "balle_arquebuse"
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -1341,7 +1740,7 @@
     },
     {
       "name": "Balle de fronde",
-      "type": "arme",
+      "type": "objet",
       "img": "systems/add2e/assets/icones/armes/Fronde_bille.webp",
       "system": {
         "nom": "Balle de fronde",
@@ -1363,8 +1762,8 @@
         "proprietes": "Contondant",
         "facteur_vitesse": "—",
         "facteur_rapidité": "—",
-        "categorie": "projectile_propulse",
-        "type": "projectile_propulse",
+        "categorie": "munition",
+        "type": "munition",
         "portee_short": 50,
         "portee_long": 200,
         "portee_courte": 50,
@@ -1395,30 +1794,44 @@
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
-          "arme",
           "type_arme:balle_de_fronde",
           "famille_arme:fronde",
           "famille_arme:munition",
           "degat:contondant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:bille",
+          "famille_munition:fronde",
+          "compatible:fronde",
+          "munition_requise:bille"
+>>>>>>> Stashed changes
         ],
         "tags": [
-          "arme",
           "type_arme:balle_de_fronde",
           "famille_arme:fronde",
           "famille_arme:munition",
           "degat:contondant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:bille",
+          "famille_munition:fronde",
+          "compatible:fronde",
+          "munition_requise:bille"
+>>>>>>> Stashed changes
         ],
         "famille_arme": [
           "fronde",
@@ -1431,8 +1844,24 @@
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "fronde_bille",
+<<<<<<< Updated upstream
         "portee_reference_mode": "exact",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "sousType": "bille",
+        "munitionType": "bille",
+        "famille_munition": "fronde",
+        "compatibleArmes": [
+          "fronde"
+        ],
+        "munition_requise": "bille",
+        "recuperable": true,
+        "taux_recuperation": 0.6,
+        "consommable": true,
+        "degats_reference_mode": "munition"
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -1454,6 +1883,26 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "munition",
+            "sousType": "bille",
+            "compatible": [
+              "fronde"
+            ]
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -2028,7 +2477,7 @@
     },
     {
       "name": "Carreau d'arbalète de poing",
-      "type": "arme",
+      "type": "objet",
       "img": "systems/add2e/assets/icones/armes/Arbalete_de_poin.webp",
       "system": {
         "nom": "Carreau d'arbalète de poing",
@@ -2050,8 +2499,8 @@
         "proprietes": "Perforant",
         "facteur_vitesse": "—",
         "facteur_rapidité": "—",
-        "categorie": "projectile_propulse",
-        "type": "projectile_propulse",
+        "categorie": "munition",
+        "type": "munition",
         "portee_short": 60,
         "portee_long": 180,
         "portee_courte": 60,
@@ -2082,32 +2531,46 @@
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
-          "arme",
           "type_arme:carreau_d_arbalete_de_poing",
           "famille_arme:arbalete",
           "famille_arme:munition",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "type_arme:carreau_darbalete_de_poing",
           "trait:munition",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:carreau_poing",
+          "famille_munition:arbalete",
+          "compatible:arbalete_de_poing",
+          "munition_requise:carreau_poing"
+>>>>>>> Stashed changes
         ],
         "tags": [
-          "arme",
           "type_arme:carreau_d_arbalete_de_poing",
           "famille_arme:arbalete",
           "famille_arme:munition",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "type_arme:carreau_darbalete_de_poing",
           "trait:munition",
+<<<<<<< Updated upstream
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:carreau_poing",
+          "famille_munition:arbalete",
+          "compatible:arbalete_de_poing",
+          "munition_requise:carreau_poing"
+>>>>>>> Stashed changes
         ],
         "famille_arme": [
           "arbalete",
@@ -2123,7 +2586,18 @@
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:arbalete legere.",
         "portee_source_reference": "ajustement_ca_reference:arbalete legere",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "sousType": "carreau_poing",
+        "munitionType": "carreau_poing",
+        "famille_munition": "arbalete",
+        "compatibleArmes": [
+          "arbalete_de_poing"
+        ],
+        "munition_requise": "carreau_poing",
+        "recuperable": true,
+        "taux_recuperation": 0.6,
+        "consommable": true,
+        "degats_reference_mode": "munition"
       },
       "effects": [],
       "flags": {
@@ -2145,6 +2619,26 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "munition",
+            "sousType": "carreau_poing",
+            "compatible": [
+              "arbalete_de_poing"
+            ]
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -2174,7 +2668,7 @@
     },
     {
       "name": "Carreau léger",
-      "type": "arme",
+      "type": "objet",
       "img": "systems/add2e/assets/icones/armes/Arbalete_legere.webp",
       "system": {
         "nom": "Carreau léger",
@@ -2196,8 +2690,8 @@
         "proprietes": "Perforant, Deux mains",
         "facteur_vitesse": "—",
         "facteur_rapidité": "—",
-        "categorie": "projectile_propulse",
-        "type": "projectile_propulse",
+        "categorie": "munition",
+        "type": "munition",
         "portee_short": 60,
         "portee_long": 180,
         "portee_courte": 60,
@@ -2228,32 +2722,46 @@
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
-          "arme",
           "type_arme:carreau_leger",
           "famille_arme:munition",
           "famille_arme:arbalete",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:carreau_leger",
+          "famille_munition:arbalete",
+          "compatible:arbalete_legere",
+          "munition_requise:carreau_leger"
+>>>>>>> Stashed changes
         ],
         "tags": [
-          "arme",
           "type_arme:carreau_leger",
           "famille_arme:munition",
           "famille_arme:arbalete",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:carreau_leger",
+          "famille_munition:arbalete",
+          "compatible:arbalete_legere",
+          "munition_requise:carreau_leger"
+>>>>>>> Stashed changes
         ],
         "famille_arme": [
           "munition",
@@ -2266,8 +2774,24 @@
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_legere",
+<<<<<<< Updated upstream
         "portee_reference_mode": "lanceur_exact",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "sousType": "carreau_leger",
+        "munitionType": "carreau_leger",
+        "famille_munition": "arbalete",
+        "compatibleArmes": [
+          "arbalete_legere"
+        ],
+        "munition_requise": "carreau_leger",
+        "recuperable": true,
+        "taux_recuperation": 0.6,
+        "consommable": true,
+        "degats_reference_mode": "munition"
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -2289,6 +2813,26 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "munition",
+            "sousType": "carreau_leger",
+            "compatible": [
+              "arbalete_legere"
+            ]
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -2318,7 +2862,7 @@
     },
     {
       "name": "Carreau lourd",
-      "type": "arme",
+      "type": "objet",
       "img": "systems/add2e/assets/icones/armes/Arbalete_legere.webp",
       "system": {
         "nom": "Carreau lourd",
@@ -2340,8 +2884,8 @@
         "proprietes": "Perforant, Deux mains",
         "facteur_vitesse": "—",
         "facteur_rapidité": "—",
-        "categorie": "projectile_propulse",
-        "type": "projectile_propulse",
+        "categorie": "munition",
+        "type": "munition",
         "portee_short": 80,
         "portee_long": 240,
         "portee_courte": 80,
@@ -2372,32 +2916,46 @@
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
-          "arme",
           "type_arme:carreau_lourd",
           "famille_arme:munition",
           "famille_arme:arbalete",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:carreau_lourd",
+          "famille_munition:arbalete",
+          "compatible:arbalete_lourde",
+          "munition_requise:carreau_lourd"
+>>>>>>> Stashed changes
         ],
         "tags": [
-          "arme",
           "type_arme:carreau_lourd",
           "famille_arme:munition",
           "famille_arme:arbalete",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:carreau_lourd",
+          "famille_munition:arbalete",
+          "compatible:arbalete_lourde",
+          "munition_requise:carreau_lourd"
+>>>>>>> Stashed changes
         ],
         "famille_arme": [
           "munition",
@@ -2410,8 +2968,24 @@
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_lourde",
+<<<<<<< Updated upstream
         "portee_reference_mode": "lanceur_exact",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "sousType": "carreau_lourd",
+        "munitionType": "carreau_lourd",
+        "famille_munition": "arbalete",
+        "compatibleArmes": [
+          "arbalete_lourde"
+        ],
+        "munition_requise": "carreau_lourd",
+        "recuperable": true,
+        "taux_recuperation": 0.6,
+        "consommable": true,
+        "degats_reference_mode": "munition"
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -2433,6 +3007,26 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "munition",
+            "sousType": "carreau_lourd",
+            "compatible": [
+              "arbalete_lourde"
+            ]
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -6676,7 +7270,7 @@
     },
     {
       "name": "Flèche de guerre",
-      "type": "arme",
+      "type": "objet",
       "img": "systems/add2e/assets/icones/armes/Flechette.webp",
       "system": {
         "nom": "Flèche de guerre",
@@ -6698,8 +7292,8 @@
         "proprietes": "Perforant, Deux mains",
         "facteur_vitesse": "—",
         "facteur_rapidité": "—",
-        "categorie": "projectile_propulse",
-        "type": "projectile_propulse",
+        "categorie": "munition",
+        "type": "munition",
         "portee_short": 70,
         "portee_long": 210,
         "portee_courte": 70,
@@ -6730,30 +7324,44 @@
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
-          "arme",
           "type_arme:fleche_de_guerre",
           "famille_arme:munition",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:fleche",
+          "famille_munition:arc",
+          "compatible:arc",
+          "munition_requise:fleche"
+>>>>>>> Stashed changes
         ],
         "tags": [
-          "arme",
           "type_arme:fleche_de_guerre",
           "famille_arme:munition",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:fleche",
+          "famille_munition:arc",
+          "compatible:arc",
+          "munition_requise:fleche"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "munition",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -6763,8 +7371,25 @@
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_long",
+<<<<<<< Updated upstream
         "portee_reference_mode": "lanceur_exact",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "sousType": "fleche",
+        "munitionType": "fleche",
+        "munitionVariant": "fleche_guerre",
+        "famille_munition": "arc",
+        "compatibleArmes": [
+          "arc"
+        ],
+        "munition_requise": "fleche",
+        "recuperable": true,
+        "taux_recuperation": 0.6,
+        "consommable": true,
+        "degats_reference_mode": "munition"
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -6786,6 +7411,26 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "munition",
+            "sousType": "fleche",
+            "compatible": [
+              "arc"
+            ]
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -6815,7 +7460,7 @@
     },
     {
       "name": "Flèche de pierre",
-      "type": "arme",
+      "type": "objet",
       "img": "systems/add2e/assets/icones/armes/Flechette.webp",
       "system": {
         "nom": "Flèche de pierre",
@@ -6837,8 +7482,8 @@
         "proprietes": "Perforant, Deux mains",
         "facteur_vitesse": "—",
         "facteur_rapidité": "—",
-        "categorie": "projectile_propulse",
-        "type": "projectile_propulse",
+        "categorie": "munition",
+        "type": "munition",
         "portee_short": 50,
         "portee_long": 150,
         "portee_courte": 50,
@@ -6869,30 +7514,44 @@
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
-          "arme",
           "type_arme:fleche_de_pierre",
           "famille_arme:munition",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:fleche",
+          "famille_munition:arc",
+          "compatible:arc",
+          "munition_requise:fleche"
+>>>>>>> Stashed changes
         ],
         "tags": [
-          "arme",
           "type_arme:fleche_de_pierre",
           "famille_arme:munition",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:fleche",
+          "famille_munition:arc",
+          "compatible:arc",
+          "munition_requise:fleche"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "munition",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -6902,8 +7561,25 @@
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_court",
+<<<<<<< Updated upstream
         "portee_reference_mode": "lanceur_exact",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "sousType": "fleche",
+        "munitionType": "fleche",
+        "munitionVariant": "fleche_pierre",
+        "famille_munition": "arc",
+        "compatibleArmes": [
+          "arc"
+        ],
+        "munition_requise": "fleche",
+        "recuperable": true,
+        "taux_recuperation": 0.6,
+        "consommable": true,
+        "degats_reference_mode": "munition"
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -6925,6 +7601,26 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "munition",
+            "sousType": "fleche",
+            "compatible": [
+              "arc"
+            ]
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -6954,7 +7650,7 @@
     },
     {
       "name": "Flèche de vol",
-      "type": "arme",
+      "type": "objet",
       "img": "systems/add2e/assets/icones/armes/Flechette.webp",
       "system": {
         "nom": "Flèche de vol",
@@ -6976,8 +7672,8 @@
         "proprietes": "Perforant, Deux mains",
         "facteur_vitesse": "—",
         "facteur_rapidité": "—",
-        "categorie": "projectile_propulse",
-        "type": "projectile_propulse",
+        "categorie": "munition",
+        "type": "munition",
         "portee_short": 70,
         "portee_long": 210,
         "portee_courte": 70,
@@ -7008,30 +7704,44 @@
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
-          "arme",
           "type_arme:fleche_de_vol",
           "famille_arme:munition",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:fleche",
+          "famille_munition:arc",
+          "compatible:arc",
+          "munition_requise:fleche"
+>>>>>>> Stashed changes
         ],
         "tags": [
-          "arme",
           "type_arme:fleche_de_vol",
           "famille_arme:munition",
           "degat:perforant",
           "usage:distance",
-          "usage:projectile_propulse",
           "trait:munition",
+<<<<<<< Updated upstream
           "trait:deux_mains",
           "magique",
           "type_arme:projectile_propulse",
           "jp_meme_type:5"
+=======
+          "objet",
+          "munition",
+          "munition:fleche",
+          "famille_munition:arc",
+          "compatible:arc",
+          "munition_requise:fleche"
+>>>>>>> Stashed changes
         ],
         "famille_arme": "munition",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -7041,8 +7751,25 @@
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_long",
+<<<<<<< Updated upstream
         "portee_reference_mode": "lanceur_exact",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+=======
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "sousType": "fleche",
+        "munitionType": "fleche",
+        "munitionVariant": "fleche_vol",
+        "famille_munition": "arc",
+        "compatibleArmes": [
+          "arc"
+        ],
+        "munition_requise": "fleche",
+        "recuperable": true,
+        "taux_recuperation": 0.6,
+        "consommable": true,
+        "degats_reference_mode": "munition"
+>>>>>>> Stashed changes
       },
       "effects": [],
       "flags": {
@@ -7064,6 +7791,26 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+<<<<<<< Updated upstream
+=======
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
+          },
+          "munitionCarquois": {
+            "version": "2026-05-26-dev-composant-v1",
+            "role": "munition",
+            "sousType": "fleche",
+            "compatible": [
+              "arc"
+            ]
+>>>>>>> Stashed changes
           }
         },
         "add2eImport": {
@@ -7222,5 +7969,41 @@
         "lastModifiedBy": "sJuwkOXARIJD2Nsz"
       }
     }
+<<<<<<< Updated upstream
   ]
+=======
+  ],
+  "correctedAt": "2026-05-26T08:20:00Z",
+  "correctionNotes": {
+    "version": "2026-05-26-armes-carquois-v1",
+    "changedCount": 16,
+    "changes": [
+      "Ajout des champs de carquois sur les lanceurs: utilise_munition, munition_requise, munition_par_defaut, projectileConsomme.",
+      "Conversion des projectiles consommables présents dans le fichier en objets de categorie=munition pour l’onglet carquois.",
+      "Ajout des tags munition:* et compatible:* sur les projectiles.",
+      "Normalisation des portées C/M/L connues d’après la table AD&D2, avec l’échelle x10 utilisée par add2e.",
+      "Vérification miroir degats/dégâts/degats_grand.",
+      "Ajout taux_recuperation=0.6 et recuperable=true sur les munitions."
+    ],
+    "changedDocuments": [
+      "Aiguille de sarbacane",
+      "Arbalète de poing",
+      "Arbalète lourde",
+      "Arbalète légère",
+      "Arc composite court",
+      "Arc composite long",
+      "Arc court",
+      "Arc long",
+      "Arquebuse",
+      "Balle de fronde",
+      "Carreau d'arbalète de poing",
+      "Carreau lourd",
+      "Carreau léger",
+      "Flèche de guerre",
+      "Flèche de pierre",
+      "Flèche de vol"
+    ],
+    "warnings": []
+  }
+>>>>>>> Stashed changes
 }
