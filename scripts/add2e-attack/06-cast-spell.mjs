@@ -6,7 +6,7 @@ import "./05-jb2a-vfx.mjs";
 
 /**
  * Lancer de sort (Script + Gestion Charges Objet)
- * VERSION : 2026-05-26-cast-spell-v18-components
+ * VERSION : 2026-05-26-cast-spell-v19-components-message-fix
  *
  * Règle stricte :
  * - onUse === true  => le sort est réellement lancé, le coût et les composants restent consommés ;
@@ -256,8 +256,9 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     if (!api?.add2eReserveSpellComponents) return true;
     componentReservation = await api.add2eReserveSpellComponents(actor, spellToUse);
     if (componentReservation?.blocked) {
+      const message = componentReservation.message || "Composant matériel manquant.";
       await add2eRefundReservedCost("composants manquants");
-      ui.notifications.warn(componentReservation.message || "Composant matériel manquant.");
+      ui.notifications.warn(message);
       return false;
     }
     return true;
