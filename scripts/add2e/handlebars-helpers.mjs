@@ -65,19 +65,32 @@ function add2eHbsComponentSlug(component) {
   return add2eHbsSlug(s.slug ?? s.composantSlug ?? s.sousType ?? s.sous_type ?? component?.name ?? "");
 }
 
-function add2eHbsSpellMaterialSlugs(sort) {
+function add2eHbsSpellMaterialEntries(sort) {
   const s = sort?.system ?? {};
   const raw = s.composants_materiels ?? s.composantsMateriels ?? s.materialComponents ?? [];
-  const slugs = [];
+  const entries = [];
   for (const entry of add2eHbsAsArray(raw)) {
     if (!entry) continue;
     if (typeof entry === "string") {
-      slugs.push(add2eHbsSlug(entry));
+      const slug = add2eHbsSlug(entry);
+      if (slug) entries.push({ slug, nom: entry, quantite: 1, consomme: true });
       continue;
     }
-    slugs.push(add2eHbsSlug(entry.slug ?? entry.nom ?? entry.name ?? entry.label ?? ""));
+    const nom = entry.nom ?? entry.name ?? entry.label ?? entry.slug ?? "Composant";
+    const slug = add2eHbsSlug(entry.slug ?? nom);
+    if (!slug) continue;
+    entries.push({
+      slug,
+      nom: String(nom),
+      quantite: Math.max(1, Number(entry.quantite ?? entry.quantity ?? 1) || 1),
+      consomme: entry.consomme !== false && entry.consume !== false
+    });
   }
-  return slugs.filter(Boolean);
+  return entries;
+}
+
+function add2eHbsSpellMaterialSlugs(sort) {
+  return add2eHbsSpellMaterialEntries(sort).map(entry => entry.slug).filter(Boolean);
 }
 
 if (typeof Handlebars !== "undefined") {
@@ -173,5 +186,16 @@ if (typeof Handlebars !== "undefined") {
     if (!spells.length) return "—";
     const unique = [...new Set(spells)].sort((a, b) => a.localeCompare(b));
     return unique.join(", ");
+  });
+
+  Handlebars.registerHelper("spellMaterialComponents", function(sort) {
+    const entries = add2eHbsSpellMaterialEntries(sort);
+    if (!entries.length) return "—";
+    const text = entries.map(entry => {
+      const qty = entry.quantite > 1 ? ` x${entry.quantite}` : "";
+      const state = entry.consomme ? "" : " (non consommé)";
+      return `${entry.nom}${qty}${state}`;
+    }).join(", ");
+    return text || "—";
   });
 }
