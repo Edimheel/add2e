@@ -1,6 +1,6 @@
 {
   "exporter": "ADD2E folder export",
-  "version": "2026-05-20-export-folder-dropdown-v1",
+  "version": "2026-05-26-armes-audit-correction-v1",
   "exportedAt": "2026-05-24T15:22:03.894Z",
   "world": "test",
   "system": "add2e",
@@ -45,7 +45,7 @@
         "type_degats": "perforant",
         "proprietes": "Perforant",
         "facteur_vitesse": "—",
-        "facteur_rapidité": null,
+        "facteur_rapidité": "—",
         "categorie": "projectile_propulse",
         "type": "projectile_propulse",
         "portee_short": 15,
@@ -57,17 +57,37 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-5,-4,-3,-2,-1,0,1,0,1",
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « flechette » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca": [
+          -5,
+          -4,
+          -3,
+          -2,
+          -1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
-        "effectTags": "arme,type_arme:aiguille_de_sarbacane,famille_arme:munition,famille_arme:sarbacane,degat:perforant,usage:distance,usage:projectile_propulse,trait:munition,magique,type_arme:projectile_propulse,jp_meme_type:5",
+        "effectTags": [
+          "arme",
+          "type_arme:aiguille_de_sarbacane",
+          "famille_arme:munition",
+          "famille_arme:sarbacane",
+          "degat:perforant",
+          "usage:distance",
+          "usage:projectile_propulse",
+          "trait:munition",
+          "type_arme:projectile_propulse"
+        ],
         "tags": [
           "arme",
           "type_arme:aiguille_de_sarbacane",
@@ -77,9 +97,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": [
           "munition",
@@ -88,14 +106,15 @@
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
         "ajustement_ca_reference": "flechette",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_propulse",
-        "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
-        "portee_reference_mode": "operationnel_equivalence_reference",
-        "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
+        "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:flechette.",
         "portee_source_reference": "ajustement_ca_reference:flechette",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "portee_reference_ligne": "flechette"
       },
       "effects": [],
       "flags": {
@@ -117,6 +136,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -154,14 +182,14 @@
         "prix": "300 po",
         "quantite": 1,
         "degats": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d3",
+          "contre_grand": "1d2"
         },
         "dégâts": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d3",
+          "contre_grand": "1d2"
         },
-        "degats_grand": "",
+        "degats_grand": "1d2",
         "poids": 3,
         "taille": "S",
         "type_degats": "special",
@@ -179,14 +207,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-2,-1,0,0,1,2,3,3,3",
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « arbalete legere » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca": [
+          -2,
+          -1,
+          0,
+          0,
+          1,
+          2,
+          3,
+          3,
+          3
+        ],
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -196,9 +234,7 @@
           "degat:special",
           "usage:distance",
           "usage:projectile_propulse",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -207,22 +243,23 @@
           "degat:special",
           "usage:distance",
           "usage:projectile_propulse",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "arbalete",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "arbalete legere",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "arbalete_legere",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_propulse",
         "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
         "portee_reference_mode": "operationnel_equivalence_reference",
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:arbalete legere.",
         "portee_source_reference": "ajustement_ca_reference:arbalete legere",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "degats_reference": "carreau_d_arbalete_de_poing",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry."
       },
       "effects": [],
       "flags": {
@@ -244,6 +281,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -281,14 +327,14 @@
         "prix": "35 po",
         "quantite": 1,
         "degats": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d4",
+          "contre_grand": "1d4"
         },
         "dégâts": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d4",
+          "contre_grand": "1d4"
         },
-        "degats_grand": "",
+        "degats_grand": "1d4",
         "poids": 7,
         "taille": "S",
         "type_degats": "special",
@@ -306,14 +352,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-2,-1,0,0,1,2,3,3,3",
+        "ajustement_ca": [
+          -2,
+          -1,
+          0,
+          0,
+          1,
+          2,
+          3,
+          3,
+          3
+        ],
         "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
-        "arme_de_jet": true,
+        "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -324,9 +380,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -336,9 +390,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "arbalete",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -349,7 +401,10 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_legere",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "carreau_leger",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry."
       },
       "effects": [],
       "flags": {
@@ -371,6 +426,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -408,14 +472,14 @@
         "prix": "50 po",
         "quantite": 1,
         "degats": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d4+1",
+          "contre_grand": "1d6+1"
         },
         "dégâts": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d4+1",
+          "contre_grand": "1d6+1"
         },
-        "degats_grand": "",
+        "degats_grand": "1d6+1",
         "poids": 14,
         "taille": "M",
         "type_degats": "special",
@@ -433,14 +497,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-1,0,1,2,3,3,4,4,4",
+        "ajustement_ca": [
+          -1,
+          0,
+          1,
+          2,
+          3,
+          3,
+          4,
+          4,
+          4
+        ],
         "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
-        "arme_de_jet": true,
+        "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -451,9 +525,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -463,9 +535,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "arbalete",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -476,7 +546,10 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_lourde",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "carreau_lourd",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry."
       },
       "effects": [],
       "flags": {
@@ -498,6 +571,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -535,14 +617,14 @@
         "prix": "75 po",
         "quantite": 1,
         "degats": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d6",
+          "contre_grand": "1d6"
         },
         "dégâts": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d6",
+          "contre_grand": "1d6"
         },
-        "degats_grand": "",
+        "degats_grand": "1d6",
         "poids": 2,
         "taille": "M",
         "type_degats": "special",
@@ -560,14 +642,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-3,-3,-1,0,1,2,2,2,3",
+        "ajustement_ca": [
+          -3,
+          -3,
+          -1,
+          0,
+          1,
+          2,
+          2,
+          2,
+          3
+        ],
         "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
-        "arme_de_jet": true,
+        "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -578,9 +670,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -590,9 +680,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "arc",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -603,7 +691,10 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_composite_court",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "fleche_de_vol",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry."
       },
       "effects": [],
       "flags": {
@@ -625,6 +716,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -662,14 +762,14 @@
         "prix": "100 po",
         "quantite": 1,
         "degats": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d8",
+          "contre_grand": "1d8"
         },
         "dégâts": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d8",
+          "contre_grand": "1d8"
         },
-        "degats_grand": "",
+        "degats_grand": "1d8",
         "poids": 3,
         "taille": "G",
         "type_degats": "special",
@@ -700,11 +800,11 @@
         ],
         "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
-        "arme_de_jet": true,
+        "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -715,9 +815,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -727,9 +825,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "arc",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -740,7 +836,10 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_composite_long",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "fleche_de_guerre",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry."
       },
       "effects": [],
       "flags": {
@@ -762,6 +861,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -799,14 +907,14 @@
         "prix": "30 po",
         "quantite": 1,
         "degats": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d6",
+          "contre_grand": "1d6"
         },
         "dégâts": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d6",
+          "contre_grand": "1d6"
         },
-        "degats_grand": "",
+        "degats_grand": "1d6",
         "poids": 2,
         "taille": "M",
         "type_degats": "special",
@@ -837,11 +945,11 @@
         ],
         "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
-        "arme_de_jet": true,
+        "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -852,9 +960,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -864,9 +970,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "arc",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -877,7 +981,10 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_court",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "fleche_de_vol",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry."
       },
       "effects": [],
       "flags": {
@@ -899,6 +1006,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -936,14 +1052,14 @@
         "prix": "75 po",
         "quantite": 1,
         "degats": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d8",
+          "contre_grand": "1d8"
         },
         "dégâts": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "1d8",
+          "contre_grand": "1d8"
         },
-        "degats_grand": "",
+        "degats_grand": "1d8",
         "poids": 3,
         "taille": "G",
         "type_degats": "special",
@@ -974,11 +1090,11 @@
         ],
         "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
-        "arme_de_jet": true,
+        "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -989,9 +1105,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -1001,9 +1115,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "arc",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -1014,7 +1126,10 @@
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_long",
         "portee_reference_mode": "exact",
-        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
+        "degats_reference": "fleche_de_guerre",
+        "degats_reference_mode": "munition_par_defaut",
+        "degats_note": "Dégâts renseignés depuis la munition de référence afin que l’arme soit utilisable directement par le moteur d’attaque Foundry."
       },
       "effects": [],
       "flags": {
@@ -1036,6 +1151,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -1109,13 +1233,13 @@
           4,
           4
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « arbalete lourde » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -1127,9 +1251,7 @@
           "usage:projectile_propulse",
           "trait:feu",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -1140,15 +1262,13 @@
           "usage:projectile_propulse",
           "trait:feu",
           "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "arme_a_feu",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "arbalete lourde",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "arbalete_lourde",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_propulse",
         "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
         "portee_reference_mode": "operationnel_equivalence_reference",
@@ -1177,6 +1297,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -1214,14 +1343,14 @@
         "prix": "30 po",
         "quantite": 1,
         "degats": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "0",
+          "contre_grand": "0"
         },
         "dégâts": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "0",
+          "contre_grand": "0"
         },
-        "degats_grand": "",
+        "degats_grand": "0",
         "poids": 8,
         "taille": "G",
         "type_degats": "special",
@@ -1250,13 +1379,13 @@
           0,
           0
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « pertuisane » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -1268,9 +1397,7 @@
           "trait:hast",
           "trait:entrave",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -1281,16 +1408,17 @@
           "trait:hast",
           "trait:entrave",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "entrave",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
         "ajustement_ca_reference": "pertuisane",
-        "ajustement_ca_source": "equivalence",
-        "type_arme": "melee"
+        "ajustement_ca_source": "exact_or_table",
+        "type_arme": "melee",
+        "degats_reference": "arme_speciale_entrave",
+        "degats_reference_mode": "special_sans_degats",
+        "degats_note": "Arme spéciale d’entrave : dégâts fixés à 0 pour éviter le fallback 1d6 du moteur d’attaque."
       },
       "effects": [],
       "flags": {
@@ -1312,6 +1440,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -1391,7 +1528,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -1403,9 +1540,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -1416,9 +1551,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": [
           "fronde",
@@ -1431,7 +1564,7 @@
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "fronde_bille",
-        "portee_reference_mode": "exact",
+        "portee_reference_mode": "equivalence_lanceur",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
       },
       "effects": [],
@@ -1454,6 +1587,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -1533,7 +1675,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -1545,9 +1687,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -1558,9 +1698,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": [
           "arme_hast",
@@ -1592,6 +1730,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -1671,7 +1818,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -1681,9 +1828,7 @@
           "degat:contondant",
           "usage:corps_a_corps",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -1692,9 +1837,7 @@
           "degat:contondant",
           "usage:corps_a_corps",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "baton",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -1723,6 +1866,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -1802,7 +1954,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -1814,9 +1966,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -1827,9 +1977,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "arme_hast",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -1858,6 +2006,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -1931,13 +2088,13 @@
           0,
           0
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « massue » (projectile/lancer), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (projectile/lancer), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": true,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -1949,9 +2106,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "trait:entrave",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "tags": [
           "arme",
@@ -1962,15 +2117,13 @@
           "usage:projectile_lance",
           "usage:lancer",
           "trait:entrave",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "famille_arme": "entrave",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
         "ajustement_ca_reference": "massue_projectile",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_lance",
         "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
         "portee_reference_mode": "operationnel_equivalence_systeme",
@@ -1999,6 +2152,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -2072,13 +2234,13 @@
           3,
           3
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « arbalete legere » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -2091,9 +2253,7 @@
           "usage:projectile_propulse",
           "type_arme:carreau_darbalete_de_poing",
           "trait:munition",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -2105,9 +2265,7 @@
           "usage:projectile_propulse",
           "type_arme:carreau_darbalete_de_poing",
           "trait:munition",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": [
           "arbalete",
@@ -2115,8 +2273,8 @@
         ],
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "arbalete legere",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "arbalete_legere",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_propulse",
         "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
         "portee_reference_mode": "operationnel_equivalence_reference",
@@ -2145,6 +2303,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -2218,13 +2385,13 @@
           3,
           3
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « arbalete legere » (table de référence), index 0=CA 2, index 8=CA 10.",
-        "deuxMains": true,
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
+        "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -2236,10 +2403,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -2250,10 +2414,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": [
           "munition",
@@ -2261,12 +2422,12 @@
         ],
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "arbalete legere",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "arbalete_legere",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_legere",
-        "portee_reference_mode": "lanceur_exact",
+        "portee_reference_mode": "equivalence_lanceur",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
       },
       "effects": [],
@@ -2289,6 +2450,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -2362,13 +2532,13 @@
           4,
           4
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « arbalete lourde » (table de référence), index 0=CA 2, index 8=CA 10.",
-        "deuxMains": true,
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
+        "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -2380,10 +2550,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -2394,10 +2561,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": [
           "munition",
@@ -2405,12 +2569,12 @@
         ],
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "arbalete lourde",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "arbalete_lourde",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arbalete_lourde",
-        "portee_reference_mode": "lanceur_exact",
+        "portee_reference_mode": "equivalence_lanceur",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
       },
       "effects": [],
@@ -2433,6 +2597,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -2506,13 +2679,13 @@
           0,
           4
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « poing main nue » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -2521,9 +2694,7 @@
           "famille_arme:pugilat",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -2531,15 +2702,13 @@
           "famille_arme:pugilat",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "pugilat",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "poing main nue",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "poing_main_nue",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
       "effects": [],
@@ -2562,6 +2731,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -2641,7 +2819,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -2650,9 +2828,7 @@
           "famille_arme:chaine",
           "degat:contondant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -2660,9 +2836,7 @@
           "famille_arme:chaine",
           "degat:contondant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "chaine",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -2691,6 +2865,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -2764,15 +2947,15 @@
           0,
           0
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « pertuisane » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
-        "bonus_force_toucher": true,
-        "bonus_force_degats": true,
+        "magique": false,
+        "bonus_force_toucher": false,
+        "bonus_force_degats": false,
         "effectTags": [
           "arme",
           "type_arme:chausse_trape",
@@ -2780,9 +2963,7 @@
           "degat:perforant",
           "usage:corps_a_corps",
           "trait:piege",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -2791,15 +2972,13 @@
           "degat:perforant",
           "usage:corps_a_corps",
           "trait:piege",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "piege",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
         "ajustement_ca_reference": "pertuisane",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
       "effects": [],
@@ -2822,6 +3001,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -2895,13 +3083,13 @@
           0,
           1
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « massue » (corps à corps), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -2912,9 +3100,7 @@
           "usage:corps_a_corps",
           "type_arme:cheville_damarrage",
           "trait:improvisee",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -2924,15 +3110,13 @@
           "usage:corps_a_corps",
           "type_arme:cheville_damarrage",
           "trait:improvisee",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "improvisee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
         "ajustement_ca_reference": "massue_melee",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
       "effects": [],
@@ -2955,6 +3139,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -3034,7 +3227,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -3043,9 +3236,7 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -3053,9 +3244,7 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -3084,6 +3273,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -3146,14 +3344,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-3,-3,-2,-2,0,0,1,1,3",
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « dague » (corps à corps), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca": [
+          -3,
+          -3,
+          -2,
+          -2,
+          0,
+          0,
+          1,
+          1,
+          3
+        ],
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -3162,9 +3370,7 @@
           "famille_arme:outil_arme",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -3172,15 +3378,13 @@
           "famille_arme:outil_arme",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "outil_arme",
         "source": "ADD2E — Bestiaire, arme ajoutée pour Korred",
         "description": "",
         "ajustement_ca_reference": "dague_melee",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
       "effects": [],
@@ -3202,6 +3406,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eExport": {
@@ -3269,14 +3482,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "2,2,2,2,3,3,3,1,0",
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « espadon » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca": [
+          2,
+          2,
+          2,
+          2,
+          3,
+          3,
+          3,
+          1,
+          0
+        ],
+        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « espadon », index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -3286,9 +3509,7 @@
           "degat:tranchant",
           "usage:corps_a_corps",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -3297,9 +3518,7 @@
           "degat:tranchant",
           "usage:corps_a_corps",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -3328,6 +3547,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -3390,14 +3618,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-3,-3,-2,-2,0,0,1,1,3",
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « dague » (corps à corps), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca": [
+          -5,
+          -4,
+          -3,
+          -2,
+          -1,
+          -1,
+          0,
+          0,
+          1
+        ],
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (projectile/lancer), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": true,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -3410,9 +3648,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "tags": [
           "arme",
@@ -3424,22 +3660,21 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "dague_melee",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "dague_projectile",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_lance",
-        "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
-        "portee_reference_mode": "operationnel_equivalence_reference",
-        "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
+        "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "portee_reference_ligne": "dague"
       },
       "effects": [],
       "flags": {
@@ -3461,6 +3696,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -3524,23 +3768,23 @@
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
-          -3,
+          -5,
+          -4,
           -3,
           -2,
-          -2,
+          -1,
+          -1,
           0,
           0,
-          1,
-          1,
-          3
+          1
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « dague » (corps à corps), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (projectile/lancer), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": true,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -3553,9 +3797,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "tags": [
           "arme",
@@ -3567,22 +3809,21 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "dague_melee",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "dague_projectile",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_lance",
-        "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
-        "portee_reference_mode": "operationnel_equivalence_reference",
-        "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
+        "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "portee_reference_ligne": "dague"
       },
       "effects": [],
       "flags": {
@@ -3604,6 +3845,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -3667,23 +3917,23 @@
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
-          -3,
+          -5,
+          -4,
           -3,
           -2,
-          -2,
+          -1,
+          -1,
           0,
           0,
-          1,
-          1,
-          3
+          1
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « dague » (corps à corps), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (projectile/lancer), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": true,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -3696,9 +3946,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "tags": [
           "arme",
@@ -3710,22 +3958,21 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "dague_melee",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "dague_projectile",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_lance",
-        "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
-        "portee_reference_mode": "operationnel_equivalence_reference",
-        "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
+        "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "portee_reference_ligne": "dague"
       },
       "effects": [],
       "flags": {
@@ -3747,6 +3994,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -3820,13 +4076,13 @@
           1,
           3
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « cimeterre » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -3835,9 +4091,7 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -3845,15 +4099,13 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
         "ajustement_ca_reference": "cimeterre",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
       "effects": [],
@@ -3876,6 +4128,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -3955,7 +4216,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -3967,9 +4228,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "tags": [
           "arme",
@@ -3980,9 +4239,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -4015,6 +4272,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -4088,13 +4354,13 @@
           1,
           3
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « dague » (corps à corps), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -4103,9 +4369,7 @@
           "famille_arme:dague",
           "degat:perforant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -4113,15 +4377,13 @@
           "famille_arme:dague",
           "degat:perforant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
         "ajustement_ca_reference": "dague_melee",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
       "effects": [],
@@ -4144,6 +4406,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -4207,23 +4478,23 @@
         "bonus_hit": 0,
         "bonus_dom": 0,
         "ajustement_ca": [
-          -3,
+          -5,
+          -4,
           -3,
           -2,
-          -2,
+          -1,
+          -1,
           0,
           0,
-          1,
-          1,
-          3
+          1
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « dague » (corps à corps), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (projectile/lancer), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": true,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -4235,9 +4506,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "tags": [
           "arme",
@@ -4248,22 +4517,21 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "dague_melee",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "dague_projectile",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_lance",
-        "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
-        "portee_reference_mode": "operationnel_equivalence_reference",
-        "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
+        "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "portee_reference_ligne": "dague"
       },
       "effects": [],
       "flags": {
@@ -4285,6 +4553,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -4347,14 +4624,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-3,-3,-2,-2,0,0,1,1,3",
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « dague » (corps à corps), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca": [
+          -5,
+          -4,
+          -3,
+          -2,
+          -1,
+          -1,
+          0,
+          0,
+          1
+        ],
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (projectile/lancer), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": true,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -4366,9 +4653,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "tags": [
           "arme",
@@ -4379,22 +4664,21 @@
           "usage:projectile_lance",
           "usage:lancer",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "famille_arme": "dague",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "dague_melee",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "dague_projectile",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_lance",
-        "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
-        "portee_reference_mode": "operationnel_equivalence_reference",
-        "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
+        "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:dague_melee.",
         "portee_source_reference": "ajustement_ca_reference:dague_melee",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "portee_reference_ligne": "dague"
       },
       "effects": [],
       "flags": {
@@ -4416,6 +4700,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -4489,13 +4782,13 @@
           0,
           1
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « flechette » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (projectile/lancer), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": true,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -4506,9 +4799,7 @@
           "usage:distance",
           "usage:projectile_lance",
           "usage:lancer",
-          "magique",
           "type_arme:projectile_lance",
-          "jp_meme_type:5",
           "usage:corps_a_corps"
         ],
         "tags": [
@@ -4519,20 +4810,18 @@
           "usage:distance",
           "usage:projectile_lance",
           "usage:lancer",
-          "magique",
           "type_arme:projectile_lance",
-          "jp_meme_type:5",
           "usage:corps_a_corps"
         ],
         "famille_arme": "dard",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
         "ajustement_ca_reference": "flechette",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_lance",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "flechette",
-        "portee_reference_mode": "exact",
+        "portee_reference_mode": "equivalence_lanceur",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
       },
       "effects": [],
@@ -4555,6 +4844,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -4605,7 +4903,7 @@
         "type_degats": "perforant",
         "proprietes": "Perforant",
         "facteur_vitesse": "—",
-        "facteur_rapidité": null,
+        "facteur_rapidité": "—",
         "categorie": "projectile_lance",
         "type": "projectile_lance",
         "portee_short": 15,
@@ -4617,14 +4915,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-5,-4,-3,-2,-1,0,1,0,1",
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « flechette » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca": [
+          -5,
+          -4,
+          -3,
+          -2,
+          -1,
+          0,
+          1,
+          0,
+          1
+        ],
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (projectile/lancer), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": true,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -4635,9 +4943,7 @@
           "usage:distance",
           "usage:projectile_lance",
           "usage:lancer",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "tags": [
           "arme",
@@ -4647,22 +4953,21 @@
           "usage:distance",
           "usage:projectile_lance",
           "usage:lancer",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "famille_arme": "dard",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
         "ajustement_ca_reference": "flechette",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_lance",
-        "portee_reference": "Catalogue des Armes et Équipements — aucune portée numérique trouvée dans la fiche/table PDF fournie",
-        "portee_reference_mode": "operationnel_equivalence_reference",
-        "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
+        "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
+        "portee_reference_mode": "equivalence_lanceur",
+        "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec ajustement_ca_reference:flechette.",
         "portee_source_reference": "ajustement_ca_reference:flechette",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "portee_reference_ligne": "flechette"
       },
       "effects": [],
       "flags": {
@@ -4684,6 +4989,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -4757,13 +5071,13 @@
           0,
           2
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « epee courte » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -4772,9 +5086,7 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -4782,15 +5094,13 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "epee courte",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "epee_courte",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
       "effects": [],
@@ -4813,6 +5123,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -4886,13 +5205,13 @@
           1,
           0
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « espadon » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « espadon », index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -4902,9 +5221,7 @@
           "degat:tranchant",
           "usage:corps_a_corps",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -4913,9 +5230,7 @@
           "degat:tranchant",
           "usage:corps_a_corps",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -4944,6 +5259,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -5017,13 +5341,13 @@
           1,
           0
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « epee batarde » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": true,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -5033,9 +5357,7 @@
           "degat:tranchant",
           "usage:corps_a_corps",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -5044,15 +5366,13 @@
           "degat:tranchant",
           "usage:corps_a_corps",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "epee batarde",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "epee_batarde",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
       "effects": [],
@@ -5075,6 +5395,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -5137,14 +5466,24 @@
         "bonus_degats": 0,
         "bonus_hit": 0,
         "bonus_dom": 0,
-        "ajustement_ca": "-2,-1,0,0,0,0,0,1,2",
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « epee longue » (table de référence), index 0=CA 2, index 8=CA 10.",
+        "ajustement_ca": [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
         "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -5153,9 +5492,7 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -5163,15 +5500,13 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "epee longue",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "epee_batarde",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
       "effects": [],
@@ -5194,6 +5529,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -5273,7 +5617,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -5282,9 +5626,7 @@
           "famille_arme:epee",
           "degat:perforant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -5292,14 +5634,12 @@
           "famille_arme:epee",
           "degat:perforant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "epee courte",
+        "ajustement_ca_reference": "epee_courte",
         "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
@@ -5323,6 +5663,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -5402,7 +5751,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -5411,9 +5760,7 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -5421,14 +5768,12 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "epee large",
+        "ajustement_ca_reference": "epee_large",
         "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
@@ -5452,6 +5797,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -5531,7 +5885,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -5540,9 +5894,7 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -5550,14 +5902,12 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "epee longue",
+        "ajustement_ca_reference": "epee_longue",
         "ajustement_ca_source": "exact_or_table",
         "type_arme": "melee"
       },
@@ -5581,6 +5931,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -5660,7 +6019,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -5669,9 +6028,7 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -5679,9 +6036,7 @@
           "famille_arme:epee",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "epee",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -5710,6 +6065,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -5789,7 +6153,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -5801,9 +6165,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -5814,9 +6176,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "arme_hast",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -5845,6 +6205,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -5924,7 +6293,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -5936,9 +6305,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -5949,9 +6316,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "arme_hast",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -5980,6 +6345,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -6059,7 +6433,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -6071,9 +6445,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -6084,9 +6456,7 @@
           "usage:corps_a_corps",
           "trait:hast",
           "trait:deux_mains",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "arme_hast",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -6115,6 +6485,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -6194,7 +6573,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -6203,9 +6582,7 @@
           "famille_arme:faucille",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -6213,9 +6590,7 @@
           "famille_arme:faucille",
           "degat:tranchant",
           "usage:corps_a_corps",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "faucille",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -6244,6 +6619,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -6281,14 +6665,14 @@
         "prix": "5 po",
         "quantite": 1,
         "degats": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "0",
+          "contre_grand": "0"
         },
         "dégâts": {
-          "contre_moyen": "",
-          "contre_grand": ""
+          "contre_moyen": "0",
+          "contre_grand": "0"
         },
-        "degats_grand": "",
+        "degats_grand": "0",
         "poids": 10,
         "taille": "M",
         "type_degats": "special",
@@ -6323,9 +6707,9 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
-        "bonus_force_degats": true,
+        "bonus_force_degats": false,
         "effectTags": [
           "arme",
           "type_arme:filet",
@@ -6335,9 +6719,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "trait:entrave",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "tags": [
           "arme",
@@ -6348,9 +6730,7 @@
           "usage:projectile_lance",
           "usage:lancer",
           "trait:entrave",
-          "magique",
-          "type_arme:projectile_lance",
-          "jp_meme_type:5"
+          "type_arme:projectile_lance"
         ],
         "famille_arme": "entrave",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -6363,7 +6743,10 @@
         "portee_note": "Valeur laissée vide volontairement: aucune portée chiffrée n’est donnée par le PDF fourni ni par une ligne exacte de la table PHB.",
         "portee_source_note": "Portée opérationnelle renseignée pour éviter qu’une arme à distance/de jet soit traitée comme arme de contact. Valeur non revendiquée comme portée officielle du Catalogue quand celui-ci ne fournit pas la donnée ; choisie par équivalence mécanique avec nom:Filet.",
         "portee_source_reference": "nom:Filet",
-        "portee_operationnelle": true
+        "portee_operationnelle": true,
+        "degats_reference": "arme_speciale_entrave",
+        "degats_reference_mode": "special_sans_degats",
+        "degats_note": "Arme spéciale d’entrave : dégâts fixés à 0 pour éviter le fallback 1d6 du moteur d’attaque."
       },
       "effects": [],
       "flags": {
@@ -6385,6 +6768,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -6464,7 +6856,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -6474,9 +6866,7 @@
           "degat:contondant",
           "usage:corps_a_corps",
           "type_arme:fleau_darmes_de_cavalier",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -6485,9 +6875,7 @@
           "degat:contondant",
           "usage:corps_a_corps",
           "type_arme:fleau_darmes_de_cavalier",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "fleau",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -6516,6 +6904,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -6595,7 +6992,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -6605,9 +7002,7 @@
           "degat:contondant",
           "usage:corps_a_corps",
           "type_arme:fleau_darmes_de_fantassin",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -6616,9 +7011,7 @@
           "degat:contondant",
           "usage:corps_a_corps",
           "type_arme:fleau_darmes_de_fantassin",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "fleau",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -6647,6 +7040,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -6720,13 +7122,13 @@
           3,
           3
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « arc long » (table de référence), index 0=CA 2, index 8=CA 10.",
-        "deuxMains": true,
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
+        "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -6737,10 +7139,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -6750,20 +7149,17 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "munition",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "arc long",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "arc_long",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_long",
-        "portee_reference_mode": "lanceur_exact",
+        "portee_reference_mode": "equivalence_lanceur",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
       },
       "effects": [],
@@ -6786,6 +7182,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -6859,13 +7264,13 @@
           2,
           2
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « arc court » (table de référence), index 0=CA 2, index 8=CA 10.",
-        "deuxMains": true,
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
+        "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -6876,10 +7281,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -6889,20 +7291,17 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "munition",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "arc court",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "arc_court",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_court",
-        "portee_reference_mode": "lanceur_exact",
+        "portee_reference_mode": "equivalence_lanceur",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
       },
       "effects": [],
@@ -6925,6 +7324,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -6998,13 +7406,13 @@
           3,
           3
         ],
-        "ajustement_ca_note": "Ajustement CA PHB p.38 appliqué par équivalence avec « arc long » (table de référence), index 0=CA 2, index 8=CA 10.",
-        "deuxMains": true,
+        "ajustement_ca_note": "Ajustement CA PHB p.38 (table de référence), index 0=CA 2, index 8=CA 10.",
+        "deuxMains": false,
         "arme_de_jet": false,
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": false,
         "bonus_force_degats": false,
         "effectTags": [
@@ -7015,10 +7423,7 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "tags": [
           "arme",
@@ -7028,20 +7433,17 @@
           "usage:distance",
           "usage:projectile_propulse",
           "trait:munition",
-          "trait:deux_mains",
-          "magique",
-          "type_arme:projectile_propulse",
-          "jp_meme_type:5"
+          "type_arme:projectile_propulse"
         ],
         "famille_arme": "munition",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
         "description": "",
-        "ajustement_ca_reference": "arc long",
-        "ajustement_ca_source": "equivalence",
+        "ajustement_ca_reference": "arc_long",
+        "ajustement_ca_source": "exact_or_table",
         "type_arme": "projectile_propulse",
         "portee_reference": "Manuel des joueurs — table Armes lancées et projectiles",
         "portee_reference_ligne": "arc_long",
-        "portee_reference_mode": "lanceur_exact",
+        "portee_reference_mode": "equivalence_lanceur",
         "portee_note": "Portée C/M/L issue de la table officielle; valeurs x10 conservées pour l’échelle utilisée par le système add2e."
       },
       "effects": [],
@@ -7064,6 +7466,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -7143,7 +7554,7 @@
         "encombrante": false,
         "base": true,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_force_toucher": true,
         "bonus_force_degats": true,
         "effectTags": [
@@ -7153,9 +7564,7 @@
           "degat:special",
           "usage:corps_a_corps",
           "trait:souple",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "tags": [
           "arme",
@@ -7164,9 +7573,7 @@
           "degat:special",
           "usage:corps_a_corps",
           "trait:souple",
-          "magique",
-          "type_arme:melee",
-          "jp_meme_type:5"
+          "type_arme:melee"
         ],
         "famille_arme": "fouet",
         "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart",
@@ -7195,6 +7602,15 @@
           "ajustementCaNormalise": {
             "version": "2026-05-05-v3-ajustements-ca-standard-et-magique",
             "index": "0=CA2, 8=CA10"
+          },
+          "correctionArmes": {
+            "version": "2026-05-26-armes-audit-v1",
+            "sources": [
+              "Manuel des joueurs — p.37-38 armes, portées et ajustements CA",
+              "Guide du Maître — règles de combat, CA et projectiles",
+              "AD&D2 Arms and Equipment Guide — Table 6 Master Weapons Chart pour les armes hors PHB"
+            ],
+            "notes": "Base weapons normalized: no magic tag, AC adjustment array 0=CA2..8=CA10, projectile categories and strength bonus flags verified."
           }
         },
         "add2eImport": {
@@ -7222,5 +7638,75 @@
         "lastModifiedBy": "sJuwkOXARIJD2Nsz"
       }
     }
-  ]
+  ],
+  "correctedAt": "2026-05-26T06:30:00Z",
+  "correctionNotes": {
+    "version": "2026-05-26-armes-audit-v1",
+    "changedCount": 54,
+    "changes": [
+      "magique=false pour les armes de base et retrait des tags magique/jp_meme_type:5",
+      "ajustement_ca converti en tableau numérique de 9 valeurs",
+      "dégâts renseignés pour les lanceurs/projectiles qui étaient vides",
+      "arme_de_jet limité aux projectiles lancés à la main",
+      "bonus de Force actif seulement pour corps à corps et armes lancées à la main",
+      "munitions non marquées deux mains",
+      "miroir degats/dégâts/degats_grand recalculé"
+    ],
+    "changedDocuments": [
+      "Aiguille de sarbacane",
+      "Arbalète de poing",
+      "Arbalète légère",
+      "Arbalète lourde",
+      "Arc composite court",
+      "Arc composite long",
+      "Arc court",
+      "Arc long",
+      "Arquebuse",
+      "Attrape-homme",
+      "Balle de fronde",
+      "Bardiche",
+      "Bâton",
+      "Bill-guisarme",
+      "Bolas",
+      "Carreau d'arbalète de poing",
+      "Carreau léger",
+      "Carreau lourd",
+      "Ceste",
+      "Chaîne",
+      "Chausse-trape",
+      "Cheville d'amarrage",
+      "Cimeterre",
+      "Cisaille",
+      "Claymore",
+      "Couteau",
+      "Couteau de pierre",
+      "Couteau en os",
+      "Coutelas",
+      "Dague",
+      "Dague de parade",
+      "Dague de pierre",
+      "Dague en os",
+      "Dard",
+      "Dard barbelé",
+      "Drusus",
+      "Épée à deux mains",
+      "Épée bâtarde à deux mains",
+      "Épée bâtarde à une main",
+      "Épée courte",
+      "Épée large",
+      "Épée longue",
+      "Falchion",
+      "Fauchard",
+      "Fauchard à crochet",
+      "Fauchard-fourche",
+      "Faucille",
+      "Filet",
+      "Fléau d'armes de cavalier",
+      "Fléau d'armes de fantassin",
+      "Flèche de guerre",
+      "Flèche de pierre",
+      "Flèche de vol",
+      "Fouet"
+    ]
+  }
 }
