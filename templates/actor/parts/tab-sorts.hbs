@@ -13,6 +13,43 @@
             {{/if}}
           </h2>
           <div class="a2e-panel-body">
+            <div class="a2e-panel add2e-components-pouch-panel" style="box-shadow:none;">
+              <h3>Sacoche de composants</h3>
+              <div class="a2e-panel-body">
+                <table class="a2e-table add2e-components-pouch-table">
+                  <thead>
+                    <tr>
+                      <th>Composant</th>
+                      <th style="width:90px;">Qté</th>
+                      <th style="width:120px;">Identifiant</th>
+                      <th style="width:120px;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each listeObjets as |component|}}
+                      {{#if (eq component.system.categorie "composant_sort")}}
+                        <tr class="item add2e-component-row" data-item-id="{{component._id}}">
+                          <td>
+                            <img src="{{component.img}}" alt="{{component.name}}" style="width:26px;height:26px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:6px;">
+                            <b>{{component.name}}</b>
+                          </td>
+                          <td>{{component.system.quantite}}</td>
+                          <td>{{#if component.system.slug}}{{component.system.slug}}{{else}}{{component.system.sousType}}{{/if}}</td>
+                          <td>
+                            <div class="a2e-actions">
+                              <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{component._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                              <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{component._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                            </div>
+                          </td>
+                        </tr>
+                      {{/if}}
+                    {{/each}}
+                  </tbody>
+                </table>
+                <p class="a2e-muted">Les objets avec <code>system.categorie = "composant_sort"</code> sont utilisés par les sorts qui déclarent <code>system.composants_materiels</code>.</p>
+              </div>
+            </div>
+
             {{#if add2eObjectMagicItems.length}}
               <div class="a2e-panel add2e-object-magic-panel" style="box-shadow:none;">
                 <h3>Objets magiques</h3>
