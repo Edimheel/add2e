@@ -1,7 +1,7 @@
 // ADD2E — Consommables : composants de sorts, projectiles et carquois
 // Phase 2/3/4 dev-composant : réglages, carquois, drop de munitions, attaque projectile et restitution.
 
-const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase4-projectiles-v1";
+const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase4-projectiles-v2-no-chat";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -470,18 +470,8 @@ function add2ePatchWeaponBonusDuringProjectileAttack(arme, projectile) {
   };
 }
 
-async function add2eNotifyProjectileUsed(actor, arme, reservation) {
-  const projectile = reservation?.projectile;
-  if (!projectile) return;
-  const hit = add2eProjectileHitBonus(projectile);
-  const dmg = add2eProjectileDamageBonus(projectile);
-  const before = add2eNumber(reservation.before, 0);
-  const after = Math.max(0, before - add2eNumber(reservation.quantity, 1));
-  const bonusText = (hit || dmg) ? `<br><b>Bonus projectile :</b> ${hit >= 0 ? "+" : ""}${hit} toucher / ${dmg >= 0 ? "+" : ""}${dmg} dégâts` : "";
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-chat-card" style="font-family:var(--font-primary);border:1px solid #b88924;border-radius:6px;padding:6px;background:#fff8df;"><b>Projectile :</b> ${projectile.name}<br><b>Arme :</b> ${arme?.name ?? "Arme"}${bonusText}<br><b>Quantité :</b> ${before} → ${after}</div>`
-  });
+async function add2eNotifyProjectileUsed(_actor, _arme, _reservation) {
+  return;
 }
 
 function add2eResolveAttackActorAndWeapon(args = {}) {
