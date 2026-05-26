@@ -166,6 +166,7 @@
                           <th style="width:42px;"></th>
                           <th>Sort</th>
                           <th>École</th>
+                          <th>Composants</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -185,6 +186,7 @@
                                 <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{sort._id}}" title="Afficher / masquer la description">{{sort.name}}</a>
                               </td>
                               <td>{{sort.system.école}}</td>
+                              <td>{{spellMaterialComponents sort}}</td>
                               <td>
                                 <div class="a2e-actions">
                                   <a class="a2e-action-icon a2e-action-edit sort-edit" data-sort-id="{{sort._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
@@ -193,10 +195,11 @@
                               </td>
                             </tr>
                             <tr id="desc-chat-{{sort._id}}" class="sort-description">
-                              <td colspan="5" class="sort-description-fullcell">
+                              <td colspan="6" class="sort-description-fullcell">
                                 <div class="a2e-small sort-description-content">
                                   {{{sort.system.description}}}
                                   {{#if sort.system.composantes}}<div><b>Composantes :</b> {{sort.system.composantes}}</div>{{/if}}
+                                  <div><b>Composants requis :</b> {{spellMaterialComponents sort}}</div>
                                   {{#if sort.system.temps_incantation}}<div><b>Incantation :</b> {{sort.system.temps_incantation}}</div>{{/if}}
                                   {{#if sort.system.portée}}<div><b>Portée :</b> {{formatSortChamp sort.system.portée}}</div>{{/if}}
                                   {{#if sort.system.durée}}<div><b>Durée :</b> {{formatSortChamp sort.system.durée}}</div>{{/if}}
