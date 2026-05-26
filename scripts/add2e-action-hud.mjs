@@ -1,8 +1,8 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison, indépendant d'Argon.
-// Version : 2026-05-25-v26-effects-from-applied-effects
+// Version : 2026-05-25-v26b-effects-time-helper-fix
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v26-effects-from-applied-effects";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-25-v26b-effects-time-helper-fix";
 const TAG = "[ADD2E][ACTION_HUD]";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
@@ -34,6 +34,7 @@ const SAVES = [
   ["Sorts", "Sorts", "fa-scroll", "save4"]
 ];
 
+function add2eHudNow() { return Date.now(); }
 function esc(v) {
   try { return foundry.utils.escapeHTML(String(v ?? "")); }
   catch (_e) { return String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"); }
