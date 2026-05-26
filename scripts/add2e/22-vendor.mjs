@@ -1,12 +1,14 @@
 // ADD2E — Vendeur système : composants, projectiles et monnaie complète
 // ApplicationV2 + DialogV2, création automatique au premier lancement du monde.
 
-const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v6-no-magic-filter";
+const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v7-token-size";
 globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
 
 const ADD2E_VENDOR_FLAG_SCOPE = "add2e";
 const ADD2E_VENDOR_NAME = "Marchand de composants et projectiles";
 const ADD2E_VENDOR_CREATION_SETTING = "vendorCreationVersion";
+const ADD2E_VENDOR_TOKEN_SIZE = 2;
+const ADD2E_VENDOR_TOKEN_IMG = "icons/containers/bags/pouch-leather-gold-brown.webp";
 
 const ADD2E_COINS = [
   { key: "pp", label: "PP", name: "Pièces de platine", pc: 1000 },
@@ -418,25 +420,66 @@ export function add2eFindDefaultVendor() {
   return Array.from(game.actors ?? []).find(actor => add2eIsVendorActor(actor)) ?? null;
 }
 
+async function add2eUpdateVendorTokenSize(vendor = null) {
+  if (!game.user?.isGM) return false;
+  vendor = vendor ?? add2eFindDefaultVendor();
+  if (!vendor) return false;
+
+  const actorUpdates = {
+    "prototypeToken.width": ADD2E_VENDOR_TOKEN_SIZE,
+    "prototypeToken.height": ADD2E_VENDOR_TOKEN_SIZE,
+    "prototypeToken.texture.src": ADD2E_VENDOR_TOKEN_IMG,
+    "flags.add2e.vendorVersion": ADD2E_VENDOR_VERSION
+  };
+
+  const currentWidth = Number(vendor.prototypeToken?.width ?? 1);
+  const currentHeight = Number(vendor.prototypeToken?.height ?? 1);
+  const currentTexture = vendor.prototypeToken?.texture?.src ?? vendor.prototypeToken?.texture?.src;
+  if (currentWidth !== ADD2E_VENDOR_TOKEN_SIZE || currentHeight !== ADD2E_VENDOR_TOKEN_SIZE || currentTexture !== ADD2E_VENDOR_TOKEN_IMG) {
+    await vendor.update(actorUpdates, { add2eReason: "vendor-token-size" });
+  }
+
+  for (const scene of game.scenes ?? []) {
+    const updates = [];
+    for (const token of scene.tokens ?? []) {
+      const sameActor = token.actorId === vendor.id;
+      const sameName = token.name === ADD2E_VENDOR_NAME;
+      if (!sameActor && !sameName) continue;
+      const width = Number(token.width ?? 1);
+      const height = Number(token.height ?? 1);
+      if (width === ADD2E_VENDOR_TOKEN_SIZE && height === ADD2E_VENDOR_TOKEN_SIZE) continue;
+      updates.push({ _id: token.id, width: ADD2E_VENDOR_TOKEN_SIZE, height: ADD2E_VENDOR_TOKEN_SIZE });
+    }
+    if (updates.length) await scene.updateEmbeddedDocuments("Token", updates, { add2eReason: "vendor-token-size" });
+  }
+
+  return true;
+}
+
 export async function add2eCreateDefaultVendor({ force = false } = {}) {
   if (!game.user?.isGM) return null;
   const existing = add2eFindDefaultVendor();
-  if (existing && !force) return existing;
+  if (existing && !force) {
+    await add2eUpdateVendorTokenSize(existing);
+    return existing;
+  }
 
   const stock = await add2eVendorBuildStockData();
   const observer = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OBSERVER ?? 2;
   const actor = await Actor.create({
     name: ADD2E_VENDOR_NAME,
     type: "personnage",
-    img: "icons/containers/bags/pouch-leather-gold-brown.webp",
+    img: ADD2E_VENDOR_TOKEN_IMG,
     ownership: { default: observer },
     prototypeToken: {
       name: ADD2E_VENDOR_NAME,
       actorLink: true,
+      width: ADD2E_VENDOR_TOKEN_SIZE,
+      height: ADD2E_VENDOR_TOKEN_SIZE,
       disposition: CONST?.TOKEN_DISPOSITIONS?.NEUTRAL ?? 0,
       displayName: CONST?.TOKEN_DISPLAY_MODES?.OWNER_HOVER ?? 30,
       displayBars: CONST?.TOKEN_DISPLAY_MODES?.NONE ?? 0,
-      texture: { src: "icons/containers/bags/pouch-leather-gold-brown.webp" }
+      texture: { src: ADD2E_VENDOR_TOKEN_IMG }
     },
     flags: {
       add2e: {
@@ -457,7 +500,10 @@ export async function add2eCreateDefaultVendor({ force = false } = {}) {
 async function add2eEnsureVendorOnFirstWorldLaunch() {
   if (!game.user?.isGM) return;
   const existing = add2eFindDefaultVendor();
-  if (existing) return;
+  if (existing) {
+    await add2eUpdateVendorTokenSize(existing);
+    return;
+  }
   const done = game.settings.get("add2e", ADD2E_VENDOR_CREATION_SETTING);
   if (done === ADD2E_VENDOR_VERSION) return;
   await add2eCreateDefaultVendor();
@@ -665,9 +711,9 @@ async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
 }
 
 function add2eBindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV6) return;
+  if (!token || token.__add2eVendorBoundV7) return;
   if (!add2eIsVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV6 = true;
+  token.__add2eVendorBoundV7 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
@@ -690,8 +736,8 @@ function add2eBindAllVendorTokens() {
 }
 
 function add2ePatchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V6) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V6 = true;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V7) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V7 = true;
 
   const TokenClass = globalThis.Token ?? foundry?.canvas?.placeables?.Token;
   const proto = TokenClass?.prototype;
@@ -738,8 +784,8 @@ function add2ePatchVendorTokenClick() {
 
 function add2ePatchActorSheetMoney() {
   const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eVendorMoneySheetV6) return;
-  proto.__add2eVendorMoneySheetV6 = true;
+  if (!proto || proto.__add2eVendorMoneySheetV7) return;
+  proto.__add2eVendorMoneySheetV7 = true;
 
   if (typeof proto.getData === "function") {
     const originalGetData = proto.getData;
@@ -778,8 +824,8 @@ function add2ePatchActorSheetMoney() {
 }
 
 function add2eRegisterVendorSockets() {
-  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V6) return;
-  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V6 = true;
+  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V7) return;
+  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V7 = true;
 
   game.socket?.on?.("system.add2e", async data => {
     if (!data || typeof data !== "object") return;
@@ -849,6 +895,7 @@ Hooks.once("ready", async () => {
   game.add2e.openVendor = add2eOpenVendor;
   game.add2e.createDefaultVendor = add2eCreateDefaultVendor;
   game.add2e.findDefaultVendor = add2eFindDefaultVendor;
+  game.add2e.updateVendorTokenSize = add2eUpdateVendorTokenSize;
   game.add2e.vendorMoney = {
     coins: ADD2E_COINS,
     get: add2eVendorGetMoney,
@@ -861,6 +908,7 @@ Hooks.once("ready", async () => {
   globalThis.add2eCreateDefaultVendor = add2eCreateDefaultVendor;
   globalThis.add2eVendorMoney = game.add2e.vendorMoney;
   await add2eEnsureVendorOnFirstWorldLaunch().catch(err => console.warn("[ADD2E][VENDOR][AUTO_CREATE]", err));
+  await add2eUpdateVendorTokenSize().catch(err => console.warn("[ADD2E][VENDOR][TOKEN_SIZE]", err));
   add2eRegisterVendorSockets();
   add2ePatchActorSheetMoney();
   add2ePatchVendorTokenClick();
