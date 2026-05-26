@@ -1,7 +1,7 @@
 // ADD2E — Vendeur système : composants, projectiles et monnaie complète
 // ApplicationV2 + DialogV2, création automatique au premier lancement du monde.
 
-const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v2-token-click";
+const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v3-token-money";
 globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
 
 const ADD2E_VENDOR_FLAG_SCOPE = "add2e";
@@ -563,14 +563,38 @@ async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
   return true;
 }
 
+function add2eBindVendorToken(token) {
+  if (!token || token.__add2eVendorBoundV3) return;
+  if (!add2eIsVendorActor(token.actor)) return;
+  token.__add2eVendorBoundV3 = true;
+  try { token.cursor = "pointer"; } catch (_err) {}
+  try { token.eventMode = "static"; } catch (_err) {}
+  try { token.interactive = true; } catch (_err) {}
+
+  const handler = ev => {
+    try {
+      ev?.stopPropagation?.();
+      add2eOpenVendorFromToken(token, { singleClick: !game.user?.isGM });
+    } catch (err) {
+      console.warn("[ADD2E][VENDOR][TOKEN_POINTER]", err);
+    }
+  };
+
+  try { token.on?.("pointertap", handler); } catch (_err) {}
+  try { token.on?.("click", handler); } catch (_err) {}
+}
+
+function add2eBindAllVendorTokens() {
+  for (const token of canvas?.tokens?.placeables ?? []) add2eBindVendorToken(token);
+}
+
 function add2ePatchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED) return;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V3) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V3 = true;
+
   const TokenClass = globalThis.Token ?? foundry?.canvas?.placeables?.Token;
   const proto = TokenClass?.prototype;
-  if (!proto) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED = true;
-
-  if (typeof proto._onClickLeft === "function") {
+  if (proto && typeof proto._onClickLeft === "function") {
     const original = proto._onClickLeft;
     proto._onClickLeft = function add2eVendorOnClickLeft(event) {
       try {
@@ -585,7 +609,7 @@ function add2ePatchVendorTokenClick() {
     };
   }
 
-  if (typeof proto._onClickLeft2 === "function") {
+  if (proto && typeof proto._onClickLeft2 === "function") {
     const original2 = proto._onClickLeft2;
     proto._onClickLeft2 = function add2eVendorOnClickLeft2(event) {
       try {
@@ -597,6 +621,57 @@ function add2ePatchVendorTokenClick() {
         console.warn("[ADD2E][VENDOR][TOKEN_DOUBLE_CLICK]", err);
       }
       return original2.call(this, event);
+    };
+  }
+
+  Hooks.on("canvasReady", add2eBindAllVendorTokens);
+  Hooks.on("createToken", () => window.setTimeout(add2eBindAllVendorTokens, 100));
+  Hooks.on("updateToken", () => window.setTimeout(add2eBindAllVendorTokens, 100));
+  Hooks.on("controlToken", (token, controlled) => {
+    if (controlled && add2eIsVendorActor(token?.actor) && !game.user?.isGM) add2eOpenVendorFromToken(token, { singleClick: true });
+  });
+  Hooks.on("targetToken", (user, token, targeted) => {
+    if (user?.id === game.user?.id && targeted && add2eIsVendorActor(token?.actor)) add2eOpenVendorFromToken(token, { singleClick: true });
+  });
+}
+
+function add2ePatchActorSheetMoney() {
+  const proto = globalThis.Add2eActorSheet?.prototype;
+  if (!proto || proto.__add2eVendorMoneySheetV3) return;
+  proto.__add2eVendorMoneySheetV3 = true;
+
+  if (typeof proto.getData === "function") {
+    const originalGetData = proto.getData;
+    proto.getData = async function add2eVendorMoneyGetData(...args) {
+      const data = await originalGetData.apply(this, args);
+      try {
+        const money = add2eVendorGetMoney(this.actor);
+        data.add2eVendorMoney = money;
+        data.add2eVendorMoneyLabel = add2eVendorFormatMoney(money);
+      } catch (err) {
+        console.warn("[ADD2E][VENDOR][SHEET_MONEY_GETDATA]", err);
+        data.add2eVendorMoney = add2eVendorMoneyFromObject({});
+        data.add2eVendorMoneyLabel = "0 PC";
+      }
+      return data;
+    };
+  }
+
+  if (typeof proto.activateListeners === "function") {
+    const originalActivateListeners = proto.activateListeners;
+    proto.activateListeners = function add2eVendorMoneyActivateListeners(html) {
+      originalActivateListeners.call(this, html);
+      const sheet = this;
+      const jq = html?.jquery ? html : $(html);
+      jq.find(".add2e-money-input").off("change.add2eVendorMoney").on("change.add2eVendorMoney", async ev => {
+        ev.preventDefault();
+        const money = add2eVendorGetMoney(sheet.actor);
+        const coin = ev.currentTarget.dataset.coin;
+        if (!ADD2E_COINS.some(c => c.key === coin)) return;
+        money[coin] = Math.max(0, Math.floor(add2eVendorNumber(ev.currentTarget.value, 0)));
+        await add2eVendorSetMoney(sheet.actor, money);
+        sheet.render(false);
+      });
     };
   }
 }
@@ -646,6 +721,8 @@ Hooks.once("ready", async () => {
   globalThis.add2eCreateDefaultVendor = add2eCreateDefaultVendor;
   globalThis.add2eVendorMoney = game.add2e.vendorMoney;
   await add2eEnsureVendorOnFirstWorldLaunch().catch(err => console.warn("[ADD2E][VENDOR][AUTO_CREATE]", err));
+  add2ePatchActorSheetMoney();
   add2ePatchVendorTokenClick();
+  window.setTimeout(add2eBindAllVendorTokens, 500);
   add2eVendorLog("ready", ADD2E_VENDOR_VERSION);
 });
