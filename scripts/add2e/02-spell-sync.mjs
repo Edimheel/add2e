@@ -1,9 +1,9 @@
 // ============================================================
 // ADD2E — Synchronisation automatique des sorts depuis add2e.sorts
-// Version : 2026-05-22-spell-sync-v6-merge-duplicate-lists
+// Version : 2026-05-26-spell-sync-v7-known-spells-by-max-level
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-05-22-spell-sync-v6-merge-duplicate-lists";
+const ADD2E_SPELL_SYNC_VERSION = "2026-05-26-spell-sync-v7-known-spells-by-max-level";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 function add2eSpellSyncClone(value) {
@@ -73,14 +73,20 @@ function add2eSpellSyncClassLists(classItem) {
   const sc = add2eSpellSyncMaybeJson(sys.spellcasting);
   const raw = [
     ...add2eSpellSyncArray(sys.spellLists),
+    ...add2eSpellSyncArray(sys.lists),
+    ...add2eSpellSyncArray(sys.listeSorts),
+    ...add2eSpellSyncArray(sys.liste_sorts),
     ...add2eSpellSyncArray(sys.sorts),
     ...add2eSpellSyncArray(sys.tags),
+    ...add2eSpellSyncArray(sys.classe),
     ...add2eSpellSyncArray(sc?.lists),
-    ...add2eSpellSyncArray(sc?.spellLists)
+    ...add2eSpellSyncArray(sc?.spellLists),
+    ...add2eSpellSyncArray(sc?.list),
+    ...add2eSpellSyncArray(sc?.classes)
   ];
 
   const lists = raw.map(add2eSpellSyncNormalize).filter(Boolean);
-  const className = add2eSpellSyncNormalize(classItem?.name ?? "");
+  const className = add2eSpellSyncNormalize(classItem?.name ?? sys.name ?? sys.label ?? sys.nom ?? "");
   if (className.includes("clerc")) lists.push("clerc");
   if (className.includes("druide")) lists.push("druide");
 
@@ -100,6 +106,7 @@ function add2eSpellSyncSpellLists(system = {}) {
     ...add2eSpellSyncArray(system.classes),
     ...add2eSpellSyncArray(system.classe),
     ...add2eSpellSyncArray(system.class),
+    ...add2eSpellSyncArray(system.liste),
     ...add2eSpellSyncArray(system.tags),
     ...add2eSpellSyncArray(system.effectTags)
   ];
@@ -142,7 +149,7 @@ function add2eSpellSyncSlotsArray(value) {
     return [];
   }
   if (typeof value === "object") {
-    for (const key of ["slots", "slot", "value", "values", "spellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "spellSlots"]) {
+    for (const key of ["slots", "slot", "value", "values", "spellsPerLevel", "SpellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "spellSlots"]) {
       if (Array.isArray(value[key]) || typeof value[key] === "string") return add2eSpellSyncSlotsArray(value[key]);
     }
     return Object.keys(value).filter(k => /^\d+$/.test(k)).sort((a, b) => Number(a) - Number(b)).map(k => value[k]);
@@ -169,7 +176,7 @@ function add2eSpellSyncReadSlotValue(raw, spellLevelOrIndex, listKey = "") {
     }
   }
 
-  for (const key of ["slots", "slot", "value", "values", "spellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "spellSlots"]) {
+  for (const key of ["slots", "slot", "value", "values", "spellsPerLevel", "SpellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "spellSlots"]) {
     if (raw[key] === undefined) continue;
     const v = add2eSpellSyncReadSlotValue(raw[key], oneBased, wantedList);
     if (v !== null) return v;
@@ -207,7 +214,7 @@ function add2eSpellSyncMaxSpellLevel(classItem, actorLevel) {
     for (const value of Object.values(raw)) {
       if (Array.isArray(value)) max = Math.max(max, maxFromArray(value));
       else if (value && typeof value === "object") {
-        max = Math.max(max, maxFromArray(value), maxFromArray(value.slots), maxFromArray(value.value), maxFromArray(value.values), maxFromArray(value.spellsPerLevel), maxFromArray(value.sortsParNiveau));
+        max = Math.max(max, maxFromArray(value), maxFromArray(value.slots), maxFromArray(value.value), maxFromArray(value.values), maxFromArray(value.spellsPerLevel), maxFromArray(value.SpellsPerLevel), maxFromArray(value.sortsParNiveau));
       }
     }
     return max;
@@ -215,7 +222,7 @@ function add2eSpellSyncMaxSpellLevel(classItem, actorLevel) {
 
   let maxFromSlots = 0;
   if (row && typeof row === "object") {
-    for (const field of ["spellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "slots", "spellSlots"]) maxFromSlots = Math.max(maxFromSlots, maxFromArray(row[field]));
+    for (const field of ["spellsPerLevel", "SpellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "slots", "spellSlots"]) maxFromSlots = Math.max(maxFromSlots, maxFromArray(row[field]));
     for (const container of ["spellSlotsByList", "spellsByList", "spellsPerLevelByList", "sortsParListe"]) maxFromSlots = Math.max(maxFromSlots, maxFromContainer(row[container]));
     for (const [key, value] of Object.entries(row)) {
       if (!/^spellsPerLevel|^sortsParNiveau|^spellSlots/i.test(key)) continue;
@@ -252,7 +259,7 @@ function add2eSpellSyncSlotProbe(actor, classLists, spellLevel) {
     count = Math.max(count, Number(v) || 0);
   };
 
-  for (const field of ["spellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "slots", "spellSlots"]) read(row[field]);
+  for (const field of ["spellsPerLevel", "SpellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "slots", "spellSlots"]) read(row[field]);
   for (const containerName of ["spellSlotsByList", "spellsByList", "spellsPerLevelByList", "sortsParListe"]) {
     const c = row[containerName];
     if (!c || typeof c !== "object") continue;
@@ -272,9 +279,18 @@ function add2eSpellSyncSlotProbe(actor, classLists, spellLevel) {
   return { found, count, source: found ? "progression" : "no-slot-source" };
 }
 
-function add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, fallbackMaxSpellLevel) {
+function add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, fallbackMaxSpellLevel, options = {}) {
   const lvl = Number(spellLevel) || 0;
   if (lvl < 1) return false;
+
+  const max = Number(fallbackMaxSpellLevel) || 0;
+  const importMode = options.importMode === true || options.mode === "import";
+
+  // La synchronisation automatique remplit la liste des sorts connus/disponibles.
+  // Les emplacements servent ensuite à la mémorisation/préparation, ils ne doivent
+  // pas empêcher l'ajout du sort si le niveau de sort est accessible par la classe.
+  if (importMode) return max > 0 && lvl <= max;
+
   const probe = add2eSpellSyncSlotProbe(actor, classLists, lvl);
   if (probe.found) return probe.count > 0;
 
@@ -295,7 +311,7 @@ function add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, fallbackM
   } catch (e) {
     console.warn("[ADD2E][CLASS_DROP_SPELLS][SLOT_POOL_ERROR]", e);
   }
-  return lvl <= (Number(fallbackMaxSpellLevel) || 0);
+  return lvl <= max;
 }
 
 function add2eSpellSyncStableKey(name, system = {}) {
@@ -449,7 +465,7 @@ async function add2ePruneActorSpellsForClassLevel(actor, classItem, actorLevel, 
     const spellLevel = add2eSpellSyncSpellLevel(sys);
     const matchesClass = add2eSpellSyncMatchesClassLists(sys, classLists);
     if (!matchesClass) continue;
-    const canStillUse = maxSpellLevel >= 1 && add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, maxSpellLevel);
+    const canStillUse = maxSpellLevel >= 1 && add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, maxSpellLevel, { importMode: true });
     if (!canStillUse) idsToDelete.push(sort.id);
   }
 
@@ -500,18 +516,25 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
       if (!scanStatsByLevel[lvl]) scanStatsByLevel[lvl] = {};
       scanStatsByLevel[lvl][reason] = (scanStatsByLevel[lvl][reason] || 0) + 1;
     };
-    const rejectEntry = (entry, reason) => {
+    const rejectEntry = (entry, reason, extra = {}) => {
       addScanStat(entry?.level, reason);
       if (!entry || rejectedSpells.length >= 120) return;
       const sameClass = entry.lists?.some?.(list => classListSet.has(list));
       const inLevelRange = Number(entry.level) >= minSpellLevel && Number(entry.level) <= maxSpellLevel;
-      if (sameClass || inLevelRange) rejectedSpells.push({ name: entry.name, level: entry.level, lists: entry.lists, reason, stableKey: entry.stableKey });
+      if (sameClass || inLevelRange) rejectedSpells.push({ name: entry.name, level: entry.level, lists: entry.lists, reason, stableKey: entry.stableKey, ...extra });
     };
 
     for (const entry of cache.entries) {
       const spellLevel = entry.level;
       if (spellLevel < minSpellLevel) { rejectEntry(entry, "skip-below-min"); continue; }
-      if (!add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, maxSpellLevel)) { rejectEntry(entry, "skip-level-not-accessible"); continue; }
+      if (!add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, maxSpellLevel, { importMode: true })) {
+        rejectEntry(entry, "skip-level-not-accessible", {
+          maxSpellLevel,
+          classLists,
+          slotProbe: add2eSpellSyncSlotProbe(actor, classLists, spellLevel)
+        });
+        continue;
+      }
       if (!entry.lists.some(list => classListSet.has(list))) { rejectEntry(entry, `skip-list:${entry.lists.join("/") || "none"}`); continue; }
       if (existingKeys.has(entry.stableKey)) { rejectEntry(entry, "skip-already-present"); continue; }
       if (selectedKeys.has(entry.stableKey)) { rejectEntry(entry, "skip-selected-duplicate"); continue; }
@@ -615,3 +638,7 @@ try { globalThis.add2ePruneActorSpellsForClassLevel = add2ePruneActorSpellsForCl
 try { globalThis.add2eSyncActorSpellsFromClass = add2eSyncActorSpellsFromClass; } catch (_e) {}
 try { globalThis.add2eSyncNewSpellLevelsAfterActorLevelChange = add2eSyncNewSpellLevelsAfterActorLevelChange; } catch (_e) {}
 try { globalThis.add2eResyncSelectedActorSpells = add2eResyncSelectedActorSpells; } catch (_e) {}
+
+Hooks.once("ready", () => {
+  if (game.user?.isGM) add2eWarmSpellSyncCache().catch(err => console.warn("[ADD2E][SPELL_SYNC][WARMUP_ERROR]", err));
+});
