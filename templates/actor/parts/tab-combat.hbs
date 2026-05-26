@@ -87,11 +87,9 @@
                       <td>{{#if munition.system.recuperable}}{{munition.system.taux_recuperation}}{{else}}Non{{/if}}</td>
                       <td>
                         <div class="a2e-actions">
-                          <a class="item-control a2e-action-icon a2e-equip-state-icon {{#if munition.system.equipee}}equip-green{{else}}equip-red{{/if}}"
-                             data-add2e-action="equip-projectile"
-                             data-actor-id="{{../actor._id}}"
+                          <a class="item-control objet-equip a2e-action-icon a2e-equip-state-icon {{#if munition.system.equipee}}equip-green{{else}}equip-red{{/if}}"
                              data-item-id="{{munition._id}}"
-                             title="{{#if munition.system.equipee}}Projectile équipé{{else}}Équiper ce projectile{{/if}}">
+                             title="{{#if munition.system.equipee}}Projectile équipé — cliquer pour retirer{{else}}Équiper ce projectile{{/if}}">
                             <i class="fas fa-bullseye"></i>
                           </a>
                           <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{munition._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
