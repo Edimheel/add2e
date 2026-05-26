@@ -1,10 +1,10 @@
 // ============================================================
 // ADD2E — Synchronisation automatique des sorts Clerc/Druide
 // Source stricte : compendium add2e.sorts
-// Version : 2026-05-26-spell-sync-v10-strict-add2e-sorts
+// Version : 2026-05-26-spell-sync-v11-restore-slot-helper
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-05-26-spell-sync-v10-strict-add2e-sorts";
+const ADD2E_SPELL_SYNC_VERSION = "2026-05-26-spell-sync-v11-restore-slot-helper";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 function add2eSpellSyncClone(value) {
@@ -152,6 +152,38 @@ function add2eSpellSyncSlotsArray(value) {
   return [];
 }
 
+function add2eSpellSyncReadSlotValue(raw, spellLevelOrIndex, listKey = "") {
+  raw = add2eSpellSyncMaybeJson(raw);
+  if (raw === undefined || raw === null || raw === "") return null;
+
+  const numeric = Number(spellLevelOrIndex);
+  const idx = numeric >= 1 ? numeric - 1 : 0;
+  const oneBased = idx + 1;
+  const wantedList = add2eSpellSyncNormalize(listKey);
+
+  const arr = add2eSpellSyncSlotsArray(raw);
+  if (arr.length) return idx >= 0 && idx < arr.length ? add2eSpellSyncNumber(arr[idx]) : 0;
+  if (typeof raw !== "object") return null;
+
+  if (wantedList) {
+    for (const [rawKey, value] of Object.entries(raw)) {
+      if (add2eSpellSyncNormalize(rawKey) !== wantedList) continue;
+      const v = add2eSpellSyncReadSlotValue(value, oneBased, "");
+      if (v !== null) return v;
+    }
+  }
+
+  for (const key of ["slots", "slot", "value", "values", "spellsPerLevel", "SpellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "spellSlots"]) {
+    if (raw[key] === undefined) continue;
+    const v = add2eSpellSyncReadSlotValue(raw[key], oneBased, wantedList);
+    if (v !== null) return v;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(raw, String(oneBased))) return add2eSpellSyncNumber(raw[String(oneBased)]);
+  if (Object.prototype.hasOwnProperty.call(raw, String(idx))) return add2eSpellSyncNumber(raw[String(idx)]);
+  return null;
+}
+
 function add2eSpellSyncMaxSpellLevel(classItem, actorLevel) {
   const sys = classItem?.system ?? {};
   const sc = add2eSpellSyncMaybeJson(sys.spellcasting);
@@ -197,9 +229,10 @@ function add2eSpellSyncSlotProbe(actor, classLists, spellLevel) {
   const lvl = Number(spellLevel) || 0;
   const row = add2eSpellSyncGetProgressionRow(actor);
   if (!row || typeof row !== "object" || lvl < 1) return { found: false, count: 0, source: "no-row" };
-  const arr = add2eSpellSyncSlotsArray(row.spellsPerLevel ?? row.SpellsPerLevel ?? row.sortsParNiveau ?? row.sorts_par_niveau ?? row.spells ?? row.slots ?? row.spellSlots);
-  if (!arr.length) return { found: false, count: 0, source: "no-slot-source" };
-  return { found: true, count: add2eSpellSyncNumber(arr[lvl - 1]), source: "progression" };
+  const raw = row.spellsPerLevel ?? row.SpellsPerLevel ?? row.sortsParNiveau ?? row.sorts_par_niveau ?? row.spells ?? row.slots ?? row.spellSlots;
+  const value = add2eSpellSyncReadSlotValue(raw, lvl, classLists?.[0] ?? "");
+  if (value === null) return { found: false, count: 0, source: "no-slot-source" };
+  return { found: true, count: Number(value) || 0, source: "progression" };
 }
 
 function add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, fallbackMaxSpellLevel, options = {}) {
@@ -544,6 +577,7 @@ try { globalThis.add2eSpellSyncSpellLevel = add2eSpellSyncSpellLevel; } catch (_
 try { globalThis.add2eSpellSyncSpellLists = add2eSpellSyncSpellLists; } catch (_e) {}
 try { globalThis.add2eSpellSyncNumber = add2eSpellSyncNumber; } catch (_e) {}
 try { globalThis.add2eSpellSyncSlotsArray = add2eSpellSyncSlotsArray; } catch (_e) {}
+try { globalThis.add2eSpellSyncReadSlotValue = add2eSpellSyncReadSlotValue; } catch (_e) {}
 try { globalThis.add2eSpellSyncMaxSpellLevel = add2eSpellSyncMaxSpellLevel; } catch (_e) {}
 try { globalThis.add2eSpellSyncGetProgressionRow = add2eSpellSyncGetProgressionRow; } catch (_e) {}
 try { globalThis.add2eSpellSyncSlotProbe = add2eSpellSyncSlotProbe; } catch (_e) {}
