@@ -1,7 +1,7 @@
 // ADD2E — Consommables : composants de sorts, projectiles et carquois
-// Phase 2/3 dev-composant : outils communs, réglages, carquois et hooks de restitution.
+// Phase 2/3 dev-composant : outils communs, réglages, carquois, drop de munitions et hooks de restitution.
 
-const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase3-v2";
+const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase3-v3-drop-qty";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -46,6 +46,11 @@ function add2eNumber(value, fallback = 0) {
 
 function add2eQuantity(item) {
   return add2eNumber(item?.system?.quantite ?? item?.system?.quantity ?? 0, 0);
+}
+
+function add2eDroppedQuantity(itemData) {
+  const qty = add2eNumber(itemData?.system?.quantite ?? itemData?.system?.quantity ?? 1, 1);
+  return Math.max(1, qty);
 }
 
 function add2eUpdatePath(path, value) {
@@ -115,6 +120,17 @@ export function add2eGetWeaponRequiredAmmoType(arme) {
 function add2eAmmoType(item) {
   const sys = item?.system ?? {};
   return add2eSlugify(sys.munitionType ?? sys.munition_type ?? sys.sousType ?? sys.sous_type ?? sys.categorie ?? item?.name ?? "");
+}
+
+function add2eAmmunitionIdentity(item) {
+  return `${String(item?.type ?? "")}:${add2eSlugify(item?.name)}:${add2eAmmoType(item)}`;
+}
+
+function add2eSameAmmunitionIdentity(a, b) {
+  return add2eIsAmmunition(a)
+    && add2eIsAmmunition(b)
+    && String(a?.type ?? "") === String(b?.type ?? "")
+    && add2eSlugify(a?.name) === add2eSlugify(b?.name);
 }
 
 function add2eAmmoCompatibleWithRequired(item, required, arme = null) {
@@ -358,6 +374,68 @@ export async function add2eRefundSpellComponents(reservation) {
   return true;
 }
 
+async function add2eConsumablesResolveDropItemData(raw) {
+  let itemData = raw?.data ?? null;
+  if (!itemData && raw?.uuid) {
+    const doc = await fromUuid(raw.uuid);
+    if (doc instanceof Item) itemData = doc.toObject();
+  }
+  if (!itemData && raw?.pack && raw?.id) {
+    const pack = game.packs.get(raw.pack);
+    const ent = pack && await pack.getDocument(raw.id);
+    if (ent instanceof Item) itemData = ent.toObject();
+  }
+  if (!itemData && raw?.pack && raw?._id) {
+    const pack = game.packs.get(raw.pack);
+    const ent = pack && await pack.getDocument(raw._id);
+    if (ent instanceof Item) itemData = ent.toObject();
+  }
+  return itemData;
+}
+
+async function add2eTryMergeDroppedAmmunition(sheet, event) {
+  if (!sheet?.actor) return false;
+
+  let raw;
+  try {
+    raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}");
+  } catch (_err) {
+    return false;
+  }
+
+  if (raw?.type !== "Item") return false;
+  const itemData = await add2eConsumablesResolveDropItemData(raw);
+  if (!itemData || !add2eIsAmmunition(itemData)) return false;
+
+  const existing = Array.from(sheet.actor.items ?? []).find(item => add2eSameAmmunitionIdentity(item, itemData)) ?? null;
+  if (!existing) return false;
+
+  const current = add2eQuantity(existing);
+  const added = add2eDroppedQuantity(itemData);
+  await existing.update({ "system.quantite": current + added }, { add2eReason: "merge-ammunition-drop" });
+  ui.notifications?.info?.(`${existing.name} : quantité ${current} → ${current + added}.`);
+  sheet.render?.(false);
+  return true;
+}
+
+function add2eWrapActorSheetDropForAmmunition() {
+  const proto = globalThis.Add2eActorSheet?.prototype;
+  if (!proto || proto.__add2eAmmunitionDropMergeV1) return;
+  if (typeof proto._onDrop !== "function") return;
+
+  proto.__add2eAmmunitionDropMergeV1 = true;
+  const originalOnDrop = proto._onDrop;
+  proto._onDrop = async function add2eAmmunitionDropMerge(event) {
+    const merged = await add2eTryMergeDroppedAmmunition(this, event);
+    if (merged) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      return true;
+    }
+    return originalOnDrop.call(this, event);
+  };
+}
+
 function add2eRegisterConsumableHooks() {
   if (globalThis.__ADD2E_CONSUMABLES_HOOKS_REGISTERED) return;
   globalThis.__ADD2E_CONSUMABLES_HOOKS_REGISTERED = true;
@@ -417,7 +495,8 @@ const api = {
   add2eRestoreProjectilesAtCombatEnd,
   add2eResolveSpellMaterialComponents,
   add2eReserveSpellComponents,
-  add2eRefundSpellComponents
+  add2eRefundSpellComponents,
+  add2eTryMergeDroppedAmmunition
 };
 
 globalThis.ADD2E_CONSUMABLES = api;
@@ -428,9 +507,11 @@ globalThis.add2eReserveProjectile = add2eReserveProjectile;
 globalThis.add2eConsumeProjectileReservation = add2eConsumeProjectileReservation;
 globalThis.add2eReserveSpellComponents = add2eReserveSpellComponents;
 globalThis.add2eRefundSpellComponents = add2eRefundSpellComponents;
+globalThis.add2eTryMergeDroppedAmmunition = add2eTryMergeDroppedAmmunition;
 
 Hooks.once("init", () => add2eRegisterConsumableHooks());
 Hooks.once("ready", () => {
+  add2eWrapActorSheetDropForAmmunition();
   game.add2e = game.add2e ?? {};
   game.add2e.consumables = api;
   game.add2e.consumablesVersion = ADD2E_CONSUMABLES_VERSION;
