@@ -1,7 +1,7 @@
 // ADD2E — Consommables : composants de sorts, projectiles et carquois
-// Phase 2/3 dev-composant : outils communs, réglages, carquois, drop de munitions et hooks de restitution.
+// Phase 2/3/4 dev-composant : réglages, carquois, drop de munitions, attaque projectile et restitution.
 
-const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase3-v3-drop-qty";
+const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase4-projectiles-v1";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -122,10 +122,6 @@ function add2eAmmoType(item) {
   return add2eSlugify(sys.munitionType ?? sys.munition_type ?? sys.sousType ?? sys.sous_type ?? sys.categorie ?? item?.name ?? "");
 }
 
-function add2eAmmunitionIdentity(item) {
-  return `${String(item?.type ?? "")}:${add2eSlugify(item?.name)}:${add2eAmmoType(item)}`;
-}
-
 function add2eSameAmmunitionIdentity(a, b) {
   return add2eIsAmmunition(a)
     && add2eIsAmmunition(b)
@@ -193,14 +189,10 @@ export async function add2eReserveProjectile(actor, arme) {
   if (!required) return null;
 
   const projectile = add2eGetEquippedProjectileForWeapon(actor, arme);
-  if (!projectile) {
-    return { blocked: true, message: `Aucun projectile équipé pour ${arme?.name ?? "cette arme"}.`, actor, arme, required };
-  }
+  if (!projectile) return { blocked: true, message: `Aucun projectile équipé pour ${arme?.name ?? "cette arme"}.`, actor, arme, required };
 
   const quantity = add2eQuantity(projectile);
-  if (quantity <= 0) {
-    return { blocked: true, message: `${projectile.name} : quantité insuffisante.`, actor, arme, projectile, required };
-  }
+  if (quantity <= 0) return { blocked: true, message: `${projectile.name} : quantité insuffisante.`, actor, arme, projectile, required };
 
   return { blocked: false, actor, arme, projectile, required, quantity: 1, before: quantity };
 }
@@ -320,9 +312,7 @@ export function add2eResolveSpellMaterialComponents(sort) {
   }).filter(c => c.slug && c.consomme !== false);
 
   const compText = String(sys.composantes ?? sys.components ?? "").toUpperCase();
-  if (!components.length && /\bM\b/.test(compText)) {
-    return [{ slug: "__manual__", nom: "Composant matériel non détaillé", quantite: 0, consomme: false, manual: true }];
-  }
+  if (!components.length && /\bM\b/.test(compText)) return [{ slug: "__manual__", nom: "Composant matériel non détaillé", quantite: 0, consomme: false, manual: true }];
   return components;
 }
 
@@ -397,11 +387,8 @@ async function add2eTryMergeDroppedAmmunition(sheet, event) {
   if (!sheet?.actor) return false;
 
   let raw;
-  try {
-    raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}");
-  } catch (_err) {
-    return false;
-  }
+  try { raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}"); }
+  catch (_err) { return false; }
 
   if (raw?.type !== "Item") return false;
   const itemData = await add2eConsumablesResolveDropItemData(raw);
@@ -436,6 +423,103 @@ function add2eWrapActorSheetDropForAmmunition() {
   };
 }
 
+function add2eProjectileHitBonus(projectile) {
+  const s = projectile?.system ?? {};
+  return add2eNumber(s.bonus_hit ?? s.bonus_toucher ?? s.bonusToucher ?? s.attackBonus ?? 0, 0);
+}
+
+function add2eProjectileDamageBonus(projectile) {
+  const s = projectile?.system ?? {};
+  return add2eNumber(s.bonus_dom ?? s.bonus_degats ?? s.bonusDégâts ?? s.damageBonus ?? 0, 0);
+}
+
+function add2ePatchWeaponBonusDuringProjectileAttack(arme, projectile) {
+  const hitBonus = add2eProjectileHitBonus(projectile);
+  const damageBonus = add2eProjectileDamageBonus(projectile);
+  const engine = globalThis.Add2eEffectsEngine;
+  const restoreFns = [];
+
+  if (engine && typeof engine.getMagicWeaponBonus === "function") {
+    const original = engine.getMagicWeaponBonus;
+    engine.getMagicWeaponBonus = function add2eProjectileMagicWeaponBonus(item, kind, ...rest) {
+      const base = add2eNumber(original.call(this, item, kind, ...rest), 0);
+      const same = item === arme || item?.id === arme?.id || item?.uuid === arme?.uuid;
+      if (!same) return base;
+      const k = String(kind ?? "").toLowerCase();
+      if (k.includes("hit") || k.includes("touch")) return base + hitBonus;
+      if (k.includes("damage") || k.includes("dom") || k.includes("deg")) return base + damageBonus;
+      return base;
+    };
+    restoreFns.push(() => { engine.getMagicWeaponBonus = original; });
+  } else {
+    const oldHit = arme?.system?.bonus_hit;
+    const oldDom = arme?.system?.bonus_dom;
+    try {
+      arme.system.bonus_hit = add2eNumber(oldHit, 0) + hitBonus;
+      arme.system.bonus_dom = add2eNumber(oldDom, 0) + damageBonus;
+      restoreFns.push(() => { arme.system.bonus_hit = oldHit; arme.system.bonus_dom = oldDom; });
+    } catch (err) {
+      console.warn("[ADD2E][PROJECTILES][PATCH_BONUS]", err);
+    }
+  }
+
+  return () => {
+    for (const fn of restoreFns.reverse()) {
+      try { fn(); } catch (err) { console.warn("[ADD2E][PROJECTILES][RESTORE_BONUS]", err); }
+    }
+  };
+}
+
+async function add2eNotifyProjectileUsed(actor, arme, reservation) {
+  const projectile = reservation?.projectile;
+  if (!projectile) return;
+  const hit = add2eProjectileHitBonus(projectile);
+  const dmg = add2eProjectileDamageBonus(projectile);
+  const before = add2eNumber(reservation.before, 0);
+  const after = Math.max(0, before - add2eNumber(reservation.quantity, 1));
+  const bonusText = (hit || dmg) ? `<br><b>Bonus projectile :</b> ${hit >= 0 ? "+" : ""}${hit} toucher / ${dmg >= 0 ? "+" : ""}${dmg} dégâts` : "";
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content: `<div class="add2e-chat-card" style="font-family:var(--font-primary);border:1px solid #b88924;border-radius:6px;padding:6px;background:#fff8df;"><b>Projectile :</b> ${projectile.name}<br><b>Arme :</b> ${arme?.name ?? "Arme"}${bonusText}<br><b>Quantité :</b> ${before} → ${after}</div>`
+  });
+}
+
+function add2eResolveAttackActorAndWeapon(args = {}) {
+  let actor = args.actor ?? null;
+  let arme = args.arme ?? null;
+  if (!actor && args.actorId) actor = game.actors?.get?.(args.actorId) ?? null;
+  if (!arme && args.itemId && actor) arme = actor.items?.get?.(args.itemId) ?? null;
+  return { actor, arme };
+}
+
+function add2eWrapAttackRollForProjectiles() {
+  if (globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED) return;
+  if (typeof globalThis.add2eAttackRoll !== "function") return;
+  globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED = true;
+
+  const originalAttackRoll = globalThis.add2eAttackRoll;
+  globalThis.add2eAttackRoll = async function add2eAttackRollWithProjectiles(args = {}) {
+    const { actor, arme } = add2eResolveAttackActorAndWeapon(args);
+    const reservation = await add2eReserveProjectile(actor, arme);
+    if (reservation?.blocked) {
+      ui.notifications?.warn?.(reservation.message || "Projectile indisponible.");
+      return false;
+    }
+    if (!reservation?.projectile) return await originalAttackRoll.call(this, args);
+
+    const restoreBonus = add2ePatchWeaponBonusDuringProjectileAttack(arme, reservation.projectile);
+    let result = false;
+    try { result = await originalAttackRoll.call(this, args); }
+    finally { restoreBonus?.(); }
+
+    if (result === true) {
+      await add2eConsumeProjectileReservation(reservation);
+      await add2eNotifyProjectileUsed(actor, arme, reservation);
+    }
+    return result;
+  };
+}
+
 function add2eRegisterConsumableHooks() {
   if (globalThis.__ADD2E_CONSUMABLES_HOOKS_REGISTERED) return;
   globalThis.__ADD2E_CONSUMABLES_HOOKS_REGISTERED = true;
@@ -467,7 +551,6 @@ function add2eRegisterConsumableHooks() {
     if (!add2eChangeSetsEquippedTrue(changes)) return;
     const actor = item.parent;
     if (!actor?.items || !actor?.updateEmbeddedDocuments) return;
-
     try {
       globalThis.__ADD2E_CONSUMABLES_EQUIP_GUARD = true;
       await add2eEquipProjectile(actor, item);
@@ -496,7 +579,8 @@ const api = {
   add2eResolveSpellMaterialComponents,
   add2eReserveSpellComponents,
   add2eRefundSpellComponents,
-  add2eTryMergeDroppedAmmunition
+  add2eTryMergeDroppedAmmunition,
+  add2eWrapAttackRollForProjectiles
 };
 
 globalThis.ADD2E_CONSUMABLES = api;
@@ -512,6 +596,7 @@ globalThis.add2eTryMergeDroppedAmmunition = add2eTryMergeDroppedAmmunition;
 Hooks.once("init", () => add2eRegisterConsumableHooks());
 Hooks.once("ready", () => {
   add2eWrapActorSheetDropForAmmunition();
+  add2eWrapAttackRollForProjectiles();
   game.add2e = game.add2e ?? {};
   game.add2e.consumables = api;
   game.add2e.consumablesVersion = ADD2E_CONSUMABLES_VERSION;
