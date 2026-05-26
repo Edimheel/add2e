@@ -1,5 +1,6 @@
 // scripts/add2e-attack/04-attack-roll.mjs
 // ADD2E — Résolution des attaques.
+// Version : 2026-05-25-attack-conditional-fixed-ac-v1
 
 import { plageToRollFormula } from "./01-core-helpers.mjs";
 import { add2eApplyDamage } from "./02-damage.mjs";
@@ -91,6 +92,99 @@ async function add2eAttackOpenDialogV2({ title, content, width, classes, default
       classes: classes ?? []
     }).render(true);
   });
+}
+
+function add2eAttackHtmlEscape(value) {
+  const div = document.createElement("div");
+  div.innerText = String(value ?? "");
+  return div.innerHTML;
+}
+
+function add2eAttackConditionalACSubtype(arme, combatProfile, isDistance) {
+  const tags = combatProfile?.tags instanceof Set ? combatProfile.tags : new Set(combatProfile?.tags ?? []);
+  const has = (...values) => add2eTagSetHas(tags, ...values);
+  const weaponName = String(arme?.name ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (
+    combatProfile?.isProjectilePropulse ||
+    has("usage:projectile_propulse", "categorie:projectile_propulse", "trait:projectile_propulse", "type:projectile_propulse") ||
+    /\b(arc|arbalete|fronde|fleche|flechette|carreau|trait)\b/.test(weaponName)
+  ) {
+    return { sousType: "projectile_propulse", label: "projectile propulsé" };
+  }
+
+  if (
+    combatProfile?.isLancer ||
+    has("usage:lancer", "usage:jet", "usage:arme_de_jet", "categorie:projectile_lance", "trait:arme_de_jet", "type:arme_de_jet") ||
+    /\b(javelot|hachette|dague|couteau|pierre|lance)\b/.test(weaponName)
+  ) {
+    return { sousType: "projectile_lance", label: "projectile lancé à la main" };
+  }
+
+  if (isDistance) return { sousType: "projectile_propulse", label: "projectile" };
+  return { sousType: "autres", label: "attaque" };
+}
+
+function add2eAttackResolveConditionalFixedAC({ cible, arme, combatProfile, isDistance, positionInfo, caBefore }) {
+  const normalCA = Number(caBefore);
+  const attackSubtype = add2eAttackConditionalACSubtype(arme, combatProfile, isDistance);
+  const context = {
+    type: "attaque",
+    sousType: attackSubtype.sousType,
+    frontale: !!positionInfo?.isFront,
+    arme: arme?.name ?? "",
+    source: "attack-roll"
+  };
+
+  let fixedInfo = null;
+  let fixedCA = null;
+
+  try {
+    if (typeof Add2eEffectsEngine !== "undefined") {
+      if (typeof Add2eEffectsEngine.getConditionalFixedCA === "function") {
+        fixedInfo = Add2eEffectsEngine.getConditionalFixedCA(cible, context);
+        fixedCA = Number(fixedInfo?.ca);
+      } else if (typeof Add2eEffectsEngine.analyze === "function") {
+        const analyzed = Add2eEffectsEngine.analyze(cible, context);
+        fixedInfo = analyzed?.ca_fixe_details ?? analyzed ?? null;
+        fixedCA = Number(analyzed?.ca_fixe);
+      }
+    }
+  } catch (err) {
+    console.warn("[ADD2E][ATTAQUE][CA_CONDITIONNELLE][ERROR]", err);
+  }
+
+  if (!Number.isFinite(fixedCA)) {
+    return {
+      applied: false,
+      ca: caBefore,
+      normalCA,
+      fixedCA: null,
+      attackSubtype,
+      context,
+      details: fixedInfo,
+      detail: ""
+    };
+  }
+
+  const finalCA = Number.isFinite(normalCA) ? Math.min(normalCA, fixedCA) : fixedCA;
+  const applied = finalCA !== normalCA;
+
+  return {
+    applied,
+    ca: finalCA,
+    normalCA,
+    fixedCA,
+    attackSubtype,
+    context,
+    details: fixedInfo,
+    detail: applied
+      ? `CA ${normalCA} → ${finalCA} contre ${attackSubtype.label}`
+      : `CA fixe ${fixedCA} non appliquée : la CA normale ${normalCA} reste meilleure`
+  };
 }
 
 /**
@@ -384,6 +478,16 @@ let totalBonusDegats = modCaracDegats + bonusDom + (Number(bonusDegatsEffets) ||
             caFinaleCible = caBaseCible;
             const caAvantPosition = caFinaleCible;
             if (activePositionAttackAdjustment.caAdjustment !== 0) caFinaleCible += activePositionAttackAdjustment.caAdjustment;
+            const caAvantConditionnelle = caFinaleCible;
+            const conditionalFixedAC = add2eAttackResolveConditionalFixedAC({
+              cible,
+              arme,
+              combatProfile,
+              isDistance,
+              positionInfo: activePositionInfo,
+              caBefore: caFinaleCible
+            });
+            caFinaleCible = conditionalFixedAC.ca;
 
             let typeArmureCible = caBaseCible;
             if (cible.items) {
@@ -439,11 +543,24 @@ let totalBonusDegats = modCaracDegats + bonusDom + (Number(bonusDegatsEffets) ||
             const iconResult = finalResult ? "fa-check" : "fa-times";
             const signeBonus = totalBonusToucher >= 0 ? "+" : "";
             const calculSimple = `<b>${d20}</b> <span style="color:#888;font-size:0.8em;">(d20)</span> ${signeBonus} ${totalBonusToucher} = <b style="font-size:1.1em;">${totalAuToucher}</b>`;
+            const conditionalACLine = conditionalFixedAC?.detail
+              ? `<div><b>CA conditionnelle :</b> ${add2eAttackHtmlEscape(conditionalFixedAC.detail)}</div>`
+              : "";
 
-            let chatContent = `<div class="add2e-chat-card" style="font-family:var(--font-primary); background:#fff; border:1px solid #aaa; border-radius:5px; padding:5px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><div style="text-align:center;"><img src="${actor.img || 'icons/svg/mystery-man.svg'}" style="width:48px;height:48px;border-radius:5px;border:1px solid #333;"><div style="font-weight:bold; font-size:0.9em; margin-top:2px;">${actor.name}</div><div style="font-size:0.8em; color:#666;">${arme.name}</div></div><div style="font-size:2em; color:#aaa;">&rarr;</div><div style="text-align:center;"><img src="${cible.img || 'icons/svg/mystery-man.svg'}" style="width:48px;height:48px;border-radius:5px;border:1px solid #333;"><div style="font-weight:bold; font-size:0.9em; margin-top:2px;">${nomCible}</div></div></div><div style="text-align:center; font-size:1em; margin-bottom:10px;">${actor.name} tente de frapper <b>${nomCible}</b> avec sa <b>${arme.name}</b> !</div><div style="text-align:center; color:#666; font-size:0.9em; margin-bottom:5px;">Portée: <b>${descPortee}</b> — ${typePortee}</div><div style="background:#f1f5f9; padding:8px; border-radius:5px; text-align:center; margin-bottom:10px; font-size:1.1em;"><i class="fas fa-dice-d20"></i> ${calculSimple}</div><div style="text-align:center; margin-bottom:10px;">Seuil à atteindre au d20 : <span style="font-weight:bold; color:#d35400;">${seuilFinalD20}</span></div><div style="text-align:center; margin-bottom:10px; font-size:1.4em; font-weight:bold; color:${colorResult};"><i class="fas ${iconResult}"></i> ${textResult}</div>${finalResult ? `<div style="text-align:center; border-top:1px dashed #ccc; padding-top:5px; margin-bottom:10px;"><span style="font-size:1.2em;">Dégâts : <b>${degats}</b></span><div style="font-size:0.8em; color:#7f8c8d;">(${formulaDegats} -> ${detailsDegats})</div>${useBackstab ? `<div style="font-size:0.9em;color:#7a4b00;font-weight:700;margin-top:0.25em;">Attaque sournoise : dégâts ×${backstabMultiplier}</div>` : ""}${activePositionAttackAdjustment.details.length ? `<div style="font-size:0.82em;color:#6b5a2a;font-weight:700;margin-top:0.25em;">Position : ${activePositionAttackAdjustment.details.join(" · ")}</div>` : ""}</div>` : ''}${assassinatResult ? `<div style="border:1px solid ${assassinatResult.success ? "#1f8f4d" : "#b3261e"}; background:${assassinatResult.success ? "#eefaf2" : "#fff1f0"}; border-radius:6px; padding:7px; margin-bottom:10px; text-align:center;"><div style="font-weight:900;color:${assassinatResult.success ? "#1f8f4d" : "#b3261e"};">Assassinat ${assassinatResult.success ? "réussi" : "échoué"}</div><div style="font-size:0.92em;">Jet : <b>${assassinatResult.total}</b> / Score : <b>${assassinatResult.finalScore}%</b></div><div style="font-size:0.82em;color:#666;">${assassinationInfo.breakdownTitle}${assassinatResult.situational ? ` | Situation ${assassinatResult.situational >= 0 ? "+" : ""}${assassinatResult.situational}%` : ""}</div></div>` : ""}<details style="margin-top:8px; font-size:1.05em; color:#333;"><summary style="cursor:pointer; font-weight:bold; font-size:1.1em;">Détails simples du jet</summary><div style="margin-top:8px; line-height:1.55; background:#f8fafc; border:1px solid #d0d7de; border-radius:6px; padding:8px;"><div><b>Base THAC0 :</b> ${thaco}</div><div><b>Classe d’armure cible :</b> ${caFinaleCible}${activePositionAttackAdjustment.caAdjustment ? ` <span style="color:#7a4b00;">(position : ${caAvantPosition} → ${caFinaleCible})</span>` : ""}</div>${activePositionAttackAdjustment.details.length ? `<div><b>Position :</b> ${activePositionAttackAdjustment.details.join(" ; ")}</div>` : ""}<div><b>Seuil sans modificateur :</b> ${valeurPourToucher}</div><hr style="margin:6px 0;"><div><b>Modificateur ${modCaracToucherLabel} :</b> ${modCaracToucher >= 0 ? "+" : ""}${modCaracToucher}</div><div><b>Modificateur magique arme :</b> ${bonusHit >= 0 ? "+" : ""}${bonusHit}</div><div><b>Modificateur effets actifs :</b> ${bonusToucheEffets >= 0 ? "+" : ""}${bonusToucheEffets}</div><div><b>Modificateur portée :</b> ${malusPortee >= 0 ? "+" : ""}${malusPortee} (${descPortee})</div><div><b>Modificateur temporaire :</b> ${userBonus >= 0 ? "+" : ""}${userBonus}</div>${useBackstab ? `<div><b>Attaque sournoise :</b> +4 toucher, dégâts ×${backstabMultiplier}</div>` : ""}${useAssassination ? `<div><b>Assassinat :</b> ${assassinationInfo.score}%${assassinatMod ? ` (${assassinatMod >= 0 ? "+" : ""}${assassinatMod} situation)` : ""}</div>` : ""}<div><b>Modificateur armure / arme :</b> ${ajustementCA >= 0 ? "+" : ""}${ajustementCA}</div><hr style="margin:6px 0;"><div style="font-size:1.15em;"><b>Total modificateur :</b><span style="font-weight:bold; color:#2563eb;"> ${totalBonusToucher >= 0 ? "+" : ""}${totalBonusToucher}</span></div><div style="font-size:1.15em;"><b>Seuil final au d20 :</b><span style="font-weight:bold; color:#15803d;"> ${seuilFinalD20}</span></div></div></details></div>`;
+            let chatContent = `<div class="add2e-chat-card" style="font-family:var(--font-primary); background:#fff; border:1px solid #aaa; border-radius:5px; padding:5px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><div style="text-align:center;"><img src="${actor.img || 'icons/svg/mystery-man.svg'}" style="width:48px;height:48px;border-radius:5px;border:1px solid #333;"><div style="font-weight:bold; font-size:0.9em; margin-top:2px;">${actor.name}</div><div style="font-size:0.8em; color:#666;">${arme.name}</div></div><div style="font-size:2em; color:#aaa;">&rarr;</div><div style="text-align:center;"><img src="${cible.img || 'icons/svg/mystery-man.svg'}" style="width:48px;height:48px;border-radius:5px;border:1px solid #333;"><div style="font-weight:bold; font-size:0.9em; margin-top:2px;">${nomCible}</div></div></div><div style="text-align:center; font-size:1em; margin-bottom:10px;">${actor.name} tente de frapper <b>${nomCible}</b> avec sa <b>${arme.name}</b> !</div><div style="text-align:center; color:#666; font-size:0.9em; margin-bottom:5px;">Portée: <b>${descPortee}</b> — ${typePortee}</div><div style="background:#f1f5f9; padding:8px; border-radius:5px; text-align:center; margin-bottom:10px; font-size:1.1em;"><i class="fas fa-dice-d20"></i> ${calculSimple}</div><div style="text-align:center; margin-bottom:10px;">Seuil à atteindre au d20 : <span style="font-weight:bold; color:#d35400;">${seuilFinalD20}</span></div><div style="text-align:center; margin-bottom:10px; font-size:1.4em; font-weight:bold; color:${colorResult};"><i class="fas ${iconResult}"></i> ${textResult}</div>${finalResult ? `<div style="text-align:center; border-top:1px dashed #ccc; padding-top:5px; margin-bottom:10px;"><span style="font-size:1.2em;">Dégâts : <b>${degats}</b></span><div style="font-size:0.8em; color:#7f8c8d;">(${formulaDegats} -> ${detailsDegats})</div>${useBackstab ? `<div style="font-size:0.9em;color:#7a4b00;font-weight:700;margin-top:0.25em;">Attaque sournoise : dégâts ×${backstabMultiplier}</div>` : ""}${activePositionAttackAdjustment.details.length ? `<div style="font-size:0.82em;color:#6b5a2a;font-weight:700;margin-top:0.25em;">Position : ${activePositionAttackAdjustment.details.join(" · ")}</div>` : ""}</div>` : ''}${assassinatResult ? `<div style="border:1px solid ${assassinatResult.success ? "#1f8f4d" : "#b3261e"}; background:${assassinatResult.success ? "#eefaf2" : "#fff1f0"}; border-radius:6px; padding:7px; margin-bottom:10px; text-align:center;"><div style="font-weight:900;color:${assassinatResult.success ? "#1f8f4d" : "#b3261e"};">Assassinat ${assassinatResult.success ? "réussi" : "échoué"}</div><div style="font-size:0.92em;">Jet : <b>${assassinatResult.total}</b> / Score : <b>${assassinatResult.finalScore}%</b></div><div style="font-size:0.82em;color:#666;">${assassinationInfo.breakdownTitle}${assassinatResult.situational ? ` | Situation ${assassinatResult.situational >= 0 ? "+" : ""}${assassinatResult.situational}%` : ""}</div></div>` : ""}<details style="margin-top:8px; font-size:1.05em; color:#333;"><summary style="cursor:pointer; font-weight:bold; font-size:1.1em;">Détails simples du jet</summary><div style="margin-top:8px; line-height:1.55; background:#f8fafc; border:1px solid #d0d7de; border-radius:6px; padding:8px;"><div><b>Base THAC0 :</b> ${thaco}</div><div><b>Classe d’armure cible :</b> ${caFinaleCible}${activePositionAttackAdjustment.caAdjustment ? ` <span style="color:#7a4b00;">(position : ${caAvantPosition} → ${caAvantConditionnelle})</span>` : ""}</div>${conditionalACLine}${activePositionAttackAdjustment.details.length ? `<div><b>Position :</b> ${activePositionAttackAdjustment.details.join(" ; ")}</div>` : ""}<div><b>Seuil sans modificateur :</b> ${valeurPourToucher}</div><hr style="margin:6px 0;"><div><b>Modificateur ${modCaracToucherLabel} :</b> ${modCaracToucher >= 0 ? "+" : ""}${modCaracToucher}</div><div><b>Modificateur magique arme :</b> ${bonusHit >= 0 ? "+" : ""}${bonusHit}</div><div><b>Modificateur effets actifs :</b> ${bonusToucheEffets >= 0 ? "+" : ""}${bonusToucheEffets}</div><div><b>Modificateur portée :</b> ${malusPortee >= 0 ? "+" : ""}${malusPortee} (${descPortee})</div><div><b>Modificateur temporaire :</b> ${userBonus >= 0 ? "+" : ""}${userBonus}</div>${useBackstab ? `<div><b>Attaque sournoise :</b> +4 toucher, dégâts ×${backstabMultiplier}</div>` : ""}${useAssassination ? `<div><b>Assassinat :</b> ${assassinationInfo.score}%${assassinatMod ? ` (${assassinatMod >= 0 ? "+" : ""}${assassinatMod} situation)` : ""}</div>` : ""}<div><b>Modificateur armure / arme :</b> ${ajustementCA >= 0 ? "+" : ""}${ajustementCA}</div><hr style="margin:6px 0;"><div style="font-size:1.15em;"><b>Total modificateur :</b><span style="font-weight:bold; color:#2563eb;"> ${totalBonusToucher >= 0 ? "+" : ""}${totalBonusToucher}</span></div><div style="font-size:1.15em;"><b>Seuil final au d20 :</b><span style="font-weight:bold; color:#15803d;"> ${seuilFinalD20}</span></div></div></details></div>`;
 
             await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: chatContent, avatar: chatImg });
             await add2eConsumeOneUseWeaponAfterAttack(actor, arme);
+            console.log("[ADD2E][ATTAQUE][CA_CONDITIONNELLE]", {
+              cible: cible?.name,
+              arme: arme?.name,
+              position: activePositionInfo?.label,
+              caBaseCible,
+              caAvantPosition,
+              caAvantConditionnelle,
+              caFinaleCible,
+              conditionalFixedAC
+            });
             return true;
           }
     });
