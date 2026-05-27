@@ -130,6 +130,29 @@ function add2eProjectileBuildSpentDeltas(combatId, value) {
   return deltas;
 }
 
+function add2eProjectileExtractSpentFromCombatUpdate(changed) {
+  return foundry.utils.getProperty(changed, `flags.${ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE}.${ADD2E_PROJECTILE_COMBAT_FLAG_KEY}`)
+    ?? changed?.flags?.[ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE]?.[ADD2E_PROJECTILE_COMBAT_FLAG_KEY]
+    ?? null;
+}
+
+function add2eProjectileEmitSpentDeltas(combat, value) {
+  if (game.user?.isGM) return false;
+  const combatId = combat?.id ?? combat?._id ?? game.combat?.id;
+  if (!combatId) return false;
+
+  const deltas = add2eProjectileBuildSpentDeltas(combatId, value);
+  if (deltas.length) {
+    game.socket?.emit?.("system.add2e", {
+      type: ADD2E_PROJECTILE_SOCKET_TYPE,
+      userId: game.user.id,
+      combatId,
+      deltas
+    });
+  }
+  return true;
+}
+
 async function add2eProjectileMergeSpentDeltas({ combatId, deltas = [] } = {}) {
   if (!add2eIsResponsibleGM()) return false;
   const combat = game.combats?.get?.(combatId) ?? game.combat;
@@ -235,9 +258,42 @@ function add2eProjectileShowRecoveryForCombat(combat) {
   add2eProjectileShowRecoveryPopup(rows).catch(err => console.warn("[ADD2E][PROJECTILES][RECOVERY_POPUP]", err));
 }
 
+function add2ePatchCombatProjectileWrite(proto) {
+  if (!proto) return false;
+
+  if (typeof proto.setFlag === "function" && !proto.__add2eProjectileSpentSetFlagPatchedV3) {
+    const originalSetFlag = proto.setFlag;
+    proto.__add2eProjectileSpentSetFlagPatchedV3 = true;
+    proto.setFlag = async function add2eProjectileSpentSetFlag(scope, key, value, ...rest) {
+      if (!game.user?.isGM && scope === ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE && key === ADD2E_PROJECTILE_COMBAT_FLAG_KEY) {
+        add2eProjectileEmitSpentDeltas(this, value);
+        return this;
+      }
+      return originalSetFlag.call(this, scope, key, value, ...rest);
+    };
+  }
+
+  if (typeof proto.update === "function" && !proto.__add2eProjectileSpentUpdatePatchedV3) {
+    const originalUpdate = proto.update;
+    proto.__add2eProjectileSpentUpdatePatchedV3 = true;
+    proto.update = async function add2eProjectileSpentUpdate(changed = {}, options = {}, ...rest) {
+      if (!game.user?.isGM) {
+        const value = add2eProjectileExtractSpentFromCombatUpdate(changed);
+        if (value) {
+          add2eProjectileEmitSpentDeltas(this, value);
+          return this;
+        }
+      }
+      return originalUpdate.call(this, changed, options, ...rest);
+    };
+  }
+
+  return true;
+}
+
 function add2eRegisterProjectileSpentSocketPatch() {
-  if (globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V2) return;
-  globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V2 = true;
+  if (globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V3) return;
+  globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V3 = true;
 
   game.socket?.on?.("system.add2e", data => {
     if (data?.type === ADD2E_PROJECTILE_SOCKET_TYPE) {
@@ -249,28 +305,13 @@ function add2eRegisterProjectileSpentSocketPatch() {
     }
   });
 
-  const CombatClass = CONFIG?.Combat?.documentClass ?? foundry?.documents?.Combat ?? globalThis.Combat;
-  const proto = CombatClass?.prototype;
-  if (!proto?.setFlag || proto.__add2eProjectileSpentSetFlagPatchedV2) return;
+  const candidates = new Set([
+    CONFIG?.Combat?.documentClass?.prototype,
+    foundry?.documents?.Combat?.prototype,
+    game.combat?.constructor?.prototype
+  ].filter(Boolean));
 
-  const originalSetFlag = proto.setFlag;
-  proto.__add2eProjectileSpentSetFlagPatchedV2 = true;
-  proto.setFlag = async function add2eProjectileSpentSetFlag(scope, key, value, ...rest) {
-    if (!game.user?.isGM && scope === ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE && key === ADD2E_PROJECTILE_COMBAT_FLAG_KEY) {
-      const combatId = this.id;
-      const deltas = add2eProjectileBuildSpentDeltas(combatId, value);
-      if (deltas.length) {
-        game.socket?.emit?.("system.add2e", {
-          type: ADD2E_PROJECTILE_SOCKET_TYPE,
-          userId: game.user.id,
-          combatId,
-          deltas
-        });
-      }
-      return true;
-    }
-    return originalSetFlag.call(this, scope, key, value, ...rest);
-  };
+  for (const proto of candidates) add2ePatchCombatProjectileWrite(proto);
 }
 
 function add2eRegisterProjectileSpendUpdateGuard() {
@@ -300,6 +341,8 @@ function add2eRegisterProjectileSpendUpdateGuard() {
 
 Hooks.on("renderActorSheet", bindOnRender);
 Hooks.on("renderApplication", bindOnRender);
+Hooks.on("createCombat", () => window.setTimeout(add2eRegisterProjectileSpentSocketPatch, 100));
+Hooks.on("updateCombat", combat => window.setTimeout(add2eRegisterProjectileSpentSocketPatch, 100));
 Hooks.on("deleteCombat", combat => {
   window.setTimeout(() => add2eProjectileShowRecoveryForCombat(combat), 100);
 });
@@ -323,3 +366,4 @@ for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
 expose("add2eEnhanceCharacterSheetUi", add2eEnhanceCharacterSheetUi);
 expose("add2eProjectileMergeSpentDeltas", add2eProjectileMergeSpentDeltas);
 expose("add2eProjectileShowRecoveryPopup", add2eProjectileShowRecoveryPopup);
+expose("add2eRegisterProjectileSpentSocketPatch", add2eRegisterProjectileSpentSocketPatch);
