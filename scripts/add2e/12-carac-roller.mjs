@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-compact-top-v1";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-clickable-classes-v1";
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -57,6 +57,7 @@ class Add2eCaracRoller {
     this._applied = false;
     this._closing = false;
     this._keepOnTopTimer = null;
+    this._suggestionPlans = new Map();
     this._uid = `add2e-carac-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     this._sheetTargetHandler = this._onSheetTargetClick.bind(this);
     this._oldValues = {};
@@ -141,15 +142,19 @@ class Add2eCaracRoller {
         .add2e-carac-popup .add2e-carac-value.selected { outline: 2px solid #f0d27a !important; box-shadow: 0 0 0 2px #6b3ca0, 0 0 12px rgba(240,210,122,.55) !important; }
         .add2e-carac-popup .add2e-carac-value.used { opacity: .65 !important; background: linear-gradient(180deg,#7c766e 0%,#4d4945 100%) !important; color: #f4eadc !important; cursor: not-allowed !important; }
         .add2e-carac-popup .add2e-carac-value.used .assigned-label { color: #f0d27a !important; }
-        .add2e-carac-popup .carac-class-list li { margin: 0 0 3px 0; }
-        .add2e-carac-popup .carac-class-list b { color: #b879ff; }
-        .add2e-carac-popup .carac-class-list .carac-ok { color: #42d681; font-weight: 800; }
+        .add2e-carac-popup .carac-class-list { list-style: none; padding-left: 0 !important; }
+        .add2e-carac-popup .carac-class-list li { margin: 0 0 4px 0; }
+        .add2e-carac-popup .add2e-class-suggestion { width: 100%; text-align: left; border: 1px solid rgba(184,121,255,.35); border-radius: 7px; background: rgba(93,44,125,.22); color: #f1e8dc; padding: 4px 7px; cursor: pointer; font-size: .84rem; line-height: 1.25; }
+        .add2e-carac-popup .add2e-class-suggestion:hover { background: rgba(142,68,173,.42); border-color: #d8b16c; }
+        .add2e-carac-popup .add2e-class-suggestion b { color: #c996ff; }
+        .add2e-carac-popup .carac-ok { color: #42d681; font-weight: 800; }
+        .add2e-carac-popup .carac-locked { color: #f0d27a; font-weight: 800; }
       </style>
       <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}" style="box-sizing:border-box;width:100%;padding:8px 10px 2px 10px;color:#f1e8dc;background:radial-gradient(circle at 85% 20%,rgba(151,87,255,.14),transparent 35%),linear-gradient(180deg,rgba(34,27,42,.96),rgba(17,14,22,.96));border-radius:8px;">
         <div style="border:1px solid rgba(214,176,116,.32);border-radius:8px;background:rgba(0,0,0,.18);padding:7px 9px;margin-bottom:9px;box-shadow:inset 0 0 12px rgba(0,0,0,.18);">
           <div style="font-size:.94rem;font-weight:800;color:#f5dfae;margin-bottom:2px;">Affectation des caractéristiques</div>
           <div style="font-size:.78rem;line-height:1.25;color:#d8c9b4;">
-            Cliquez sur une valeur, puis sur une caractéristique de la fiche. Cliquez sur une caractéristique déjà affectée pour la libérer.
+            Cliquez sur une valeur, puis sur une caractéristique. Ou cliquez sur une classe proposée pour affecter automatiquement ses prérequis.
           </div>
         </div>
 
@@ -206,6 +211,20 @@ class Add2eCaracRoller {
     });
   }
 
+  _bindClassSuggestionEvents() {
+    if (!this._dlgRoot) return;
+    this._dlgRoot.querySelectorAll(".add2e-class-suggestion[data-plan-key]").forEach(btn => {
+      btn.addEventListener("click", ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        this._keepDialogOnTop();
+        const plan = this._suggestionPlans.get(btn.dataset.planKey);
+        if (!plan) return;
+        this.applyClassSuggestion(plan);
+      });
+    });
+  }
+
   _sheetTargets() {
     const root = add2eCaracSheetRoot(this.sheet);
     return Array.from(root?.querySelectorAll?.('.carac-drop-target[data-carac]') ?? []);
@@ -256,6 +275,34 @@ class Add2eCaracRoller {
     this._refreshUi();
   }
 
+  applyClassSuggestion(plan) {
+    if (!plan?.assignments) return;
+
+    for (const [carac, idx] of Object.entries(plan.assignments)) {
+      if (!ADD2E_CARACS.includes(carac)) continue;
+      const numericIdx = Number(idx);
+      if (!Number.isFinite(numericIdx)) continue;
+
+      const previousCaracUsingValue = Object.keys(this.assigned).find(c => c !== carac && Number(this.assigned[c]) === numericIdx);
+      if (previousCaracUsingValue) delete this.assigned[previousCaracUsingValue];
+
+      if (this.assigned[carac] !== undefined && Number(this.assigned[carac]) !== numericIdx) {
+        delete this.used[this.assigned[carac]];
+      }
+
+      this.assigned[carac] = numericIdx;
+      this.used[numericIdx] = carac;
+    }
+
+    for (const [idx, carac] of Object.entries({ ...this.used })) {
+      if (this.assigned[carac] === undefined || Number(this.assigned[carac]) !== Number(idx)) delete this.used[idx];
+    }
+
+    this.selectedIdx = null;
+    ui.notifications.info(`Prérequis ${plan.className} affectés.`);
+    this._refreshUi();
+  }
+
   unassignCarac(caracName) {
     if (this.assigned[caracName] === undefined) return;
     const idx = this.assigned[caracName];
@@ -276,7 +323,7 @@ class Add2eCaracRoller {
     if (!this._dlgRoot) return;
     this._dlgRoot.querySelectorAll(".add2e-carac-value").forEach(el => {
       const idx = Number(el.dataset.idx);
-      const carac = Object.keys(this.assigned).find(c => this.assigned[c] === idx) ?? null;
+      const carac = Object.keys(this.assigned).find(c => Number(this.assigned[c]) === idx) ?? null;
       el.classList.toggle("used", Boolean(carac));
       el.classList.toggle("selected", this.selectedIdx === idx);
       const label = el.querySelector(".assigned-label");
@@ -301,6 +348,49 @@ class Add2eCaracRoller {
     }
   }
 
+  _usedIndexesForRequiredCaracs(requis) {
+    const requiredCaracs = new Set(requis.map(([carac]) => carac));
+    return new Set(Object.entries(this.assigned)
+      .filter(([carac, idx]) => requiredCaracs.has(carac) && idx !== undefined && idx !== null)
+      .map(([, idx]) => Number(idx)));
+  }
+
+  _classSuggestionPlan(cls) {
+    const requis = Object.entries(cls.system?.caracs_min || {});
+    const lockedRequiredIndexes = this._usedIndexesForRequiredCaracs(requis);
+    const pool = this.values
+      .map((value, idx) => ({ value, idx }))
+      .filter(entry => !lockedRequiredIndexes.has(entry.idx))
+      .sort((a, b) => b.value - a.value);
+
+    const placements = [];
+    const assignments = {};
+
+    for (const [carac, minRaw] of requis) {
+      const min = Number(minRaw) || 0;
+      const bonus = add2eCaracRaceBonus(this.actor, carac);
+
+      if (this.assigned[carac] !== undefined) {
+        const assignedIdx = Number(this.assigned[carac]);
+        const assignedBase = Number(this.values[assignedIdx]) || 0;
+        const assignedTotal = assignedBase + bonus;
+        if (assignedTotal < min) return null;
+        assignments[carac] = assignedIdx;
+        placements.push(`<b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b> <span class="carac-locked">${assignedBase}</span>`);
+        continue;
+      }
+
+      const idx = pool.findIndex(entry => entry.value + bonus >= min);
+      if (idx === -1) return null;
+      const picked = pool[idx];
+      assignments[carac] = picked.idx;
+      placements.push(`<b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b> <span class="carac-ok">${picked.value}</span>`);
+      pool.splice(idx, 1);
+    }
+
+    return { className: cls.name, placements, assignments };
+  }
+
   async classesSynthese() {
     let classes = game.items?.filter?.(i => i.type === "classe") ?? [];
     if (!classes.length) {
@@ -310,34 +400,29 @@ class Add2eCaracRoller {
     }
     if (!classes.length) return "<em>Aucune classe trouvée</em>";
 
-    const values = [...this.values].sort((a, b) => b - a);
-    let html = '<div style="margin:0 0 6px 0;font-size:.92rem;color:#f5dfae;font-weight:800;">Classes accessibles et valeur à placer :</div>';
-    html += '<ul class="carac-class-list" style="padding-left:1.05em;margin:0;line-height:1.32;font-size:.84rem;">';
+    this._suggestionPlans.clear();
 
+    let html = '<div style="margin:0 0 6px 0;font-size:.92rem;color:#f5dfae;font-weight:800;">Classes possibles, cliquez pour auto-affecter :</div>';
+    html += '<ul class="carac-class-list" style="margin:0;line-height:1.32;font-size:.84rem;">';
+
+    let count = 0;
     for (const cls of classes) {
-      const requis = Object.entries(cls.system?.caracs_min || {});
-      const pool = [...values];
-      const placements = [];
-      let ok = true;
-
-      for (const [carac, minRaw] of requis) {
-        const min = Number(minRaw) || 0;
-        const idx = pool.findIndex(val => val + add2eCaracRaceBonus(this.actor, carac) >= min);
-        if (idx === -1) { ok = false; break; }
-        placements.push(`<b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b> <span class="carac-ok">${pool[idx]}</span>`);
-        pool.splice(idx, 1);
-      }
-
-      if (ok) html += `<li><b>${add2eCaracEscapeHtml(cls.name)}</b>${placements.length ? ` : ${placements.join(', ')}` : ''}</li>`;
+      const plan = this._classSuggestionPlan(cls);
+      if (!plan) continue;
+      const key = `plan-${count}`;
+      this._suggestionPlans.set(key, plan);
+      count++;
+      html += `<li><button type="button" class="add2e-class-suggestion" data-plan-key="${key}"><b>${add2eCaracEscapeHtml(cls.name)}</b>${plan.placements.length ? ` : ${plan.placements.join(', ')}` : ''}</button></li>`;
     }
 
-    html += '</ul>';
+    html += count ? '</ul>' : '<li><em>Aucune classe ne correspond à cette affectation.</em></li></ul>';
     return html;
   }
 
   _setClassesHtml(html) {
     const el = this._dlgRoot?.querySelector("#classes-suggestions");
     if (el) el.innerHTML = html;
+    this._bindClassSuggestionEvents();
     this._keepDialogOnTop();
   }
 
