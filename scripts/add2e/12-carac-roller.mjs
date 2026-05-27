@@ -1,388 +1,606 @@
-// ========== CLASSE ROLLER CLICK-TO-ASSIGN ==========
+// ============================================================
+// ADD2E — Tirage et affectation des caractéristiques — Dialog V2
+// Fichier externalisé depuis add2e.mjs.
+// ============================================================
+
+const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-prerequis-layout-v3";
+const ADD2E_CARAC_DIALOG_WIDTH = 600;
+
+const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
+const ADD2E_CARAC_SHORT = {
+  force: "FOR",
+  dexterite: "DEX",
+  constitution: "CON",
+  intelligence: "INT",
+  sagesse: "SAG",
+  charisme: "CHA"
+};
+
+const ADD2E_CLASS_TAG_COLOR_BY_SLUG = {
+  assassin: ["#7b1e24", "#ffe1d8"],
+  clerc: ["#375d89", "#e6f0ff"],
+  druide: ["#2f6b3f", "#e3ffd9"],
+  guerrier: ["#8a4b1d", "#fff0d6"],
+  illusionniste: ["#5b3f95", "#f0e6ff"],
+  magicien: ["#243c78", "#dbe7ff"],
+  moine: ["#7b5a23", "#fff1c7"],
+  paladin: ["#8b842b", "#fffad1"],
+  ranger: ["#2d5f55", "#d8fff4"],
+  voleur: ["#4f5158", "#eef0f4"]
+};
+const ADD2E_CLASS_TAG_COLORS = Object.values(ADD2E_CLASS_TAG_COLOR_BY_SLUG);
+
+function add2eCaracEscapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function add2eCaracSlug(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eCaracDialogV2() {
+  return foundry?.applications?.api?.DialogV2 ?? null;
+}
+
+function add2eCaracSheetRoot(sheet) {
+  const source = sheet?.element;
+  const root = source?.jquery ? source[0] : source;
+  if (!root) return null;
+  return root.querySelector?.(".add2e-character-v3") || root.querySelector?.("form.sheet.actor.add2e") || root;
+}
+
+function add2eCaracRaceBonus(actor, carac) {
+  const sys = actor?.system ?? {};
+  return Number(sys.bonus_caracteristiques?.[carac] ?? sys[`${carac}_race`] ?? 0) || 0;
+}
+
+function add2eCaracBaseValue(actor, carac) {
+  return Number(actor?.system?.[`${carac}_base`] ?? actor?.system?.[carac] ?? 10) || 10;
+}
+
+function add2eClassColorIndex(name) {
+  const text = String(name ?? "");
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+  return Math.abs(hash) % ADD2E_CLASS_TAG_COLORS.length;
+}
+
 class Add2eCaracRoller {
   constructor(sheet) {
     this.sheet = sheet;
+    this.actor = sheet?.actor ?? sheet?.document ?? null;
     this.values = [];
     this.used = {};
     this.assigned = {};
     this.selectedIdx = null;
-    this._dlgHtml = null;
     this.dialogRef = null;
-    // Save the old base values for rollback
+    this._dlgRoot = null;
+    this._applied = false;
+    this._closing = false;
+    this._keepOnTopTimer = null;
+    this._suggestionPlans = new Map();
+    this._uid = `add2e-carac-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    this._sheetTargetHandler = this._onSheetTargetClick.bind(this);
     this._oldValues = {};
-    for (const c of CARACS) {
-      this._oldValues[c] = sheet.actor.system[`${c}_base`];
-    }
+
+    for (const c of ADD2E_CARACS) this._oldValues[c] = add2eCaracBaseValue(this.actor, c);
     this.render();
   }
+
   static rollCarac() {
-    let rolls = [];
-    for (let i = 0; i < 4; i++) rolls.push(Math.floor(Math.random() * 6) + 1);
-    rolls.sort((a, b) => b - a);
+    const rolls = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1).sort((a, b) => b - a);
     return rolls[0] + rolls[1] + rolls[2];
   }
 
-  async render() {
-  this.values = [];
-  this.used = {};
-  this.assigned = {};
-  this.selectedIdx = null;
-  let rolls = [];
-  for (let i = 0; i < 7; i++) rolls.push(Add2eCaracRoller.rollCarac());
-  rolls.sort((a, b) => b - a);
-  this.values = rolls.slice(0, 6);
+  _rollValues() {
+    const rolls = Array.from({ length: 7 }, () => Add2eCaracRoller.rollCarac()).sort((a, b) => b - a);
+    this.values = rolls.slice(0, 6);
+    this.used = {};
+    this.assigned = {};
+    this.selectedIdx = null;
+  }
 
-  // Génère le HTML du popup, mais laisse la zone guide vide (sera remplie dynamiquement)
-  let html = `
-    <style>
-      .add2e-carac-popup { font-family: var(--font-primary); }
-      .add2e-carac-values { display: flex; gap: 0.7em; justify-content: center; margin-bottom: 1em; }
-      .add2e-carac-value { background: #e8d4b0; border-radius: 8px; padding: 0.5em 1em; font-size:1.3em; font-weight:bold; cursor: pointer; box-shadow: 0 2px 6px #0001; text-align:center; min-width:2.9em;}
-      .add2e-carac-value.used { opacity: 0.55; background: #bbb; cursor: not-allowed;}
-      .add2e-carac-value.selected { outline: 3px solid #8e44ad; background: #ffeaa7;}
-      .add2e-carac-help { font-size: 0.97em; color: #88704b; text-align: center; margin-bottom: 1em;}
-      .add2e-carac-apply { text-align: center; margin-top: 1em; }
-      .add2e-carac-apply button { padding: 0.5em 1.3em; font-size: 1em; background: #8e44ad; color: #fff; border: none; border-radius: 6px; cursor: pointer;}
-      .assigned-label { font-size: 0.85em; color: #164a1b; margin-top: 0.3em; display: block; font-weight: 500;}
-      ul.class-short {margin:0.5em 0 0.2em 1em;padding-left:0.6em;}
-      ul.class-short li {margin-bottom:0.1em;}
-      .class-short .c {font-weight:bold;color:#6a3c99;}
-      .class-short .carac {font-weight:bold;color:#194;}
-    </style>
-    <div class="add2e-carac-popup">
-      <div class="add2e-carac-help">
-        Cliquez sur une valeur, puis sur une caractéristique à assigner.<br>
-        <b>Astuce :</b> Cliquez sur une carac déjà affectée pour la remplacer.
-      </div>
-      <div class="add2e-carac-values">
-        ${this.values.map((v, i) => {
-          let caracAffectee = Object.entries(this.assigned).find(([_, idx]) => idx === i);
-          let short = caracAffectee ? caracAffectee[0].slice(0,3).toUpperCase() : "—";
-          return `
-            <div class="add2e-carac-value${this.used[i] ? ' used' : ''}" data-idx="${i}">
-              ${v}
-              <div class="assigned-label">${short}</div>
-            </div>`;
-        }).join("")}
-      </div>
-      <div id="classes-suggestions" style="margin:0.6em 0 0.1em 0.1em;"></div>
-      <div class="add2e-carac-apply">
-        <button class="apply-caracs-btn">Valider</button>
-      </div>
-    </div>
-  `;
+  render() {
+    const DialogV2 = add2eCaracDialogV2();
+    if (!DialogV2) {
+      ui.notifications.error("Dialog V2 est introuvable : tirage des caractéristiques impossible.");
+      console.error("[ADD2E][CARAC_ROLLER] DialogV2 introuvable.");
+      return;
+    }
 
-  let dialogRef = new Dialog({
-    title: "Tirage des caractéristiques",
-    content: html,
-    render: dlgHtml => {
-      this._dlgHtml = dlgHtml;
-      this._setupClickHandlers();
-      if (this.sheet) this.sheet._enableCaracClickAssign(this);
+    this._rollValues();
+    this._applied = false;
+    this._closing = false;
+
+    this.dialogRef = new DialogV2({
+      window: { title: "Tirage des caractéristiques" },
+      content: this._buildContent(),
+      buttons: [{ action: "add2e-technical-cancel", label: "Annuler", default: true, callback: () => this.cancel() }],
+      close: () => this._onDialogClosed()
+    }, { width: ADD2E_CARAC_DIALOG_WIDTH, height: "auto" });
+
+    this.dialogRef.render({ force: true });
+
+    setTimeout(() => {
+      this._dlgRoot = document.querySelector(`[data-add2e-carac-roller="${this._uid}"]`);
+      if (!this._dlgRoot) return console.warn("[ADD2E][CARAC_ROLLER] Racine de dialogue introuvable.");
+      this._hideNativeFooter();
+      this._lockDialogGeometry();
+      this._bindDialogEvents();
+      this._bindSheetTargets();
       this._updateCaracDisplay();
-dlgHtml.find('.apply-caracs-btn').on('click', async ev => {
-  const caracList = CARACS;
-  if (!caracList.every(c => this.assigned[c] !== undefined)) {
-    ui.notifications.warn("Toutes les caractéristiques doivent être affectées !");
-    return;
+      this._updateAssignLabels();
+      this._keepDialogOnTop();
+      this._startKeepOnTop();
+      this.classesSynthese().then(html => this._setClassesHtml(html));
+    }, 0);
+
+    console.log("[ADD2E][CARAC_ROLLER][OPEN]", {
+      version: ADD2E_CARAC_ROLLER_VERSION,
+      actor: this.actor?.name,
+      values: this.values
+    });
   }
 
-  // 1. Prépare les updates ET vérifie s’il y a des caracs > 18
-  let updates = {};
-  let overflows = [];
-  for (let carac of caracList) {
-    let idx = this.assigned[carac];
-    if (typeof idx !== "undefined") {
-      const base = this.values[idx];
-      const bonusRacial = this.sheet.actor.system[`${carac}_race`] || 0;
-      const total = base + bonusRacial;
-      updates[`system.${carac}_base`] = base;
-      if (total > 18) {
-        overflows.push({
-          carac,
-          base,
-          bonusRacial,
-          total
-        });
+  _valueCardsHtml() {
+    return this.values.map((v, i) => `
+      <button type="button" class="add2e-carac-value" data-idx="${i}" title="Cliquer pour sélectionner. Si la valeur est affectée, cliquer pour la libérer."
+        style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:46px;height:48px;padding:4px 7px;border:1px solid #7a4d21;border-radius:8px;background:linear-gradient(180deg,#fff1c8 0%,#d7a95e 100%);box-shadow:0 2px 5px rgba(50,25,8,.38), inset 0 1px 0 rgba(255,255,255,.7);color:#2b1b0d;cursor:pointer;font-weight:800;line-height:1;">
+        <span class="add2e-carac-score" style="font-size:1.12rem;line-height:1;">${v}</span>
+        <span class="assigned-label" style="font-size:.62rem;min-height:.72rem;color:#5b3514;font-weight:900;letter-spacing:.04em;">—</span>
+      </button>`).join("");
+  }
+
+  _buildContent() {
+    return `
+      <style>
+        .add2e-carac-popup .add2e-carac-value:hover { filter: brightness(1.06); transform: translateY(-1px); }
+        .add2e-carac-popup .add2e-carac-value.selected { outline: 2px solid #8d1f1f !important; box-shadow: 0 0 0 2px #e2c178, 0 0 10px rgba(120,40,20,.45) !important; }
+        .add2e-carac-popup .add2e-carac-value.used { opacity: .82 !important; background: linear-gradient(180deg,#8b7b63 0%,#5f533f 100%) !important; color: #fff2d0 !important; cursor: pointer !important; }
+        .add2e-carac-popup .add2e-carac-value.used .assigned-label { color: #ffe19b !important; }
+        .add2e-carac-popup .add2e-class-tags { display:grid !important; grid-template-columns:repeat(5,minmax(0,1fr)) !important; gap:7px !important; align-items:stretch !important; width:100% !important; }
+        .add2e-carac-popup .add2e-class-suggestion:hover { filter: brightness(1.13); transform: translateY(-1px); }
+        .add2e-carac-popup .carac-ok { color: #d8ffd4; font-weight: 900; }
+        .add2e-carac-popup .carac-locked { color: #ffe19b; font-weight: 900; }
+        .add2e-carac-popup .class-no-requis { color: rgba(255,255,255,.82); font-style: italic; font-weight: 700; }
+        .add2e-carac-popup .add2e-carac-action { min-width:110px; padding:6px 12px; border-radius:7px; font-weight:900; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,.25); }
+        .add2e-carac-popup .add2e-carac-action.reroll { border:1px solid #775122; background:linear-gradient(180deg,#f6dfad,#d19b4c); color:#2d1c0b; }
+        .add2e-carac-popup .add2e-carac-action.validate { border:1px solid #6e1414; background:linear-gradient(180deg,#a7372d,#6e1714); color:#fff1d5; }
+        .add2e-carac-popup .add2e-carac-action.cancel { border:1px solid #6a5640; background:linear-gradient(180deg,#7b6c5c,#4f463b); color:#fff1d5; }
+      </style>
+      <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}" style="box-sizing:border-box;width:100%;min-width:100%;max-width:100%;padding:10px;color:#2a1b0d;background:linear-gradient(180deg,#efe0bc 0%,#d8bd82 100%);border:2px solid #5a3418;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);">
+        <div style="border:1px solid #8a6330;border-radius:8px;background:rgba(255,247,218,.62);padding:8px 10px;margin-bottom:9px;box-shadow:inset 0 0 10px rgba(90,52,24,.15);">
+          <div style="font-size:.96rem;font-weight:900;color:#5b1e16;margin-bottom:3px;">Affectation des caractéristiques</div>
+          <div style="font-size:.78rem;line-height:1.25;color:#3b2a19;">
+            Cliquez sur une valeur puis une caractéristique. Cliquez une valeur déjà affectée pour la libérer. Cliquez une classe pour ses prérequis.
+          </div>
+        </div>
+        <div class="add2e-carac-values" style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:center;margin:0 0 9px 0;">${this._valueCardsHtml()}</div>
+        <div id="classes-suggestions" style="margin:0 0 9px 0;padding:8px 10px;border:1px solid #8a6330;border-radius:8px;background:rgba(43,28,13,.10);max-height:250px;overflow:auto;"></div>
+        <div class="add2e-carac-actions" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px;">
+          <button type="button" class="add2e-carac-action reroll reroll-caracs-btn">Relancer</button>
+          <button type="button" class="add2e-carac-action validate apply-caracs-btn">Valider</button>
+          <button type="button" class="add2e-carac-action cancel cancel-caracs-btn">Annuler</button>
+        </div>
+      </div>`;
+  }
+
+  _dialogWindowElement() {
+    return this._dlgRoot?.closest?.(".application, .window-app, .app, .dialog") ?? null;
+  }
+
+  _hideNativeFooter() {
+    const win = this._dialogWindowElement();
+    if (!win) return;
+    for (const footer of win.querySelectorAll(".form-footer, .dialog-buttons, footer")) {
+      if (!footer.closest("[data-add2e-carac-roller]")) footer.style.display = "none";
+    }
+  }
+
+  _lockDialogGeometry() {
+    const win = this._dialogWindowElement();
+    if (!win) return;
+    const width = `${ADD2E_CARAC_DIALOG_WIDTH}px`;
+    win.style.setProperty("width", width, "important");
+    win.style.setProperty("min-width", width, "important");
+    win.style.setProperty("max-width", width, "important");
+    const content = this._dlgRoot?.closest?.(".window-content, .application-content") ?? this._dlgRoot?.parentElement ?? null;
+    if (content) {
+      content.style.setProperty("width", "100%", "important");
+      content.style.setProperty("box-sizing", "border-box", "important");
+    }
+  }
+
+  _keepDialogOnTop() {
+    const win = this._dialogWindowElement();
+    if (!win) return;
+    win.style.zIndex = "2147483000";
+    win.dataset.add2eAlwaysOnTop = "carac-roller";
+    this._hideNativeFooter();
+    this._lockDialogGeometry();
+  }
+
+  _startKeepOnTop() {
+    this._stopKeepOnTop();
+    this._keepOnTopTimer = setInterval(() => this._keepDialogOnTop(), 350);
+  }
+
+  _stopKeepOnTop() {
+    if (this._keepOnTopTimer) clearInterval(this._keepOnTopTimer);
+    this._keepOnTopTimer = null;
+  }
+
+  _bindDialogEvents() {
+    this._dlgRoot.querySelectorAll(".add2e-carac-value").forEach(el => {
+      el.addEventListener("click", ev => {
+        ev.preventDefault();
+        this._keepDialogOnTop();
+        const idx = Number(el.dataset.idx);
+        if (this.used[idx]) return this.unassignCarac(this.used[idx]);
+        this.selectedIdx = idx;
+        this._updateAssignLabels();
+      });
+    });
+
+    this._dlgRoot.querySelector(".apply-caracs-btn")?.addEventListener("click", ev => {
+      ev.preventDefault();
+      this._keepDialogOnTop();
+      this.apply();
+    });
+    this._dlgRoot.querySelector(".reroll-caracs-btn")?.addEventListener("click", ev => {
+      ev.preventDefault();
+      this.reroll();
+    });
+    this._dlgRoot.querySelector(".cancel-caracs-btn")?.addEventListener("click", ev => {
+      ev.preventDefault();
+      this.cancel();
+    });
+  }
+
+  _bindClassSuggestionEvents() {
+    if (!this._dlgRoot) return;
+    this._dlgRoot.querySelectorAll(".add2e-class-suggestion[data-plan-key]").forEach(btn => {
+      btn.addEventListener("click", ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        this._keepDialogOnTop();
+        const plan = this._suggestionPlans.get(btn.dataset.planKey);
+        if (plan) this.applyClassSuggestion(plan);
+      });
+    });
+  }
+
+  reroll() {
+    this._rollValues();
+    const valuesRoot = this._dlgRoot?.querySelector(".add2e-carac-values");
+    if (valuesRoot) valuesRoot.innerHTML = this._valueCardsHtml();
+    this._bindDialogEvents();
+    this._updateCaracDisplay();
+    this._updateAssignLabels();
+    this._keepDialogOnTop();
+    this._setClassesHtml("<em>Actualisation...</em>");
+    this.classesSynthese().then(html => this._setClassesHtml(html));
+  }
+
+  _sheetTargets() {
+    const root = add2eCaracSheetRoot(this.sheet);
+    return Array.from(root?.querySelectorAll?.('.carac-drop-target[data-carac]') ?? []);
+  }
+
+  _bindSheetTargets() {
+    for (const el of this._sheetTargets()) {
+      el.onclick = null;
+      el.classList.add("clickable");
+      el.dataset.add2eCaracRoller = this._uid;
+      el.removeEventListener("click", this._sheetTargetHandler);
+      el.addEventListener("click", this._sheetTargetHandler);
+    }
+    this._updatePendingSheetBorders();
+  }
+
+  _unbindSheetTargets() {
+    for (const el of this._sheetTargets()) {
+      if (el.dataset.add2eCaracRoller === this._uid) {
+        el.removeEventListener("click", this._sheetTargetHandler);
+        el.classList.remove("clickable", "assignable", "carac-assigned", "add2e-carac-pending");
+        el.style.outline = "";
+        el.style.outlineOffset = "";
+        el.style.boxShadow = "";
+        delete el.dataset.add2eCaracRoller;
       }
     }
   }
 
-  // 2. S’il y a des débordements, on confirme
-  if (overflows.length) {
-    let caracsTxt = overflows.map(o =>
-      `<li><b>${CARAC_SHORT[o.carac]}</b> : base ${o.base} + bonus racial ${o.bonusRacial} = <span style="color:#e74c3c;font-weight:bold;">${o.total}</span> <b>→ 18</b></li>`
-    ).join("");
-    const confirmed = await Dialog.confirm({
-      title: "Caractéristique supérieure à 18",
-      content: `<p>Une ou plusieurs caractéristiques dépassent 18 après bonus racial.<br>
-      Elles seront ramenées à 18 :</p><ul>${caracsTxt}</ul>
-      <p>Confirmez-vous l’assignation ?</p>`,
-      yes: () => true,
-      no: () => false,
-      defaultYes: true
-    });
-    if (!confirmed) return;
-    // Applique le cap à 18
-    for (let o of overflows) {
-      // On baisse la base pour que base + bonus == 18
-      let cappedBase = 18 - o.bonusRacial;
-      updates[`system.${o.carac}_base`] = Math.max(3, cappedBase); // Jamais <3
+  _updatePendingSheetBorders() {
+    for (const el of this._sheetTargets()) {
+      const carac = el.dataset?.carac;
+      if (!ADD2E_CARACS.includes(carac)) continue;
+      const pending = this.assigned[carac] === undefined;
+      el.classList.toggle("add2e-carac-pending", pending);
+      el.style.outline = pending ? "2px solid #c01818" : "";
+      el.style.outlineOffset = pending ? "2px" : "";
+      el.style.boxShadow = pending ? "0 0 0 2px rgba(192,24,24,.22), 0 0 10px rgba(192,24,24,.45)" : "";
     }
   }
 
-  // 3. Applique les updates
-  await this.sheet.actor.update(updates);
-  await this.sheet.actor.setFlag("add2e", "base_caracs", updates);
-  if (typeof this.sheet.autoSetCaracAjustements === "function") {
-    await this.sheet.autoSetCaracAjustements();
-  }
-  await this.sheet.render(false);
-  ui.notifications.info("Affectation terminée !");
-  dlgHtml.closest('.window-app').remove();
-});
-
-
-    },
-    close: () => { this._restoreOldCaracs(); },
-    buttons: { cancel: { label: "Annuler" } },
-    default: "cancel"
-  }, { width: 480, height: "auto" });
-
-  dialogRef.render(true);
-  this.dialogRef = dialogRef;
-
-  // Affichage synthétique des classes accessibles (remplit la div juste après affichage)
-  this.classesSynthese().then(synth => {
-    if (this._dlgHtml) this._dlgHtml.find('#classes-suggestions').html(synth);
-  });
-
-  // Force la popup à l’avant-plan
-  setTimeout(() => {
-    const dialogEl = document.querySelector('.window-app.dialog');
-    if (dialogEl && dialogEl.querySelector('.add2e-carac-popup')) {
-      dialogEl.style.zIndex = 9999;
-    }
-  }, 60);
-}
-
-  _setupClickHandlers() {
-    this._dlgHtml.find('.add2e-carac-value').off('click').on('click', ev => {
-      const idx = Number(ev.currentTarget.dataset.idx);
-      if (this.used[idx]) return;
-      this.selectedIdx = idx;
-      this._dlgHtml.find('.add2e-carac-value').removeClass('selected');
-      $(ev.currentTarget).addClass('selected');
-      $('.carac-drop-target').addClass('assignable');
-    });
+  _onSheetTargetClick(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    this._keepDialogOnTop();
+    const carac = ev.currentTarget?.dataset?.carac;
+    if (!ADD2E_CARACS.includes(carac)) return;
+    if (this.assigned[carac] !== undefined) this.unassignCarac(carac);
+    else this.assignToCarac(carac);
   }
 
-  // Affichage synthétique des classes accessibles selon la répartition possible des valeurs
-async classesSynthese() {
-  let classes = game.items.filter(i => i.type === "classe");
-
-  // Si aucune classe dans le monde, charge depuis le compendium
-  if (!classes.length) {
-    const pack = game.packs.get("add2e.classes");
-    if (!pack) {
-      console.error("[ADD2e] Compendium 'add2e.classes' introuvable !");
-      return "<em>Compendium des classes introuvable.</em>";
-    }
-    const content = await pack.getDocuments();
-    classes = content.filter(i => i.type === "classe");
+  assignToCarac(caracName) {
+    if (this.selectedIdx === null) return;
+    const idx = this.selectedIdx;
+    const previousCarac = Object.keys(this.assigned).find(c => Number(this.assigned[c]) === idx);
+    if (previousCarac) this.unassignCarac(previousCarac);
+    if (this.assigned[caracName] !== undefined) delete this.used[this.assigned[caracName]];
+    this.assigned[caracName] = idx;
+    this.used[idx] = caracName;
+    this.selectedIdx = null;
+    this._refreshUi();
   }
 
-  if (!classes.length) return "<em>Aucune classe trouvée</em>";
+  applyClassSuggestion(plan) {
+    if (!plan?.assignments) return;
 
-  const values = [...this.values].sort((a, b) => b - a); // scores décroissants
-  const caracShort = { force:'FOR', dexterite:'DEX', constitution:'CON', intelligence:'INT', sagesse:'SAG', charisme:'CHA' };
-  let html = '<div style="margin:0.6em 0 0.2em 0.1em;font-size:1.05em;"><b>Classes accessibles et valeur à placer :</b></div>';
-  html += '<ul style="padding-left:1.1em;line-height:1.5em;font-size:1.05em;">';
-
-  for (const cls of classes) {
-    const caracsMin = cls.system.caracs_min || {};
-    const requis = Object.entries(caracsMin);
-
-    let valeursDisponibles = [...values];
-    let match = true;
-    let caracPlacements = [];
-
-    for (let [carac, min] of requis) {
-      const idx = valeursDisponibles.findIndex(val => val >= min);
-      if (idx === -1) {
-        match = false;
-        break;
-      }
-      const val = valeursDisponibles[idx];
-      caracPlacements.push(`<b>${caracShort[carac] || carac}</b> <span style="color:#219150;font-weight:bold">${val}</span>`);
-      valeursDisponibles.splice(idx, 1); // empêche la réutilisation
+    for (const [carac, idx] of Object.entries(plan.assignments)) {
+      const numericIdx = Number(idx);
+      if (!ADD2E_CARACS.includes(carac) || !Number.isFinite(numericIdx)) continue;
+      const previousCaracUsingValue = Object.keys(this.assigned).find(c => c !== carac && Number(this.assigned[c]) === numericIdx);
+      if (previousCaracUsingValue) delete this.assigned[previousCaracUsingValue];
+      if (this.assigned[carac] !== undefined && Number(this.assigned[carac]) !== numericIdx) delete this.used[this.assigned[carac]];
+      this.assigned[carac] = numericIdx;
+      this.used[numericIdx] = carac;
     }
 
-    if (match) {
-      html += `<li><b style="color:#6a3c99">${cls.name}</b> : ${caracPlacements.join(', ')}</li>`;
+    for (const [idx, carac] of Object.entries({ ...this.used })) {
+      if (this.assigned[carac] === undefined || Number(this.assigned[carac]) !== Number(idx)) delete this.used[idx];
     }
+
+    this.selectedIdx = null;
+    this._refreshUi();
   }
 
-  html += '</ul>';
-  return html;
-}
-
-
-
-assignToCarac(caracName) {
-  if (this.selectedIdx === null) return;
-  let idx = this.selectedIdx;
-  // Unassign any carac that was already using this value
-  if (Object.values(this.assigned).includes(idx)) {
-    const prevCarac = Object.keys(this.assigned).find(cn => this.assigned[cn] === idx);
-    if (prevCarac) this.unassignCarac(prevCarac);
-  }
-  // Unassign previous value from caracName
-  if (this.assigned[caracName] !== undefined) {
-    const prevIdx = this.assigned[caracName];
-    delete this.used[prevIdx];
-    this._dlgHtml.find(`.add2e-carac-value[data-idx=${prevIdx}]`).removeClass('used');
-  }
-  this.assigned[caracName] = idx;
-  this.used[idx] = caracName;
-  this._dlgHtml.find(`.add2e-carac-value[data-idx=${idx}]`).addClass('used');
-  this.selectedIdx = null;
-  this._dlgHtml.find('.add2e-carac-value').removeClass('selected');
-  $('.carac-drop-target').removeClass('assignable');
-  this._updateCaracDisplay();
-  this._updateAssignLabels();
-  if (this._dlgHtml) {
-    // Correction ici : appel direct, sans surcouche de texte
-    this.classesSynthese().then(html => {
-      this._dlgHtml.find('#classes-suggestions').html(html);
-    });
-  }
-  this._setupClickHandlers();
-}
-
-unassignCarac(caracName) {
-  if (this.assigned[caracName] !== undefined) {
+  unassignCarac(caracName) {
+    if (this.assigned[caracName] === undefined) return;
     const idx = this.assigned[caracName];
     delete this.assigned[caracName];
     delete this.used[idx];
-    this._dlgHtml.find(`.add2e-carac-value[data-idx=${idx}]`).removeClass('used');
+    this.selectedIdx = null;
+    this._refreshUi();
+  }
+
+  _refreshUi() {
     this._updateCaracDisplay();
     this._updateAssignLabels();
-    if (this._dlgHtml) {
-      // Correction ici : appel direct, sans surcouche de texte
-      this.classesSynthese().then(html => {
-        this._dlgHtml.find('#classes-suggestions').html(html);
-      });
-    }
-    this._setupClickHandlers();
+    this._updatePendingSheetBorders();
+    this._keepDialogOnTop();
+    this._setClassesHtml("<em>Actualisation...</em>");
+    this.classesSynthese().then(html => this._setClassesHtml(html));
   }
-}
 
-_updateCaracDisplay() {
-  for (const c of CARACS) {
-    const el = this.sheet.element.find(`.carac-drop-target[data-carac="${c}"]`);
-    const bonusRacial = this.sheet.actor.system[`${c}_race`] || 0;
-    let html = '';
-    if (this.assigned[c] !== undefined) {
-      const base = this.values[this.assigned[c]];
+  _updateAssignLabels() {
+    if (!this._dlgRoot) return;
+    this._dlgRoot.querySelectorAll(".add2e-carac-value").forEach(el => {
+      const idx = Number(el.dataset.idx);
+      const carac = Object.keys(this.assigned).find(c => Number(this.assigned[c]) === idx) ?? null;
+      el.classList.toggle("used", Boolean(carac));
+      el.classList.toggle("selected", this.selectedIdx === idx);
+      const label = el.querySelector(".assigned-label");
+      if (label) label.textContent = carac ? ADD2E_CARAC_SHORT[carac] : "—";
+    });
+    this._sheetTargets().forEach(el => el.classList.toggle("assignable", this.selectedIdx !== null));
+    this._updatePendingSheetBorders();
+  }
+
+  _updateCaracDisplay() {
+    for (const c of ADD2E_CARACS) {
+      const el = this._sheetTargets().find(target => target.dataset.carac === c);
+      if (!el) continue;
+      const bonusRacial = add2eCaracRaceBonus(this.actor, c);
+      const base = this.assigned[c] !== undefined ? this.values[this.assigned[c]] : this._oldValues[c];
       const total = base + bonusRacial;
-      html = `<span style="font-size:1.22em;font-weight:bold;">${total}</span>
+      el.classList.toggle("carac-assigned", this.assigned[c] !== undefined);
+      el.innerHTML = `<span style="font-size:1.22em;font-weight:bold;">${total}</span>
         <div style="font-size:0.40em;line-height:1.2em;color:#777;margin-top:1px;">
           <span style="color:#555;">base : </span>${base}<br>
-          <span style="color:#555;">bonus : </span><span style="color:${bonusRacial>0?'#1abc9c':'#e74c3c'};">
-            ${bonusRacial>0?'+':''}${bonusRacial}
-          </span>
+          <span style="color:#555;">bonus : </span><span style="color:${bonusRacial > 0 ? '#1abc9c' : bonusRacial < 0 ? '#e74c3c' : '#777'};">${bonusRacial > 0 ? '+' : ''}${bonusRacial}</span>
         </div>`;
-      el.addClass('carac-assigned').html(html);
-    } else {
-      const base = this._oldValues[c];
+    }
+    this._updatePendingSheetBorders();
+  }
+
+  _classSuggestionPlan(cls) {
+    const requis = Object.entries(cls.system?.caracs_min || {})
+      .map(([carac, minRaw]) => ({ carac, min: Number(minRaw) || 0 }))
+      .filter(r => ADD2E_CARACS.includes(r.carac) && r.min > 0)
+      .sort((a, b) => b.min - a.min);
+
+    const pool = this.values.map((value, idx) => ({ value, idx })).sort((a, b) => b.value - a.value);
+    const placements = [];
+    const assignments = {};
+
+    for (const req of requis) {
+      const bonus = add2eCaracRaceBonus(this.actor, req.carac);
+      const idx = pool.findIndex(entry => entry.value + bonus >= req.min);
+      if (idx === -1) return null;
+      const picked = pool[idx];
+      assignments[req.carac] = picked.idx;
+      placements.push(`<span style="display:inline-flex;gap:1px;align-items:center;"><b>${ADD2E_CARAC_SHORT[req.carac] || add2eCaracEscapeHtml(req.carac)}</b><span class="carac-ok">${picked.value}</span></span>`);
+      pool.splice(idx, 1);
+    }
+
+    return { className: cls.name, placements, assignments };
+  }
+
+  _classTagStyle(className) {
+    const slug = add2eCaracSlug(className);
+    const [bg, fg] = ADD2E_CLASS_TAG_COLOR_BY_SLUG[slug] ?? ADD2E_CLASS_TAG_COLORS[add2eClassColorIndex(className)];
+    return [
+      "display:flex!important",
+      "flex-direction:column!important",
+      "align-items:center!important",
+      "justify-content:flex-start!important",
+      "width:100%!important",
+      "min-width:0!important",
+      "max-width:100%!important",
+      "gap:3px!important",
+      "border-radius:10px!important",
+      "padding:5px 5px!important",
+      "cursor:pointer!important",
+      "font-size:.74rem!important",
+      "line-height:1.08!important",
+      "white-space:normal!important",
+      "margin:0!important",
+      "min-height:50px!important",
+      "box-shadow:inset 0 1px 0 rgba(255,255,255,.24), 0 1px 4px rgba(0,0,0,.26)!important",
+      "border:1px solid rgba(40,20,8,.55)",
+      `background:linear-gradient(180deg,${bg},${bg}dd)`,
+      `color:${fg}`
+    ].join(";");
+  }
+
+  async classesSynthese() {
+    let classes = game.items?.filter?.(i => i.type === "classe") ?? [];
+    if (!classes.length) {
+      const pack = game.packs.get("add2e.classes");
+      if (!pack) return "<em>Compendium des classes introuvable.</em>";
+      classes = (await pack.getDocuments()).filter(i => i.type === "classe");
+    }
+    if (!classes.length) return "<em>Aucune classe trouvée</em>";
+
+    this._suggestionPlans.clear();
+
+    let html = '<div style="margin:0 0 6px 0;font-size:.82rem;color:#5b1e16;font-weight:900;">Classes possibles :</div>';
+    html += '<div class="add2e-class-tags" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;align-items:stretch;width:100%;">';
+
+    let count = 0;
+    for (const cls of classes) {
+      const plan = this._classSuggestionPlan(cls);
+      if (!plan) continue;
+      const key = `plan-${count}`;
+      this._suggestionPlans.set(key, plan);
+      count++;
+      const detail = plan.placements.length
+        ? `<span class="class-requis" style="display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:3px!important;width:100%!important;font-size:.68rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">${plan.placements.join(' ')}</span>`
+        : `<span class="class-requis class-no-requis" style="display:block!important;width:100%!important;font-size:.56rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">Aucun prérequis</span>`;
+      html += `<button type="button" class="add2e-class-suggestion" data-plan-key="${key}" title="Auto-affecter les prérequis" style="${this._classTagStyle(cls.name)}"><b class="class-name" style="display:block!important;width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:center!important;font-weight:900!important;color:inherit!important;">${add2eCaracEscapeHtml(cls.name)}</b>${detail}</button>`;
+    }
+
+    html += count ? "</div>" : '<em>Aucune classe ne correspond à ce tirage.</em></div>';
+    return html;
+  }
+
+  _setClassesHtml(html) {
+    const el = this._dlgRoot?.querySelector("#classes-suggestions");
+    if (el) el.innerHTML = html;
+    this._bindClassSuggestionEvents();
+    this._keepDialogOnTop();
+  }
+
+  async _confirmOverflows(overflows) {
+    const DialogV2 = add2eCaracDialogV2();
+    const caracsTxt = overflows.map(o => `<li><b>${ADD2E_CARAC_SHORT[o.carac]}</b> : base ${o.base} + bonus racial ${o.bonusRacial} = <span style="color:#e74c3c;font-weight:bold;">${o.total}</span> <b>→ 18</b></li>`).join("");
+    return DialogV2.confirm({
+      window: { title: "Caractéristique supérieure à 18" },
+      content: `<p>Une ou plusieurs caractéristiques dépassent 18 après bonus racial.</p><ul>${caracsTxt}</ul><p>Elles seront ramenées à 18. Confirmez-vous l’affectation ?</p>`,
+      yes: { label: "Confirmer" },
+      no: { label: "Revenir" },
+      rejectClose: false
+    });
+  }
+
+  async apply() {
+    if (!ADD2E_CARACS.every(c => this.assigned[c] !== undefined)) {
+      ui.notifications.warn("Toutes les caractéristiques doivent être affectées.");
+      return;
+    }
+
+    const updates = {};
+    const baseCaracs = {};
+    const overflows = [];
+
+    for (const carac of ADD2E_CARACS) {
+      const base = Number(this.values[this.assigned[carac]]) || 10;
+      const bonusRacial = add2eCaracRaceBonus(this.actor, carac);
       const total = base + bonusRacial;
-      html = `<span style="font-size:1.22em;font-weight:bold;">${total}</span>
-        <div style="font-size:0.40em;line-height:1.2em;color:#777;margin-top:1px;">
-          <span style="color:#555;">base : </span>${base}<br>
-          <span style="color:#555;">bonus : </span><span style="color:${bonusRacial>0?'#1abc9c':'#e74c3c'};">
-            ${bonusRacial>0?'+':''}${bonusRacial}
-          </span>
-        </div>`;
-      el.removeClass('carac-assigned').html(html);
+      if (total > 18) overflows.push({ carac, base, bonusRacial, total });
+      updates[`system.${carac}_base`] = base;
+      baseCaracs[carac] = base;
     }
+
+    if (overflows.length) {
+      const confirmed = await this._confirmOverflows(overflows);
+      if (!confirmed) return;
+      for (const o of overflows) {
+        const cappedBase = Math.max(3, 18 - o.bonusRacial);
+        updates[`system.${o.carac}_base`] = cappedBase;
+        baseCaracs[o.carac] = cappedBase;
+      }
+    }
+
+    await this.actor.update(updates);
+    await this.actor.setFlag("add2e", "base_caracs", baseCaracs);
+    if (typeof this.sheet?.autoSetCaracAjustements === "function") await this.sheet.autoSetCaracAjustements();
+
+    this._applied = true;
+    this._unbindSheetTargets();
+    ui.notifications.info("Affectation terminée.");
+    await this.sheet?.render?.(false);
+    this._closeDialogOnly();
+  }
+
+  async cancel() {
+    await this._restoreOldCaracs();
+    this._closeDialogOnly();
+  }
+
+  async _restoreOldCaracs() {
+    if (this._applied || !this.actor) return;
+    this.assigned = {};
+    this.used = {};
+    this.selectedIdx = null;
+    this._updateCaracDisplay();
+    this._updateAssignLabels();
+    const updates = {};
+    for (const c of ADD2E_CARACS) updates[`system.${c}_base`] = this._oldValues[c];
+    await this.actor.update(updates);
+    if (typeof this.sheet?.autoSetCaracAjustements === "function") await this.sheet.autoSetCaracAjustements();
+  }
+
+  _closeDialogOnly() {
+    if (this._closing) return;
+    this._closing = true;
+    this._stopKeepOnTop();
+    this._unbindSheetTargets();
+    this.dialogRef?.close?.();
+  }
+
+  _onDialogClosed() {
+    this._stopKeepOnTop();
+    if (!this._applied && !this._closing) {
+      this._closing = true;
+      this._restoreOldCaracs();
+    }
+    this._unbindSheetTargets();
   }
 }
 
-
-_updateAssignLabels() {
-  for (let i = 0; i < this.values.length; i++) {
-    let carac = null;
-    for (let c of CARACS) {
-      if (this.assigned[c] === i) carac = c;
-    }
-    let txt = carac ? carac.slice(0,3).toUpperCase() : "—";
-    let el = this._dlgHtml.find(`.add2e-carac-value[data-idx=${i}] .assigned-label`);
-    if (el.length) el.html(txt);
-  }
-}
-async suggestClassesAndPlacements() {
-  let classes = game.items.filter(i => i.type === "classe");
-
-  if (!classes.length) {
-    const pack = game.packs.get("add2e.classes"); // Vérifie bien l'ID exact
-    if (!pack) {
-      console.error("[ADD2e] Compendium 'add2e.classes' introuvable !");
-      return "<em>Compendium des classes introuvable.</em>";
-    }
-    const content = await pack.getDocuments();
-    classes = content.filter(i => i.type === "classe");
-  }
-  const caracs = CARACS.reduce((acc, c) => {
-    const base = this.assigned[c] !== undefined ? this.values[this.assigned[c]] : 0;
-    acc[c] = base + (this.sheet.actor.system[`${c}_race`] || 0);
-    return acc;
-  }, {});
-  // Valeurs non attribuées
-  const nonAttribuees = this.values.filter((v, i) => !Object.values(this.assigned).includes(i));
-  let suggestions = [];
-  for (const cls of classes) {
-    const caracsMin = cls.system.caracs_min || {};
-    let preReqOk = true, preReqManquantes = [];
-    for (let [carac, min] of Object.entries(caracsMin)) {
-      const current = caracs[carac] || 0;
-      if (current >= min) continue;
-      const possible = nonAttribuees.some(val => val >= min);
-      if (!possible) preReqOk = false;
-      preReqManquantes.push({carac, min, possible});
-    }
-    // Texte selon situation
-    if (Object.keys(caracsMin).length === 0) {
-      suggestions.push(`<li><b>${cls.name}</b> : <span style="color:green;">✔️ Pas de prérequis</span></li>`);
-    } else if (preReqOk && preReqManquantes.length === 0) {
-      suggestions.push(`<li><b style="color:green;">${cls.name}</b> : <span style="color:green;">✔️ Tous les prérequis remplis</span></li>`);
-    } else if (preReqOk) {
-      // Liste les prérequis à placer
-      let txt = preReqManquantes.map(pr =>
-        pr.possible
-          ? `Placez au moins <b>${pr.min}</b> en <b>${pr.carac.toUpperCase()}</b>`
-          : `<span style="color:red">Impossible d’avoir ${pr.min} en ${pr.carac.toUpperCase()}</span>`
-      ).join(", ");
-      suggestions.push(`<li><b>${cls.name}</b> : ${txt}</li>`);
-    } else {
-      suggestions.push(`<li style="color:#aaa;"><del>${cls.name}</del> : <span style="color:#aaa;">Prérequis inatteignables avec ce tirage</span></li>`);
-    }
-  }
-  return `<ul style="margin-left:1em;">${suggestions.join("\n")}</ul>`;
-}
-
-  _restoreOldCaracs() {
-    // Quand on annule ou ferme, on restaure les valeurs initiales
-    for (const c of CARACS) {
-      this.sheet.actor.update({ [`system.${c}_base`]: this._oldValues[c] });
-      // Restaure l'affichage sur la fiche
-      this.sheet.element.find(`.carac-drop-target[data-carac="${c}"]`)
-        .removeClass('carac-assigned')
-        .text(this._oldValues[c]);
-    }
-  }
-}
-window.Add2eCaracRoller = Add2eCaracRoller;
-
-// Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
-try { globalThis.Add2eCaracRoller = Add2eCaracRoller; } catch (_e) {}
+globalThis.Add2eCaracRoller = Add2eCaracRoller;
+globalThis.ADD2E_CARAC_ROLLER_VERSION = ADD2E_CARAC_ROLLER_VERSION;
+console.log("[ADD2E][CARAC_ROLLER][VERSION]", ADD2E_CARAC_ROLLER_VERSION);

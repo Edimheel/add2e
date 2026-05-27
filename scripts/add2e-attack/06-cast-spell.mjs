@@ -1,21 +1,17 @@
 // scripts/add2e-attack/06-cast-spell.mjs
-// ADD2E — Lancement de sorts, onUse, mémorisation et pouvoirs.
+// ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs et composants.
 
 import { formatSortChamp } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
 
 /**
  * Lancer de sort (Script + Gestion Charges Objet)
- * VERSION : 2026-05-21-cast-spell-v17-no-generic-vfx-after-onuse
+ * VERSION : 2026-05-26-cast-spell-v19-components-message-fix
  *
  * Règle stricte :
- * - onUse === true  => le sort est réellement lancé, le coût reste consommé ;
- * - onUse === false => annulation / cible manquante / invalide, le coût est remboursé ;
- * - toute autre valeur => erreur stricte, coût remboursé, aucun fallback undefined.
- *
- * V17 :
- * - si un script onUse existe, il est seul responsable des VFX et du chat ;
- * - le VFX générique n'est joué que pour les sorts sans script onUse.
+ * - onUse === true  => le sort est réellement lancé, le coût et les composants restent consommés ;
+ * - onUse === false => annulation / cible manquante / invalide, le coût et les composants sont remboursés ;
+ * - toute autre valeur => erreur stricte, coût et composants remboursés, aucun fallback undefined.
  */
 export async function add2eCastSpell({ actor, sort } = {}) {
   if (!actor || !sort) {
@@ -38,6 +34,7 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   let labelCharge = "";
   let spellToUse = sort;
   let reservedCost = null;
+  let componentReservation = null;
 
   function add2eExtractScriptPath(raw) {
     if (!raw) return "";
@@ -207,7 +204,21 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     await globalThis.ADD2E_PLAY_SPELL_FX?.("default", { casterToken });
   }
 
+  async function add2eRefundReservedComponents(reason = "") {
+    if (!componentReservation) return false;
+    try {
+      const refunded = await globalThis.ADD2E_CONSUMABLES?.add2eRefundSpellComponents?.(componentReservation);
+      if (refunded) console.log("[ADD2E][CAST_SPELL][REFUND][COMPONENTS]", { reason, sort: spellToUse?.name });
+      componentReservation = null;
+      return !!refunded;
+    } catch (e) {
+      console.error("[ADD2E][CAST_SPELL][REFUND][COMPONENTS][ERROR]", e, componentReservation);
+      return false;
+    }
+  }
+
   async function add2eRefundReservedCost(reason = "") {
+    await add2eRefundReservedComponents(reason);
     if (!reservedCost) return false;
     try {
       if (reservedCost.kind === "memorized") {
@@ -237,6 +248,20 @@ export async function add2eCastSpell({ actor, sort } = {}) {
       console.error("[ADD2E][CAST_SPELL][REFUND][ERROR]", e, reservedCost);
     }
     return false;
+  }
+
+  async function add2eReserveComponentsAfterCost() {
+    if (sort.system?.isPower) return true;
+    const api = globalThis.ADD2E_CONSUMABLES;
+    if (!api?.add2eReserveSpellComponents) return true;
+    componentReservation = await api.add2eReserveSpellComponents(actor, spellToUse);
+    if (componentReservation?.blocked) {
+      const message = componentReservation.message || "Composant matériel manquant.";
+      await add2eRefundReservedCost("composants manquants");
+      ui.notifications.warn(message);
+      return false;
+    }
+    return true;
   }
 
   async function add2eCreateFallbackSpellChat(actorDoc, sortDoc, chargeLabel = "") {
@@ -299,6 +324,7 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   }
 
   if (!canCast) return false;
+  if (!await add2eReserveComponentsAfterCost()) return false;
 
   const info = spellToUse.system ?? {};
   const scriptPath = add2eExtractScriptPath(info.onUse || info.onuse || info.on_use);
@@ -341,6 +367,8 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     console.log("[ADD2E][CAST_SPELL][NOT_CONSUMED]", { actor: actor.name, sort: spellToUse.name });
     return false;
   }
+
+  componentReservation = null;
 
   if (!scriptExecuted) {
     await add2ePlayGenericCastVfx(actor, spellToUse);

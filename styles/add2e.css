@@ -540,3 +540,106 @@
 #pause .paused-text {
   display: none !important;
 }
+/* ==========================================================================
+   ADD2E — Popups composants / projectiles
+   ========================================================================== */
+
+.application:has(.add2e-consumable-alert),
+.application:has(.add2e-cast-alert) {
+  border: 1px solid #b98b2d !important;
+  border-radius: 14px !important;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 240, 190, 0.35) inset !important;
+  overflow: hidden !important;
+}
+
+.application:has(.add2e-consumable-alert) .window-header,
+.application:has(.add2e-cast-alert) .window-header {
+  background: linear-gradient(180deg, #5a3511, #2f1b08) !important;
+  color: #ffe7a8 !important;
+  border-bottom: 1px solid #b98b2d !important;
+}
+
+.application:has(.add2e-consumable-alert) .window-title,
+.application:has(.add2e-cast-alert) .window-title {
+  color: #ffe7a8 !important;
+  font-weight: 900 !important;
+}
+
+.application:has(.add2e-consumable-alert) .window-content,
+.application:has(.add2e-cast-alert) .window-content {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 241, 187, 0.95), transparent 34%),
+    linear-gradient(180deg, #fff8df 0%, #f5dfaa 100%) !important;
+  color: #2f250c !important;
+  padding: 0 !important;
+}
+
+.application:has(.add2e-consumable-alert) .dialog-content,
+.application:has(.add2e-cast-alert) .dialog-content {
+  padding: 0 !important;
+}
+
+.add2e-consumable-alert,
+.add2e-cast-alert {
+  display: grid !important;
+  grid-template-columns: 56px minmax(0, 1fr) !important;
+  gap: 14px !important;
+  align-items: start !important;
+  min-width: 380px !important;
+  max-width: 520px !important;
+  padding: 18px 20px !important;
+  background:
+    linear-gradient(90deg, rgba(122, 70, 16, 0.08), transparent 42%),
+    rgba(255, 252, 242, 0.82) !important;
+  color: #2f250c !important;
+}
+
+.add2e-consumable-alert > div:first-child,
+.add2e-cast-alert > div:first-child {
+  width: 52px !important;
+  height: 52px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid #c99a3e !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 35% 25%, #fff1b8, #d9a441 68%, #8b5a15) !important;
+  color: #3a2208 !important;
+  font-size: 24px !important;
+}
+
+.add2e-consumable-alert h3,
+.add2e-cast-alert h3 {
+  margin: 1px 0 6px 0 !important;
+  color: #3a2208 !important;
+  font-size: 1.12rem !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+}
+
+.add2e-consumable-alert p,
+.add2e-cast-alert p {
+  margin: 0 !important;
+  color: #46300f !important;
+  font-size: 1rem !important;
+  line-height: 1.45 !important;
+  font-weight: 700 !important;
+}
+
+.application:has(.add2e-consumable-alert) .dialog-buttons,
+.application:has(.add2e-cast-alert) .dialog-buttons {
+  padding: 0 18px 16px 18px !important;
+  background: linear-gradient(180deg, rgba(245, 223, 170, 0.2), #efd08a) !important;
+  gap: 10px !important;
+}
+
+.application:has(.add2e-consumable-alert) .dialog-buttons button,
+.application:has(.add2e-cast-alert) .dialog-buttons button {
+  border: 1px solid #8d641b !important;
+  border-radius: 10px !important;
+  background: linear-gradient(180deg, #7b4b16, #4b2b0b) !important;
+  color: #ffe7a8 !important;
+  font-weight: 900 !important;
+}

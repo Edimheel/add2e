@@ -16,6 +16,7 @@
   "scripts/add2e-attack.mjs",
   "scripts/add2e-action-hud.mjs",
   "scripts/add2e.mjs",
+  "scripts/add2e/22-vendor.mjs",
   "scripts/08-character-sheet-ui.mjs",
   "scripts/resolveActiveEffectsOnTarget.mjs",
   "scripts/monster-sheet.mjs"
@@ -86,10 +87,17 @@
       "path": "packs/objets-magiques",
       "type": "Item"
     },
+<<<<<<< HEAD
         {
       "name": "equipements",
       "label": "Equipements",
       "path": "packs/equipements",
+=======
+     {
+      "name": "equipements",
+      "label": "Equipements",
+      "path": "packs/equipementss",
+>>>>>>> 0753e0a54b2eb556ac3a95e30d0c21fff263accf
       "type": "Item"
     }
   ]

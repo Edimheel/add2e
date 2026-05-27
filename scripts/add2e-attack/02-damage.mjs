@@ -1,7 +1,7 @@
 // scripts/add2e-attack/02-damage.mjs
 // ADD2E — Application des dégâts.
 
-export const ADD2E_DAMAGE_VERSION = "2026-05-23-cold-resistance-v1";
+export const ADD2E_DAMAGE_VERSION = "2026-05-27-token-namespace-status-v2";
 
 function add2eDamageNormTag(value) {
   return String(value ?? "")
@@ -88,6 +88,39 @@ function add2eDamageColdSaveBonus(tags) {
   return bonus || 3;
 }
 
+function add2eDamageTokenClass() {
+  return foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? null;
+}
+
+function add2eDamageTokenId(cible) {
+  if (!cible) return null;
+  if (cible.token?.id) return cible.token.id;
+  const TokenClass = add2eDamageTokenClass();
+  if (TokenClass && cible instanceof TokenClass) return cible.id;
+  if (cible.documentName === "Token" || cible.constructor?.name === "TokenDocument") return cible.id;
+  return null;
+}
+
+function add2eDamageCanUseStatusEffect(id) {
+  if (!id) return false;
+  const effects = CONFIG?.statusEffects ?? [];
+  const entry = effects.find(e => e.id === id || e._id === id || e.statuses?.has?.(id));
+  if (!entry) return false;
+  return !!entry._id || !!entry.id;
+}
+
+async function add2eDamageToggleStatus(actor, id, options) {
+  if (!actor?.toggleStatusEffect || !add2eDamageCanUseStatusEffect(id)) return false;
+  try {
+    await actor.toggleStatusEffect(id, options);
+    return true;
+  } catch (err) {
+    const msg = String(err?.message ?? err ?? "");
+    if (msg.includes("implicit statuses must have a static _id")) return false;
+    throw err;
+  }
+}
+
 async function add2eDamageRollSave(actor, bonus) {
   const saveVal = add2eDamageSaveVsSpells(actor);
   if (!Number.isFinite(saveVal) || saveVal <= 0) {
@@ -164,7 +197,7 @@ export async function add2eApplyDamage({ cible, montant, type = "", details = ""
 
     game.socket.emit("system.add2e", {
       type: "applyDamageFlag",
-      tokenId: cible.token?.id || (cible instanceof Token ? cible.id : null),
+      tokenId: add2eDamageTokenId(cible),
       actorId: cible.actor?.id || cible.id,
       flagData: {
         montant: baseDmg,
@@ -199,20 +232,16 @@ export async function add2eApplyDamage({ cible, montant, type = "", details = ""
   try {
     const DEAD_STATUS = "dead";
     const UNCONSCIOUS_STATUS = "unconscious";
-    const toggleStatus = async (id, options) => {
-      if (!id) return;
-      await actor.toggleStatusEffect(id, options);
-    };
 
     if (newHP <= -11) {
-      await toggleStatus(UNCONSCIOUS_STATUS, { active: false, overlay: false });
-      await toggleStatus(DEAD_STATUS, { active: true, overlay: true });
+      await add2eDamageToggleStatus(actor, UNCONSCIOUS_STATUS, { active: false, overlay: false });
+      await add2eDamageToggleStatus(actor, DEAD_STATUS, { active: true, overlay: true });
     } else if (newHP <= 0) {
-      await toggleStatus(DEAD_STATUS, { active: false, overlay: false });
-      await toggleStatus(UNCONSCIOUS_STATUS, { active: true, overlay: true });
+      await add2eDamageToggleStatus(actor, DEAD_STATUS, { active: false, overlay: false });
+      await add2eDamageToggleStatus(actor, UNCONSCIOUS_STATUS, { active: true, overlay: true });
     } else {
-      await toggleStatus(DEAD_STATUS, { active: false, overlay: false });
-      await toggleStatus(UNCONSCIOUS_STATUS, { active: false, overlay: false });
+      await add2eDamageToggleStatus(actor, DEAD_STATUS, { active: false, overlay: false });
+      await add2eDamageToggleStatus(actor, UNCONSCIOUS_STATUS, { active: false, overlay: false });
     }
   } catch (e) {
     console.warn("ADD2E SOCKET | Erreur mise à jour overlay HP :", e);
