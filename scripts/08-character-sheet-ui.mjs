@@ -20,6 +20,8 @@ console.log("[ADD2E][CHARACTER_UI][VERSION]", ADD2E_CHARACTER_SHEET_UI_VERSION);
 const ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE = "add2e";
 const ADD2E_PROJECTILE_COMBAT_FLAG_KEY = "projectilesDepensesCombat";
 const ADD2E_PROJECTILE_SOCKET_TYPE = "ADD2E_PROJECTILE_SPENT_REQUEST";
+const ADD2E_PROJECTILE_RECOVERY_SOCKET_TYPE = "ADD2E_PROJECTILE_RECOVERY_RESULT";
+const ADD2E_PROJECTILE_RECOVERY_RATE = 0.6;
 
 export function add2eEnhanceCharacterSheetUi(sheet, html) {
   const actor = sheet?.actor ?? sheet?.document;
@@ -86,6 +88,12 @@ function add2eIsResponsibleGM() {
   return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
 }
 
+function add2eEscapeHtml(value) {
+  const div = document.createElement("div");
+  div.textContent = String(value ?? "");
+  return div.innerHTML;
+}
+
 function add2eProjectileBuildSpentDeltas(combatId, value) {
   const deltas = [];
   const lastSent = globalThis.__ADD2E_PROJECTILE_LAST_SENT ?? {};
@@ -103,8 +111,10 @@ function add2eProjectileBuildSpentDeltas(combatId, value) {
 
       const key = `${combatId}:${actorId}:${itemId}`;
       const previous = Math.max(0, Math.floor(Number(lastSent[key] ?? 0)));
-      const delta = spent > previous ? spent - previous : 1;
-      lastSent[key] = Math.max(spent, previous + delta);
+      if (spent <= previous) continue;
+
+      const delta = spent - previous;
+      lastSent[key] = spent;
 
       deltas.push({
         actorId,
@@ -154,21 +164,97 @@ async function add2eProjectileMergeSpentDeltas({ combatId, deltas = [] } = {}) {
   return true;
 }
 
+function add2eProjectileBuildRecoveryRows(combat) {
+  const spent = foundry.utils.deepClone(combat?.getFlag?.(ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE, ADD2E_PROJECTILE_COMBAT_FLAG_KEY) ?? {});
+  const rows = [];
+
+  for (const actorEntry of Object.values(spent)) {
+    const actor = game.actors?.get(actorEntry.actorId);
+    if (!actor || game.user?.isGM || !actor.isOwner) continue;
+
+    for (const itemEntry of Object.values(actorEntry.items ?? {})) {
+      const qtySpent = Math.max(0, Math.floor(Number(itemEntry.spent ?? 0)));
+      if (!qtySpent) continue;
+      rows.push({
+        actor: actor.name,
+        item: itemEntry.itemName ?? "Projectile",
+        spent: qtySpent,
+        recovered: Math.max(0, Math.round(qtySpent * ADD2E_PROJECTILE_RECOVERY_RATE))
+      });
+    }
+  }
+
+  return rows;
+}
+
+async function add2eProjectileShowRecoveryPopup(rows, { title = "Récupération des projectiles" } = {}) {
+  if (!rows?.length) return false;
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  const htmlRows = rows.map(row => `
+    <tr>
+      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eEscapeHtml(row.actor)}</td>
+      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eEscapeHtml(row.item)}</td>
+      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;">${row.spent}</td>
+      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;font-weight:900;color:#1f7a3f;">${row.recovered}</td>
+    </tr>`).join("");
+
+  const content = `
+    <div class="add2e-dialog add2e-vendor-alert" style="color:#2f250c;">
+      <h3>Récupération des projectiles</h3>
+      <p>Fin de combat : 60 % des projectiles dépensés sont récupérés.</p>
+      <table style="width:100%;border-collapse:collapse;background:#fffaf0;border:1px solid #d9bf73;">
+        <thead><tr style="background:#e8d08f;"><th>Acteur</th><th>Projectile</th><th>Dépensés</th><th>Récupérés</th></tr></thead>
+        <tbody>${htmlRows}</tbody>
+      </table>
+    </div>`;
+
+  if (DialogV2?.confirm) {
+    await DialogV2.confirm({
+      window: { title },
+      content,
+      yes: { label: "Compris" },
+      no: { label: "Fermer" },
+      modal: true
+    });
+  } else {
+    ui.notifications?.info?.("Récupération des projectiles effectuée.");
+  }
+  return true;
+}
+
+function add2eProjectileShowRecoveryForCombat(combat) {
+  const combatId = combat?.id ?? combat?._id ?? "combat";
+  const key = `${combatId}:${game.user?.id ?? "user"}`;
+  const seen = globalThis.__ADD2E_PROJECTILE_RECOVERY_POPUP_SEEN ?? new Set();
+  globalThis.__ADD2E_PROJECTILE_RECOVERY_POPUP_SEEN = seen;
+  if (seen.has(key)) return;
+
+  const rows = add2eProjectileBuildRecoveryRows(combat);
+  if (!rows.length) return;
+  seen.add(key);
+  add2eProjectileShowRecoveryPopup(rows).catch(err => console.warn("[ADD2E][PROJECTILES][RECOVERY_POPUP]", err));
+}
+
 function add2eRegisterProjectileSpentSocketPatch() {
-  if (globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V1) return;
-  globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V1 = true;
+  if (globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V2) return;
+  globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V2 = true;
 
   game.socket?.on?.("system.add2e", data => {
-    if (data?.type !== ADD2E_PROJECTILE_SOCKET_TYPE) return;
-    add2eProjectileMergeSpentDeltas(data).catch(err => console.warn("[ADD2E][PROJECTILES][SOCKET_MERGE]", err));
+    if (data?.type === ADD2E_PROJECTILE_SOCKET_TYPE) {
+      add2eProjectileMergeSpentDeltas(data).catch(err => console.warn("[ADD2E][PROJECTILES][SOCKET_MERGE]", err));
+      return;
+    }
+    if (data?.type === ADD2E_PROJECTILE_RECOVERY_SOCKET_TYPE && data.userId === game.user?.id) {
+      add2eProjectileShowRecoveryPopup(data.rows ?? []).catch(err => console.warn("[ADD2E][PROJECTILES][SOCKET_RECOVERY_POPUP]", err));
+    }
   });
 
   const CombatClass = CONFIG?.Combat?.documentClass ?? foundry?.documents?.Combat ?? globalThis.Combat;
   const proto = CombatClass?.prototype;
-  if (!proto?.setFlag || proto.__add2eProjectileSpentSetFlagPatched) return;
+  if (!proto?.setFlag || proto.__add2eProjectileSpentSetFlagPatchedV2) return;
 
   const originalSetFlag = proto.setFlag;
-  proto.__add2eProjectileSpentSetFlagPatched = true;
+  proto.__add2eProjectileSpentSetFlagPatchedV2 = true;
   proto.setFlag = async function add2eProjectileSpentSetFlag(scope, key, value, ...rest) {
     if (!game.user?.isGM && scope === ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE && key === ADD2E_PROJECTILE_COMBAT_FLAG_KEY) {
       const combatId = this.id;
@@ -187,11 +273,45 @@ function add2eRegisterProjectileSpentSocketPatch() {
   };
 }
 
+function add2eRegisterProjectileSpendUpdateGuard() {
+  if (globalThis.__ADD2E_PROJECTILE_SPEND_UPDATE_GUARD_V1) return;
+  const ItemClass = CONFIG?.Item?.documentClass ?? globalThis.Item;
+  const proto = ItemClass?.prototype;
+  if (!proto?.update) return;
+
+  const originalUpdate = proto.update;
+  globalThis.__ADD2E_PROJECTILE_SPEND_UPDATE_GUARD_V1 = true;
+  proto.update = async function add2eProjectileSpendGuardedUpdate(data = {}, options = {}, ...rest) {
+    if (options?.add2eReason === "projectile-spent-attack") {
+      const actorId = this.parent?.id ?? "actor";
+      const itemId = this.id ?? this.name ?? "item";
+      const key = `${actorId}:${itemId}`;
+      const now = Date.now();
+      const last = globalThis.__ADD2E_PROJECTILE_LAST_ITEM_SPEND ?? {};
+      globalThis.__ADD2E_PROJECTILE_LAST_ITEM_SPEND = last;
+      if (last[key] && now - last[key] < 650) {
+        return this;
+      }
+      last[key] = now;
+    }
+    return originalUpdate.call(this, data, options, ...rest);
+  };
+}
+
 Hooks.on("renderActorSheet", bindOnRender);
 Hooks.on("renderApplication", bindOnRender);
+Hooks.on("deleteCombat", combat => {
+  window.setTimeout(() => add2eProjectileShowRecoveryForCombat(combat), 100);
+});
+Hooks.on("updateCombat", (combat, changed) => {
+  if (changed?.active === false || changed?.round === null) {
+    window.setTimeout(() => add2eProjectileShowRecoveryForCombat(combat), 100);
+  }
+});
 
 Hooks.once("ready", () => {
   add2eRegisterProjectileSpentSocketPatch();
+  add2eRegisterProjectileSpendUpdateGuard();
 });
 
 for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
@@ -202,3 +322,4 @@ for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
 
 expose("add2eEnhanceCharacterSheetUi", add2eEnhanceCharacterSheetUi);
 expose("add2eProjectileMergeSpentDeltas", add2eProjectileMergeSpentDeltas);
+expose("add2eProjectileShowRecoveryPopup", add2eProjectileShowRecoveryPopup);
