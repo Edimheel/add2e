@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-style-v2";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-compact-top-v1";
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -56,6 +56,7 @@ class Add2eCaracRoller {
     this._dlgRoot = null;
     this._applied = false;
     this._closing = false;
+    this._keepOnTopTimer = null;
     this._uid = `add2e-carac-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     this._sheetTargetHandler = this._onSheetTargetClick.bind(this);
     this._oldValues = {};
@@ -97,7 +98,7 @@ class Add2eCaracRoller {
         }
       ],
       close: () => this._onDialogClosed()
-    }, { width: 560, height: "auto" });
+    }, { width: 460, height: "auto" });
 
     this.dialogRef.render({ force: true });
 
@@ -111,6 +112,8 @@ class Add2eCaracRoller {
       this._bindSheetTargets();
       this._updateCaracDisplay();
       this._updateAssignLabels();
+      this._keepDialogOnTop();
+      this._startKeepOnTop();
       this.classesSynthese().then(html => this._setClassesHtml(html));
     }, 0);
 
@@ -126,47 +129,69 @@ class Add2eCaracRoller {
       <button type="button"
         class="add2e-carac-value"
         data-idx="${i}"
-        style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:58px;height:62px;padding:6px 10px;border:1px solid #b8935d;border-radius:10px;background:linear-gradient(180deg,#f5dfae 0%,#d3a967 100%);box-shadow:0 2px 7px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.55);color:#2b1b0d;cursor:pointer;font-weight:700;line-height:1;"
+        style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:46px;height:48px;padding:4px 7px;border:1px solid #b8935d;border-radius:8px;background:linear-gradient(180deg,#f5dfae 0%,#d3a967 100%);box-shadow:0 2px 6px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.55);color:#2b1b0d;cursor:pointer;font-weight:700;line-height:1;"
       >
-        <span class="add2e-carac-score" style="font-size:1.35rem;line-height:1;">${v}</span>
-        <span class="assigned-label" style="font-size:.72rem;min-height:.85rem;color:#5b3514;font-weight:800;letter-spacing:.04em;">—</span>
+        <span class="add2e-carac-score" style="font-size:1.12rem;line-height:1;">${v}</span>
+        <span class="assigned-label" style="font-size:.62rem;min-height:.72rem;color:#5b3514;font-weight:800;letter-spacing:.04em;">—</span>
       </button>`).join("");
 
     return `
       <style>
         .add2e-carac-popup .add2e-carac-value:hover { filter: brightness(1.08); transform: translateY(-1px); }
-        .add2e-carac-popup .add2e-carac-value.selected { outline: 3px solid #f0d27a !important; box-shadow: 0 0 0 2px #6b3ca0, 0 0 16px rgba(240,210,122,.55) !important; }
+        .add2e-carac-popup .add2e-carac-value.selected { outline: 2px solid #f0d27a !important; box-shadow: 0 0 0 2px #6b3ca0, 0 0 12px rgba(240,210,122,.55) !important; }
         .add2e-carac-popup .add2e-carac-value.used { opacity: .65 !important; background: linear-gradient(180deg,#7c766e 0%,#4d4945 100%) !important; color: #f4eadc !important; cursor: not-allowed !important; }
         .add2e-carac-popup .add2e-carac-value.used .assigned-label { color: #f0d27a !important; }
-        .add2e-carac-popup .carac-class-list li { margin: 0 0 4px 0; }
+        .add2e-carac-popup .carac-class-list li { margin: 0 0 3px 0; }
         .add2e-carac-popup .carac-class-list b { color: #b879ff; }
         .add2e-carac-popup .carac-class-list .carac-ok { color: #42d681; font-weight: 800; }
       </style>
-      <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}" style="box-sizing:border-box;width:100%;padding:12px 14px 4px 14px;color:#f1e8dc;background:radial-gradient(circle at 85% 20%,rgba(151,87,255,.16),transparent 35%),linear-gradient(180deg,rgba(34,27,42,.96),rgba(17,14,22,.96));border-radius:8px;">
-        <div style="border:1px solid rgba(214,176,116,.35);border-radius:10px;background:rgba(0,0,0,.18);padding:10px 12px;margin-bottom:12px;box-shadow:inset 0 0 16px rgba(0,0,0,.2);">
-          <div style="font-size:1.02rem;font-weight:800;color:#f5dfae;margin-bottom:4px;">Affectation des caractéristiques</div>
-          <div style="font-size:.88rem;line-height:1.35;color:#d8c9b4;">
+      <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}" style="box-sizing:border-box;width:100%;padding:8px 10px 2px 10px;color:#f1e8dc;background:radial-gradient(circle at 85% 20%,rgba(151,87,255,.14),transparent 35%),linear-gradient(180deg,rgba(34,27,42,.96),rgba(17,14,22,.96));border-radius:8px;">
+        <div style="border:1px solid rgba(214,176,116,.32);border-radius:8px;background:rgba(0,0,0,.18);padding:7px 9px;margin-bottom:9px;box-shadow:inset 0 0 12px rgba(0,0,0,.18);">
+          <div style="font-size:.94rem;font-weight:800;color:#f5dfae;margin-bottom:2px;">Affectation des caractéristiques</div>
+          <div style="font-size:.78rem;line-height:1.25;color:#d8c9b4;">
             Cliquez sur une valeur, puis sur une caractéristique de la fiche. Cliquez sur une caractéristique déjà affectée pour la libérer.
           </div>
         </div>
 
-        <div class="add2e-carac-values" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin:0 0 14px 0;">
+        <div class="add2e-carac-values" style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:center;margin:0 0 9px 0;">
           ${valueCards}
         </div>
 
-        <div id="classes-suggestions" style="margin:0 0 12px 0;padding:10px 12px;border:1px solid rgba(214,176,116,.28);border-radius:10px;background:rgba(0,0,0,.20);max-height:260px;overflow:auto;"></div>
+        <div id="classes-suggestions" style="margin:0 0 8px 0;padding:8px 10px;border:1px solid rgba(214,176,116,.26);border-radius:8px;background:rgba(0,0,0,.20);max-height:175px;overflow:auto;"></div>
 
-        <div class="add2e-carac-apply" style="display:flex;justify-content:center;margin-top:10px;">
-          <button type="button" class="apply-caracs-btn" style="min-width:170px;padding:8px 18px;border:1px solid #d8b16c;border-radius:8px;background:linear-gradient(180deg,#8e44ad 0%,#5d2c7d 100%);color:#fff7e8;font-weight:800;letter-spacing:.02em;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35);">Valider</button>
+        <div class="add2e-carac-apply" style="display:flex;justify-content:center;margin-top:7px;">
+          <button type="button" class="apply-caracs-btn" style="min-width:140px;padding:6px 14px;border:1px solid #d8b16c;border-radius:7px;background:linear-gradient(180deg,#8e44ad 0%,#5d2c7d 100%);color:#fff7e8;font-weight:800;letter-spacing:.02em;cursor:pointer;box-shadow:0 2px 7px rgba(0,0,0,.32);">Valider</button>
         </div>
       </div>
     `;
+  }
+
+  _dialogWindowElement() {
+    return this._dlgRoot?.closest?.(".application, .window-app, .app, .dialog") ?? null;
+  }
+
+  _keepDialogOnTop() {
+    const win = this._dialogWindowElement();
+    if (!win) return;
+    win.style.zIndex = "2147483000";
+    win.dataset.add2eAlwaysOnTop = "carac-roller";
+  }
+
+  _startKeepOnTop() {
+    this._stopKeepOnTop();
+    this._keepOnTopTimer = setInterval(() => this._keepDialogOnTop(), 350);
+  }
+
+  _stopKeepOnTop() {
+    if (this._keepOnTopTimer) clearInterval(this._keepOnTopTimer);
+    this._keepOnTopTimer = null;
   }
 
   _bindDialogEvents() {
     this._dlgRoot.querySelectorAll(".add2e-carac-value").forEach(el => {
       el.addEventListener("click", ev => {
         ev.preventDefault();
+        this._keepDialogOnTop();
         const idx = Number(el.dataset.idx);
         if (this.used[idx]) return;
         this.selectedIdx = idx;
@@ -176,6 +201,7 @@ class Add2eCaracRoller {
 
     this._dlgRoot.querySelector(".apply-caracs-btn")?.addEventListener("click", ev => {
       ev.preventDefault();
+      this._keepDialogOnTop();
       this.apply();
     });
   }
@@ -208,6 +234,7 @@ class Add2eCaracRoller {
   _onSheetTargetClick(ev) {
     ev.preventDefault();
     ev.stopPropagation();
+    this._keepDialogOnTop();
     const carac = ev.currentTarget?.dataset?.carac;
     if (!ADD2E_CARACS.includes(carac)) return;
     if (this.assigned[carac] !== undefined) this.unassignCarac(carac);
@@ -240,6 +267,7 @@ class Add2eCaracRoller {
   _refreshUi() {
     this._updateCaracDisplay();
     this._updateAssignLabels();
+    this._keepDialogOnTop();
     this._setClassesHtml("<em>Actualisation...</em>");
     this.classesSynthese().then(html => this._setClassesHtml(html));
   }
@@ -283,8 +311,8 @@ class Add2eCaracRoller {
     if (!classes.length) return "<em>Aucune classe trouvée</em>";
 
     const values = [...this.values].sort((a, b) => b - a);
-    let html = '<div style="margin:0 0 8px 0;font-size:1rem;color:#f5dfae;font-weight:800;">Classes accessibles et valeur à placer :</div>';
-    html += '<ul class="carac-class-list" style="padding-left:1.15em;margin:0;line-height:1.45;font-size:.96rem;">';
+    let html = '<div style="margin:0 0 6px 0;font-size:.92rem;color:#f5dfae;font-weight:800;">Classes accessibles et valeur à placer :</div>';
+    html += '<ul class="carac-class-list" style="padding-left:1.05em;margin:0;line-height:1.32;font-size:.84rem;">';
 
     for (const cls of classes) {
       const requis = Object.entries(cls.system?.caracs_min || {});
@@ -310,6 +338,7 @@ class Add2eCaracRoller {
   _setClassesHtml(html) {
     const el = this._dlgRoot?.querySelector("#classes-suggestions");
     if (el) el.innerHTML = html;
+    this._keepDialogOnTop();
   }
 
   async _confirmOverflows(overflows) {
@@ -381,11 +410,13 @@ class Add2eCaracRoller {
   _closeDialogOnly() {
     if (this._closing) return;
     this._closing = true;
+    this._stopKeepOnTop();
     this._unbindSheetTargets();
     this.dialogRef?.close?.();
   }
 
   _onDialogClosed() {
+    this._stopKeepOnTop();
     if (!this._applied && !this._closing) {
       this._closing = true;
       this._restoreOldCaracs();
