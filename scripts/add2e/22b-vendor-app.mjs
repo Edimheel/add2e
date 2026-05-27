@@ -22,6 +22,175 @@ import {
   lower
 } from "./22a-vendor-core.mjs";
 
+const ADD2E_VENDOR_STYLE = `
+  .add2e-vendor-root {
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: linear-gradient(180deg, #fff8df 0%, #ead39b 100%);
+    color: #2f250c;
+    font-family: var(--font-primary, serif);
+  }
+  .add2e-vendor-root * { box-sizing: border-box; }
+  .add2e-vendor-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #b98b2d;
+    background: linear-gradient(180deg, #5a3511 0%, #2f1b08 100%);
+    color: #ffe7a8;
+  }
+  .add2e-vendor-header h2 {
+    margin: 0;
+    color: #ffe7a8;
+    font-weight: 950;
+    line-height: 1.1;
+    text-shadow: 0 1px 2px #000;
+  }
+  .add2e-vendor-header p {
+    margin: 4px 0 0;
+    color: #fff2c2;
+  }
+  .add2e-vendor-money {
+    padding: 6px 10px;
+    border: 1px solid #d9bf73;
+    border-radius: 999px;
+    background: #fff3c7;
+    color: #3a2208;
+    font-weight: 950;
+    white-space: nowrap;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
+  }
+  .add2e-vendor-tabs {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #d9bf73;
+    background: #f6e2ad;
+  }
+  .add2e-vendor-tabs button,
+  .add2e-vendor-buy,
+  .add2e-vendor-stock-set {
+    border: 1px solid #8d641b;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #7b4b16 0%, #4b2b0b 100%);
+    color: #ffe7a8;
+    font-weight: 900;
+    padding: 5px 10px;
+    line-height: 1.2;
+    min-height: 28px;
+    cursor: pointer;
+  }
+  .add2e-vendor-tabs button.active {
+    box-shadow: 0 0 0 2px #f0c36a inset;
+    filter: brightness(1.12);
+  }
+  .add2e-vendor-tabs button:disabled,
+  .add2e-vendor-buy:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+  .add2e-vendor-restock-all { margin-left: auto; }
+  .add2e-vendor-search {
+    flex: 0 0 auto;
+    padding: 10px 14px;
+    border-bottom: 1px solid #d9bf73;
+    background: #fff1bf;
+  }
+  .add2e-vendor-search-input {
+    width: 100%;
+    min-height: 30px;
+    padding: 5px 9px;
+    border: 1px solid #b98b2d;
+    border-radius: 8px;
+    background: #fffaf0;
+    color: #2f250c;
+    font-weight: 700;
+  }
+  .add2e-vendor-table-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    padding: 12px 14px 16px;
+  }
+  .add2e-vendor-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    background: rgba(255,252,242,.94);
+    border: 1px solid #d9bf73;
+    color: #2f250c;
+  }
+  .add2e-vendor-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #e8d08f;
+    color: #2f250c;
+    border-bottom: 1px solid #b98b2d;
+    padding: 7px 8px;
+    text-align: left;
+    font-weight: 950;
+  }
+  .add2e-vendor-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #e0c982;
+    vertical-align: middle;
+    color: #2f250c;
+    font-weight: 750;
+  }
+  .add2e-vendor-table tbody tr:nth-child(even) { background: rgba(242, 222, 169, .35); }
+  .add2e-vendor-table tbody tr:hover { background: rgba(255, 231, 168, .7); }
+  .add2e-vendor-item {
+    min-width: 260px;
+  }
+  .add2e-vendor-item-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .add2e-vendor-item img {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+    object-fit: contain !important;
+    border: 1px solid #b98b2d;
+    border-radius: 6px;
+    background: #f8edc7;
+  }
+  .add2e-vendor-item span {
+    font-weight: 950;
+    color: #2f250c;
+    white-space: normal;
+    line-height: 1.2;
+  }
+  .add2e-vendor-buy-qty,
+  .add2e-vendor-stock-qty {
+    width: 58px !important;
+    min-width: 58px !important;
+    max-width: 58px !important;
+    text-align: center;
+    border: 1px solid #b98b2d;
+    border-radius: 6px;
+    background: #fffaf0;
+    color: #2f250c;
+    font-weight: 900;
+    min-height: 28px;
+  }
+  .add2e-vendor-stock-set { margin-left: 6px; }
+`;
+
 class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
     id: "add2e-vendor-app-{id}",
@@ -53,7 +222,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
         return {
           id: item.id,
           name: item.name,
-          img: item.img,
+          img: item.img || "icons/svg/item-bag.svg",
           kind,
           tab,
           stock: quantity(item),
@@ -79,7 +248,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
     const rows = context.items.map(item => {
       const hidden = (context.activeTab !== "all" && context.activeTab !== item.tab) || (q && !item.search.includes(q));
       return `<tr data-item-id="${item.id}" data-tab="${item.tab}" data-search="${esc(item.search)}" style="${hidden ? "display:none;" : ""}">
-        <td class="add2e-vendor-item"><img src="${esc(item.img)}" alt=""><span>${esc(item.name)}</span></td>
+        <td class="add2e-vendor-item"><div class="add2e-vendor-item-wrap"><img src="${esc(item.img)}" alt=""><span>${esc(item.name)}</span></div></td>
         <td>${esc(item.kind)}</td>
         <td>${esc(item.priceLabel)}</td>
         <td>${item.stock} / ${item.stockMax}</td>
@@ -92,6 +261,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
     const div = document.createElement("div");
     div.className = "add2e-vendor-root";
     div.innerHTML = `
+      <style>${ADD2E_VENDOR_STYLE}</style>
       <header class="add2e-vendor-header">
         <div><h2>${esc(context.vendor?.name ?? "Boutique")}</h2><p>Acheteur : <strong>${esc(context.buyer?.name ?? (context.isGM ? "gestion MJ" : "aucun personnage assigné"))}</strong></p></div>
         <div class="add2e-vendor-money">${esc(context.buyerMoneyLabel)}</div>
@@ -116,6 +286,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
   _replaceHTML(result, content) {
     content.style.overflow = "hidden";
     content.style.padding = "0";
+    content.style.background = "linear-gradient(180deg, #fff8df 0%, #ead39b 100%)";
     content.replaceChildren(result);
   }
 
@@ -127,6 +298,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
     if (windowContent) {
       windowContent.style.overflow = "hidden";
       windowContent.style.padding = "0";
+      windowContent.style.background = "linear-gradient(180deg, #fff8df 0%, #ead39b 100%)";
     }
 
     root.querySelectorAll(".add2e-vendor-tabs button[data-tab]").forEach(button => {
