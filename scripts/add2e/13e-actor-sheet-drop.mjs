@@ -3,7 +3,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-05-25-drop-application-v2-objet-drop-v1";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-05-27-drop-application-v2-purge-boutique-v1";
 globalThis.ADD2E_ACTOR_SHEET_DROP_VERSION = ADD2E_ACTOR_SHEET_DROP_VERSION;
 console.log("[ADD2E][DROP][VERSION]", ADD2E_ACTOR_SHEET_DROP_VERSION);
 
@@ -13,6 +13,44 @@ function add2eDropUniqueExistingIds(collection, ids) {
       .map(id => String(id ?? "").trim())
       .filter(Boolean)
   )].filter(id => collection?.has?.(id));
+}
+
+function add2eDropArray(value) {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === undefined) return [];
+  if (typeof value === "string") return value.split(/[,;|]/g).map(v => v.trim()).filter(Boolean);
+  return [value];
+}
+
+function add2eDropItemTags(item) {
+  const sys = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return [
+    ...add2eDropArray(sys.tags),
+    ...add2eDropArray(sys.effectTags),
+    ...add2eDropArray(flags.tags)
+  ].map(t => String(t ?? "").trim().toLowerCase()).filter(Boolean);
+}
+
+function add2eDropIsBoutiqueConsumable(item) {
+  if (!item || String(item.type ?? "").toLowerCase() !== "objet") return false;
+
+  const sys = item.system ?? {};
+  const flags = item.flags?.add2e ?? {};
+  const categorie = String(sys.categorie ?? sys.category ?? "").trim().toLowerCase();
+  const sousType = String(sys.sousType ?? sys.sous_type ?? "").trim().toLowerCase();
+  const type = String(sys.type ?? "").trim().toLowerCase();
+  const tags = add2eDropItemTags(item);
+
+  if (categorie === "composant_sort") return true;
+  if (categorie === "munition") return true;
+  if (type === "munition") return true;
+  if (sousType === "composant") return true;
+  if (tags.includes("composant_sort")) return true;
+  if (tags.includes("munition") || tags.includes("trait:munition")) return true;
+  if (tags.some(t => t.startsWith("composant:"))) return true;
+  if (flags.purchasedFromVendor === true && (categorie || sousType || type || tags.length)) return true;
+  return false;
 }
 
 async function add2eDropBulkDelete(actor, documentName, ids, label) {
@@ -84,13 +122,15 @@ async function add2eDropPurgeClassContent(actor, itemData) {
   const typesToDelete = ["classe", "sort", "arme", "armure", "spell", "weapon", "armor"];
 
   const itemsToDelete = actor.items.filter(i =>
-    typesToDelete.includes(String(i.type || "").toLowerCase())
+    typesToDelete.includes(String(i.type || "").toLowerCase()) || add2eDropIsBoutiqueConsumable(i)
   );
 
   console.log("[ADD2E][DROP CLASSE][PURGE] items à supprimer :", itemsToDelete.map(i => ({
     id: i.id,
     name: i.name,
     type: i.type,
+    categorie: i.system?.categorie ?? null,
+    sousType: i.system?.sousType ?? i.system?.sous_type ?? null,
     uuid: i.uuid
   })));
 
@@ -133,6 +173,7 @@ async function add2eResolveDropItemData(raw) {
 
 try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_e) {}
 try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_e) {}
+try { globalThis.add2eDropIsBoutiqueConsumable = add2eDropIsBoutiqueConsumable; } catch (_e) {}
 
 globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
   event.preventDefault?.();
