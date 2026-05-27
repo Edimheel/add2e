@@ -22,7 +22,7 @@
               <table class="a2e-table">
                 <tbody>
                   <tr><th>Arme</th><td>{{{combatDefense.arme}}}</td></tr>
-                  <tr><th>Dégâts</th><td>{{combatDefense.degats}}</td></tr>
+                  <tr><th>Dégâts</th><td>{{add2eWeaponDisplayDamage actor.system.arme_equipee listeObjets}}</td></tr>
                   <tr><th>Bonus toucher</th><td>{{combatDefense.bonus_toucher}}</td></tr>
                   <tr><th>Bonus dégâts</th><td>{{combatDefense.bonus_degats}}</td></tr>
                   <tr><th>THAC0</th><td>{{combatDefense.thaco}}</td></tr>
@@ -46,7 +46,7 @@
                       <td><img class="arme-img-attack" data-item-id="{{arme._id}}" src="{{arme.img}}" title="Attaquer avec {{arme.name}}" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;"></td>
                       <td><b>{{arme.name}}</b></td>
                       <td>{{#if arme.system.equipee}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td>
-                      <td>{{arme.system.dégâts.contre_moyen}} / {{arme.system.dégâts.contre_grand}}</td>
+                      <td>{{add2eWeaponDisplayDamage arme ../listeObjets}}</td>
                       <td>{{arme.system.type_degats}}</td>
                       <td>{{arme.system.bonus_hit}}</td>
                       <td>{{arme.system.bonus_dom}}</td>
@@ -73,7 +73,7 @@
           <div class="a2e-panel-body">
             <table class="a2e-table add2e-quiver-table">
               <thead>
-                <tr><th>État</th><th>Projectile</th><th>Type</th><th>Qté</th><th>Bonus</th><th>Récup.</th><th>Actions</th></tr>
+                <tr><th>État</th><th>Projectile</th><th>Type</th><th>Dégâts</th><th>Qté</th><th>Bonus</th><th>Récup.</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 {{#each listeObjets as |munition|}}
@@ -82,6 +82,7 @@
                       <td>{{#if munition.system.equipee}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td>
                       <td><b>{{munition.name}}</b></td>
                       <td>{{munition.system.sousType}}</td>
+                      <td>{{add2eItemDisplayDamage munition}}</td>
                       <td>{{munition.system.quantite}}</td>
                       <td>{{munition.system.bonus_hit}} / {{munition.system.bonus_dom}}</td>
                       <td>{{#if munition.system.recuperable}}{{munition.system.taux_recuperation}}{{else}}Non{{/if}}</td>
