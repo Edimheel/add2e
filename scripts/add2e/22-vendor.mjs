@@ -1,11 +1,12 @@
 // ADD2E — Vendeur système : composants, projectiles et monnaie complète
 // ApplicationV2 + DialogV2, création automatique au premier lancement du monde.
 
-const ADD2E_VENDOR_VERSION = "2026-05-27-vendor-v10-projectile-recovery";
+const ADD2E_VENDOR_VERSION = "2026-05-27-vendor-v11-v14-token-folder-projectiles";
 globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
 
 const ADD2E_VENDOR_FLAG_SCOPE = "add2e";
 const ADD2E_VENDOR_NAME = "Marchand de composants et projectiles";
+const ADD2E_VENDOR_FOLDER_NAME = "ADD2E — Boutique";
 const ADD2E_VENDOR_CREATION_SETTING = "vendorCreationVersion";
 const ADD2E_VENDOR_TOKEN_SIZE = 2;
 const ADD2E_VENDOR_TOKEN_IMG = "systems/add2e/assets/ui/boutique.webp";
@@ -37,6 +38,14 @@ function add2eVendorSlug(value) {
     .replace(/[’']/g, "_")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
+}
+
+function add2eVendorLower(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 function add2eVendorEscape(value) {
@@ -72,9 +81,37 @@ function add2eVendorSetQuantityPath(value) {
 
 function add2eVendorIsAmmunition(item) {
   const sys = item?.system ?? {};
-  if (String(sys.categorie ?? "").toLowerCase() === "munition") return true;
-  if (String(sys.type ?? "").toLowerCase() === "munition") return true;
-  return add2eVendorTags(item).some(tag => ["munition", "trait:munition"].includes(String(tag).toLowerCase()));
+  const name = add2eVendorLower(item?.name);
+  const values = [
+    sys.categorie,
+    sys.category,
+    sys.sousType,
+    sys.sous_type,
+    sys.type,
+    sys.subtype,
+    sys.kind,
+    sys.slot
+  ].map(add2eVendorLower).filter(Boolean);
+  const tags = add2eVendorTags(item).map(add2eVendorLower);
+  const accepted = new Set([
+    "munition",
+    "munitions",
+    "projectile",
+    "projectiles",
+    "ammo",
+    "ammunition",
+    "trait:munition",
+    "trait:projectile",
+    "categorie:munition",
+    "categorie:projectile",
+    "type:munition",
+    "type:projectile"
+  ]);
+
+  if (values.some(v => accepted.has(v))) return true;
+  if (tags.some(t => accepted.has(t) || t.startsWith("munition:") || t.startsWith("projectile:"))) return true;
+  if (/\b(fleche|fleches|carreau|carreaux|trait|traits|bille|billes|pierre de fronde|pierres de fronde|munition|munitions|projectile|projectiles)\b/.test(name)) return true;
+  return false;
 }
 
 function add2eVendorIsSpellComponent(item) {
@@ -86,7 +123,7 @@ function add2eVendorIsSpellComponent(item) {
 
 function add2eVendorIsMagicStockItem(item) {
   const sys = item?.system ?? {};
-  const name = String(item?.name ?? "").toLowerCase();
+  const name = add2eVendorLower(item?.name);
   const tags = add2eVendorTags(item).map(t => String(t).toLowerCase());
   const category = String(sys.categorie ?? sys.category ?? sys.sousType ?? sys.sous_type ?? "").toLowerCase();
 
@@ -270,7 +307,7 @@ async function add2eVendorMergeOrCreateItem(actor, sourceItem, quantity) {
 function add2eVendorWeaponRequiresProjectile(arme) {
   const sys = arme?.system ?? {};
   const tags = add2eVendorTags(arme).map(t => String(t).toLowerCase());
-  const name = String(arme?.name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const name = add2eVendorLower(arme?.name);
   const hasRange = Number(sys.portee_courte ?? 0) > 0;
   if (!hasRange) return false;
   if (tags.some(t => ["usage:projectile_propulse", "categorie:projectile_propulse", "trait:projectile_propulse", "type:projectile_propulse", "arme:projectile_propulse"].includes(t))) return true;
@@ -404,8 +441,8 @@ async function add2eVendorRecoverProjectilesForCombat(combat) {
 }
 
 function add2eRegisterProjectileRecoveryHooks() {
-  if (globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V10) return;
-  globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V10 = true;
+  if (globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V11) return;
+  globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V11 = true;
 
   Hooks.on("deleteCombat", combat => {
     add2eVendorRecoverProjectilesForCombat(combat).catch(err => console.warn("[ADD2E][PROJECTILES][RECOVERY][deleteCombat]", err));
@@ -420,11 +457,11 @@ function add2eRegisterProjectileRecoveryHooks() {
 }
 
 function add2ePatchAttackRollProjectileConsumption() {
-  if (globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V10) return;
+  if (globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V11) return;
   const original = globalThis.add2eAttackRoll;
   if (typeof original !== "function") return;
 
-  globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V10 = true;
+  globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V11 = true;
   globalThis.add2eAttackRoll = async function add2eAttackRollWithProjectiles(args = {}) {
     const actor = args.actor ?? (args.actorId ? game.actors?.get(args.actorId) : null);
     const arme = args.arme ?? (actor && args.itemId ? actor.items?.get(args.itemId) : null);
@@ -596,8 +633,38 @@ async function add2eVendorBuildStockData() {
   });
 }
 
+async function add2eVendorEnsureStock(vendor) {
+  if (!game.user?.isGM || !vendor) return 0;
+  const docs = await add2eVendorBuildStockData();
+  const existing = Array.from(vendor.items ?? []);
+  const toCreate = docs.filter(doc => !existing.some(item => add2eVendorSameItemIdentity(item, doc)));
+  if (toCreate.length) {
+    await vendor.createEmbeddedDocuments("Item", toCreate, { add2eReason: "vendor-ensure-stock" });
+    ui.notifications?.info?.(`${vendor.name} : ${toCreate.length} article(s) ajouté(s) au stock.`);
+  }
+  return toCreate.length;
+}
+
 export function add2eFindDefaultVendor() {
   return Array.from(game.actors ?? []).find(actor => add2eIsVendorActor(actor)) ?? null;
+}
+
+async function add2eVendorEnsureFolder() {
+  if (!game.user?.isGM) return null;
+  const existing = Array.from(game.folders ?? []).find(f => f.type === "Actor" && f.name === ADD2E_VENDOR_FOLDER_NAME);
+  if (existing) return existing;
+  return Folder.create({ name: ADD2E_VENDOR_FOLDER_NAME, type: "Actor", color: "#8d641b" }, { add2eReason: "vendor-folder-create" });
+}
+
+async function add2eVendorMoveToFolder(vendor = null) {
+  if (!game.user?.isGM) return false;
+  vendor = vendor ?? add2eFindDefaultVendor();
+  if (!vendor) return false;
+  const folder = await add2eVendorEnsureFolder();
+  if (!folder) return false;
+  if (vendor.folder?.id === folder.id || vendor.folder === folder.id) return true;
+  await vendor.update({ folder: folder.id }, { add2eReason: "vendor-folder-move" });
+  return true;
 }
 
 async function add2eUpdateVendorTokenSize(vendor = null) {
@@ -642,15 +709,19 @@ export async function add2eCreateDefaultVendor({ force = false } = {}) {
   if (!game.user?.isGM) return null;
   const existing = add2eFindDefaultVendor();
   if (existing && !force) {
+    await add2eVendorMoveToFolder(existing);
     await add2eUpdateVendorTokenSize(existing);
+    await add2eVendorEnsureStock(existing);
     return existing;
   }
 
   const stock = await add2eVendorBuildStockData();
   const observer = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OBSERVER ?? 2;
+  const folder = await add2eVendorEnsureFolder();
   const actor = await Actor.create({
     name: ADD2E_VENDOR_NAME,
     type: "personnage",
+    folder: folder?.id ?? null,
     img: ADD2E_VENDOR_TOKEN_IMG,
     ownership: { default: observer },
     prototypeToken: {
@@ -683,7 +754,9 @@ async function add2eEnsureVendorOnFirstWorldLaunch() {
   if (!game.user?.isGM) return;
   const existing = add2eFindDefaultVendor();
   if (existing) {
+    await add2eVendorMoveToFolder(existing);
     await add2eUpdateVendorTokenSize(existing);
+    await add2eVendorEnsureStock(existing);
     return;
   }
   const done = game.settings.get("add2e", ADD2E_VENDOR_CREATION_SETTING);
@@ -892,17 +965,16 @@ async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
 }
 
 function add2eBindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV10) return;
+  if (!token || token.__add2eVendorBoundV11) return;
   if (!add2eIsVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV10 = true;
+  token.__add2eVendorBoundV11 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
 
   const handler = ev => {
     try {
-      ev?.stopPropagation?.();
-      add2eOpenVendorFromToken(token, { singleClick: true });
+      window.setTimeout(() => add2eOpenVendorFromToken(token, { singleClick: true }), 0);
     } catch (err) {
       console.warn("[ADD2E][VENDOR][TOKEN_POINTER]", err);
     }
@@ -917,38 +989,38 @@ function add2eBindAllVendorTokens() {
 }
 
 function add2ePatchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V10) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V10 = true;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V11) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V11 = true;
 
   const TokenClass = globalThis.Token ?? foundry?.canvas?.placeables?.Token;
   const proto = TokenClass?.prototype;
   if (proto && typeof proto._onClickLeft === "function") {
     const original = proto._onClickLeft;
     proto._onClickLeft = function add2eVendorOnClickLeft(event) {
+      const result = original.call(this, event);
       try {
         if (add2eIsVendorActor(this.actor)) {
-          add2eOpenVendorFromToken(this, { singleClick: true });
-          return;
+          window.setTimeout(() => add2eOpenVendorFromToken(this, { singleClick: true }), 0);
         }
       } catch (err) {
         console.warn("[ADD2E][VENDOR][TOKEN_CLICK]", err);
       }
-      return original.call(this, event);
+      return result;
     };
   }
 
   if (proto && typeof proto._onClickLeft2 === "function") {
     const original2 = proto._onClickLeft2;
     proto._onClickLeft2 = function add2eVendorOnClickLeft2(event) {
+      const result = original2.call(this, event);
       try {
         if (add2eIsVendorActor(this.actor)) {
-          add2eOpenVendorFromToken(this, { singleClick: false });
-          return;
+          window.setTimeout(() => add2eOpenVendorFromToken(this, { singleClick: false }), 0);
         }
       } catch (err) {
         console.warn("[ADD2E][VENDOR][TOKEN_DOUBLE_CLICK]", err);
       }
-      return original2.call(this, event);
+      return result;
     };
   }
 
@@ -956,17 +1028,17 @@ function add2ePatchVendorTokenClick() {
   Hooks.on("createToken", () => window.setTimeout(add2eBindAllVendorTokens, 100));
   Hooks.on("updateToken", () => window.setTimeout(add2eBindAllVendorTokens, 100));
   Hooks.on("controlToken", (token, controlled) => {
-    if (controlled && add2eIsVendorActor(token?.actor)) add2eOpenVendorFromToken(token, { singleClick: true });
+    if (controlled && add2eIsVendorActor(token?.actor)) window.setTimeout(() => add2eOpenVendorFromToken(token, { singleClick: true }), 0);
   });
   Hooks.on("targetToken", (user, token, targeted) => {
-    if (user?.id === game.user?.id && targeted && add2eIsVendorActor(token?.actor)) add2eOpenVendorFromToken(token, { singleClick: true });
+    if (user?.id === game.user?.id && targeted && add2eIsVendorActor(token?.actor)) window.setTimeout(() => add2eOpenVendorFromToken(token, { singleClick: true }), 0);
   });
 }
 
 function add2ePatchActorSheetMoney() {
   const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eVendorMoneySheetV10) return;
-  proto.__add2eVendorMoneySheetV10 = true;
+  if (!proto || proto.__add2eVendorMoneySheetV11) return;
+  proto.__add2eVendorMoneySheetV11 = true;
 
   if (typeof proto.getData === "function") {
     const originalGetData = proto.getData;
@@ -1005,8 +1077,8 @@ function add2ePatchActorSheetMoney() {
 }
 
 function add2eRegisterVendorSockets() {
-  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V10) return;
-  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V10 = true;
+  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V11) return;
+  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V11 = true;
 
   game.socket?.on?.("system.add2e", async data => {
     if (!data || typeof data !== "object") return;
@@ -1077,6 +1149,8 @@ Hooks.once("ready", async () => {
   game.add2e.createDefaultVendor = add2eCreateDefaultVendor;
   game.add2e.findDefaultVendor = add2eFindDefaultVendor;
   game.add2e.updateVendorTokenSize = add2eUpdateVendorTokenSize;
+  game.add2e.ensureVendorStock = add2eVendorEnsureStock;
+  game.add2e.moveVendorToFolder = add2eVendorMoveToFolder;
   game.add2e.spendProjectileForAttack = add2eVendorSpendProjectileForAttack;
   game.add2e.recoverProjectilesForCombat = add2eVendorRecoverProjectilesForCombat;
   game.add2e.vendorMoney = {
