@@ -1,7 +1,7 @@
 // scripts/add2e-attack/02-damage.mjs
 // ADD2E — Application des dégâts.
 
-export const ADD2E_DAMAGE_VERSION = "2026-05-23-cold-resistance-v1";
+export const ADD2E_DAMAGE_VERSION = "2026-05-27-token-namespace-v1";
 
 function add2eDamageNormTag(value) {
   return String(value ?? "")
@@ -88,6 +88,19 @@ function add2eDamageColdSaveBonus(tags) {
   return bonus || 3;
 }
 
+function add2eDamageTokenClass() {
+  return foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? null;
+}
+
+function add2eDamageTokenId(cible) {
+  if (!cible) return null;
+  if (cible.token?.id) return cible.token.id;
+  const TokenClass = add2eDamageTokenClass();
+  if (TokenClass && cible instanceof TokenClass) return cible.id;
+  if (cible.documentName === "Token" || cible.constructor?.name === "TokenDocument") return cible.id;
+  return null;
+}
+
 async function add2eDamageRollSave(actor, bonus) {
   const saveVal = add2eDamageSaveVsSpells(actor);
   if (!Number.isFinite(saveVal) || saveVal <= 0) {
@@ -164,7 +177,7 @@ export async function add2eApplyDamage({ cible, montant, type = "", details = ""
 
     game.socket.emit("system.add2e", {
       type: "applyDamageFlag",
-      tokenId: cible.token?.id || (cible instanceof Token ? cible.id : null),
+      tokenId: add2eDamageTokenId(cible),
       actorId: cible.actor?.id || cible.id,
       flagData: {
         montant: baseDmg,
