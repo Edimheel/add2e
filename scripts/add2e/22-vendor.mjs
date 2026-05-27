@@ -5,7 +5,6 @@ import {
   ADD2E_VENDOR_VERSION,
   VENDOR_SETTING,
   ensureVendorOnLaunch,
-  registerSockets,
   registerRecoveryHooks,
   patchActorSheetMoney,
   patchAttackRollProjectileConsumption,
@@ -38,7 +37,6 @@ Hooks.once("ready", async () => {
 
   await ensureVendorOnLaunch().catch(err => console.warn("[ADD2E][VENDOR][AUTO_CREATE]", err));
 
-  registerSockets();
   registerRecoveryHooks();
   patchActorSheetMoney();
   patchVendorTokenClick();
