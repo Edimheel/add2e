@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-independent-class-suggestions-v2";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-prerequis-layout-v3";
 const ADD2E_CARAC_DIALOG_WIDTH = 600;
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -169,11 +169,7 @@ class Add2eCaracRoller {
         .add2e-carac-popup .add2e-carac-value.used { opacity: .82 !important; background: linear-gradient(180deg,#8b7b63 0%,#5f533f 100%) !important; color: #fff2d0 !important; cursor: pointer !important; }
         .add2e-carac-popup .add2e-carac-value.used .assigned-label { color: #ffe19b !important; }
         .add2e-carac-popup .add2e-class-tags { display:grid !important; grid-template-columns:repeat(5,minmax(0,1fr)) !important; gap:7px !important; align-items:stretch !important; width:100% !important; }
-        .add2e-carac-popup .add2e-class-suggestion { display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:flex-start !important; width:100% !important; min-width:0 !important; max-width:100% !important; gap:3px !important; border-radius:10px !important; padding:5px 5px !important; cursor:pointer !important; font-size:.74rem !important; line-height:1.08 !important; white-space:normal !important; margin:0 !important; min-height:48px !important; box-shadow:inset 0 1px 0 rgba(255,255,255,.24), 0 1px 4px rgba(0,0,0,.26) !important; }
         .add2e-carac-popup .add2e-class-suggestion:hover { filter: brightness(1.13); transform: translateY(-1px); }
-        .add2e-carac-popup .add2e-class-suggestion .class-name { display:block !important; width:100% !important; overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; text-align:center !important; font-weight:900 !important; color:inherit !important; }
-        .add2e-carac-popup .add2e-class-suggestion .class-requis { display:flex !important; flex-wrap:wrap !important; justify-content:center !important; gap:3px !important; align-items:center !important; width:100% !important; font-size:.58rem !important; line-height:1.05 !important; opacity:.96 !important; }
-        .add2e-carac-popup .add2e-class-suggestion .class-requis span { display:inline-flex !important; gap:1px !important; align-items:center !important; }
         .add2e-carac-popup .carac-ok { color: #d8ffd4; font-weight: 900; }
         .add2e-carac-popup .carac-locked { color: #ffe19b; font-weight: 900; }
         .add2e-carac-popup .class-no-requis { color: rgba(255,255,255,.82); font-style: italic; font-weight: 700; }
@@ -190,7 +186,7 @@ class Add2eCaracRoller {
           </div>
         </div>
         <div class="add2e-carac-values" style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:center;margin:0 0 9px 0;">${this._valueCardsHtml()}</div>
-        <div id="classes-suggestions" style="margin:0 0 9px 0;padding:8px 10px;border:1px solid #8a6330;border-radius:8px;background:rgba(43,28,13,.10);max-height:160px;overflow:auto;"></div>
+        <div id="classes-suggestions" style="margin:0 0 9px 0;padding:8px 10px;border:1px solid #8a6330;border-radius:8px;background:rgba(43,28,13,.10);max-height:168px;overflow:auto;"></div>
         <div class="add2e-carac-actions" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px;">
           <button type="button" class="add2e-carac-action reroll reroll-caracs-btn">Relancer</button>
           <button type="button" class="add2e-carac-action validate apply-caracs-btn">Valider</button>
@@ -445,7 +441,7 @@ class Add2eCaracRoller {
       if (idx === -1) return null;
       const picked = pool[idx];
       assignments[req.carac] = picked.idx;
-      placements.push(`<span><b>${ADD2E_CARAC_SHORT[req.carac] || add2eCaracEscapeHtml(req.carac)}</b><span class="carac-ok">${picked.value}</span></span>`);
+      placements.push(`<span style="display:inline-flex;gap:1px;align-items:center;"><b>${ADD2E_CARAC_SHORT[req.carac] || add2eCaracEscapeHtml(req.carac)}</b><span class="carac-ok">${picked.value}</span></span>`);
       pool.splice(idx, 1);
     }
 
@@ -455,7 +451,28 @@ class Add2eCaracRoller {
   _classTagStyle(className) {
     const slug = add2eCaracSlug(className);
     const [bg, fg] = ADD2E_CLASS_TAG_COLOR_BY_SLUG[slug] ?? ADD2E_CLASS_TAG_COLORS[add2eClassColorIndex(className)];
-    return `border:1px solid rgba(40,20,8,.55);background:linear-gradient(180deg,${bg},${bg}dd);color:${fg};`;
+    return [
+      "display:flex!important",
+      "flex-direction:column!important",
+      "align-items:center!important",
+      "justify-content:flex-start!important",
+      "width:100%!important",
+      "min-width:0!important",
+      "max-width:100%!important",
+      "gap:3px!important",
+      "border-radius:10px!important",
+      "padding:5px 5px!important",
+      "cursor:pointer!important",
+      "font-size:.74rem!important",
+      "line-height:1.08!important",
+      "white-space:normal!important",
+      "margin:0!important",
+      "min-height:50px!important",
+      "box-shadow:inset 0 1px 0 rgba(255,255,255,.24), 0 1px 4px rgba(0,0,0,.26)!important",
+      "border:1px solid rgba(40,20,8,.55)",
+      `background:linear-gradient(180deg,${bg},${bg}dd)`,
+      `color:${fg}`
+    ].join(";");
   }
 
   async classesSynthese() {
@@ -480,9 +497,9 @@ class Add2eCaracRoller {
       this._suggestionPlans.set(key, plan);
       count++;
       const detail = plan.placements.length
-        ? `<div class="class-requis" style="display:flex;flex-wrap:wrap;justify-content:center;gap:3px;width:100%;font-size:.58rem;line-height:1.05;margin-top:2px;">${plan.placements.join(' ')}</div>`
-        : `<div class="class-requis class-no-requis" style="display:block;width:100%;font-size:.56rem;line-height:1.05;margin-top:2px;text-align:center;">Aucun prérequis</div>`;
-      html += `<button type="button" class="add2e-class-suggestion" data-plan-key="${key}" title="Auto-affecter les prérequis" style="${this._classTagStyle(cls.name)}"><b class="class-name">${add2eCaracEscapeHtml(cls.name)}</b>${detail}</button>`;
+        ? `<span class="class-requis" style="display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:3px!important;width:100%!important;font-size:.58rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">${plan.placements.join(' ')}</span>`
+        : `<span class="class-requis class-no-requis" style="display:block!important;width:100%!important;font-size:.56rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">Aucun prérequis</span>`;
+      html += `<button type="button" class="add2e-class-suggestion" data-plan-key="${key}" title="Auto-affecter les prérequis" style="${this._classTagStyle(cls.name)}"><b class="class-name" style="display:block!important;width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:center!important;font-weight:900!important;color:inherit!important;">${add2eCaracEscapeHtml(cls.name)}</b>${detail}</button>`;
     }
 
     html += count ? "</div>" : '<em>Aucune classe ne correspond à ce tirage.</em></div>';
