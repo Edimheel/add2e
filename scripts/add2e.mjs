@@ -60,6 +60,9 @@ Hooks.once("ready", () => add2eInstallDialogV2AlertFallback());
 const ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION = "2026-05-27-vendor-projectile-gm-operation-v1";
 globalThis.ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION = ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION;
 
+const ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION = "2026-05-27-projectile-consume-gm-operation-v1";
+globalThis.ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION = ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION;
+
 function add2eVendorProjectileIsResponsibleGM() {
   if (!game.user?.isGM) return false;
   if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
@@ -70,6 +73,78 @@ function add2eVendorProjectileRequestSet() {
   const set = globalThis.__ADD2E_VENDOR_PROJECTILE_GM_RELAY_REQUESTS ?? new Set();
   globalThis.__ADD2E_VENDOR_PROJECTILE_GM_RELAY_REQUESTS = set;
   return set;
+}
+
+function add2eProjectileFixQuantity(item) {
+  const n = Number(item?.system?.quantite ?? item?.system?.quantity ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function add2eProjectileFixAmmoType(item) {
+  const sys = item?.system ?? {};
+  return String(sys.munitionType ?? sys.munition_type ?? sys.sousType ?? sys.sous_type ?? sys.categorie ?? item?.name ?? "");
+}
+
+async function add2eGmRelayConsumeProjectile(payload = {}) {
+  if (!add2eVendorProjectileIsResponsibleGM()) return false;
+
+  let actor = null;
+  if (payload.actorUuid) {
+    try { actor = await fromUuid(payload.actorUuid); }
+    catch (err) { console.warn("[ADD2E][GM-RELAY][consumeProjectile][UUID_ERROR]", payload.actorUuid, err); }
+  }
+  if (!actor && payload.actorId) actor = game.actors?.get?.(payload.actorId) ?? null;
+
+  if (!actor) {
+    console.warn("[ADD2E][GM-RELAY][consumeProjectile] acteur introuvable :", payload);
+    return false;
+  }
+
+  const item = actor.items?.get?.(payload.itemId) ?? null;
+  if (!item) {
+    console.warn("[ADD2E][GM-RELAY][consumeProjectile] projectile introuvable :", {
+      actor: actor.name,
+      itemId: payload.itemId,
+      itemName: payload.itemName
+    });
+    return false;
+  }
+
+  const quantity = Math.max(1, Math.floor(Number(payload.quantity) || 1));
+  const before = add2eProjectileFixQuantity(item);
+  const after = Math.max(0, before - quantity);
+
+  await item.update({ "system.quantite": after }, { add2eReason: "gm-relay-consume-projectile" });
+
+  if (game.combat?.setFlag) {
+    const registry = foundry.utils.deepClone(game.combat.getFlag("add2e", "projectilesDepenses") ?? {});
+    const key = `${actor.id}.${item.id}`;
+    registry[key] ??= {
+      actorId: actor.id,
+      actorName: actor.name,
+      itemId: item.id,
+      itemName: item.name,
+      ammunitionType: add2eProjectileFixAmmoType(item),
+      spent: 0,
+      restoreRate: item.system?.recuperable === false ? 0 : Number(item.system?.taux_recuperation ?? 0.6),
+      recoverable: item.system?.recuperable !== false
+    };
+    registry[key].spent = Number(registry[key].spent ?? 0) + quantity;
+    registry[key].restoreRate = item.system?.recuperable === false ? 0 : Number(item.system?.taux_recuperation ?? 0.6);
+    registry[key].recoverable = item.system?.recuperable !== false;
+    await game.combat.setFlag("add2e", "projectilesDepenses", registry);
+  }
+
+  console.log("[ADD2E][GM-RELAY][consumeProjectile] OK", {
+    actor: actor.name,
+    projectile: item.name,
+    before,
+    after,
+    quantity,
+    requestId: payload.requestId ?? null
+  });
+
+  return true;
 }
 
 async function add2eVendorRecordProjectileSpent(payload = {}) {
@@ -100,7 +175,7 @@ async function add2eVendorRecordProjectileSpent(payload = {}) {
 
   const entry = current[payload.actorId].items[key];
   entry.itemId = payload.itemId ?? entry.itemId ?? null;
-  entry.itemName = payload.itemName ?? entry.itemName ?? "Projectile";
+  entry.itemName = payload.itemName ?? "Projectile";
   entry.img = payload.img ?? entry.img ?? null;
   entry.spent = Math.max(0, Math.floor(Number(entry.spent) || 0)) + Math.max(1, Math.floor(Number(payload.quantity) || 1));
 
@@ -123,17 +198,70 @@ function add2eRegisterVendorProjectileGmRelay() {
 
   game.socket?.on?.("system.add2e", data => {
     if (!data || data.type !== "ADD2E_GM_OPERATION") return;
-    if (data.operation !== "vendorRecordProjectileSpent") return;
-    add2eVendorRecordProjectileSpent(data.payload ?? {}).catch(err => console.warn("[ADD2E][GM-RELAY][vendorRecordProjectileSpent][ERROR]", err));
+    if (data.operation === "vendorRecordProjectileSpent") {
+      add2eVendorRecordProjectileSpent(data.payload ?? {}).catch(err => console.warn("[ADD2E][GM-RELAY][vendorRecordProjectileSpent][ERROR]", err));
+      return;
+    }
+    if (data.operation === "consumeProjectile") {
+      add2eGmRelayConsumeProjectile(data.payload ?? {}).catch(err => console.warn("[ADD2E][GM-RELAY][consumeProjectile][ERROR]", err));
+      return;
+    }
   });
 
   game.add2e = game.add2e ?? {};
   game.add2e.vendorProjectileGmRelayVersion = ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION;
+  game.add2e.projectileGmConsumeFixVersion = ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION;
   globalThis.add2eGmRelayVendorRecordProjectileSpent = add2eVendorRecordProjectileSpent;
+  globalThis.add2eGmRelayConsumeProjectile = add2eGmRelayConsumeProjectile;
   console.log("[ADD2E][GM-RELAY][VENDOR_PROJECTILES]", ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION);
+  console.log("[ADD2E][GM-RELAY][CONSUME_PROJECTILE]", ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION);
 }
 
-Hooks.once("ready", () => add2eRegisterVendorProjectileGmRelay());
+function add2eInstallProjectilePlayerUpdateRelay() {
+  if (globalThis.__ADD2E_PROJECTILE_PLAYER_UPDATE_RELAY_INSTALLED) return;
+  const ItemCls = globalThis.Item;
+  if (!ItemCls?.prototype?.update) return;
+  globalThis.__ADD2E_PROJECTILE_PLAYER_UPDATE_RELAY_INSTALLED = true;
+
+  const originalUpdate = ItemCls.prototype.update;
+  ItemCls.prototype.update = async function add2eProjectileUpdateRelay(updateData = {}, options = {}, ...rest) {
+    const reason = String(options?.add2eReason ?? "");
+    if (!game.user?.isGM && reason === "consume-projectile" && this.parent?.documentName === "Actor") {
+      const actor = this.parent;
+      const current = add2eProjectileFixQuantity(this);
+      const incoming = Number(foundry.utils.getProperty(updateData, "system.quantite") ?? updateData?.system?.quantite ?? current);
+      const quantity = Math.max(1, Math.floor(current - incoming) || 1);
+      game.socket?.emit?.("system.add2e", {
+        type: "ADD2E_GM_OPERATION",
+        operation: "consumeProjectile",
+        payload: {
+          actorId: actor.id,
+          actorUuid: actor.uuid,
+          itemId: this.id,
+          itemName: this.name,
+          quantity,
+          fromUserId: game.user.id,
+          requestId: foundry.utils.randomID()
+        }
+      });
+      console.log("[ADD2E][PROJECTILES][JOUEUR->GM][consumeProjectile]", {
+        actor: actor.name,
+        projectile: this.name,
+        current,
+        incoming,
+        quantity
+      });
+      return this;
+    }
+    return originalUpdate.call(this, updateData, options, ...rest);
+  };
+}
+
+Hooks.once("init", () => add2eInstallProjectilePlayerUpdateRelay());
+Hooks.once("ready", () => {
+  add2eRegisterVendorProjectileGmRelay();
+  add2eInstallProjectilePlayerUpdateRelay();
+});
 
 function add2eRemoveLegacyClassSheetValidationHook() {
   const stores = [Hooks.events, Hooks._hooks].filter(Boolean);
