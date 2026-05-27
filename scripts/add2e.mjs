@@ -22,7 +22,6 @@ import "./add2e/09-race-class-drop.mjs";
 import "./add2e/10-monk-rules.mjs";
 import "./add2e/11-character-data-prep.mjs";
 import "./add2e/12-carac-roller.mjs";
-import "./add2e/12b-carac-roller-dialog-v2-fix.mjs";
 import "./add2e/13-actor-sheet-legacy.mjs";
 import "./add2e/14-item-sheets.mjs";
 import "./add2e/15-validation-sockets.mjs";
@@ -119,3 +118,143 @@ async function add2eGmRelayConsumeProjectile(payload = {}) {
 
   if (game.combat?.setFlag) {
     const registry = foundry.utils.deepClone(game.combat.getFlag("add2e", "projectilesDepenses") ?? {});
+    const key = `${actor.id}.${item.id}`;
+    registry[key] ??= {
+      actorId: actor.id,
+      actorName: actor.name,
+      itemId: item.id,
+      itemName: item.name,
+      ammunitionType: add2eProjectileFixAmmoType(item),
+      spent: 0,
+      restoreRate: item.system?.recuperable === false ? 0 : Number(item.system?.taux_recuperation ?? 0.6),
+      recoverable: item.system?.recuperable !== false
+    };
+    registry[key].spent = Number(registry[key].spent ?? 0) + quantity;
+    registry[key].restoreRate = item.system?.recuperable === false ? 0 : Number(item.system?.taux_recuperation ?? 0.6);
+    registry[key].recoverable = item.system?.recuperable !== false;
+    await game.combat.setFlag("add2e", "projectilesDepenses", registry);
+  }
+
+  console.log("[ADD2E][GM-RELAY][consumeProjectile] OK", {
+    actor: actor.name,
+    projectile: item.name,
+    before,
+    after,
+    quantity,
+    requestId: payload.requestId ?? null
+  });
+
+  return true;
+}
+
+async function add2eVendorRecordProjectileSpent(payload = {}) {
+  if (!add2eVendorProjectileIsResponsibleGM()) return false;
+  const combat = game.combats?.get?.(payload.combatId) ?? game.combat;
+  if (!combat?.getFlag || !combat?.setFlag || !payload.actorId) return false;
+
+  const key = payload.itemId || payload.itemName;
+  if (!key) return false;
+
+  const requestId = payload.requestId ?? null;
+  const seen = add2eVendorProjectileRequestSet();
+  if (requestId && seen.has(requestId)) return true;
+
+  const current = foundry.utils.deepClone(await combat.getFlag("add2e", "projectilesDepensesCombat") ?? {});
+  current[payload.actorId] ??= {
+    actorId: payload.actorId,
+    actorName: payload.actorName ?? "Acteur",
+    items: {}
+  };
+  current[payload.actorId].actorName = payload.actorName ?? current[payload.actorId].actorName;
+  current[payload.actorId].items[key] ??= {
+    itemId: payload.itemId ?? null,
+    itemName: payload.itemName ?? "Projectile",
+    img: payload.img ?? null,
+    spent: 0
+  };
+
+  const entry = current[payload.actorId].items[key];
+  entry.itemId = payload.itemId ?? entry.itemId ?? null;
+  entry.itemName = payload.itemName ?? "Projectile";
+  entry.img = payload.img ?? entry.img ?? null;
+  entry.spent = Math.max(0, Math.floor(Number(entry.spent) || 0)) + Math.max(1, Math.floor(Number(payload.quantity) || 1));
+
+  await combat.setFlag("add2e", "projectilesDepensesCombat", current);
+  if (requestId) seen.add(requestId);
+
+  console.log("[ADD2E][GM-RELAY][vendorRecordProjectileSpent]", {
+    combat: combat.id,
+    actorId: payload.actorId,
+    item: entry.itemName,
+    spent: entry.spent,
+    requestId
+  });
+  return true;
+}
+
+function add2eRegisterVendorProjectileGmRelay() {
+  if (globalThis.__ADD2E_VENDOR_PROJECTILE_GM_RELAY_REGISTERED) return;
+  globalThis.__ADD2E_VENDOR_PROJECTILE_GM_RELAY_REGISTERED = true;
+
+  game.socket?.on?.("system.add2e", data => {
+    if (!data || data.type !== "ADD2E_GM_OPERATION") return;
+    if (data.operation === "vendorRecordProjectileSpent") {
+      add2eVendorRecordProjectileSpent(data.payload ?? {}).catch(err => console.warn("[ADD2E][GM-RELAY][vendorRecordProjectileSpent][ERROR]", err));
+      return;
+    }
+    if (data.operation === "consumeProjectile") {
+      add2eGmRelayConsumeProjectile(data.payload ?? {}).catch(err => console.warn("[ADD2E][GM-RELAY][consumeProjectile][ERROR]", err));
+      return;
+    }
+  });
+
+  game.add2e = game.add2e ?? {};
+  game.add2e.vendorProjectileGmRelayVersion = ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION;
+  game.add2e.projectileGmConsumeFixVersion = ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION;
+  globalThis.add2eGmRelayVendorRecordProjectileSpent = add2eVendorRecordProjectileSpent;
+  globalThis.add2eGmRelayConsumeProjectile = add2eGmRelayConsumeProjectile;
+  console.log("[ADD2E][GM-RELAY][VENDOR_PROJECTILES]", ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION);
+  console.log("[ADD2E][GM-RELAY][CONSUME_PROJECTILE]", ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION);
+}
+
+function add2eInstallProjectilePlayerUpdateRelay() {
+  if (globalThis.__ADD2E_PROJECTILE_PLAYER_UPDATE_RELAY_INSTALLED) return;
+  const ItemCls = globalThis.Item;
+  if (!ItemCls?.prototype?.update) return;
+  globalThis.__ADD2E_PROJECTILE_PLAYER_UPDATE_RELAY_INSTALLED = true;
+
+  const originalUpdate = ItemCls.prototype.update;
+  ItemCls.prototype.update = async function add2eProjectileUpdateRelay(updateData = {}, options = {}, ...rest) {
+    const reason = String(options?.add2eReason ?? "");
+    if (!game.user?.isGM && reason === "consume-projectile" && this.parent?.documentName === "Actor") {
+      const actor = this.parent;
+      const current = add2eProjectileFixQuantity(this);
+      const incoming = Number(foundry.utils.getProperty(updateData, "system.quantite") ?? updateData?.system?.quantite ?? current);
+      const quantity = Math.max(1, Math.floor(current - incoming) || 1);
+      game.socket?.emit?.("system.add2e", {
+        type: "ADD2E_GM_OPERATION",
+        operation: "consumeProjectile",
+        payload: {
+          actorId: actor.id,
+          actorUuid: actor.uuid,
+          itemId: this.id,
+          itemName: this.name,
+          quantity,
+          fromUserId: game.user.id,
+          requestId: foundry.utils.randomID()
+        }
+      });
+      console.log("[ADD2E][PROJECTILES][JOUEUR->GM][consumeProjectile]", {
+        actor: actor.name,
+        projectile: this.name,
+        current,
+        incoming,
+        quantity
+      });
+      return this;
+    }
+    return originalUpdate.call(this, updateData, options, ...rest);
+  };
+}
+
+Hooks.once("init", () => add2eInstallProjectilePlayerUpdateRelay());
