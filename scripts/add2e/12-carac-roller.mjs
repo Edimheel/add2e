@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-tags-grid-v5";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-independent-class-suggestions-v1";
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -27,17 +27,7 @@ const ADD2E_CLASS_TAG_COLOR_BY_SLUG = {
   ranger: ["#2d5f55", "#d8fff4"],
   voleur: ["#4f5158", "#eef0f4"]
 };
-
-const ADD2E_CLASS_TAG_COLORS = [
-  ["#7b1e24", "#ffe1d8"],
-  ["#2f6b3f", "#e3ffd9"],
-  ["#243c78", "#dbe7ff"],
-  ["#8a4b1d", "#fff0d6"],
-  ["#5b3f95", "#f0e6ff"],
-  ["#2d5f55", "#d8fff4"],
-  ["#7b5a23", "#fff1c7"],
-  ["#4f5158", "#eef0f4"]
-];
+const ADD2E_CLASS_TAG_COLORS = Object.values(ADD2E_CLASS_TAG_COLOR_BY_SLUG);
 
 function add2eCaracEscapeHtml(value) {
   return String(value ?? "")
@@ -134,14 +124,7 @@ class Add2eCaracRoller {
     this.dialogRef = new DialogV2({
       window: { title: "Tirage des caractéristiques" },
       content: this._buildContent(),
-      buttons: [
-        {
-          action: "add2e-technical-cancel",
-          label: "Annuler",
-          default: true,
-          callback: () => this.cancel()
-        }
-      ],
+      buttons: [{ action: "add2e-technical-cancel", label: "Annuler", default: true, callback: () => this.cancel() }],
       close: () => this._onDialogClosed()
     }, { width: 500, height: "auto" });
 
@@ -149,10 +132,7 @@ class Add2eCaracRoller {
 
     setTimeout(() => {
       this._dlgRoot = document.querySelector(`[data-add2e-carac-roller="${this._uid}"]`);
-      if (!this._dlgRoot) {
-        console.warn("[ADD2E][CARAC_ROLLER] Racine de dialogue introuvable.");
-        return;
-      }
+      if (!this._dlgRoot) return console.warn("[ADD2E][CARAC_ROLLER] Racine de dialogue introuvable.");
       this._hideNativeFooter();
       this._bindDialogEvents();
       this._bindSheetTargets();
@@ -172,12 +152,8 @@ class Add2eCaracRoller {
 
   _valueCardsHtml() {
     return this.values.map((v, i) => `
-      <button type="button"
-        class="add2e-carac-value"
-        data-idx="${i}"
-        title="Cliquer pour sélectionner. Si la valeur est affectée, cliquer pour la libérer."
-        style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:46px;height:48px;padding:4px 7px;border:1px solid #7a4d21;border-radius:8px;background:linear-gradient(180deg,#fff1c8 0%,#d7a95e 100%);box-shadow:0 2px 5px rgba(50,25,8,.38), inset 0 1px 0 rgba(255,255,255,.7);color:#2b1b0d;cursor:pointer;font-weight:800;line-height:1;"
-      >
+      <button type="button" class="add2e-carac-value" data-idx="${i}" title="Cliquer pour sélectionner. Si la valeur est affectée, cliquer pour la libérer."
+        style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:46px;height:48px;padding:4px 7px;border:1px solid #7a4d21;border-radius:8px;background:linear-gradient(180deg,#fff1c8 0%,#d7a95e 100%);box-shadow:0 2px 5px rgba(50,25,8,.38), inset 0 1px 0 rgba(255,255,255,.7);color:#2b1b0d;cursor:pointer;font-weight:800;line-height:1;">
         <span class="add2e-carac-score" style="font-size:1.12rem;line-height:1;">${v}</span>
         <span class="assigned-label" style="font-size:.62rem;min-height:.72rem;color:#5b3514;font-weight:900;letter-spacing:.04em;">—</span>
       </button>`).join("");
@@ -191,10 +167,10 @@ class Add2eCaracRoller {
         .add2e-carac-popup .add2e-carac-value.used { opacity: .82 !important; background: linear-gradient(180deg,#8b7b63 0%,#5f533f 100%) !important; color: #fff2d0 !important; cursor: pointer !important; }
         .add2e-carac-popup .add2e-carac-value.used .assigned-label { color: #ffe19b !important; }
         .add2e-carac-popup .add2e-class-tags { display:grid !important; grid-template-columns:repeat(5,minmax(0,1fr)) !important; gap:7px !important; align-items:stretch !important; width:100% !important; }
-        .add2e-carac-popup .add2e-class-suggestion { display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; width:100% !important; min-width:0 !important; max-width:100% !important; gap:2px !important; border-radius:10px !important; padding:5px 6px !important; cursor:pointer !important; font-size:.76rem !important; line-height:1.1 !important; white-space:normal !important; margin:0 !important; min-height:42px !important; box-shadow:inset 0 1px 0 rgba(255,255,255,.24), 0 1px 4px rgba(0,0,0,.26) !important; }
+        .add2e-carac-popup .add2e-class-suggestion { display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; width:100% !important; min-width:0 !important; max-width:100% !important; gap:2px !important; border-radius:10px !important; padding:5px 6px !important; cursor:pointer !important; font-size:.76rem !important; line-height:1.1 !important; white-space:normal !important; margin:0 !important; min-height:46px !important; box-shadow:inset 0 1px 0 rgba(255,255,255,.24), 0 1px 4px rgba(0,0,0,.26) !important; }
         .add2e-carac-popup .add2e-class-suggestion:hover { filter: brightness(1.13); transform: translateY(-1px); }
         .add2e-carac-popup .add2e-class-suggestion .class-name { display:block !important; width:100% !important; overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; text-align:center !important; font-weight:900 !important; color:inherit !important; }
-        .add2e-carac-popup .add2e-class-suggestion .class-requis { display:flex !important; flex-wrap:wrap !important; justify-content:center !important; gap:3px !important; align-items:center !important; width:100% !important; font-size:.62rem !important; line-height:1.05 !important; opacity:.95 !important; }
+        .add2e-carac-popup .add2e-class-suggestion .class-requis { display:flex !important; flex-wrap:wrap !important; justify-content:center !important; gap:3px !important; align-items:center !important; width:100% !important; font-size:.61rem !important; line-height:1.05 !important; opacity:.96 !important; }
         .add2e-carac-popup .add2e-class-suggestion .class-requis span { display:inline-flex !important; gap:1px !important; align-items:center !important; }
         .add2e-carac-popup .carac-ok { color: #d8ffd4; font-weight: 900; }
         .add2e-carac-popup .carac-locked { color: #ffe19b; font-weight: 900; }
@@ -210,20 +186,14 @@ class Add2eCaracRoller {
             Cliquez sur une valeur puis une caractéristique. Cliquez une valeur déjà affectée pour la libérer. Cliquez une classe pour ses prérequis.
           </div>
         </div>
-
-        <div class="add2e-carac-values" style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:center;margin:0 0 9px 0;">
-          ${this._valueCardsHtml()}
-        </div>
-
-        <div id="classes-suggestions" style="margin:0 0 9px 0;padding:8px 10px;border:1px solid #8a6330;border-radius:8px;background:rgba(43,28,13,.10);max-height:150px;overflow:auto;"></div>
-
+        <div class="add2e-carac-values" style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:center;margin:0 0 9px 0;">${this._valueCardsHtml()}</div>
+        <div id="classes-suggestions" style="margin:0 0 9px 0;padding:8px 10px;border:1px solid #8a6330;border-radius:8px;background:rgba(43,28,13,.10);max-height:155px;overflow:auto;"></div>
         <div class="add2e-carac-actions" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px;">
           <button type="button" class="add2e-carac-action reroll reroll-caracs-btn">Relancer</button>
           <button type="button" class="add2e-carac-action validate apply-caracs-btn">Valider</button>
           <button type="button" class="add2e-carac-action cancel cancel-caracs-btn">Annuler</button>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 
   _dialogWindowElement() {
@@ -262,10 +232,7 @@ class Add2eCaracRoller {
         ev.preventDefault();
         this._keepDialogOnTop();
         const idx = Number(el.dataset.idx);
-        if (this.used[idx]) {
-          this.unassignCarac(this.used[idx]);
-          return;
-        }
+        if (this.used[idx]) return this.unassignCarac(this.used[idx]);
         this.selectedIdx = idx;
         this._updateAssignLabels();
       });
@@ -276,12 +243,10 @@ class Add2eCaracRoller {
       this._keepDialogOnTop();
       this.apply();
     });
-
     this._dlgRoot.querySelector(".reroll-caracs-btn")?.addEventListener("click", ev => {
       ev.preventDefault();
       this.reroll();
     });
-
     this._dlgRoot.querySelector(".cancel-caracs-btn")?.addEventListener("click", ev => {
       ev.preventDefault();
       this.cancel();
@@ -296,8 +261,7 @@ class Add2eCaracRoller {
         ev.stopPropagation();
         this._keepDialogOnTop();
         const plan = this._suggestionPlans.get(btn.dataset.planKey);
-        if (!plan) return;
-        this.applyClassSuggestion(plan);
+        if (plan) this.applyClassSuggestion(plan);
       });
     });
   }
@@ -349,15 +313,9 @@ class Add2eCaracRoller {
       if (!ADD2E_CARACS.includes(carac)) continue;
       const pending = this.assigned[carac] === undefined;
       el.classList.toggle("add2e-carac-pending", pending);
-      if (pending) {
-        el.style.outline = "2px solid #c01818";
-        el.style.outlineOffset = "2px";
-        el.style.boxShadow = "0 0 0 2px rgba(192,24,24,.22), 0 0 10px rgba(192,24,24,.45)";
-      } else {
-        el.style.outline = "";
-        el.style.outlineOffset = "";
-        el.style.boxShadow = "";
-      }
+      el.style.outline = pending ? "2px solid #c01818" : "";
+      el.style.outlineOffset = pending ? "2px" : "";
+      el.style.boxShadow = pending ? "0 0 0 2px rgba(192,24,24,.22), 0 0 10px rgba(192,24,24,.45)" : "";
     }
   }
 
@@ -374,12 +332,9 @@ class Add2eCaracRoller {
   assignToCarac(caracName) {
     if (this.selectedIdx === null) return;
     const idx = this.selectedIdx;
-
     const previousCarac = Object.keys(this.assigned).find(c => Number(this.assigned[c]) === idx);
     if (previousCarac) this.unassignCarac(previousCarac);
-
     if (this.assigned[caracName] !== undefined) delete this.used[this.assigned[caracName]];
-
     this.assigned[caracName] = idx;
     this.used[idx] = caracName;
     this.selectedIdx = null;
@@ -390,17 +345,11 @@ class Add2eCaracRoller {
     if (!plan?.assignments) return;
 
     for (const [carac, idx] of Object.entries(plan.assignments)) {
-      if (!ADD2E_CARACS.includes(carac)) continue;
       const numericIdx = Number(idx);
-      if (!Number.isFinite(numericIdx)) continue;
-
+      if (!ADD2E_CARACS.includes(carac) || !Number.isFinite(numericIdx)) continue;
       const previousCaracUsingValue = Object.keys(this.assigned).find(c => c !== carac && Number(this.assigned[c]) === numericIdx);
       if (previousCaracUsingValue) delete this.assigned[previousCaracUsingValue];
-
-      if (this.assigned[carac] !== undefined && Number(this.assigned[carac]) !== numericIdx) {
-        delete this.used[this.assigned[carac]];
-      }
-
+      if (this.assigned[carac] !== undefined && Number(this.assigned[carac]) !== numericIdx) delete this.used[this.assigned[carac]];
       this.assigned[carac] = numericIdx;
       this.used[numericIdx] = carac;
     }
@@ -463,43 +412,23 @@ class Add2eCaracRoller {
     this._updatePendingSheetBorders();
   }
 
-  _usedIndexesForRequiredCaracs(requis) {
-    const requiredCaracs = new Set(requis.map(([carac]) => carac));
-    return new Set(Object.entries(this.assigned)
-      .filter(([carac, idx]) => requiredCaracs.has(carac) && idx !== undefined && idx !== null)
-      .map(([, idx]) => Number(idx)));
-  }
-
   _classSuggestionPlan(cls) {
-    const requis = Object.entries(cls.system?.caracs_min || {});
-    const lockedRequiredIndexes = this._usedIndexesForRequiredCaracs(requis);
-    const pool = this.values
-      .map((value, idx) => ({ value, idx }))
-      .filter(entry => !lockedRequiredIndexes.has(entry.idx))
-      .sort((a, b) => b.value - a.value);
+    const requis = Object.entries(cls.system?.caracs_min || {})
+      .map(([carac, minRaw]) => ({ carac, min: Number(minRaw) || 0 }))
+      .filter(r => ADD2E_CARACS.includes(r.carac))
+      .sort((a, b) => b.min - a.min);
 
+    const pool = this.values.map((value, idx) => ({ value, idx })).sort((a, b) => b.value - a.value);
     const placements = [];
     const assignments = {};
 
-    for (const [carac, minRaw] of requis) {
-      const min = Number(minRaw) || 0;
-      const bonus = add2eCaracRaceBonus(this.actor, carac);
-
-      if (this.assigned[carac] !== undefined) {
-        const assignedIdx = Number(this.assigned[carac]);
-        const assignedBase = Number(this.values[assignedIdx]) || 0;
-        const assignedTotal = assignedBase + bonus;
-        if (assignedTotal < min) return null;
-        assignments[carac] = assignedIdx;
-        placements.push(`<span><b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b><span class="carac-locked">${assignedBase}</span></span>`);
-        continue;
-      }
-
-      const idx = pool.findIndex(entry => entry.value + bonus >= min);
+    for (const req of requis) {
+      const bonus = add2eCaracRaceBonus(this.actor, req.carac);
+      const idx = pool.findIndex(entry => entry.value + bonus >= req.min);
       if (idx === -1) return null;
       const picked = pool[idx];
-      assignments[carac] = picked.idx;
-      placements.push(`<span><b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b><span class="carac-ok">${picked.value}</span></span>`);
+      assignments[req.carac] = picked.idx;
+      placements.push(`<span><b>${ADD2E_CARAC_SHORT[req.carac] || add2eCaracEscapeHtml(req.carac)}</b><span class="carac-ok">${picked.value}</span></span>`);
       pool.splice(idx, 1);
     }
 
@@ -537,7 +466,7 @@ class Add2eCaracRoller {
       html += `<button type="button" class="add2e-class-suggestion" data-plan-key="${key}" title="Auto-affecter les prérequis" style="${this._classTagStyle(cls.name)}"><b class="class-name">${add2eCaracEscapeHtml(cls.name)}</b>${detail}</button>`;
     }
 
-    html += count ? '</div>' : '<em>Aucune classe ne correspond à cette affectation.</em></div>';
+    html += count ? "</div>" : '<em>Aucune classe ne correspond à ce tirage.</em></div>';
     return html;
   }
 
@@ -600,18 +529,22 @@ class Add2eCaracRoller {
     this._closeDialogOnly();
   }
 
-  cancel() {
-    this._restoreOldCaracs();
+  async cancel() {
+    await this._restoreOldCaracs();
     this._closeDialogOnly();
   }
 
   async _restoreOldCaracs() {
     if (this._applied || !this.actor) return;
+    this.assigned = {};
+    this.used = {};
+    this.selectedIdx = null;
+    this._updateCaracDisplay();
+    this._updateAssignLabels();
     const updates = {};
     for (const c of ADD2E_CARACS) updates[`system.${c}_base`] = this._oldValues[c];
     await this.actor.update(updates);
     if (typeof this.sheet?.autoSetCaracAjustements === "function") await this.sheet.autoSetCaracAjustements();
-    this._updateCaracDisplay();
   }
 
   _closeDialogOnly() {
