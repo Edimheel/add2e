@@ -186,7 +186,7 @@ class Add2eCaracRoller {
           </div>
         </div>
         <div class="add2e-carac-values" style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:center;margin:0 0 9px 0;">${this._valueCardsHtml()}</div>
-        <div id="classes-suggestions" style="margin:0 0 9px 0;padding:8px 10px;border:1px solid #8a6330;border-radius:8px;background:rgba(43,28,13,.10);max-height:168px;overflow:auto;"></div>
+        <div id="classes-suggestions" style="margin:0 0 9px 0;padding:8px 10px;border:1px solid #8a6330;border-radius:8px;background:rgba(43,28,13,.10);max-height:250px;overflow:auto;"></div>
         <div class="add2e-carac-actions" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px;">
           <button type="button" class="add2e-carac-action reroll reroll-caracs-btn">Relancer</button>
           <button type="button" class="add2e-carac-action validate apply-caracs-btn">Valider</button>
