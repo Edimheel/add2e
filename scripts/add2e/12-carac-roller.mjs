@@ -4,7 +4,7 @@
 // ============================================================
 
 const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-independent-class-suggestions-v2";
-const ADD2E_CARAC_DIALOG_WIDTH = 500;
+const ADD2E_CARAC_DIALOG_WIDTH = 600;
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
