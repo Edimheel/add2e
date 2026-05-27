@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-tags-horizontal-v3";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-tags-horizontal-v4";
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -328,14 +328,36 @@ class Add2eCaracRoller {
       el.removeEventListener("click", this._sheetTargetHandler);
       el.addEventListener("click", this._sheetTargetHandler);
     }
+    this._updatePendingSheetBorders();
   }
 
   _unbindSheetTargets() {
     for (const el of this._sheetTargets()) {
       if (el.dataset.add2eCaracRoller === this._uid) {
         el.removeEventListener("click", this._sheetTargetHandler);
-        el.classList.remove("clickable", "assignable", "carac-assigned");
+        el.classList.remove("clickable", "assignable", "carac-assigned", "add2e-carac-pending");
+        el.style.outline = "";
+        el.style.outlineOffset = "";
+        el.style.boxShadow = "";
         delete el.dataset.add2eCaracRoller;
+      }
+    }
+  }
+
+  _updatePendingSheetBorders() {
+    for (const el of this._sheetTargets()) {
+      const carac = el.dataset?.carac;
+      if (!ADD2E_CARACS.includes(carac)) continue;
+      const pending = this.assigned[carac] === undefined;
+      el.classList.toggle("add2e-carac-pending", pending);
+      if (pending) {
+        el.style.outline = "2px solid #c01818";
+        el.style.outlineOffset = "2px";
+        el.style.boxShadow = "0 0 0 2px rgba(192,24,24,.22), 0 0 10px rgba(192,24,24,.45)";
+      } else {
+        el.style.outline = "";
+        el.style.outlineOffset = "";
+        el.style.boxShadow = "";
       }
     }
   }
@@ -405,6 +427,7 @@ class Add2eCaracRoller {
   _refreshUi() {
     this._updateCaracDisplay();
     this._updateAssignLabels();
+    this._updatePendingSheetBorders();
     this._keepDialogOnTop();
     this._setClassesHtml("<em>Actualisation...</em>");
     this.classesSynthese().then(html => this._setClassesHtml(html));
@@ -421,6 +444,7 @@ class Add2eCaracRoller {
       if (label) label.textContent = carac ? ADD2E_CARAC_SHORT[carac] : "—";
     });
     this._sheetTargets().forEach(el => el.classList.toggle("assignable", this.selectedIdx !== null));
+    this._updatePendingSheetBorders();
   }
 
   _updateCaracDisplay() {
@@ -437,6 +461,7 @@ class Add2eCaracRoller {
           <span style="color:#555;">bonus : </span><span style="color:${bonusRacial > 0 ? '#1abc9c' : bonusRacial < 0 ? '#e74c3c' : '#777'};">${bonusRacial > 0 ? '+' : ''}${bonusRacial}</span>
         </div>`;
     }
+    this._updatePendingSheetBorders();
   }
 
   _usedIndexesForRequiredCaracs(requis) {
