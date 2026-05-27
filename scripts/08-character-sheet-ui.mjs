@@ -61,9 +61,7 @@ function add2eRefreshActorSheetsForItemChange(item, reason = "item-change") {
 
   const hasPowers = (() => {
     try {
-      if (typeof globalThis.add2eMagicObjectActivePowerEntries === "function") {
-        return globalThis.add2eMagicObjectActivePowerEntries(item).length > 0;
-      }
+      if (typeof globalThis.add2eMagicObjectActivePowerEntries === "function") return globalThis.add2eMagicObjectActivePowerEntries(item).length > 0;
     } catch (_e) {}
     const sys = item.system ?? {};
     const raw = sys.pouvoirs ?? sys.powers ?? sys.pouvoirsMagiques ?? sys.magicalPowers ?? sys.sorts ?? sys.spells ?? [];
@@ -94,6 +92,14 @@ function add2eEscapeHtml(value) {
   return div.innerHTML;
 }
 
+function add2eIsCombatDocument(doc) {
+  if (!doc) return false;
+  if (doc.documentName === "Combat") return true;
+  if (doc.constructor?.name === "Combat") return true;
+  if (game.combat && doc.id && doc.id === game.combat.id && doc.combatants !== undefined) return true;
+  return false;
+}
+
 function add2eProjectileBuildSpentDeltas(combatId, value) {
   const deltas = [];
   const lastSent = globalThis.__ADD2E_PROJECTILE_LAST_SENT ?? {};
@@ -115,18 +121,9 @@ function add2eProjectileBuildSpentDeltas(combatId, value) {
 
       const delta = spent - previous;
       lastSent[key] = spent;
-
-      deltas.push({
-        actorId,
-        actorName: actorEntry.actorName ?? "Acteur",
-        itemId: itemEntry.itemId ?? null,
-        itemName,
-        img: itemEntry.img ?? null,
-        delta
-      });
+      deltas.push({ actorId, actorName: actorEntry.actorName ?? "Acteur", itemId: itemEntry.itemId ?? null, itemName, img: itemEntry.img ?? null, delta });
     }
   }
-
   return deltas;
 }
 
@@ -143,12 +140,7 @@ function add2eProjectileEmitSpentDeltas(combat, value) {
 
   const deltas = add2eProjectileBuildSpentDeltas(combatId, value);
   if (deltas.length) {
-    game.socket?.emit?.("system.add2e", {
-      type: ADD2E_PROJECTILE_SOCKET_TYPE,
-      userId: game.user.id,
-      combatId,
-      deltas
-    });
+    game.socket?.emit?.("system.add2e", { type: ADD2E_PROJECTILE_SOCKET_TYPE, userId: game.user.id, combatId, deltas });
   }
   return true;
 }
@@ -159,25 +151,15 @@ async function add2eProjectileMergeSpentDeltas({ combatId, deltas = [] } = {}) {
   if (!combat?.setFlag || !deltas.length) return false;
 
   const current = foundry.utils.deepClone(await combat.getFlag(ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE, ADD2E_PROJECTILE_COMBAT_FLAG_KEY) ?? {});
-
   for (const deltaEntry of deltas) {
     const actorId = deltaEntry.actorId;
     const itemKey = deltaEntry.itemId || deltaEntry.itemName;
     const delta = Math.max(1, Math.floor(Number(deltaEntry.delta ?? 1)));
     if (!actorId || !itemKey) continue;
 
-    current[actorId] = current[actorId] ?? {
-      actorId,
-      actorName: deltaEntry.actorName ?? "Acteur",
-      items: {}
-    };
+    current[actorId] = current[actorId] ?? { actorId, actorName: deltaEntry.actorName ?? "Acteur", items: {} };
     current[actorId].actorName = deltaEntry.actorName ?? current[actorId].actorName;
-    current[actorId].items[itemKey] = current[actorId].items[itemKey] ?? {
-      itemId: deltaEntry.itemId ?? null,
-      itemName: deltaEntry.itemName ?? "Projectile",
-      img: deltaEntry.img ?? null,
-      spent: 0
-    };
+    current[actorId].items[itemKey] = current[actorId].items[itemKey] ?? { itemId: deltaEntry.itemId ?? null, itemName: deltaEntry.itemName ?? "Projectile", img: deltaEntry.img ?? null, spent: 0 };
     current[actorId].items[itemKey].spent = Math.max(0, Math.floor(Number(current[actorId].items[itemKey].spent ?? 0))) + delta;
     current[actorId].items[itemKey].itemName = deltaEntry.itemName ?? current[actorId].items[itemKey].itemName;
     current[actorId].items[itemKey].img = deltaEntry.img ?? current[actorId].items[itemKey].img;
@@ -190,58 +172,25 @@ async function add2eProjectileMergeSpentDeltas({ combatId, deltas = [] } = {}) {
 function add2eProjectileBuildRecoveryRows(combat) {
   const spent = foundry.utils.deepClone(combat?.getFlag?.(ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE, ADD2E_PROJECTILE_COMBAT_FLAG_KEY) ?? {});
   const rows = [];
-
   for (const actorEntry of Object.values(spent)) {
     const actor = game.actors?.get(actorEntry.actorId);
     if (!actor || game.user?.isGM || !actor.isOwner) continue;
-
     for (const itemEntry of Object.values(actorEntry.items ?? {})) {
       const qtySpent = Math.max(0, Math.floor(Number(itemEntry.spent ?? 0)));
       if (!qtySpent) continue;
-      rows.push({
-        actor: actor.name,
-        item: itemEntry.itemName ?? "Projectile",
-        spent: qtySpent,
-        recovered: Math.max(0, Math.round(qtySpent * ADD2E_PROJECTILE_RECOVERY_RATE))
-      });
+      rows.push({ actor: actor.name, item: itemEntry.itemName ?? "Projectile", spent: qtySpent, recovered: Math.max(0, Math.round(qtySpent * ADD2E_PROJECTILE_RECOVERY_RATE)) });
     }
   }
-
   return rows;
 }
 
 async function add2eProjectileShowRecoveryPopup(rows, { title = "Récupération des projectiles" } = {}) {
   if (!rows?.length) return false;
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  const htmlRows = rows.map(row => `
-    <tr>
-      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eEscapeHtml(row.actor)}</td>
-      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eEscapeHtml(row.item)}</td>
-      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;">${row.spent}</td>
-      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;font-weight:900;color:#1f7a3f;">${row.recovered}</td>
-    </tr>`).join("");
-
-  const content = `
-    <div class="add2e-dialog add2e-vendor-alert" style="color:#2f250c;">
-      <h3>Récupération des projectiles</h3>
-      <p>Fin de combat : 60 % des projectiles dépensés sont récupérés.</p>
-      <table style="width:100%;border-collapse:collapse;background:#fffaf0;border:1px solid #d9bf73;">
-        <thead><tr style="background:#e8d08f;"><th>Acteur</th><th>Projectile</th><th>Dépensés</th><th>Récupérés</th></tr></thead>
-        <tbody>${htmlRows}</tbody>
-      </table>
-    </div>`;
-
-  if (DialogV2?.confirm) {
-    await DialogV2.confirm({
-      window: { title },
-      content,
-      yes: { label: "Compris" },
-      no: { label: "Fermer" },
-      modal: true
-    });
-  } else {
-    ui.notifications?.info?.("Récupération des projectiles effectuée.");
-  }
+  const htmlRows = rows.map(row => `<tr><td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eEscapeHtml(row.actor)}</td><td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eEscapeHtml(row.item)}</td><td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;">${row.spent}</td><td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;font-weight:900;color:#1f7a3f;">${row.recovered}</td></tr>`).join("");
+  const content = `<div class="add2e-dialog add2e-vendor-alert" style="color:#2f250c;"><h3>Récupération des projectiles</h3><p>Fin de combat : 60 % des projectiles dépensés sont récupérés.</p><table style="width:100%;border-collapse:collapse;background:#fffaf0;border:1px solid #d9bf73;"><thead><tr style="background:#e8d08f;"><th>Acteur</th><th>Projectile</th><th>Dépensés</th><th>Récupérés</th></tr></thead><tbody>${htmlRows}</tbody></table></div>`;
+  if (DialogV2?.confirm) await DialogV2.confirm({ window: { title }, content, yes: { label: "Compris" }, no: { label: "Fermer" }, modal: true });
+  else ui.notifications?.info?.("Récupération des projectiles effectuée.");
   return true;
 }
 
@@ -251,7 +200,6 @@ function add2eProjectileShowRecoveryForCombat(combat) {
   const seen = globalThis.__ADD2E_PROJECTILE_RECOVERY_POPUP_SEEN ?? new Set();
   globalThis.__ADD2E_PROJECTILE_RECOVERY_POPUP_SEEN = seen;
   if (seen.has(key)) return;
-
   const rows = add2eProjectileBuildRecoveryRows(combat);
   if (!rows.length) return;
   seen.add(key);
@@ -261,11 +209,11 @@ function add2eProjectileShowRecoveryForCombat(combat) {
 function add2ePatchCombatProjectileWrite(proto) {
   if (!proto) return false;
 
-  if (typeof proto.setFlag === "function" && !proto.__add2eProjectileSpentSetFlagPatchedV3) {
+  if (typeof proto.setFlag === "function" && !proto.__add2eProjectileSpentSetFlagPatchedV4) {
     const originalSetFlag = proto.setFlag;
-    proto.__add2eProjectileSpentSetFlagPatchedV3 = true;
+    proto.__add2eProjectileSpentSetFlagPatchedV4 = true;
     proto.setFlag = async function add2eProjectileSpentSetFlag(scope, key, value, ...rest) {
-      if (!game.user?.isGM && scope === ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE && key === ADD2E_PROJECTILE_COMBAT_FLAG_KEY) {
+      if (!game.user?.isGM && add2eIsCombatDocument(this) && scope === ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE && key === ADD2E_PROJECTILE_COMBAT_FLAG_KEY) {
         add2eProjectileEmitSpentDeltas(this, value);
         return this;
       }
@@ -273,11 +221,11 @@ function add2ePatchCombatProjectileWrite(proto) {
     };
   }
 
-  if (typeof proto.update === "function" && !proto.__add2eProjectileSpentUpdatePatchedV3) {
+  if (typeof proto.update === "function" && !proto.__add2eProjectileSpentUpdatePatchedV4) {
     const originalUpdate = proto.update;
-    proto.__add2eProjectileSpentUpdatePatchedV3 = true;
+    proto.__add2eProjectileSpentUpdatePatchedV4 = true;
     proto.update = async function add2eProjectileSpentUpdate(changed = {}, options = {}, ...rest) {
-      if (!game.user?.isGM) {
+      if (!game.user?.isGM && add2eIsCombatDocument(this)) {
         const value = add2eProjectileExtractSpentFromCombatUpdate(changed);
         if (value) {
           add2eProjectileEmitSpentDeltas(this, value);
@@ -287,13 +235,12 @@ function add2ePatchCombatProjectileWrite(proto) {
       return originalUpdate.call(this, changed, options, ...rest);
     };
   }
-
   return true;
 }
 
 function add2eRegisterProjectileSpentSocketPatch() {
-  if (globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V3) return;
-  globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V3 = true;
+  if (globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V4) return;
+  globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V4 = true;
 
   game.socket?.on?.("system.add2e", data => {
     if (data?.type === ADD2E_PROJECTILE_SOCKET_TYPE) {
@@ -308,20 +255,23 @@ function add2eRegisterProjectileSpentSocketPatch() {
   const candidates = new Set([
     CONFIG?.Combat?.documentClass?.prototype,
     foundry?.documents?.Combat?.prototype,
-    game.combat?.constructor?.prototype
+    game.combat?.constructor?.prototype,
+    foundry?.abstract?.Document?.prototype,
+    foundry?.documents?.BaseCombat?.prototype,
+    globalThis.Combat?.prototype
   ].filter(Boolean));
 
   for (const proto of candidates) add2ePatchCombatProjectileWrite(proto);
 }
 
 function add2eRegisterProjectileSpendUpdateGuard() {
-  if (globalThis.__ADD2E_PROJECTILE_SPEND_UPDATE_GUARD_V1) return;
+  if (globalThis.__ADD2E_PROJECTILE_SPEND_UPDATE_GUARD_V2) return;
   const ItemClass = CONFIG?.Item?.documentClass ?? globalThis.Item;
   const proto = ItemClass?.prototype;
   if (!proto?.update) return;
 
   const originalUpdate = proto.update;
-  globalThis.__ADD2E_PROJECTILE_SPEND_UPDATE_GUARD_V1 = true;
+  globalThis.__ADD2E_PROJECTILE_SPEND_UPDATE_GUARD_V2 = true;
   proto.update = async function add2eProjectileSpendGuardedUpdate(data = {}, options = {}, ...rest) {
     if (options?.add2eReason === "projectile-spent-attack") {
       const actorId = this.parent?.id ?? "actor";
@@ -330,9 +280,7 @@ function add2eRegisterProjectileSpendUpdateGuard() {
       const now = Date.now();
       const last = globalThis.__ADD2E_PROJECTILE_LAST_ITEM_SPEND ?? {};
       globalThis.__ADD2E_PROJECTILE_LAST_ITEM_SPEND = last;
-      if (last[key] && now - last[key] < 650) {
-        return this;
-      }
+      if (last[key] && now - last[key] < 650) return this;
       last[key] = now;
     }
     return originalUpdate.call(this, data, options, ...rest);
@@ -343,13 +291,9 @@ Hooks.on("renderActorSheet", bindOnRender);
 Hooks.on("renderApplication", bindOnRender);
 Hooks.on("createCombat", () => window.setTimeout(add2eRegisterProjectileSpentSocketPatch, 100));
 Hooks.on("updateCombat", combat => window.setTimeout(add2eRegisterProjectileSpentSocketPatch, 100));
-Hooks.on("deleteCombat", combat => {
-  window.setTimeout(() => add2eProjectileShowRecoveryForCombat(combat), 100);
-});
+Hooks.on("deleteCombat", combat => window.setTimeout(() => add2eProjectileShowRecoveryForCombat(combat), 100));
 Hooks.on("updateCombat", (combat, changed) => {
-  if (changed?.active === false || changed?.round === null) {
-    window.setTimeout(() => add2eProjectileShowRecoveryForCombat(combat), 100);
-  }
+  if (changed?.active === false || changed?.round === null) window.setTimeout(() => add2eProjectileShowRecoveryForCombat(combat), 100);
 });
 
 Hooks.once("ready", () => {
@@ -358,9 +302,7 @@ Hooks.once("ready", () => {
 });
 
 for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
-  Hooks.on(hookName, (item, _changes, _options, _userId) => {
-    setTimeout(() => add2eRefreshActorSheetsForItemChange(item, hookName), 80);
-  });
+  Hooks.on(hookName, (item, _changes, _options, _userId) => setTimeout(() => add2eRefreshActorSheetsForItemChange(item, hookName), 80));
 }
 
 expose("add2eEnhanceCharacterSheetUi", add2eEnhanceCharacterSheetUi);
