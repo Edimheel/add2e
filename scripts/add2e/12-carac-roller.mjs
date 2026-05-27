@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-tags-reroll-v1";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-add2e-tags-actions-v1";
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -14,6 +14,17 @@ const ADD2E_CARAC_SHORT = {
   sagesse: "SAG",
   charisme: "CHA"
 };
+
+const ADD2E_CLASS_TAG_COLORS = [
+  ["#6f2e2e", "#f8dfb2"],
+  ["#2f5c3a", "#e4f5d8"],
+  ["#374f7a", "#dbe8ff"],
+  ["#6b4b1f", "#fff0c2"],
+  ["#5b3b7a", "#f0ddff"],
+  ["#2f6266", "#d9fbff"],
+  ["#7a3d5b", "#ffe0f0"],
+  ["#4e4a36", "#f3edcf"]
+];
 
 function add2eCaracEscapeHtml(value) {
   return String(value ?? "")
@@ -42,6 +53,13 @@ function add2eCaracRaceBonus(actor, carac) {
 
 function add2eCaracBaseValue(actor, carac) {
   return Number(actor?.system?.[`${carac}_base`] ?? actor?.system?.[carac] ?? 10) || 10;
+}
+
+function add2eClassColorIndex(name) {
+  const text = String(name ?? "");
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+  return Math.abs(hash) % ADD2E_CLASS_TAG_COLORS.length;
 }
 
 class Add2eCaracRoller {
@@ -94,16 +112,9 @@ class Add2eCaracRoller {
     this.dialogRef = new DialogV2({
       window: { title: "Tirage des caractéristiques" },
       content: this._buildContent(),
-      buttons: [
-        {
-          action: "cancel",
-          label: "Annuler",
-          default: true,
-          callback: () => this.cancel()
-        }
-      ],
+      buttons: [],
       close: () => this._onDialogClosed()
-    }, { width: 460, height: "auto" });
+    }, { width: 500, height: "auto" });
 
     this.dialogRef.render({ force: true });
 
@@ -135,34 +146,35 @@ class Add2eCaracRoller {
         class="add2e-carac-value"
         data-idx="${i}"
         title="Cliquer pour sélectionner. Si la valeur est affectée, cliquer pour la libérer."
-        style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:46px;height:48px;padding:4px 7px;border:1px solid #b8935d;border-radius:8px;background:linear-gradient(180deg,#f5dfae 0%,#d3a967 100%);box-shadow:0 2px 6px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.55);color:#2b1b0d;cursor:pointer;font-weight:700;line-height:1;"
+        style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:46px;height:48px;padding:4px 7px;border:1px solid #7a4d21;border-radius:8px;background:linear-gradient(180deg,#fff1c8 0%,#d7a95e 100%);box-shadow:0 2px 5px rgba(50,25,8,.38), inset 0 1px 0 rgba(255,255,255,.7);color:#2b1b0d;cursor:pointer;font-weight:800;line-height:1;"
       >
         <span class="add2e-carac-score" style="font-size:1.12rem;line-height:1;">${v}</span>
-        <span class="assigned-label" style="font-size:.62rem;min-height:.72rem;color:#5b3514;font-weight:800;letter-spacing:.04em;">—</span>
+        <span class="assigned-label" style="font-size:.62rem;min-height:.72rem;color:#5b3514;font-weight:900;letter-spacing:.04em;">—</span>
       </button>`).join("");
   }
 
   _buildContent() {
     return `
       <style>
-        .add2e-carac-popup .add2e-carac-value:hover { filter: brightness(1.08); transform: translateY(-1px); }
-        .add2e-carac-popup .add2e-carac-value.selected { outline: 2px solid #f0d27a !important; box-shadow: 0 0 0 2px #6b3ca0, 0 0 12px rgba(240,210,122,.55) !important; }
-        .add2e-carac-popup .add2e-carac-value.used { opacity: .70 !important; background: linear-gradient(180deg,#7c766e 0%,#4d4945 100%) !important; color: #f4eadc !important; cursor: pointer !important; }
-        .add2e-carac-popup .add2e-carac-value.used .assigned-label { color: #f0d27a !important; }
-        .add2e-carac-popup .add2e-class-tags { display:flex; flex-wrap:wrap; gap:5px; align-items:flex-start; }
-        .add2e-carac-popup .add2e-class-suggestion { display:inline-flex; align-items:center; gap:4px; border: 1px solid rgba(184,121,255,.35); border-radius: 999px; background: rgba(93,44,125,.28); color: #f1e8dc; padding: 3px 8px; cursor: pointer; font-size: .78rem; line-height: 1.2; white-space: nowrap; max-width: 100%; }
-        .add2e-carac-popup .add2e-class-suggestion:hover { background: rgba(142,68,173,.48); border-color: #d8b16c; }
-        .add2e-carac-popup .add2e-class-suggestion b { color: #d9b2ff; }
-        .add2e-carac-popup .carac-ok { color: #42d681; font-weight: 800; }
-        .add2e-carac-popup .carac-locked { color: #f0d27a; font-weight: 800; }
+        .add2e-carac-popup .add2e-carac-value:hover { filter: brightness(1.06); transform: translateY(-1px); }
+        .add2e-carac-popup .add2e-carac-value.selected { outline: 2px solid #8d1f1f !important; box-shadow: 0 0 0 2px #e2c178, 0 0 10px rgba(120,40,20,.45) !important; }
+        .add2e-carac-popup .add2e-carac-value.used { opacity: .82 !important; background: linear-gradient(180deg,#8b7b63 0%,#5f533f 100%) !important; color: #fff2d0 !important; cursor: pointer !important; }
+        .add2e-carac-popup .add2e-carac-value.used .assigned-label { color: #ffe19b !important; }
+        .add2e-carac-popup .add2e-class-tags { display:flex; flex-wrap:wrap; gap:6px; align-items:flex-start; }
+        .add2e-carac-popup .add2e-class-suggestion { display:inline-flex; align-items:center; gap:5px; border-radius: 9px; padding: 4px 8px; cursor: pointer; font-size: .78rem; line-height: 1.15; white-space: nowrap; max-width: 100%; box-shadow: inset 0 1px 0 rgba(255,255,255,.20), 0 1px 3px rgba(0,0,0,.22); }
+        .add2e-carac-popup .add2e-class-suggestion:hover { filter: brightness(1.12); transform: translateY(-1px); }
+        .add2e-carac-popup .add2e-class-suggestion b { font-weight: 900; }
+        .add2e-carac-popup .carac-ok { color: #d8ffd4; font-weight: 900; }
+        .add2e-carac-popup .carac-locked { color: #ffe19b; font-weight: 900; }
+        .add2e-carac-popup .add2e-carac-action { min-width:110px; padding:6px 12px; border-radius:7px; font-weight:900; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,.25); }
+        .add2e-carac-popup .add2e-carac-action.reroll { border:1px solid #775122; background:linear-gradient(180deg,#f6dfad,#d19b4c); color:#2d1c0b; }
+        .add2e-carac-popup .add2e-carac-action.validate { border:1px solid #6e1414; background:linear-gradient(180deg,#a7372d,#6e1714); color:#fff1d5; }
+        .add2e-carac-popup .add2e-carac-action.cancel { border:1px solid #6a5640; background:linear-gradient(180deg,#7b6c5c,#4f463b); color:#fff1d5; }
       </style>
-      <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}" style="box-sizing:border-box;width:100%;padding:8px 10px 2px 10px;color:#f1e8dc;background:radial-gradient(circle at 85% 20%,rgba(151,87,255,.14),transparent 35%),linear-gradient(180deg,rgba(34,27,42,.96),rgba(17,14,22,.96));border-radius:8px;">
-        <div style="border:1px solid rgba(214,176,116,.32);border-radius:8px;background:rgba(0,0,0,.18);padding:7px 9px;margin-bottom:9px;box-shadow:inset 0 0 12px rgba(0,0,0,.18);">
-          <div style="display:flex;align-items:center;gap:8px;justify-content:space-between;">
-            <div style="font-size:.94rem;font-weight:800;color:#f5dfae;">Affectation des caractéristiques</div>
-            <button type="button" class="reroll-caracs-btn" style="padding:3px 8px;border:1px solid #d8b16c;border-radius:999px;background:rgba(0,0,0,.24);color:#f5dfae;font-size:.76rem;font-weight:800;cursor:pointer;">Relancer</button>
-          </div>
-          <div style="font-size:.78rem;line-height:1.25;color:#d8c9b4;margin-top:3px;">
+      <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}" style="box-sizing:border-box;width:100%;padding:10px;color:#2a1b0d;background:linear-gradient(180deg,#efe0bc 0%,#d8bd82 100%);border:2px solid #5a3418;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);">
+        <div style="border:1px solid #8a6330;border-radius:8px;background:rgba(255,247,218,.62);padding:8px 10px;margin-bottom:9px;box-shadow:inset 0 0 10px rgba(90,52,24,.15);">
+          <div style="font-size:.96rem;font-weight:900;color:#5b1e16;margin-bottom:3px;">Affectation des caractéristiques</div>
+          <div style="font-size:.78rem;line-height:1.25;color:#3b2a19;">
             Cliquez sur une valeur puis une caractéristique. Cliquez une valeur déjà affectée pour la libérer. Cliquez une classe pour ses prérequis.
           </div>
         </div>
@@ -171,10 +183,12 @@ class Add2eCaracRoller {
           ${this._valueCardsHtml()}
         </div>
 
-        <div id="classes-suggestions" style="margin:0 0 8px 0;padding:8px 10px;border:1px solid rgba(214,176,116,.26);border-radius:8px;background:rgba(0,0,0,.20);max-height:150px;overflow:auto;"></div>
+        <div id="classes-suggestions" style="margin:0 0 9px 0;padding:8px 10px;border:1px solid #8a6330;border-radius:8px;background:rgba(43,28,13,.10);max-height:128px;overflow:auto;"></div>
 
-        <div class="add2e-carac-apply" style="display:flex;justify-content:center;margin-top:7px;">
-          <button type="button" class="apply-caracs-btn" style="min-width:140px;padding:6px 14px;border:1px solid #d8b16c;border-radius:7px;background:linear-gradient(180deg,#8e44ad 0%,#5d2c7d 100%);color:#fff7e8;font-weight:800;letter-spacing:.02em;cursor:pointer;box-shadow:0 2px 7px rgba(0,0,0,.32);">Valider</button>
+        <div class="add2e-carac-actions" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px;">
+          <button type="button" class="add2e-carac-action reroll reroll-caracs-btn">Relancer</button>
+          <button type="button" class="add2e-carac-action validate apply-caracs-btn">Valider</button>
+          <button type="button" class="add2e-carac-action cancel cancel-caracs-btn">Annuler</button>
         </div>
       </div>
     `;
@@ -225,6 +239,11 @@ class Add2eCaracRoller {
     this._dlgRoot.querySelector(".reroll-caracs-btn")?.addEventListener("click", ev => {
       ev.preventDefault();
       this.reroll();
+    });
+
+    this._dlgRoot.querySelector(".cancel-caracs-btn")?.addEventListener("click", ev => {
+      ev.preventDefault();
+      this.cancel();
     });
   }
 
@@ -407,7 +426,7 @@ class Add2eCaracRoller {
         const assignedTotal = assignedBase + bonus;
         if (assignedTotal < min) return null;
         assignments[carac] = assignedIdx;
-        placements.push(`<b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b><span class="carac-locked">${assignedBase}</span>`);
+        placements.push(`<span><b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b><span class="carac-locked">${assignedBase}</span></span>`);
         continue;
       }
 
@@ -415,11 +434,16 @@ class Add2eCaracRoller {
       if (idx === -1) return null;
       const picked = pool[idx];
       assignments[carac] = picked.idx;
-      placements.push(`<b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b><span class="carac-ok">${picked.value}</span>`);
+      placements.push(`<span><b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b><span class="carac-ok">${picked.value}</span></span>`);
       pool.splice(idx, 1);
     }
 
     return { className: cls.name, placements, assignments };
+  }
+
+  _classTagStyle(className) {
+    const [bg, fg] = ADD2E_CLASS_TAG_COLORS[add2eClassColorIndex(className)];
+    return `border:1px solid rgba(40,20,8,.55);background:linear-gradient(180deg,${bg},${bg}cc);color:${fg};`;
   }
 
   async classesSynthese() {
@@ -433,7 +457,7 @@ class Add2eCaracRoller {
 
     this._suggestionPlans.clear();
 
-    let html = '<div style="margin:0 0 6px 0;font-size:.82rem;color:#f5dfae;font-weight:800;">Classes possibles :</div>';
+    let html = '<div style="margin:0 0 6px 0;font-size:.82rem;color:#5b1e16;font-weight:900;">Classes possibles :</div>';
     html += '<div class="add2e-class-tags">';
 
     let count = 0;
@@ -443,8 +467,8 @@ class Add2eCaracRoller {
       const key = `plan-${count}`;
       this._suggestionPlans.set(key, plan);
       count++;
-      const detail = plan.placements.length ? `<span style="display:inline-flex;gap:3px;align-items:center;">${plan.placements.join(' ')}</span>` : "";
-      html += `<button type="button" class="add2e-class-suggestion" data-plan-key="${key}" title="Auto-affecter les prérequis"><b>${add2eCaracEscapeHtml(cls.name)}</b>${detail}</button>`;
+      const detail = plan.placements.length ? `<span style="display:inline-flex;gap:4px;align-items:center;">${plan.placements.join(' ')}</span>` : "";
+      html += `<button type="button" class="add2e-class-suggestion" data-plan-key="${key}" title="Auto-affecter les prérequis" style="${this._classTagStyle(cls.name)}"><b>${add2eCaracEscapeHtml(cls.name)}</b>${detail}</button>`;
     }
 
     html += count ? '</div>' : '<em>Aucune classe ne correspond à cette affectation.</em></div>';
