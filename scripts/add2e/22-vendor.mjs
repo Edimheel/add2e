@@ -1,7 +1,7 @@
 // ADD2E — Vendeur système : composants, projectiles et monnaie complète
 // ApplicationV2 + DialogV2, création automatique au premier lancement du monde.
 
-const ADD2E_VENDOR_VERSION = "2026-05-27-vendor-v11-v14-token-folder-projectiles";
+const ADD2E_VENDOR_VERSION = "2026-05-27-vendor-v12-projectiles-from-armes";
 globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
 
 const ADD2E_VENDOR_FLAG_SCOPE = "add2e";
@@ -30,22 +30,19 @@ function add2eVendorNumber(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function add2eVendorSlug(value) {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[’']/g, "_")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
 function add2eVendorLower(value) {
   return String(value ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function add2eVendorSlug(value) {
+  return add2eVendorLower(value)
+    .replace(/[’']/g, "_")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 function add2eVendorEscape(value) {
@@ -56,7 +53,7 @@ function add2eVendorEscape(value) {
 
 function add2eVendorAsArray(value) {
   if (Array.isArray(value)) return value.filter(v => v !== null && v !== undefined && String(v).trim() !== "");
-  if (value === null || value === undefined) return [];
+  if (value === null || value === undefined || value === "") return [];
   if (typeof value === "string") return value.split(/[,;|]/g).map(v => v.trim()).filter(Boolean);
   return [value];
 }
@@ -79,53 +76,63 @@ function add2eVendorSetQuantityPath(value) {
   return { "system.quantite": Math.max(0, Math.floor(add2eVendorNumber(value, 0))) };
 }
 
+function add2eVendorPackIds(kind) {
+  const all = Array.from(game.packs ?? []);
+  if (kind === "projectiles") {
+    const ids = ["add2e.armes", "world.armes"];
+    for (const [id, pack] of all) {
+      const txt = `${id} ${pack?.metadata?.label ?? ""}`;
+      if (/\barmes?\b|weapons?/i.test(txt) && !ids.includes(id)) ids.push(id);
+    }
+    return ids;
+  }
+
+  const ids = ["add2e.equipements", "world.equipements", "world.equipement", "add2e.equipement"];
+  for (const [id, pack] of all) {
+    const txt = `${id} ${pack?.metadata?.label ?? ""}`;
+    if (/equip|équip|objets?/i.test(txt) && !/magique|magic/i.test(txt) && !ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
 function add2eVendorIsAmmunition(item) {
   const sys = item?.system ?? {};
   const name = add2eVendorLower(item?.name);
-  const values = [
-    sys.categorie,
-    sys.category,
-    sys.sousType,
-    sys.sous_type,
-    sys.type,
-    sys.subtype,
-    sys.kind,
-    sys.slot
-  ].map(add2eVendorLower).filter(Boolean);
+  const values = [sys.categorie, sys.category, sys.sousType, sys.sous_type, sys.type, sys.subtype, sys.kind, sys.slot]
+    .map(add2eVendorLower).filter(Boolean);
   const tags = add2eVendorTags(item).map(add2eVendorLower);
   const accepted = new Set([
-    "munition",
-    "munitions",
-    "projectile",
-    "projectiles",
-    "ammo",
-    "ammunition",
-    "trait:munition",
-    "trait:projectile",
-    "categorie:munition",
-    "categorie:projectile",
-    "type:munition",
-    "type:projectile"
+    "munition", "munitions", "projectile", "projectiles", "ammo", "ammunition",
+    "trait:munition", "trait:projectile", "categorie:munition", "categorie:projectile", "type:munition", "type:projectile"
   ]);
+
+  if (/\b(carquois|quiver|etui|etuis|étui|étuis|sac|sacoche|container|contenant|boite|boîte|bourse)\b/.test(name)) return false;
+  if (values.some(v => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(v))) return false;
+  if (tags.some(t => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(t))) return false;
 
   if (values.some(v => accepted.has(v))) return true;
   if (tags.some(t => accepted.has(t) || t.startsWith("munition:") || t.startsWith("projectile:"))) return true;
-  if (/\b(fleche|fleches|carreau|carreaux|trait|traits|bille|billes|pierre de fronde|pierres de fronde|munition|munitions|projectile|projectiles)\b/.test(name)) return true;
+  if (/\b(fleche|fleches|carreau|carreaux|trait|traits|bille|billes|pierre de fronde|pierres de fronde)\b/.test(name)) return true;
   return false;
 }
 
 function add2eVendorIsSpellComponent(item) {
   const sys = item?.system ?? {};
-  if (String(sys.categorie ?? "").toLowerCase() === "composant_sort") return true;
-  if (String(sys.sousType ?? sys.sous_type ?? "").toLowerCase() === "composant") return true;
-  return add2eVendorTags(item).some(tag => String(tag).toLowerCase() === "composant_sort" || String(tag).toLowerCase().startsWith("composant:"));
+  const categorie = add2eVendorLower(sys.categorie ?? sys.category);
+  const sousType = add2eVendorLower(sys.sousType ?? sys.sous_type ?? sys.type);
+  if (categorie === "composant_sort") return true;
+  if (sousType === "composant") return true;
+  return add2eVendorTags(item).some(tag => {
+    const t = add2eVendorLower(tag);
+    return t === "composant_sort" || t.startsWith("composant:");
+  });
 }
 
 function add2eVendorIsMagicStockItem(item) {
   const sys = item?.system ?? {};
   const name = add2eVendorLower(item?.name);
-  const tags = add2eVendorTags(item).map(t => String(t).toLowerCase());
-  const category = String(sys.categorie ?? sys.category ?? sys.sousType ?? sys.sous_type ?? "").toLowerCase();
+  const tags = add2eVendorTags(item).map(add2eVendorLower);
+  const category = add2eVendorLower(sys.categorie ?? sys.category ?? sys.sousType ?? sys.sous_type ?? "");
 
   if (item?.getFlag?.(ADD2E_VENDOR_FLAG_SCOPE, "vendorMagic") === true) return true;
   if (item?.getFlag?.(ADD2E_VENDOR_FLAG_SCOPE, "magicItem") === true) return true;
@@ -133,14 +140,15 @@ function add2eVendorIsMagicStockItem(item) {
   if (category.includes("magique") || category.includes("magic")) return true;
   if (tags.some(t => /magique|magic|objet_magique|magic_item/.test(t))) return true;
   if (/\+\d/.test(name)) return true;
-  if (/anneau|bracelet|baguette|bâton|baton|potion|parchemin|amulette|cape|ceinture|gantelet|heaume|botte|bottes|collier|robe magique/.test(name)) return true;
+  if (/anneau|bracelet|baguette|baton|bâton|potion|parchemin|amulette|cape|ceinture|gantelet|heaume|botte|bottes|collier|robe magique/.test(name)) return true;
   return false;
 }
 
 function add2eVendorIsStockItem(item) {
-  return item?.type === "objet"
-    && !add2eVendorIsMagicStockItem(item)
-    && (add2eVendorIsSpellComponent(item) || add2eVendorIsAmmunition(item));
+  if (!item || add2eVendorIsMagicStockItem(item)) return false;
+  if (item.type === "objet" && add2eVendorIsSpellComponent(item)) return true;
+  if (add2eVendorIsAmmunition(item)) return true;
+  return false;
 }
 
 function add2eVendorStockKind(item) {
@@ -160,7 +168,7 @@ function add2eVendorDefaultStock(item) {
 }
 
 function add2eVendorCoinByKey(key) {
-  const normalized = String(key ?? "po").toLowerCase();
+  const normalized = add2eVendorLower(key || "po");
   return ADD2E_COINS.find(c => c.key === normalized) ?? ADD2E_COINS.find(c => c.key === "po");
 }
 
@@ -230,20 +238,21 @@ function add2eVendorResolvePrice(item) {
 
   const coin = add2eVendorCoinByKey(devise);
   const copper = Math.max(1, Math.round(Number(value) * coin.pc));
-  return { value: Number(value), devise: coin.key, label: `${value} ${coin.label}`, copper };
+  return { value: Number(value), devise: coin.key, copper };
 }
 
 function add2eVendorSameItemIdentity(a, b) {
-  return String(a?.type ?? "") === String(b?.type ?? "") && add2eVendorSlug(a?.name) === add2eVendorSlug(b?.name);
+  const aAmmo = add2eVendorIsAmmunition(a);
+  const bAmmo = add2eVendorIsAmmunition(b);
+  const keyType = aAmmo || bAmmo ? "munition" : String(a?.type ?? b?.type ?? "");
+  return keyType && add2eVendorSlug(a?.name) === add2eVendorSlug(b?.name);
 }
 
 function add2eVendorGetBuyer({ excludeVendor = true, preferCharacter = true } = {}) {
   const character = game.user?.character ?? null;
   if (preferCharacter && character && (!excludeVendor || !add2eIsVendorActor(character)) && (character.isOwner || game.user?.isGM)) return character;
-
   const controlled = canvas?.tokens?.controlled?.[0]?.actor ?? null;
   if (controlled && (!excludeVendor || !add2eIsVendorActor(controlled)) && (controlled.isOwner || game.user?.isGM)) return controlled;
-
   if (!preferCharacter && character && (!excludeVendor || !add2eIsVendorActor(character)) && (character.isOwner || game.user?.isGM)) return character;
   return null;
 }
@@ -257,13 +266,7 @@ function add2eVendorIsResponsibleGM() {
 async function add2eVendorDialog({ title = "Marchand", content = "", yes = "Compris", no = "Fermer" } = {}) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (DialogV2?.confirm) {
-    return DialogV2.confirm({
-      window: { title },
-      content,
-      yes: { label: yes },
-      no: { label: no },
-      modal: true
-    });
+    return DialogV2.confirm({ window: { title }, content, yes: { label: yes }, no: { label: no }, modal: true });
   }
   ui.notifications?.warn?.(content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim());
   return false;
@@ -295,6 +298,7 @@ async function add2eVendorMergeOrCreateItem(actor, sourceItem, quantity) {
 
   const itemData = sourceItem.toObject ? sourceItem.toObject() : foundry.utils.deepClone(sourceItem);
   delete itemData._id;
+  if (add2eVendorIsAmmunition(sourceItem)) itemData.type = "objet";
   itemData.system = itemData.system ?? {};
   itemData.system.quantite = quantity;
   itemData.flags = itemData.flags ?? {};
@@ -306,12 +310,12 @@ async function add2eVendorMergeOrCreateItem(actor, sourceItem, quantity) {
 
 function add2eVendorWeaponRequiresProjectile(arme) {
   const sys = arme?.system ?? {};
-  const tags = add2eVendorTags(arme).map(t => String(t).toLowerCase());
+  const tags = add2eVendorTags(arme).map(add2eVendorLower);
   const name = add2eVendorLower(arme?.name);
   const hasRange = Number(sys.portee_courte ?? 0) > 0;
   if (!hasRange) return false;
   if (tags.some(t => ["usage:projectile_propulse", "categorie:projectile_propulse", "trait:projectile_propulse", "type:projectile_propulse", "arme:projectile_propulse"].includes(t))) return true;
-  if (/\b(arc|arbalete|fronde)\b/.test(name)) return true;
+  if (/\b(arc|arbalete|arbalete|fronde)\b/.test(name)) return true;
   if (/\b(fleche|carreau|trait|bille|pierre de fronde)\b/.test(name)) return true;
   if (tags.some(t => ["usage:lancer", "usage:jet", "usage:arme_de_jet", "trait:arme_de_jet", "type:arme_de_jet"].includes(t))) return false;
   if (/\b(dague|hachette|javelot|lance|couteau)\b/.test(name)) return false;
@@ -325,14 +329,13 @@ function add2eVendorIsEquippedProjectile(item) {
 }
 
 function add2eVendorFindEquippedProjectile(actor) {
-  const projectiles = Array.from(actor?.items ?? []).filter(item => item?.type === "objet" && add2eVendorIsAmmunition(item));
-  const equipped = projectiles.find(item => add2eVendorIsEquippedProjectile(item));
-  return equipped ?? null;
+  const projectiles = Array.from(actor?.items ?? []).filter(item => add2eVendorIsAmmunition(item));
+  return projectiles.find(item => add2eVendorIsEquippedProjectile(item)) ?? null;
 }
 
 function add2eVendorProjectileSummary(actor) {
   return Array.from(actor?.items ?? [])
-    .filter(item => item?.type === "objet" && add2eVendorIsAmmunition(item))
+    .filter(item => add2eVendorIsAmmunition(item))
     .map(item => `${item.name} (${add2eVendorQuantity(item)})`)
     .join(", ");
 }
@@ -340,29 +343,17 @@ function add2eVendorProjectileSummary(actor) {
 async function add2eVendorRecordProjectileSpent({ actor, projectile, quantity = 1 }) {
   const combat = game.combat ?? null;
   if (!combat || !combat.started) return false;
-
   const q = Math.max(1, Math.floor(add2eVendorNumber(quantity, 1)));
   const current = foundry.utils.deepClone(await combat.getFlag(ADD2E_VENDOR_FLAG_SCOPE, ADD2E_PROJECTILE_SPENT_FLAG) ?? {});
   const actorId = actor?.id;
   const itemKey = projectile?.id || add2eVendorSlug(projectile?.name);
   if (!actorId || !itemKey) return false;
-
-  current[actorId] = current[actorId] ?? {
-    actorId,
-    actorName: actor.name,
-    items: {}
-  };
+  current[actorId] = current[actorId] ?? { actorId, actorName: actor.name, items: {} };
   current[actorId].actorName = actor.name;
-  current[actorId].items[itemKey] = current[actorId].items[itemKey] ?? {
-    itemId: projectile.id,
-    itemName: projectile.name,
-    img: projectile.img,
-    spent: 0
-  };
+  current[actorId].items[itemKey] = current[actorId].items[itemKey] ?? { itemId: projectile.id, itemName: projectile.name, img: projectile.img, spent: 0 };
   current[actorId].items[itemKey].spent = Math.max(0, Math.floor(add2eVendorNumber(current[actorId].items[itemKey].spent, 0))) + q;
   current[actorId].items[itemKey].itemName = projectile.name;
   current[actorId].items[itemKey].img = projectile.img;
-
   await combat.setFlag(ADD2E_VENDOR_FLAG_SCOPE, ADD2E_PROJECTILE_SPENT_FLAG, current);
   return true;
 }
@@ -371,18 +362,11 @@ async function add2eVendorSpendProjectileForAttack({ actor, arme } = {}) {
   if (!add2eVendorWeaponRequiresProjectile(arme)) return { ok: true, required: false, spent: 0 };
   const projectile = add2eVendorFindEquippedProjectile(actor);
   const qty = add2eVendorQuantity(projectile);
-
   if (!projectile || qty <= 0) {
     const detail = add2eVendorProjectileSummary(actor);
-    await add2eVendorAlert(
-      "Projectile indisponible",
-      detail
-        ? `Aucun projectile équipé avec une quantité disponible. Projectiles dans le carquois : ${detail}.`
-        : "Aucun projectile disponible dans le carquois."
-    );
+    await add2eVendorAlert("Projectile indisponible", detail ? `Aucun projectile équipé avec une quantité disponible. Projectiles dans le carquois : ${detail}.` : "Aucun projectile disponible dans le carquois.");
     return { ok: false, required: true, spent: 0 };
   }
-
   await projectile.update(add2eVendorSetQuantityPath(qty - 1), { add2eReason: "projectile-spent-attack" });
   await add2eVendorRecordProjectileSpent({ actor, projectile, quantity: 1 });
   return { ok: true, required: true, spent: 1, projectile };
@@ -391,81 +375,44 @@ async function add2eVendorSpendProjectileForAttack({ actor, arme } = {}) {
 async function add2eVendorRecoverProjectilesForCombat(combat) {
   if (!add2eVendorIsResponsibleGM()) return false;
   if (!combat?.getFlag) return false;
-
   const spent = foundry.utils.deepClone(await combat.getFlag(ADD2E_VENDOR_FLAG_SCOPE, ADD2E_PROJECTILE_SPENT_FLAG) ?? {});
   const rows = [];
-
   for (const actorEntry of Object.values(spent)) {
     const actor = game.actors?.get(actorEntry.actorId);
     if (!actor) continue;
-
     for (const itemEntry of Object.values(actorEntry.items ?? {})) {
       const qtySpent = Math.max(0, Math.floor(add2eVendorNumber(itemEntry.spent, 0)));
       if (!qtySpent) continue;
       const recovered = Math.max(0, Math.round(qtySpent * ADD2E_PROJECTILE_RECOVERY_RATE));
-      if (!recovered) {
-        rows.push({ actor: actor.name, item: itemEntry.itemName, spent: qtySpent, recovered: 0 });
-        continue;
-      }
-
-      let item = actor.items?.get(itemEntry.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === itemEntry.itemName && add2eVendorIsAmmunition(i));
-      if (item) {
-        await item.update(add2eVendorSetQuantityPath(add2eVendorQuantity(item) + recovered), { add2eReason: "projectile-combat-recovery" });
-      }
+      const item = actor.items?.get(itemEntry.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === itemEntry.itemName && add2eVendorIsAmmunition(i));
+      if (item && recovered) await item.update(add2eVendorSetQuantityPath(add2eVendorQuantity(item) + recovered), { add2eReason: "projectile-combat-recovery" });
       rows.push({ actor: actor.name, item: itemEntry.itemName, spent: qtySpent, recovered });
     }
   }
-
   if (!rows.length) return false;
-
-  const htmlRows = rows.map(row => `
-    <tr>
-      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eVendorEscape(row.actor)}</td>
-      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eVendorEscape(row.item)}</td>
-      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;">${row.spent}</td>
-      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;font-weight:900;color:#1f7a3f;">${row.recovered}</td>
-    </tr>`).join("");
-
-  const content = `
-    <div class="add2e-dialog add2e-vendor-alert" style="color:#2f250c;">
-      <h3>Récupération des projectiles</h3>
-      <p>Fin de combat : 60 % des projectiles dépensés sont récupérés.</p>
-      <table style="width:100%;border-collapse:collapse;background:#fffaf0;border:1px solid #d9bf73;">
-        <thead><tr style="background:#e8d08f;"><th>Acteur</th><th>Projectile</th><th>Dépensés</th><th>Récupérés</th></tr></thead>
-        <tbody>${htmlRows}</tbody>
-      </table>
-    </div>`;
-
+  const htmlRows = rows.map(row => `<tr><td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eVendorEscape(row.actor)}</td><td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eVendorEscape(row.item)}</td><td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;">${row.spent}</td><td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;font-weight:900;color:#1f7a3f;">${row.recovered}</td></tr>`).join("");
+  const content = `<div class="add2e-dialog add2e-vendor-alert" style="color:#2f250c;"><h3>Récupération des projectiles</h3><p>Fin de combat : 60 % des projectiles dépensés sont récupérés.</p><table style="width:100%;border-collapse:collapse;background:#fffaf0;border:1px solid #d9bf73;"><thead><tr style="background:#e8d08f;"><th>Acteur</th><th>Projectile</th><th>Dépensés</th><th>Récupérés</th></tr></thead><tbody>${htmlRows}</tbody></table></div>`;
   await add2eVendorDialog({ title: "Récupération des projectiles", content, yes: "Compris", no: "Fermer" });
   return true;
 }
 
 function add2eRegisterProjectileRecoveryHooks() {
-  if (globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V11) return;
-  globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V11 = true;
-
-  Hooks.on("deleteCombat", combat => {
-    add2eVendorRecoverProjectilesForCombat(combat).catch(err => console.warn("[ADD2E][PROJECTILES][RECOVERY][deleteCombat]", err));
-  });
-
+  if (globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V12) return;
+  globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V12 = true;
+  Hooks.on("deleteCombat", combat => add2eVendorRecoverProjectilesForCombat(combat).catch(err => console.warn("[ADD2E][PROJECTILES][RECOVERY][deleteCombat]", err)));
   Hooks.on("updateCombat", (combat, changed) => {
-    if (!changed) return;
-    if (changed.active === false || changed.round === null) {
-      add2eVendorRecoverProjectilesForCombat(combat).catch(err => console.warn("[ADD2E][PROJECTILES][RECOVERY][updateCombat]", err));
-    }
+    if (changed?.active === false || changed?.round === null) add2eVendorRecoverProjectilesForCombat(combat).catch(err => console.warn("[ADD2E][PROJECTILES][RECOVERY][updateCombat]", err));
   });
 }
 
 function add2ePatchAttackRollProjectileConsumption() {
-  if (globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V11) return;
+  if (globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V12) return;
   const original = globalThis.add2eAttackRoll;
   if (typeof original !== "function") return;
-
-  globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V11 = true;
+  globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V12 = true;
   globalThis.add2eAttackRoll = async function add2eAttackRollWithProjectiles(args = {}) {
     const actor = args.actor ?? (args.actorId ? game.actors?.get(args.actorId) : null);
     const arme = args.arme ?? (actor && args.itemId ? actor.items?.get(args.itemId) : null);
-
     if (actor && arme && add2eVendorWeaponRequiresProjectile(arme)) {
       const projectile = add2eVendorFindEquippedProjectile(actor);
       if (!projectile || add2eVendorQuantity(projectile) <= 0) {
@@ -473,11 +420,8 @@ function add2ePatchAttackRollProjectileConsumption() {
         return false;
       }
     }
-
     const result = await original.call(this, args);
-    if (result === true && actor && arme) {
-      await add2eVendorSpendProjectileForAttack({ actor, arme });
-    }
+    if (result === true && actor && arme) await add2eVendorSpendProjectileForAttack({ actor, arme });
     return result;
   };
 }
@@ -485,26 +429,16 @@ function add2ePatchAttackRollProjectileConsumption() {
 async function add2eVendorBuyLocal({ vendor, buyer, item, quantity }, { confirm = true, notify = true } = {}) {
   if (!vendor || !buyer || !item) return { ok: false, message: "Vendeur, acheteur ou article introuvable." };
   if (add2eIsVendorActor(buyer)) return { ok: false, message: "Le vendeur ne peut pas acheter dans sa propre boutique." };
-
   quantity = Math.max(1, Math.floor(add2eVendorNumber(quantity, 1)));
   const stock = add2eVendorQuantity(item);
   if (stock < quantity) return { ok: false, message: `${item.name} : stock disponible ${stock}.` };
-
   const price = add2eVendorResolvePrice(item);
   const total = price.copper * quantity;
-  const buyerMoney = add2eVendorGetMoney(buyer);
-  if (add2eVendorMoneyToCopper(buyerMoney) < total) return { ok: false, message: `${buyer.name} n’a pas assez d’argent. Prix : ${add2eVendorFormatMoney(total)}.` };
-
+  if (add2eVendorMoneyToCopper(add2eVendorGetMoney(buyer)) < total) return { ok: false, message: `${buyer.name} n’a pas assez d’argent. Prix : ${add2eVendorFormatMoney(total)}.` };
   if (confirm) {
-    const accepted = await add2eVendorDialog({
-      title: "Confirmer l’achat",
-      content: `<div class="add2e-dialog add2e-vendor-alert"><h3>${add2eVendorEscape(item.name)}</h3><p>Acheter ${quantity} unité(s) pour <strong>${add2eVendorFormatMoney(total)}</strong> ?</p></div>`,
-      yes: "Acheter",
-      no: "Annuler"
-    });
+    const accepted = await add2eVendorDialog({ title: "Confirmer l’achat", content: `<div class="add2e-dialog add2e-vendor-alert"><h3>${add2eVendorEscape(item.name)}</h3><p>Acheter ${quantity} unité(s) pour <strong>${add2eVendorFormatMoney(total)}</strong> ?</p></div>`, yes: "Acheter", no: "Annuler" });
     if (!accepted) return { ok: false, cancelled: true, message: "Achat annulé." };
   }
-
   const paid = await add2eVendorSubtractMoney(buyer, total);
   if (!paid) return { ok: false, message: "Paiement impossible." };
   await item.update(add2eVendorSetQuantityPath(stock - quantity), { add2eReason: "vendor-stock-decrease" });
@@ -517,36 +451,14 @@ async function add2eVendorBuyLocal({ vendor, buyer, item, quantity }, { confirm 
 async function add2eVendorRequestBuy({ vendor, buyer, item, quantity }) {
   if (!vendor || !buyer || !item) return false;
   quantity = Math.max(1, Math.floor(add2eVendorNumber(quantity, 1)));
-
   const price = add2eVendorResolvePrice(item);
   const total = price.copper * quantity;
   const stock = add2eVendorQuantity(item);
-  if (stock < quantity) {
-    await add2eVendorAlert("Stock insuffisant", `${item.name} : stock disponible ${stock}.`);
-    return false;
-  }
-  if (add2eVendorMoneyToCopper(add2eVendorGetMoney(buyer)) < total) {
-    await add2eVendorAlert("Argent insuffisant", `${buyer.name} n’a pas assez d’argent. Prix : ${add2eVendorFormatMoney(total)}.`);
-    return false;
-  }
-
-  const accepted = await add2eVendorDialog({
-    title: "Confirmer l’achat",
-    content: `<div class="add2e-dialog add2e-vendor-alert"><h3>${add2eVendorEscape(item.name)}</h3><p>Acheter ${quantity} unité(s) pour <strong>${add2eVendorFormatMoney(total)}</strong> ?</p></div>`,
-    yes: "Acheter",
-    no: "Annuler"
-  });
+  if (stock < quantity) return add2eVendorAlert("Stock insuffisant", `${item.name} : stock disponible ${stock}.`).then(() => false);
+  if (add2eVendorMoneyToCopper(add2eVendorGetMoney(buyer)) < total) return add2eVendorAlert("Argent insuffisant", `${buyer.name} n’a pas assez d’argent. Prix : ${add2eVendorFormatMoney(total)}.`).then(() => false);
+  const accepted = await add2eVendorDialog({ title: "Confirmer l’achat", content: `<div class="add2e-dialog add2e-vendor-alert"><h3>${add2eVendorEscape(item.name)}</h3><p>Acheter ${quantity} unité(s) pour <strong>${add2eVendorFormatMoney(total)}</strong> ?</p></div>`, yes: "Acheter", no: "Annuler" });
   if (!accepted) return false;
-
-  game.socket?.emit?.("system.add2e", {
-    type: "ADD2E_VENDOR_BUY_REQUEST",
-    requestId: foundry.utils.randomID(),
-    userId: game.user.id,
-    vendorId: vendor.id,
-    buyerId: buyer.id,
-    itemId: item.id,
-    quantity
-  });
+  game.socket?.emit?.("system.add2e", { type: "ADD2E_VENDOR_BUY_REQUEST", requestId: foundry.utils.randomID(), userId: game.user.id, vendorId: vendor.id, buyerId: buyer.id, itemId: item.id, quantity });
   ui.notifications?.info?.("Demande d’achat envoyée au MJ.");
   return true;
 }
@@ -557,7 +469,6 @@ async function add2eVendorBuy({ vendor, buyer, item, quantity }) {
     if (!result.ok && !result.cancelled) await add2eVendorAlert("Achat impossible", result.message);
     return result.ok;
   }
-
   return add2eVendorRequestBuy({ vendor, buyer, item, quantity });
 }
 
@@ -568,10 +479,7 @@ function add2eVendorStockMax(item) {
 async function add2eVendorRestockAll(vendor) {
   if (!game.user?.isGM) return false;
   const updates = [];
-  for (const item of vendor.items ?? []) {
-    if (!add2eVendorIsStockItem(item)) continue;
-    updates.push({ _id: item.id, "system.quantite": add2eVendorStockMax(item) });
-  }
+  for (const item of vendor.items ?? []) if (add2eVendorIsStockItem(item)) updates.push({ _id: item.id, "system.quantite": add2eVendorStockMax(item) });
   if (updates.length) await vendor.updateEmbeddedDocuments("Item", updates, { add2eReason: "vendor-restock-all" });
   ui.notifications?.info?.(`${vendor.name} : stocks réapprovisionnés.`);
   return true;
@@ -579,39 +487,58 @@ async function add2eVendorRestockAll(vendor) {
 
 async function add2eVendorSetStock(item, value) {
   if (!game.user?.isGM || !item) return false;
-  const qty = Math.max(0, Math.floor(add2eVendorNumber(value, 0)));
-  await item.update(add2eVendorSetQuantityPath(qty), { add2eReason: "vendor-manual-stock" });
+  await item.update(add2eVendorSetQuantityPath(value), { add2eReason: "vendor-manual-stock" });
   return true;
 }
 
+async function add2eVendorReadPackDocuments(packId) {
+  const pack = game.packs?.get?.(packId);
+  if (!pack) return [];
+  try {
+    const docs = await pack.getDocuments();
+    if (Array.isArray(docs) && docs.length) return docs;
+  } catch (err) {
+    console.warn("[ADD2E][VENDOR][PACK_DOCUMENTS_ERROR]", packId, err);
+  }
+  try {
+    const index = await pack.getIndex({ fields: ["name", "type", "system"] });
+    const docs = [];
+    for (const entry of index ?? []) {
+      const doc = await pack.getDocument(entry._id);
+      if (doc) docs.push(doc);
+    }
+    return docs;
+  } catch (err) {
+    console.warn("[ADD2E][VENDOR][PACK_INDEX_ERROR]", packId, err);
+    return [];
+  }
+}
+
 async function add2eVendorCollectSourceItems() {
-  const packIds = ["add2e.equipements", "world.equipements"];
+  const sources = [
+    { label: "composants", packIds: add2eVendorPackIds("composants"), accept: item => item?.type === "objet" && add2eVendorIsSpellComponent(item) },
+    { label: "projectiles", packIds: add2eVendorPackIds("projectiles"), accept: item => add2eVendorIsAmmunition(item) }
+  ];
   const collected = [];
   const seen = new Set();
-
-  for (const packId of packIds) {
-    const pack = game.packs?.get?.(packId);
-    if (!pack) continue;
-    let docs = [];
-    try { docs = await pack.getDocuments(); }
-    catch (err) { console.warn("[ADD2E][VENDOR][PACK_READ_ERROR]", packId, err); }
-    for (const doc of docs) {
-      if (!add2eVendorIsStockItem(doc)) continue;
-      const key = `${doc.type}:${add2eVendorSlug(doc.name)}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      collected.push(doc);
+  const add = (doc, source) => {
+    if (!doc || add2eVendorIsMagicStockItem(doc) || !source.accept(doc)) return;
+    const keyType = add2eVendorIsAmmunition(doc) ? "munition" : doc.type;
+    const key = `${keyType}:${add2eVendorSlug(doc.name)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    collected.push(doc);
+  };
+  for (const source of sources) {
+    for (const packId of source.packIds) {
+      const docs = await add2eVendorReadPackDocuments(packId);
+      for (const doc of docs) add(doc, source);
     }
   }
-
   for (const item of game.items ?? []) {
-    if (!add2eVendorIsStockItem(item)) continue;
-    const key = `${item.type}:${add2eVendorSlug(item.name)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    collected.push(item);
+    if (item?.type === "objet" && add2eVendorIsSpellComponent(item)) add(item, sources[0]);
+    if (add2eVendorIsAmmunition(item)) add(item, sources[1]);
   }
-
   return collected.sort((a, b) => String(a.name).localeCompare(String(b.name)));
 }
 
@@ -620,11 +547,12 @@ async function add2eVendorBuildStockData() {
   return docs.map(doc => {
     const data = doc.toObject ? doc.toObject() : foundry.utils.deepClone(doc);
     delete data._id;
+    if (add2eVendorIsAmmunition(doc)) data.type = "objet";
     data.system = data.system ?? {};
     const max = add2eVendorDefaultStock(doc);
     data.system.quantite = max;
-    if (!data.system.categorie && add2eVendorIsAmmunition(doc)) data.system.categorie = "munition";
-    if (!data.system.categorie && add2eVendorIsSpellComponent(doc)) data.system.categorie = "composant_sort";
+    if (add2eVendorIsAmmunition(doc)) data.system.categorie = "munition";
+    else if (!data.system.categorie && add2eVendorIsSpellComponent(doc)) data.system.categorie = "composant_sort";
     data.flags = data.flags ?? {};
     data.flags.add2e = data.flags.add2e ?? {};
     data.flags.add2e.vendorStockMax = max;
@@ -671,37 +599,17 @@ async function add2eUpdateVendorTokenSize(vendor = null) {
   if (!game.user?.isGM) return false;
   vendor = vendor ?? add2eFindDefaultVendor();
   if (!vendor) return false;
-
-  const actorUpdates = {
-    "img": ADD2E_VENDOR_TOKEN_IMG,
-    "prototypeToken.width": ADD2E_VENDOR_TOKEN_SIZE,
-    "prototypeToken.height": ADD2E_VENDOR_TOKEN_SIZE,
-    "prototypeToken.texture.src": ADD2E_VENDOR_TOKEN_IMG,
-    "flags.add2e.vendorVersion": ADD2E_VENDOR_VERSION
-  };
-
-  const currentWidth = Number(vendor.prototypeToken?.width ?? 1);
-  const currentHeight = Number(vendor.prototypeToken?.height ?? 1);
-  const currentTexture = vendor.prototypeToken?.texture?.src ?? vendor.prototypeToken?.texture?.src;
-  if (currentWidth !== ADD2E_VENDOR_TOKEN_SIZE || currentHeight !== ADD2E_VENDOR_TOKEN_SIZE || currentTexture !== ADD2E_VENDOR_TOKEN_IMG || vendor.img !== ADD2E_VENDOR_TOKEN_IMG) {
-    await vendor.update(actorUpdates, { add2eReason: "vendor-token-image-size" });
-  }
-
+  const actorUpdates = { img: ADD2E_VENDOR_TOKEN_IMG, "prototypeToken.width": ADD2E_VENDOR_TOKEN_SIZE, "prototypeToken.height": ADD2E_VENDOR_TOKEN_SIZE, "prototypeToken.texture.src": ADD2E_VENDOR_TOKEN_IMG, "flags.add2e.vendorVersion": ADD2E_VENDOR_VERSION };
+  if (Number(vendor.prototypeToken?.width ?? 1) !== ADD2E_VENDOR_TOKEN_SIZE || Number(vendor.prototypeToken?.height ?? 1) !== ADD2E_VENDOR_TOKEN_SIZE || vendor.prototypeToken?.texture?.src !== ADD2E_VENDOR_TOKEN_IMG || vendor.img !== ADD2E_VENDOR_TOKEN_IMG) await vendor.update(actorUpdates, { add2eReason: "vendor-token-image-size" });
   for (const scene of game.scenes ?? []) {
     const updates = [];
     for (const token of scene.tokens ?? []) {
-      const sameActor = token.actorId === vendor.id;
-      const sameName = token.name === ADD2E_VENDOR_NAME;
-      if (!sameActor && !sameName) continue;
-      const width = Number(token.width ?? 1);
-      const height = Number(token.height ?? 1);
-      const texture = token.texture?.src ?? "";
-      if (width === ADD2E_VENDOR_TOKEN_SIZE && height === ADD2E_VENDOR_TOKEN_SIZE && texture === ADD2E_VENDOR_TOKEN_IMG) continue;
+      if (token.actorId !== vendor.id && token.name !== ADD2E_VENDOR_NAME) continue;
+      if (Number(token.width ?? 1) === ADD2E_VENDOR_TOKEN_SIZE && Number(token.height ?? 1) === ADD2E_VENDOR_TOKEN_SIZE && token.texture?.src === ADD2E_VENDOR_TOKEN_IMG) continue;
       updates.push({ _id: token.id, width: ADD2E_VENDOR_TOKEN_SIZE, height: ADD2E_VENDOR_TOKEN_SIZE, "texture.src": ADD2E_VENDOR_TOKEN_IMG });
     }
     if (updates.length) await scene.updateEmbeddedDocuments("Token", updates, { add2eReason: "vendor-token-image-size" });
   }
-
   return true;
 }
 
@@ -714,7 +622,6 @@ export async function add2eCreateDefaultVendor({ force = false } = {}) {
     await add2eVendorEnsureStock(existing);
     return existing;
   }
-
   const stock = await add2eVendorBuildStockData();
   const observer = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OBSERVER ?? 2;
   const folder = await add2eVendorEnsureFolder();
@@ -724,26 +631,9 @@ export async function add2eCreateDefaultVendor({ force = false } = {}) {
     folder: folder?.id ?? null,
     img: ADD2E_VENDOR_TOKEN_IMG,
     ownership: { default: observer },
-    prototypeToken: {
-      name: ADD2E_VENDOR_NAME,
-      actorLink: true,
-      width: ADD2E_VENDOR_TOKEN_SIZE,
-      height: ADD2E_VENDOR_TOKEN_SIZE,
-      disposition: CONST?.TOKEN_DISPOSITIONS?.NEUTRAL ?? 0,
-      displayName: CONST?.TOKEN_DISPLAY_MODES?.OWNER_HOVER ?? 30,
-      displayBars: CONST?.TOKEN_DISPLAY_MODES?.NONE ?? 0,
-      texture: { src: ADD2E_VENDOR_TOKEN_IMG }
-    },
-    flags: {
-      add2e: {
-        isVendor: true,
-        vendorType: "components-projectiles",
-        vendorVersion: ADD2E_VENDOR_VERSION,
-        monnaie: { pc: 0, pa: 0, pe: 0, po: 500, pp: 0 }
-      }
-    }
+    prototypeToken: { name: ADD2E_VENDOR_NAME, actorLink: true, width: ADD2E_VENDOR_TOKEN_SIZE, height: ADD2E_VENDOR_TOKEN_SIZE, disposition: CONST?.TOKEN_DISPOSITIONS?.NEUTRAL ?? 0, displayName: CONST?.TOKEN_DISPLAY_MODES?.OWNER_HOVER ?? 30, displayBars: CONST?.TOKEN_DISPLAY_MODES?.NONE ?? 0, texture: { src: ADD2E_VENDOR_TOKEN_IMG } },
+    flags: { add2e: { isVendor: true, vendorType: "components-projectiles", vendorVersion: ADD2E_VENDOR_VERSION, monnaie: { pc: 0, pa: 0, pe: 0, po: 500, pp: 0 } } }
   }, { renderSheet: false, add2eReason: "vendor-create" });
-
   if (stock.length) await actor.createEmbeddedDocuments("Item", stock, { add2eReason: "vendor-initial-stock" });
   await game.settings.set("add2e", ADD2E_VENDOR_CREATION_SETTING, ADD2E_VENDOR_VERSION);
   ui.notifications?.info?.(`${ADD2E_VENDOR_NAME} créé avec ${stock.length} article(s).`);
@@ -765,172 +655,79 @@ async function add2eEnsureVendorOnFirstWorldLaunch() {
 }
 
 class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
-  static DEFAULT_OPTIONS = {
-    id: "add2e-vendor-app-{id}",
-    classes: ["add2e", "add2e-vendor-app"],
-    tag: "section",
-    window: { title: "Boutique ADD2E", resizable: true },
-    position: { width: 920, height: 680 }
-  };
-
+  static DEFAULT_OPTIONS = { id: "add2e-vendor-app-{id}", classes: ["add2e", "add2e-vendor-app"], tag: "section", window: { title: "Boutique ADD2E", resizable: true }, position: { width: 920, height: 680 } };
   constructor({ vendor, buyer } = {}, options = {}) {
     super(options);
     this.vendor = vendor;
     this.buyer = buyer ?? add2eVendorGetBuyer({ excludeVendor: true, preferCharacter: true });
     this.activeFilter = "all";
   }
-
-  get title() {
-    return `${this.vendor?.name ?? "Boutique"}${this.buyer ? ` — ${this.buyer.name}` : ""}`;
-  }
-
+  get title() { return `${this.vendor?.name ?? "Boutique"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
   async _prepareContext(_options = {}) {
-    const items = Array.from(this.vendor?.items ?? [])
-      .filter(add2eVendorIsStockItem)
-      .sort((a, b) => String(a.name).localeCompare(String(b.name)))
-      .map(item => {
-        const price = add2eVendorResolvePrice(item);
-        return {
-          id: item.id,
-          name: item.name,
-          img: item.img,
-          kind: add2eVendorStockKind(item),
-          stock: add2eVendorQuantity(item),
-          stockMax: add2eVendorStockMax(item),
-          priceLabel: add2eVendorFormatMoney(price.copper),
-          priceCopper: price.copper
-        };
-      });
-
-    return {
-      vendor: this.vendor,
-      buyer: this.buyer,
-      buyerMoney: this.buyer ? add2eVendorGetMoney(this.buyer) : add2eVendorMoneyFromObject({}),
-      buyerMoneyLabel: this.buyer ? add2eVendorFormatMoney(add2eVendorGetMoney(this.buyer)) : "Gestion MJ",
-      items,
-      isGM: game.user?.isGM === true,
-      activeFilter: this.activeFilter ?? "all"
-    };
+    const items = Array.from(this.vendor?.items ?? []).filter(add2eVendorIsStockItem).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(item => {
+      const price = add2eVendorResolvePrice(item);
+      return { id: item.id, name: item.name, img: item.img, kind: add2eVendorStockKind(item), stock: add2eVendorQuantity(item), stockMax: add2eVendorStockMax(item), priceLabel: add2eVendorFormatMoney(price.copper), priceCopper: price.copper };
+    });
+    return { vendor: this.vendor, buyer: this.buyer, buyerMoney: this.buyer ? add2eVendorGetMoney(this.buyer) : add2eVendorMoneyFromObject({}), buyerMoneyLabel: this.buyer ? add2eVendorFormatMoney(add2eVendorGetMoney(this.buyer)) : "Gestion MJ", items, isGM: game.user?.isGM === true, activeFilter: this.activeFilter ?? "all" };
   }
-
   async _renderHTML(context, _options = {}) {
     const rows = context.items.map(item => {
       const hidden = context.activeFilter !== "all" && item.kind !== context.activeFilter;
-      return `
-      <tr data-item-id="${item.id}" style="${hidden ? "display:none;" : ""}border-bottom:1px solid #e0c982;">
-        <td style="padding:6px 8px;min-width:260px;">
-          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-            <img src="${add2eVendorEscape(item.img)}" alt="${add2eVendorEscape(item.name)}" style="width:38px !important;height:38px !important;min-width:38px !important;max-width:38px !important;max-height:38px !important;object-fit:contain !important;border:1px solid #b98b2d;border-radius:6px;background:#f8edc7;">
-            <span style="font-weight:900;color:#2f250c;white-space:normal;line-height:1.2;">${add2eVendorEscape(item.name)}</span>
-          </div>
-        </td>
-        <td style="padding:6px 8px;color:#2f250c;font-weight:800;">${add2eVendorEscape(item.kind)}</td>
-        <td style="padding:6px 8px;color:#2f250c;font-weight:900;">${add2eVendorEscape(item.priceLabel)}</td>
-        <td style="padding:6px 8px;color:#2f250c;font-weight:800;">${item.stock} / ${item.stockMax}</td>
-        <td style="padding:6px 8px;"><input class="add2e-vendor-buy-qty" type="number" min="1" value="1" style="width:58px !important;text-align:center;border:1px solid #b98b2d;border-radius:6px;background:#fffaf0;color:#2f250c;font-weight:900;"></td>
-        <td style="padding:6px 8px;"><button type="button" class="add2e-vendor-buy" ${item.stock <= 0 || !context.buyer ? "disabled" : ""} style="border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Acheter</button></td>
-        ${context.isGM ? `<td style="padding:6px 8px;"><input class="add2e-vendor-stock-qty" type="number" min="0" value="${item.stock}" style="width:58px !important;text-align:center;border:1px solid #b98b2d;border-radius:6px;background:#fffaf0;color:#2f250c;font-weight:900;"><button type="button" class="add2e-vendor-stock-set" style="margin-left:6px;border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Stock</button></td>` : ""}
-      </tr>`;
+      return `<tr data-item-id="${item.id}" style="${hidden ? "display:none;" : ""}border-bottom:1px solid #e0c982;"><td style="padding:6px 8px;min-width:260px;"><div style="display:flex;align-items:center;gap:8px;min-width:0;"><img src="${add2eVendorEscape(item.img)}" alt="${add2eVendorEscape(item.name)}" style="width:38px !important;height:38px !important;min-width:38px !important;max-width:38px !important;max-height:38px !important;object-fit:contain !important;border:1px solid #b98b2d;border-radius:6px;background:#f8edc7;"><span style="font-weight:900;color:#2f250c;white-space:normal;line-height:1.2;">${add2eVendorEscape(item.name)}</span></div></td><td style="padding:6px 8px;color:#2f250c;font-weight:800;">${add2eVendorEscape(item.kind)}</td><td style="padding:6px 8px;color:#2f250c;font-weight:900;">${add2eVendorEscape(item.priceLabel)}</td><td style="padding:6px 8px;color:#2f250c;font-weight:800;">${item.stock} / ${item.stockMax}</td><td style="padding:6px 8px;"><input class="add2e-vendor-buy-qty" type="number" min="1" value="1" style="width:58px !important;text-align:center;border:1px solid #b98b2d;border-radius:6px;background:#fffaf0;color:#2f250c;font-weight:900;"></td><td style="padding:6px 8px;"><button type="button" class="add2e-vendor-buy" ${item.stock <= 0 || !context.buyer ? "disabled" : ""} style="border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Acheter</button></td>${context.isGM ? `<td style="padding:6px 8px;"><input class="add2e-vendor-stock-qty" type="number" min="0" value="${item.stock}" style="width:58px !important;text-align:center;border:1px solid #b98b2d;border-radius:6px;background:#fffaf0;color:#2f250c;font-weight:900;"><button type="button" class="add2e-vendor-stock-set" style="margin-left:6px;border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;">Stock</button></td>` : ""}</tr>`;
     }).join("");
-
     const colCount = context.isGM ? 7 : 6;
     const activeStyle = "box-shadow:0 0 0 2px #f0c36a inset;filter:brightness(1.12);";
     const buttonStyle = "border:1px solid #8d641b;border-radius:8px;background:linear-gradient(180deg,#7b4b16,#4b2b0b);color:#ffe7a8;font-weight:900;padding:5px 10px;";
     const div = document.createElement("div");
     div.className = "add2e-vendor-root";
     div.style.cssText = "height:100%;max-height:100%;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(180deg,#fff8df,#ead39b);color:#2f250c;";
-    div.innerHTML = `
-      <header class="add2e-vendor-header" style="flex:0 0 auto;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #b98b2d;background:linear-gradient(180deg,#5a3511,#2f1b08);color:#ffe7a8;">
-        <div>
-          <h2 style="margin:0;color:#ffe7a8;font-weight:950;">${add2eVendorEscape(context.vendor?.name ?? "Boutique")}</h2>
-          <p style="margin:4px 0 0;color:#fff2c2;">Acheteur : <strong>${add2eVendorEscape(context.buyer?.name ?? (context.isGM ? "gestion MJ" : "aucun personnage assigné"))}</strong></p>
-        </div>
-        <div class="add2e-vendor-money" style="padding:6px 10px;border:1px solid #d9bf73;border-radius:999px;background:#fff3c7;color:#3a2208;font-weight:950;white-space:nowrap;">${add2eVendorEscape(context.buyerMoneyLabel)}</div>
-      </header>
-      <div class="add2e-vendor-toolbar" style="flex:0 0 auto;display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid #d9bf73;background:#f6e2ad;">
-        <button type="button" class="add2e-vendor-filter ${context.activeFilter === "all" ? "active" : ""}" data-filter="all" style="${buttonStyle}${context.activeFilter === "all" ? activeStyle : ""}">Tous</button>
-        <button type="button" class="add2e-vendor-filter ${context.activeFilter === "Composant" ? "active" : ""}" data-filter="Composant" style="${buttonStyle}${context.activeFilter === "Composant" ? activeStyle : ""}">Composants</button>
-        <button type="button" class="add2e-vendor-filter ${context.activeFilter === "Projectile" ? "active" : ""}" data-filter="Projectile" style="${buttonStyle}${context.activeFilter === "Projectile" ? activeStyle : ""}">Projectiles</button>
-        ${context.isGM ? `<button type="button" class="add2e-vendor-restock-all" style="margin-left:auto;${buttonStyle}">Tout réapprovisionner</button>` : ""}
-      </div>
-      <div class="add2e-vendor-table-wrap" style="flex:1 1 auto;min-height:0;overflow-y:auto !important;overflow-x:hidden;padding:12px 14px 16px;">
-        <table class="add2e-vendor-table" style="width:100%;border-collapse:collapse;background:rgba(255,252,242,.94);border:1px solid #d9bf73;table-layout:auto;">
-          <thead>
-            <tr>
-              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Article</th>
-              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Type</th>
-              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Prix</th>
-              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Stock</th>
-              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Qté</th>
-              <th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Achat</th>
-              ${context.isGM ? `<th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">MJ</th>` : ""}
-            </tr>
-          </thead>
-          <tbody>${rows || `<tr><td colspan="${colCount}" style="padding:12px;color:#2f250c;">Aucun composant ou projectile en stock.</td></tr>`}</tbody>
-        </table>
-      </div>`;
+    div.innerHTML = `<header class="add2e-vendor-header" style="flex:0 0 auto;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #b98b2d;background:linear-gradient(180deg,#5a3511,#2f1b08);color:#ffe7a8;"><div><h2 style="margin:0;color:#ffe7a8;font-weight:950;">${add2eVendorEscape(context.vendor?.name ?? "Boutique")}</h2><p style="margin:4px 0 0;color:#fff2c2;">Acheteur : <strong>${add2eVendorEscape(context.buyer?.name ?? (context.isGM ? "gestion MJ" : "aucun personnage assigné"))}</strong></p></div><div class="add2e-vendor-money" style="padding:6px 10px;border:1px solid #d9bf73;border-radius:999px;background:#fff3c7;color:#3a2208;font-weight:950;white-space:nowrap;">${add2eVendorEscape(context.buyerMoneyLabel)}</div></header><div class="add2e-vendor-toolbar" style="flex:0 0 auto;display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid #d9bf73;background:#f6e2ad;"><button type="button" class="add2e-vendor-filter ${context.activeFilter === "all" ? "active" : ""}" data-filter="all" style="${buttonStyle}${context.activeFilter === "all" ? activeStyle : ""}">Tous</button><button type="button" class="add2e-vendor-filter ${context.activeFilter === "Composant" ? "active" : ""}" data-filter="Composant" style="${buttonStyle}${context.activeFilter === "Composant" ? activeStyle : ""}">Composants</button><button type="button" class="add2e-vendor-filter ${context.activeFilter === "Projectile" ? "active" : ""}" data-filter="Projectile" style="${buttonStyle}${context.activeFilter === "Projectile" ? activeStyle : ""}">Projectiles</button>${context.isGM ? `<button type="button" class="add2e-vendor-restock-all" style="margin-left:auto;${buttonStyle}">Tout réapprovisionner</button>` : ""}</div><div class="add2e-vendor-table-wrap" style="flex:1 1 auto;min-height:0;overflow-y:auto !important;overflow-x:hidden;padding:12px 14px 16px;"><table class="add2e-vendor-table" style="width:100%;border-collapse:collapse;background:rgba(255,252,242,.94);border:1px solid #d9bf73;table-layout:auto;"><thead><tr><th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Article</th><th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Type</th><th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Prix</th><th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Stock</th><th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Qté</th><th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">Achat</th>${context.isGM ? `<th style="position:sticky;top:0;z-index:2;background:#e8d08f;color:#2f250c;border-bottom:1px solid #b98b2d;padding:7px 8px;text-align:left;">MJ</th>` : ""}</tr></thead><tbody>${rows || `<tr><td colspan="${colCount}" style="padding:12px;color:#2f250c;">Aucun composant ou projectile en stock.</td></tr>`}</tbody></table></div>`;
     return div;
   }
-
   _replaceHTML(result, content, _options = {}) {
     content.style.overflow = "hidden";
     content.style.padding = "0";
     content.replaceChildren(result);
   }
-
   async _onRender(context, options = {}) {
     await super._onRender?.(context, options);
     const root = this.element?.querySelector?.(".add2e-vendor-root") ?? this.element;
     if (!root) return;
-
     const windowContent = this.element?.closest?.(".application")?.querySelector?.(".window-content") ?? this.element?.parentElement;
     if (windowContent) {
       windowContent.style.overflow = "hidden";
       windowContent.style.padding = "0";
       windowContent.style.background = "linear-gradient(180deg,#fff8df,#ead39b)";
     }
-
-    root.querySelectorAll(".add2e-vendor-buy").forEach(button => {
-      button.addEventListener("click", async ev => {
-        const row = ev.currentTarget.closest("tr[data-item-id]");
-        const item = this.vendor?.items?.get(row?.dataset?.itemId);
-        const qty = row?.querySelector?.(".add2e-vendor-buy-qty")?.value ?? 1;
-        const ok = await add2eVendorBuy({ vendor: this.vendor, buyer: this.buyer, item, quantity: qty });
-        if (ok) this.render({ force: true });
-      });
-    });
-
-    root.querySelectorAll(".add2e-vendor-stock-set").forEach(button => {
-      button.addEventListener("click", async ev => {
-        const row = ev.currentTarget.closest("tr[data-item-id]");
-        const item = this.vendor?.items?.get(row?.dataset?.itemId);
-        const qty = row?.querySelector?.(".add2e-vendor-stock-qty")?.value ?? 0;
-        await add2eVendorSetStock(item, qty);
-        this.render({ force: true });
-      });
-    });
-
-    root.querySelector(".add2e-vendor-restock-all")?.addEventListener("click", async () => {
-      await add2eVendorRestockAll(this.vendor);
+    root.querySelectorAll(".add2e-vendor-buy").forEach(button => button.addEventListener("click", async ev => {
+      const row = ev.currentTarget.closest("tr[data-item-id]");
+      const item = this.vendor?.items?.get(row?.dataset?.itemId);
+      const qty = row?.querySelector?.(".add2e-vendor-buy-qty")?.value ?? 1;
+      const ok = await add2eVendorBuy({ vendor: this.vendor, buyer: this.buyer, item, quantity: qty });
+      if (ok) this.render({ force: true });
+    }));
+    root.querySelectorAll(".add2e-vendor-stock-set").forEach(button => button.addEventListener("click", async ev => {
+      const row = ev.currentTarget.closest("tr[data-item-id]");
+      const item = this.vendor?.items?.get(row?.dataset?.itemId);
+      const qty = row?.querySelector?.(".add2e-vendor-stock-qty")?.value ?? 0;
+      await add2eVendorSetStock(item, qty);
       this.render({ force: true });
-    });
-
-    root.querySelectorAll(".add2e-vendor-filter").forEach(button => {
-      button.addEventListener("click", ev => {
-        const filter = ev.currentTarget.dataset.filter;
-        this.activeFilter = filter;
-        root.querySelectorAll(".add2e-vendor-filter").forEach(b => {
-          const active = b === ev.currentTarget;
-          b.classList.toggle("active", active);
-          b.style.boxShadow = active ? "0 0 0 2px #f0c36a inset" : "";
-          b.style.filter = active ? "brightness(1.12)" : "";
-        });
-        root.querySelectorAll("tbody tr[data-item-id]").forEach(row => {
-          const kind = row.children?.[1]?.textContent?.trim() ?? "";
-          row.style.display = filter === "all" || kind === filter ? "" : "none";
-        });
+    }));
+    root.querySelector(".add2e-vendor-restock-all")?.addEventListener("click", async () => { await add2eVendorRestockAll(this.vendor); this.render({ force: true }); });
+    root.querySelectorAll(".add2e-vendor-filter").forEach(button => button.addEventListener("click", ev => {
+      const filter = ev.currentTarget.dataset.filter;
+      this.activeFilter = filter;
+      root.querySelectorAll(".add2e-vendor-filter").forEach(b => {
+        const active = b === ev.currentTarget;
+        b.classList.toggle("active", active);
+        b.style.boxShadow = active ? "0 0 0 2px #f0c36a inset" : "";
+        b.style.filter = active ? "brightness(1.12)" : "";
       });
-    });
+      root.querySelectorAll("tbody tr[data-item-id]").forEach(row => {
+        const kind = row.children?.[1]?.textContent?.trim() ?? "";
+        row.style.display = filter === "all" || kind === filter ? "" : "none";
+      });
+    }));
   }
 }
 
@@ -951,35 +748,28 @@ export async function add2eOpenVendor({ vendor = null, buyer = null } = {}) {
 async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
   const vendor = token?.actor ?? null;
   if (!add2eIsVendorActor(vendor)) return false;
-
   const now = Date.now();
   const key = `${vendor.id}:${game.user?.id ?? "user"}`;
   const last = globalThis.__ADD2E_VENDOR_LAST_OPEN ?? {};
   if (last[key] && now - last[key] < 650) return true;
   last[key] = now;
   globalThis.__ADD2E_VENDOR_LAST_OPEN = last;
-
   const buyer = add2eVendorGetBuyer({ excludeVendor: true, preferCharacter: true });
   await add2eOpenVendor({ vendor, buyer });
   return true;
 }
 
 function add2eBindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV11) return;
+  if (!token || token.__add2eVendorBoundV12) return;
   if (!add2eIsVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV11 = true;
+  token.__add2eVendorBoundV12 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
-
-  const handler = ev => {
-    try {
-      window.setTimeout(() => add2eOpenVendorFromToken(token, { singleClick: true }), 0);
-    } catch (err) {
-      console.warn("[ADD2E][VENDOR][TOKEN_POINTER]", err);
-    }
+  const handler = () => {
+    try { window.setTimeout(() => add2eOpenVendorFromToken(token, { singleClick: true }), 0); }
+    catch (err) { console.warn("[ADD2E][VENDOR][TOKEN_POINTER]", err); }
   };
-
   try { token.on?.("pointertap", handler); } catch (_err) {}
   try { token.on?.("click", handler); } catch (_err) {}
 }
@@ -989,57 +779,39 @@ function add2eBindAllVendorTokens() {
 }
 
 function add2ePatchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V11) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V11 = true;
-
-  const TokenClass = globalThis.Token ?? foundry?.canvas?.placeables?.Token;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V12) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V12 = true;
+  const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
   const proto = TokenClass?.prototype;
   if (proto && typeof proto._onClickLeft === "function") {
     const original = proto._onClickLeft;
     proto._onClickLeft = function add2eVendorOnClickLeft(event) {
       const result = original.call(this, event);
-      try {
-        if (add2eIsVendorActor(this.actor)) {
-          window.setTimeout(() => add2eOpenVendorFromToken(this, { singleClick: true }), 0);
-        }
-      } catch (err) {
-        console.warn("[ADD2E][VENDOR][TOKEN_CLICK]", err);
-      }
+      try { if (add2eIsVendorActor(this.actor)) window.setTimeout(() => add2eOpenVendorFromToken(this, { singleClick: true }), 0); }
+      catch (err) { console.warn("[ADD2E][VENDOR][TOKEN_CLICK]", err); }
       return result;
     };
   }
-
   if (proto && typeof proto._onClickLeft2 === "function") {
     const original2 = proto._onClickLeft2;
     proto._onClickLeft2 = function add2eVendorOnClickLeft2(event) {
       const result = original2.call(this, event);
-      try {
-        if (add2eIsVendorActor(this.actor)) {
-          window.setTimeout(() => add2eOpenVendorFromToken(this, { singleClick: false }), 0);
-        }
-      } catch (err) {
-        console.warn("[ADD2E][VENDOR][TOKEN_DOUBLE_CLICK]", err);
-      }
+      try { if (add2eIsVendorActor(this.actor)) window.setTimeout(() => add2eOpenVendorFromToken(this, { singleClick: false }), 0); }
+      catch (err) { console.warn("[ADD2E][VENDOR][TOKEN_DOUBLE_CLICK]", err); }
       return result;
     };
   }
-
   Hooks.on("canvasReady", add2eBindAllVendorTokens);
   Hooks.on("createToken", () => window.setTimeout(add2eBindAllVendorTokens, 100));
   Hooks.on("updateToken", () => window.setTimeout(add2eBindAllVendorTokens, 100));
-  Hooks.on("controlToken", (token, controlled) => {
-    if (controlled && add2eIsVendorActor(token?.actor)) window.setTimeout(() => add2eOpenVendorFromToken(token, { singleClick: true }), 0);
-  });
-  Hooks.on("targetToken", (user, token, targeted) => {
-    if (user?.id === game.user?.id && targeted && add2eIsVendorActor(token?.actor)) window.setTimeout(() => add2eOpenVendorFromToken(token, { singleClick: true }), 0);
-  });
+  Hooks.on("controlToken", (token, controlled) => { if (controlled && add2eIsVendorActor(token?.actor)) window.setTimeout(() => add2eOpenVendorFromToken(token, { singleClick: true }), 0); });
+  Hooks.on("targetToken", (user, token, targeted) => { if (user?.id === game.user?.id && targeted && add2eIsVendorActor(token?.actor)) window.setTimeout(() => add2eOpenVendorFromToken(token, { singleClick: true }), 0); });
 }
 
 function add2ePatchActorSheetMoney() {
   const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eVendorMoneySheetV11) return;
-  proto.__add2eVendorMoneySheetV11 = true;
-
+  if (!proto || proto.__add2eVendorMoneySheetV12) return;
+  proto.__add2eVendorMoneySheetV12 = true;
   if (typeof proto.getData === "function") {
     const originalGetData = proto.getData;
     proto.getData = async function add2eVendorMoneyGetData(...args) {
@@ -1056,7 +828,6 @@ function add2ePatchActorSheetMoney() {
       return data;
     };
   }
-
   if (typeof proto.activateListeners === "function") {
     const originalActivateListeners = proto.activateListeners;
     proto.activateListeners = function add2eVendorMoneyActivateListeners(html) {
@@ -1077,41 +848,25 @@ function add2ePatchActorSheetMoney() {
 }
 
 function add2eRegisterVendorSockets() {
-  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V11) return;
-  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V11 = true;
-
+  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V12) return;
+  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V12 = true;
   game.socket?.on?.("system.add2e", async data => {
     if (!data || typeof data !== "object") return;
-
     if (data.type === "ADD2E_VENDOR_BUY_RESULT") {
       if (data.userId !== game.user?.id) return;
       if (data.ok) ui.notifications?.info?.(data.message ?? "Achat effectué.");
       else ui.notifications?.warn?.(data.message ?? "Achat impossible.");
       return;
     }
-
     if (data.type !== "ADD2E_VENDOR_BUY_REQUEST") return;
     if (!add2eVendorIsResponsibleGM()) return;
-
     const vendor = game.actors?.get(data.vendorId) ?? null;
     const buyer = game.actors?.get(data.buyerId) ?? null;
     const item = vendor?.items?.get(data.itemId) ?? null;
     let result = { ok: false, message: "Achat impossible." };
-
-    try {
-      result = await add2eVendorBuyLocal({ vendor, buyer, item, quantity: data.quantity }, { confirm: false, notify: false });
-    } catch (err) {
-      console.warn("[ADD2E][VENDOR][SOCKET_BUY_ERROR]", err);
-      result = { ok: false, message: err?.message || "Erreur pendant l'achat." };
-    }
-
-    game.socket?.emit?.("system.add2e", {
-      type: "ADD2E_VENDOR_BUY_RESULT",
-      requestId: data.requestId,
-      userId: data.userId,
-      ok: !!result.ok,
-      message: result.message
-    });
+    try { result = await add2eVendorBuyLocal({ vendor, buyer, item, quantity: data.quantity }, { confirm: false, notify: false }); }
+    catch (err) { console.warn("[ADD2E][VENDOR][SOCKET_BUY_ERROR]", err); result = { ok: false, message: err?.message || "Erreur pendant l'achat." }; }
+    game.socket?.emit?.("system.add2e", { type: "ADD2E_VENDOR_BUY_RESULT", requestId: data.requestId, userId: data.userId, ok: !!result.ok, message: result.message });
   });
 }
 
@@ -1119,8 +874,7 @@ function add2eRegisterVendorHooks() {
   Hooks.on("renderActorDirectory", (_app, html) => {
     if (!game.user?.isGM) return;
     const root = html?.jquery ? html[0] : html;
-    if (!root?.querySelector) return;
-    if (root.querySelector(".add2e-open-default-vendor")) return;
+    if (!root?.querySelector || root.querySelector(".add2e-open-default-vendor")) return;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "add2e-open-default-vendor";
@@ -1131,14 +885,7 @@ function add2eRegisterVendorHooks() {
 }
 
 Hooks.once("init", () => {
-  game.settings.register("add2e", ADD2E_VENDOR_CREATION_SETTING, {
-    name: "ADD2E — Création du vendeur système",
-    hint: "Version du vendeur de composants et projectiles créé automatiquement.",
-    scope: "world",
-    config: false,
-    type: String,
-    default: ""
-  });
+  game.settings.register("add2e", ADD2E_VENDOR_CREATION_SETTING, { name: "ADD2E — Création du vendeur système", hint: "Version du vendeur de composants et projectiles créé automatiquement.", scope: "world", config: false, type: String, default: "" });
   add2eRegisterVendorHooks();
 });
 
@@ -1153,14 +900,7 @@ Hooks.once("ready", async () => {
   game.add2e.moveVendorToFolder = add2eVendorMoveToFolder;
   game.add2e.spendProjectileForAttack = add2eVendorSpendProjectileForAttack;
   game.add2e.recoverProjectilesForCombat = add2eVendorRecoverProjectilesForCombat;
-  game.add2e.vendorMoney = {
-    coins: ADD2E_COINS,
-    get: add2eVendorGetMoney,
-    set: add2eVendorSetMoney,
-    format: add2eVendorFormatMoney,
-    toCopper: add2eVendorMoneyToCopper,
-    fromCopper: add2eVendorCopperToMoney
-  };
+  game.add2e.vendorMoney = { coins: ADD2E_COINS, get: add2eVendorGetMoney, set: add2eVendorSetMoney, format: add2eVendorFormatMoney, toCopper: add2eVendorMoneyToCopper, fromCopper: add2eVendorCopperToMoney };
   globalThis.add2eOpenVendor = add2eOpenVendor;
   globalThis.add2eCreateDefaultVendor = add2eCreateDefaultVendor;
   globalThis.add2eVendorMoney = game.add2e.vendorMoney;
