@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-add2e-tags-actions-v1";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-add2e-tags-actions-v2";
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -112,7 +112,14 @@ class Add2eCaracRoller {
     this.dialogRef = new DialogV2({
       window: { title: "Tirage des caractéristiques" },
       content: this._buildContent(),
-      buttons: [],
+      buttons: [
+        {
+          action: "add2e-technical-cancel",
+          label: "Annuler",
+          default: true,
+          callback: () => this.cancel()
+        }
+      ],
       close: () => this._onDialogClosed()
     }, { width: 500, height: "auto" });
 
@@ -124,6 +131,7 @@ class Add2eCaracRoller {
         console.warn("[ADD2E][CARAC_ROLLER] Racine de dialogue introuvable.");
         return;
       }
+      this._hideNativeFooter();
       this._bindDialogEvents();
       this._bindSheetTargets();
       this._updateCaracDisplay();
@@ -198,11 +206,20 @@ class Add2eCaracRoller {
     return this._dlgRoot?.closest?.(".application, .window-app, .app, .dialog") ?? null;
   }
 
+  _hideNativeFooter() {
+    const win = this._dialogWindowElement();
+    if (!win) return;
+    for (const footer of win.querySelectorAll(".form-footer, .dialog-buttons, footer")) {
+      if (!footer.closest("[data-add2e-carac-roller]")) footer.style.display = "none";
+    }
+  }
+
   _keepDialogOnTop() {
     const win = this._dialogWindowElement();
     if (!win) return;
     win.style.zIndex = "2147483000";
     win.dataset.add2eAlwaysOnTop = "carac-roller";
+    this._hideNativeFooter();
   }
 
   _startKeepOnTop() {
