@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-v1";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-style-v2";
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -97,7 +97,7 @@ class Add2eCaracRoller {
         }
       ],
       close: () => this._onDialogClosed()
-    }, { width: 520, height: "auto" });
+    }, { width: 560, height: "auto" });
 
     this.dialogRef.render({ force: true });
 
@@ -122,28 +122,43 @@ class Add2eCaracRoller {
   }
 
   _buildContent() {
+    const valueCards = this.values.map((v, i) => `
+      <button type="button"
+        class="add2e-carac-value"
+        data-idx="${i}"
+        style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:58px;height:62px;padding:6px 10px;border:1px solid #b8935d;border-radius:10px;background:linear-gradient(180deg,#f5dfae 0%,#d3a967 100%);box-shadow:0 2px 7px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.55);color:#2b1b0d;cursor:pointer;font-weight:700;line-height:1;"
+      >
+        <span class="add2e-carac-score" style="font-size:1.35rem;line-height:1;">${v}</span>
+        <span class="assigned-label" style="font-size:.72rem;min-height:.85rem;color:#5b3514;font-weight:800;letter-spacing:.04em;">—</span>
+      </button>`).join("");
+
     return `
       <style>
-        .add2e-carac-popup { font-family: var(--font-primary); }
-        .add2e-carac-values { display:flex; gap:0.7em; justify-content:center; margin-bottom:1em; flex-wrap:wrap; }
-        .add2e-carac-value { background:#e8d4b0; border:1px solid #b89255; border-radius:8px; padding:0.5em 1em; font-size:1.3em; font-weight:bold; cursor:pointer; box-shadow:0 2px 6px #0001; text-align:center; min-width:2.9em; }
-        .add2e-carac-value.used { opacity:0.55; background:#bbb; cursor:not-allowed; }
-        .add2e-carac-value.selected { outline:3px solid #8e44ad; background:#ffeaa7; }
-        .add2e-carac-help { font-size:0.97em; color:#88704b; text-align:center; margin-bottom:1em; }
-        .add2e-carac-apply { text-align:center; margin-top:1em; }
-        .add2e-carac-apply button { padding:0.5em 1.3em; font-size:1em; background:#8e44ad; color:#fff; border:0; border-radius:6px; cursor:pointer; }
-        .assigned-label { font-size:0.85em; color:#164a1b; margin-top:0.3em; display:block; font-weight:500; }
+        .add2e-carac-popup .add2e-carac-value:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .add2e-carac-popup .add2e-carac-value.selected { outline: 3px solid #f0d27a !important; box-shadow: 0 0 0 2px #6b3ca0, 0 0 16px rgba(240,210,122,.55) !important; }
+        .add2e-carac-popup .add2e-carac-value.used { opacity: .65 !important; background: linear-gradient(180deg,#7c766e 0%,#4d4945 100%) !important; color: #f4eadc !important; cursor: not-allowed !important; }
+        .add2e-carac-popup .add2e-carac-value.used .assigned-label { color: #f0d27a !important; }
+        .add2e-carac-popup .carac-class-list li { margin: 0 0 4px 0; }
+        .add2e-carac-popup .carac-class-list b { color: #b879ff; }
+        .add2e-carac-popup .carac-class-list .carac-ok { color: #42d681; font-weight: 800; }
       </style>
-      <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}">
-        <div class="add2e-carac-help">
-          Cliquez sur une valeur, puis sur une caractéristique à assigner.<br>
-          <b>Astuce :</b> cliquez sur une caractéristique déjà affectée pour la libérer.
+      <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}" style="box-sizing:border-box;width:100%;padding:12px 14px 4px 14px;color:#f1e8dc;background:radial-gradient(circle at 85% 20%,rgba(151,87,255,.16),transparent 35%),linear-gradient(180deg,rgba(34,27,42,.96),rgba(17,14,22,.96));border-radius:8px;">
+        <div style="border:1px solid rgba(214,176,116,.35);border-radius:10px;background:rgba(0,0,0,.18);padding:10px 12px;margin-bottom:12px;box-shadow:inset 0 0 16px rgba(0,0,0,.2);">
+          <div style="font-size:1.02rem;font-weight:800;color:#f5dfae;margin-bottom:4px;">Affectation des caractéristiques</div>
+          <div style="font-size:.88rem;line-height:1.35;color:#d8c9b4;">
+            Cliquez sur une valeur, puis sur une caractéristique de la fiche. Cliquez sur une caractéristique déjà affectée pour la libérer.
+          </div>
         </div>
-        <div class="add2e-carac-values">
-          ${this.values.map((v, i) => `<div class="add2e-carac-value" data-idx="${i}">${v}<div class="assigned-label">—</div></div>`).join("")}
+
+        <div class="add2e-carac-values" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin:0 0 14px 0;">
+          ${valueCards}
         </div>
-        <div id="classes-suggestions" style="margin:0.6em 0 0.1em 0.1em;"></div>
-        <div class="add2e-carac-apply"><button type="button" class="apply-caracs-btn">Valider</button></div>
+
+        <div id="classes-suggestions" style="margin:0 0 12px 0;padding:10px 12px;border:1px solid rgba(214,176,116,.28);border-radius:10px;background:rgba(0,0,0,.20);max-height:260px;overflow:auto;"></div>
+
+        <div class="add2e-carac-apply" style="display:flex;justify-content:center;margin-top:10px;">
+          <button type="button" class="apply-caracs-btn" style="min-width:170px;padding:8px 18px;border:1px solid #d8b16c;border-radius:8px;background:linear-gradient(180deg,#8e44ad 0%,#5d2c7d 100%);color:#fff7e8;font-weight:800;letter-spacing:.02em;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35);">Valider</button>
+        </div>
       </div>
     `;
   }
@@ -268,8 +283,8 @@ class Add2eCaracRoller {
     if (!classes.length) return "<em>Aucune classe trouvée</em>";
 
     const values = [...this.values].sort((a, b) => b - a);
-    let html = '<div style="margin:0.6em 0 0.2em 0.1em;font-size:1.05em;"><b>Classes accessibles et valeur à placer :</b></div>';
-    html += '<ul style="padding-left:1.1em;line-height:1.5em;font-size:1.05em;">';
+    let html = '<div style="margin:0 0 8px 0;font-size:1rem;color:#f5dfae;font-weight:800;">Classes accessibles et valeur à placer :</div>';
+    html += '<ul class="carac-class-list" style="padding-left:1.15em;margin:0;line-height:1.45;font-size:.96rem;">';
 
     for (const cls of classes) {
       const requis = Object.entries(cls.system?.caracs_min || {});
@@ -281,11 +296,11 @@ class Add2eCaracRoller {
         const min = Number(minRaw) || 0;
         const idx = pool.findIndex(val => val + add2eCaracRaceBonus(this.actor, carac) >= min);
         if (idx === -1) { ok = false; break; }
-        placements.push(`<b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b> <span style="color:#219150;font-weight:bold">${pool[idx]}</span>`);
+        placements.push(`<b>${ADD2E_CARAC_SHORT[carac] || add2eCaracEscapeHtml(carac)}</b> <span class="carac-ok">${pool[idx]}</span>`);
         pool.splice(idx, 1);
       }
 
-      if (ok) html += `<li><b style="color:#6a3c99">${add2eCaracEscapeHtml(cls.name)}</b>${placements.length ? ` : ${placements.join(', ')}` : ''}</li>`;
+      if (ok) html += `<li><b>${add2eCaracEscapeHtml(cls.name)}</b>${placements.length ? ` : ${placements.join(', ')}` : ''}</li>`;
     }
 
     html += '</ul>';
