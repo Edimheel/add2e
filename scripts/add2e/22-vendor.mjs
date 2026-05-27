@@ -1,7 +1,7 @@
 // ADD2E — Vendeur système : composants, projectiles et monnaie complète
 // ApplicationV2 + DialogV2, création automatique au premier lancement du monde.
 
-const ADD2E_VENDOR_VERSION = "2026-05-26-vendor-v9-mj-open";
+const ADD2E_VENDOR_VERSION = "2026-05-27-vendor-v10-projectile-recovery";
 globalThis.ADD2E_VENDOR_VERSION = ADD2E_VENDOR_VERSION;
 
 const ADD2E_VENDOR_FLAG_SCOPE = "add2e";
@@ -9,6 +9,8 @@ const ADD2E_VENDOR_NAME = "Marchand de composants et projectiles";
 const ADD2E_VENDOR_CREATION_SETTING = "vendorCreationVersion";
 const ADD2E_VENDOR_TOKEN_SIZE = 2;
 const ADD2E_VENDOR_TOKEN_IMG = "systems/add2e/assets/ui/boutique.webp";
+const ADD2E_PROJECTILE_SPENT_FLAG = "projectilesDepensesCombat";
+const ADD2E_PROJECTILE_RECOVERY_RATE = 0.6;
 
 const ADD2E_COINS = [
   { key: "pp", label: "PP", name: "Pièces de platine", pc: 1000 },
@@ -263,6 +265,184 @@ async function add2eVendorMergeOrCreateItem(actor, sourceItem, quantity) {
   itemData.flags.add2e.purchasedFromVendor = true;
   const created = await actor.createEmbeddedDocuments("Item", [itemData], { add2eReason: "vendor-buy-create" });
   return created?.[0] ?? null;
+}
+
+function add2eVendorWeaponRequiresProjectile(arme) {
+  const sys = arme?.system ?? {};
+  const tags = add2eVendorTags(arme).map(t => String(t).toLowerCase());
+  const name = String(arme?.name ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const hasRange = Number(sys.portee_courte ?? 0) > 0;
+  if (!hasRange) return false;
+  if (tags.some(t => ["usage:projectile_propulse", "categorie:projectile_propulse", "trait:projectile_propulse", "type:projectile_propulse", "arme:projectile_propulse"].includes(t))) return true;
+  if (/\b(arc|arbalete|fronde)\b/.test(name)) return true;
+  if (/\b(fleche|carreau|trait|bille|pierre de fronde)\b/.test(name)) return true;
+  if (tags.some(t => ["usage:lancer", "usage:jet", "usage:arme_de_jet", "trait:arme_de_jet", "type:arme_de_jet"].includes(t))) return false;
+  if (/\b(dague|hachette|javelot|lance|couteau)\b/.test(name)) return false;
+  return true;
+}
+
+function add2eVendorIsEquippedProjectile(item) {
+  const sys = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return sys.equipee === true || sys.equiped === true || sys.equipped === true || flags.equippedProjectile === true || flags.carquoisEquipe === true || flags.selectedProjectile === true;
+}
+
+function add2eVendorFindEquippedProjectile(actor) {
+  const projectiles = Array.from(actor?.items ?? []).filter(item => item?.type === "objet" && add2eVendorIsAmmunition(item));
+  const equipped = projectiles.find(item => add2eVendorIsEquippedProjectile(item));
+  return equipped ?? null;
+}
+
+function add2eVendorProjectileSummary(actor) {
+  return Array.from(actor?.items ?? [])
+    .filter(item => item?.type === "objet" && add2eVendorIsAmmunition(item))
+    .map(item => `${item.name} (${add2eVendorQuantity(item)})`)
+    .join(", ");
+}
+
+async function add2eVendorRecordProjectileSpent({ actor, projectile, quantity = 1 }) {
+  const combat = game.combat ?? null;
+  if (!combat || !combat.started) return false;
+
+  const q = Math.max(1, Math.floor(add2eVendorNumber(quantity, 1)));
+  const current = foundry.utils.deepClone(await combat.getFlag(ADD2E_VENDOR_FLAG_SCOPE, ADD2E_PROJECTILE_SPENT_FLAG) ?? {});
+  const actorId = actor?.id;
+  const itemKey = projectile?.id || add2eVendorSlug(projectile?.name);
+  if (!actorId || !itemKey) return false;
+
+  current[actorId] = current[actorId] ?? {
+    actorId,
+    actorName: actor.name,
+    items: {}
+  };
+  current[actorId].actorName = actor.name;
+  current[actorId].items[itemKey] = current[actorId].items[itemKey] ?? {
+    itemId: projectile.id,
+    itemName: projectile.name,
+    img: projectile.img,
+    spent: 0
+  };
+  current[actorId].items[itemKey].spent = Math.max(0, Math.floor(add2eVendorNumber(current[actorId].items[itemKey].spent, 0))) + q;
+  current[actorId].items[itemKey].itemName = projectile.name;
+  current[actorId].items[itemKey].img = projectile.img;
+
+  await combat.setFlag(ADD2E_VENDOR_FLAG_SCOPE, ADD2E_PROJECTILE_SPENT_FLAG, current);
+  return true;
+}
+
+async function add2eVendorSpendProjectileForAttack({ actor, arme } = {}) {
+  if (!add2eVendorWeaponRequiresProjectile(arme)) return { ok: true, required: false, spent: 0 };
+  const projectile = add2eVendorFindEquippedProjectile(actor);
+  const qty = add2eVendorQuantity(projectile);
+
+  if (!projectile || qty <= 0) {
+    const detail = add2eVendorProjectileSummary(actor);
+    await add2eVendorAlert(
+      "Projectile indisponible",
+      detail
+        ? `Aucun projectile équipé avec une quantité disponible. Projectiles dans le carquois : ${detail}.`
+        : "Aucun projectile disponible dans le carquois."
+    );
+    return { ok: false, required: true, spent: 0 };
+  }
+
+  await projectile.update(add2eVendorSetQuantityPath(qty - 1), { add2eReason: "projectile-spent-attack" });
+  await add2eVendorRecordProjectileSpent({ actor, projectile, quantity: 1 });
+  return { ok: true, required: true, spent: 1, projectile };
+}
+
+async function add2eVendorRecoverProjectilesForCombat(combat) {
+  if (!add2eVendorIsResponsibleGM()) return false;
+  if (!combat?.getFlag) return false;
+
+  const spent = foundry.utils.deepClone(await combat.getFlag(ADD2E_VENDOR_FLAG_SCOPE, ADD2E_PROJECTILE_SPENT_FLAG) ?? {});
+  const rows = [];
+
+  for (const actorEntry of Object.values(spent)) {
+    const actor = game.actors?.get(actorEntry.actorId);
+    if (!actor) continue;
+
+    for (const itemEntry of Object.values(actorEntry.items ?? {})) {
+      const qtySpent = Math.max(0, Math.floor(add2eVendorNumber(itemEntry.spent, 0)));
+      if (!qtySpent) continue;
+      const recovered = Math.max(0, Math.round(qtySpent * ADD2E_PROJECTILE_RECOVERY_RATE));
+      if (!recovered) {
+        rows.push({ actor: actor.name, item: itemEntry.itemName, spent: qtySpent, recovered: 0 });
+        continue;
+      }
+
+      let item = actor.items?.get(itemEntry.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === itemEntry.itemName && add2eVendorIsAmmunition(i));
+      if (item) {
+        await item.update(add2eVendorSetQuantityPath(add2eVendorQuantity(item) + recovered), { add2eReason: "projectile-combat-recovery" });
+      }
+      rows.push({ actor: actor.name, item: itemEntry.itemName, spent: qtySpent, recovered });
+    }
+  }
+
+  if (!rows.length) return false;
+
+  const htmlRows = rows.map(row => `
+    <tr>
+      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eVendorEscape(row.actor)}</td>
+      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;">${add2eVendorEscape(row.item)}</td>
+      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;">${row.spent}</td>
+      <td style="padding:5px 7px;border-bottom:1px solid #e2ca88;text-align:center;font-weight:900;color:#1f7a3f;">${row.recovered}</td>
+    </tr>`).join("");
+
+  const content = `
+    <div class="add2e-dialog add2e-vendor-alert" style="color:#2f250c;">
+      <h3>Récupération des projectiles</h3>
+      <p>Fin de combat : 60 % des projectiles dépensés sont récupérés.</p>
+      <table style="width:100%;border-collapse:collapse;background:#fffaf0;border:1px solid #d9bf73;">
+        <thead><tr style="background:#e8d08f;"><th>Acteur</th><th>Projectile</th><th>Dépensés</th><th>Récupérés</th></tr></thead>
+        <tbody>${htmlRows}</tbody>
+      </table>
+    </div>`;
+
+  await add2eVendorDialog({ title: "Récupération des projectiles", content, yes: "Compris", no: "Fermer" });
+  return true;
+}
+
+function add2eRegisterProjectileRecoveryHooks() {
+  if (globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V10) return;
+  globalThis.__ADD2E_PROJECTILE_RECOVERY_HOOKS_V10 = true;
+
+  Hooks.on("deleteCombat", combat => {
+    add2eVendorRecoverProjectilesForCombat(combat).catch(err => console.warn("[ADD2E][PROJECTILES][RECOVERY][deleteCombat]", err));
+  });
+
+  Hooks.on("updateCombat", (combat, changed) => {
+    if (!changed) return;
+    if (changed.active === false || changed.round === null) {
+      add2eVendorRecoverProjectilesForCombat(combat).catch(err => console.warn("[ADD2E][PROJECTILES][RECOVERY][updateCombat]", err));
+    }
+  });
+}
+
+function add2ePatchAttackRollProjectileConsumption() {
+  if (globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V10) return;
+  const original = globalThis.add2eAttackRoll;
+  if (typeof original !== "function") return;
+
+  globalThis.__ADD2E_ATTACK_PROJECTILE_PATCH_V10 = true;
+  globalThis.add2eAttackRoll = async function add2eAttackRollWithProjectiles(args = {}) {
+    const actor = args.actor ?? (args.actorId ? game.actors?.get(args.actorId) : null);
+    const arme = args.arme ?? (actor && args.itemId ? actor.items?.get(args.itemId) : null);
+
+    if (actor && arme && add2eVendorWeaponRequiresProjectile(arme)) {
+      const projectile = add2eVendorFindEquippedProjectile(actor);
+      if (!projectile || add2eVendorQuantity(projectile) <= 0) {
+        await add2eVendorSpendProjectileForAttack({ actor, arme });
+        return false;
+      }
+    }
+
+    const result = await original.call(this, args);
+    if (result === true && actor && arme) {
+      await add2eVendorSpendProjectileForAttack({ actor, arme });
+    }
+    return result;
+  };
 }
 
 async function add2eVendorBuyLocal({ vendor, buyer, item, quantity }, { confirm = true, notify = true } = {}) {
@@ -712,9 +892,9 @@ async function add2eOpenVendorFromToken(token, { singleClick = false } = {}) {
 }
 
 function add2eBindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV9) return;
+  if (!token || token.__add2eVendorBoundV10) return;
   if (!add2eIsVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV9 = true;
+  token.__add2eVendorBoundV10 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
@@ -737,8 +917,8 @@ function add2eBindAllVendorTokens() {
 }
 
 function add2ePatchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V9) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V9 = true;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V10) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V10 = true;
 
   const TokenClass = globalThis.Token ?? foundry?.canvas?.placeables?.Token;
   const proto = TokenClass?.prototype;
@@ -785,8 +965,8 @@ function add2ePatchVendorTokenClick() {
 
 function add2ePatchActorSheetMoney() {
   const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eVendorMoneySheetV9) return;
-  proto.__add2eVendorMoneySheetV9 = true;
+  if (!proto || proto.__add2eVendorMoneySheetV10) return;
+  proto.__add2eVendorMoneySheetV10 = true;
 
   if (typeof proto.getData === "function") {
     const originalGetData = proto.getData;
@@ -825,8 +1005,8 @@ function add2ePatchActorSheetMoney() {
 }
 
 function add2eRegisterVendorSockets() {
-  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V9) return;
-  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V9 = true;
+  if (globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V10) return;
+  globalThis.__ADD2E_VENDOR_SOCKET_REGISTERED_V10 = true;
 
   game.socket?.on?.("system.add2e", async data => {
     if (!data || typeof data !== "object") return;
@@ -897,6 +1077,8 @@ Hooks.once("ready", async () => {
   game.add2e.createDefaultVendor = add2eCreateDefaultVendor;
   game.add2e.findDefaultVendor = add2eFindDefaultVendor;
   game.add2e.updateVendorTokenSize = add2eUpdateVendorTokenSize;
+  game.add2e.spendProjectileForAttack = add2eVendorSpendProjectileForAttack;
+  game.add2e.recoverProjectilesForCombat = add2eVendorRecoverProjectilesForCombat;
   game.add2e.vendorMoney = {
     coins: ADD2E_COINS,
     get: add2eVendorGetMoney,
@@ -908,11 +1090,16 @@ Hooks.once("ready", async () => {
   globalThis.add2eOpenVendor = add2eOpenVendor;
   globalThis.add2eCreateDefaultVendor = add2eCreateDefaultVendor;
   globalThis.add2eVendorMoney = game.add2e.vendorMoney;
+  globalThis.add2eSpendProjectileForAttack = add2eVendorSpendProjectileForAttack;
+  globalThis.add2eRecoverProjectilesForCombat = add2eVendorRecoverProjectilesForCombat;
   await add2eEnsureVendorOnFirstWorldLaunch().catch(err => console.warn("[ADD2E][VENDOR][AUTO_CREATE]", err));
   await add2eUpdateVendorTokenSize().catch(err => console.warn("[ADD2E][VENDOR][TOKEN_SIZE]", err));
   add2eRegisterVendorSockets();
+  add2eRegisterProjectileRecoveryHooks();
   add2ePatchActorSheetMoney();
   add2ePatchVendorTokenClick();
   window.setTimeout(add2eBindAllVendorTokens, 500);
+  window.setTimeout(add2ePatchAttackRollProjectileConsumption, 800);
+  window.setTimeout(add2ePatchAttackRollProjectileConsumption, 2000);
   add2eVendorLog("ready", ADD2E_VENDOR_VERSION);
 });
