@@ -45,10 +45,11 @@
             <h2>Monnaie</h2>
             <div class="a2e-panel-body">
               <div class="add2e-money-grid" style="display:grid;grid-template-columns:1fr;gap:6px;">
-                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PP <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pp" value="{{add2eVendorMoney.pp}}"></label>
-                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PO <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="po" value="{{add2eVendorMoney.po}}"></label>
-                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PA <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pa" value="{{add2eVendorMoney.pa}}"></label>
-                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PC <input class="add2e-money-input" style="width:100%;" type="number" min="0" step="1" data-coin="pc" value="{{add2eVendorMoney.pc}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PP <input class="add2e-money-input" name="flags.add2e.monnaie.pp" style="width:100%;" type="number" min="0" step="1" data-coin="pp" value="{{add2eVendorMoney.pp}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PO <input class="add2e-money-input" name="flags.add2e.monnaie.po" style="width:100%;" type="number" min="0" step="1" data-coin="po" value="{{add2eVendorMoney.po}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PE <input class="add2e-money-input" name="flags.add2e.monnaie.pe" style="width:100%;" type="number" min="0" step="1" data-coin="pe" value="{{add2eVendorMoney.pe}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PA <input class="add2e-money-input" name="flags.add2e.monnaie.pa" style="width:100%;" type="number" min="0" step="1" data-coin="pa" value="{{add2eVendorMoney.pa}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PC <input class="add2e-money-input" name="flags.add2e.monnaie.pc" style="width:100%;" type="number" min="0" step="1" data-coin="pc" value="{{add2eVendorMoney.pc}}"></label>
               </div>
               <p class="a2e-small" style="margin:8px 0 0;line-height:1.35;"><b>Total :</b><br>{{add2eVendorMoneyLabel}}</p>
             </div>
