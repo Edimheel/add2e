@@ -17,6 +17,10 @@ import { injectCharacterUiStyles } from "./08-character-sheet-ui-03-styles.mjs";
 
 console.log("[ADD2E][CHARACTER_UI][VERSION]", ADD2E_CHARACTER_SHEET_UI_VERSION);
 
+const ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE = "add2e";
+const ADD2E_PROJECTILE_COMBAT_FLAG_KEY = "projectilesDepensesCombat";
+const ADD2E_PROJECTILE_SOCKET_TYPE = "ADD2E_PROJECTILE_SPENT_REQUEST";
+
 export function add2eEnhanceCharacterSheetUi(sheet, html) {
   const actor = sheet?.actor ?? sheet?.document;
   if (!actor || actor.type !== "personnage") return;
@@ -76,8 +80,119 @@ function add2eRefreshActorSheetsForItemChange(item, reason = "item-change") {
   }
 }
 
+function add2eIsResponsibleGM() {
+  if (!game.user?.isGM) return false;
+  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+  return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
+}
+
+function add2eProjectileBuildSpentDeltas(combatId, value) {
+  const deltas = [];
+  const lastSent = globalThis.__ADD2E_PROJECTILE_LAST_SENT ?? {};
+  globalThis.__ADD2E_PROJECTILE_LAST_SENT = lastSent;
+
+  for (const actorEntry of Object.values(value ?? {})) {
+    const actorId = actorEntry?.actorId;
+    if (!actorId) continue;
+
+    for (const itemEntry of Object.values(actorEntry.items ?? {})) {
+      const itemId = itemEntry?.itemId || itemEntry?.itemName;
+      const itemName = itemEntry?.itemName ?? "Projectile";
+      const spent = Math.max(0, Math.floor(Number(itemEntry?.spent ?? 0)));
+      if (!itemId || !spent) continue;
+
+      const key = `${combatId}:${actorId}:${itemId}`;
+      const previous = Math.max(0, Math.floor(Number(lastSent[key] ?? 0)));
+      const delta = spent > previous ? spent - previous : 1;
+      lastSent[key] = Math.max(spent, previous + delta);
+
+      deltas.push({
+        actorId,
+        actorName: actorEntry.actorName ?? "Acteur",
+        itemId: itemEntry.itemId ?? null,
+        itemName,
+        img: itemEntry.img ?? null,
+        delta
+      });
+    }
+  }
+
+  return deltas;
+}
+
+async function add2eProjectileMergeSpentDeltas({ combatId, deltas = [] } = {}) {
+  if (!add2eIsResponsibleGM()) return false;
+  const combat = game.combats?.get?.(combatId) ?? game.combat;
+  if (!combat?.setFlag || !deltas.length) return false;
+
+  const current = foundry.utils.deepClone(await combat.getFlag(ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE, ADD2E_PROJECTILE_COMBAT_FLAG_KEY) ?? {});
+
+  for (const deltaEntry of deltas) {
+    const actorId = deltaEntry.actorId;
+    const itemKey = deltaEntry.itemId || deltaEntry.itemName;
+    const delta = Math.max(1, Math.floor(Number(deltaEntry.delta ?? 1)));
+    if (!actorId || !itemKey) continue;
+
+    current[actorId] = current[actorId] ?? {
+      actorId,
+      actorName: deltaEntry.actorName ?? "Acteur",
+      items: {}
+    };
+    current[actorId].actorName = deltaEntry.actorName ?? current[actorId].actorName;
+    current[actorId].items[itemKey] = current[actorId].items[itemKey] ?? {
+      itemId: deltaEntry.itemId ?? null,
+      itemName: deltaEntry.itemName ?? "Projectile",
+      img: deltaEntry.img ?? null,
+      spent: 0
+    };
+    current[actorId].items[itemKey].spent = Math.max(0, Math.floor(Number(current[actorId].items[itemKey].spent ?? 0))) + delta;
+    current[actorId].items[itemKey].itemName = deltaEntry.itemName ?? current[actorId].items[itemKey].itemName;
+    current[actorId].items[itemKey].img = deltaEntry.img ?? current[actorId].items[itemKey].img;
+  }
+
+  await combat.setFlag(ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE, ADD2E_PROJECTILE_COMBAT_FLAG_KEY, current);
+  return true;
+}
+
+function add2eRegisterProjectileSpentSocketPatch() {
+  if (globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V1) return;
+  globalThis.__ADD2E_PROJECTILE_SPENT_SOCKET_PATCH_V1 = true;
+
+  game.socket?.on?.("system.add2e", data => {
+    if (data?.type !== ADD2E_PROJECTILE_SOCKET_TYPE) return;
+    add2eProjectileMergeSpentDeltas(data).catch(err => console.warn("[ADD2E][PROJECTILES][SOCKET_MERGE]", err));
+  });
+
+  const CombatClass = CONFIG?.Combat?.documentClass ?? foundry?.documents?.Combat ?? globalThis.Combat;
+  const proto = CombatClass?.prototype;
+  if (!proto?.setFlag || proto.__add2eProjectileSpentSetFlagPatched) return;
+
+  const originalSetFlag = proto.setFlag;
+  proto.__add2eProjectileSpentSetFlagPatched = true;
+  proto.setFlag = async function add2eProjectileSpentSetFlag(scope, key, value, ...rest) {
+    if (!game.user?.isGM && scope === ADD2E_PROJECTILE_COMBAT_FLAG_SCOPE && key === ADD2E_PROJECTILE_COMBAT_FLAG_KEY) {
+      const combatId = this.id;
+      const deltas = add2eProjectileBuildSpentDeltas(combatId, value);
+      if (deltas.length) {
+        game.socket?.emit?.("system.add2e", {
+          type: ADD2E_PROJECTILE_SOCKET_TYPE,
+          userId: game.user.id,
+          combatId,
+          deltas
+        });
+      }
+      return true;
+    }
+    return originalSetFlag.call(this, scope, key, value, ...rest);
+  };
+}
+
 Hooks.on("renderActorSheet", bindOnRender);
 Hooks.on("renderApplication", bindOnRender);
+
+Hooks.once("ready", () => {
+  add2eRegisterProjectileSpentSocketPatch();
+});
 
 for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
   Hooks.on(hookName, (item, _changes, _options, _userId) => {
@@ -86,3 +201,4 @@ for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
 }
 
 expose("add2eEnhanceCharacterSheetUi", add2eEnhanceCharacterSheetUi);
+expose("add2eProjectileMergeSpentDeltas", add2eProjectileMergeSpentDeltas);
