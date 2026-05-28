@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-28-application-v2-token-header-v14-token-config-v2";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-28-application-v2-token-header-v14-native-token-config-v3";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -163,6 +163,22 @@ function add2eGetTokenConfigClasses() {
   };
 }
 
+async function add2eTryNativeActorSheetTokenAction(sheet, target, event = null) {
+  const actions = ADD2E_DOCUMENT_SHEET_V2?.DEFAULT_OPTIONS?.actions ?? {};
+  const actionName = target?.mode === "scene-token" ? "configureToken" : "configurePrototypeToken";
+  const action = actions[actionName];
+  if (typeof action !== "function") return false;
+
+  try {
+    await action.call(sheet, event ?? new PointerEvent("click"), event?.currentTarget ?? null);
+    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED] native ActorSheetV2 action", actionName);
+    return true;
+  } catch (err) {
+    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][NATIVE_ACTION_FAILED]", actionName, err);
+    return false;
+  }
+}
+
 async function add2eRenderTokenDocumentSheet(tokenDocument, options = {}) {
   if (!tokenDocument) return false;
 
@@ -233,10 +249,12 @@ async function add2eOpenTokenConfig(sheet, event = null) {
       tokenId: targetDocument?.id ?? null,
       tokenName: targetDocument?.name ?? null,
       sceneId: targetDocument?.parent?.id ?? null,
-      tokenConfigV14: true
+      tokenConfigNativeAction: true
     });
 
     if (!targetDocument) return ui.notifications?.warn?.("Aucun token configurable trouvé pour cet acteur.");
+
+    if (await add2eTryNativeActorSheetTokenAction(sheet, target, event)) return;
 
     const options = add2eTokenConfigPosition(sheet, target.mode === "scene-token" ? targetDocument?.parent : actor);
 
