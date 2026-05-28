@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-25-application-v2-token-header-v5-icon-only";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-28-application-v2-token-header-v14-token-config-v1";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -137,8 +137,21 @@ async function add2eTryRenderTokenConfig(label, createApp) {
   }
 }
 
+function add2eGetTokenConfigClasses() {
+  return {
+    tokenConfig: ADD2E_SHEETS_API.TokenConfig ?? foundry?.applications?.apps?.TokenConfig ?? CONFIG?.Token?.sheetClass ?? globalThis.TokenConfig ?? null,
+    prototypeConfig: ADD2E_SHEETS_API.PrototypeTokenConfig ?? foundry?.applications?.apps?.PrototypeTokenConfig ?? CONFIG?.Token?.prototypeSheetClass ?? globalThis.PrototypeTokenConfig ?? null
+  };
+}
+
 async function add2eRenderTokenDocumentSheet(tokenDocument, options = {}) {
   if (!tokenDocument) return false;
+
+  const { tokenConfig } = add2eGetTokenConfigClasses();
+  const parent = options.parent ?? tokenDocument.parent ?? null;
+
+  if (await add2eTryRenderTokenConfig("TokenConfig({document,parent})", () => tokenConfig ? new tokenConfig({ document: tokenDocument, parent, ...options }) : null)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig({object,parent})", () => tokenConfig ? new tokenConfig({ object: tokenDocument, document: tokenDocument, parent, ...options }) : null)) return true;
 
   if (tokenDocument.sheet?.render) {
     try {
@@ -153,20 +166,24 @@ async function add2eRenderTokenDocumentSheet(tokenDocument, options = {}) {
     }
   }
 
-  const TokenConfigClass = foundry?.applications?.sheets?.TokenConfig ?? CONFIG?.Token?.sheetClass ?? globalThis.TokenConfig;
-  if (!TokenConfigClass) return false;
-
-  if (await add2eTryRenderTokenConfig("TokenConfig({document})", () => new TokenConfigClass({ document: tokenDocument, ...options }))) return true;
-  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => new TokenConfigClass(tokenDocument, options))) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => tokenConfig ? new tokenConfig(tokenDocument, options) : null)) return true;
   return false;
 }
 
 async function add2eRenderPrototypeTokenDocumentSheet(tokenDocument, actor, options = {}) {
-  if (!tokenDocument) return false;
+  if (!tokenDocument || !actor) return false;
+
+  const { tokenConfig, prototypeConfig } = add2eGetTokenConfigClasses();
+  const prototypeOptions = { parent: actor, actor, ...options };
+
+  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({document,parent,actor})", () => prototypeConfig ? new prototypeConfig({ document: tokenDocument, parent: actor, actor, ...options }) : null)) return true;
+  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({object,parent,actor})", () => prototypeConfig ? new prototypeConfig({ object: tokenDocument, document: tokenDocument, parent: actor, actor, ...options }) : null)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig({document,parent,actor})", () => tokenConfig ? new tokenConfig({ document: tokenDocument, parent: actor, actor, ...options }) : null)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig({object,parent,actor})", () => tokenConfig ? new tokenConfig({ object: tokenDocument, document: tokenDocument, parent: actor, actor, ...options }) : null)) return true;
 
   if (tokenDocument.sheet?.render) {
     try {
-      await tokenDocument.sheet.render(true, { parent: actor, ...options });
+      await tokenDocument.sheet.render(true, prototypeOptions);
       console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED] prototype.document.sheet", { actorId: actor?.id ?? null });
       return true;
     } catch (err) {
@@ -174,12 +191,8 @@ async function add2eRenderPrototypeTokenDocumentSheet(tokenDocument, actor, opti
     }
   }
 
-  const PrototypeTokenConfigClass = foundry?.applications?.sheets?.PrototypeTokenConfig ?? CONFIG?.Token?.prototypeSheetClass ?? globalThis.PrototypeTokenConfig;
-  if (!PrototypeTokenConfigClass) return false;
-
-  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({document,parent})", () => new PrototypeTokenConfigClass({ document: tokenDocument, parent: actor, ...options }))) return true;
-  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({object,parent})", () => new PrototypeTokenConfigClass({ object: tokenDocument, document: tokenDocument, parent: actor, ...options }))) return true;
-  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig(token, options)", () => new PrototypeTokenConfigClass(tokenDocument, { parent: actor, ...options }))) return true;
+  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig(token, options)", () => prototypeConfig ? new prototypeConfig(tokenDocument, prototypeOptions) : null)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => tokenConfig ? new tokenConfig(tokenDocument, prototypeOptions) : null)) return true;
   return false;
 }
 
@@ -205,7 +218,8 @@ async function add2eOpenTokenConfig(sheet, event = null) {
       actorIsToken: actor.isToken,
       tokenId: targetDocument?.id ?? null,
       tokenName: targetDocument?.name ?? null,
-      sceneId: targetDocument?.parent?.id ?? null
+      sceneId: targetDocument?.parent?.id ?? null,
+      tokenConfigV14: true
     });
 
     if (!targetDocument) return ui.notifications?.warn?.("Aucun token configurable trouvé pour cet acteur.");
