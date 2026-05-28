@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Missile magique
-// Version : 2026-05-28-groupe-a-portee-dialogv2-chat-v2
+// Version : 2026-05-28-groupe-a-dialogv2-cartes-v3
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -85,8 +85,7 @@ return await (async () => {
   function tokenDistanceMeters(sourceToken, targetToken) {
     const s = sourceToken.center ?? { x: sourceToken.document.x, y: sourceToken.document.y };
     const t = targetToken.center ?? { x: targetToken.document.x, y: targetToken.document.y };
-    const px = Math.hypot((t.x ?? 0) - (s.x ?? 0), (t.y ?? 0) - (s.y ?? 0));
-    return px / gridSizePx() * metersPerGridCell();
+    return Math.hypot((t.x ?? 0) - (s.x ?? 0), (t.y ?? 0) - (s.y ?? 0)) / gridSizePx() * metersPerGridCell();
   }
 
   function emitGmOperation(operation, payload) {
@@ -197,25 +196,37 @@ return await (async () => {
 
     const rows = candidates.map(t => {
       const value = defaultDistribution.get(t.id) || 0;
+      const distance = tokenDistanceMeters(sourceToken, t);
       return `
-        <div class="add2e-mm-v2-row" style="display:grid;grid-template-columns:32px 1fr 52px;gap:8px;align-items:center;padding:6px;border:1px solid #8e63c7;border-radius:6px;background:#fffaff;margin-bottom:5px;">
-          <img src="${esc(t.document?.texture?.src || t.actor?.img || 'icons/svg/mystery-man.svg')}" style="width:30px;height:30px;border-radius:4px;object-fit:cover;background:#fff;">
+        <article class="add2e-mm-card" data-token-id="${esc(t.id)}" style="display:grid;grid-template-columns:38px 1fr 102px;gap:8px;align-items:center;border:1px solid #8e63c7;border-radius:8px;background:#fffaff;padding:7px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.12);">
+          <img src="${esc(t.document?.texture?.src || t.actor?.img || 'icons/svg/mystery-man.svg')}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;background:#fff;">
           <div style="min-width:0;">
-            <div style="font-weight:800;color:#2d2144;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.name)}</div>
-            <div style="font-size:11px;color:#4a2e78;">${tokenDistanceMeters(sourceToken, t).toFixed(1)} m</div>
+            <div style="font-weight:900;color:#2d2144;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.name)}</div>
+            <div style="font-size:11px;color:#4a2e78;">${distance.toFixed(1)} m / ${rangeMeters.toFixed(1)} m</div>
           </div>
-          <input type="number" name="target.${esc(t.id)}" min="0" max="${nbMissiles}" value="${value}" style="width:48px;text-align:center;">
-        </div>`;
+          <div style="display:grid;grid-template-columns:28px 42px 28px;gap:3px;align-items:center;">
+            <button type="button" data-add2e-mm-delta="-1" data-target="${esc(t.id)}" style="height:26px;border-radius:5px;border:1px solid #8e63c7;background:#f6f0ff;color:#4a2e78;font-weight:900;">−</button>
+            <input type="number" name="target.${esc(t.id)}" min="0" max="${nbMissiles}" value="${value}" style="height:26px;width:42px;text-align:center;font-weight:900;border:1px solid #8e63c7;border-radius:5px;background:#fff;">
+            <button type="button" data-add2e-mm-delta="1" data-target="${esc(t.id)}" style="height:26px;border-radius:5px;border:1px solid #8e63c7;background:#f6f0ff;color:#4a2e78;font-weight:900;">+</button>
+          </div>
+        </article>`;
     }).join("");
 
     const content = `
-      <form class="add2e-dialog-v2 add2e-mm-dialog-v2" style="min-width:420px;max-width:520px;font-family:var(--font-primary);color:#2d2144;">
-        <section style="border:1px solid #8e63c7;border-radius:8px;background:#f6f0ff;padding:8px;margin-bottom:8px;">
-          <div style="font-weight:900;color:#6c31b5;text-align:center;text-transform:uppercase;letter-spacing:.3px;">Missile magique</div>
-          <div style="font-size:13px;text-align:center;margin-top:4px;">${nbMissiles} missile${nbMissiles > 1 ? "s" : ""} à répartir — portée ${rangeMeters.toFixed(1)} m</div>
+      <form class="add2e-dialog-v2 add2e-mm-dialog-v2" style="min-width:440px;max-width:560px;font-family:var(--font-primary);color:#2d2144;">
+        <section style="display:flex;align-items:center;gap:10px;border:1px solid #8e63c7;border-radius:10px;background:#f6f0ff;padding:9px;margin-bottom:8px;">
+          <img src="${esc(SPELL.imgFallback)}" style="width:42px;height:42px;border-radius:6px;object-fit:cover;background:#fff;border:1px solid #8e63c7;">
+          <div style="flex:1;">
+            <div style="font-weight:900;color:#6c31b5;text-transform:uppercase;letter-spacing:.3px;">Missile magique</div>
+            <div style="font-size:12px;">Répartis ${nbMissiles} missile${nbMissiles > 1 ? "s" : ""} entre les cibles à portée.</div>
+          </div>
+          <div style="text-align:center;border:1px solid #8e63c7;border-radius:8px;background:#fffaff;padding:5px 8px;min-width:70px;">
+            <div style="font-size:10px;text-transform:uppercase;color:#4a2e78;font-weight:800;">Restants</div>
+            <div class="add2e-mm-remaining" style="font-size:22px;font-weight:900;color:#6c31b5;">${nbMissiles}</div>
+          </div>
         </section>
-        <section>${rows}</section>
-        <p style="font-size:12px;margin:.4em 0 0;color:#4a2e78;">Les cibles hors portée ne sont pas listées.</p>
+        <section style="max-height:360px;overflow:auto;padding-right:2px;">${rows}</section>
+        <p style="font-size:12px;margin:.4em 0 0;color:#4a2e78;">Les cibles hors portée ne sont pas listées. Bouclier annule les missiles reçus.</p>
       </form>`;
 
     return await DialogV2.wait({
@@ -231,11 +242,12 @@ return await (async () => {
           default: true,
           callback: (_event, _button, dialog) => {
             const form = dialog.element?.querySelector?.("form");
-            const data = new FormData(form);
+            if (!form) return null;
             const result = {};
             let total = 0;
             for (const t of candidates) {
-              const value = Math.max(0, Math.floor(Number(data.get(`target.${t.id}`)) || 0));
+              const input = form.querySelector(`[name="target.${CSS.escape(t.id)}"]`);
+              const value = Math.max(0, Math.floor(Number(input?.value) || 0));
               if (value > 0) {
                 result[t.id] = value;
                 total += value;
@@ -245,26 +257,51 @@ return await (async () => {
               ui.notifications.warn("Aucun missile assigné.");
               return null;
             }
-            if (total > nbMissiles) {
-              ui.notifications.warn(`Trop de missiles assignés : ${total}/${nbMissiles}.`);
+            if (total !== nbMissiles) {
+              ui.notifications.warn(`Répartition incorrecte : ${total}/${nbMissiles} missile(s).`);
               return null;
             }
             return { result, total };
           }
         },
         { action: "cancel", label: "Annuler", icon: "fas fa-times", callback: () => null }
-      ]
+      ],
+      render: (_event, dialog) => {
+        const form = dialog.element?.querySelector?.("form");
+        if (!form) return;
+        const refresh = () => {
+          const inputs = Array.from(form.querySelectorAll('input[name^="target."]'));
+          const total = inputs.reduce((sum, input) => sum + Math.max(0, Math.floor(Number(input.value) || 0)), 0);
+          const remaining = form.querySelector(".add2e-mm-remaining");
+          if (remaining) {
+            remaining.textContent = String(Math.max(0, nbMissiles - total));
+            remaining.style.color = total === nbMissiles ? "#1f7a35" : "#6c31b5";
+          }
+        };
+        form.addEventListener("click", event => {
+          const button = event.target?.closest?.("[data-add2e-mm-delta]");
+          if (!button) return;
+          event.preventDefault();
+          const targetId = button.dataset.target;
+          const input = form.querySelector(`[name="target.${CSS.escape(targetId)}"]`);
+          if (!input) return;
+          const delta = Number(button.dataset.add2eMmDelta) || 0;
+          input.value = String(Math.max(0, Math.min(nbMissiles, Math.floor(Number(input.value) || 0) + delta)));
+          refresh();
+        });
+        form.addEventListener("input", refresh);
+        refresh();
+      }
     });
   }
 
-  async function createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned, nbMissiles, rangeMeters }) {
+  async function createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned, rangeMeters }) {
     const casterName = caster?.name ?? sourceToken?.name ?? "Magicien";
     const casterImg = sourceToken?.document?.texture?.src ?? caster?.img ?? "icons/svg/mystery-man.svg";
     const spellImg = sourceItem?.img || SPELL.imgFallback || "icons/svg/magic.svg";
     const rows = summaries.length
       ? summaries.map(m => `<tr><td style="padding:4px 6px;"><b>${esc(m.name)}</b></td><td style="text-align:center;padding:4px 6px;">${m.nb}</td><td style="padding:4px 6px;text-align:right;"><b>${m.dmg}</b></td></tr>`).join("")
       : `<tr><td colspan="3" style="padding:6px;text-align:center;"><i>Aucun missile résolu.</i></td></tr>`;
-    const unused = Math.max(0, nbMissiles - totalAssigned);
 
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: caster, token: sourceToken }),
@@ -279,7 +316,7 @@ return await (async () => {
           <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
             <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;">
               <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Projectiles magiques</div>
-              <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>${totalAssigned}</b> missile${totalAssigned > 1 ? "s" : ""} lancé${totalAssigned > 1 ? "s" : ""}.${unused ? ` <b>${unused}</b> non assigné${unused > 1 ? "s" : ""}.` : ""}</p>
+              <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>${totalAssigned}</b> missile${totalAssigned > 1 ? "s" : ""} lancé${totalAssigned > 1 ? "s" : ""}.</p>
               <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px;">
                 <thead><tr><th style="text-align:left;padding:4px 6px;">Cible</th><th>Missiles</th><th style="text-align:right;padding:4px 6px;">Dégâts</th></tr></thead>
                 <tbody>${rows}</tbody>
@@ -363,10 +400,10 @@ return await (async () => {
     summaries.push({ name: targetToken.name, nb: count, dmg });
   }
 
-  await createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned: distribution.total, nbMissiles, rangeMeters });
+  await createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned: distribution.total, rangeMeters });
 
   console.log(`${TAG}[DONE]`, {
-    version: "2026-05-28-groupe-a-portee-dialogv2-chat-v2",
+    version: "2026-05-28-groupe-a-dialogv2-cartes-v3",
     caster: caster.name,
     level,
     metersPerGridCell: metersPerGridCell(),
