@@ -24,6 +24,7 @@ import {
   ARMORER_SETTING,
   ensureArmorerOnLaunch,
   registerGlobals as registerArmorerGlobals,
+  registerSockets as registerArmorerSockets,
   isArmorerActor
 } from "./22c-armorer-core.mjs";
 
@@ -34,7 +35,7 @@ import {
   registerArmorerDirectoryButton
 } from "./22d-armorer-app.mjs";
 
-const ADD2E_SHOP_TOKEN_PRESENTATION_VERSION = "2026-05-28-shop-token-name-lock-rotation-v1";
+const ADD2E_SHOP_TOKEN_PRESENTATION_VERSION = "2026-05-28-shop-token-name-lock-rotation-hide-actors-v2";
 
 function add2eShopTokenDisplayAlwaysValue() {
   return CONST?.TOKEN_DISPLAY_MODES?.ALWAYS ?? 50;
@@ -55,6 +56,7 @@ async function add2eEnforceShopTokenPresentation() {
     const update = {};
     if (actor.prototypeToken?.displayName !== displayName) update["prototypeToken.displayName"] = displayName;
     if (actor.prototypeToken?.lockRotation !== true) update["prototypeToken.lockRotation"] = true;
+    if (actor.ownership?.default !== 0) update["ownership.default"] = 0;
     if (!Object.keys(update).length) continue;
     await actor.update(update, { add2eReason: "shop-token-presentation" }).catch(err => console.warn("[ADD2E][SHOP_TOKEN][ACTOR]", actor.name, err));
     actorUpdates.push(actor.name);
@@ -92,6 +94,21 @@ async function add2eEnforceShopTokenPresentation() {
   return true;
 }
 
+function add2eHideShopActorsFromPlayers() {
+  if (globalThis.__ADD2E_HIDE_SHOP_ACTORS_FROM_PLAYERS_V2) return;
+  globalThis.__ADD2E_HIDE_SHOP_ACTORS_FROM_PLAYERS_V2 = true;
+  Hooks.on("renderActorDirectory", (_app, html) => {
+    if (game.user?.isGM) return;
+    const root = html?.jquery ? html[0] : html;
+    if (!root?.querySelectorAll) return;
+    for (const actor of game.actors ?? []) {
+      if (!add2eIsShopActor(actor)) continue;
+      const selector = `[data-document-id="${actor.id}"], [data-entry-id="${actor.id}"], [data-actor-id="${actor.id}"]`;
+      for (const node of root.querySelectorAll(selector)) node.remove();
+    }
+  });
+}
+
 Hooks.once("init", () => {
   game.settings.register("add2e", VENDOR_SETTING, {
     name: "ADD2E — Création du vendeur système",
@@ -113,6 +130,7 @@ Hooks.once("init", () => {
 
   registerVendorDirectoryButton();
   registerArmorerDirectoryButton();
+  add2eHideShopActorsFromPlayers();
 });
 
 Hooks.once("ready", async () => {
@@ -120,6 +138,7 @@ Hooks.once("ready", async () => {
   registerUiGlobals();
   registerArmorerGlobals();
   registerArmorerUiGlobals();
+  registerArmorerSockets();
 
   await ensureVendorOnLaunch().catch(err => console.warn("[ADD2E][VENDOR][AUTO_CREATE]", err));
   await ensureArmorerOnLaunch().catch(err => console.warn("[ADD2E][ARMORER][AUTO_CREATE]", err));
