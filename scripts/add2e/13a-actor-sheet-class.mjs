@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-28-application-v2-token-header-v14-token-config-v1";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-28-application-v2-token-header-v14-token-config-v2";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -124,13 +124,32 @@ function add2eDescribeTokenTarget(sheet, actor) {
   };
 }
 
-async function add2eTryRenderTokenConfig(label, createApp) {
+async function add2eRenderApplicationCompat(app, label, options = {}) {
+  if (!app?.render) return false;
+
+  try {
+    await app.render({ ...options, force: true });
+    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED]", `${label} render({force:true})`);
+    return true;
+  } catch (err) {
+    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][RENDER_V2_FAILED]", label, err);
+  }
+
+  try {
+    await app.render(true, options);
+    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED]", `${label} render(true, options)`);
+    return true;
+  } catch (err) {
+    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][RENDER_LEGACY_FAILED]", label, err);
+  }
+
+  return false;
+}
+
+async function add2eTryRenderTokenConfig(label, createApp, options = {}) {
   try {
     const app = createApp?.();
-    if (!app?.render) return false;
-    await app.render(true);
-    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED]", label);
-    return true;
+    return await add2eRenderApplicationCompat(app, label, options);
   } catch (err) {
     console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][TRY_FAILED]", label, err);
     return false;
@@ -149,24 +168,22 @@ async function add2eRenderTokenDocumentSheet(tokenDocument, options = {}) {
 
   const { tokenConfig } = add2eGetTokenConfigClasses();
   const parent = options.parent ?? tokenDocument.parent ?? null;
+  const renderOptions = { ...options, parent };
 
-  if (await add2eTryRenderTokenConfig("TokenConfig({document,parent})", () => tokenConfig ? new tokenConfig({ document: tokenDocument, parent, ...options }) : null)) return true;
-  if (await add2eTryRenderTokenConfig("TokenConfig({object,parent})", () => tokenConfig ? new tokenConfig({ object: tokenDocument, document: tokenDocument, parent, ...options }) : null)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig({document,parent})", () => tokenConfig ? new tokenConfig({ document: tokenDocument, parent, ...options }) : null, renderOptions)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig({object,parent})", () => tokenConfig ? new tokenConfig({ object: tokenDocument, document: tokenDocument, parent, ...options }) : null, renderOptions)) return true;
 
   if (tokenDocument.sheet?.render) {
-    try {
-      await tokenDocument.sheet.render(true, options);
+    if (await add2eRenderApplicationCompat(tokenDocument.sheet, "document.sheet", renderOptions)) {
       console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED] document.sheet", {
         tokenId: tokenDocument.id,
         sceneId: tokenDocument.parent?.id ?? null
       });
       return true;
-    } catch (err) {
-      console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][TOKEN_SHEET_FAILED]", err);
     }
   }
 
-  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => tokenConfig ? new tokenConfig(tokenDocument, options) : null)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => tokenConfig ? new tokenConfig(tokenDocument, renderOptions) : null, renderOptions)) return true;
   return false;
 }
 
@@ -176,23 +193,20 @@ async function add2eRenderPrototypeTokenDocumentSheet(tokenDocument, actor, opti
   const { tokenConfig, prototypeConfig } = add2eGetTokenConfigClasses();
   const prototypeOptions = { parent: actor, actor, ...options };
 
-  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({document,parent,actor})", () => prototypeConfig ? new prototypeConfig({ document: tokenDocument, parent: actor, actor, ...options }) : null)) return true;
-  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({object,parent,actor})", () => prototypeConfig ? new prototypeConfig({ object: tokenDocument, document: tokenDocument, parent: actor, actor, ...options }) : null)) return true;
-  if (await add2eTryRenderTokenConfig("TokenConfig({document,parent,actor})", () => tokenConfig ? new tokenConfig({ document: tokenDocument, parent: actor, actor, ...options }) : null)) return true;
-  if (await add2eTryRenderTokenConfig("TokenConfig({object,parent,actor})", () => tokenConfig ? new tokenConfig({ object: tokenDocument, document: tokenDocument, parent: actor, actor, ...options }) : null)) return true;
+  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({document,parent,actor})", () => prototypeConfig ? new prototypeConfig({ document: tokenDocument, parent: actor, actor, ...options }) : null, prototypeOptions)) return true;
+  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({object,parent,actor})", () => prototypeConfig ? new prototypeConfig({ object: tokenDocument, document: tokenDocument, parent: actor, actor, ...options }) : null, prototypeOptions)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig({document,parent,actor})", () => tokenConfig ? new tokenConfig({ document: tokenDocument, parent: actor, actor, ...options }) : null, prototypeOptions)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig({object,parent,actor})", () => tokenConfig ? new tokenConfig({ object: tokenDocument, document: tokenDocument, parent: actor, actor, ...options }) : null, prototypeOptions)) return true;
 
   if (tokenDocument.sheet?.render) {
-    try {
-      await tokenDocument.sheet.render(true, prototypeOptions);
+    if (await add2eRenderApplicationCompat(tokenDocument.sheet, "prototype.document.sheet", prototypeOptions)) {
       console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED] prototype.document.sheet", { actorId: actor?.id ?? null });
       return true;
-    } catch (err) {
-      console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][PROTOTYPE_TOKEN_SHEET_FAILED]", err);
     }
   }
 
-  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig(token, options)", () => prototypeConfig ? new prototypeConfig(tokenDocument, prototypeOptions) : null)) return true;
-  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => tokenConfig ? new tokenConfig(tokenDocument, prototypeOptions) : null)) return true;
+  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig(token, options)", () => prototypeConfig ? new prototypeConfig(tokenDocument, prototypeOptions) : null, prototypeOptions)) return true;
+  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => tokenConfig ? new tokenConfig(tokenDocument, prototypeOptions) : null, prototypeOptions)) return true;
   return false;
 }
 
