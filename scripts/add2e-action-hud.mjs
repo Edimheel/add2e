@@ -1,9 +1,9 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-05-28-v35-icons-ammo-components
+// Version : 2026-05-28-v36-visual-actions-compact
 // Principe : le HUD est une interface. Les jets et actions délèguent strictement aux fonctions de la feuille/système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-28-v35-icons-ammo-components";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-28-v36-visual-actions-compact";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
 const STORAGE_KEY = "add2e.actionHud.state.v34";
@@ -125,8 +125,8 @@ function injectStyle() {
 #${HUD_ID} .portrait{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #c4973f;background:#111}#${HUD_ID} .name{color:#fff4cf;font-size:1.12em;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#${HUD_ID} .sub{color:#d8bd78;font-size:.82em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #${HUD_ID} .pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}#${HUD_ID} .pill{display:inline-flex;min-height:22px;padding:2px 7px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.78em;font-weight:850}
 #${HUD_ID} .icon{width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .resize{cursor:nwse-resize!important}
-#${HUD_ID} .row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:50px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07)}#${HUD_ID} .row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px}
-#${HUD_ID} .row img{width:36px;height:36px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25)}
+#${HUD_ID} .row{display:grid;grid-template-columns:42px minmax(0,1fr);gap:8px;align-items:center;min-height:50px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07)}#${HUD_ID} .row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px}
+#${HUD_ID} .row.effect-row{grid-template-columns:42px minmax(0,1fr) auto}#${HUD_ID} .row img{width:36px;height:36px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25)}
 #${HUD_ID} .img-act{width:38px;height:38px;padding:0;border:1px solid rgba(214,176,90,.75);border-radius:8px;background:rgba(0,0,0,.22);cursor:pointer;display:flex;align-items:center;justify-content:center}#${HUD_ID} .img-act:hover{filter:brightness(1.22)}#${HUD_ID} .img-act img{width:34px;height:34px;border:0;border-radius:7px}
 #${HUD_ID} .title{color:#fff4cf;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#${HUD_ID} .meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px}
 #${HUD_ID} .component-ok{color:#b8ffb8;border:1px solid rgba(80,180,80,.55);background:rgba(35,100,35,.35);padding:1px 6px;border-radius:999px}#${HUD_ID} .component-bad{color:#ffb1a8;border:1px solid rgba(190,55,45,.62);background:rgba(110,25,20,.42);padding:1px 6px;border-radius:999px}
@@ -134,7 +134,7 @@ function injectStyle() {
 #${HUD_ID} .act{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap}#${HUD_ID} .danger{min-width:36px;width:36px;color:#ffd0c8;border-color:#b94735;background:linear-gradient(180deg,#7d241b,#42120d)}
 #${HUD_ID} .empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center}
 #${HUD_ID} .spell-layout{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}#${HUD_ID} .spell-levels{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;border-bottom:1px solid rgba(214,176,90,.28)}#${HUD_ID} .spell-level{min-height:30px;padding:5px 10px;border:1px solid rgba(214,176,90,.55);border-radius:999px;background:rgba(214,176,90,.12);color:#ffe4a1;font-weight:950;font-size:.82em;cursor:pointer}#${HUD_ID} .spell-level.active{background:linear-gradient(180deg,#f0c66d,#c78d2e);color:#211307}#${HUD_ID} .spell-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;padding-right:3px}#${HUD_ID} .spell-list-title{color:#ffe4a1;font-weight:950;font-size:.82em;margin:0 0 2px 2px}
-#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${HUD_ID} .cell{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;min-height:54px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}#${HUD_ID} .cell b{display:block;color:#fff;font-size:1.16em;line-height:1.05}#${HUD_ID} .cell span{display:block;color:#c8ad6e;font-size:.74em;font-weight:800}#${HUD_ID} .roll-icon{width:36px;height:36px;min-width:36px;padding:0;border-radius:10px;border:1px solid rgba(214,176,90,.65);background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .roll-icon:hover{filter:brightness(1.2)}
+#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${HUD_ID} .cell{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;min-height:48px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}#${HUD_ID} .cell b{display:block;color:#fff;font-size:1.08em;line-height:1.1}#${HUD_ID} .roll-icon{width:36px;height:36px;min-width:36px;padding:0;border-radius:10px;border:1px solid rgba(214,176,90,.65);background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .roll-icon:hover{filter:brightness(1.2)}
 #${HUD_ID} button,#${HUD_ID} [data-action],#${HUD_ID} [data-tab]{user-select:auto;touch-action:auto}`;
   document.head.appendChild(style);
 }
@@ -147,7 +147,7 @@ function weaponRows(actor) {
     const propelled = isPropelledWeapon(i);
     const dmg = propelled && projectile ? `Dégâts projectile ${damage(projectile)}` : `Dégâts ${damage(i)}`;
     const ammo = propelled ? (projectile ? `<span class="ammo"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>` : `<span class="ammo-missing">Aucune munition équipée</span>`) : "";
-    return `<div class="row"><button type="button" class="img-act" data-action="attack" data-item-id="${esc(i.id)}" title="Attaquer avec ${esc(i.name)}"><img src="${esc(i.img || "icons/svg/sword.svg")}" alt=""></button><div><div class="title">${esc(i.name)}</div><div class="meta"><span>${esc(dmg)}</span><span>Portée ${esc(range(i))}</span>${ammo}</div></div><button type="button" class="act" data-action="attack" data-item-id="${esc(i.id)}">Attaquer</button></div>`;
+    return `<div class="row"><button type="button" class="img-act" data-action="attack" data-item-id="${esc(i.id)}" title="Attaquer avec ${esc(i.name)}"><img src="${esc(i.img || "icons/svg/sword.svg")}" alt=""></button><div><div class="title">${esc(i.name)}</div><div class="meta"><span>${esc(dmg)}</span><span>Portée ${esc(range(i))}</span>${ammo}</div></div></div>`;
   }).join("");
 }
 function spellRows(actor) {
@@ -159,7 +159,7 @@ function spellRows(actor) {
   if (!selectedSpellGroup || !groups.has(selectedSpellGroup)) selectedSpellGroup = list[0].key;
   const active = groups.get(selectedSpellGroup) ?? list[0];
   const buttons = list.map(g => `<button type="button" class="spell-level ${g.key === active.key ? "active" : ""}" data-action="select-spell-group" data-spell-group="${esc(g.key)}">${esc(g.label)} niv. ${esc(g.level || "—")} <span>${g.items.length}</span></button>`).join("");
-  const spellsHtml = active.items.map(s => `<div class="row"><button type="button" class="img-act" data-action="cast-spell" data-item-id="${esc(s.id)}" title="Lancer ${esc(s.name)}"><img src="${esc(s.img || "icons/svg/book.svg")}" alt=""></button><div><div class="title">${esc(s.name)}</div><div class="meta"><span>Mémorisé ${preparedCount(s)}</span>${spellComponentBadges(actor, s)}</div></div><button type="button" class="act" data-action="cast-spell" data-item-id="${esc(s.id)}">Lancer</button></div>`).join("");
+  const spellsHtml = active.items.map(s => `<div class="row"><button type="button" class="img-act" data-action="cast-spell" data-item-id="${esc(s.id)}" title="Lancer ${esc(s.name)}"><img src="${esc(s.img || "icons/svg/book.svg")}" alt=""></button><div><div class="title">${esc(s.name)}</div><div class="meta"><span>Mémorisé ${preparedCount(s)}</span>${spellComponentBadges(actor, s)}</div></div></div>`).join("");
   return `<div class="spell-layout"><div class="spell-levels">${buttons}</div><div class="spell-list"><div class="spell-list-title">${esc(active.label)} niveau ${esc(active.level || "—")}</div>${spellsHtml}</div></div>`;
 }
 function featureRows(actor) {
@@ -170,10 +170,10 @@ function featureRows(actor) {
 function effectRows(actor) {
   const rows = effects(actor);
   if (!rows.length) return `<div class="empty">Aucun effet actif.</div>`;
-  return rows.map(e => `<div class="row"><img src="${esc(e.img || e.icon || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(e.name)}</div><div class="meta"><span>Effet actif</span></div></div><button type="button" class="act danger" data-action="remove-effect" data-effect-id="${esc(e.id)}"><i class="fas fa-trash"></i></button></div>`).join("");
+  return rows.map(e => `<div class="row effect-row"><img src="${esc(e.img || e.icon || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(e.name)}</div><div class="meta"><span>Effet actif</span></div></div><button type="button" class="act danger" data-action="remove-effect" data-effect-id="${esc(e.id)}"><i class="fas fa-trash"></i></button></div>`).join("");
 }
-function saveRows(actor) { const values = savingThrows(actor); return `<div class="grid">${SAVES.map((s, i) => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-save" data-save-index="${i}" title="Jet ${esc(s[0])}"><i class="fas ${s[2]}"></i></button><div><b>${esc(s[0])} ${esc(values[i] || "—")}</b><span>${esc(s[1])}</span></div></div>`).join("")}</div>`; }
-function abilityRows(actor) { return `<div class="grid">${CARACS.map(c => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-ability" data-ability="${c[0]}" title="Jet ${esc(c[2])}"><i class="fas ${c[3]}"></i></button><div><b>${c[1]} ${esc(ability(actor, c[0]))}</b><span>${esc(c[2])}</span></div></div>`).join("")}</div>`; }
+function saveRows(actor) { const values = savingThrows(actor); return `<div class="grid">${SAVES.map((s, i) => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-save" data-save-index="${i}" title="Jet ${esc(s[1])}"><i class="fas ${s[2]}"></i></button><div><b>${esc(s[1])} ${esc(values[i] || "—")}</b></div></div>`).join("")}</div>`; }
+function abilityRows(actor) { return `<div class="grid">${CARACS.map(c => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-ability" data-ability="${c[0]}" title="Jet ${esc(c[1])}"><i class="fas ${c[3]}"></i></button><div><b>${c[1]} ${esc(ability(actor, c[0]))}</b></div></div>`).join("")}</div>`; }
 
 function hudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
