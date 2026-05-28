@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Mains brûlantes
-// Version : 2026-05-28-groupe-a-cone-overlay-v2
+// Version : 2026-05-28-groupe-a-cone-positionnement-manuel-v3
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -72,11 +72,11 @@ return await (async () => {
   }
 
   function angleDiffDegrees(a, b) {
-    let d = ((b - a + 540) % 360) - 180;
+    const d = ((b - a + 540) % 360) - 180;
     return Math.abs(d);
   }
 
-  function tokenBearingFromFacing(sourceToken, targetToken) {
+  function tokenBearingFromDirection(sourceToken, targetToken) {
     const sx = sourceToken.center?.x ?? (sourceToken.document.x + sourceToken.w / 2);
     const sy = sourceToken.center?.y ?? (sourceToken.document.y + sourceToken.h / 2);
     const tx = targetToken.center?.x ?? (targetToken.document.x + targetToken.w / 2);
@@ -85,9 +85,8 @@ return await (async () => {
     return (radians * 180 / Math.PI + 90 + 360) % 360;
   }
 
-  function tokensInCone(sourceToken) {
+  function tokensInCone(sourceToken, directionDeg) {
     const sourceCenter = sourceToken.center ?? { x: sourceToken.document.x, y: sourceToken.document.y };
-    const direction = n(sourceToken.document?.rotation, 0);
     const half = SPELL.coneAngle / 2;
     return canvas.tokens.placeables
       .filter(t => t.visible && t.actor && t.id !== sourceToken.id && t.actor.id !== sourceToken.actor?.id)
@@ -95,8 +94,8 @@ return await (async () => {
         const targetCenter = t.center ?? { x: t.document.x, y: t.document.y };
         const distance = gridDistanceBetween(sourceCenter, targetCenter);
         if (distance > SPELL.coneDistance) return false;
-        const bearing = tokenBearingFromFacing(sourceToken, t);
-        return angleDiffDegrees(direction, bearing) <= half;
+        const bearing = tokenBearingFromDirection(sourceToken, t);
+        return angleDiffDegrees(directionDeg, bearing) <= half;
       });
   }
 
@@ -113,55 +112,156 @@ return await (async () => {
     return Math.max(20, rulesPx, gridSize * 1.05);
   }
 
-  function tokenRotationToCanvasRadians(rotationDeg) {
+  function foundryRotationToCanvasRadians(rotationDeg) {
     return (n(rotationDeg, 0) - 90) * Math.PI / 180;
   }
 
-  function drawTemporaryConeOverlay(sourceToken) {
-    clearMovementRulerArtifacts();
+  function canvasRadiansToFoundryRotation(radians) {
+    return (radians * 180 / Math.PI + 90 + 360) % 360;
+  }
 
-    const parent = canvas.interface ?? canvas.controls ?? canvas.stage;
-    if (!parent || typeof PIXI === "undefined") return false;
+  function browserEventToCanvasPoint(event) {
+    const view = canvas.app?.view;
+    const renderer = canvas.app?.renderer;
+    if (!view || !renderer || typeof PIXI === "undefined") return null;
 
-    const previous = parent.getChildByName?.("add2e-mains-brulantes-cone-overlay");
-    if (previous) previous.destroy({ children: true });
+    const rect = view.getBoundingClientRect();
+    const sx = renderer.screen?.width ? renderer.screen.width / rect.width : 1;
+    const sy = renderer.screen?.height ? renderer.screen.height / rect.height : 1;
+    const global = new PIXI.Point((event.clientX - rect.left) * sx, (event.clientY - rect.top) * sy);
+    return canvas.stage?.worldTransform?.applyInverse(global) ?? null;
+  }
 
+  function drawConeGraphic(graphic, sourceToken, directionDeg) {
+    if (!graphic) return;
     const cx = sourceToken.center?.x ?? (sourceToken.document.x + sourceToken.w / 2);
     const cy = sourceToken.center?.y ?? (sourceToken.document.y + sourceToken.h / 2);
     const radius = coneRadiusPx();
-    const directionRad = tokenRotationToCanvasRadians(sourceToken.document?.rotation);
+    const directionRad = foundryRotationToCanvasRadians(directionDeg);
     const halfRad = (SPELL.coneAngle / 2) * Math.PI / 180;
     const start = directionRad - halfRad;
     const end = directionRad + halfRad;
+
+    graphic.clear();
+    graphic.lineStyle(3, 0x8e63c7, 0.95);
+    graphic.beginFill(0xff7a18, 0.28);
+    graphic.moveTo(cx, cy);
+    graphic.arc(cx, cy, radius, start, end);
+    graphic.lineTo(cx, cy);
+    graphic.endFill();
+
+    graphic.lineStyle(2, 0xffe08a, 0.9);
+    graphic.moveTo(cx, cy);
+    graphic.lineTo(cx + Math.cos(start) * radius, cy + Math.sin(start) * radius);
+    graphic.moveTo(cx, cy);
+    graphic.lineTo(cx + Math.cos(end) * radius, cy + Math.sin(end) * radius);
+  }
+
+  function createConeOverlay() {
+    const parent = canvas.interface ?? canvas.controls ?? canvas.stage;
+    if (!parent || typeof PIXI === "undefined") return null;
+
+    const previous = parent.getChildByName?.("add2e-mains-brulantes-cone-overlay");
+    if (previous) previous.destroy({ children: true });
 
     const g = new PIXI.Graphics();
     g.name = "add2e-mains-brulantes-cone-overlay";
     g.zIndex = 100000;
     g.eventMode = "none";
     g.interactive = false;
-
-    g.lineStyle(3, 0x8e63c7, 0.95);
-    g.beginFill(0xff7a18, 0.28);
-    g.moveTo(cx, cy);
-    g.arc(cx, cy, radius, start, end);
-    g.lineTo(cx, cy);
-    g.endFill();
-
-    g.lineStyle(2, 0xffe08a, 0.9);
-    g.moveTo(cx, cy);
-    g.lineTo(cx + Math.cos(start) * radius, cy + Math.sin(start) * radius);
-    g.moveTo(cx, cy);
-    g.lineTo(cx + Math.cos(end) * radius, cy + Math.sin(end) * radius);
-
     parent.sortableChildren = true;
     parent.addChild(g);
+    return g;
+  }
 
-    window.setTimeout(() => {
-      if (!g.destroyed) g.destroy({ children: true });
-      clearMovementRulerArtifacts();
-    }, 4500);
+  async function waitForConePlacement(sourceToken) {
+    clearMovementRulerArtifacts();
 
-    return true;
+    const view = canvas.app?.view;
+    const overlay = createConeOverlay();
+    if (!view || !overlay) {
+      const direction = n(sourceToken.document?.rotation, 0);
+      return { direction, overlayShown: false, manualPlacement: false };
+    }
+
+    ui.notifications.info(`${SPELL.name} : déplace la souris pour orienter le cône, clic gauche pour valider, clic droit ou Échap pour annuler.`);
+
+    const oldCursor = view.style.cursor;
+    view.style.cursor = "crosshair";
+
+    let direction = n(sourceToken.document?.rotation, 0);
+    drawConeGraphic(overlay, sourceToken, direction);
+
+    return await new Promise(resolve => {
+      let done = false;
+
+      const cleanup = (result, keepOverlay = false) => {
+        if (done) return;
+        done = true;
+        view.removeEventListener("mousemove", onMouseMove, true);
+        view.removeEventListener("mousedown", onMouseDown, true);
+        view.removeEventListener("contextmenu", onContextMenu, true);
+        window.removeEventListener("keydown", onKeyDown, true);
+        view.style.cursor = oldCursor;
+        clearMovementRulerArtifacts();
+
+        if (keepOverlay) {
+          window.setTimeout(() => {
+            if (!overlay.destroyed) overlay.destroy({ children: true });
+            clearMovementRulerArtifacts();
+          }, 4500);
+        } else if (!overlay.destroyed) {
+          overlay.destroy({ children: true });
+        }
+
+        resolve(result);
+      };
+
+      const updateDirectionFromEvent = event => {
+        const point = browserEventToCanvasPoint(event);
+        if (!point) return;
+        const cx = sourceToken.center?.x ?? (sourceToken.document.x + sourceToken.w / 2);
+        const cy = sourceToken.center?.y ?? (sourceToken.document.y + sourceToken.h / 2);
+        const rad = Math.atan2(point.y - cy, point.x - cx);
+        direction = canvasRadiansToFoundryRotation(rad);
+        drawConeGraphic(overlay, sourceToken, direction);
+      };
+
+      function onMouseMove(event) {
+        updateDirectionFromEvent(event);
+      }
+
+      function onMouseDown(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.button === 2) {
+          cleanup(null, false);
+          return;
+        }
+        if (event.button !== 0) return;
+        updateDirectionFromEvent(event);
+        drawConeGraphic(overlay, sourceToken, direction);
+        cleanup({ direction, overlayShown: true, manualPlacement: true }, true);
+      }
+
+      function onContextMenu(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null, false);
+      }
+
+      function onKeyDown(event) {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null, false);
+      }
+
+      view.addEventListener("mousemove", onMouseMove, true);
+      view.addEventListener("mousedown", onMouseDown, true);
+      view.addEventListener("contextmenu", onContextMenu, true);
+      window.addEventListener("keydown", onKeyDown, true);
+    });
   }
 
   function emitGmOperation(operation, payload) {
@@ -202,7 +302,7 @@ return await (async () => {
     return true;
   }
 
-  async function createChat({ caster, sourceItem, sourceToken, affected, damage, overlayShown }) {
+  async function createChat({ caster, sourceItem, sourceToken, affected, damage, placement }) {
     const casterName = caster?.name ?? sourceToken?.name ?? "Magicien";
     const casterImg = sourceToken?.document?.texture?.src ?? caster?.img ?? "icons/svg/mystery-man.svg";
     const spellImg = sourceItem?.img || SPELL.imgFallback || "icons/svg/fire.svg";
@@ -229,7 +329,7 @@ return await (async () => {
               <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Cône de flammes</div>
               <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Zone :</b> ${esc(SPELL.areaText)} depuis le lanceur. <b>Portée :</b> ${esc(SPELL.rangeText)}.</p>
               <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Dégâts :</b> ${damage} point${damage > 1 ? "s" : ""} de feu par créature dans la zone. <b>Jet de sauvegarde :</b> aucun.</p>
-              <p style="margin:.35em 0;font-size:12px;line-height:1.35;"><b>Affichage de zone :</b> ${overlayShown ? "cône temporaire affiché sur le canvas" : "non disponible sur ce client"}.</p>
+              <p style="margin:.35em 0;font-size:12px;line-height:1.35;"><b>Orientation :</b> ${Math.round(n(placement?.direction, 0))}°. ${placement?.manualPlacement ? "Cône positionné manuellement." : "Orientation du token utilisée."}</p>
               <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px;">
                 <thead><tr><th style="text-align:left;padding:4px 6px;">Créature dans le cône</th><th style="text-align:right;padding:4px 6px;">Dégâts</th></tr></thead>
                 <tbody>${rows}</tbody>
@@ -238,7 +338,7 @@ return await (async () => {
             <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;margin-top:7px;">
               <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
               <div style="margin-top:5px;font-size:12px;line-height:1.35;">
-                <p><b>École :</b> ${esc(SPELL.school)} — <b>Incantation :</b> ${esc(SPELL.castingTimeText)}.</p>
+                <p><b>École :</b> ${esc(SPELL.school)} — <b>Composantes :</b> V, S — <b>Incantation :</b> ${esc(SPELL.castingTimeText)}.</p>
                 <p>Les matières inflammables dans la zone peuvent s’enflammer selon l’arbitrage du MD.</p>
               </div>
             </details>
@@ -260,13 +360,18 @@ return await (async () => {
     return false;
   }
 
+  const placement = await waitForConePlacement(sourceToken);
+  if (!placement) {
+    ui.notifications.info(`${SPELL.name} : lancement annulé.`);
+    return false;
+  }
+
   const level = casterLevel(caster);
   const damage = Math.max(1, level);
-  const affected = tokensInCone(sourceToken);
-  const overlayShown = drawTemporaryConeOverlay(sourceToken);
+  const affected = tokensInCone(sourceToken, placement.direction);
 
   console.log(`${TAG}[START]`, {
-    version: "2026-05-28-groupe-a-cone-overlay-v2",
+    version: "2026-05-28-groupe-a-cone-positionnement-manuel-v3",
     caster: caster.name,
     token: sourceToken.name,
     level,
@@ -274,12 +379,14 @@ return await (async () => {
     range: SPELL.rangeText,
     coneDistance: SPELL.coneDistance,
     coneAngle: SPELL.coneAngle,
-    overlayShown,
+    direction: placement.direction,
+    manualPlacement: placement.manualPlacement,
+    overlayShown: placement.overlayShown,
     affected: affected.map(t => t.name)
   });
 
   for (const targetToken of affected) await applyDamage(targetToken, damage, caster, sourceItem);
-  await createChat({ caster, sourceItem, sourceToken, affected, damage, overlayShown });
+  await createChat({ caster, sourceItem, sourceToken, affected, damage, placement });
   clearMovementRulerArtifacts();
 
   return true;
