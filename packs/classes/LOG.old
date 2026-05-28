@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-2026/05/25-15:59:59.803857 7f597aefc0 Recovering log #512
-2026/05/25-15:59:59.819329 7f597aefc0 Delete type=3 #510
-2026/05/25-15:59:59.819403 7f597aefc0 Delete type=0 #512
-=======
-2026/05/26-17:44:20.865801 7f6a51dfc0 Recovering log #539
-2026/05/26-17:44:20.880373 7f6a51dfc0 Delete type=0 #539
-2026/05/26-17:44:20.880435 7f6a51dfc0 Delete type=3 #538
->>>>>>> 0753e0a54b2eb556ac3a95e30d0c21fff263accf
+2026/05/28-09:23:10.986885 7f857aefc0 Log #544: 0 ops saved to Table #547 OK
+2026/05/28-09:23:10.987005 7f857aefc0 Archiving /data/Data/systems/add2e/packs/classes/000544.log: OK
+2026/05/28-09:23:10.987720 7f857aefc0 Table #546: 10 entries OK
+2026/05/28-09:23:10.987917 7f857aefc0 Archiving /data/Data/systems/add2e/packs/classes/MANIFEST-000542: OK
+2026/05/28-09:23:11.023429 7f857aefc0 **** Repaired leveldb /data/Data/systems/add2e/packs/classes; recovered 1 files; 80371 bytes. Some data may have been lost. ****

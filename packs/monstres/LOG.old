@@ -1,9 +1,7 @@
-<<<<<<< HEAD
-2026/05/25-15:59:59.826966 7f5a7cefc0 Recovering log #348
-2026/05/25-15:59:59.841589 7f5a7cefc0 Delete type=3 #346
-2026/05/25-15:59:59.841661 7f5a7cefc0 Delete type=0 #348
-=======
-2026/05/26-17:44:20.889176 7f694fdfc0 Recovering log #377
-2026/05/26-17:44:20.904935 7f694fdfc0 Delete type=3 #376
-2026/05/26-17:44:20.905016 7f694fdfc0 Delete type=0 #377
->>>>>>> 0753e0a54b2eb556ac3a95e30d0c21fff263accf
+2026/05/28-09:23:11.054166 7f6f7eefc0 Log #382: 0 ops saved to Table #387 OK
+2026/05/28-09:23:11.054281 7f6f7eefc0 Archiving /data/Data/systems/add2e/packs/monstres/000382.log: OK
+2026/05/28-09:23:11.073383 7f6f7eefc0 Table #385: 2680 entries OK
+2026/05/28-09:23:11.084884 7f6f7eefc0 Table #386: 3166 entries OK
+2026/05/28-09:23:11.097577 7f6f7eefc0 Table #384: 625 entries OK
+2026/05/28-09:23:11.097946 7f6f7eefc0 Archiving /data/Data/systems/add2e/packs/monstres/MANIFEST-000380: OK
+2026/05/28-09:23:11.107216 7f6f7eefc0 **** Repaired leveldb /data/Data/systems/add2e/packs/monstres; recovered 3 files; 5293761 bytes. Some data may have been lost. ****

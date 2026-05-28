@@ -1,13 +1,1 @@
-<<<<<<< HEAD
-2026/05/26-08:54:45.115963 7f57ffefc0 Recovering log #447
-2026/05/26-08:54:45.118993 7f57ffefc0 Level-0 table #449: started
-2026/05/26-08:54:45.135402 7f57ffefc0 Level-0 table #449: 167246 bytes OK
-2026/05/26-08:54:45.149422 7f57ffefc0 Delete type=0 #447
-2026/05/26-08:54:45.149679 7f57ffefc0 Delete type=3 #446
-=======
-2026/05/26-19:08:00.036864 7f4fefdfc0 Recovering log #476
-2026/05/26-19:08:00.039064 7f4fefdfc0 Level-0 table #478: started
-2026/05/26-19:08:00.051875 7f4fefdfc0 Level-0 table #478: 144286 bytes OK
-2026/05/26-19:08:00.066757 7f4fefdfc0 Delete type=3 #475
-2026/05/26-19:08:00.066829 7f4fefdfc0 Delete type=0 #476
->>>>>>> 0753e0a54b2eb556ac3a95e30d0c21fff263accf
+2026/05/28-09:23:11.297476 7f857aefc0 Delete type=3 #1
