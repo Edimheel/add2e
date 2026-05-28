@@ -1,176 +1,165 @@
-// Missile Magique.js — ADD2E corrigé multi-cibles
-// Version : 2026-05-05-v3-multi-target
-// Retour attendu : true = consommé, false = non consommé.
-// Objectif : permettre de répartir plusieurs missiles sur plusieurs cibles visibles.
+// ADD2E — onUse Magicien : Missile magique
+// Version : 2026-05-28-groupe-a-portee-zone-charte-v1
+// Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
-  const TAG = "[ADD2E][SORT_ONUSE][MISSILE_MAGIQUE][MULTI]";
-
-  const htmlEscape = (value) => {
-    const div = document.createElement("div");
-    div.innerText = String(value ?? "");
-    return div.innerHTML;
+  const TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][MISSILE_MAGIQUE]";
+  const SPELL = {
+    name: "Missile magique",
+    slug: "missile_magique",
+    level: 1,
+    school: "Évocation",
+    rangeText: "45 m + 1,5 m par niveau",
+    areaText: "une ou plusieurs créatures dans la portée",
+    saveText: "Aucun",
+    castingTimeText: "1 segment",
+    damageType: "force",
+    imgFallback: "systems/add2e/assets/icones/sorts/missile_magique.webp"
   };
 
-  const asNumber = (value, fallback = 0) => {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : fallback;
-  };
+  function esc(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-  const getSourceItem = () => {
+  function n(value, fallback = 0) {
+    const out = Number(value);
+    return Number.isFinite(out) ? out : fallback;
+  }
+
+  function sourceItemFromContext() {
     if (typeof item !== "undefined" && item) return item;
     if (typeof sort !== "undefined" && sort) return sort;
     if (typeof spell !== "undefined" && spell) return spell;
+    if (typeof args !== "undefined" && args?.[0]?.item) return args[0].item;
     if (typeof this !== "undefined" && this?.documentName === "Item") return this;
     return null;
-  };
-
-  const spellData = getSourceItem();
-  const sourceRef = (typeof sort !== "undefined" && sort) ? sort : spellData;
-
-  if (!spellData) {
-    ui.notifications.error("Missile magique : sort introuvable.");
-    return false;
   }
 
-  const caster = (typeof actor !== "undefined" && actor) ? actor : spellData.parent;
-
-  if (!caster) {
-    ui.notifications.error("Missile magique : lanceur introuvable.");
-    return false;
+  function casterFromContext(sourceItem) {
+    return (typeof actor !== "undefined" && actor) ? actor : sourceItem?.parent;
   }
 
-  const refund = async (raison = "") => {
-    if (raison) ui.notifications.warn(raison);
+  function casterTokenFor(caster) {
+    if (typeof token !== "undefined" && token?.actor?.id === caster?.id) return token;
+    return canvas.tokens?.controlled?.find(t => t.actor?.id === caster?.id)
+      ?? caster?.getActiveTokens?.()[0]
+      ?? canvas.tokens?.controlled?.[0]
+      ?? null;
+  }
 
+  function casterLevel(caster, sourceItem) {
+    if (sourceItem?.system?.isPower) return Math.max(1, n(sourceItem.system.niveau, 1));
+    const details = caster?.system?.details_classe ?? {};
+    const byClass = n(details.magicien?.niveau ?? details.mage?.niveau ?? details.illusionniste?.niveau, 0);
+    if (byClass > 0) return byClass;
+    const classItem = caster?.items?.find?.(i => String(i.type).toLowerCase() === "classe" && /magicien|mage|illusionniste/i.test(i.name ?? ""));
+    const byItem = n(classItem?.system?.niveau ?? classItem?.system?.level, 0);
+    return byItem > 0 ? byItem : Math.max(1, n(caster?.system?.niveau ?? caster?.system?.level ?? caster?.system?.details?.niveau, 1));
+  }
+
+  function spellRange(level) {
+    return 45 + 1.5 * Math.max(1, level);
+  }
+
+  function sceneDistanceBetween(a, b) {
+    const gridSize = canvas.grid?.size || 100;
+    const sceneDistance = n(canvas.scene?.grid?.distance, 1);
+    const ax = a?.x ?? 0;
+    const ay = a?.y ?? 0;
+    const bx = b?.x ?? 0;
+    const by = b?.y ?? 0;
+    return Math.hypot(bx - ax, by - ay) / gridSize * sceneDistance;
+  }
+
+  function tokenDistance(sourceToken, targetToken) {
+    const sourceCenter = sourceToken.center ?? { x: sourceToken.document.x, y: sourceToken.document.y };
+    const targetCenter = targetToken.center ?? { x: targetToken.document.x, y: targetToken.document.y };
+    return sceneDistanceBetween(sourceCenter, targetCenter);
+  }
+
+  function emitGmOperation(operation, payload) {
+    game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation, payload });
+  }
+
+  async function refundObjectChargeIfNeeded(sourceItem, caster, reason = "") {
+    if (reason) ui.notifications.warn(reason);
     try {
-      if (sourceRef?.system?.isPower && sourceRef?.system?.sourceWeaponId) {
-        const weapon = caster.items?.get(sourceRef.system.sourceWeaponId);
-        if (!weapon) return;
+      if (!sourceItem?.system?.isPower || !sourceItem?.system?.sourceWeaponId) return false;
+      const weapon = caster.items?.get(sourceItem.system.sourceWeaponId);
+      if (!weapon) return false;
 
-        const currentGlobal = await weapon.getFlag?.("add2e", "global_charges");
-        if (currentGlobal !== undefined) {
-          await weapon.setFlag("add2e", "global_charges", asNumber(currentGlobal) + 1);
-          ui.notifications.info(`Charge restituée à ${weapon.name}.`);
-          return;
-        }
-
-        const idx = sourceRef.system.powerIndex;
-        const currentIndiv = await weapon.getFlag?.("add2e", `charges_${idx}`);
-        if (currentIndiv !== undefined) {
-          await weapon.setFlag("add2e", `charges_${idx}`, asNumber(currentIndiv) + 1);
-          ui.notifications.info("Charge restituée.");
-        }
+      const currentGlobal = await weapon.getFlag?.("add2e", "global_charges");
+      if (currentGlobal !== undefined) {
+        await weapon.setFlag("add2e", "global_charges", n(currentGlobal) + 1);
+        ui.notifications.info(`Charge restituée à ${weapon.name}.`);
+        return true;
       }
-    } catch (e) {
-      console.warn(`${TAG}[REFUND_FAILED]`, e);
+
+      const idx = sourceItem.system.powerIndex;
+      const currentIndiv = await weapon.getFlag?.("add2e", `charges_${idx}`);
+      if (currentIndiv !== undefined) {
+        await weapon.setFlag("add2e", `charges_${idx}`, n(currentIndiv) + 1);
+        ui.notifications.info("Charge restituée.");
+        return true;
+      }
+    } catch (err) {
+      console.warn(`${TAG}[REFUND_FAILED]`, err);
     }
-  };
+    return false;
+  }
 
-  const getCasterLevel = () => {
-    if (sourceRef?.system?.isPower) return Math.max(1, asNumber(sourceRef.system.niveau, 1));
+  function isShieldedAgainstMagicMissile(targetActor) {
+    return targetActor?.effects?.some?.(effect => {
+      const tags = Array.isArray(effect.flags?.add2e?.tags) ? effect.flags.add2e.tags : [];
+      const name = String(effect.name || effect.label || "").toLowerCase();
+      return tags.includes("immunite:missile_magique")
+        || tags.includes("missile_magique:immunite")
+        || tags.includes("bouclier")
+        || name.includes("bouclier");
+    }) === true;
+  }
 
-    const details = caster.system?.details_classe ?? {};
-    const byKey = asNumber(details.magicien?.niveau ?? details.mage?.niveau ?? details.illusionniste?.niveau, 0);
-    if (byKey > 0) return byKey;
-
-    const classItem = caster.items?.find?.(i => {
-      if (i.type !== "classe") return false;
-      const n = String(i.name || "").toLowerCase();
-      return n.includes("magicien") || n.includes("mage") || n.includes("illusionniste");
-    });
-
-    const clsLvl = asNumber(classItem?.system?.niveau ?? classItem?.system?.level, 0);
-    if (clsLvl > 0) return clsLvl;
-
-    return Math.max(1, asNumber(caster.system?.niveau ?? caster.system?.level, 1));
-  };
-
-  const getCasterToken = () => {
-    if (typeof token !== "undefined" && token?.actor?.id === caster.id) return token;
-
-    const controlled = canvas.tokens?.controlled?.find(t => t.actor?.id === caster.id);
-    if (controlled) return controlled;
-
-    const active = caster.getActiveTokens?.()[0];
-    if (active) return active;
-
-    return canvas.tokens?.placeables?.find(t => t.actor?.id === caster.id) ?? null;
-  };
-
-  const getHpPath = (targetActor) => {
-    const candidates = [
-      ["system.pdv", targetActor.system?.pdv],
-      ["system.pv", targetActor.system?.pv],
-      ["system.hp.value", targetActor.system?.hp?.value],
-      ["system.hitPoints.value", targetActor.system?.hitPoints?.value]
-    ];
-
-    return candidates.find(([, v]) => Number.isFinite(Number(v))) ?? null;
-  };
-
-  const applyDamageSafe = async (targetToken, amount) => {
-    const targetActor = targetToken?.actor;
-    if (!targetActor || amount <= 0) return false;
-
-    if (typeof add2eApplyDamage === "function") {
-      await add2eApplyDamage({
-        cible: targetActor,
-        montant: amount,
-        source: "Missile Magique",
-        lanceur: caster,
-        type: "force",
-        silent: true
-      });
-      return true;
-    }
+  async function applyDamage(targetToken, amount, caster, sourceItem) {
+    if (!targetToken?.actor || amount <= 0) return false;
+    const payload = {
+      actorUuid: targetToken.actor.uuid,
+      actorId: targetToken.actor.id,
+      sceneId: canvas.scene?.id,
+      tokenId: targetToken.document?.id ?? targetToken.id,
+      montant: amount,
+      type: SPELL.damageType,
+      details: `${SPELL.name} — ${amount} dégât${amount > 1 ? "s" : ""} de force`,
+      sourceItemId: sourceItem?.id ?? null,
+      sourceItemUuid: sourceItem?.uuid ?? null,
+      casterId: caster?.id ?? null,
+      casterUuid: caster?.uuid ?? null
+    };
 
     if (typeof globalThis.add2eApplyDamage === "function") {
-      await globalThis.add2eApplyDamage({
-        cible: targetActor,
-        montant: amount,
-        source: "Missile Magique",
-        lanceur: caster,
-        type: "force",
-        silent: true
-      });
+      await globalThis.add2eApplyDamage({ cible: targetToken, montant: amount, type: SPELL.damageType, details: payload.details });
       return true;
     }
 
-    const found = getHpPath(targetActor);
-
-    if (game.user.isGM && found) {
-      const [path, value] = found;
-      await targetActor.update({ [path]: Math.max(0, asNumber(value) - amount) });
-      return true;
+    if (game.user.isGM || targetToken.actor.isOwner) {
+      const sys = targetToken.actor.system ?? {};
+      const current = [sys.pdv, sys.pv, sys.hp?.value, sys.attributes?.hp?.value].map(Number).find(Number.isFinite);
+      if (current !== undefined) {
+        await targetToken.actor.update({ "system.pdv": current - amount }, { add2eReason: "missile-magique" });
+        return true;
+      }
     }
 
-    if (game.socket) {
-      game.socket.emit("system.add2e", {
-        type: "applyDamage",
-        actorId: targetActor.id,
-        actorUuid: targetActor.uuid,
-        sceneId: canvas.scene?.id,
-        tokenId: targetToken.id,
-        tokenUuid: targetToken.document?.uuid,
-        montant: amount,
-        damage: amount,
-        source: "Missile Magique",
-        lanceurId: caster.id,
-        lanceurUuid: caster.uuid,
-        damageType: "force",
-        silent: true
-      });
-      return true;
-    }
+    emitGmOperation("applyDamage", payload);
+    return true;
+  }
 
-    ui.notifications.error("Impossible d’appliquer les dégâts : fonction add2eApplyDamage absente et socket indisponible.");
-    return false;
-  };
-
-  const playMissileVfx = async (sourceToken, targetToken, missileIndex) => {
+  async function playMissileVfx(sourceToken, targetToken, missileIndex) {
     if (typeof Sequence === "undefined" || !sourceToken || !targetToken) return;
-
     try {
       await new Sequence()
         .effect()
@@ -181,241 +170,211 @@ return await (async () => {
         .delay(missileIndex * 160)
         .missed(false)
         .play();
-    } catch (e) {
-      console.warn(`${TAG}[VFX_FAILED]`, e);
+    } catch (err) {
+      console.warn(`${TAG}[VFX_FAILED]`, err);
     }
-  };
-
-  const isShieldedAgainstMagicMissile = (targetActor) => {
-    return targetActor.effects?.some(e => {
-      const tags = e.flags?.add2e?.tags || [];
-      const name = String(e.name || e.label || "").toLowerCase();
-      return tags.includes("immunite:missile_magique") ||
-        tags.includes("missile_magique:immunite") ||
-        tags.includes("bouclier") ||
-        name.includes("bouclier");
-    });
-  };
-
-  const casterLevel = getCasterLevel();
-
-  // AD&D2 : 1 missile au niveau 1, +1 tous les 2 niveaux, maximum 5 missiles.
-  const nbMissiles = Math.min(5, 1 + Math.floor((casterLevel - 1) / 2));
-  const sourceToken = getCasterToken();
-  const targetedIds = new Set(Array.from(game.user.targets ?? []).map(t => t.id));
-
-  // Important : on affiche toutes les cibles visibles, pas seulement les cibles déjà sélectionnées.
-  // Cela permet de répartir les missiles sur plusieurs cibles différentes depuis le dialogue.
-  let candidates = canvas.tokens.placeables
-    .filter(t => t.visible && t.actor && t.id !== sourceToken?.id && t.actor.id !== caster.id)
-    .sort((a, b) => {
-      const ta = targetedIds.has(a.id) ? 0 : 1;
-      const tb = targetedIds.has(b.id) ? 0 : 1;
-      if (ta !== tb) return ta - tb;
-
-      if (sourceToken?.center && a.center && b.center) {
-        const da = Math.hypot(a.center.x - sourceToken.center.x, a.center.y - sourceToken.center.y);
-        const db = Math.hypot(b.center.x - sourceToken.center.x, b.center.y - sourceToken.center.y);
-        if (da !== db) return da - db;
-      }
-
-      return String(a.name).localeCompare(String(b.name));
-    });
-
-  if (!candidates.length) {
-    await refund("Aucune cible visible disponible.");
-    return false;
   }
 
-  const defaultDistribution = new Map();
-  const selectedCandidates = candidates.filter(t => targetedIds.has(t.id));
-  const preferred = selectedCandidates.length ? selectedCandidates : candidates.slice(0, 1);
+  async function askDistribution({ candidates, nbMissiles, selectedIds, sourceItem, range }) {
+    const DialogV2 = foundry?.applications?.api?.DialogV2;
+    if (!DialogV2?.wait) {
+      ui.notifications.error("Missile magique : DialogV2 indisponible.");
+      return null;
+    }
 
-  let remainingDefault = nbMissiles;
-  for (const t of preferred) {
-    if (remainingDefault <= 0) break;
-    defaultDistribution.set(t.id, 1);
-    remainingDefault--;
-  }
+    const defaultDistribution = new Map();
+    const selectedCandidates = candidates.filter(t => selectedIds.has(t.id));
+    const preferred = selectedCandidates.length ? selectedCandidates : candidates.slice(0, 1);
+    let remaining = nbMissiles;
+    for (const t of preferred) {
+      if (remaining <= 0) break;
+      defaultDistribution.set(t.id, 1);
+      remaining--;
+    }
+    if (preferred.length === 1 && remaining > 0) defaultDistribution.set(preferred[0].id, (defaultDistribution.get(preferred[0].id) || 0) + remaining);
 
-  if (preferred.length === 1 && remainingDefault > 0) {
-    defaultDistribution.set(preferred[0].id, (defaultDistribution.get(preferred[0].id) || 0) + remainingDefault);
-  }
+    const rows = candidates.map(t => {
+      const selected = selectedIds.has(t.id);
+      const value = defaultDistribution.get(t.id) || 0;
+      return `
+        <div class="add2e-mm-target" style="display:grid;grid-template-columns:34px minmax(0,1fr) 54px;gap:8px;align-items:center;padding:5px;border:1px solid #8e63c7;border-radius:6px;background:#fffaff;margin-bottom:5px;">
+          <img src="${esc(t.document?.texture?.src || t.actor?.img || 'icons/svg/mystery-man.svg')}" style="width:30px;height:30px;border-radius:4px;object-fit:cover;background:#fff;">
+          <label style="font-weight:800;color:#2d2144;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.name)}${selected ? ' <span style="font-weight:600;color:#6c31b5;">— ciblée</span>' : ''}<br><span style="font-size:11px;font-weight:600;color:#4a2e78;">${tokenDistance(candidates.__sourceToken, t).toFixed(1)} m / ${range.toFixed(1)} m</span></label>
+          <input type="number" name="target.${esc(t.id)}" min="0" max="${nbMissiles}" value="${value}" style="width:50px;text-align:center;">
+        </div>`;
+    }).join("");
 
-  let content = `
-    <div style="font-family:var(--font-primary);">
-      <div style="text-align:center;margin-bottom:10px;color:#4a148c;">
-        <img src="${htmlEscape(spellData.img || 'icons/svg/magic.svg')}" width="32" height="32" style="vertical-align:middle;margin-right:5px;border-radius:4px;">
-        <b>${nbMissiles}</b> Missile${nbMissiles > 1 ? "s" : ""} à répartir
-      </div>
+    const content = `
+      <form class="add2e-mm-dialog" style="font-family:var(--font-primary);color:#2d2144;">
+        <div style="border:1px solid #8e63c7;border-radius:8px;background:#f6f0ff;padding:8px;margin-bottom:8px;">
+          <div style="font-weight:900;color:#6c31b5;text-align:center;text-transform:uppercase;letter-spacing:.3px;">${nbMissiles} missile${nbMissiles > 1 ? "s" : ""} à répartir</div>
+          <div style="font-size:12px;text-align:center;margin-top:4px;">Portée vérifiée : ${range.toFixed(1)} m. Les cibles hors portée ne sont pas proposées.</div>
+        </div>
+        ${rows}
+        <p style="font-size:12px;margin:.4em 0 0 0;color:#4a2e78;">Tous les missiles assignés touchent automatiquement, sauf immunité active comme Bouclier.</p>
+      </form>`;
 
-      <div style="font-size:12px;margin-bottom:8px;padding:6px;border:1px solid #d7bde2;background:#faf5ff;border-radius:5px;">
-        Les cibles déjà sélectionnées sont affichées en premier. Tu peux répartir les missiles sur plusieurs cibles visibles.
-      </div>
-
-      <form class="missile-form">`;
-
-  for (const t of candidates) {
-    const selected = targetedIds.has(t.id);
-    const val = defaultDistribution.get(t.id) || 0;
-    const border = selected ? "2px solid #8e44ad" : "1px solid #d8cce2";
-    const label = selected ? " — cible sélectionnée" : "";
-
-    content += `
-      <div style="display:flex;align-items:center;margin-bottom:4px;background:${selected ? '#f0e4ff' : '#f8f4fb'};padding:4px;border-radius:4px;border:${border};">
-        <img src="${htmlEscape(t.document?.texture?.src || t.actor?.img || 'icons/svg/mystery-man.svg')}" width="28" height="28" style="margin-right:8px;border:1px solid #aaa;background:#fff;">
-        <label style="flex:1;font-weight:600;font-size:0.9em;">${htmlEscape(t.name)}<span style="font-weight:400;color:#6a3c99;">${label}</span></label>
-        <input type="number" data-id="${t.id}" min="0" max="${nbMissiles}" value="${val}" style="width:48px;text-align:center;font-weight:bold;">
-      </div>`;
-  }
-
-  content += `
-      </form>
-      <div style="margin-top:8px;font-size:12px;color:#5f4b66;">
-        Total autorisé : <b>${nbMissiles}</b>. Tous les missiles assignés touchent automatiquement, sauf immunité active.
-      </div>
-    </div>`;
-
-  const distribution = await new Promise(resolve => {
-    let done = false;
-    const finish = (v) => {
-      if (done) return;
-      done = true;
-      resolve(v);
-    };
-
-    new Dialog({
-      title: "Missiles Magiques — répartition multi-cibles",
+    return await DialogV2.wait({
+      window: { title: "Missile magique — répartition" },
       content,
-      buttons: {
-        fire: {
-          label: `<i class="fas fa-magic"></i> Lancer`,
-          callback: (html) => {
+      modal: true,
+      rejectClose: false,
+      buttons: [
+        {
+          action: "cast",
+          label: "Lancer",
+          icon: "fas fa-magic",
+          default: true,
+          callback: (_event, _button, dialog) => {
+            const form = dialog.element?.querySelector?.("form");
+            const data = new FormData(form);
             const result = {};
-            let totalAssigne = 0;
-
-            html.find('input[type="number"]').each((i, el) => {
-              const tid = String(el.dataset.id || $(el).data("id"));
-              const val = Math.max(0, Math.floor(Number($(el).val()) || 0));
-
-              if (val > 0) {
-                result[tid] = val;
-                totalAssigne += val;
+            let total = 0;
+            for (const t of candidates) {
+              const value = Math.max(0, Math.floor(Number(data.get(`target.${t.id}`)) || 0));
+              if (value > 0) {
+                result[t.id] = value;
+                total += value;
               }
-            });
-
-            if (totalAssigne === 0) {
+            }
+            if (total <= 0) {
               ui.notifications.warn("Aucun missile assigné.");
-              return finish(null);
+              return null;
             }
-
-            if (totalAssigne > nbMissiles) {
-              ui.notifications.warn(`Trop de missiles assignés : ${totalAssigne}/${nbMissiles}.`);
-              return finish(null);
+            if (total > nbMissiles) {
+              ui.notifications.warn(`Trop de missiles assignés : ${total}/${nbMissiles}.`);
+              return null;
             }
-
-            finish({ result, totalAssigne });
+            return { result, total };
           }
         },
-        cancel: {
-          label: "Annuler",
-          callback: () => finish(null)
-        }
-      },
-      default: "fire",
-      close: () => finish(null)
-    }).render(true);
-  });
+        { action: "cancel", label: "Annuler", icon: "fas fa-times", callback: () => null }
+      ]
+    });
+  }
 
-  if (!distribution) {
-    await refund();
+  async function createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned, nbMissiles, range }) {
+    const casterName = caster?.name ?? sourceToken?.name ?? "Magicien";
+    const casterImg = sourceToken?.document?.texture?.src ?? caster?.img ?? "icons/svg/mystery-man.svg";
+    const spellImg = sourceItem?.img || SPELL.imgFallback || "icons/svg/magic.svg";
+    const rows = summaries.length
+      ? summaries.map(m => `<tr><td style="padding:4px 6px;"><b>${esc(m.name)}</b></td><td style="text-align:center;padding:4px 6px;">${m.nb}</td><td style="padding:4px 6px;">${m.rolls.map(esc).join(" + ")}</td><td style="padding:4px 6px;text-align:right;"><b>${m.dmg}</b></td></tr>`).join("")
+      : `<tr><td colspan="4" style="padding:6px;text-align:center;"><i>Aucun missile résolu.</i></td></tr>`;
+    const unused = Math.max(0, nbMissiles - totalAssigned);
+
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: sourceToken }),
+      content: `
+        <div class="add2e-chat-card add2e-magicien-sort add2e-sort-missile-magique"
+             style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
+          <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
+            <img src="${esc(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
+            <div style="flex:1;line-height:1.05;">
+              <div style="font-weight:800;font-size:14px;">${esc(casterName)}</div>
+              <div style="font-size:12px;font-weight:700;">lance ${esc(SPELL.name)}</div>
+            </div>
+            <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. 1</div>
+            <img src="${esc(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
+          </div>
+          <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
+            <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;">
+              <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Projectiles de force</div>
+              <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>${totalAssigned}</b> missile${totalAssigned > 1 ? "s" : ""} lancé${totalAssigned > 1 ? "s" : ""}. ${unused ? `<b>${unused}</b> non assigné${unused > 1 ? "s" : ""}.` : ""}</p>
+              <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px;">
+                <thead><tr><th style="text-align:left;padding:4px 6px;">Cible</th><th>Qté</th><th>Dés</th><th style="text-align:right;padding:4px 6px;">Dégâts</th></tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+            <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;margin-top:7px;">
+              <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
+              <div style="margin-top:5px;font-size:12px;line-height:1.35;">
+                <p><b>École :</b> ${esc(SPELL.school)} — <b>Portée :</b> ${esc(SPELL.rangeText)} = ${range.toFixed(1)} m.</p>
+                <p><b>Zone :</b> ${esc(SPELL.areaText)} — <b>Incantation :</b> ${esc(SPELL.castingTimeText)} — <b>Jet de sauvegarde :</b> ${esc(SPELL.saveText)}.</p>
+                <p>Les cibles hors portée sont exclues avant la répartition. Bouclier annule les missiles magiques.</p>
+              </div>
+            </details>
+          </div>
+        </div>`
+    });
+  }
+
+  const sourceItem = sourceItemFromContext();
+  const caster = casterFromContext(sourceItem);
+  const sourceToken = casterTokenFor(caster);
+
+  if (!sourceItem) {
+    ui.notifications.warn(`${SPELL.name} : sort introuvable.`);
+    return false;
+  }
+  if (!caster || !sourceToken) {
+    await refundObjectChargeIfNeeded(sourceItem, caster, `${SPELL.name} : lanceur ou token lanceur introuvable.`);
     return false;
   }
 
-  const { result, totalAssigne } = distribution;
-  const missilesSummary = [];
+  const level = casterLevel(caster, sourceItem);
+  const range = spellRange(level);
+  const nbMissiles = Math.min(5, 1 + Math.floor((level - 1) / 2));
+  const selectedIds = new Set(Array.from(game.user.targets ?? []).map(t => t.id));
+
+  const candidates = canvas.tokens.placeables
+    .filter(t => t.visible && t.actor && t.id !== sourceToken.id && t.actor.id !== caster.id)
+    .map(t => ({ token: t, distance: tokenDistance(sourceToken, t) }))
+    .filter(entry => entry.distance <= range)
+    .sort((a, b) => {
+      const sa = selectedIds.has(a.token.id) ? 0 : 1;
+      const sb = selectedIds.has(b.token.id) ? 0 : 1;
+      if (sa !== sb) return sa - sb;
+      if (a.distance !== b.distance) return a.distance - b.distance;
+      return String(a.token.name).localeCompare(String(b.token.name));
+    })
+    .map(entry => entry.token);
+  candidates.__sourceToken = sourceToken;
+
+  if (!candidates.length) {
+    await refundObjectChargeIfNeeded(sourceItem, caster, `${SPELL.name} : aucune cible visible à portée (${range.toFixed(1)} m).`);
+    return false;
+  }
+
+  const distribution = await askDistribution({ candidates, nbMissiles, selectedIds, sourceItem, range });
+  if (!distribution) {
+    await refundObjectChargeIfNeeded(sourceItem, caster);
+    return false;
+  }
+
+  const summaries = [];
   let globalMissileIndex = 0;
-
-  console.log(`${TAG}[START]`, {
-    caster: caster.name,
-    casterLevel,
-    nbMissiles,
-    totalAssigne,
-    distribution: result
-  });
-
-  for (const [tokenId, countRaw] of Object.entries(result)) {
+  for (const [tokenId, countRaw] of Object.entries(distribution.result)) {
     const count = Math.max(0, Math.floor(Number(countRaw) || 0));
     if (!count) continue;
-
     const targetToken = canvas.tokens.get(tokenId);
     if (!targetToken?.actor) continue;
 
-    const targetActor = targetToken.actor;
-
-    if (isShieldedAgainstMagicMissile(targetActor)) {
-      missilesSummary.push({
-        name: targetToken.name,
-        nb: count,
-        dmg: 0,
-        rolls: ["Immunisé — Bouclier"]
-      });
+    if (isShieldedAgainstMagicMissile(targetToken.actor)) {
+      summaries.push({ name: targetToken.name, nb: count, dmg: 0, rolls: ["Immunisé — Bouclier"] });
       continue;
     }
 
     const rolls = [];
-    let dmgTotal = 0;
-
+    let dmg = 0;
     for (let i = 0; i < count; i++) {
       await playMissileVfx(sourceToken, targetToken, globalMissileIndex++);
-
-      const r = await new Roll("1d4+1").evaluate();
-      rolls.push(r.total);
-      dmgTotal += asNumber(r.total);
+      const roll = await new Roll("1d4+1").evaluate({ async: true });
+      rolls.push(String(roll.total));
+      dmg += Number(roll.total) || 0;
     }
-
-    await applyDamageSafe(targetToken, dmgTotal);
-
-    missilesSummary.push({
-      name: targetToken.name,
-      nb: count,
-      dmg: dmgTotal,
-      rolls
-    });
+    await applyDamage(targetToken, dmg, caster, sourceItem);
+    summaries.push({ name: targetToken.name, nb: count, dmg, rolls });
   }
 
-  const rows = missilesSummary.map(m => `
-    <tr style="border-bottom:1px solid #eee;">
-      <td style="padding:4px;font-weight:bold;color:#4a148c;">${htmlEscape(m.name)}</td>
-      <td style="text-align:center;">${m.nb}</td>
-      <td style="font-size:0.85em;color:#666;">${m.rolls.map(htmlEscape).join(" + ")}</td>
-      <td style="text-align:right;font-weight:bold;color:#c0392b;">${m.dmg}</td>
-    </tr>`).join("");
+  await createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned: distribution.total, nbMissiles, range });
 
-  const unused = Math.max(0, nbMissiles - totalAssigne);
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: caster, token: sourceToken }),
-    content: `
-    <div class="add2e-spell-card" style="border:1px solid #8e44ad;border-radius:8px;overflow:hidden;font-family:var(--font-primary);background:#fff;">
-      <div style="background:linear-gradient(135deg,#7b1fa2,#4a148c);color:white;padding:6px 10px;font-weight:bold;display:flex;align-items:center;">
-        <img src="${htmlEscape(spellData.img || 'icons/svg/magic.svg')}" width="24" height="24" style="margin-right:8px;border:1px solid #fff;border-radius:4px;">
-        ${htmlEscape(spellData.name || "Missile Magique")}
-      </div>
-      <div style="padding:5px;background:#f3e5f5;font-size:0.9em;text-align:center;border-bottom:1px solid #e1bee7;">
-        <b>${totalAssigne}</b> missile${totalAssigne > 1 ? "s" : ""} lancé${totalAssigne > 1 ? "s" : ""} sur <b>${missilesSummary.length}</b> cible${missilesSummary.length > 1 ? "s" : ""}.
-        ${unused ? `<br><span style="color:#8a5a00;">${unused} missile${unused > 1 ? "s" : ""} non assigné${unused > 1 ? "s" : ""}.</span>` : ""}
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:0.9em;">
-        <tr style="background:#eee;color:#555;">
-          <th style="text-align:left;padding:4px;">Cible</th>
-          <th>Qté</th>
-          <th>Dés</th>
-          <th style="text-align:right;">Dégâts</th>
-        </tr>
-        ${rows || `<tr><td colspan="4" style="padding:6px;text-align:center;"><i>Aucun missile résolu.</i></td></tr>`}
-      </table>
-    </div>`
+  console.log(`${TAG}[DONE]`, {
+    caster: caster.name,
+    level,
+    range,
+    nbMissiles,
+    totalAssigned: distribution.total,
+    summaries
   });
 
   return true;
