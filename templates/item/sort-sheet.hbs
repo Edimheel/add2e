@@ -57,7 +57,7 @@
           <label><span>Source composants</span><input type="text" name="system.composants_materiels_source" value="{{system.composants_materiels_source}}" placeholder="Manuel des joueurs"/></label>
           <label class="checkline" title="À cocher si le sort contient M mais que le composant matériel reste à compléter."><input type="checkbox" name="system.composants_materiels_a_renseigner" {{#if system.composants_materiels_a_renseigner}}checked{{/if}}/><span>Matériel à renseigner</span></label>
         </div>
-        <label style="margin-top:8px;display:block;"><span>Composants matériels</span><textarea class="add2e-components-textarea" name="system.composants_materiels" rows="5" placeholder="Un composant par ligne, ou séparé par des virgules/points-virgules. Laisser vide si le sort n’a pas de composante M.">{{system.composants_materiels}}</textarea></label>
+        <label style="margin-top:8px;display:block;"><span>Composants matériels</span><textarea class="add2e-components-textarea" name="system.composants_materiels" rows="5" placeholder="Un composant par ligne, ou séparé par des virgules/points-virgules. Laisser vide si le sort n’a pas de composante M.">{{spellMaterialComponents item}}</textarea></label>
         <div class="grid-2" style="margin-top:8px;">
           <label><span>Référence / page</span><input type="text" name="system.composants_materiels_reference" value="{{system.composants_materiels_reference}}" placeholder="Manuel des joueurs, sort ..."/></label>
           <label><span>Vérification recommandée</span><input type="text" name="system.composants_materiels_verification_recommandee" value="{{system.composants_materiels_verification_recommandee}}" placeholder="oui / non / note"/></label>
