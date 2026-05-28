@@ -4,7 +4,7 @@
 import {
   GM_OPERATION_TYPE,
   isAmmunition,
-  isComponent,
+  isComponent as vendorIsComponent,
   quantity,
   quantityUpdate,
   num,
@@ -12,7 +12,7 @@ import {
   slug
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-05-28-consumables-core-v2-sheet-pouches-gm-relay";
+export const ADD2E_CONSUMABLES_VERSION = "2026-05-28-consumables-core-v3-loose-component-detection";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -24,6 +24,45 @@ const asArray = value => Array.isArray(value)
     : typeof value === "string"
       ? value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)
       : [value];
+
+function itemTextFields(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return [
+    item?.name,
+    system.categorie,
+    system.category,
+    system.sousType,
+    system.sous_type,
+    system.type,
+    system.subtype,
+    system.kind,
+    system.slot,
+    system.slug,
+    system.composant,
+    system.component,
+    flags.vendorKind,
+    flags.kind,
+    flags.slug,
+    flags.componentSlug,
+    ...asArray(system.tags),
+    ...asArray(system.effectTags),
+    ...asArray(flags.tags)
+  ].map(lower).filter(Boolean);
+}
+
+function isSpellComponentItem(item) {
+  if (!item) return false;
+  if (vendorIsComponent(item)) return true;
+  const fields = itemTextFields(item);
+  if (fields.some(v => v === "component" || v === "composant" || v === "composants")) return true;
+  if (fields.some(v => v === "composant_sort" || v === "composants_sort" || v === "composant_de_sort" || v === "composants_de_sort")) return true;
+  if (fields.some(v => v === "spell_component" || v === "spell_components" || v === "material_component" || v === "material_components")) return true;
+  if (fields.some(v => v.startsWith("composant:") || v.startsWith("component:") || v.startsWith("spell_component:"))) return true;
+  if (fields.some(v => v.includes("composant") && v.includes("sort"))) return true;
+  if (fields.some(v => v.includes("spell") && v.includes("component"))) return true;
+  return false;
+}
 
 function isOnlyComponentCode(value) {
   const text = lower(value).replace(/[^a-z]/g, "");
@@ -102,20 +141,13 @@ function spellComponentRequirements(sort) {
 }
 
 function componentKeys(item) {
-  const system = item?.system ?? {};
-  const flags = item?.flags?.add2e ?? {};
-  const tags = [
-    ...(Array.isArray(system.tags) ? system.tags : []),
-    ...(Array.isArray(system.effectTags) ? system.effectTags : []),
-    ...(Array.isArray(flags.tags) ? flags.tags : [])
-  ];
-  return [item?.name, system.nom, system.slug, system.composant, system.component, flags.slug, flags.componentSlug, ...tags]
-    .map(v => slug(String(v ?? "").replace(/^composant[:_]/i, "")))
+  return itemTextFields(item)
+    .map(v => slug(String(v ?? "").replace(/^(composant|component|spell_component)[:_]/i, "")))
     .filter(Boolean);
 }
 
 function findActorComponent(actor, requirement) {
-  const items = Array.from(actor?.items ?? []).filter(isComponent);
+  const items = Array.from(actor?.items ?? []).filter(isSpellComponentItem);
   return items.find(item => componentKeys(item).includes(requirement.key))
     ?? items.find(item => componentKeys(item).some(key => key && (key.includes(requirement.key) || requirement.key.includes(key))))
     ?? null;
@@ -132,8 +164,8 @@ export function prepareActorSheetConsumables(data) {
     : items.filter(item => item.type === "objet");
 
   const carquois = objets.filter(isAmmunition).sort(sortByName);
-  const sacoche = objets.filter(isComponent).sort(sortByName);
-  const divers = objets.filter(item => !isAmmunition(item) && !isComponent(item)).sort(sortByName);
+  const sacoche = objets.filter(isSpellComponentItem).sort(sortByName);
+  const divers = objets.filter(item => !isAmmunition(item) && !isSpellComponentItem(item)).sort(sortByName);
 
   data.listeCarquois = carquois;
   data.listeSacocheComposants = sacoche;
@@ -230,7 +262,7 @@ async function refundSpellComponentsLocal(reservation) {
   if (!actor || !entries.length) return false;
 
   for (const entry of entries) {
-    const item = actor.items?.get(entry.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === entry.itemName && isComponent(i));
+    const item = actor.items?.get(entry.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === entry.itemName && isSpellComponentItem(i));
     if (item) await item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-refund-gm" });
   }
 
