@@ -3,11 +3,11 @@
 // Règle gérée ici : initiative simple au d6, ordre ascendant.
 // Surprise volontairement non gérée dans ce module.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-28-init-chat-card-turn-lock-v1";
+const ADD2E_INITIATIVE_VERSION = "2026-05-28-init-chat-card-turn-lock-v2";
 const TAG = "[ADD2E][INIT]";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 
-const ADD2E_TURN_LOCK_VERSION = "2026-05-28-turn-lock-actions-movement-v1";
+const ADD2E_TURN_LOCK_VERSION = "2026-05-28-turn-lock-actions-movement-v2";
 const ADD2E_INIT_CHAT_CARD_VERSION = "2026-05-28-init-chat-card-v1";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
@@ -268,7 +268,7 @@ function add2eCanActorActNow(actor, { notify = false } = {}) {
   if (game.user?.isGM) return true;
   if (add2eCombatantMatchesActor(combat.combatant, actor)) return true;
 
-  if (notify) add2eWarnNotTurn(actor);
+  if (notify) add2eNotifyNotTurn(actor);
   return false;
 }
 
@@ -278,18 +278,18 @@ function add2eCanTokenActNow(tokenDocument, { notify = false } = {}) {
   if (game.user?.isGM) return true;
   if (add2eCombatantMatchesToken(combat.combatant, tokenDocument)) return true;
 
-  if (notify) add2eWarnNotTurn(tokenDocument?.actor ?? tokenDocument?.object?.actor ?? null);
+  if (notify) add2eNotifyNotTurn(tokenDocument?.actor ?? tokenDocument?.object?.actor ?? null);
   return false;
 }
 
-function add2eWarnNotTurn(actor = null) {
+function add2eNotifyNotTurn(actor = null) {
   const now = Date.now();
   if (now - add2eTurnWarningAt < 900) return;
   add2eTurnWarningAt = now;
   const current = game.combat?.combatant;
   const currentName = current?.name ?? current?.actor?.name ?? "l'acteur actif";
   const actorName = actor?.name ? `${actor.name} ne peut pas agir.` : "Ce token ne peut pas agir.";
-  ui.notifications?.warn?.(`${actorName} C'est le tour de ${currentName}.`);
+  ui.notifications?.info?.(`${actorName} C'est le tour de ${currentName}.`);
 }
 
 function add2eResolveActionActor(argsLike) {
@@ -307,6 +307,30 @@ function add2eHasMovementChange(changes = {}) {
   return ["x", "y", "elevation", "rotation"].some(path => foundry.utils.hasProperty(changes, path));
 }
 
+function add2eResetDeniedTokenVisual(tokenDocument) {
+  const token = tokenDocument?.object ?? canvas?.tokens?.get?.(tokenDocument?.id) ?? null;
+  if (!token) return;
+
+  const x = Number(tokenDocument.x ?? token.document?.x ?? token.x ?? 0);
+  const y = Number(tokenDocument.y ?? token.document?.y ?? token.y ?? 0);
+  const elevation = Number(tokenDocument.elevation ?? token.document?.elevation ?? 0);
+  const rotation = Number(tokenDocument.rotation ?? token.document?.rotation ?? 0);
+
+  window.setTimeout(() => {
+    try {
+      token.document?.updateSource?.({ x, y, elevation, rotation });
+      token.x = x;
+      token.y = y;
+      token.position?.set?.(x, y);
+      token.refresh?.();
+      token.renderFlags?.set?.({ refresh: true, refreshPosition: true });
+      canvas?.perception?.update?.({ refresh: true }, true);
+    } catch (err) {
+      console.warn(`${TAG}[TURN_LOCK][MOVE_RESET][ERROR]`, err);
+    }
+  }, 0);
+}
+
 function add2eInstallMovementTurnLock() {
   if (globalThis.__ADD2E_TURN_LOCK_MOVEMENT_INSTALLED === ADD2E_TURN_LOCK_VERSION) return;
   globalThis.__ADD2E_TURN_LOCK_MOVEMENT_INSTALLED = ADD2E_TURN_LOCK_VERSION;
@@ -317,6 +341,7 @@ function add2eInstallMovementTurnLock() {
       if (!add2eHasMovementChange(changes)) return;
       if (options?.add2eAllowOutOfTurn || options?.add2eIgnoreTurnLock) return;
       if (add2eCanTokenActNow(tokenDocument, { notify: true })) return;
+      add2eResetDeniedTokenVisual(tokenDocument);
       return false;
     } catch (err) {
       console.warn(`${TAG}[TURN_LOCK][MOVE][ERROR]`, err);
@@ -345,7 +370,9 @@ function add2eWrapActionFunction(name, label) {
 function add2eInstallActionTurnLocks() {
   add2eWrapActionFunction("add2eAttackRoll", "attaque");
   add2eWrapActionFunction("add2eCastSpell", "sort");
-  if (globalThis.cast_spell === globalThis.add2eCastSpell || typeof globalThis.cast_spell === "function") add2eWrapActionFunction("cast_spell", "sort alias");
+  if (globalThis.cast_spell === globalThis.add2eCastSpell || typeof globalThis.cast_spell === "function") {
+    add2eWrapActionFunction("cast_spell", "sort alias");
+  }
 }
 
 function add2eExposeInitiativeGlobals() {
@@ -416,8 +443,6 @@ function add2ePatchCombatTrackerInitiativeIcons(root = document) {
     const scope = root?.jquery ? root[0] : root;
     if (!scope?.querySelectorAll) return 0;
 
-    // IMPORTANT : uniquement les boutons d'initiative par combattant visibles dans le tracker.
-    // On ne touche pas aux boutons globaux rollAll/rollNPC ni aux autres dés d20 de l'interface.
     const selectors = [
       "#combat-tracker .combatant button.combatant-control.roll",
       "#combat .combatant button.combatant-control.roll",
@@ -503,6 +528,7 @@ function add2eInstallInitiativeHooks() {
 }
 
 Hooks.once("init", add2eConfigureInitiative);
+
 Hooks.once("ready", () => {
   add2eConfigureInitiative();
   add2eRemoveLegacyInitiativeHooks();
