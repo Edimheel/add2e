@@ -22,6 +22,7 @@ import {
 } from "./15b2-gm-relay-scene-documents.mjs";
 
 import { vendorRecordProjectileSpent } from "./15b3-gm-relay-projectiles.mjs";
+import { consumeSpellComponent } from "./15b4-gm-relay-spell-components.mjs";
 
 Hooks.once("ready", () => {
   if (globalThis.ADD2E_GM_OPERATION_RELAY_REGISTERED) return;
@@ -38,7 +39,8 @@ Hooks.once("ready", () => {
     deleteAmbientLight,
     updateToken,
     createActiveEffect,
-    vendorRecordProjectileSpent
+    vendorRecordProjectileSpent,
+    consumeSpellComponent
   };
 
   game.socket.on(ADD2E_SOCKET, async data => {
