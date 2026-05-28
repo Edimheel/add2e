@@ -1,9 +1,9 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-05-28-v36-visual-actions-compact
+// Version : 2026-05-28-v37-values-colored-large
 // Principe : le HUD est une interface. Les jets et actions délèguent strictement aux fonctions de la feuille/système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-28-v36-visual-actions-compact";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-28-v37-values-colored-large";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
 const STORAGE_KEY = "add2e.actionHud.state.v34";
@@ -134,7 +134,7 @@ function injectStyle() {
 #${HUD_ID} .act{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap}#${HUD_ID} .danger{min-width:36px;width:36px;color:#ffd0c8;border-color:#b94735;background:linear-gradient(180deg,#7d241b,#42120d)}
 #${HUD_ID} .empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center}
 #${HUD_ID} .spell-layout{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}#${HUD_ID} .spell-levels{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;border-bottom:1px solid rgba(214,176,90,.28)}#${HUD_ID} .spell-level{min-height:30px;padding:5px 10px;border:1px solid rgba(214,176,90,.55);border-radius:999px;background:rgba(214,176,90,.12);color:#ffe4a1;font-weight:950;font-size:.82em;cursor:pointer}#${HUD_ID} .spell-level.active{background:linear-gradient(180deg,#f0c66d,#c78d2e);color:#211307}#${HUD_ID} .spell-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;padding-right:3px}#${HUD_ID} .spell-list-title{color:#ffe4a1;font-weight:950;font-size:.82em;margin:0 0 2px 2px}
-#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${HUD_ID} .cell{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;min-height:48px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}#${HUD_ID} .cell b{display:block;color:#fff;font-size:1.08em;line-height:1.1}#${HUD_ID} .roll-icon{width:36px;height:36px;min-width:36px;padding:0;border-radius:10px;border:1px solid rgba(214,176,90,.65);background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .roll-icon:hover{filter:brightness(1.2)}
+#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${HUD_ID} .cell{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;min-height:48px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}#${HUD_ID} .cell b{display:block;color:#ffe4a1;font-size:1.32em;font-weight:950;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.45)}#${HUD_ID} .roll-icon{width:36px;height:36px;min-width:36px;padding:0;border-radius:10px;border:1px solid rgba(214,176,90,.65);background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .roll-icon:hover{filter:brightness(1.2)}
 #${HUD_ID} button,#${HUD_ID} [data-action],#${HUD_ID} [data-tab]{user-select:auto;touch-action:auto}`;
   document.head.appendChild(style);
 }
@@ -244,7 +244,7 @@ function followCombat(combat = game.combat, forceOpen = false) { if (Date.now() 
 Hooks.once("init", () => { game.add2e = game.add2e ?? {}; game.add2e.actionHudVersion = ADD2E_ACTION_HUD_VERSION; game.add2e.openActionHud = (actor = null) => { const token = canvas?.tokens?.controlled?.[0] ?? null; return renderHud(actor ?? token?.actor ?? game.user?.character, actor ? tokenFor(actor) : token, { reason: "api-open" }); }; game.add2e.closeActionHud = closeHud; game.add2e.refreshActionHud = () => hudActor ? renderHud(hudActor, hudToken, { reason: "api-refresh-current" }) : refreshHud("api-refresh"); Object.assign(globalThis, { add2eRenderActionHud: renderHud, add2eRefreshActionHud: refreshHud, add2eCloseActionHud: closeHud, add2eHudCheck: () => ({ version: ADD2E_ACTION_HUD_VERSION, actor: currentActor()?.name ?? null, actorId: currentActor()?.id ?? null, activeTab, selectedSpellGroup, attackRoll: typeof globalThis.add2eAttackRoll, castSpell: typeof globalThis.add2eCastSpell, rollCarac: typeof globalThis.add2eRollCharacteristicCard, rollSave: typeof globalThis.add2eRollSaveCard, featureUse: typeof globalThis.add2eExecuteClassFeatureOnUse, hud: !!hud() }) }); console.log(`${TAG}[INIT]`, ADD2E_ACTION_HUD_VERSION); });
 Hooks.once("ready", () => { document.addEventListener("pointerdown", pointerDown, true); window.addEventListener("resize", () => applyGeometry(hud(), true)); setTimeout(() => refreshHud("ready"), 300); });
 Hooks.on("controlToken", () => { manualIntentUntil = Date.now() + 500; setTimeout(() => refreshHud("controlToken"), 60); });
-Hooks.on("canvasReady", () => setTimeout(() => refreshHud("canvasReady"), 150));
+Hooks.on("canvasReady", () => setTimeout(() => refreshHud("canvasReady", 150)));
 Hooks.on("updateCombat", combat => setTimeout(() => followCombat(combat, false), 80));
 Hooks.on("combatTurn", combat => setTimeout(() => followCombat(combat, false), 80));
 Hooks.on("combatRound", combat => setTimeout(() => followCombat(combat, false), 80));
