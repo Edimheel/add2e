@@ -1,9 +1,9 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-05-28-v34-sheet-delegation-clean
+// Version : 2026-05-28-v35-icons-ammo-components
 // Principe : le HUD est une interface. Les jets et actions délèguent strictement aux fonctions de la feuille/système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-28-v34-sheet-delegation-clean";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-28-v35-icons-ammo-components";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
 const STORAGE_KEY = "add2e.actionHud.state.v34";
@@ -19,11 +19,11 @@ let manualIntentUntil = 0;
 let state = null;
 
 const TABS = ["attaques", "sorts", "capacites", "effets", "sauvegardes", "caracs"];
-const CARACS = [["force", "FOR", "Force"], ["dexterite", "DEX", "Dextérité"], ["constitution", "CON", "Constitution"], ["intelligence", "INT", "Intelligence"], ["sagesse", "SAG", "Sagesse"], ["charisme", "CHA", "Charisme"]];
-const SAVES = [["Paralysie", "Paralysie / poison / mort"], ["Pétrification", "Pétrification / métamorphose"], ["Baguettes", "Baguettes"], ["Souffles", "Souffles"], ["Sorts", "Sorts"]];
+const CARACS = [["force", "FOR", "Force", "fa-fist-raised"], ["dexterite", "DEX", "Dextérité", "fa-running"], ["constitution", "CON", "Constitution", "fa-heart"], ["intelligence", "INT", "Intelligence", "fa-brain"], ["sagesse", "SAG", "Sagesse", "fa-eye"], ["charisme", "CHA", "Charisme", "fa-comments"]];
+const SAVES = [["Paralysie", "Paralysie / poison / mort", "fa-skull-crossbones"], ["Pétrification", "Pétrification / métamorphose", "fa-mountain"], ["Baguettes", "Baguettes", "fa-magic"], ["Souffles", "Souffles", "fa-wind"], ["Sorts", "Sorts", "fa-scroll"]];
 
 function esc(v) { try { return foundry.utils.escapeHTML(String(v ?? "")); } catch (_e) { return String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;"); } }
-function arr(v) { if (v === undefined || v === null || v === "") return []; if (Array.isArray(v)) return v; if (v instanceof Set) return [...v]; if (typeof v?.values === "function") return [...v.values()]; if (typeof v === "object") return Object.values(v); return [v]; }
+function arr(v) { if (v === undefined || v === null || v === "") return []; if (Array.isArray(v)) return v.flatMap(arr); if (v instanceof Set) return [...v]; if (typeof v?.values === "function") return [...v.values()]; if (typeof v === "object") return Object.values(v); return [v]; }
 function num(v, fallback = 0) { if (typeof v === "string") { const m = v.match(/-?\d+(?:[.,]\d+)?/); if (!m) return fallback; v = m[0].replace(",", "."); } const n = Number(v); return Number.isFinite(n) ? n : fallback; }
 function norm(v) { return String(v ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9:_-]+/g, "_").replace(/^_|_$/g, ""); }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
@@ -52,9 +52,11 @@ function setCollapsed(value, persist = true) { const el = hud(); if (!el) return
 
 function itemEquipped(item) { const s = item?.system ?? {}; return s.equipee === true || s.equipped === true || s.portee === true || s.worn === true || s.estEquipee === true; }
 function itemTags(item) { const s = item?.system ?? {}, f = item?.flags?.add2e ?? {}; return [item?.name, s.nom, s.categorie, s.category, s.type, s.sousType, s.sous_type, s.type_arme, s.famille, s.famille_arme, s.tags, s.effectTags, f.tags, f.effectTags].flatMap(arr).map(norm).filter(Boolean); }
+function isContainerLike(item) { const t = itemTags(item).join(" "); const n = norm(item?.name); return t.includes("sacoche") || t.includes("component") || t.includes("composant") || n.includes("sacoche") || n.includes("composant"); }
 function isPropelledWeapon(item) { const tags = itemTags(item), n = norm(item?.name), s = item?.system ?? {}; return s.projectile_propulse === true || s.arme_a_projectile === true || tags.includes("projectile_propulse") || tags.includes("usage_projectile_propulse") || ["arc", "arbalete", "fronde"].some(k => n.includes(k)); }
 function projectileKeys(item) { const text = `${norm(item?.name)} ${itemTags(item).join(" ")}`; if (text.includes("arbalete")) return ["carreau", "carreaux", "bolt"]; if (text.includes("arc")) return ["fleche", "fleches", "arrow"]; if (text.includes("fronde")) return ["bille", "billes", "pierre", "pierres", "bullet"]; return ["munition", "projectile", "ammo"]; }
 function quantity(item) { const s = item?.system ?? {}; const q = s.quantite ?? s.quantity ?? s.qty ?? s.nombre ?? s.nb ?? s.uses?.value ?? s.charges?.value; return q === undefined || q === null || q === "" ? "—" : String(q); }
+function quantityNumber(item, fallback = 1) { const q = quantity(item); if (q === "—") return fallback; return num(q, fallback); }
 function equippedProjectile(actor, weapon) { if (!actor || !isPropelledWeapon(weapon)) return null; const keys = projectileKeys(weapon).map(norm); const items = actor.items?.filter?.(i => i.id !== weapon.id && itemEquipped(i) && keys.some(k => norm(i.name).includes(k) || itemTags(i).some(t => t.includes(k)))) ?? []; return items.find(i => quantity(i) !== "0") ?? items[0] ?? null; }
 function damage(item) { const s = item?.system ?? {}; return s?.dégâts?.contre_moyen ?? s?.degats?.contre_moyen ?? s?.degats_moyen ?? s?.damage ?? s?.degats ?? s?.dmg ?? "—"; }
 function range(item) { const s = item?.system ?? {}; const p = [s.portee_courte ?? s.portee_short, s.portee_moyenne ?? s.portee_medium, s.portee_longue ?? s.portee_long].filter(v => v !== undefined && v !== null && String(v) !== ""); return p.length ? p.join(" / ") : "Contact"; }
@@ -67,6 +69,36 @@ function spellLevel(sort) { return Math.max(0, num(sort?.system?.niveau ?? sort?
 function spellListLabel(sort) { const s = sort?.system ?? {}; const raw = [s.liste, s.list, s.spellList, s.classe, s.class, s.sourceClasse, s.casterClass, ...arr(s.lists), ...arr(s.listes), ...arr(s.classes)].map(v => String(v ?? "").trim()).find(Boolean) || "Mag"; const n = norm(raw); if (n.includes("clerc") || n.includes("pretre") || n.includes("priest")) return "Clerc"; if (n.includes("druid") || n.includes("druide")) return "Dru"; if (n.includes("ranger")) return "Rng"; if (n.includes("paladin")) return "Pal"; if (n.includes("mag") || n.includes("wizard") || n.includes("mage")) return "Mag"; return String(raw).slice(0, 6); }
 function spellGroupKey(sort) { return `${spellListLabel(sort)}|${spellLevel(sort)}`; }
 function spellComponents(sort) { return String(sort?.system?.composantes ?? sort?.system?.components ?? sort?.system?.componentes ?? "—").trim() || "—"; }
+function materialComponentNames(sort) {
+  const s = sort?.system ?? {};
+  const raw = s.composantsMateriels ?? s.composants_materiels ?? s.composantsMateriel ?? s.composantMateriel ?? s.composant_materiel ?? s.materiel ?? s.materialComponents ?? s.material_components ?? s.components?.material ?? s.components?.materials ?? s.composants;
+  return arr(raw).flatMap(v => {
+    if (typeof v === "string") return v.split(/[,;|\n]+/);
+    return [v?.name ?? v?.nom ?? v?.label ?? v?.itemName ?? v?.component ?? v?.composant ?? ""];
+  }).map(v => String(v ?? "").trim()).filter(Boolean);
+}
+function actorHasComponent(actor, componentName) {
+  const wanted = norm(componentName);
+  if (!wanted) return false;
+  return !!actor?.items?.find?.(i => {
+    const q = quantityNumber(i, 1);
+    if (q <= 0) return false;
+    const n = norm(i.name ?? i.system?.nom ?? "");
+    const tags = itemTags(i);
+    const type = String(i.type ?? "").toLowerCase();
+    const looksLikeComponent = type === "objet" || type === "equipment" || tags.some(t => t.includes("composant") || t.includes("component")) || isContainerLike(i);
+    if (!looksLikeComponent) return false;
+    return n.includes(wanted) || wanted.includes(n) || tags.some(t => t.includes(wanted) || wanted.includes(t));
+  });
+}
+function spellComponentBadges(actor, sort) {
+  const base = `<span>Comp. ${esc(spellComponents(sort))}</span>`;
+  const names = materialComponentNames(sort);
+  const needsMaterial = /(^|[^a-z])m([^a-z]|$)/.test(norm(spellComponents(sort))) || names.length > 0;
+  if (!needsMaterial) return base;
+  if (!names.length) return `${base}<span class="component-bad">M non détaillé</span>`;
+  return `${base}${names.map(name => `<span class="${actorHasComponent(actor, name) ? "component-ok" : "component-bad"}">${esc(name)}</span>`).join("")}`;
+}
 
 function features(actor) { if (typeof globalThis.add2eGetActorActivableClassFeatures === "function") return globalThis.add2eGetActorActivableClassFeatures(actor, { includeLocked: false }) ?? []; return []; }
 function effects(actor) { const map = new Map(); for (const e of arr(actor?.effects)) if (e && e.disabled !== true) map.set(e.id, e); return [...map.values()]; }
@@ -93,12 +125,16 @@ function injectStyle() {
 #${HUD_ID} .portrait{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #c4973f;background:#111}#${HUD_ID} .name{color:#fff4cf;font-size:1.12em;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#${HUD_ID} .sub{color:#d8bd78;font-size:.82em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #${HUD_ID} .pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}#${HUD_ID} .pill{display:inline-flex;min-height:22px;padding:2px 7px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.78em;font-weight:850}
 #${HUD_ID} .icon{width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .resize{cursor:nwse-resize!important}
-#${HUD_ID} .row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:46px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07)}#${HUD_ID} .row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px}
-#${HUD_ID} .row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25)}#${HUD_ID} .title{color:#fff4cf;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#${HUD_ID} .meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px}
+#${HUD_ID} .row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:50px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07)}#${HUD_ID} .row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px}
+#${HUD_ID} .row img{width:36px;height:36px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25)}
+#${HUD_ID} .img-act{width:38px;height:38px;padding:0;border:1px solid rgba(214,176,90,.75);border-radius:8px;background:rgba(0,0,0,.22);cursor:pointer;display:flex;align-items:center;justify-content:center}#${HUD_ID} .img-act:hover{filter:brightness(1.22)}#${HUD_ID} .img-act img{width:34px;height:34px;border:0;border-radius:7px}
+#${HUD_ID} .title{color:#fff4cf;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#${HUD_ID} .meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px}
+#${HUD_ID} .component-ok{color:#b8ffb8;border:1px solid rgba(80,180,80,.55);background:rgba(35,100,35,.35);padding:1px 6px;border-radius:999px}#${HUD_ID} .component-bad{color:#ffb1a8;border:1px solid rgba(190,55,45,.62);background:rgba(110,25,20,.42);padding:1px 6px;border-radius:999px}
+#${HUD_ID} .ammo{display:inline-flex;align-items:center;gap:4px;color:#b8ffb8}#${HUD_ID} .ammo-missing{color:#ffb1a8}#${HUD_ID} .ammo img{width:18px;height:18px;border-radius:4px;border:1px solid rgba(214,176,90,.4)}
 #${HUD_ID} .act{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap}#${HUD_ID} .danger{min-width:36px;width:36px;color:#ffd0c8;border-color:#b94735;background:linear-gradient(180deg,#7d241b,#42120d)}
 #${HUD_ID} .empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center}
 #${HUD_ID} .spell-layout{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}#${HUD_ID} .spell-levels{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;border-bottom:1px solid rgba(214,176,90,.28)}#${HUD_ID} .spell-level{min-height:30px;padding:5px 10px;border:1px solid rgba(214,176,90,.55);border-radius:999px;background:rgba(214,176,90,.12);color:#ffe4a1;font-weight:950;font-size:.82em;cursor:pointer}#${HUD_ID} .spell-level.active{background:linear-gradient(180deg,#f0c66d,#c78d2e);color:#211307}#${HUD_ID} .spell-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;padding-right:3px}#${HUD_ID} .spell-list-title{color:#ffe4a1;font-weight:950;font-size:.82em;margin:0 0 2px 2px}
-#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${HUD_ID} .cell{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;min-height:50px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}#${HUD_ID} .cell b{display:block;color:#fff;font-size:1.16em;line-height:1.05}#${HUD_ID} .cell span{display:block;color:#c8ad6e;font-size:.74em;font-weight:800}
+#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${HUD_ID} .cell{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;min-height:54px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}#${HUD_ID} .cell b{display:block;color:#fff;font-size:1.16em;line-height:1.05}#${HUD_ID} .cell span{display:block;color:#c8ad6e;font-size:.74em;font-weight:800}#${HUD_ID} .roll-icon{width:36px;height:36px;min-width:36px;padding:0;border-radius:10px;border:1px solid rgba(214,176,90,.65);background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .roll-icon:hover{filter:brightness(1.2)}
 #${HUD_ID} button,#${HUD_ID} [data-action],#${HUD_ID} [data-tab]{user-select:auto;touch-action:auto}`;
   document.head.appendChild(style);
 }
@@ -110,8 +146,8 @@ function weaponRows(actor) {
     const projectile = equippedProjectile(actor, i);
     const propelled = isPropelledWeapon(i);
     const dmg = propelled && projectile ? `Dégâts projectile ${damage(projectile)}` : `Dégâts ${damage(i)}`;
-    const ammo = propelled ? (projectile ? `<span>Munition ${esc(projectile.name)} ×${esc(quantity(projectile))}</span>` : `<span>Aucune munition équipée</span>`) : "";
-    return `<div class="row"><img src="${esc(i.img || "icons/svg/sword.svg")}" alt=""><div><div class="title">${esc(i.name)}</div><div class="meta"><span>${esc(dmg)}</span><span>Portée ${esc(range(i))}</span>${ammo}</div></div><button type="button" class="act" data-action="attack" data-item-id="${esc(i.id)}">Attaquer</button></div>`;
+    const ammo = propelled ? (projectile ? `<span class="ammo"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>` : `<span class="ammo-missing">Aucune munition équipée</span>`) : "";
+    return `<div class="row"><button type="button" class="img-act" data-action="attack" data-item-id="${esc(i.id)}" title="Attaquer avec ${esc(i.name)}"><img src="${esc(i.img || "icons/svg/sword.svg")}" alt=""></button><div><div class="title">${esc(i.name)}</div><div class="meta"><span>${esc(dmg)}</span><span>Portée ${esc(range(i))}</span>${ammo}</div></div><button type="button" class="act" data-action="attack" data-item-id="${esc(i.id)}">Attaquer</button></div>`;
   }).join("");
 }
 function spellRows(actor) {
@@ -123,7 +159,7 @@ function spellRows(actor) {
   if (!selectedSpellGroup || !groups.has(selectedSpellGroup)) selectedSpellGroup = list[0].key;
   const active = groups.get(selectedSpellGroup) ?? list[0];
   const buttons = list.map(g => `<button type="button" class="spell-level ${g.key === active.key ? "active" : ""}" data-action="select-spell-group" data-spell-group="${esc(g.key)}">${esc(g.label)} niv. ${esc(g.level || "—")} <span>${g.items.length}</span></button>`).join("");
-  const spellsHtml = active.items.map(s => `<div class="row"><img src="${esc(s.img || "icons/svg/book.svg")}" alt=""><div><div class="title">${esc(s.name)}</div><div class="meta"><span>Mémorisé ${preparedCount(s)}</span><span>Comp. ${esc(spellComponents(s))}</span></div></div><button type="button" class="act" data-action="cast-spell" data-item-id="${esc(s.id)}">Lancer</button></div>`).join("");
+  const spellsHtml = active.items.map(s => `<div class="row"><button type="button" class="img-act" data-action="cast-spell" data-item-id="${esc(s.id)}" title="Lancer ${esc(s.name)}"><img src="${esc(s.img || "icons/svg/book.svg")}" alt=""></button><div><div class="title">${esc(s.name)}</div><div class="meta"><span>Mémorisé ${preparedCount(s)}</span>${spellComponentBadges(actor, s)}</div></div><button type="button" class="act" data-action="cast-spell" data-item-id="${esc(s.id)}">Lancer</button></div>`).join("");
   return `<div class="spell-layout"><div class="spell-levels">${buttons}</div><div class="spell-list"><div class="spell-list-title">${esc(active.label)} niveau ${esc(active.level || "—")}</div>${spellsHtml}</div></div>`;
 }
 function featureRows(actor) {
@@ -136,8 +172,8 @@ function effectRows(actor) {
   if (!rows.length) return `<div class="empty">Aucun effet actif.</div>`;
   return rows.map(e => `<div class="row"><img src="${esc(e.img || e.icon || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(e.name)}</div><div class="meta"><span>Effet actif</span></div></div><button type="button" class="act danger" data-action="remove-effect" data-effect-id="${esc(e.id)}"><i class="fas fa-trash"></i></button></div>`).join("");
 }
-function saveRows(actor) { const values = savingThrows(actor); return `<div class="grid">${SAVES.map((s, i) => `<div class="cell"><div><b>${esc(s[0])} ${esc(values[i] || "—")}</b><span>${esc(s[1])}</span></div><button type="button" class="act" data-action="roll-save" data-save-index="${i}">Jet</button></div>`).join("")}</div>`; }
-function abilityRows(actor) { return `<div class="grid">${CARACS.map(c => `<div class="cell"><div><b>${c[1]} ${esc(ability(actor, c[0]))}</b><span>${esc(c[2])}</span></div><button type="button" class="act" data-action="roll-ability" data-ability="${c[0]}">Jet</button></div>`).join("")}</div>`; }
+function saveRows(actor) { const values = savingThrows(actor); return `<div class="grid">${SAVES.map((s, i) => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-save" data-save-index="${i}" title="Jet ${esc(s[0])}"><i class="fas ${s[2]}"></i></button><div><b>${esc(s[0])} ${esc(values[i] || "—")}</b><span>${esc(s[1])}</span></div></div>`).join("")}</div>`; }
+function abilityRows(actor) { return `<div class="grid">${CARACS.map(c => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-ability" data-ability="${c[0]}" title="Jet ${esc(c[2])}"><i class="fas ${c[3]}"></i></button><div><b>${c[1]} ${esc(ability(actor, c[0]))}</b><span>${esc(c[2])}</span></div></div>`).join("")}</div>`; }
 
 function hudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
