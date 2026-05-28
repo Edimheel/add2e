@@ -21,8 +21,7 @@ import {
   updateToken
 } from "./15b2-gm-relay-scene-documents.mjs";
 
-import { vendorRecordProjectileSpent } from "./15b3-gm-relay-projectiles.mjs";
-import { consumeSpellComponent } from "./15b4-gm-relay-spell-components.mjs";
+import { vendorRecordProjectileSpent, consumeSpellComponent } from "./15b3-gm-relay-projectiles.mjs";
 
 Hooks.once("ready", () => {
   if (globalThis.ADD2E_GM_OPERATION_RELAY_REGISTERED) return;
