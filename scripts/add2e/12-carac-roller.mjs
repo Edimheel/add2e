@@ -467,7 +467,7 @@ class Add2eCaracRoller {
       "line-height:1.08!important",
       "white-space:normal!important",
       "margin:0!important",
-      "min-height:50px!important",
+      "min-height:54px!important",
       "box-shadow:inset 0 1px 0 rgba(255,255,255,.24), 0 1px 4px rgba(0,0,0,.26)!important",
       "border:1px solid rgba(40,20,8,.55)",
       `background:linear-gradient(180deg,${bg},${bg}dd)`,
