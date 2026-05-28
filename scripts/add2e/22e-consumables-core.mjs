@@ -1,8 +1,9 @@
 // ADD2E — Consommables : composants de sort via relais MJ.
-// Ce module expose l'API attendue par 06-cast-spell.mjs sans placer de logique métier dans 22-vendor.mjs.
+// Ce module expose l'API attendue par 06-cast-spell.mjs et prépare l'affichage sacoche/carquoi.
 
 import {
   GM_OPERATION_TYPE,
+  isAmmunition,
   isComponent,
   quantity,
   quantityUpdate,
@@ -11,7 +12,7 @@ import {
   slug
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-05-28-consumables-core-v1-gm-relay";
+export const ADD2E_CONSUMABLES_VERSION = "2026-05-28-consumables-core-v2-sheet-pouches-gm-relay";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -118,6 +119,47 @@ function findActorComponent(actor, requirement) {
   return items.find(item => componentKeys(item).includes(requirement.key))
     ?? items.find(item => componentKeys(item).some(key => key && (key.includes(requirement.key) || requirement.key.includes(key))))
     ?? null;
+}
+
+function sortByName(a, b) {
+  return String(a?.name ?? "").localeCompare(String(b?.name ?? ""));
+}
+
+export function prepareActorSheetConsumables(data) {
+  const items = Array.from(data?.actor?.items ?? []);
+  const objets = Array.isArray(data?.listeObjets) && data.listeObjets.length
+    ? data.listeObjets
+    : items.filter(item => item.type === "objet");
+
+  const carquois = objets.filter(isAmmunition).sort(sortByName);
+  const sacoche = objets.filter(isComponent).sort(sortByName);
+  const divers = objets.filter(item => !isAmmunition(item) && !isComponent(item)).sort(sortByName);
+
+  data.listeCarquois = carquois;
+  data.listeSacocheComposants = sacoche;
+  data.listeObjetsDivers = divers;
+  data.add2eConsumablesSummary = {
+    carquoisCount: carquois.length,
+    sacocheCount: sacoche.length,
+    objetsDiversCount: divers.length,
+    carquoisQuantity: carquois.reduce((sum, item) => sum + quantity(item), 0),
+    sacocheQuantity: sacoche.reduce((sum, item) => sum + quantity(item), 0)
+  };
+  return data;
+}
+
+export function patchActorSheetConsumablesData() {
+  const proto = globalThis.Add2eActorSheet?.prototype;
+  if (!proto || proto.__add2eConsumablesSheetDataV2) return false;
+  if (typeof proto.getData !== "function") return false;
+
+  proto.__add2eConsumablesSheetDataV2 = true;
+  const originalGetData = proto.getData;
+  proto.getData = async function add2eConsumablesGetData(...args) {
+    const data = await originalGetData.apply(this, args);
+    return prepareActorSheetConsumables(data);
+  };
+  return true;
 }
 
 function serializableReservation(result) {
@@ -248,11 +290,13 @@ export async function add2eRefundSpellComponents(reservation) {
 
 export function registerGlobals() {
   game.add2e = game.add2e ?? {};
-  game.add2e.consumables = { add2eReserveSpellComponents, add2eRefundSpellComponents };
+  game.add2e.consumables = { add2eReserveSpellComponents, add2eRefundSpellComponents, prepareActorSheetConsumables };
   globalThis.ADD2E_CONSUMABLES = game.add2e.consumables;
   globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
   globalThis.add2eReserveSpellComponents = add2eReserveSpellComponents;
   globalThis.add2eRefundSpellComponents = add2eRefundSpellComponents;
+  globalThis.add2ePrepareActorSheetConsumables = prepareActorSheetConsumables;
+  patchActorSheetConsumablesData();
 }
 
 export function registerSockets() {
