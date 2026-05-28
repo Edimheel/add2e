@@ -71,17 +71,17 @@
         <div class="a2e-panel">
           <h2>Carquois et projectiles</h2>
           <div class="a2e-panel-body">
-            <table class="a2e-table add2e-quiver-table">
-              <thead>
-                <tr><th>État</th><th>Projectile</th><th>Type</th><th>Dégâts</th><th>Qté</th><th>Bonus</th><th>Récup.</th><th>Actions</th></tr>
-              </thead>
-              <tbody>
-                {{#each listeObjets as |munition|}}
-                  {{#if (eq munition.system.categorie "munition")}}
+            {{#if listeCarquois.length}}
+              <table class="a2e-table add2e-quiver-table">
+                <thead>
+                  <tr><th>État</th><th>Projectile</th><th>Type</th><th>Dégâts</th><th>Qté</th><th>Bonus</th><th>Récup.</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {{#each listeCarquois as |munition|}}
                     <tr class="item add2e-quiver-row" data-item-id="{{munition._id}}">
                       <td>{{#if munition.system.equipee}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td>
                       <td><b>{{munition.name}}</b></td>
-                      <td>{{munition.system.sousType}}</td>
+                      <td>{{munition.system.sousType}}{{munition.system.sous_type}}{{munition.system.munitionType}}</td>
                       <td>{{add2eItemDisplayDamage munition}}</td>
                       <td>{{munition.system.quantite}}</td>
                       <td>{{munition.system.bonus_hit}} / {{munition.system.bonus_dom}}</td>
@@ -98,10 +98,13 @@
                         </div>
                       </td>
                     </tr>
-                  {{/if}}
-                {{/each}}
-              </tbody>
-            </table>
+                  {{/each}}
+                </tbody>
+              </table>
+              <p class="a2e-small"><b>Total projectiles :</b> {{add2eConsumablesSummary.carquoisQuantity}}</p>
+            {{else}}
+              <p class="a2e-muted">Aucun projectile dans le carquois.</p>
+            {{/if}}
           </div>
         </div>
 
