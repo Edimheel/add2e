@@ -1,0 +1,80 @@
+// ADD2E — Core armurier : stock armes/armures, achats et compatibilité acteur.
+
+export const ADD2E_ARMORER_VERSION = "2026-05-28-armorer-v1";
+export const ARMORER_SCOPE = "add2e";
+export const ARMORER_NAME = "Armurier";
+export const ARMORER_FOLDER = "ADD2E — Boutique";
+export const ARMORER_SETTING = "armorerCreationVersion";
+export const ARMORER_TOKEN_IMG = "icons/environment/settlement/blacksmith.webp";
+
+export const COINS = [
+  { key: "pp", label: "PP", pc: 500 },
+  { key: "po", label: "PO", pc: 100 },
+  { key: "pe", label: "PE", pc: 50 },
+  { key: "pa", label: "PA", pc: 10 },
+  { key: "pc", label: "PC", pc: 1 }
+];
+
+export const num = (v, f = 0) => Number.isFinite(Number(v)) ? Number(v) : f;
+export const lower = v => String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+export const slug = v => lower(v).replace(/[’']/g, "_").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+export function esc(v) { const d = document.createElement("div"); d.textContent = String(v ?? ""); return d.innerHTML; }
+const asArray = v => Array.isArray(v) ? v : v === null || v === undefined || v === "" ? [] : typeof v === "string" ? v.split(/[,;|]/g).map(x => x.trim()).filter(Boolean) : [v];
+export function tags(item) { const s = item?.system ?? {}; const f = item?.flags?.add2e ?? {}; return [...asArray(s.tags), ...asArray(s.effectTags), ...asArray(f.tags)].map(lower).filter(Boolean); }
+export const quantity = item => Math.max(0, Math.floor(num(item?.system?.quantite ?? item?.system?.quantity ?? 0, 0)));
+export const quantityUpdate = v => ({ "system.quantite": Math.max(0, Math.floor(num(v, 0))) });
+export const isArmorerActor = actor => actor?.getFlag?.(ARMORER_SCOPE, "isArmorer") === true || actor?.name === ARMORER_NAME;
+export const isArmorerStockItem = item => item?.type === "arme" || item?.type === "armure";
+export const defaultStock = item => item?.type === "arme" ? 5 : 4;
+export const stockMax = item => Math.max(1, Math.floor(num(item?.getFlag?.(ARMORER_SCOPE, "armorerStockMax"), defaultStock(item))));
+export function armorerKind(item) { return item?.type === "arme" ? "Arme" : item?.type === "armure" ? "Armure" : "Article"; }
+
+function packIds(kind) {
+  const base = kind === "armes" ? ["add2e.armes", "world.armes"] : ["add2e.armures", "world.armures"];
+  for (const [id, pack] of game.packs ?? []) {
+    const text = `${id} ${pack?.metadata?.label ?? ""}`;
+    if (kind === "armes" && /\barmes?\b|weapons?/i.test(text) && !base.includes(id)) base.push(id);
+    if (kind === "armures" && /armures?|armor|armour/i.test(text) && !base.includes(id)) base.push(id);
+  }
+  return base;
+}
+
+export function moneyFrom(raw = {}) { const m = { pc: 0, pa: 0, pe: 0, po: 0, pp: 0 }; for (const c of COINS) m[c.key] = Math.max(0, Math.floor(num(raw?.[c.key], 0))); return m; }
+export function getMoney(actor) { const f = actor?.getFlag?.(ARMORER_SCOPE, "monnaie") ?? actor?.getFlag?.("add2e", "monnaie"); if (f && typeof f === "object") return moneyFrom(f); const s = actor?.system?.monnaie ?? actor?.system?.argent ?? actor?.system?.currency; return s && typeof s === "object" ? moneyFrom(s) : moneyFrom({}); }
+export async function setMoney(actor, money) { if (!actor?.setFlag) return false; await actor.setFlag("add2e", "monnaie", moneyFrom(money)); return true; }
+export function toCopper(money) { const m = moneyFrom(money); return COINS.reduce((sum, c) => sum + m[c.key] * c.pc, 0); }
+export function fromCopper(total) { let rest = Math.max(0, Math.floor(num(total, 0))); const m = { pc: 0, pa: 0, pe: 0, po: 0, pp: 0 }; for (const c of COINS) { m[c.key] = Math.floor(rest / c.pc); rest %= c.pc; } return m; }
+export function formatMoney(value) { const m = typeof value === "number" ? fromCopper(value) : moneyFrom(value); const parts = COINS.map(c => m[c.key] ? `${m[c.key]} ${c.label}` : "").filter(Boolean); return parts.length ? parts.join(" ") : "0 PC"; }
+export function priceCopper(item) { const s = item?.system ?? {}; const raw = s.prix ?? s.price ?? s.cout ?? s.coût ?? s.cost ?? item?.getFlag?.(ARMORER_SCOPE, "prix") ?? null; let value = 0, devise = s.devise ?? s.currency ?? item?.getFlag?.(ARMORER_SCOPE, "devise") ?? "po"; if (typeof raw === "number") value = raw; else if (typeof raw === "string") { const m = raw.match(/([0-9]+(?:[\.,][0-9]+)?)\s*(pp|po|pe|pa|pc)?/i); if (m) { value = Number(String(m[1]).replace(",", ".")); if (m[2]) devise = m[2].toLowerCase(); } } else if (raw && typeof raw === "object") { value = raw.valeur ?? raw.value ?? raw.montant ?? raw.amount ?? 0; devise = raw.devise ?? raw.currency ?? devise; } if (!Number.isFinite(Number(value)) || Number(value) <= 0) { value = 1; devise = "po"; } const coin = COINS.find(c => c.key === lower(devise)) ?? COINS.find(c => c.key === "po"); return Math.max(1, Math.round(Number(value) * coin.pc)); }
+
+function sameItem(a, b) { return String(a?.type ?? b?.type ?? "") && slug(a?.name) === slug(b?.name) && String(a?.type) === String(b?.type); }
+export function getBuyer() { const c = game.user?.character; if (c && !isArmorerActor(c) && (c.isOwner || game.user?.isGM)) return c; const controlled = canvas?.tokens?.controlled?.[0]?.actor; if (controlled && !isArmorerActor(controlled) && (controlled.isOwner || game.user?.isGM)) return controlled; return null; }
+export async function dialog({ title = "Armurier", content = "", yes = "Compris", no = "Fermer" } = {}) { const D = foundry?.applications?.api?.DialogV2; if (D?.confirm) return D.confirm({ window: { title }, content, yes: { label: yes }, no: { label: no }, modal: true }); ui.notifications?.warn?.(content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()); return false; }
+export const alertBox = (title, message) => dialog({ title, content: `<div class="add2e-dialog add2e-armorer-alert"><h3>${esc(title)}</h3><p>${esc(message)}</p></div>` });
+
+async function readPack(packId) { const pack = game.packs?.get?.(packId); if (!pack) return []; try { const docs = await pack.getDocuments(); if (Array.isArray(docs) && docs.length) return docs; } catch (e) { console.warn("[ADD2E][ARMORER][PACK_DOCUMENTS_ERROR]", packId, e); } try { const index = await pack.getIndex({ fields: ["name", "type", "system"] }); const docs = []; for (const e of index ?? []) { const d = await pack.getDocument(e._id); if (d) docs.push(d); } return docs; } catch (e) { console.warn("[ADD2E][ARMORER][PACK_INDEX_ERROR]", packId, e); return []; } }
+async function collectSources() { const out = [], seen = new Set(); const add = doc => { if (!isArmorerStockItem(doc)) return; const key = `${doc.type}:${slug(doc.name)}`; if (seen.has(key)) return; seen.add(key); out.push(doc); }; for (const pid of packIds("armes")) for (const doc of await readPack(pid)) add(doc); for (const pid of packIds("armures")) for (const doc of await readPack(pid)) add(doc); return out.sort((a, b) => String(a.type).localeCompare(String(b.type)) || String(a.name).localeCompare(String(b.name))); }
+async function buildStockData() { return (await collectSources()).map(doc => { const data = doc.toObject ? doc.toObject() : foundry.utils.deepClone(doc); delete data._id; data.system = data.system ?? {}; data.system.quantite = Math.max(quantity(doc), defaultStock(doc)); data.flags = data.flags ?? {}; data.flags.add2e = data.flags.add2e ?? {}; data.flags.add2e.armorerItem = true; data.flags.add2e.armorerStockMax = data.system.quantite; return data; }); }
+export async function ensureStock(armorer) { if (!game.user?.isGM || !armorer) return 0; const docs = await buildStockData(); const existing = Array.from(armorer.items ?? []); const create = docs.filter(d => !existing.some(i => sameItem(i, d))); if (create.length) await armorer.createEmbeddedDocuments("Item", create, { add2eReason: "armorer-ensure-stock" }); if (create.length) ui.notifications?.info?.(`${armorer.name} : ${create.length} article(s) ajouté(s) au stock.`); return create.length; }
+export function findArmorer() { return Array.from(game.actors ?? []).find(isArmorerActor) ?? null; }
+async function ensureFolder() { if (!game.user?.isGM) return null; return Array.from(game.folders ?? []).find(f => f.type === "Actor" && f.name === ARMORER_FOLDER) ?? Folder.create({ name: ARMORER_FOLDER, type: "Actor", color: "#69431a" }, { add2eReason: "armorer-folder-create" }); }
+export async function moveToFolder(armorer = null) { if (!game.user?.isGM) return false; armorer = armorer ?? findArmorer(); if (!armorer) return false; const folder = await ensureFolder(); if (folder && armorer.folder?.id !== folder.id && armorer.folder !== folder.id) await armorer.update({ folder: folder.id }, { add2eReason: "armorer-folder-move" }); return true; }
+export async function updateTokenSize(armorer = null) { if (!game.user?.isGM) return false; armorer = armorer ?? findArmorer(); if (!armorer) return false; await armorer.update({ img: ARMORER_TOKEN_IMG, "prototypeToken.width": 2, "prototypeToken.height": 2, "prototypeToken.texture.src": ARMORER_TOKEN_IMG, "flags.add2e.armorerVersion": ADD2E_ARMORER_VERSION }, { add2eReason: "armorer-token-image-size" }); return true; }
+export async function createArmorer({ force = false } = {}) { if (!game.user?.isGM) return null; const ex = findArmorer(); if (ex && !force) { await moveToFolder(ex); await updateTokenSize(ex); await ensureStock(ex); return ex; } const folder = await ensureFolder(); const actor = await Actor.create({ name: ARMORER_NAME, type: "personnage", folder: folder?.id ?? null, img: ARMORER_TOKEN_IMG, ownership: { default: CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OBSERVER ?? 2 }, prototypeToken: { name: ARMORER_NAME, actorLink: true, width: 2, height: 2, texture: { src: ARMORER_TOKEN_IMG } }, flags: { add2e: { isArmorer: true, armorerVersion: ADD2E_ARMORER_VERSION, monnaie: { pc: 0, pa: 0, pe: 0, po: 1000, pp: 0 } } } }, { renderSheet: false, add2eReason: "armorer-create" }); const stock = await buildStockData(); if (stock.length) await actor.createEmbeddedDocuments("Item", stock, { add2eReason: "armorer-initial-stock" }); await game.settings.set("add2e", ARMORER_SETTING, ADD2E_ARMORER_VERSION); return actor; }
+export async function ensureArmorerOnLaunch() { if (!game.user?.isGM) return; const a = findArmorer(); if (a) { await moveToFolder(a); await updateTokenSize(a); await ensureStock(a); return; } if (game.settings.get("add2e", ARMORER_SETTING) !== ADD2E_ARMORER_VERSION) await createArmorer(); }
+
+async function subtractMoney(actor, copper) { const total = toCopper(getMoney(actor)); if (total < copper) return false; await setMoney(actor, fromCopper(total - copper)); return true; }
+async function mergeOrCreate(actor, item, qty) { const ex = Array.from(actor.items ?? []).find(i => sameItem(i, item)); if (ex) return ex.update(quantityUpdate(quantity(ex) + qty), { add2eReason: "armorer-buy-merge" }); const data = item.toObject ? item.toObject() : foundry.utils.deepClone(item); delete data._id; data.system = data.system ?? {}; data.system.quantite = qty; data.flags = data.flags ?? {}; data.flags.add2e = data.flags.add2e ?? {}; data.flags.add2e.purchasedFromArmorer = true; const c = await actor.createEmbeddedDocuments("Item", [data], { add2eReason: "armorer-buy-create" }); return c?.[0] ?? null; }
+export async function buyLocal({ armorer, buyer, item, quantity: qty }, { confirm = true } = {}) { if (!armorer || !buyer || !item) return { ok: false, message: "Armurier, acheteur ou article introuvable." }; qty = Math.max(1, Math.floor(num(qty, 1))); if (quantity(item) < qty) return { ok: false, message: `${item.name} : stock disponible ${quantity(item)}.` }; const total = priceCopper(item) * qty; if (toCopper(getMoney(buyer)) < total) return { ok: false, message: `${buyer.name} n’a pas assez d’argent. Prix : ${formatMoney(total)}.` }; if (confirm && !await dialog({ title: "Confirmer l’achat", content: `<p>Acheter <b>${qty} × ${esc(item.name)}</b> pour <b>${formatMoney(total)}</b> ?</p>`, yes: "Acheter", no: "Annuler" })) return { ok: false, cancelled: true }; if (!await subtractMoney(buyer, total)) return { ok: false, message: "Paiement impossible." }; await item.update(quantityUpdate(quantity(item) - qty), { add2eReason: "armorer-stock-decrease" }); await mergeOrCreate(buyer, item, qty); return { ok: true, message: `${buyer.name} achète ${qty} × ${item.name} pour ${formatMoney(total)}.` }; }
+export async function buy(args) { const r = await buyLocal(args, { confirm: true }); if (!r.ok && !r.cancelled) await alertBox("Achat impossible", r.message); else if (r.ok) ui.notifications?.info?.(r.message); return r.ok; }
+export async function restockAll(armorer) { if (!game.user?.isGM) return false; const updates = Array.from(armorer.items ?? []).filter(isArmorerStockItem).map(i => ({ _id: i.id, "system.quantite": stockMax(i) })); if (updates.length) await armorer.updateEmbeddedDocuments("Item", updates, { add2eReason: "armorer-restock-all" }); return true; }
+export async function setStock(item, value) { if (!game.user?.isGM || !item) return false; await item.update(quantityUpdate(value), { add2eReason: "armorer-manual-restock" }); return true; }
+
+function actorClassItems(actor) { return Array.from(actor?.items ?? []).filter(i => i?.type === "classe"); }
+function classTokens(actor, category) { const vals = []; for (const cls of actorClassItems(actor)) { const s = cls.system ?? {}; const source = category === "arme" ? [s.weaponsAllowed, s.weaponAllowed, s.weaponRestriction, s.allowedWeapons, s.tags, s.effectTags] : [s.armorAllowed, s.armorsAllowed, s.armorRestriction, s.allowedArmor, s.shieldAllowed, s.tags, s.effectTags]; for (const v of source) vals.push(...flattenTokens(v)); } return vals.map(lower).filter(Boolean); }
+function flattenTokens(v) { if (!v) return []; if (Array.isArray(v)) return v.flatMap(flattenTokens); if (typeof v === "object") return Object.values(v).flatMap(flattenTokens); return String(v).split(/[,;|]/g).map(x => x.trim()).filter(Boolean); }
+function itemTokens(item) { const s = item?.system ?? {}; return [item?.name, s.nom, s.categorie, s.category, s.sousType, s.sous_type, s.type, s.famille_arme, s.famille, s.taille, ...tags(item)].map(lower).filter(Boolean); }
+function matchAllowed(allowed, item) { if (!allowed.length) return { known: false, ok: true, reason: "Aucune restriction détectée" }; if (allowed.some(t => /^(toutes?|all|any|libre|autorisees?|autorise)$/i.test(t))) return { known: true, ok: true, reason: "Toutes les options sont autorisées" }; const tokens = itemTokens(item); const ok = allowed.some(a => tokens.some(t => t === a || t.includes(a) || a.includes(t))); return { known: true, ok, reason: ok ? "Autorisé par la classe" : "Non listé dans les restrictions de classe" }; }
+export function usabilityForActor(actor, item) { if (!actor || !item) return { state: "neutral", usable: true, label: "Aucun acteur acheteur", reason: "Aucun acteur acheteur" }; if (item.type === "arme") { const r = matchAllowed(classTokens(actor, "arme"), item); return { state: r.ok ? "usable" : "unusable", usable: r.ok, label: r.ok ? "Utilisable" : "Non utilisable", reason: r.reason }; } if (item.type === "armure") { const r = matchAllowed(classTokens(actor, "armure"), item); return { state: r.ok ? "usable" : "unusable", usable: r.ok, label: r.ok ? "Utilisable" : "Non utilisable", reason: r.reason }; } return { state: "neutral", usable: true, label: "Article", reason: "Article hors armurerie" }; }
+
+export function registerGlobals() { game.add2e = game.add2e ?? {}; Object.assign(game.add2e, { armorerVersion: ADD2E_ARMORER_VERSION, createDefaultArmorer: createArmorer, findDefaultArmorer: findArmorer, ensureArmorerStock: ensureStock, updateArmorerTokenSize: updateTokenSize, moveArmorerToFolder: moveToFolder, armorerUsability: usabilityForActor }); globalThis.ADD2E_ARMORER_VERSION = ADD2E_ARMORER_VERSION; globalThis.add2eCreateDefaultArmorer = createArmorer; globalThis.add2eArmorerUsability = usabilityForActor; }
