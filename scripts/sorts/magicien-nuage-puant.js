@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Nuage puant
-// Version : 2026-05-28-magicien-attaque-n2-nuage-puant-vfx-cloud-v4
+// Version : 2026-05-28-magicien-attaque-n2-nuage-puant-vfx-only-v5
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -49,12 +49,6 @@ return await (async () => {
     return 1.5;
   }
 
-  function metersToSceneDistance(meters) {
-    const { units } = gridData();
-    if (/^(ft|feet|foot|pied|pieds)$/.test(units)) return meters / 0.3048;
-    return meters;
-  }
-
   const gridSizePx = () => canvas.grid?.size || canvas.dimensions?.size || 100;
   const metersToPx = m => (m / metersPerGridCell()) * gridSizePx();
   const pxDistanceMeters = (a, b) => Math.hypot((b.x ?? 0) - (a.x ?? 0), (b.y ?? 0) - (a.y ?? 0)) / gridSizePx() * metersPerGridCell();
@@ -99,12 +93,10 @@ return await (async () => {
   function drawPreview(g, point, valid) {
     const r = metersToPx(SPELL.radiusMeters);
     g.clear();
-    g.lineStyle(3, valid ? 0x5a8f3a : 0xb33a3a, 0.95);
-    g.beginFill(0x7aa85c, 0.28);
+    g.lineStyle(2, valid ? 0x5a8f3a : 0xb33a3a, 0.7);
+    g.beginFill(0x7aa85c, 0.16);
     g.drawCircle(point.x, point.y, r);
     g.endFill();
-    g.lineStyle(1, 0xe8ffd6, 0.8);
-    g.drawCircle(point.x, point.y, Math.max(4, r * 0.55));
   }
 
   async function waitForPlacement() {
@@ -164,50 +156,6 @@ return await (async () => {
       view.addEventListener("contextmenu", onContext, true);
       window.addEventListener("keydown", onKey, true);
     });
-  }
-
-  async function createLocalDrawingFog(point, durationRounds) {
-    const scene = canvas.scene;
-    if (!scene) return;
-    const requestId = foundry.utils.randomID();
-    const radiusPx = metersToPx(SPELL.radiusMeters);
-    const drawingData = {
-      x: point.x - radiusPx,
-      y: point.y - radiusPx,
-      rotation: 0,
-      hidden: false,
-      locked: false,
-      fillType: 1,
-      fillColor: "#5f8f42",
-      fillAlpha: 0.18,
-      strokeColor: "#2f5f2f",
-      strokeAlpha: 0.45,
-      strokeWidth: 1,
-      shape: { type: "e", width: radiusPx * 2, height: radiusPx * 2 },
-      flags: { add2e: { spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, drawingFallback: true, vfxCloud: true, durationRounds } }
-    };
-    if (game.user.isGM) await scene.createEmbeddedDocuments("Drawing", [drawingData]);
-    else game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createMeasuredTemplate", payload: { sceneId: scene.id, spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, visibleDrawing: true, drawingColor: "#5f8f42", drawingAlpha: 0.18, templateData: { t: "circle", user: game.user.id, x: point.x, y: point.y, distance: metersToSceneDistance(SPELL.radiusMeters), fillColor: "#5f8f42", flags: { add2e: { spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, visibleDrawing: true } } } } });
-  }
-
-  async function createSceneTemplate(point, durationRounds) {
-    const requestId = foundry.utils.randomID();
-    const templateData = {
-      t: "circle",
-      user: game.user.id,
-      x: point.x,
-      y: point.y,
-      direction: 0,
-      distance: metersToSceneDistance(SPELL.radiusMeters),
-      fillColor: "#7aa85c",
-      flags: { add2e: { spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, durationRounds, visibleDrawing: true } }
-    };
-    if (game.user.isGM) {
-      await canvas.scene?.createEmbeddedDocuments?.("MeasuredTemplate", [templateData]);
-      await createLocalDrawingFog(point, durationRounds);
-    } else {
-      game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createMeasuredTemplate", payload: { sceneId: canvas.scene?.id, spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, visibleDrawing: true, drawingColor: "#5f8f42", drawingAlpha: 0.18, templateData } });
-    }
   }
 
   function tokenSamplePoints(t) {
@@ -352,7 +300,6 @@ return await (async () => {
   const durationRounds = Math.max(1, level);
   const placement = await waitForPlacement();
   if (!placement?.point) { ui.notifications.info(`${SPELL.name} : lancement annulé.`); return false; }
-  await createSceneTemplate(placement.point, durationRounds);
   await playVfx(placement.point);
   const targets = tokensInCircle(placement.point);
   const rows = [];
