@@ -16,19 +16,19 @@
             <div class="a2e-panel add2e-components-pouch-panel" style="box-shadow:none;">
               <h3>Sacoche de composants</h3>
               <div class="a2e-panel-body">
-                <table class="a2e-table add2e-components-pouch-table">
-                  <thead>
-                    <tr>
-                      <th>Composant</th>
-                      <th style="width:90px;">Qté</th>
-                      <th style="width:120px;">Identifiant</th>
-                      <th>Utilisé par</th>
-                      <th style="width:120px;">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{#each listeObjets as |component|}}
-                      {{#if (eq component.system.categorie "composant_sort")}}
+                {{#if listeSacocheComposants.length}}
+                  <table class="a2e-table add2e-components-pouch-table">
+                    <thead>
+                      <tr>
+                        <th>Composant</th>
+                        <th style="width:90px;">Qté</th>
+                        <th style="width:120px;">Identifiant</th>
+                        <th>Utilisé par</th>
+                        <th style="width:120px;">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{#each listeSacocheComposants as |component|}}
                         <tr class="item add2e-component-row" data-item-id="{{component._id}}">
                           <td>
                             <img src="{{component.img}}" alt="{{component.name}}" style="width:26px;height:26px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:6px;">
@@ -44,10 +44,13 @@
                             </div>
                           </td>
                         </tr>
-                      {{/if}}
-                    {{/each}}
-                  </tbody>
-                </table>
+                      {{/each}}
+                    </tbody>
+                  </table>
+                  <p class="a2e-small"><b>Total composants :</b> {{add2eConsumablesSummary.sacocheQuantity}}</p>
+                {{else}}
+                  <p class="a2e-muted">Aucun composant dans la sacoche.</p>
+                {{/if}}
               </div>
             </div>
 
