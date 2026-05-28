@@ -258,3 +258,151 @@ function add2eInstallProjectilePlayerUpdateRelay() {
 }
 
 Hooks.once("init", () => add2eInstallProjectilePlayerUpdateRelay());
+
+const ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION = "2026-05-28-monster-document-sheet-v2-recovery-v2";
+globalThis.ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION = ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION;
+
+function add2eMonsterSheetRecoveryGetBase() {
+  const api = foundry?.applications?.api ?? {};
+  const sheets = foundry?.applications?.sheets ?? {};
+  const mixin = api.HandlebarsApplicationMixin;
+  const base = sheets.ActorSheetV2 ?? sheets.DocumentSheetV2 ?? api.DocumentSheetV2;
+  if (!mixin || !base) return null;
+  return mixin(base);
+}
+
+function add2eMonsterSheetRecoveryMethod(name) {
+  const method = globalThis.Add2eMonsterSheet?.prototype?.[name];
+  return typeof method === "function" ? method : null;
+}
+
+function add2eMonsterSheetRecoveryElement(element) {
+  return element?.jquery ? element[0] : element;
+}
+
+function add2eRegisterMonsterSheetDocumentV2Recovery() {
+  if (globalThis.__ADD2E_MONSTER_SHEET_V2_RECOVERY_REGISTERED === ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION) return true;
+  if (!globalThis.Add2eMonsterSheet?.prototype) return false;
+
+  const Base = add2eMonsterSheetRecoveryGetBase();
+  if (!Base) {
+    console.warn("[ADD2E][MONSTER_SHEET][V2_RECOVERY] ActorSheetV2/DocumentSheetV2 indisponible.");
+    return false;
+  }
+
+  class Add2eMonsterSheetDocumentV2 extends Base {
+    static DEFAULT_OPTIONS = {
+      id: "add2e-monster-sheet-{id}",
+      classes: ["add2e", "sheet", "actor", "monster", "add2e-monster-document-v2"],
+      tag: "section",
+      window: { title: "ADD2e Descartes (FR) - Monstre", resizable: true },
+      position: { width: 920, height: 900 },
+      actions: {}
+    };
+
+    static PARTS = {
+      main: { template: "systems/add2e/templates/actor/monster-sheet.hbs" }
+    };
+
+    get actor() { return this.document; }
+    get object() { return this.document; }
+    get title() { return this.actor?.name ?? super.title; }
+    get editable() { return this.actor?.isOwner === true || game.user?.isGM === true; }
+    get isEditable() { return this.editable; }
+
+    async getData(...args) {
+      const method = add2eMonsterSheetRecoveryMethod("getData");
+      if (method) return method.apply(this, args);
+      return {
+        actor: this.actor,
+        object: this.actor,
+        document: this.actor,
+        system: this.actor?.system ?? {},
+        items: this.actor?.items ?? [],
+        effects: this.actor?.effects ?? [],
+        editable: this.editable,
+        owner: this.actor?.isOwner ?? false,
+        limited: this.actor?.limited ?? false,
+        options: this.options ?? {}
+      };
+    }
+
+    async _prepareContext(options = {}) {
+      const context = await this.getData(options);
+      context.actor = this.actor;
+      context.object = this.actor;
+      context.document = this.actor;
+      context.system = this.actor?.system ?? {};
+      context.items = this.actor?.items ?? [];
+      context.effects = this.actor?.effects ?? [];
+      context.editable = this.editable;
+      context.owner = this.actor?.isOwner ?? false;
+      context.limited = this.actor?.limited ?? false;
+      context.options = this.options ?? {};
+      return context;
+    }
+
+    async _preparePartContext(_partId, context, _options = {}) { return context; }
+
+    async _onRender(context, options = {}) {
+      await super._onRender?.(context, options);
+      try { globalThis.add2eEnsureTokenHeaderControl?.(this); } catch (err) { console.warn("[ADD2E][MONSTER_SHEET][TOKEN_HEADER]", err); }
+      try { globalThis.add2eBindApplicationV2Close?.(this); } catch (err) { console.warn("[ADD2E][MONSTER_SHEET][CLOSE]", err); }
+      const root = add2eMonsterSheetRecoveryElement(this.element);
+      const sheetRoot = root?.querySelector?.(".add2e-monster-readable-sheet") ?? root;
+      if (sheetRoot) this.activateListeners(sheetRoot);
+    }
+
+    activateListeners(content) {
+      const method = add2eMonsterSheetRecoveryMethod("activateListeners");
+      if (method) return method.call(this, content);
+    }
+
+    _activateAutoSubmit(root) {
+      const method = add2eMonsterSheetRecoveryMethod("_activateAutoSubmit");
+      if (method) return method.call(this, root);
+    }
+
+    async _updateObject(event, formData) {
+      const method = add2eMonsterSheetRecoveryMethod("_updateObject");
+      if (method) return method.call(this, event, formData);
+      const updateData = foundry.utils.flattenObject(formData ?? {});
+      if (!updateData.name || String(updateData.name).trim() === "") updateData.name = this.actor?.name ?? "Monstre";
+      return this.actor?.update?.(updateData);
+    }
+
+    _injectLayoutFix() {
+      const method = add2eMonsterSheetRecoveryMethod("_injectLayoutFix");
+      if (method) return method.call(this);
+    }
+
+    async _onEquipItem(item) {
+      const method = add2eMonsterSheetRecoveryMethod("_onEquipItem");
+      if (method) return method.call(this, item);
+    }
+
+    async _recalculerCA() {
+      const method = add2eMonsterSheetRecoveryMethod("_recalculerCA");
+      if (method) return method.call(this);
+    }
+
+    render(options = {}) {
+      if (typeof options === "boolean") return super.render({ force: options });
+      return super.render(options);
+    }
+  }
+
+  foundry.documents.collections.Actors.registerSheet("add2e", Add2eMonsterSheetDocumentV2, {
+    types: ["monster"],
+    makeDefault: true,
+    label: "ADD2e Descartes (FR) - Monstre V2"
+  });
+
+  globalThis.Add2eMonsterSheetDocumentV2 = Add2eMonsterSheetDocumentV2;
+  globalThis.__ADD2E_MONSTER_SHEET_V2_RECOVERY_REGISTERED = ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION;
+  console.log("[ADD2E][MONSTER_SHEET][V2_RECOVERY]", ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION);
+  return true;
+}
+
+Hooks.once("init", () => add2eRegisterMonsterSheetDocumentV2Recovery());
+Hooks.once("ready", () => add2eRegisterMonsterSheetDocumentV2Recovery());
