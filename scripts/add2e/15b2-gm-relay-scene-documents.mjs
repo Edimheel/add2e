@@ -9,9 +9,11 @@ function measuredTemplates(scene, payload) {
   const spell = payload.spell ?? null;
 
   return Array.from(scene.templates ?? []).filter(t => {
+    const flags = t.flags?.add2e ?? {};
     if (templateId && t.id === templateId) return true;
-    if (requestId && (t.flags?.add2e?.templateRequestId === requestId || t.getFlag?.("add2e", "templateRequestId") === requestId)) return true;
-    if (spell && t.flags?.add2e?.spell === spell && requestId && t.flags?.add2e?.templateRequestId === requestId) return true;
+    if (requestId && (flags.templateRequestId === requestId || t.getFlag?.("add2e", "templateRequestId") === requestId)) return true;
+    if (spell && flags.spell === spell && !requestId && !templateId) return true;
+    if (spell && flags.spell === spell && requestId && flags.templateRequestId === requestId) return true;
     return false;
   });
 }
@@ -23,6 +25,7 @@ function measuredDrawings(scene, payload) {
   return Array.from(scene.drawings ?? []).filter(d => {
     const flags = d.flags?.add2e ?? {};
     if (requestId && flags.templateRequestId === requestId) return true;
+    if (spell && flags.spell === spell && !requestId) return true;
     if (spell && flags.spell === spell && requestId && flags.templateRequestId === requestId) return true;
     return false;
   });
