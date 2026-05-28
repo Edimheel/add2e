@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Nuage puant
-// Version : 2026-05-28-magicien-attaque-n2-nuage-puant-save-template-v3
+// Version : 2026-05-28-magicien-attaque-n2-nuage-puant-vfx-cloud-v4
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -166,6 +166,30 @@ return await (async () => {
     });
   }
 
+  async function createLocalDrawingFog(point, durationRounds) {
+    const scene = canvas.scene;
+    if (!scene) return;
+    const requestId = foundry.utils.randomID();
+    const radiusPx = metersToPx(SPELL.radiusMeters);
+    const drawingData = {
+      x: point.x - radiusPx,
+      y: point.y - radiusPx,
+      rotation: 0,
+      hidden: false,
+      locked: false,
+      fillType: 1,
+      fillColor: "#5f8f42",
+      fillAlpha: 0.18,
+      strokeColor: "#2f5f2f",
+      strokeAlpha: 0.45,
+      strokeWidth: 1,
+      shape: { type: "e", width: radiusPx * 2, height: radiusPx * 2 },
+      flags: { add2e: { spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, drawingFallback: true, vfxCloud: true, durationRounds } }
+    };
+    if (game.user.isGM) await scene.createEmbeddedDocuments("Drawing", [drawingData]);
+    else game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createMeasuredTemplate", payload: { sceneId: scene.id, spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, visibleDrawing: true, drawingColor: "#5f8f42", drawingAlpha: 0.18, templateData: { t: "circle", user: game.user.id, x: point.x, y: point.y, distance: metersToSceneDistance(SPELL.radiusMeters), fillColor: "#5f8f42", flags: { add2e: { spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, visibleDrawing: true } } } } });
+  }
+
   async function createSceneTemplate(point, durationRounds) {
     const requestId = foundry.utils.randomID();
     const templateData = {
@@ -176,10 +200,14 @@ return await (async () => {
       direction: 0,
       distance: metersToSceneDistance(SPELL.radiusMeters),
       fillColor: "#7aa85c",
-      flags: { add2e: { spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, durationRounds } }
+      flags: { add2e: { spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, durationRounds, visibleDrawing: true } }
     };
-    if (game.user.isGM) await canvas.scene?.createEmbeddedDocuments?.("MeasuredTemplate", [templateData]);
-    else game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createMeasuredTemplate", payload: { sceneId: canvas.scene?.id, spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, templateData } });
+    if (game.user.isGM) {
+      await canvas.scene?.createEmbeddedDocuments?.("MeasuredTemplate", [templateData]);
+      await createLocalDrawingFog(point, durationRounds);
+    } else {
+      game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createMeasuredTemplate", payload: { sceneId: canvas.scene?.id, spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, visibleDrawing: true, drawingColor: "#5f8f42", drawingAlpha: 0.18, templateData } });
+    }
   }
 
   function tokenSamplePoints(t) {
@@ -196,10 +224,93 @@ return await (async () => {
       .filter(t => tokenSamplePoints(t).some(p => Math.hypot(p.x - center.x, p.y - center.y) <= radiusPx));
   }
 
-  async function playVfx(point) {
-    if (typeof Sequence !== "undefined") {
-      try { await new Sequence().effect().file("jb2a.fog_cloud.01.green").atLocation(point).scaleToObject?.(2.5).duration(9000).play(); } catch (err) { console.warn(`${TAG}[VFX_SEQUENCE_FAILED]`, err); }
+  async function playJb2aFog(point) {
+    if (typeof Sequence === "undefined") return false;
+    const radiusPx = metersToPx(SPELL.radiusMeters);
+    const files = [
+      "jb2a.fog_cloud.02.green",
+      "jb2a.fog_cloud.01.green",
+      "jb2a.cloud_of_daggers.fog.green",
+      "jb2a.smoke.puff.centered.green",
+      "jb2a.smoke.puff.centered.grey"
+    ];
+    for (const file of files) {
+      try {
+        const seq = new Sequence();
+        let effect = seq.effect().file(file).atLocation(point).duration(9000).fadeIn(800).fadeOut(1200).opacity(0.85).belowTokens();
+        if (typeof effect.scaleToObject === "function") effect = effect.scaleToObject(Math.max(2, radiusPx / gridSizePx()));
+        else if (typeof effect.scale === "function") effect = effect.scale(Math.max(1.2, radiusPx / gridSizePx()));
+        await seq.play();
+        console.log(`${TAG}[VFX_JB2A]`, { file });
+        return true;
+      } catch (err) {
+        console.warn(`${TAG}[VFX_JB2A_FAILED]`, { file, err });
+      }
     }
+    return false;
+  }
+
+  function playPixiFog(point) {
+    const parent = canvas.interface ?? canvas.controls ?? canvas.stage;
+    if (!parent || typeof PIXI === "undefined") return false;
+    const previous = parent.getChildByName?.("add2e-nuage-puant-cloud-vfx");
+    if (previous) previous.destroy({ children: true });
+
+    const radius = metersToPx(SPELL.radiusMeters);
+    const container = new PIXI.Container();
+    container.name = "add2e-nuage-puant-cloud-vfx";
+    container.zIndex = 99999;
+    container.eventMode = "none";
+    container.alpha = 0.95;
+    parent.sortableChildren = true;
+    parent.addChild(container);
+
+    const puffs = [];
+    for (let i = 0; i < 18; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.sqrt(Math.random()) * radius * 0.78;
+      const size = radius * (0.22 + Math.random() * 0.32);
+      const g = new PIXI.Graphics();
+      const color = [0x6f9f45, 0x8fbf64, 0x4f7f3a, 0xb2c98a][Math.floor(Math.random() * 4)];
+      g.beginFill(color, 0.18 + Math.random() * 0.18);
+      g.drawCircle(0, 0, size);
+      g.endFill();
+      g.x = point.x + Math.cos(angle) * dist;
+      g.y = point.y + Math.sin(angle) * dist;
+      g.blendMode = PIXI.BLEND_MODES.NORMAL;
+      container.addChild(g);
+      puffs.push({ g, baseX: g.x, baseY: g.y, angle, speed: 0.002 + Math.random() * 0.003, drift: 5 + Math.random() * 13, phase: Math.random() * Math.PI * 2 });
+    }
+
+    const started = performance.now();
+    const duration = 9000;
+    const ticker = canvas.app?.ticker;
+    const animate = () => {
+      const elapsed = performance.now() - started;
+      const life = Math.min(1, elapsed / duration);
+      container.alpha = life < 0.12 ? life / 0.12 : life > 0.82 ? Math.max(0, (1 - life) / 0.18) : 1;
+      for (const p of puffs) {
+        const t = elapsed * p.speed + p.phase;
+        p.g.x = p.baseX + Math.cos(t) * p.drift;
+        p.g.y = p.baseY + Math.sin(t * 0.85) * p.drift;
+        p.g.scale.set(1 + Math.sin(t * 1.7) * 0.06);
+      }
+      if (elapsed >= duration) {
+        ticker?.remove?.(animate);
+        if (!container.destroyed) container.destroy({ children: true });
+      }
+    };
+    ticker?.add?.(animate);
+    window.setTimeout(() => {
+      ticker?.remove?.(animate);
+      if (!container.destroyed) container.destroy({ children: true });
+    }, duration + 500);
+    return true;
+  }
+
+  async function playVfx(point) {
+    const jb2aOk = await playJb2aFog(point);
+    if (!jb2aOk) playPixiFog(point);
   }
 
   async function applyNausea(targetActor, durationRounds) {
