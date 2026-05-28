@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Mains brûlantes
-// Version : 2026-05-28-groupe-a-portee-zone-charte-v1
+// Version : 2026-05-28-groupe-a-cone-overlay-v2
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -100,43 +100,72 @@ return await (async () => {
       });
   }
 
-  function emitGmOperation(operation, payload) {
-    game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation, payload });
+  function clearMovementRulerArtifacts() {
+    try { canvas.controls?.ruler?.clear?.(); } catch (_err) {}
+    try { canvas.controls?.ruler?.destroyChildren?.(); } catch (_err) {}
+    try { canvas.controls?.ruler?.render?.(true); } catch (_err) {}
   }
 
-  async function createConeTemplate(sourceToken, sourceItem) {
-    const templateRequestId = foundry.utils.randomID();
-    const templateData = {
-      t: "cone",
-      user: game.user.id,
-      x: sourceToken.center?.x ?? sourceToken.document.x,
-      y: sourceToken.center?.y ?? sourceToken.document.y,
-      direction: n(sourceToken.document?.rotation, 0),
-      distance: SPELL.coneDistance,
-      angle: SPELL.coneAngle,
-      fillColor: game.user.color ?? "#8e63c7",
-      flags: {
-        add2e: {
-          spell: SPELL.slug,
-          spellName: SPELL.name,
-          sourceItemId: sourceItem?.id ?? null,
-          sourceItemUuid: sourceItem?.uuid ?? null,
-          templateRequestId
-        }
-      }
-    };
+  function coneRadiusPx() {
+    const gridSize = canvas.grid?.size || 100;
+    const sceneDistance = n(canvas.scene?.grid?.distance, 1) || 1;
+    const rulesPx = (SPELL.coneDistance / sceneDistance) * gridSize;
+    return Math.max(20, rulesPx, gridSize * 1.05);
+  }
 
-    if (game.user.isGM) {
-      await canvas.scene?.createEmbeddedDocuments?.("MeasuredTemplate", [templateData]);
-    } else {
-      emitGmOperation("createMeasuredTemplate", {
-        sceneId: canvas.scene?.id,
-        spell: SPELL.slug,
-        spellName: SPELL.name,
-        templateRequestId,
-        templateData
-      });
-    }
+  function tokenRotationToCanvasRadians(rotationDeg) {
+    return (n(rotationDeg, 0) - 90) * Math.PI / 180;
+  }
+
+  function drawTemporaryConeOverlay(sourceToken) {
+    clearMovementRulerArtifacts();
+
+    const parent = canvas.interface ?? canvas.controls ?? canvas.stage;
+    if (!parent || typeof PIXI === "undefined") return false;
+
+    const previous = parent.getChildByName?.("add2e-mains-brulantes-cone-overlay");
+    if (previous) previous.destroy({ children: true });
+
+    const cx = sourceToken.center?.x ?? (sourceToken.document.x + sourceToken.w / 2);
+    const cy = sourceToken.center?.y ?? (sourceToken.document.y + sourceToken.h / 2);
+    const radius = coneRadiusPx();
+    const directionRad = tokenRotationToCanvasRadians(sourceToken.document?.rotation);
+    const halfRad = (SPELL.coneAngle / 2) * Math.PI / 180;
+    const start = directionRad - halfRad;
+    const end = directionRad + halfRad;
+
+    const g = new PIXI.Graphics();
+    g.name = "add2e-mains-brulantes-cone-overlay";
+    g.zIndex = 100000;
+    g.eventMode = "none";
+    g.interactive = false;
+
+    g.lineStyle(3, 0x8e63c7, 0.95);
+    g.beginFill(0xff7a18, 0.28);
+    g.moveTo(cx, cy);
+    g.arc(cx, cy, radius, start, end);
+    g.lineTo(cx, cy);
+    g.endFill();
+
+    g.lineStyle(2, 0xffe08a, 0.9);
+    g.moveTo(cx, cy);
+    g.lineTo(cx + Math.cos(start) * radius, cy + Math.sin(start) * radius);
+    g.moveTo(cx, cy);
+    g.lineTo(cx + Math.cos(end) * radius, cy + Math.sin(end) * radius);
+
+    parent.sortableChildren = true;
+    parent.addChild(g);
+
+    window.setTimeout(() => {
+      if (!g.destroyed) g.destroy({ children: true });
+      clearMovementRulerArtifacts();
+    }, 4500);
+
+    return true;
+  }
+
+  function emitGmOperation(operation, payload) {
+    game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation, payload });
   }
 
   async function applyDamage(targetToken, amount, caster, sourceItem) {
@@ -173,7 +202,7 @@ return await (async () => {
     return true;
   }
 
-  async function createChat({ caster, sourceItem, sourceToken, affected, damage }) {
+  async function createChat({ caster, sourceItem, sourceToken, affected, damage, overlayShown }) {
     const casterName = caster?.name ?? sourceToken?.name ?? "Magicien";
     const casterImg = sourceToken?.document?.texture?.src ?? caster?.img ?? "icons/svg/mystery-man.svg";
     const spellImg = sourceItem?.img || SPELL.imgFallback || "icons/svg/fire.svg";
@@ -200,6 +229,7 @@ return await (async () => {
               <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Cône de flammes</div>
               <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Zone :</b> ${esc(SPELL.areaText)} depuis le lanceur. <b>Portée :</b> ${esc(SPELL.rangeText)}.</p>
               <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Dégâts :</b> ${damage} point${damage > 1 ? "s" : ""} de feu par créature dans la zone. <b>Jet de sauvegarde :</b> aucun.</p>
+              <p style="margin:.35em 0;font-size:12px;line-height:1.35;"><b>Affichage de zone :</b> ${overlayShown ? "cône temporaire affiché sur le canvas" : "non disponible sur ce client"}.</p>
               <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px;">
                 <thead><tr><th style="text-align:left;padding:4px 6px;">Créature dans le cône</th><th style="text-align:right;padding:4px 6px;">Dégâts</th></tr></thead>
                 <tbody>${rows}</tbody>
@@ -233,8 +263,10 @@ return await (async () => {
   const level = casterLevel(caster);
   const damage = Math.max(1, level);
   const affected = tokensInCone(sourceToken);
+  const overlayShown = drawTemporaryConeOverlay(sourceToken);
 
   console.log(`${TAG}[START]`, {
+    version: "2026-05-28-groupe-a-cone-overlay-v2",
     caster: caster.name,
     token: sourceToken.name,
     level,
@@ -242,12 +274,13 @@ return await (async () => {
     range: SPELL.rangeText,
     coneDistance: SPELL.coneDistance,
     coneAngle: SPELL.coneAngle,
+    overlayShown,
     affected: affected.map(t => t.name)
   });
 
-  await createConeTemplate(sourceToken, sourceItem);
   for (const targetToken of affected) await applyDamage(targetToken, damage, caster, sourceItem);
-  await createChat({ caster, sourceItem, sourceToken, affected, damage });
+  await createChat({ caster, sourceItem, sourceToken, affected, damage, overlayShown });
+  clearMovementRulerArtifacts();
 
   return true;
 })();
