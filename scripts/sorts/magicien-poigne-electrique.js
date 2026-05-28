@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Poigne électrique
-// Version : 2026-05-28-groupe-a-portee-zone-charte-v1
+// Version : 2026-05-28-groupe-a-chat-description-v2
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -13,8 +13,10 @@ return await (async () => {
     areaText: "créature touchée",
     saveText: "Aucun",
     castingTimeText: "1 segment",
+    componentsText: "V, S",
     damageType: "electricite",
-    imgFallback: "systems/add2e/assets/icones/sorts/poigne-electrique.webp"
+    imgFallback: "systems/add2e/assets/icones/sorts/magicien-poigne-electrique.webp",
+    description: "Quand un magicien lance ce sort, il développe une puissante charge électrique qui provoque une secousse chez la créature touchée. Ce choc inflige de 1 à 8 points de dégâts (1d8) plus 1 point par niveau du magicien ; c.-à-d. qu’un magicien de niveau 2 infligera de 3 à 10 points de dégâts. Le magicien doit juste toucher la victime pour que la décharge électrique ait lieu ; mais si la victime touche d’elle-même le magicien, le sort ne se décharge pas."
   };
 
   function esc(value) {
@@ -71,7 +73,7 @@ return await (async () => {
   }
 
   function tokensAuContact(a, b) {
-    if (!a || !b || a.id === b.id) return true;
+    if (!a || !b || a.id === b.id) return false;
     const gridSize = canvas.grid?.size || 100;
     const ax1 = a.document.x / gridSize;
     const ay1 = a.document.y / gridSize;
@@ -124,7 +126,7 @@ return await (async () => {
     return true;
   }
 
-  async function createChat({ caster, sourceItem, sourceToken, targetToken, roll, applied }) {
+  async function createChat({ caster, sourceItem, sourceToken, targetToken, roll }) {
     const casterName = caster?.name ?? sourceToken?.name ?? "Magicien";
     const casterImg = sourceToken?.document?.texture?.src ?? caster?.img ?? "icons/svg/mystery-man.svg";
     const spellImg = sourceItem?.img || SPELL.imgFallback || "icons/svg/lightning.svg";
@@ -149,14 +151,13 @@ return await (async () => {
             <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;text-align:center;">
               <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">Décharge au toucher</div>
               <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Dégâts :</b> ${esc(roll.formula)} = <b>${roll.total}</b>.</p>
-              <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Application Foundry :</b> ${applied ? "réussie" : "non appliquée"}.</p>
             </div>
             <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;margin-top:7px;">
-              <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
+              <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Détails du sort</summary>
               <div style="margin-top:5px;font-size:12px;line-height:1.35;">
                 <p><b>École :</b> ${esc(SPELL.school)} — <b>Portée :</b> ${esc(SPELL.rangeText)} — <b>Zone :</b> ${esc(SPELL.areaText)}.</p>
-                <p><b>Incantation :</b> ${esc(SPELL.castingTimeText)} — <b>Jet de sauvegarde :</b> ${esc(SPELL.saveText)}.</p>
-                <p>Le sort se décharge uniquement si le magicien touche une créature au contact.</p>
+                <p><b>Composantes :</b> ${esc(SPELL.componentsText)} — <b>Incantation :</b> ${esc(SPELL.castingTimeText)} — <b>Jet de sauvegarde :</b> ${esc(SPELL.saveText)}.</p>
+                <p>${esc(SPELL.description)}</p>
               </div>
             </details>
           </div>
@@ -180,6 +181,11 @@ return await (async () => {
   const targetToken = selectedSingleTarget();
   if (!targetToken) return false;
 
+  if (targetToken.id === sourceToken.id || targetToken.actor?.id === caster.id) {
+    ui.notifications.warn(`${SPELL.name} : cible une autre créature au contact.`);
+    return false;
+  }
+
   if (!tokensAuContact(sourceToken, targetToken)) {
     ui.notifications.warn(`${SPELL.name} : la cible doit être au contact du lanceur.`);
     console.log(`${TAG}[OUT_OF_TOUCH_RANGE]`, { caster: caster.name, sourceToken: sourceToken.name, target: targetToken.name });
@@ -190,16 +196,15 @@ return await (async () => {
   const roll = await new Roll(`1d8+${Math.max(1, level)}`).evaluate({ async: true });
   if (game.dice3d) await game.dice3d.showForRoll(roll);
 
-  const applied = await applyDamage(targetToken, Number(roll.total) || 0, caster, sourceItem);
-  await createChat({ caster, sourceItem, sourceToken, targetToken, roll, applied });
+  await applyDamage(targetToken, Number(roll.total) || 0, caster, sourceItem);
+  await createChat({ caster, sourceItem, sourceToken, targetToken, roll });
 
   console.log(`${TAG}[DONE]`, {
     caster: caster.name,
     target: targetToken.name,
     level,
     formula: roll.formula,
-    total: roll.total,
-    applied
+    total: roll.total
   });
 
   return true;
