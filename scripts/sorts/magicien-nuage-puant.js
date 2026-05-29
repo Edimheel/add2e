@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Nuage puant
-// Version : 2026-05-28-magicien-attaque-n2-nuage-puant-vfx-only-v5
+// Version : 2026-05-28-magicien-attaque-n2-nuage-puant-vfx-only-v6
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -16,6 +16,7 @@ return await (async () => {
     componentsText: "V, S, M",
     rangeMeters: 30,
     radiusMeters: 3,
+    vfxDurationMs: 30000,
     imgFallback: "systems/add2e/assets/icones/sorts/nuage-puant.webp",
     description: "Ce sort crée une masse de vapeurs nauséabondes qui rend les créatures présentes incapables d’agir normalement si elles ratent leur jet de protection contre le poison. Les créatures affectées chancellent, sont prises de nausées et ne peuvent pas attaquer tant qu’elles restent dans le nuage et pendant un court temps après en être sorties. Le nuage dérive selon le vent et peut être dissipé par un vent fort."
   };
@@ -90,12 +91,41 @@ return await (async () => {
 
   function parentLayer() { return canvas.interface ?? canvas.controls ?? canvas.stage; }
 
-  function drawPreview(g, point, valid) {
-    const r = metersToPx(SPELL.radiusMeters);
+  async function deleteOldTechnicalZones() {
+    const scene = canvas.scene;
+    if (!scene) return;
+    if (game.user.isGM) {
+      const templateIds = Array.from(scene.templates ?? [])
+        .filter(t => t.flags?.add2e?.spell === SPELL.slug)
+        .map(t => t.id)
+        .filter(Boolean);
+      if (templateIds.length) await scene.deleteEmbeddedDocuments("MeasuredTemplate", templateIds);
+
+      const drawingIds = Array.from(scene.drawings ?? [])
+        .filter(d => d.flags?.add2e?.spell === SPELL.slug)
+        .map(d => d.id)
+        .filter(Boolean);
+      if (drawingIds.length) await scene.deleteEmbeddedDocuments("Drawing", drawingIds);
+      return;
+    }
+
+    game.socket?.emit?.("system.add2e", {
+      type: "ADD2E_GM_OPERATION",
+      operation: "deleteMeasuredTemplates",
+      payload: { sceneId: scene.id, spell: SPELL.slug }
+    });
+  }
+
+  function drawPlacementMarker(g, point, valid) {
     g.clear();
-    g.lineStyle(2, valid ? 0x5a8f3a : 0xb33a3a, 0.7);
-    g.beginFill(0x7aa85c, 0.16);
-    g.drawCircle(point.x, point.y, r);
+    const color = valid ? 0x7aa85c : 0xb33a3a;
+    g.lineStyle(3, color, 0.95);
+    g.moveTo(point.x - 10, point.y);
+    g.lineTo(point.x + 10, point.y);
+    g.moveTo(point.x, point.y - 10);
+    g.lineTo(point.x, point.y + 10);
+    g.beginFill(color, 0.55);
+    g.drawCircle(point.x, point.y, 4);
     g.endFill();
   }
 
@@ -104,10 +134,10 @@ return await (async () => {
     const parent = parentLayer();
     if (!view || !parent || typeof PIXI === "undefined") return null;
     clearRuler();
-    const previous = parent.getChildByName?.("add2e-nuage-puant-zone-preview");
+    const previous = parent.getChildByName?.("add2e-nuage-puant-placement-marker");
     if (previous) previous.destroy({ children: true });
     const g = new PIXI.Graphics();
-    g.name = "add2e-nuage-puant-zone-preview";
+    g.name = "add2e-nuage-puant-placement-marker";
     g.zIndex = 100000;
     g.eventMode = "none";
     parent.sortableChildren = true;
@@ -137,7 +167,7 @@ return await (async () => {
         if (!p) return;
         current = p;
         valid = pxDistanceMeters(origin, current) <= SPELL.rangeMeters + 0.001;
-        drawPreview(g, current, valid);
+        drawPlacementMarker(g, current, valid);
       };
       function onMove(e) { update(e); }
       function onDown(e) {
@@ -150,7 +180,7 @@ return await (async () => {
       }
       function onContext(e) { e.preventDefault(); e.stopPropagation(); cleanup(null); }
       function onKey(e) { if (e.key !== "Escape") return; e.preventDefault(); e.stopPropagation(); cleanup(null); }
-      drawPreview(g, current, valid);
+      drawPlacementMarker(g, current, valid);
       view.addEventListener("mousemove", onMove, true);
       view.addEventListener("mousedown", onDown, true);
       view.addEventListener("contextmenu", onContext, true);
@@ -172,32 +202,6 @@ return await (async () => {
       .filter(t => tokenSamplePoints(t).some(p => Math.hypot(p.x - center.x, p.y - center.y) <= radiusPx));
   }
 
-  async function playJb2aFog(point) {
-    if (typeof Sequence === "undefined") return false;
-    const radiusPx = metersToPx(SPELL.radiusMeters);
-    const files = [
-      "jb2a.fog_cloud.02.green",
-      "jb2a.fog_cloud.01.green",
-      "jb2a.cloud_of_daggers.fog.green",
-      "jb2a.smoke.puff.centered.green",
-      "jb2a.smoke.puff.centered.grey"
-    ];
-    for (const file of files) {
-      try {
-        const seq = new Sequence();
-        let effect = seq.effect().file(file).atLocation(point).duration(9000).fadeIn(800).fadeOut(1200).opacity(0.85).belowTokens();
-        if (typeof effect.scaleToObject === "function") effect = effect.scaleToObject(Math.max(2, radiusPx / gridSizePx()));
-        else if (typeof effect.scale === "function") effect = effect.scale(Math.max(1.2, radiusPx / gridSizePx()));
-        await seq.play();
-        console.log(`${TAG}[VFX_JB2A]`, { file });
-        return true;
-      } catch (err) {
-        console.warn(`${TAG}[VFX_JB2A_FAILED]`, { file, err });
-      }
-    }
-    return false;
-  }
-
   function playPixiFog(point) {
     const parent = canvas.interface ?? canvas.controls ?? canvas.stage;
     if (!parent || typeof PIXI === "undefined") return false;
@@ -214,36 +218,35 @@ return await (async () => {
     parent.addChild(container);
 
     const puffs = [];
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 26; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const dist = Math.sqrt(Math.random()) * radius * 0.78;
-      const size = radius * (0.22 + Math.random() * 0.32);
+      const dist = Math.sqrt(Math.random()) * radius * 0.82;
+      const size = radius * (0.18 + Math.random() * 0.34);
       const g = new PIXI.Graphics();
-      const color = [0x6f9f45, 0x8fbf64, 0x4f7f3a, 0xb2c98a][Math.floor(Math.random() * 4)];
-      g.beginFill(color, 0.18 + Math.random() * 0.18);
+      const color = [0x6f9f45, 0x8fbf64, 0x4f7f3a, 0x9fbf72, 0xb2c98a][Math.floor(Math.random() * 5)];
+      g.beginFill(color, 0.16 + Math.random() * 0.17);
       g.drawCircle(0, 0, size);
       g.endFill();
       g.x = point.x + Math.cos(angle) * dist;
       g.y = point.y + Math.sin(angle) * dist;
       g.blendMode = PIXI.BLEND_MODES.NORMAL;
       container.addChild(g);
-      puffs.push({ g, baseX: g.x, baseY: g.y, angle, speed: 0.002 + Math.random() * 0.003, drift: 5 + Math.random() * 13, phase: Math.random() * Math.PI * 2 });
+      puffs.push({ g, baseX: g.x, baseY: g.y, angle, speed: 0.0012 + Math.random() * 0.0022, drift: 7 + Math.random() * 18, phase: Math.random() * Math.PI * 2 });
     }
 
     const started = performance.now();
-    const duration = 9000;
     const ticker = canvas.app?.ticker;
     const animate = () => {
       const elapsed = performance.now() - started;
-      const life = Math.min(1, elapsed / duration);
-      container.alpha = life < 0.12 ? life / 0.12 : life > 0.82 ? Math.max(0, (1 - life) / 0.18) : 1;
+      const life = Math.min(1, elapsed / SPELL.vfxDurationMs);
+      container.alpha = life < 0.08 ? life / 0.08 : life > 0.9 ? Math.max(0, (1 - life) / 0.10) : 1;
       for (const p of puffs) {
         const t = elapsed * p.speed + p.phase;
         p.g.x = p.baseX + Math.cos(t) * p.drift;
         p.g.y = p.baseY + Math.sin(t * 0.85) * p.drift;
-        p.g.scale.set(1 + Math.sin(t * 1.7) * 0.06);
+        p.g.scale.set(1 + Math.sin(t * 1.7) * 0.07);
       }
-      if (elapsed >= duration) {
+      if (elapsed >= SPELL.vfxDurationMs) {
         ticker?.remove?.(animate);
         if (!container.destroyed) container.destroy({ children: true });
       }
@@ -252,13 +255,8 @@ return await (async () => {
     window.setTimeout(() => {
       ticker?.remove?.(animate);
       if (!container.destroyed) container.destroy({ children: true });
-    }, duration + 500);
+    }, SPELL.vfxDurationMs + 500);
     return true;
-  }
-
-  async function playVfx(point) {
-    const jb2aOk = await playJb2aFog(point);
-    if (!jb2aOk) playPixiFog(point);
   }
 
   async function applyNausea(targetActor, durationRounds) {
@@ -296,11 +294,13 @@ return await (async () => {
   }
 
   if (!sourceItem || !caster || !casterToken) { ui.notifications.warn(`${SPELL.name} : lanceur ou sort introuvable.`); return false; }
+  await deleteOldTechnicalZones();
   const level = casterLevel();
   const durationRounds = Math.max(1, level);
   const placement = await waitForPlacement();
   if (!placement?.point) { ui.notifications.info(`${SPELL.name} : lancement annulé.`); return false; }
-  await playVfx(placement.point);
+  await deleteOldTechnicalZones();
+  playPixiFog(placement.point);
   const targets = tokensInCircle(placement.point);
   const rows = [];
   for (const t of targets) {
