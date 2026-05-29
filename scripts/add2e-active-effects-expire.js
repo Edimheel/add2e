@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-29-vital-status-single-custom-effect-v5
+// Version : 2026-05-29-vital-status-token-overlay-v6
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-single-custom-effect-v5";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-token-overlay-v6";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -16,10 +16,11 @@ const ADD2E_VITAL_STATUS = {
   dead: {
     key: "dead",
     name: "Mort",
-    icon: "icons/svg/blood.svg"
+    icon: "icons/svg/skull.svg"
   }
 };
 
+const ADD2E_VITAL_ICONS = new Set(Object.values(ADD2E_VITAL_STATUS).map(s => s.icon));
 const ADD2E_VITAL_SYNC_LOCK = new Set();
 
 function add2eVitalArray(value) {
@@ -83,9 +84,11 @@ function add2eVitalEffectFlag(effect) {
     flags.vitalStatus,
     flags.status,
     flags.etat,
-    typeof effect?.getFlag === "function" ? effect.getFlag("add2e", "vitalStatus") : null
+    flags.autoVitalStatus === true ? "autoVitalStatus" : "",
+    typeof effect?.getFlag === "function" ? effect.getFlag("add2e", "vitalStatus") : null,
+    typeof effect?.getFlag === "function" && effect.getFlag("add2e", "autoVitalStatus") === true ? "autoVitalStatus" : ""
   ];
-  return values.map(add2eVitalNorm).find(v => ["dead", "unconscious", "mort", "inconscient"].includes(v)) ?? "";
+  return values.map(add2eVitalNorm).find(v => ["dead", "unconscious", "mort", "inconscient", "autovitalstatus"].includes(v)) ?? "";
 }
 
 function add2eVitalEffectKind(effect) {
@@ -96,6 +99,7 @@ function add2eVitalEffectKind(effect) {
 
   if (flag === "dead" || flag === "mort") return "dead";
   if (flag === "unconscious" || flag === "inconscient") return "unconscious";
+  if (flag === "autovitalstatus") return "vital";
 
   if (name === "mort" || name === "dead" || name === "etat_mort") return "dead";
   if (name === "inconscient" || name === "unconscious" || name === "etat_inconscient") return "unconscious";
@@ -103,32 +107,13 @@ function add2eVitalEffectKind(effect) {
   if (statuses.has("dead") || statuses.has("mort")) return "dead";
   if (statuses.has("unconscious") || statuses.has("inconscient")) return "unconscious";
 
-  if (icon.includes("skull") || icon.includes("blood")) return "dead";
+  if (icon.includes("skull")) return "dead";
   if (icon.includes("unconscious") || icon.includes("daze")) return "unconscious";
 
   return null;
 }
 
-function add2eVitalEffectData(kind) {
-  const cfg = ADD2E_VITAL_STATUS[kind];
-  return {
-    name: cfg.name,
-    icon: cfg.icon,
-    disabled: false,
-    transfer: false,
-    changes: [],
-    duration: {},
-    flags: {
-      add2e: {
-        vitalStatus: cfg.key,
-        autoVitalStatus: true,
-        source: "add2e-vital-status-sync"
-      }
-    }
-  };
-}
-
-async function add2eVitalDeleteAllVitalEffects(actor) {
+async function add2eVitalRemoveActorVitalEffects(actor) {
   const ids = add2eVitalArray(actor?.effects)
     .filter(e => e?.id && add2eVitalEffectKind(e))
     .map(e => e.id);
@@ -138,10 +123,93 @@ async function add2eVitalDeleteAllVitalEffects(actor) {
   return ids.length;
 }
 
-async function add2eVitalCreateKind(actor, kind) {
-  if (!kind) return false;
-  await actor.createEmbeddedDocuments("ActiveEffect", [add2eVitalEffectData(kind)]);
+function add2eVitalGetActorTokens(actor) {
+  const tokens = [];
+  try { tokens.push(...(actor?.getActiveTokens?.(true, true) ?? [])); } catch (_e) {}
+  try { tokens.push(...(canvas?.tokens?.placeables ?? []).filter(t => t?.actor?.id === actor?.id || t?.document?.actorId === actor?.id)); } catch (_e) {}
+
+  const seen = new Set();
+  return tokens.filter(t => {
+    const id = t?.document?.uuid ?? t?.id ?? t?.document?.id;
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return !!t?.document;
+  });
+}
+
+function add2eVitalIsVitalOverlay(value) {
+  if (!value) return false;
+  if (ADD2E_VITAL_ICONS.has(value)) return true;
+  const n = add2eVitalNorm(value);
+  return n.includes("skull") || n.includes("unconscious") || n.includes("daze");
+}
+
+async function add2eVitalSetTokenOverlay(token, desired) {
+  const doc = token?.document ?? token;
+  if (!doc?.update) return false;
+
+  const icon = desired ? ADD2E_VITAL_STATUS[desired]?.icon : null;
+  const current = doc.overlayEffect ?? doc._source?.overlayEffect ?? "";
+
+  if (desired && current === icon) return false;
+  if (!desired && !add2eVitalIsVitalOverlay(current)) return false;
+
+  await doc.update({ overlayEffect: icon ?? null });
   return true;
+}
+
+function add2eVitalCombatantsForActor(actor) {
+  const combats = [game.combat, ...add2eVitalArray(game.combats)].filter(Boolean);
+  const out = [];
+  const seen = new Set();
+
+  for (const combat of combats) {
+    for (const combatant of add2eVitalArray(combat?.combatants)) {
+      if (!combatant?.id) continue;
+      const sameActor = combatant.actor?.id === actor?.id || combatant.actorId === actor?.id || combatant.token?.actorId === actor?.id;
+      if (!sameActor) continue;
+      const key = `${combat.id}:${combatant.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(combatant);
+    }
+  }
+
+  return out;
+}
+
+async function add2eVitalSetDefeated(actor, defeated) {
+  const combatants = add2eVitalCombatantsForActor(actor);
+  let changed = 0;
+
+  for (const combatant of combatants) {
+    if (!combatant?.update) continue;
+    if (combatant.defeated === defeated) continue;
+    try {
+      await combatant.update({ defeated });
+      changed += 1;
+    } catch (err) {
+      console.warn("[ADD2E][VITAL_STATUS][DEFEATED][WARN]", { actor: actor?.name, combatant: combatant?.id, defeated, err });
+    }
+  }
+
+  return changed;
+}
+
+async function add2eVitalSyncTokenState(actor, desired) {
+  const tokens = add2eVitalGetActorTokens(actor);
+  let overlays = 0;
+
+  for (const token of tokens) {
+    try {
+      if (await add2eVitalSetTokenOverlay(token, desired)) overlays += 1;
+    } catch (err) {
+      console.warn("[ADD2E][VITAL_STATUS][OVERLAY][WARN]", { actor: actor?.name, token: token?.name, desired, err });
+    }
+  }
+
+  const defeated = await add2eVitalSetDefeated(actor, desired === "dead");
+  return { overlays, defeated, tokenCount: tokens.length };
 }
 
 async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
@@ -155,9 +223,8 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
   try {
     const desired = add2eVitalDesiredStatus(actor);
     const before = add2eVitalArray(actor?.effects).filter(e => add2eVitalEffectKind(e)).map(e => ({ id: e.id, name: e.name, kind: add2eVitalEffectKind(e), icon: e.icon }));
-
-    const deleted = await add2eVitalDeleteAllVitalEffects(actor);
-    if (desired) await add2eVitalCreateKind(actor, desired);
+    const removed = await add2eVitalRemoveActorVitalEffects(actor);
+    const tokenState = await add2eVitalSyncTokenState(actor, desired);
 
     console.log("[ADD2E][VITAL_STATUS][SYNC]", {
       reason,
@@ -166,8 +233,9 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
       type: actor.type,
       hp: add2eVitalReadHP(actor),
       desired,
-      deleted,
-      before
+      removed,
+      before,
+      tokenState
     });
 
     return true;
@@ -220,7 +288,10 @@ Hooks.on("updateCombat", async (combat, changed, options, userId) => {
 
       for (const effect of Array.from(actor.effects ?? [])) {
         if (!effect) continue;
-        if (add2eVitalEffectKind(effect)) continue;
+        if (add2eVitalEffectKind(effect)) {
+          toDelete.push(effect.id);
+          continue;
+        }
 
         const dur = effect.duration || {};
 
