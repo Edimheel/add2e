@@ -21,6 +21,14 @@
                     {{else}}
                       <div class="carac-ex-square carac-ex-square--readonly" title="Force exceptionnelle (18/xx)">{{actor.system.force_ex}}</div>
                     {{/if}}
+                  {{else}}
+                    {{#if (eq (add actor.system.force_base actor.system.bonus_caracteristiques.force) 18)}}
+                      {{#if editable}}
+                        <input type="number" name="system.force_ex" value="{{actor.system.force_ex}}" min="0" max="100" step="1" class="carac-ex-square" title="Force exceptionnelle (18/xx)" placeholder="xx">
+                      {{else}}
+                        <div class="carac-ex-square carac-ex-square--readonly" title="Force exceptionnelle (18/xx)">{{actor.system.force_ex}}</div>
+                      {{/if}}
+                    {{/if}}
                   {{/if}}
                   <button type="button" class="carac-btn plus" data-carac="force" tabindex="-1">+</button>
                 </div>
