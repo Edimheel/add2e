@@ -16,28 +16,34 @@
                     {{/if}}
                   </div>
                   {{#if canExceptionalStrength}}
-                    {{#if editable}}
-                      <select name="system.force_ex" class="carac-ex-square" title="Force exceptionnelle (18/xx)">
-                        <option value="0" {{#if (eq actor.system.force_ex 0)}}selected{{/if}}>--</option>
-                        {{#each forceExValues}}
-                          <option value="{{this.value}}" {{#if (eq ../actor.system.force_ex this.value)}}selected{{/if}}>{{this.label}}</option>
-                        {{/each}}
-                      </select>
-                    {{else}}
-                      <div class="carac-ex-square carac-ex-square--readonly" title="Force exceptionnelle (18/xx)">{{actor.system.force_ex}}</div>
-                    {{/if}}
-                  {{else}}
-                    {{#if (eq (add actor.system.force_base actor.system.bonus_caracteristiques.force) 18)}}
+                    <div class="carac-ex-wrap" title="Force exceptionnelle (18/xx)" style="display:inline-flex;align-items:center;gap:3px;height:34px;padding:0 6px;border:1px solid #c8a94e;border-radius:9px;background:linear-gradient(180deg,#fff8d8,#f1d889);box-shadow:inset 0 0 0 1px rgba(255,255,255,.55);">
+                      <span style="font-size:.78rem;font-weight:900;color:#6b4a12;letter-spacing:.02em;white-space:nowrap;">18/</span>
                       {{#if editable}}
-                        <select name="system.force_ex" class="carac-ex-square" title="Force exceptionnelle (18/xx)">
+                        <select name="system.force_ex" class="carac-ex-square" style="width:52px;height:26px;min-width:52px;margin:0;padding:0 3px;border:1px solid #b89436;border-radius:7px;background:#fffdf3;color:#2b2410;font-weight:900;text-align:center;" title="Force exceptionnelle (18/xx)">
                           <option value="0" {{#if (eq actor.system.force_ex 0)}}selected{{/if}}>--</option>
                           {{#each forceExValues}}
                             <option value="{{this.value}}" {{#if (eq ../actor.system.force_ex this.value)}}selected{{/if}}>{{this.label}}</option>
                           {{/each}}
                         </select>
                       {{else}}
-                        <div class="carac-ex-square carac-ex-square--readonly" title="Force exceptionnelle (18/xx)">{{actor.system.force_ex}}</div>
+                        <span class="carac-ex-square carac-ex-square--readonly" style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:26px;border:1px solid #b89436;border-radius:7px;background:#fffdf3;color:#2b2410;font-weight:900;">{{actor.system.force_ex}}</span>
                       {{/if}}
+                    </div>
+                  {{else}}
+                    {{#if (eq (add actor.system.force_base actor.system.bonus_caracteristiques.force) 18)}}
+                      <div class="carac-ex-wrap" title="Force exceptionnelle (18/xx)" style="display:inline-flex;align-items:center;gap:3px;height:34px;padding:0 6px;border:1px solid #c8a94e;border-radius:9px;background:linear-gradient(180deg,#fff8d8,#f1d889);box-shadow:inset 0 0 0 1px rgba(255,255,255,.55);">
+                        <span style="font-size:.78rem;font-weight:900;color:#6b4a12;letter-spacing:.02em;white-space:nowrap;">18/</span>
+                        {{#if editable}}
+                          <select name="system.force_ex" class="carac-ex-square" style="width:52px;height:26px;min-width:52px;margin:0;padding:0 3px;border:1px solid #b89436;border-radius:7px;background:#fffdf3;color:#2b2410;font-weight:900;text-align:center;" title="Force exceptionnelle (18/xx)">
+                            <option value="0" {{#if (eq actor.system.force_ex 0)}}selected{{/if}}>--</option>
+                            {{#each forceExValues}}
+                              <option value="{{this.value}}" {{#if (eq ../actor.system.force_ex this.value)}}selected{{/if}}>{{this.label}}</option>
+                            {{/each}}
+                          </select>
+                        {{else}}
+                          <span class="carac-ex-square carac-ex-square--readonly" style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:26px;border:1px solid #b89436;border-radius:7px;background:#fffdf3;color:#2b2410;font-weight:900;">{{actor.system.force_ex}}</span>
+                        {{/if}}
+                      </div>
                     {{/if}}
                   {{/if}}
                   <button type="button" class="carac-btn plus" data-carac="force" tabindex="-1">+</button>
