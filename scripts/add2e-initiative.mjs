@@ -3,11 +3,11 @@
 // Règle gérée ici : initiative simple au d6, ordre ascendant.
 // Surprise volontairement non gérée dans ce module.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-turn-lock-clear-move-history-v4";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-turn-lock-clear-move-history-v5";
 const TAG = "[ADD2E][INIT]";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 
-const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-clear-move-history-v4";
+const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-clear-move-history-v5";
 const ADD2E_INIT_CHAT_CARD_VERSION = "2026-05-28-init-chat-card-v1";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
@@ -374,6 +374,16 @@ function add2eInstallMovementTurnLock() {
       return false;
     } catch (err) {
       console.warn(`${TAG}[TURN_LOCK][MOVE][ERROR]`, err);
+    }
+  });
+
+  Hooks.on("updateToken", (tokenDocument, changes, options, userId) => {
+    try {
+      if (!add2eHasMovementChange(changes)) return;
+      window.setTimeout(() => add2eClearTokenMovementHistory(tokenDocument), 30);
+      window.setTimeout(() => add2eClearTokenMovementHistory(tokenDocument), 180);
+    } catch (err) {
+      console.warn(`${TAG}[TURN_LOCK][MOVE_HISTORY_AFTER_UPDATE][ERROR]`, err);
     }
   });
 
