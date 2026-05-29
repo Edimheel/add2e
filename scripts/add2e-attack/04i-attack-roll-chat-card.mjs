@@ -1,8 +1,8 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Rendu des messages d'attaque.
-// Version : 2026-05-29-attack-chat-render-visibility-v6
+// Version : 2026-05-29-attack-chat-no-blind-placeholder-v7
 
-const ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = "2026-05-29-attack-chat-render-visibility-v6";
+const ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = "2026-05-29-attack-chat-no-blind-placeholder-v7";
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = ADD2E_ATTACK_CHAT_VISIBILITY_VERSION;
 
 function esc(value) {
@@ -86,11 +86,11 @@ function preferredPlayerUserId() {
 }
 
 function isPlayerCardContent(content = "") {
-  return String(content).includes("add2e-attack-chat-card-player-v6") || String(content).includes("add2e-attack-chat-card-player-v5") || String(content).includes("add2e-attack-chat-card-player-v4");
+  return String(content).includes("add2e-attack-chat-card-player-v7") || String(content).includes("add2e-attack-chat-card-player-v6") || String(content).includes("add2e-attack-chat-card-player-v5") || String(content).includes("add2e-attack-chat-card-player-v4");
 }
 
 function isGmCardContent(content = "") {
-  return String(content).includes("add2e-attack-chat-card-gm-v6") || String(content).includes("add2e-attack-chat-card-gm-v5") || String(content).includes("add2e-attack-chat-card-gm-v4");
+  return String(content).includes("add2e-attack-chat-card-gm-v7") || String(content).includes("add2e-attack-chat-card-gm-v6") || String(content).includes("add2e-attack-chat-card-gm-v5") || String(content).includes("add2e-attack-chat-card-gm-v4");
 }
 
 function attackVisibilityFromMessage(message, data = {}) {
@@ -119,7 +119,7 @@ function forceAttackChatVisibility(message, data = {}) {
   }
   const update = {
     whisper: gmIds(),
-    blind: true,
+    blind: false,
     "flags.add2e.attackChatVisibility": "gm-only",
     "flags.add2e.attackChatVisibilityVersion": ADD2E_ATTACK_CHAT_VISIBILITY_VERSION
   };
@@ -153,10 +153,10 @@ function filterAttackChatRender(message, html) {
 
 function pruneRenderedAttackCards() {
   try {
-    const nodes = document.querySelectorAll(".add2e-attack-chat-card-player-v6,.add2e-attack-chat-card-player-v5,.add2e-attack-chat-card-player-v4,.add2e-attack-chat-card-gm-v6,.add2e-attack-chat-card-gm-v5,.add2e-attack-chat-card-gm-v4");
+    const nodes = document.querySelectorAll(".add2e-attack-chat-card-player-v7,.add2e-attack-chat-card-player-v6,.add2e-attack-chat-card-player-v5,.add2e-attack-chat-card-player-v4,.add2e-attack-chat-card-gm-v7,.add2e-attack-chat-card-gm-v6,.add2e-attack-chat-card-gm-v5,.add2e-attack-chat-card-gm-v4");
     for (const card of nodes) {
-      const isPlayer = card.classList.contains("add2e-attack-chat-card-player-v6") || card.classList.contains("add2e-attack-chat-card-player-v5") || card.classList.contains("add2e-attack-chat-card-player-v4");
-      const isGm = card.classList.contains("add2e-attack-chat-card-gm-v6") || card.classList.contains("add2e-attack-chat-card-gm-v5") || card.classList.contains("add2e-attack-chat-card-gm-v4");
+      const isPlayer = card.classList.contains("add2e-attack-chat-card-player-v7") || card.classList.contains("add2e-attack-chat-card-player-v6") || card.classList.contains("add2e-attack-chat-card-player-v5") || card.classList.contains("add2e-attack-chat-card-player-v4");
+      const isGm = card.classList.contains("add2e-attack-chat-card-gm-v7") || card.classList.contains("add2e-attack-chat-card-gm-v6") || card.classList.contains("add2e-attack-chat-card-gm-v5") || card.classList.contains("add2e-attack-chat-card-gm-v4");
       if ((isPlayer && game.user?.isGM) || (isGm && !game.user?.isGM)) hideChatHtml(card);
     }
   } catch (_e) {}
@@ -196,7 +196,7 @@ function chip(label, value, color = "#5d3d0d") {
 function buildPublicCard(ctx) {
   const o = outcome(ctx);
   const showDamage = !!ctx.finalResult && Number(ctx.degats) > 0;
-  return [`<div class="add2e-chat-card add2e-attack-chat-card-player-v6" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
+  return [`<div class="add2e-chat-card add2e-attack-chat-card-player-v7" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
     `<div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;">`,
     `<i class="fas ${o.icon}" style="font-size:1.22rem;color:#ffd978;"></i>`,
     `<div style="min-width:0;flex:1;"><div style="font-size:1.04rem;font-weight:950;line-height:1.1;">Attaque</div><div style="font-size:.78rem;font-weight:750;color:#f7e3b1;line-height:1.18;margin-top:2px;">${esc(ctx.actor?.name)} attaque ${esc(ctx.nomCible)} avec ${esc(ctx.arme?.name)}</div></div>`,
@@ -246,7 +246,7 @@ function buildGmCard(ctx) {
   ].filter(Boolean).join("") : `<div>Aucun dommage : l’attaque ne touche pas.</div>`;
   const assassination = ctx.assassinatResult ? `<div style="border:1px solid ${ctx.assassinatResult.success ? "#1f8f4d" : "#b3261e"};background:${ctx.assassinatResult.success ? "#eefaf2" : "#fff1f0"};border-radius:8px;padding:7px;margin-bottom:10px;text-align:center;"><div style="font-weight:900;color:${ctx.assassinatResult.success ? "#1f8f4d" : "#b3261e"};">Assassinat ${ctx.assassinatResult.success ? "réussi" : "échoué"}</div><div style="font-size:.92em;">Jet : <b>${esc(ctx.assassinatResult.total)}</b> / Score : <b>${esc(ctx.assassinatResult.finalScore)}%</b></div><div style="font-size:.82em;color:#666;">${esc(ctx.assassinationInfo?.breakdownTitle ?? "")}</div></div>` : "";
 
-  return [`<div class="add2e-chat-card add2e-attack-chat-card-gm-v6" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
+  return [`<div class="add2e-chat-card add2e-attack-chat-card-gm-v7" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
     `<div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;"><i class="fas ${o.icon}" style="font-size:1.22rem;color:#ffd978;"></i><div style="min-width:0;flex:1;"><div style="font-size:1.04rem;font-weight:950;line-height:1.1;">Attaque — MJ</div><div style="font-size:.78rem;font-weight:750;color:#f7e3b1;line-height:1.18;margin-top:2px;">${esc(ctx.actor?.name)} attaque ${esc(ctx.nomCible)} avec ${esc(ctx.arme?.name)}</div></div><div style="white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${o.color};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.86rem;">${esc(o.title)}</div></div>`,
     `<div style="padding:10px;">`,
     `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px;">${chip("Portée", `${esc(ctx.descPortee || "—")} <span style=\"font-size:.78rem;color:#7b6a40;\">${esc(ctx.typePortee || "")}</span>`)}${chip("Seuil", esc(ctx.seuilFinalD20), "#c06000")}${chip("Issue", esc(o.title), o.color)}</div>`,
