@@ -57,10 +57,10 @@ function add2eInstallDialogV2AlertFallback() {
 Hooks.once("init", () => add2eInstallDialogV2AlertFallback());
 Hooks.once("ready", () => add2eInstallDialogV2AlertFallback());
 
-const ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION = "2026-05-27-vendor-projectile-gm-operation-v1";
+const ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION = "2026-05-29-vendor-projectile-personnages-only-v2";
 globalThis.ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION = ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION;
 
-const ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION = "2026-05-27-projectile-consume-gm-operation-v1";
+const ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION = "2026-05-29-projectile-consume-personnages-only-v2";
 globalThis.ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION = ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION;
 
 function add2eVendorProjectileIsResponsibleGM() {
@@ -85,6 +85,36 @@ function add2eProjectileFixAmmoType(item) {
   return String(sys.munitionType ?? sys.munition_type ?? sys.sousType ?? sys.sous_type ?? sys.categorie ?? item?.name ?? "");
 }
 
+function add2eProjectileNormalizeType(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function add2eProjectileActorType(actor, payload = {}) {
+  const candidates = [
+    actor?.type,
+    actor?._source?.type,
+    actor?.baseActor?.type,
+    actor?.document?.type,
+    payload.actorType,
+    payload.type
+  ];
+  for (const candidate of candidates) {
+    const type = add2eProjectileNormalizeType(candidate);
+    if (type) return type;
+  }
+  return "";
+}
+
+function add2eProjectileActorUsesInventory(actor, payload = {}) {
+  return add2eProjectileActorType(actor, payload) === "personnage";
+}
+
 async function add2eGmRelayConsumeProjectile(payload = {}) {
   if (!add2eVendorProjectileIsResponsibleGM()) return false;
 
@@ -97,6 +127,11 @@ async function add2eGmRelayConsumeProjectile(payload = {}) {
 
   if (!actor) {
     console.warn("[ADD2E][GM-RELAY][consumeProjectile] acteur introuvable :", payload);
+    return false;
+  }
+
+  if (!add2eProjectileActorUsesInventory(actor, payload)) {
+    console.log("[ADD2E][GM-RELAY][consumeProjectile][SKIP_NON_PERSONNAGE]", { actor: actor.name, type: add2eProjectileActorType(actor, payload), payload });
     return false;
   }
 
@@ -152,6 +187,12 @@ async function add2eVendorRecordProjectileSpent(payload = {}) {
   const combat = game.combats?.get?.(payload.combatId) ?? game.combat;
   if (!combat?.getFlag || !combat?.setFlag || !payload.actorId) return false;
 
+  const actor = payload.actorUuid ? await fromUuid(payload.actorUuid).catch(() => null) : game.actors?.get?.(payload.actorId) ?? null;
+  if (!add2eProjectileActorUsesInventory(actor, payload)) {
+    console.log("[ADD2E][GM-RELAY][vendorRecordProjectileSpent][SKIP_NON_PERSONNAGE]", { actor: actor?.name ?? payload.actorName, type: add2eProjectileActorType(actor, payload), payload });
+    return false;
+  }
+
   const key = payload.itemId || payload.itemName;
   if (!key) return false;
 
@@ -162,10 +203,10 @@ async function add2eVendorRecordProjectileSpent(payload = {}) {
   const current = foundry.utils.deepClone(await combat.getFlag("add2e", "projectilesDepensesCombat") ?? {});
   current[payload.actorId] ??= {
     actorId: payload.actorId,
-    actorName: payload.actorName ?? "Acteur",
+    actorName: payload.actorName ?? actor?.name ?? "Acteur",
     items: {}
   };
-  current[payload.actorId].actorName = payload.actorName ?? current[payload.actorId].actorName;
+  current[payload.actorId].actorName = payload.actorName ?? actor?.name ?? current[payload.actorId].actorName;
   current[payload.actorId].items[key] ??= {
     itemId: payload.itemId ?? null,
     itemName: payload.itemName ?? "Projectile",
@@ -213,6 +254,7 @@ function add2eRegisterVendorProjectileGmRelay() {
   game.add2e.projectileGmConsumeFixVersion = ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION;
   globalThis.add2eGmRelayVendorRecordProjectileSpent = add2eVendorRecordProjectileSpent;
   globalThis.add2eGmRelayConsumeProjectile = add2eGmRelayConsumeProjectile;
+  globalThis.add2eProjectileActorUsesInventory = add2eProjectileActorUsesInventory;
   console.log("[ADD2E][GM-RELAY][VENDOR_PROJECTILES]", ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION);
   console.log("[ADD2E][GM-RELAY][CONSUME_PROJECTILE]", ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION);
 }
@@ -228,6 +270,7 @@ function add2eInstallProjectilePlayerUpdateRelay() {
     const reason = String(options?.add2eReason ?? "");
     if (!game.user?.isGM && reason === "consume-projectile" && this.parent?.documentName === "Actor") {
       const actor = this.parent;
+      if (!add2eProjectileActorUsesInventory(actor)) return originalUpdate.call(this, updateData, options, ...rest);
       const current = add2eProjectileFixQuantity(this);
       const incoming = Number(foundry.utils.getProperty(updateData, "system.quantite") ?? updateData?.system?.quantite ?? current);
       const quantity = Math.max(1, Math.floor(current - incoming) || 1);
@@ -237,6 +280,7 @@ function add2eInstallProjectilePlayerUpdateRelay() {
         payload: {
           actorId: actor.id,
           actorUuid: actor.uuid,
+          actorType: actor.type,
           itemId: this.id,
           itemName: this.name,
           quantity,
