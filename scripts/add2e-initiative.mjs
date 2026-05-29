@@ -1,38 +1,30 @@
 // scripts/add2e-initiative.mjs
 // ADD2E — Initiative indépendante.
-// Règle gérée ici : initiative simple au d6, ordre ascendant.
-// Surprise volontairement non gérée dans ce module.
+// Initiative simple au d6, ordre ascendant.
+// Le verrou de combat agit comme une pause sélective côté joueur : seul le token du tour reste interactif.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-combatant-movement-purge-v8";
-const TAG = "[ADD2E][INIT]";
-const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
-const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-combatant-movement-purge-v8";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-selective-token-lock-v9";
+const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-selective-token-lock-v9";
 const ADD2E_INIT_CHAT_CARD_VERSION = "2026-05-28-init-chat-card-v1";
+const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
+const TAG = "[ADD2E][INIT]";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
 globalThis.ADD2E_TURN_LOCK_VERSION = ADD2E_TURN_LOCK_VERSION;
 globalThis.ADD2E_INIT_CHAT_CARD_VERSION = ADD2E_INIT_CHAT_CARD_VERSION;
 
-let add2eInitiativeSortRunning = false;
-let add2eInitiativeSortTimer = null;
 let add2eInitiativeConfigured = false;
 let add2eLegacyHooksCleaned = false;
+let add2eInitiativeSortRunning = false;
+let add2eInitiativeSortTimer = null;
 let add2eTurnWarningAt = 0;
-let add2eCombatantMovementPurgeRunning = false;
-
-const ADD2E_MOVEMENT_FLAG_RE = /(movement|move|ruler|waypoint|path|history|trail|trace|distance|drag)/i;
-const ADD2E_MOVEMENT_KEYS = [
-  "movementHistory", "movement", "movementData", "movementPath", "movementTrail", "movementTrace",
-  "path", "waypoints", "segments", "ruler", "rulerPath", "rulerHistory", "distance",
-  "priorMovement", "movementSegments", "tokenMovement", "dragPath", "lastMovement"
-];
 
 function add2eConfigureInitiative() {
   if (add2eInitiativeConfigured) return;
   add2eInitiativeConfigured = true;
   CONFIG.Combat ??= {};
   CONFIG.Combat.initiative = { formula: "1d6", decimals: 2 };
-  console.log(`${TAG}[CONFIG]`, { version: ADD2E_INITIATIVE_VERSION, formula: CONFIG.Combat.initiative.formula, order: "ascending", surprise: "not-managed" });
+  console.log(`${TAG}[CONFIG]`, { version: ADD2E_INITIATIVE_VERSION, formula: "1d6", order: "ascending" });
 }
 
 function add2eHookFnSource(entry) {
@@ -99,7 +91,6 @@ async function add2eSortInitiativeAscending(combat = game.combat) {
 
   add2eInitiativeSortRunning = true;
   try {
-    console.log(`${TAG}[SORT_ASC]`, { combat: combat.id, order: sorted.map(c => ({ id: c.id, name: c.name, initiative: c.initiative, sort: c.sort })) });
     await combat.updateEmbeddedDocuments("Combatant", updates, { add2eInitiativeSort: true });
     ui.combat?.render?.(true);
     return true;
@@ -197,12 +188,22 @@ function add2eInstallInitiativeChatCard() {
         "flags.add2e.initiativeRoll": true,
         "flags.add2e.initiativeChatCardVersion": ADD2E_INIT_CHAT_CARD_VERSION
       });
-    } catch (err) { console.warn(`${TAG}[CHAT_CARD][ERROR]`, err); }
+    } catch (err) {
+      console.warn(`${TAG}[CHAT_CARD][ERROR]`, err);
+    }
   });
 }
 
 function add2eIsCombatActive(combat = game.combat) {
   return Boolean(combat && combat.started && combat.combatant);
+}
+
+function add2eTokenDocument(tokenOrDocument) {
+  return tokenOrDocument?.document ?? tokenOrDocument ?? null;
+}
+
+function add2eTokenActor(tokenOrDocument) {
+  return tokenOrDocument?.actor ?? tokenOrDocument?.object?.actor ?? tokenOrDocument?.document?.actor ?? null;
 }
 
 function add2eCombatantMatchesActor(combatant, actor) {
@@ -212,27 +213,22 @@ function add2eCombatantMatchesActor(combatant, actor) {
   return false;
 }
 
-function add2eTokenDocument(tokenDocumentOrObject) {
-  return tokenDocumentOrObject?.document ?? tokenDocumentOrObject ?? null;
-}
-
-function add2eTokenActor(tokenDocumentOrObject) {
-  return tokenDocumentOrObject?.actor ?? tokenDocumentOrObject?.object?.actor ?? tokenDocumentOrObject?.document?.actor ?? null;
-}
-
-function add2eCombatantMatchesToken(combatant, tokenDocumentOrObject) {
-  const tokenDocument = add2eTokenDocument(tokenDocumentOrObject);
+function add2eCombatantMatchesToken(combatant, tokenOrDocument) {
+  const tokenDocument = add2eTokenDocument(tokenOrDocument);
   if (!combatant || !tokenDocument) return false;
   if (combatant.tokenId && combatant.tokenId === tokenDocument.id) return true;
   if (combatant.token?.id && combatant.token.id === tokenDocument.id) return true;
-  return add2eCombatantMatchesActor(combatant, add2eTokenActor(tokenDocumentOrObject));
+  return add2eCombatantMatchesActor(combatant, add2eTokenActor(tokenOrDocument));
 }
 
-function add2eCombatantsForToken(tokenDocumentOrObject = null, combat = game.combat) {
-  const tokenDocument = add2eTokenDocument(tokenDocumentOrObject);
-  if (!combat) return [];
-  if (!tokenDocument) return Array.from(combat.combatants ?? []);
-  return Array.from(combat.combatants ?? []).filter(c => add2eCombatantMatchesToken(c, tokenDocument));
+function add2eIsCombatToken(tokenOrDocument, combat = game.combat) {
+  if (!combat) return false;
+  return Array.from(combat.combatants ?? []).some(c => add2eCombatantMatchesToken(c, tokenOrDocument));
+}
+
+function add2eIsActiveCombatToken(tokenOrDocument, combat = game.combat) {
+  if (!add2eIsCombatActive(combat)) return true;
+  return add2eCombatantMatchesToken(combat.combatant, tokenOrDocument);
 }
 
 function add2eNotifyNotTurn(actor = null) {
@@ -254,12 +250,13 @@ function add2eCanActorActNow(actor, { notify = false } = {}) {
   return false;
 }
 
-function add2eCanTokenActNow(tokenDocumentOrObject, { notify = false } = {}) {
+function add2eCanTokenActNow(tokenOrDocument, { notify = false } = {}) {
   const combat = game.combat;
   if (!add2eIsCombatActive(combat)) return true;
   if (game.user?.isGM) return true;
-  if (add2eCombatantMatchesToken(combat.combatant, tokenDocumentOrObject)) return true;
-  if (notify) add2eNotifyNotTurn(add2eTokenActor(tokenDocumentOrObject));
+  if (!add2eIsCombatToken(tokenOrDocument, combat)) return true;
+  if (add2eIsActiveCombatToken(tokenOrDocument, combat)) return true;
+  if (notify) add2eNotifyNotTurn(add2eTokenActor(tokenOrDocument));
   return false;
 }
 
@@ -278,129 +275,77 @@ function add2eHasMovementChange(changes = {}) {
   return ["x", "y", "elevation", "rotation"].some(path => foundry.utils.hasProperty(changes, path));
 }
 
-function add2eSuppressMovementHistoryOptions(options = {}) {
-  options.animate = false;
-  options.movementHistory = false;
-  options.showMovementHistory = false;
-  options.showRuler = false;
-  options.ruler = false;
-  options.add2eNoMovementHistory = true;
-  return options;
-}
-
-function add2eCollectMovementFlagDeletes(flags = {}, prefix = "flags", out = {}) {
-  if (!flags || typeof flags !== "object") return out;
-  for (const [scope, data] of Object.entries(flags)) {
-    if (!data || typeof data !== "object") continue;
-    for (const key of Object.keys(data)) {
-      if (ADD2E_MOVEMENT_FLAG_RE.test(key)) out[`${prefix}.${scope}.-=${key}`] = null;
-    }
-  }
-  return out;
-}
-
-function add2eKnownMovementDeletes(prefix, out = {}) {
-  for (const key of ADD2E_MOVEMENT_KEYS) {
-    out[`${prefix}.-=${key}`] = null;
-    out[`${prefix}.${key}`] = null;
-  }
-  return out;
-}
-
-function add2eClearLocalMovementObjects(tokenDocumentOrObject = null) {
-  const tokenDocument = add2eTokenDocument(tokenDocumentOrObject);
-  const token = tokenDocument?.object ?? tokenDocumentOrObject?.object ?? tokenDocumentOrObject ?? null;
-  for (const obj of [token, tokenDocument, canvas?.controls?.ruler]) {
-    if (!obj || typeof obj !== "object") continue;
-    for (const key of ADD2E_MOVEMENT_KEYS.concat(ADD2E_MOVEMENT_KEYS.map(k => `_${k}`))) {
-      try {
-        if (Array.isArray(obj[key])) obj[key].length = 0;
-        else if (obj[key]?.clear instanceof Function) obj[key].clear();
-        else if (obj[key]?.destroy instanceof Function) obj[key].destroy({ children: true });
-      } catch (_e) {}
-    }
-  }
-  try { canvas?.controls?.ruler?.clear?.(); } catch (_e) {}
-}
-
-async function add2ePurgeCombatantMovementHistory(tokenDocumentOrObject = null, combat = game.combat) {
-  if (!combat || add2eCombatantMovementPurgeRunning) return false;
-  const combatants = add2eCombatantsForToken(tokenDocumentOrObject, combat);
-  if (!combatants.length) return false;
-
-  const updates = [];
-  for (const combatant of combatants) {
-    const update = { _id: combatant.id };
-    add2eKnownMovementDeletes("flags.core", update);
-    add2eKnownMovementDeletes("flags.add2e", update);
-    add2eCollectMovementFlagDeletes(combatant.flags ?? {}, "flags", update);
-    for (const key of ADD2E_MOVEMENT_KEYS) {
-      update[key] = null;
-      update[`-=${key}`] = null;
-    }
-    updates.push(update);
-  }
-
-  add2eCombatantMovementPurgeRunning = true;
+function add2eApplyTokenInteractivity() {
   try {
-    await combat.updateEmbeddedDocuments("Combatant", updates, { add2ePurgeMovementHistory: true, render: false });
-    for (const combatant of combatants) add2eClearLocalMovementObjects(combatant.token?.object ?? combatant.token ?? tokenDocumentOrObject);
-    ui.combat?.render?.(false);
-    return true;
+    const combat = game.combat;
+    const tokens = Array.from(canvas?.tokens?.placeables ?? []);
+    for (const token of tokens) {
+      if (!token) continue;
+      const locked = !game.user?.isGM && add2eIsCombatActive(combat) && add2eIsCombatToken(token, combat) && !add2eIsActiveCombatToken(token, combat);
+      token.__add2eTurnLocked = locked;
+      token.interactive = !locked;
+      if ("eventMode" in token) token.eventMode = locked ? "none" : "auto";
+      if ("cursor" in token) token.cursor = locked ? "not-allowed" : null;
+      if (locked && token.controlled) token.release({ add2eTurnLockRelease: true });
+    }
   } catch (err) {
-    console.warn(`${TAG}[MOVEMENT_HISTORY][PURGE_COMBATANT_ERROR]`, err);
-    return false;
-  } finally {
-    add2eCombatantMovementPurgeRunning = false;
+    console.warn(`${TAG}[TURN_LOCK][INTERACTIVITY_ERROR]`, err);
   }
 }
 
-function add2ePatchTokenInteractionAtSource() {
+function add2eScheduleApplyTokenInteractivity(delay = 0) {
+  setTimeout(() => add2eApplyTokenInteractivity(), delay);
+}
+
+function add2ePatchTokenDragGuard() {
   const TokenClass = globalThis.Token;
-  if (!TokenClass?.prototype || TokenClass.prototype.__add2eTurnLockSourceGuard === ADD2E_TURN_LOCK_VERSION) return;
-  TokenClass.prototype.__add2eTurnLockSourceGuard = ADD2E_TURN_LOCK_VERSION;
+  if (!TokenClass?.prototype || TokenClass.prototype.__add2eTurnLockDragGuard === ADD2E_TURN_LOCK_VERSION) return;
+  TokenClass.prototype.__add2eTurnLockDragGuard = ADD2E_TURN_LOCK_VERSION;
   const proto = TokenClass.prototype;
-  for (const name of ["_canDrag", "_canDragLeftStart", "_canDragLeftMove", "_onDragLeftStart", "_onDragLeftMove"]) {
+  const methods = ["_canDrag", "_canDragLeftStart", "_canDragLeftMove"];
+  for (const name of methods) {
     const original = proto[name];
-    if (typeof original !== "function" || original.__add2eTurnLockWrapped === ADD2E_TURN_LOCK_VERSION) continue;
-    proto[name] = function add2eTurnLockedTokenInteraction(...args) {
-      if (add2eIsCombatActive() && !add2eCanTokenActNow(this.document ?? this, { notify: true })) {
-        add2eClearLocalMovementObjects(this);
-        add2ePurgeCombatantMovementHistory(this.document ?? this);
-        return name.startsWith("_can") ? false : undefined;
-      }
+    if (typeof original !== "function") continue;
+    proto[name] = function add2eTurnLockedCanDrag(...args) {
+      if (!add2eCanTokenActNow(this.document ?? this, { notify: true })) return false;
       return original.apply(this, args);
     };
-    proto[name].__add2eTurnLockWrapped = ADD2E_TURN_LOCK_VERSION;
   }
-  console.log(`${TAG}[TURN_LOCK][TOKEN_SOURCE_GUARD]`, { version: ADD2E_TURN_LOCK_VERSION });
+  console.log(`${TAG}[TURN_LOCK][DRAG_GUARD]`, { version: ADD2E_TURN_LOCK_VERSION, methods });
 }
 
 function add2eInstallMovementTurnLock() {
   if (globalThis.__ADD2E_TURN_LOCK_MOVEMENT_INSTALLED === ADD2E_TURN_LOCK_VERSION) return;
   globalThis.__ADD2E_TURN_LOCK_MOVEMENT_INSTALLED = ADD2E_TURN_LOCK_VERSION;
-  add2ePatchTokenInteractionAtSource();
+
+  add2ePatchTokenDragGuard();
+
+  Hooks.on("controlToken", (token, controlled) => {
+    if (game.user?.isGM) return;
+    if (!controlled) return;
+    if (add2eCanTokenActNow(token?.document ?? token, { notify: true })) return;
+    token?.release?.({ add2eTurnLockRelease: true });
+    add2eScheduleApplyTokenInteractivity(0);
+  });
 
   Hooks.on("preUpdateToken", (tokenDocument, changes, options, userId) => {
     try {
       if (!add2eHasMovementChange(changes)) return;
-      add2eSuppressMovementHistoryOptions(options);
+      options.animate = false;
       if (options?.add2eAllowOutOfTurn || options?.add2eIgnoreTurnLock) return;
       if (add2eCanTokenActNow(tokenDocument, { notify: userId === game.user?.id })) return;
-      add2eClearLocalMovementObjects(tokenDocument);
-      add2ePurgeCombatantMovementHistory(tokenDocument);
       return false;
-    } catch (err) { console.warn(`${TAG}[TURN_LOCK][MOVE][ERROR]`, err); }
+    } catch (err) {
+      console.warn(`${TAG}[TURN_LOCK][MOVE][ERROR]`, err);
+    }
   });
 
-  Hooks.on("updateToken", (tokenDocument, changes, options, userId) => {
-    try {
-      if (!add2eHasMovementChange(changes)) return;
-      add2eSuppressMovementHistoryOptions(options);
-      add2eClearLocalMovementObjects(tokenDocument);
-      add2ePurgeCombatantMovementHistory(tokenDocument);
-    } catch (err) { console.warn(`${TAG}[TURN_LOCK][MOVE_AFTER_UPDATE][ERROR]`, err); }
-  });
+  Hooks.on("canvasReady", () => add2eScheduleApplyTokenInteractivity(100));
+  Hooks.on("createCombatant", () => add2eScheduleApplyTokenInteractivity(100));
+  Hooks.on("deleteCombatant", () => add2eScheduleApplyTokenInteractivity(100));
+  Hooks.on("updateCombat", () => add2eScheduleApplyTokenInteractivity(50));
+  Hooks.on("combatTurn", () => add2eScheduleApplyTokenInteractivity(50));
+  Hooks.on("combatRound", () => add2eScheduleApplyTokenInteractivity(50));
 }
 
 function add2eWrapActionFunction(name, label) {
@@ -432,9 +377,7 @@ function add2eExposeInitiativeGlobals() {
   globalThis.add2ePatchCombatTrackerInitiativeIcons = add2ePatchCombatTrackerInitiativeIcons;
   globalThis.add2eCanActorActNow = add2eCanActorActNow;
   globalThis.add2eCanTokenActNow = add2eCanTokenActNow;
-  globalThis.add2eInstallMovementTurnLock = add2eInstallMovementTurnLock;
-  globalThis.add2ePurgeCombatantMovementHistory = add2ePurgeCombatantMovementHistory;
-  globalThis.add2eClearLocalMovementObjects = add2eClearLocalMovementObjects;
+  globalThis.add2eApplyTokenInteractivity = add2eApplyTokenInteractivity;
   globalThis.triInitiativeAscendant = add2eSortInitiativeAscending;
 }
 
@@ -504,40 +447,32 @@ function add2ePatchCombatTrackerInitiativeIcons(root = document) {
     let changed = 0;
     for (const el of elements) if (add2ePatchOneInitiativeElement(el)) changed++;
     return changed;
-  } catch (err) { console.warn(`${TAG}[D6_ICON][ERROR]`, err); return 0; }
-}
-
-function add2eSchedulePurgeCombatants(combat = game.combat) {
-  if (!combat) return;
-  setTimeout(() => add2ePurgeCombatantMovementHistory(null, combat), 50);
+  } catch (err) {
+    console.warn(`${TAG}[D6_ICON][ERROR]`, err);
+    return 0;
+  }
 }
 
 function add2eInstallInitiativeHooks() {
   Hooks.on("updateCombatant", (combatant, changes, options, userId) => {
-    if (options?.add2eInitiativeSort || options?.add2ePurgeMovementHistory) return;
+    if (options?.add2eInitiativeSort) return;
     if (foundry.utils.hasProperty(changes ?? {}, "initiative")) {
-      console.log(`${TAG}[UPDATE_COMBATANT]`, { combatant: combatant?.name, initiative: changes.initiative, userId });
       add2eScheduleInitiativeSort(combatant.combat ?? game.combat);
     }
-    add2eSchedulePurgeCombatants(combatant.combat ?? game.combat);
+    add2eScheduleApplyTokenInteractivity(100);
   });
 
   Hooks.on("createCombatant", (combatant, options, userId) => {
-    if (options?.add2eInitiativeSort || options?.add2ePurgeMovementHistory) return;
-    console.log(`${TAG}[CREATE_COMBATANT]`, { combatant: combatant?.name, initiative: combatant?.initiative, userId });
+    if (options?.add2eInitiativeSort) return;
     add2eScheduleInitiativeSort(combatant.combat ?? game.combat);
-    add2eSchedulePurgeCombatants(combatant.combat ?? game.combat);
+    add2eScheduleApplyTokenInteractivity(100);
   });
 
   Hooks.on("deleteCombatant", (combatant, options, userId) => {
-    if (options?.add2eInitiativeSort || options?.add2ePurgeMovementHistory) return;
+    if (options?.add2eInitiativeSort) return;
     add2eScheduleInitiativeSort(combatant.combat ?? game.combat);
-    add2eSchedulePurgeCombatants(combatant.combat ?? game.combat);
+    add2eScheduleApplyTokenInteractivity(100);
   });
-
-  Hooks.on("updateCombat", combat => add2eSchedulePurgeCombatants(combat));
-  Hooks.on("combatTurn", combat => add2eSchedulePurgeCombatants(combat));
-  Hooks.on("combatRound", combat => add2eSchedulePurgeCombatants(combat));
 
   Hooks.on("renderCombatTracker", (app, html) => add2ePatchCombatTrackerInitiativeIcons(html));
   Hooks.on("renderCombatantConfig", () => setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 50));
@@ -558,10 +493,10 @@ Hooks.once("ready", () => {
   add2eConfigureInitiative();
   add2eRemoveLegacyInitiativeHooks();
   add2eExposeInitiativeGlobals();
-  add2ePatchTokenInteractionAtSource();
   add2ePatchCombatTrackerInitiativeIcons(document);
   add2eInstallActionTurnLocks();
-  add2eSchedulePurgeCombatants(game.combat);
+  add2eInstallMovementTurnLock();
+  add2eScheduleApplyTokenInteractivity(500);
   setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 500);
   setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 1500);
   setTimeout(() => add2eInstallActionTurnLocks(), 800);
