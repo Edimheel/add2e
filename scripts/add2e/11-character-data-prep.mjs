@@ -51,7 +51,22 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   // =====================================================
   try {
     if (actor.type === "personnage" && changes.system) {
+      const CARAC_CHANGE_KEYS = [
+        "force", "force_base", "force_race", "force_ex",
+        "dexterite", "dexterite_base", "dexterite_race",
+        "constitution", "constitution_base", "constitution_race",
+        "intelligence", "intelligence_base", "intelligence_race",
+        "sagesse", "sagesse_base", "sagesse_race",
+        "charisme", "charisme_base", "charisme_race"
+      ];
+
       let caracChanged = false;
+      for (const key of CARAC_CHANGE_KEYS) {
+        if (Object.prototype.hasOwnProperty.call(changes.system, key)) {
+          caracChanged = true;
+          break;
+        }
+      }
 
       if (caracChanged && !ACTIVE_CARAC_AUTO.has(actor.id)) {
         ACTIVE_CARAC_AUTO.add(actor.id);
