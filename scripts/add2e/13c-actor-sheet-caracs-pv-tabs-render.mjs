@@ -2,6 +2,9 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
+const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-05-29-force-ex-input-v1";
+globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
+
 function add2eV2Root(source) {
   if (!source) return null;
   const root = source.jquery ? source[0] : source;
@@ -13,6 +16,29 @@ function add2eV2Root(source) {
 function add2eV2Jq(source) {
   if (!source) return $();
   return source.jquery ? source : $(source);
+}
+
+function add2eNormalizeClassForExceptionalStrength(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f’']/g, "");
+}
+
+function add2eActorCanUseExceptionalStrength(actor) {
+  const sys = actor?.system ?? {};
+  const classItem = actor?.items?.find?.(i => i.type === "classe") ?? null;
+  const classText = [
+    sys.classe,
+    sys.details_classe?.nom,
+    sys.details_classe?.name,
+    sys.details_classe?.label,
+    classItem?.name,
+    classItem?.system?.nom,
+    classItem?.system?.name,
+    classItem?.system?.label
+  ].map(add2eNormalizeClassForExceptionalStrength).join(" ");
+  return classText.includes("guerrier") || classText.includes("paladin") || classText.includes("ranger");
 }
 
 globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
@@ -44,17 +70,9 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
       totalCaracs[c] = base + (bonusRace || legacyRace);
     }
 
-    const classeStr = String(s.classe || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f’']/g, "");
-
     const allowExceptional =
       !!s.details_classe?.allowExceptionalStrength ||
-      classeStr.includes("guerrier") ||
-      classeStr.includes("paladin") ||
-      classeStr.includes("rodeur") ||
-      classeStr.includes("ranger");
+      add2eActorCanUseExceptionalStrength(this.actor);
 
     let forceKey = totalCaracs.force;
     const forceEx = Number(s.force_ex || 0);
@@ -234,7 +252,16 @@ globalThis.Add2eActorSheet.prototype._add2eBindPersistentTabs = function _add2eB
       }
       this._add2eRememberActiveTab(root);
     }, true);
-    root.addEventListener("change", () => this._add2eRememberActiveTab(root), true);
+    root.addEventListener("change", async ev => {
+      this._add2eRememberActiveTab(root);
+      const field = ev.target?.closest?.("[name='system.force_ex']");
+      if (!field) return;
+      const value = Math.max(0, Math.min(100, Number(field.value) || 0));
+      field.value = String(value);
+      await this.actor.update({ "system.force_ex": value });
+      if (typeof this.autoSetCaracAjustements === "function") await this.autoSetCaracAjustements();
+      if (this.rendered) this.render(false);
+    }, true);
   }
 
   add2eV2Jq(root).find(".sheet-tabs .item[data-tab], .a2e-tabs .item[data-tab]")
