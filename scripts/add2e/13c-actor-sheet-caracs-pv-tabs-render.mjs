@@ -2,7 +2,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
-const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-05-29-force-ex-input-v1";
+const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-05-29-force-ex-input-v2";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 
 function add2eV2Root(source) {
@@ -16,6 +16,15 @@ function add2eV2Root(source) {
 function add2eV2Jq(source) {
   if (!source) return $();
   return source.jquery ? source : $(source);
+}
+
+function add2eSyncForceExSelects(root, actor) {
+  if (!root || !actor?.system) return;
+  const value = String(Math.max(0, Math.min(100, Number(actor.system.force_ex) || 0)));
+  root.querySelectorAll?.("select[name='system.force_ex']")?.forEach(select => {
+    select.value = value;
+    select.dataset.currentForceEx = value;
+  });
 }
 
 function add2eNormalizeClassForExceptionalStrength(value) {
@@ -233,6 +242,8 @@ globalThis.Add2eActorSheet.prototype._add2eActivateTab = function _add2eActivate
   root.querySelectorAll(".sheet-body .tab[data-tab], .a2e-tab-content[data-tab]").forEach(el => {
     el.classList.toggle("active", el.dataset.tab === tab);
   });
+
+  add2eSyncForceExSelects(root, this.actor);
 };
 
 globalThis.Add2eActorSheet.prototype._add2eBindPersistentTabs = function _add2eBindPersistentTabs(html) {
@@ -241,6 +252,7 @@ globalThis.Add2eActorSheet.prototype._add2eBindPersistentTabs = function _add2eB
 
   const initial = this._add2eActiveTab || this._add2eReadStoredTab() || "resume";
   this._add2eActivateTab(initial, root);
+  add2eSyncForceExSelects(root, this.actor);
 
   if (root.dataset.add2eTabsCaptureBound !== "1") {
     root.dataset.add2eTabsCaptureBound = "1";
@@ -258,8 +270,10 @@ globalThis.Add2eActorSheet.prototype._add2eBindPersistentTabs = function _add2eB
       if (!field) return;
       const value = Math.max(0, Math.min(100, Number(field.value) || 0));
       field.value = String(value);
+      field.dataset.currentForceEx = String(value);
       await this.actor.update({ "system.force_ex": value });
       if (typeof this.autoSetCaracAjustements === "function") await this.autoSetCaracAjustements();
+      add2eSyncForceExSelects(root, this.actor);
       if (this.rendered) this.render(false);
     }, true);
   }
@@ -283,6 +297,7 @@ globalThis.Add2eActorSheet.prototype.render = function render(force = false, opt
   const result = this._add2eNativeRender(renderOptions);
   const refreshUi = () => {
     this._add2eActivateTab(this._add2eActiveTab || this._add2eReadStoredTab() || "resume");
+    add2eSyncForceExSelects(this._add2eSheetRoot(this.element), this.actor);
     try { add2eEnhanceCharacterSheetUi(this, this.element); } catch (_err) {}
   };
   for (const delay of [0, 80, 220]) setTimeout(refreshUi, delay);
