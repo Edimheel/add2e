@@ -5,11 +5,11 @@
 // carte de chat, icône D6, verrou des actions hors tour, suivi HUD.
 // Le fichier ne gère pas le déplacement ; il neutralise seulement l'historique visuel/persisté.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-start-first-v5";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-start-first-v6";
 const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v1";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
-const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v5";
-const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-29-no-movement-history-record-v3";
+const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v6";
+const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-29-no-movement-history-record-v4";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
@@ -21,6 +21,7 @@ let movementTrailTimer = null;
 let warningAt = 0;
 let combatPatchInstalled = false;
 let movementHistoryPatchInstalled = false;
+let tokenHoverPatchInstalled = false;
 let lastHudCombatantKey = "";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
@@ -185,9 +186,7 @@ async function advanceSortedTurn(combat = game.combat, direction = 1) {
   if (!turns.length) return combat;
 
   const rawTurn = Number(combat.turn ?? combat.current?.turn);
-  if (!Number.isFinite(rawTurn) || rawTurn < 0) {
-    return updateCombatTurnBySortedIndex(combat, direction >= 0 ? 0 : turns.length - 1);
-  }
+  if (!Number.isFinite(rawTurn) || rawTurn < 0) return updateCombatTurnBySortedIndex(combat, direction >= 0 ? 0 : turns.length - 1);
 
   const index = Math.max(0, Math.min(turns.length - 1, Math.floor(rawTurn)));
   let next = index + direction;
@@ -584,6 +583,7 @@ function clearObjectMovementTrail(obj) {
   try { obj._movementPath?.clear?.(); } catch (_e) {}
   try { obj._movementPath?.destroy?.({ children: true }); obj._movementPath = null; } catch (_e) {}
   try { obj._ruler?.clear?.(); } catch (_e) {}
+  try { obj._hoverRuler?.clear?.(); } catch (_e) {}
 }
 
 function clearFoundryMovementTrail(token = null) {
@@ -594,14 +594,54 @@ function clearFoundryMovementTrail(token = null) {
   try { canvas?.controls?.ruler?._clear?.(); } catch (_e) {}
   try { canvas?.grid?.clearHighlightLayer?.("Token.Ruler"); } catch (_e) {}
   try { canvas?.grid?.clearHighlightLayer?.("movement"); } catch (_e) {}
+  try { canvas?.grid?.clearHighlightLayer?.("Movement"); } catch (_e) {}
   try { canvas?.interface?.grid?.clearHighlightLayer?.("Token.Ruler"); } catch (_e) {}
   try { canvas?.interface?.grid?.clearHighlightLayer?.("movement"); } catch (_e) {}
+  try { canvas?.interface?.grid?.clearHighlightLayer?.("Movement"); } catch (_e) {}
+  return true;
+}
+
+function clearFoundryMovementTrailAggressive(token = null) {
+  clearFoundryMovementTrail(token);
+  try { requestAnimationFrame(() => clearFoundryMovementTrail(token)); } catch (_e) {}
+  setTimeout(() => clearFoundryMovementTrail(token), 0);
+  setTimeout(() => clearFoundryMovementTrail(token), 20);
   return true;
 }
 
 function scheduleClearMovementTrail(token = null) {
+  clearFoundryMovementTrailAggressive(token);
   clearTimeout(movementTrailTimer);
-  movementTrailTimer = setTimeout(() => clearFoundryMovementTrail(token), 40);
+  movementTrailTimer = setTimeout(() => clearFoundryMovementTrailAggressive(token), 40);
+}
+
+function patchTokenHoverMethod(proto, methodName) {
+  const original = proto?.[methodName];
+  if (typeof original !== "function") return false;
+  if (original.__add2eNoMovementHoverTrail === ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION) return false;
+
+  proto[methodName] = function add2eNoMovementHoverTrail(...args) {
+    clearFoundryMovementTrailAggressive(this);
+    const result = original.apply(this, args);
+    clearFoundryMovementTrailAggressive(this);
+    return result;
+  };
+  proto[methodName].__add2eNoMovementHoverTrail = ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION;
+  proto[methodName].__add2eOriginal = original;
+  return true;
+}
+
+function installTokenHoverPatch() {
+  if (tokenHoverPatchInstalled) return true;
+  const proto = globalThis.Token?.prototype;
+  if (!proto) return false;
+  const patched = [];
+  for (const methodName of ["_onHoverIn", "_onHoverOut", "_onMouseOver", "_onMouseOut", "_onClickLeft", "refresh"]) {
+    if (patchTokenHoverMethod(proto, methodName)) patched.push(methodName);
+  }
+  tokenHoverPatchInstalled = true;
+  console.log(`${TAG}[MOVE_HISTORY][TOKEN_HOVER_PATCH]`, { version: ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION, patched });
+  return true;
 }
 
 function installMovementHistoryBlock() {
@@ -611,6 +651,7 @@ function installMovementHistoryBlock() {
   if (patchSetFlagHistoryBlock(globalThis.Actor, "Actor")) patched.push("Actor");
   if (patchSetFlagHistoryBlock(globalThis.TokenDocument ?? foundry?.documents?.TokenDocument, "TokenDocument")) patched.push("TokenDocument");
   cleanupMovementHistoryHooks();
+  installTokenHoverPatch();
   game.add2e = game.add2e ?? {};
   game.add2e.movementHistoryDisabledVersion = ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION;
   console.log(`${TAG}[MOVE_HISTORY][DISABLED]`, { version: ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION, patched });
@@ -647,7 +688,8 @@ function exposeGlobals() {
   globalThis.add2eDisableMovementHistoryRecording = installMovementHistoryBlock;
   globalThis.add2eClearExistingMovementHistoryFlags = clearExistingMovementHistoryFlags;
   globalThis.add2eCleanupMovementHistoryHooks = cleanupMovementHistoryHooks;
-  globalThis.add2eClearFoundryMovementTrail = clearFoundryMovementTrail;
+  globalThis.add2eClearFoundryMovementTrail = clearFoundryMovementTrailAggressive;
+  globalThis.add2eInstallTokenHoverPatch = installTokenHoverPatch;
   globalThis.add2eForceFirstSortedTurn = forceFirstSortedTurn;
   globalThis.triInitiativeAscendant = sortInitiativeAscending;
 }
@@ -674,10 +716,11 @@ function installHooks() {
   });
   Hooks.on("combatTurn", combat => { scheduleHudFollow(combat, { forceOpen: false, reason: "combatTurn" }); scheduleClearMovementTrail(); });
   Hooks.on("combatRound", combat => { scheduleHudFollow(combat, { forceOpen: false, reason: "combatRound" }); scheduleClearMovementTrail(); });
-  Hooks.on("updateToken", tokenDoc => scheduleClearMovementTrail(tokenDoc?.object ?? null));
-  Hooks.on("controlToken", token => scheduleClearMovementTrail(token));
-  Hooks.on("refreshToken", token => scheduleClearMovementTrail(token));
-  Hooks.on("canvasReady", () => scheduleClearMovementTrail());
+  Hooks.on("hoverToken", (token, hovered) => { clearFoundryMovementTrailAggressive(token); });
+  Hooks.on("updateToken", tokenDoc => clearFoundryMovementTrailAggressive(tokenDoc?.object ?? null));
+  Hooks.on("controlToken", token => clearFoundryMovementTrailAggressive(token));
+  Hooks.on("refreshToken", token => clearFoundryMovementTrailAggressive(token));
+  Hooks.on("canvasReady", () => { installTokenHoverPatch(); scheduleClearMovementTrail(); });
   Hooks.on("deleteCombat", () => { lastHudCombatantKey = ""; scheduleClearMovementTrail(); });
   Hooks.on("renderCombatTracker", (app, html) => patchInitiativeIcons(html));
   Hooks.on("renderCombatantConfig", () => setTimeout(() => patchInitiativeIcons(document), 50));
@@ -698,12 +741,14 @@ Hooks.once("ready", () => {
   cleanupLegacyHooks();
   installCombatPatch();
   installMovementHistoryBlock();
+  installTokenHoverPatch();
   exposeGlobals();
   patchInitiativeIcons(document);
   installActionLocks();
   installHooks();
   clearExistingMovementHistoryFlags().catch(err => console.warn(`${TAG}[MOVE_HISTORY][CLEAN_ERROR]`, err));
   setTimeout(() => cleanupMovementHistoryHooks(), 300);
+  setTimeout(() => installTokenHoverPatch(), 350);
   setTimeout(() => patchInitiativeIcons(document), 500);
   setTimeout(() => patchInitiativeIcons(document), 1500);
   setTimeout(() => installActionLocks(), 800);
