@@ -1,7 +1,7 @@
 // ADD2E — Consommables : composants de sorts, projectiles et carquois
 // Phase 2/3/4 dev-composant : réglages, carquois, drop de munitions, attaque projectile et restitution.
 
-const ADD2E_CONSUMABLES_VERSION = "2026-05-29-dev-composant-phase4-projectiles-v4-recovery-popups";
+const ADD2E_CONSUMABLES_VERSION = "2026-05-29-dev-composant-phase4-projectiles-v5-monsters-ignore-ammo";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 const ADD2E_PROJECTILE_GM_OPERATION_TYPE = "ADD2E_GM_OPERATION";
@@ -70,6 +70,11 @@ function add2eEscapeHtml(value) {
   const div = document.createElement("div");
   div.textContent = String(value ?? "");
   return div.innerHTML;
+}
+
+function add2eActorUsesProjectileInventory(actor) {
+  if (!actor) return false;
+  return String(actor.type ?? "").toLowerCase() !== "monster";
 }
 
 async function add2eDialogPopup({ title = "Information", content = "", modal = false } = {}) {
@@ -221,6 +226,8 @@ export async function add2eEquipProjectile(actor, projectile) {
 
 export async function add2eReserveProjectile(actor, arme) {
   if (!add2eSettingBool("gestionProjectiles")) return null;
+  if (!add2eActorUsesProjectileInventory(actor)) return null;
+
   const required = add2eGetWeaponRequiredAmmoType(arme);
   if (!required) return null;
 
@@ -259,6 +266,8 @@ function add2eProjectileRegistryKey(actor, projectile) {
 
 export async function add2eRegisterProjectileSpentInCombat(actor, projectile, quantity = 1) {
   if (!game.combat || !actor || !projectile) return false;
+  if (!add2eActorUsesProjectileInventory(actor)) return false;
+
   const combat = game.combat;
   const registry = foundry.utils.deepClone(combat.getFlag("add2e", "projectilesDepenses") ?? {});
   const key = add2eProjectileRegistryKey(actor, projectile);
@@ -614,7 +623,7 @@ async function add2eGmConsumeProjectileFromSocket(payload = {}) {
     catch (err) { console.warn("[ADD2E][CONSUMABLES][GM_PROJECTILE][UUID]", err); }
   }
   if (!actor && payload.actorId) actor = game.actors?.get(payload.actorId) ?? null;
-  if (!actor) return false;
+  if (!actor || !add2eActorUsesProjectileInventory(actor)) return false;
 
   const projectile = actor.items?.get(payload.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === payload.itemName && add2eIsAmmunition(i));
   if (!projectile) return false;
@@ -708,7 +717,8 @@ const api = {
   add2eReserveSpellComponents,
   add2eRefundSpellComponents,
   add2eTryMergeDroppedAmmunition,
-  add2eWrapAttackRollForProjectiles
+  add2eWrapAttackRollForProjectiles,
+  add2eActorUsesProjectileInventory
 };
 
 globalThis.ADD2E_CONSUMABLES = api;
@@ -720,6 +730,7 @@ globalThis.add2eConsumeProjectileReservation = add2eConsumeProjectileReservation
 globalThis.add2eReserveSpellComponents = add2eReserveSpellComponents;
 globalThis.add2eRefundSpellComponents = add2eRefundSpellComponents;
 globalThis.add2eTryMergeDroppedAmmunition = add2eTryMergeDroppedAmmunition;
+globalThis.add2eActorUsesProjectileInventory = add2eActorUsesProjectileInventory;
 
 Hooks.once("init", () => add2eRegisterConsumableHooks());
 Hooks.once("ready", () => {
