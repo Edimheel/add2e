@@ -24,9 +24,6 @@
                   <tr>
                     <th>Arme</th>
                     <th>Dégâts</th>
-                    <th>Magie</th>
-                    <th>Carac.</th>
-                    <th>Autres</th>
                     <th>Total toucher</th>
                     <th>Total dégâts</th>
                     <th>THAC0 effectif</th>
@@ -37,9 +34,6 @@
                     <tr title="Toucher : magie {{row.magicHitSigned}} + {{row.abilityLabel}} {{row.abilityHitSigned}} + autres {{row.otherHitSigned}} = {{row.totalHitSigned}}&#10;Dégâts : magie {{row.magicDamageSigned}} + {{row.abilityLabel}} {{row.abilityDamageSigned}} + autres {{row.otherDamageSigned}} = {{row.totalDamageSigned}}&#10;THAC0 : {{row.thacoBase}} - bonus toucher {{row.totalHitSigned}} = {{row.thacoEffectif}}">
                       <td><b>{{row.name}}</b></td>
                       <td>{{row.damage}}</td>
-                      <td>{{row.magicHitSigned}} / {{row.magicDamageSigned}}</td>
-                      <td>{{row.abilityLabel}} {{row.abilityHitSigned}} / {{row.abilityDamageSigned}}</td>
-                      <td>{{row.otherHitSigned}} / {{row.otherDamageSigned}}</td>
                       <td><b>{{row.totalHitSigned}}</b></td>
                       <td><b>{{row.totalDamageSigned}}</b></td>
                       <td><b>{{row.thacoEffectif}}</b></td>
