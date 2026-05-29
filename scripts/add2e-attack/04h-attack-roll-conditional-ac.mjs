@@ -1,6 +1,90 @@
 // scripts/add2e-attack/04h-attack-roll-conditional-ac.mjs
 // ADD2E — CA conditionnelle pour les attaques.
-// Version : 2026-05-29-no-generic-fixed-ac-for-melee-v1
+// Version : 2026-05-29-shield-only-conditional-ac-v1
+
+function add2eAttackNormalizeConditionalACText(value) {
+  return String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9:_-]+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function add2eAttackArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(add2eAttackArray);
+  if (value instanceof Set) return [...value];
+  if (typeof value?.values === "function") return [...value.values()];
+  if (typeof value === "object") return Object.values(value);
+  return [value];
+}
+
+function add2eAttackEffectOriginItem(actor, effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  const directId = flags.sourceItemId ?? flags.itemId ?? flags.originItemId ?? flags.sourceSpellId ?? flags.spellId ?? null;
+  if (directId && actor?.items?.get?.(directId)) return actor.items.get(directId);
+
+  const origin = String(effect?.origin ?? "");
+  const itemId = origin.match(/\.Item\.([A-Za-z0-9]{16})/)?.[1] ?? origin.match(/Item\.([A-Za-z0-9]{16})/)?.[1] ?? null;
+  return itemId && actor?.items?.get?.(itemId) ? actor.items.get(itemId) : null;
+}
+
+function add2eAttackCollectEffectTags(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  const raw = [
+    effect?.name,
+    effect?.label,
+    flags.name,
+    flags.label,
+    flags.sourceName,
+    flags.sourceSpellName,
+    flags.spellName,
+    flags.type,
+    flags.category,
+    flags.sourceType,
+    flags.tags,
+    flags.effectTags
+  ];
+
+  if (typeof effect?.getFlag === "function") {
+    try { raw.push(effect.getFlag("add2e", "tags")); } catch (_e) {}
+    try { raw.push(effect.getFlag("add2e", "effectTags")); } catch (_e) {}
+    try { raw.push(effect.getFlag("add2e", "sourceSpellName")); } catch (_e) {}
+    try { raw.push(effect.getFlag("add2e", "spellName")); } catch (_e) {}
+  }
+
+  return raw.flatMap(add2eAttackArray).map(add2eAttackNormalizeConditionalACText).filter(Boolean);
+}
+
+function add2eAttackIsShieldSpellText(value) {
+  const text = add2eAttackNormalizeConditionalACText(value);
+  return text === "bouclier" || text === "shield" || text.includes("sort_bouclier") || text.includes("spell_shield") || text.includes("bouclier_magique");
+}
+
+function add2eAttackTargetHasActiveShieldSpell(actor) {
+  if (!actor) return false;
+
+  const activeEffects = [
+    ...add2eAttackArray(actor.effects),
+    ...add2eAttackArray(actor.appliedEffects),
+    ...add2eAttackArray(actor.temporaryEffects)
+  ].filter(e => e && e.disabled !== true);
+
+  for (const effect of activeEffects) {
+    const originItem = add2eAttackEffectOriginItem(actor, effect);
+    const originType = String(originItem?.type ?? "").toLowerCase();
+    const originName = originItem?.name ?? originItem?.system?.nom ?? "";
+    const tags = add2eAttackCollectEffectTags(effect);
+
+    if (add2eAttackIsShieldSpellText(effect?.name) || add2eAttackIsShieldSpellText(effect?.label)) return true;
+    if (originType === "sort" && add2eAttackIsShieldSpellText(originName)) return true;
+    if (tags.some(add2eAttackIsShieldSpellText)) return true;
+  }
+
+  return false;
+}
 
 export function add2eAttackConditionalACSubtype({ arme, combatProfile, isDistance, hasTag }) {
   const tags = combatProfile?.tags instanceof Set ? combatProfile.tags : new Set(combatProfile?.tags ?? []);
@@ -27,7 +111,7 @@ export function add2eAttackConditionalACSubtype({ arme, combatProfile, isDistanc
   }
 
   if (isDistance) return { sousType: "projectile_propulse", label: "projectile", conditional: true };
-  return { sousType: "autres", label: "attaque de mêlée", conditional: false };
+  return { sousType: "autres", label: "attaque de mêlée", conditional: true };
 }
 
 function add2eAttackIsExplicitConditionalFixedAC(info, sousType) {
@@ -36,6 +120,7 @@ function add2eAttackIsExplicitConditionalFixedAC(info, sousType) {
 
   if (sousType === "projectile_lance") return tag.startsWith("ca_fixe_projectile_lance:") || tag.startsWith("ca_fixe_conditionnelle:projectile_lance:");
   if (sousType === "projectile_propulse") return tag.startsWith("ca_fixe_projectile_propulse:") || tag.startsWith("ca_fixe_conditionnelle:projectile_propulse:");
+  if (sousType === "autres") return tag.startsWith("ca_fixe_autres:") || tag.startsWith("ca_fixe_conditionnelle:autres:");
 
   return tag.startsWith(`ca_fixe_conditionnelle:${sousType}:`);
 }
@@ -51,7 +136,7 @@ export function add2eAttackResolveConditionalFixedAC({ cible, arme, combatProfil
     source: "attack-roll"
   };
 
-  if (!attackSubtype.conditional) {
+  if (!add2eAttackTargetHasActiveShieldSpell(cible)) {
     return {
       applied: false,
       ca: caBefore,
@@ -107,7 +192,7 @@ export function add2eAttackResolveConditionalFixedAC({ cible, arme, combatProfil
     context,
     details: fixedInfo,
     detail: applied
-      ? `CA ${normalCA} → ${finalCA} contre ${attackSubtype.label}`
+      ? `CA ${normalCA} → ${finalCA} contre ${attackSubtype.label} (Bouclier)`
       : `CA fixe ${fixedCA} non appliquée : la CA normale ${normalCA} reste meilleure`
   };
 }
