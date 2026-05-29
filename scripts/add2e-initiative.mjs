@@ -5,10 +5,10 @@
 // carte de chat, icône D6, verrou des actions hors tour, suivi HUD.
 // Le fichier ne gère pas le déplacement ; il neutralise seulement l'historique visuel/persisté.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-navigation-hud-v4";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-start-first-v5";
 const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v1";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
-const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v4";
+const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v5";
 const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-29-no-movement-history-record-v3";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
@@ -19,7 +19,6 @@ let sortTimer = null;
 let hudFollowTimer = null;
 let movementTrailTimer = null;
 let warningAt = 0;
-let cleanedLegacyHooks = false;
 let combatPatchInstalled = false;
 let movementHistoryPatchInstalled = false;
 let lastHudCombatantKey = "";
@@ -38,6 +37,11 @@ function configureInitiative() {
   console.log(`${TAG}[CONFIG]`, { version: ADD2E_INITIATIVE_VERSION, formula: "1d6", order: "ascending", rule: "le plus petit résultat agit en premier" });
 }
 
+function num(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 function initiativeValue(value) {
   if (value === undefined || value === null || value === "") return null;
   const n = Number(value);
@@ -47,7 +51,7 @@ function initiativeValue(value) {
 function compareCombatantsAscending(a, b) {
   const ai = initiativeValue(a?.initiative);
   const bi = initiativeValue(b?.initiative);
-  if (ai === null && bi === null) return 0;
+  if (ai === null && bi === null) return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
   if (ai === null) return 1;
   if (bi === null) return -1;
   if (ai !== bi) return ai - bi;
@@ -59,27 +63,15 @@ function sortedCombatants(combat = game.combat) {
 }
 
 function sortedTurnIndex(combat = game.combat) {
-  const n = Number(combat?.turn ?? combat?.current?.turn ?? 0);
-  return Number.isInteger(n) && n >= 0 ? n : 0;
-}
-
-function sortedCombatantAt(combat = game.combat, index = null) {
-  const turns = Array.isArray(combat?.turns) && combat.turns.length ? combat.turns : sortedCombatants(combat);
-  if (!turns.length) return null;
-  const i = Math.max(0, Math.min(turns.length - 1, Number(index ?? sortedTurnIndex(combat)) || 0));
-  return turns[i] ?? null;
+  const n = num(combat?.turn ?? combat?.current?.turn, 0);
+  return n >= 0 ? Math.floor(n) : 0;
 }
 
 function currentCombatant(combat = game.combat) {
-  return sortedCombatantAt(combat, sortedTurnIndex(combat)) ?? combat?.combatant ?? null;
-}
-
-function activeSortedIndex(combat = game.combat) {
-  const turns = sortedCombatants(combat);
-  if (!turns.length) return 0;
-  const raw = sortedTurnIndex(combat);
-  if (raw >= 0 && raw < turns.length) return raw;
-  return 0;
+  const turns = Array.isArray(combat?.turns) && combat.turns.length ? combat.turns : sortedCombatants(combat);
+  if (!turns.length) return combat?.combatant ?? null;
+  const index = Math.max(0, Math.min(turns.length - 1, sortedTurnIndex(combat)));
+  return turns[index] ?? combat?.combatant ?? null;
 }
 
 function hookSource(entry) {
@@ -96,44 +88,39 @@ function cleanupHooksFromStore(store, hookName, predicate) {
   return before - store[hookName].length;
 }
 
-function cleanupLegacyInitiativeHooksFromStore(store) {
-  if (!store || typeof store !== "object") return 0;
+function cleanupLegacyHooks() {
   let removed = 0;
-  for (const hookName of ["updateCombatant", "updateCombat"]) {
-    removed += cleanupHooksFromStore(store, hookName, source => (
-      source.includes("triInitiativeAscendant") ||
-      source.includes("add2eClearCombatMovementHistoryOnce") ||
-      source.includes("add2eClearTokenMovementHistory") ||
-      source.includes("add2ePurgeCombatantMovementHistory") ||
-      source.includes("movementHistory") ||
-      source.includes("showMovementHistory") ||
-      source.includes("updateEmbeddedDocuments(\"Combatant\"")
-    ));
-  }
-  return removed;
-}
-
-function cleanupLegacyInitiativeHooks() {
-  if (cleanedLegacyHooks) return 0;
-  cleanedLegacyHooks = true;
-  let removed = 0;
-  try { removed += cleanupLegacyInitiativeHooksFromStore(Hooks.events); } catch (_e) {}
-  try { removed += cleanupLegacyInitiativeHooksFromStore(Hooks._hooks); } catch (_e) {}
+  const clean = store => {
+    if (!store || typeof store !== "object") return;
+    for (const hookName of ["updateCombatant", "updateCombat"]) {
+      removed += cleanupHooksFromStore(store, hookName, source => (
+        source.includes("triInitiativeAscendant") ||
+        source.includes("add2eClearCombatMovementHistoryOnce") ||
+        source.includes("add2eClearTokenMovementHistory") ||
+        source.includes("add2ePurgeCombatantMovementHistory") ||
+        source.includes("movementHistory") ||
+        source.includes("showMovementHistory") ||
+        source.includes("updateEmbeddedDocuments(\"Combatant\"")
+      ));
+    }
+  };
+  try { clean(Hooks.events); } catch (_e) {}
+  try { clean(Hooks._hooks); } catch (_e) {}
   console.log(`${TAG}[LEGACY_CLEAN]`, { removed });
   return removed;
 }
 
-function applyAscendingTurns(combat = game.combat) {
+function applyAscendingTurns(combat = game.combat, { forceFirst = false } = {}) {
   if (!combat) return false;
   const turns = sortedCombatants(combat);
   if (!turns.length) return false;
-  const oldIndex = sortedTurnIndex(combat);
+  const index = forceFirst ? 0 : Math.max(0, Math.min(turns.length - 1, sortedTurnIndex(combat)));
   try {
     combat.turns = turns;
-    combat.turn = Math.max(0, Math.min(turns.length - 1, oldIndex));
+    combat.turn = index;
     if (combat.current && typeof combat.current === "object") {
-      combat.current.turn = combat.turn;
-      combat.current.combatantId = turns[combat.turn]?.id ?? combat.current.combatantId;
+      combat.current.turn = index;
+      combat.current.combatantId = turns[index]?.id ?? combat.current.combatantId;
     }
     return true;
   } catch (err) {
@@ -168,6 +155,28 @@ async function updateCombatTurnBySortedIndex(combat, newIndex, { roundDelta = 0 
   return combat;
 }
 
+async function forceFirstSortedTurn(combat = game.combat, reason = "start") {
+  if (!combat) return combat;
+  const turns = sortedCombatants(combat);
+  if (!turns.length) return combat;
+  const round = Math.max(1, Number(combat.round ?? 1));
+  await combat.update({ round, turn: 0 });
+  try {
+    combat.turns = turns;
+    combat.turn = 0;
+    if (combat.current && typeof combat.current === "object") {
+      combat.current.round = round;
+      combat.current.turn = 0;
+      combat.current.combatantId = turns[0]?.id ?? combat.current.combatantId;
+    }
+  } catch (_e) {}
+  ui.combat?.render?.(true);
+  scheduleHudFollow(combat, { forceOpen: false, reason });
+  scheduleClearMovementTrail();
+  console.log(`${TAG}[START_FIRST]`, { reason, first: turns[0]?.name ?? null, order: turns.map(c => `${c.name}:${c.initiative}`) });
+  return combat;
+}
+
 async function advanceSortedTurn(combat = game.combat, direction = 1) {
   if (!combat) return combat;
   combat.setupTurns?.();
@@ -175,7 +184,12 @@ async function advanceSortedTurn(combat = game.combat, direction = 1) {
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
 
-  const index = activeSortedIndex(combat);
+  const rawTurn = Number(combat.turn ?? combat.current?.turn);
+  if (!Number.isFinite(rawTurn) || rawTurn < 0) {
+    return updateCombatTurnBySortedIndex(combat, direction >= 0 ? 0 : turns.length - 1);
+  }
+
+  const index = Math.max(0, Math.min(turns.length - 1, Math.floor(rawTurn)));
   let next = index + direction;
   let roundDelta = 0;
 
@@ -205,6 +219,17 @@ function installCombatPatch() {
     };
     proto.setupTurns.__add2eD6LowFirstTurnsPatch = ADD2E_INITIATIVE_VERSION;
     proto.setupTurns.__add2eOriginal = originalSetupTurns;
+  }
+
+  if (proto.startCombat && proto.startCombat.__add2eD6LowFirstStartPatch !== ADD2E_INITIATIVE_VERSION) {
+    const originalStartCombat = proto.startCombat.__add2eOriginal ?? proto.startCombat;
+    proto.startCombat = async function add2eD6LowFirstStartCombat(...args) {
+      const result = await originalStartCombat.apply(this, args);
+      if (game?.system?.id === "add2e") await forceFirstSortedTurn(this, "startCombat");
+      return result;
+    };
+    proto.startCombat.__add2eD6LowFirstStartPatch = ADD2E_INITIATIVE_VERSION;
+    proto.startCombat.__add2eOriginal = originalStartCombat;
   }
 
   if (proto.nextTurn && proto.nextTurn.__add2eD6LowFirstNavigationPatch !== ADD2E_INITIATIVE_VERSION) {
@@ -340,12 +365,7 @@ function installInitiativeChatCard() {
   Hooks.on("preCreateChatMessage", (message, data) => {
     try {
       if (!isInitiativeMessage(message, data)) return;
-      message.updateSource?.({
-        content: initiativeChatContent(message, data),
-        flavor: "Initiative ADD2E",
-        "flags.add2e.initiativeRoll": true,
-        "flags.add2e.initiativeChatCardVersion": ADD2E_INITIATIVE_CHAT_VERSION
-      });
+      message.updateSource?.({ content: initiativeChatContent(message, data), flavor: "Initiative ADD2E", "flags.add2e.initiativeRoll": true, "flags.add2e.initiativeChatCardVersion": ADD2E_INITIATIVE_CHAT_VERSION });
     } catch (err) {
       console.warn(`${TAG}[CHAT][ERROR]`, err);
     }
@@ -461,18 +481,10 @@ function patchInitiativeIcons(root = document) {
     const scope = root?.jquery ? root[0] : root;
     if (!scope?.querySelectorAll) return 0;
     const selectors = [
-      "#combat-tracker .combatant button.combatant-control.roll",
-      "#combat .combatant button.combatant-control.roll",
-      ".combat-sidebar .combatant button.combatant-control.roll",
-      "#combat-tracker [data-combatant-id] button.combatant-control.roll",
-      "#combat [data-combatant-id] button.combatant-control.roll",
-      ".combat-sidebar [data-combatant-id] button.combatant-control.roll",
-      "#combat-tracker .combatant [data-action='rollInitiative']",
-      "#combat .combatant [data-action='rollInitiative']",
-      ".combat-sidebar .combatant [data-action='rollInitiative']",
-      "#combat-tracker [data-combatant-id] [data-action='rollInitiative']",
-      "#combat [data-combatant-id] [data-action='rollInitiative']",
-      ".combat-sidebar [data-combatant-id] [data-action='rollInitiative']"
+      "#combat-tracker .combatant button.combatant-control.roll", "#combat .combatant button.combatant-control.roll", ".combat-sidebar .combatant button.combatant-control.roll",
+      "#combat-tracker [data-combatant-id] button.combatant-control.roll", "#combat [data-combatant-id] button.combatant-control.roll", ".combat-sidebar [data-combatant-id] button.combatant-control.roll",
+      "#combat-tracker .combatant [data-action='rollInitiative']", "#combat .combatant [data-action='rollInitiative']", ".combat-sidebar .combatant [data-action='rollInitiative']",
+      "#combat-tracker [data-combatant-id] [data-action='rollInitiative']", "#combat [data-combatant-id] [data-action='rollInitiative']", ".combat-sidebar [data-combatant-id] [data-action='rollInitiative']"
     ];
     const elements = new Set();
     for (const selector of selectors) for (const el of scope.querySelectorAll(selector)) elements.add(el);
@@ -609,21 +621,16 @@ async function clearExistingMovementHistoryFlags() {
   if (!game.user?.isGM) return;
   const actorUpdates = [];
   for (const actor of game.actors ?? []) {
-    if (actor?.flags?.add2e?.movementTurnKey !== undefined || actor?.flags?.add2e?.movementSpentMeters !== undefined) {
-      actorUpdates.push({ _id: actor.id, "flags.add2e.-=movementTurnKey": null, "flags.add2e.-=movementSpentMeters": null });
-    }
+    if (actor?.flags?.add2e?.movementTurnKey !== undefined || actor?.flags?.add2e?.movementSpentMeters !== undefined) actorUpdates.push({ _id: actor.id, "flags.add2e.-=movementTurnKey": null, "flags.add2e.-=movementSpentMeters": null });
   }
   if (actorUpdates.length) await Actor.updateDocuments(actorUpdates, { add2eIgnoreMovementHistoryCleanup: true });
   for (const scene of game.scenes ?? []) {
     const tokenUpdates = [];
     for (const token of scene.tokens ?? []) {
-      if (token?.flags?.add2e?.lastAllowedPosition !== undefined || token?.flags?.add2e?.movementScale !== undefined) {
-        tokenUpdates.push({ _id: token.id, "flags.add2e.-=lastAllowedPosition": null, "flags.add2e.-=movementScale": null });
-      }
+      if (token?.flags?.add2e?.lastAllowedPosition !== undefined || token?.flags?.add2e?.movementScale !== undefined) tokenUpdates.push({ _id: token.id, "flags.add2e.-=lastAllowedPosition": null, "flags.add2e.-=movementScale": null });
     }
     if (tokenUpdates.length) await scene.updateEmbeddedDocuments("Token", tokenUpdates, { add2eIgnoreMovementHistoryCleanup: true });
   }
-  if (actorUpdates.length) console.log(`${TAG}[MOVE_HISTORY][CLEAN_ACTORS]`, actorUpdates.length);
 }
 
 function exposeGlobals() {
@@ -641,6 +648,7 @@ function exposeGlobals() {
   globalThis.add2eClearExistingMovementHistoryFlags = clearExistingMovementHistoryFlags;
   globalThis.add2eCleanupMovementHistoryHooks = cleanupMovementHistoryHooks;
   globalThis.add2eClearFoundryMovementTrail = clearFoundryMovementTrail;
+  globalThis.add2eForceFirstSortedTurn = forceFirstSortedTurn;
   globalThis.triInitiativeAscendant = sortInitiativeAscending;
 }
 
@@ -653,7 +661,11 @@ function installHooks() {
   Hooks.on("deleteCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatant.combat ?? game.combat); });
   Hooks.on("updateCombat", (combat, changes, options) => {
     if (options?.add2eInitiativeSort) return;
-    if (foundry.utils.hasProperty(changes ?? {}, "turn") || foundry.utils.hasProperty(changes ?? {}, "round") || foundry.utils.hasProperty(changes ?? {}, "current") || foundry.utils.hasProperty(changes ?? {}, "started")) {
+    if (foundry.utils.hasProperty(changes ?? {}, "started") && combat?.started) {
+      setTimeout(() => forceFirstSortedTurn(combat, "updateCombat-started"), 80);
+      return;
+    }
+    if (foundry.utils.hasProperty(changes ?? {}, "turn") || foundry.utils.hasProperty(changes ?? {}, "round") || foundry.utils.hasProperty(changes ?? {}, "current")) {
       applyAscendingTurns(combat);
       scheduleHudFollow(combat, { forceOpen: false, reason: "updateCombat" });
       scheduleClearMovementTrail();
@@ -683,7 +695,7 @@ Hooks.once("init", configureInitiative);
 
 Hooks.once("ready", () => {
   configureInitiative();
-  cleanupLegacyInitiativeHooks();
+  cleanupLegacyHooks();
   installCombatPatch();
   installMovementHistoryBlock();
   exposeGlobals();
