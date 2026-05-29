@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04-attack-roll.mjs
 // ADD2E — Résolution des attaques.
-// Version : 2026-05-29-attack-roll-split-v1
+// Version : 2026-05-29-attack-roll-v14-target-actor-v2
 
 import { plageToRollFormula } from "./01-core-helpers.mjs";
 import { add2eApplyDamage } from "./02-damage.mjs";
@@ -49,6 +49,41 @@ function add2eAttackHtmlEscape(value) {
   const div = document.createElement("div");
   div.innerText = String(value ?? "");
   return div.innerHTML;
+}
+
+function add2eReadSystemNumber(system, ...paths) {
+  for (const path of paths) {
+    let value = system?.[path];
+    if (value === undefined && typeof foundry?.utils?.getProperty === "function") value = foundry.utils.getProperty(system, path);
+    const n = add2eReadStrictNumber(value);
+    if (n !== null) return { value: n, path };
+  }
+  return { value: null, path: null };
+}
+
+function add2eResolveAttackTokenActor(tokenLike) {
+  const tokenObject = tokenLike?.object ?? tokenLike;
+  const tokenDocument = tokenObject?.document ?? tokenLike?.document ?? tokenLike;
+
+  const candidates = [
+    tokenDocument?.actor,
+    tokenObject?.actor,
+    tokenDocument?.actorId ? game.actors?.get?.(tokenDocument.actorId) : null,
+    tokenObject?.actorId ? game.actors?.get?.(tokenObject.actorId) : null
+  ].filter(Boolean);
+
+  return candidates[0] ?? null;
+}
+
+function add2eResolveAttackSourceToken(actor) {
+  const controlled = canvas?.tokens?.controlled ?? [];
+  const controlledMatch = controlled.find(t => t?.actor?.id === actor?.id || t?.document?.actorId === actor?.id);
+  if (controlledMatch) return controlledMatch;
+
+  const active = actor?.getActiveTokens?.()?.[0];
+  if (active) return active;
+
+  return actor?.token?.object ?? actor?.token ?? null;
 }
 
 function add2eResolveAttackThac0(actor) {
@@ -111,13 +146,25 @@ function add2eResolveTargetArmorClass({ cible, actor, arme, isTouchAttack }) {
       console.warn("[ADD2E][ATTAQUE][CA][TOKEN_STORED_CA_STALE][V25]", { cible: nomCible, attaqueContact: isTouchAttack, caUtilisee: caBaseCible, formule: caComputedDetails, valeursStockeesSurToken: caComputedDetails.stored, note: "system.ca_total du token est ignoré car il ne correspond pas à la CA affichée/calculée." });
     }
   } else {
-    caSourceCible = "system.armorClass";
-    caBaseCible = add2eReadStrictNumber(sysCible.armorClass);
+    const acRead = add2eReadSystemNumber(
+      sysCible,
+      "armorClass",
+      "ca_total",
+      "ca",
+      "ac",
+      "ca_naturel",
+      "defense.armorClass",
+      "defense.ca",
+      "combat.armorClass",
+      "combat.ca"
+    );
+    caSourceCible = acRead.path ? `system.${acRead.path}` : "system.armorClass|ca_total|ca|ac";
+    caBaseCible = acRead.value;
   }
 
   if (caBaseCible === null) {
     ui.notifications.error(`${nomCible} : CA absente. Corrige le JSON / les données acteur : ${caSourceCible}.`);
-    console.error("[ADD2E][ATTAQUE][CA][MISSING_OR_INVALID]", { cible: nomCible, type: cible.type, attendu: caSourceCible, attaqueContact: isTouchAttack, valeurs: { ca: sysCible.ca, armorClass: sysCible.armorClass, ca_total: sysCible.ca_total, ca_naturel: sysCible.ca_naturel }, system: sysCible });
+    console.error("[ADD2E][ATTAQUE][CA][MISSING_OR_INVALID]", { cible: nomCible, type: cible.type, attendu: caSourceCible, attaqueContact: isTouchAttack, valeurs: { ca: sysCible.ca, armorClass: sysCible.armorClass, ac: sysCible.ac, ca_total: sysCible.ca_total, ca_naturel: sysCible.ca_naturel }, system: sysCible });
     return null;
   }
 
@@ -156,12 +203,35 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   if (!arme) return ui.notifications.warn("Arme introuvable !");
   if (!arme.system.equipee) return ui.notifications.warn(`L'arme "${arme.name}" n'est pas équipée !`);
 
-  const srcToken = actor?.token?.object ?? actor.getActiveTokens()[0];
-  const chatImg = srcToken?.document.texture.src || actor.img;
+  const srcToken = add2eResolveAttackSourceToken(actor);
+  const chatImg = srcToken?.document?.texture?.src || srcToken?.texture?.src || actor.img;
 
-  const cibleToken = Array.from(game.user.targets)[0];
-  const cible = cibleToken ? cibleToken.actor : null;
+  const cibleToken = Array.from(game.user.targets ?? [])[0];
   if (!cibleToken) return ui.notifications.warn("Aucune cible sélectionnée !");
+
+  const cible = add2eResolveAttackTokenActor(cibleToken);
+  if (!cible) {
+    console.error("[ADD2E][ATTAQUE][TARGET][NO_ACTOR]", { cibleToken, document: cibleToken?.document });
+    return ui.notifications.warn("La cible sélectionnée n'a pas d'acteur utilisable.");
+  }
+
+  console.log("[ADD2E][ATTAQUE][TARGET][RESOLVED]", {
+    foundry: game?.version ?? game?.release?.version,
+    token: cibleToken?.name ?? cibleToken?.document?.name,
+    actor: cible?.name,
+    actorType: cible?.type,
+    actorId: cible?.id,
+    tokenActorId: cibleToken?.actor?.id ?? null,
+    documentActorId: cibleToken?.document?.actor?.id ?? null,
+    tokenDocumentActorId: cibleToken?.document?.actorId ?? null,
+    armorValues: {
+      armorClass: cible?.system?.armorClass,
+      ca_total: cible?.system?.ca_total,
+      ca: cible?.system?.ca,
+      ac: cible?.system?.ac,
+      ca_naturel: cible?.system?.ca_naturel
+    }
+  });
 
   const { distanceCible, auContact } = add2eAttackMeasureContactAndDistance({
     srcToken,
@@ -354,6 +424,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         arme: arme?.name,
         position: activePositionInfo?.label,
         caBaseCible,
+        caSourceCible: acData.caSourceCible,
         caAvantPosition,
         caAvantConditionnelle,
         caFinaleCible,
