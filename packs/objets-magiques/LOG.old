@@ -1,5 +1,7 @@
-2026/05/28-09:23:11.433499 7f857aefc0 Log #100: 0 ops saved to Table #103 OK
-2026/05/28-09:23:11.433616 7f857aefc0 Archiving /data/Data/systems/add2e/packs/objets-magiques/000100.log: OK
-2026/05/28-09:23:11.437248 7f857aefc0 Table #102: 299 entries OK
-2026/05/28-09:23:11.437617 7f857aefc0 Archiving /data/Data/systems/add2e/packs/objets-magiques/MANIFEST-000098: OK
-2026/05/28-09:23:11.446426 7f857aefc0 **** Repaired leveldb /data/Data/systems/add2e/packs/objets-magiques; recovered 1 files; 769761 bytes. Some data may have been lost. ****
+2026/05/29-17:52:13.556814 7f857aefc0 Recovering log #111
+2026/05/29-17:52:13.572319 7f857aefc0 Delete type=0 #111
+2026/05/29-17:52:13.572375 7f857aefc0 Delete type=3 #109
+2026/05/29-18:39:09.351667 7d6eabefc0 Level-0 table #116: started
+2026/05/29-18:39:09.351702 7d6eabefc0 Level-0 table #116: 0 bytes OK
+2026/05/29-18:39:09.357979 7d6eabefc0 Delete type=0 #114
+2026/05/29-18:39:09.364299 7d6eabefc0 Manual compaction at level-0 from '!folders!3n7PaHvhAAdrG3dB' @ 72057594037927935 : 1 .. '!items.effects!edTSa3rYSJhUgHYJ.bYwZBpndlyDzBNlB' @ 0 : 0; will stop at (end)

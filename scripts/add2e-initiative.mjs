@@ -195,8 +195,7 @@ function initiativeChatContent(message, data = {}) {
         </div>
       </div>
       <div style="margin-top:8px;font-size:12px;color:#ead6b0;display:flex;justify-content:space-between;gap:10px;">
-        <span>Ordre ADD2E : initiative basse en premier.</span>
-        <span style="white-space:nowrap;">1d6</span>
+       <span style="white-space:nowrap;">1d6</span>
       </div>
     </div>`;
 }

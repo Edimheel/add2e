@@ -1,5 +1,7 @@
-2026/05/28-09:23:11.369008 7f84f9efc0 Log #336: 0 ops saved to Table #339 OK
-2026/05/28-09:23:11.369131 7f84f9efc0 Archiving /data/Data/systems/add2e/packs/armures/000336.log: OK
-2026/05/28-09:23:11.369287 7f84f9efc0 Table #338: 24 entries OK
-2026/05/28-09:23:11.369425 7f84f9efc0 Archiving /data/Data/systems/add2e/packs/armures/MANIFEST-000334: OK
-2026/05/28-09:23:11.406441 7f84f9efc0 **** Repaired leveldb /data/Data/systems/add2e/packs/armures; recovered 1 files; 9008 bytes. Some data may have been lost. ****
+2026/05/29-17:52:13.535681 7f6fffefc0 Recovering log #347
+2026/05/29-17:52:13.551019 7f6fffefc0 Delete type=3 #345
+2026/05/29-17:52:13.551094 7f6fffefc0 Delete type=0 #347
+2026/05/29-18:39:09.344860 7d6eabefc0 Level-0 table #352: started
+2026/05/29-18:39:09.344901 7d6eabefc0 Level-0 table #352: 0 bytes OK
+2026/05/29-18:39:09.351589 7d6eabefc0 Delete type=0 #350
+2026/05/29-18:39:09.364274 7d6eabefc0 Manual compaction at level-0 from '!items!12r50m5xuimVbKF4' @ 72057594037927935 : 1 .. '!items!vQ7U4J67mE2g6G5h' @ 0 : 0; will stop at (end)
