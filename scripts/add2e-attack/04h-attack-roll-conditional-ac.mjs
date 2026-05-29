@@ -1,5 +1,6 @@
 // scripts/add2e-attack/04h-attack-roll-conditional-ac.mjs
 // ADD2E — CA conditionnelle pour les attaques.
+// Version : 2026-05-29-no-generic-fixed-ac-for-melee-v1
 
 export function add2eAttackConditionalACSubtype({ arme, combatProfile, isDistance, hasTag }) {
   const tags = combatProfile?.tags instanceof Set ? combatProfile.tags : new Set(combatProfile?.tags ?? []);
@@ -14,7 +15,7 @@ export function add2eAttackConditionalACSubtype({ arme, combatProfile, isDistanc
     has("usage:projectile_propulse", "categorie:projectile_propulse", "trait:projectile_propulse", "type:projectile_propulse") ||
     /\b(arc|arbalete|fronde|fleche|flechette|carreau|trait)\b/.test(weaponName)
   ) {
-    return { sousType: "projectile_propulse", label: "projectile propulsé" };
+    return { sousType: "projectile_propulse", label: "projectile propulsé", conditional: true };
   }
 
   if (
@@ -22,11 +23,21 @@ export function add2eAttackConditionalACSubtype({ arme, combatProfile, isDistanc
     has("usage:lancer", "usage:jet", "usage:arme_de_jet", "categorie:projectile_lance", "trait:arme_de_jet", "type:arme_de_jet") ||
     /\b(javelot|hachette|dague|couteau|pierre|lance)\b/.test(weaponName)
   ) {
-    return { sousType: "projectile_lance", label: "projectile lancé à la main" };
+    return { sousType: "projectile_lance", label: "projectile lancé à la main", conditional: true };
   }
 
-  if (isDistance) return { sousType: "projectile_propulse", label: "projectile" };
-  return { sousType: "autres", label: "attaque" };
+  if (isDistance) return { sousType: "projectile_propulse", label: "projectile", conditional: true };
+  return { sousType: "autres", label: "attaque de mêlée", conditional: false };
+}
+
+function add2eAttackIsExplicitConditionalFixedAC(info, sousType) {
+  const tag = String(info?.sourceTag ?? "").toLowerCase();
+  if (!tag) return false;
+
+  if (sousType === "projectile_lance") return tag.startsWith("ca_fixe_projectile_lance:") || tag.startsWith("ca_fixe_conditionnelle:projectile_lance:");
+  if (sousType === "projectile_propulse") return tag.startsWith("ca_fixe_projectile_propulse:") || tag.startsWith("ca_fixe_conditionnelle:projectile_propulse:");
+
+  return tag.startsWith(`ca_fixe_conditionnelle:${sousType}:`);
 }
 
 export function add2eAttackResolveConditionalFixedAC({ cible, arme, combatProfile, isDistance, positionInfo, caBefore, hasTag }) {
@@ -39,6 +50,19 @@ export function add2eAttackResolveConditionalFixedAC({ cible, arme, combatProfil
     arme: arme?.name ?? "",
     source: "attack-roll"
   };
+
+  if (!attackSubtype.conditional) {
+    return {
+      applied: false,
+      ca: caBefore,
+      normalCA,
+      fixedCA: null,
+      attackSubtype,
+      context,
+      details: null,
+      detail: ""
+    };
+  }
 
   let fixedInfo = null;
   let fixedCA = null;
@@ -58,12 +82,12 @@ export function add2eAttackResolveConditionalFixedAC({ cible, arme, combatProfil
     console.warn("[ADD2E][ATTAQUE][CA_CONDITIONNELLE][ERROR]", err);
   }
 
-  if (!Number.isFinite(fixedCA)) {
+  if (!Number.isFinite(fixedCA) || !add2eAttackIsExplicitConditionalFixedAC(fixedInfo, attackSubtype.sousType)) {
     return {
       applied: false,
       ca: caBefore,
       normalCA,
-      fixedCA: null,
+      fixedCA: Number.isFinite(fixedCA) ? fixedCA : null,
       attackSubtype,
       context,
       details: fixedInfo,
