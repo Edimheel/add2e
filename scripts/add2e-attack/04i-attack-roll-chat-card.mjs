@@ -1,8 +1,8 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Rendu des messages d'attaque.
-// Version : 2026-05-29-attack-chat-return-gm-send-player-v5
+// Version : 2026-05-29-attack-chat-render-visibility-v6
 
-const ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = "2026-05-29-attack-chat-return-gm-send-player-v5";
+const ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = "2026-05-29-attack-chat-render-visibility-v6";
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = ADD2E_ATTACK_CHAT_VISIBILITY_VERSION;
 
 function esc(value) {
@@ -32,28 +32,24 @@ function roleplay(ctx) {
   const t = esc(ctx.nomCible ?? ctx.cible?.name ?? "la cible");
   const w = esc(ctx.arme?.name ?? "son arme");
   const o = outcome(ctx);
-
   if (o.key === "natural20") return pick([
     `${a} trouve une ouverture parfaite : ${w} frappe avec une précision remarquable.`,
     `Le geste de ${a} est net, presque trop rapide à suivre. ${t} encaisse un coup d’exception.`,
     `La fortune sourit à ${a} : l’attaque passe au moment exact où la défense cède.`,
     `${a} transforme son attaque en coup magistral. ${t} est pris de court.`
   ]);
-
   if (o.key === "natural1") return pick([
     `${a} se précipite et son attaque tourne court dans un déséquilibre dangereux.`,
     `Le coup part mal : ${w} manque sa trajectoire et laisse ${a} exposé.`,
     `Un faux mouvement ruine l’assaut de ${a}. ${t} échappe à l’attaque sans effort.`,
     `${a} tente une manœuvre trop ambitieuse ; l’attaque se transforme en échec critique.`
   ]);
-
   if (o.hit) return pick([
     `${a} force la garde de ${t} et place son attaque.`,
     `${w} trouve son chemin malgré la défense de ${t}.`,
     `${a} ajuste son geste et touche ${t}.`,
     `L’attaque de ${a} passe : ${t} subit le choc.`
   ]);
-
   return pick([
     `${t} évite l’attaque de justesse.`,
     `${a} frappe, mais ${t} parvient à détourner le danger.`,
@@ -89,13 +85,27 @@ function preferredPlayerUserId() {
   return playerUsers().find(u => u.active)?.id ?? playerUsers()[0]?.id ?? game.user?.id ?? null;
 }
 
-function forceAttackChatVisibility(message, data = {}) {
-  const content = String(data.content ?? message?.content ?? "");
-  const isPlayerCard = content.includes("add2e-attack-chat-card-player-v5");
-  const isGmCard = content.includes("add2e-attack-chat-card-gm-v5");
-  if (!isPlayerCard && !isGmCard) return;
+function isPlayerCardContent(content = "") {
+  return String(content).includes("add2e-attack-chat-card-player-v6") || String(content).includes("add2e-attack-chat-card-player-v5") || String(content).includes("add2e-attack-chat-card-player-v4");
+}
 
-  if (isPlayerCard) {
+function isGmCardContent(content = "") {
+  return String(content).includes("add2e-attack-chat-card-gm-v6") || String(content).includes("add2e-attack-chat-card-gm-v5") || String(content).includes("add2e-attack-chat-card-gm-v4");
+}
+
+function attackVisibilityFromMessage(message, data = {}) {
+  const flag = foundry.utils.getProperty(message, "flags.add2e.attackChatVisibility") ?? foundry.utils.getProperty(data, "flags.add2e.attackChatVisibility");
+  if (flag === "players-only" || flag === "gm-only") return flag;
+  const content = String(data.content ?? message?.content ?? "");
+  if (isPlayerCardContent(content)) return "players-only";
+  if (isGmCardContent(content)) return "gm-only";
+  return null;
+}
+
+function forceAttackChatVisibility(message, data = {}) {
+  const visibility = attackVisibilityFromMessage(message, data);
+  if (!visibility) return;
+  if (visibility === "players-only") {
     const update = {
       whisper: playerIds(),
       blind: false,
@@ -107,7 +117,6 @@ function forceAttackChatVisibility(message, data = {}) {
     message.updateSource?.(update);
     return;
   }
-
   const update = {
     whisper: gmIds(),
     blind: true,
@@ -119,10 +128,50 @@ function forceAttackChatVisibility(message, data = {}) {
   message.updateSource?.(update);
 }
 
+function normalizeHtml(html) {
+  if (!html) return null;
+  if (html.jquery) return html[0] ?? null;
+  if (html instanceof HTMLElement) return html;
+  if (Array.isArray(html)) return html[0] ?? null;
+  return html?.querySelector ? html : null;
+}
+
+function hideChatHtml(html) {
+  const el = normalizeHtml(html);
+  if (!el) return;
+  const target = el.closest?.(".chat-message") ?? el;
+  try { target.style.display = "none"; } catch (_e) {}
+  try { target.remove?.(); } catch (_e) {}
+}
+
+function filterAttackChatRender(message, html) {
+  const visibility = attackVisibilityFromMessage(message, { content: message?.content, flags: message?.flags });
+  if (!visibility) return;
+  if (visibility === "players-only" && game.user?.isGM) hideChatHtml(html);
+  if (visibility === "gm-only" && !game.user?.isGM) hideChatHtml(html);
+}
+
+function pruneRenderedAttackCards() {
+  try {
+    const nodes = document.querySelectorAll(".add2e-attack-chat-card-player-v6,.add2e-attack-chat-card-player-v5,.add2e-attack-chat-card-player-v4,.add2e-attack-chat-card-gm-v6,.add2e-attack-chat-card-gm-v5,.add2e-attack-chat-card-gm-v4");
+    for (const card of nodes) {
+      const isPlayer = card.classList.contains("add2e-attack-chat-card-player-v6") || card.classList.contains("add2e-attack-chat-card-player-v5") || card.classList.contains("add2e-attack-chat-card-player-v4");
+      const isGm = card.classList.contains("add2e-attack-chat-card-gm-v6") || card.classList.contains("add2e-attack-chat-card-gm-v5") || card.classList.contains("add2e-attack-chat-card-gm-v4");
+      if ((isPlayer && game.user?.isGM) || (isGm && !game.user?.isGM)) hideChatHtml(card);
+    }
+  } catch (_e) {}
+}
+
 function installAttackChatVisibilityGuard() {
   if (globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD === ADD2E_ATTACK_CHAT_VISIBILITY_VERSION) return;
   globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = ADD2E_ATTACK_CHAT_VISIBILITY_VERSION;
   Hooks.on("preCreateChatMessage", forceAttackChatVisibility);
+  Hooks.on("renderChatMessage", filterAttackChatRender);
+  Hooks.on("renderChatMessageHTML", filterAttackChatRender);
+  Hooks.once("ready", () => {
+    setTimeout(pruneRenderedAttackCards, 250);
+    setTimeout(pruneRenderedAttackCards, 1000);
+  });
 }
 
 installAttackChatVisibilityGuard();
@@ -147,7 +196,7 @@ function chip(label, value, color = "#5d3d0d") {
 function buildPublicCard(ctx) {
   const o = outcome(ctx);
   const showDamage = !!ctx.finalResult && Number(ctx.degats) > 0;
-  return [`<div class="add2e-chat-card add2e-attack-chat-card-player-v5" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
+  return [`<div class="add2e-chat-card add2e-attack-chat-card-player-v6" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
     `<div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;">`,
     `<i class="fas ${o.icon}" style="font-size:1.22rem;color:#ffd978;"></i>`,
     `<div style="min-width:0;flex:1;"><div style="font-size:1.04rem;font-weight:950;line-height:1.1;">Attaque</div><div style="font-size:.78rem;font-weight:750;color:#f7e3b1;line-height:1.18;margin-top:2px;">${esc(ctx.actor?.name)} attaque ${esc(ctx.nomCible)} avec ${esc(ctx.arme?.name)}</div></div>`,
@@ -197,7 +246,7 @@ function buildGmCard(ctx) {
   ].filter(Boolean).join("") : `<div>Aucun dommage : l’attaque ne touche pas.</div>`;
   const assassination = ctx.assassinatResult ? `<div style="border:1px solid ${ctx.assassinatResult.success ? "#1f8f4d" : "#b3261e"};background:${ctx.assassinatResult.success ? "#eefaf2" : "#fff1f0"};border-radius:8px;padding:7px;margin-bottom:10px;text-align:center;"><div style="font-weight:900;color:${ctx.assassinatResult.success ? "#1f8f4d" : "#b3261e"};">Assassinat ${ctx.assassinatResult.success ? "réussi" : "échoué"}</div><div style="font-size:.92em;">Jet : <b>${esc(ctx.assassinatResult.total)}</b> / Score : <b>${esc(ctx.assassinatResult.finalScore)}%</b></div><div style="font-size:.82em;color:#666;">${esc(ctx.assassinationInfo?.breakdownTitle ?? "")}</div></div>` : "";
 
-  return [`<div class="add2e-chat-card add2e-attack-chat-card-gm-v5" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
+  return [`<div class="add2e-chat-card add2e-attack-chat-card-gm-v6" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
     `<div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;"><i class="fas ${o.icon}" style="font-size:1.22rem;color:#ffd978;"></i><div style="min-width:0;flex:1;"><div style="font-size:1.04rem;font-weight:950;line-height:1.1;">Attaque — MJ</div><div style="font-size:.78rem;font-weight:750;color:#f7e3b1;line-height:1.18;margin-top:2px;">${esc(ctx.actor?.name)} attaque ${esc(ctx.nomCible)} avec ${esc(ctx.arme?.name)}</div></div><div style="white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${o.color};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.86rem;">${esc(o.title)}</div></div>`,
     `<div style="padding:10px;">`,
     `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px;">${chip("Portée", `${esc(ctx.descPortee || "—")} <span style=\"font-size:.78rem;color:#7b6a40;\">${esc(ctx.typePortee || "")}</span>`)}${chip("Seuil", esc(ctx.seuilFinalD20), "#c06000")}${chip("Issue", esc(o.title), o.color)}</div>`,
