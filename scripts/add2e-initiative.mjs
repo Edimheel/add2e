@@ -3,11 +3,11 @@
 // Règle gérée ici : initiative simple au d6, ordre ascendant.
 // Surprise volontairement non gérée dans ce module.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-turn-lock-clear-move-history-v5";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-turn-lock-clear-move-history-v6";
 const TAG = "[ADD2E][INIT]";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 
-const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-clear-move-history-v5";
+const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-clear-move-history-v6";
 const ADD2E_INIT_CHAT_CARD_VERSION = "2026-05-28-init-chat-card-v1";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
@@ -297,7 +297,8 @@ function add2eClearObjectMovementState(obj) {
   const clearArrayKeys = [
     "movementHistory", "movement", "path", "waypoints", "segments",
     "_movementHistory", "_movement", "_path", "_waypoints", "_segments",
-    "_dragPath", "_rulerPath", "_movementPath", "_previewPath"
+    "_dragPath", "_rulerPath", "_movementPath", "_previewPath",
+    "_priorMovement", "priorMovement", "_movementSegments", "movementSegments"
   ];
 
   for (const key of clearArrayKeys) {
@@ -307,7 +308,7 @@ function add2eClearObjectMovementState(obj) {
     } catch (_e) {}
   }
 
-  for (const key of ["_preview", "preview", "_dragRuler", "dragRuler", "_movementPreview", "movementPreview"]) {
+  for (const key of ["_preview", "preview", "_dragRuler", "dragRuler", "_movementPreview", "movementPreview", "_movementHistoryPreview", "movementHistoryPreview"]) {
     try {
       if (obj[key]?.clear instanceof Function) obj[key].clear();
       else if (obj[key]?.destroy instanceof Function) obj[key].destroy({ children: true });
@@ -317,7 +318,7 @@ function add2eClearObjectMovementState(obj) {
 }
 
 function add2eClearMovementHighlightLayers() {
-  const layerNames = ["movement", "move", "ruler", "ruler-history", "movement-history", "token-movement", "token-ruler", "drag-ruler", "add2e-movement"];
+  const layerNames = ["movement", "move", "ruler", "ruler-history", "movement-history", "token-movement", "token-ruler", "drag-ruler", "add2e-movement", "Token.ruler", "Ruler", "MeasureTemplate"];
   for (const name of layerNames) {
     try { canvas?.interface?.grid?.clearHighlightLayer?.(name); } catch (_e) {}
     try { canvas?.grid?.clearHighlightLayer?.(name); } catch (_e) {}
@@ -345,7 +346,7 @@ function add2eClearTokenMovementHistory(tokenDocument = null) {
       add2eClearObjectMovementState(token?.document);
       token?._onDragLeftCancel?.({});
       token?.mouseInteractionManager?.cancel?.();
-      token?.renderFlags?.set?.({ refresh: true, refreshPosition: true });
+      token?.renderFlags?.set?.({ refresh: true, refreshPosition: true, refreshState: true });
       token?.refresh?.();
     } catch (_e) {}
   }
@@ -356,8 +357,12 @@ function add2eClearTokenMovementHistory(tokenDocument = null) {
   try { canvas?.perception?.update?.({ refresh: true }, true); } catch (_e) {}
 }
 
+function add2eScheduleClearTokenMovementHistory(tokenDocument = null, delays = [0, 60, 180, 350]) {
+  for (const delay of delays) window.setTimeout(() => add2eClearTokenMovementHistory(tokenDocument), delay);
+}
+
 function add2eClearDeniedMovementPreview(tokenDocument = null) {
-  window.setTimeout(() => add2eClearTokenMovementHistory(tokenDocument), 0);
+  add2eScheduleClearTokenMovementHistory(tokenDocument, [0, 30, 120, 260]);
 }
 
 function add2eInstallMovementTurnLock() {
@@ -380,8 +385,7 @@ function add2eInstallMovementTurnLock() {
   Hooks.on("updateToken", (tokenDocument, changes, options, userId) => {
     try {
       if (!add2eHasMovementChange(changes)) return;
-      window.setTimeout(() => add2eClearTokenMovementHistory(tokenDocument), 30);
-      window.setTimeout(() => add2eClearTokenMovementHistory(tokenDocument), 180);
+      add2eScheduleClearTokenMovementHistory(tokenDocument, [30, 180, 420]);
     } catch (err) {
       console.warn(`${TAG}[TURN_LOCK][MOVE_HISTORY_AFTER_UPDATE][ERROR]`, err);
     }
@@ -389,12 +393,18 @@ function add2eInstallMovementTurnLock() {
 
   Hooks.on("hoverToken", (token, hovered) => {
     if (!hovered || !add2eIsCombatActive()) return;
-    add2eClearTokenMovementHistory(token?.document ?? token);
+    const tokenDocument = token?.document ?? token;
+    add2eScheduleClearTokenMovementHistory(tokenDocument, [0, 60, 180, 350]);
   });
 
   Hooks.on("controlToken", token => {
     if (!add2eIsCombatActive()) return;
-    add2eClearTokenMovementHistory(token?.document ?? token);
+    add2eScheduleClearTokenMovementHistory(token?.document ?? token, [0, 80, 220]);
+  });
+
+  Hooks.on("highlightToken", token => {
+    if (!add2eIsCombatActive()) return;
+    add2eScheduleClearTokenMovementHistory(token?.document ?? token, [0, 80, 220]);
   });
 }
 
@@ -434,6 +444,7 @@ function add2eExposeInitiativeGlobals() {
   globalThis.add2eCanTokenActNow = add2eCanTokenActNow;
   globalThis.add2eClearDeniedMovementPreview = add2eClearDeniedMovementPreview;
   globalThis.add2eClearTokenMovementHistory = add2eClearTokenMovementHistory;
+  globalThis.add2eScheduleClearTokenMovementHistory = add2eScheduleClearTokenMovementHistory;
   globalThis.triInitiativeAscendant = add2eSortInitiativeAscending;
 }
 
