@@ -1,7 +1,7 @@
 // scripts/add2e-attack/02-damage.mjs
 // ADD2E — Application des dégâts.
 
-export const ADD2E_DAMAGE_VERSION = "2026-05-27-token-namespace-status-v2";
+export const ADD2E_DAMAGE_VERSION = "2026-05-29-delegate-vital-status-sync-v1";
 
 function add2eDamageNormTag(value) {
   return String(value ?? "")
@@ -99,26 +99,6 @@ function add2eDamageTokenId(cible) {
   if (TokenClass && cible instanceof TokenClass) return cible.id;
   if (cible.documentName === "Token" || cible.constructor?.name === "TokenDocument") return cible.id;
   return null;
-}
-
-function add2eDamageCanUseStatusEffect(id) {
-  if (!id) return false;
-  const effects = CONFIG?.statusEffects ?? [];
-  const entry = effects.find(e => e.id === id || e._id === id || e.statuses?.has?.(id));
-  if (!entry) return false;
-  return !!entry._id || !!entry.id;
-}
-
-async function add2eDamageToggleStatus(actor, id, options) {
-  if (!actor?.toggleStatusEffect || !add2eDamageCanUseStatusEffect(id)) return false;
-  try {
-    await actor.toggleStatusEffect(id, options);
-    return true;
-  } catch (err) {
-    const msg = String(err?.message ?? err ?? "");
-    if (msg.includes("implicit statuses must have a static _id")) return false;
-    throw err;
-  }
 }
 
 async function add2eDamageRollSave(actor, bonus) {
@@ -229,22 +209,8 @@ export async function add2eApplyDamage({ cible, montant, type = "", details = ""
   await actor.update({ "system.pdv": newHP });
   await add2eDamageColdChat(actor, cold);
 
-  try {
-    const DEAD_STATUS = "dead";
-    const UNCONSCIOUS_STATUS = "unconscious";
-
-    if (newHP <= -11) {
-      await add2eDamageToggleStatus(actor, UNCONSCIOUS_STATUS, { active: false, overlay: false });
-      await add2eDamageToggleStatus(actor, DEAD_STATUS, { active: true, overlay: true });
-    } else if (newHP <= 0) {
-      await add2eDamageToggleStatus(actor, DEAD_STATUS, { active: false, overlay: false });
-      await add2eDamageToggleStatus(actor, UNCONSCIOUS_STATUS, { active: true, overlay: true });
-    } else {
-      await add2eDamageToggleStatus(actor, DEAD_STATUS, { active: false, overlay: false });
-      await add2eDamageToggleStatus(actor, UNCONSCIOUS_STATUS, { active: false, overlay: false });
-    }
-  } catch (e) {
-    console.warn("ADD2E SOCKET | Erreur mise à jour overlay HP :", e);
+  if (typeof globalThis.add2eSyncActorVitalStatus === "function") {
+    await globalThis.add2eSyncActorVitalStatus(actor, { reason: "damage" });
   }
 
   ui.notifications.info(`${actor.name} prend ${dmg} dégât(s).`);
