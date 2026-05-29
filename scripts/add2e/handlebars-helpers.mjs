@@ -191,6 +191,85 @@ function add2eHbsSpellMaterialSlugs(sort) {
   return add2eHbsSpellMaterialEntries(sort).map(entry => entry.slug).filter(Boolean);
 }
 
+function add2eHbsSigned(value) {
+  const n = Number(value || 0);
+  return `${n >= 0 ? "+" : ""}${n}`;
+}
+
+function add2eHbsNumeric(value) {
+  const n = Number(value ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function add2eHbsWeaponMagicBonus(arme, kind) {
+  try {
+    if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function") {
+      return Number(Add2eEffectsEngine.getMagicWeaponBonus(arme, kind)) || 0;
+    }
+  } catch (_e) {}
+  return kind === "damage" ? add2eHbsNumeric(arme?.system?.bonus_dom) : add2eHbsNumeric(arme?.system?.bonus_hit);
+}
+
+function add2eHbsEquippedArmorPieces(actor) {
+  const items = add2eHbsAsArray(actor?.items?.contents ?? actor?.items ?? []);
+  return items.filter(item => String(item?.type ?? "") === "armure" && add2eHbsItemEquipped(item));
+}
+
+function add2eHbsArmorOtherBonus(actor, key) {
+  return add2eHbsEquippedArmorPieces(actor).reduce((sum, item) => sum + add2eHbsNumeric(item?.system?.[key]), 0);
+}
+
+function add2eHbsWeaponAbilityBonuses(actor, arme) {
+  const sys = actor?.system ?? {};
+  const type = String(arme?.system?.type_degats ?? "").toLowerCase();
+  const isMelee = type.includes("tranchant") || type.includes("contondant");
+  const isPiercing = type.includes("perforant");
+  if (isMelee) return { hit: add2eHbsNumeric(sys.force_bonus_toucher), damage: add2eHbsNumeric(sys.force_bonus_degats), label: "FOR" };
+  if (isPiercing) return { hit: add2eHbsNumeric(sys.dex_att), damage: add2eHbsNumeric(sys.dex_att), label: "DEX" };
+  return { hit: 0, damage: 0, label: "—" };
+}
+
+function add2eHbsEquippedWeaponRows(actor, listeArmes, listeObjets, combatDefense) {
+  const armes = add2eHbsAsArray(listeArmes).filter(arme => add2eHbsItemEquipped(arme));
+  const thacoBase = add2eHbsNumeric(combatDefense?.thaco ?? actor?.system?.thac0 ?? 20);
+  const otherHit = add2eHbsArmorOtherBonus(actor, "bonus_toucher");
+  const otherDamage = add2eHbsArmorOtherBonus(actor, "bonus_degats");
+
+  return armes.map(arme => {
+    const ability = add2eHbsWeaponAbilityBonuses(actor, arme);
+    const magicHit = add2eHbsWeaponMagicBonus(arme, "hit");
+    const magicDamage = add2eHbsWeaponMagicBonus(arme, "damage");
+    const totalHit = magicHit + ability.hit + otherHit;
+    const totalDamage = magicDamage + ability.damage + otherDamage;
+    const thacoEffectif = thacoBase - totalHit;
+    return {
+      id: arme?._id ?? arme?.id ?? "",
+      name: arme?.name ?? "Arme",
+      damage: add2eHbsWeaponRequiresProjectile(arme) ? (add2eHbsFindEquippedProjectile(listeObjets) ? add2eHbsDisplayDamageForItem(add2eHbsFindEquippedProjectile(listeObjets)) : add2eHbsDisplayDamageForItem(arme)) : add2eHbsDisplayDamageForItem(arme),
+      type: arme?.system?.type_degats ?? "",
+      abilityLabel: ability.label,
+      magicHit,
+      magicDamage,
+      abilityHit: ability.hit,
+      abilityDamage: ability.damage,
+      otherHit,
+      otherDamage,
+      totalHit,
+      totalDamage,
+      thacoBase,
+      thacoEffectif,
+      magicHitSigned: add2eHbsSigned(magicHit),
+      magicDamageSigned: add2eHbsSigned(magicDamage),
+      abilityHitSigned: add2eHbsSigned(ability.hit),
+      abilityDamageSigned: add2eHbsSigned(ability.damage),
+      otherHitSigned: add2eHbsSigned(otherHit),
+      otherDamageSigned: add2eHbsSigned(otherDamage),
+      totalHitSigned: add2eHbsSigned(totalHit),
+      totalDamageSigned: add2eHbsSigned(totalDamage)
+    };
+  });
+}
+
 if (typeof Handlebars !== "undefined") {
   // Capitalise la première lettre
   Handlebars.registerHelper("capitalize", str =>
@@ -222,7 +301,7 @@ if (typeof Handlebars !== "undefined") {
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.getFlag) {
   Handlebars.registerHelper("getFlag", function(item, flag) {
     try {
-      // Pour éviter les crashs si getFlag n'est pas dispo (ex : preview)
+      // Pour éviter les crashs si getFlag n'est pas dispo (ex : preview)
       if (!item || typeof item.getFlag !== "function") return false;
       const [scope, key] = flag.split('.');
       return item.getFlag(scope, key);
@@ -261,6 +340,10 @@ if (typeof Handlebars !== "undefined") {
     return n === 0 ? 0 : -Math.abs(n);
   });
 
+  Handlebars.registerHelper("signedNumber", function(value) {
+    return add2eHbsSigned(value);
+  });
+
   Handlebars.registerHelper("add2eItemDisplayDamage", function(item) {
     return add2eHbsDisplayDamageForItem(item);
   });
@@ -271,6 +354,10 @@ if (typeof Handlebars !== "undefined") {
       if (projectile) return add2eHbsDisplayDamageForItem(projectile);
     }
     return add2eHbsDisplayDamageForItem(arme);
+  });
+
+  Handlebars.registerHelper("add2eEquippedWeaponRows", function(actor, listeArmes, listeObjets, combatDefense) {
+    return add2eHbsEquippedWeaponRows(actor, listeArmes, listeObjets, combatDefense);
   });
 
   Handlebars.registerHelper("magicSourceNames", function(value, fallback) {
