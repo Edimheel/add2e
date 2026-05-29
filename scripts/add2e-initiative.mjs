@@ -1,23 +1,29 @@
 // scripts/add2e-initiative.mjs
 // ADD2E — Initiative propre.
-// Responsabilités uniques : initiative 1d6, ordre ascendant, icône D6, verrou des actions hors tour.
-// Aucune gestion de déplacement, drag, ruler, trace, chemin ou historique de mouvement.
+// Règle système : initiative 1d6, le plus petit résultat agit en premier.
+// Responsabilités : configuration initiative, tri ascendant, carte de chat, icône D6,
+// verrou des actions hors tour, synchronisation du HUD sur le combattant actif.
+// Ne gère pas le déplacement, les chemins, les traces, le ruler ou l'historique de mouvement.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-clean-recreated-initiative-v1";
-const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-clean-recreated-action-lock-v1";
-const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-clean-recreated-chat-v1";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-hud-follow-v1";
+const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v1";
+const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
+const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v1";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
 let configured = false;
 let sorting = false;
 let sortTimer = null;
+let hudFollowTimer = null;
 let warningAt = 0;
 let cleanedLegacyHooks = false;
+let lastHudCombatantKey = "";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
 globalThis.ADD2E_INITIATIVE_ACTION_LOCK_VERSION = ADD2E_INITIATIVE_ACTION_LOCK_VERSION;
 globalThis.ADD2E_INITIATIVE_CHAT_VERSION = ADD2E_INITIATIVE_CHAT_VERSION;
+globalThis.ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = ADD2E_INITIATIVE_HUD_FOLLOW_VERSION;
 
 function configureInitiative() {
   if (configured) return;
@@ -32,7 +38,8 @@ function configureInitiative() {
   console.log(`${TAG}[CONFIG]`, {
     version: ADD2E_INITIATIVE_VERSION,
     formula: "1d6",
-    order: "ascending"
+    order: "ascending",
+    rule: "le plus petit résultat agit en premier"
   });
 }
 
@@ -87,10 +94,14 @@ function cleanupLegacyInitiativeHooks() {
   return removed;
 }
 
+function getCombatants(combat = game.combat) {
+  return Array.from(combat?.combatants ?? []);
+}
+
 async function sortInitiativeAscending(combat = game.combat) {
   if (!combat || sorting) return false;
 
-  const combatants = Array.from(combat.combatants ?? []);
+  const combatants = getCombatants(combat);
   if (!combatants.length) return false;
 
   const sorted = combatants.slice().sort((a, b) => {
@@ -135,9 +146,12 @@ function scheduleInitiativeSort(combat = game.combat) {
 }
 
 function escapeHtml(value) {
-  const div = document.createElement("div");
-  div.textContent = String(value ?? "");
-  return div.innerHTML;
+  try { return foundry.utils.escapeHTML(String(value ?? "")); }
+  catch (_e) {
+    const div = document.createElement("div");
+    div.textContent = String(value ?? "");
+    return div.innerHTML;
+  }
 }
 
 function speakerActor(speaker = {}) {
@@ -195,7 +209,8 @@ function initiativeChatContent(message, data = {}) {
         </div>
       </div>
       <div style="margin-top:8px;font-size:12px;color:#ead6b0;display:flex;justify-content:space-between;gap:10px;">
-       <span style="white-space:nowrap;">1d6</span>
+        <span>Le plus petit résultat agit en premier.</span>
+        <span style="white-space:nowrap;">1d6</span>
       </div>
     </div>`;
 }
@@ -204,7 +219,7 @@ function installInitiativeChatCard() {
   if (globalThis.__ADD2E_INIT_CHAT_CARD_INSTALLED === ADD2E_INITIATIVE_CHAT_VERSION) return;
   globalThis.__ADD2E_INIT_CHAT_CARD_INSTALLED = ADD2E_INITIATIVE_CHAT_VERSION;
 
-  Hooks.on("preCreateChatMessage", (message, data, options, userId) => {
+  Hooks.on("preCreateChatMessage", (message, data) => {
     try {
       if (!isInitiativeMessage(message, data)) return;
       message.updateSource?.({
@@ -221,7 +236,12 @@ function installInitiativeChatCard() {
 
 function currentCombatant(combat = game.combat) {
   if (!combat) return null;
-  return combat.combatant ?? combat.combatants?.get?.(combat.current?.combatantId) ?? null;
+  const id = combat.current?.combatantId ?? combat.combatantId ?? null;
+  return (id ? combat.combatants?.get?.(id) : null) ?? combat.combatant ?? combat.turns?.[Number(combat.current?.turn ?? combat.turn)] ?? null;
+}
+
+function tokenFromCombatant(combatant) {
+  return combatant?.token?.object ?? (combatant?.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? null;
 }
 
 function combatantMatchesActor(combatant, actor) {
@@ -335,7 +355,7 @@ function patchInitiativeButton(button) {
   button.style.setProperty("background-repeat", "no-repeat", "important");
   button.style.setProperty("background-position", "center", "important");
   button.dataset.add2eD6InitiativeIcon = "1";
-  button.title = button.title || "Lancer l'initiative ADD2E (1d6)";
+  button.title = "Lancer l'initiative ADD2E (1d6, le plus petit commence)";
 
   return true;
 }
@@ -374,31 +394,91 @@ function patchInitiativeIcons(root = document) {
   }
 }
 
+function actionHudIsOpen() {
+  return Boolean(document.getElementById("add2e-action-hud"));
+}
+
+function syncActionHudToCombatant(combat = game.combat, { forceOpen = false, reason = "combat" } = {}) {
+  const combatant = currentCombatant(combat);
+  const actor = combatant?.actor ?? null;
+  if (!actor) return false;
+  if (!forceOpen && !actionHudIsOpen()) return false;
+
+  const token = tokenFromCombatant(combatant);
+  const key = `${combat?.id ?? "combat"}.${combatant.id}.${actor.id}.${token?.id ?? "no-token"}`;
+  if (lastHudCombatantKey === key && reason !== "manual") return true;
+  lastHudCombatantKey = key;
+
+  try {
+    if (typeof globalThis.add2eRenderActionHud === "function") {
+      globalThis.add2eRenderActionHud(actor, token, { reason: `initiative-${reason}` });
+      console.log(`${TAG}[HUD_FOLLOW]`, { actor: actor.name, token: token?.name ?? null, reason });
+      return true;
+    }
+
+    if (typeof game.add2e?.openActionHud === "function") {
+      game.add2e.openActionHud(actor);
+      console.log(`${TAG}[HUD_FOLLOW][API]`, { actor: actor.name, token: token?.name ?? null, reason });
+      return true;
+    }
+  } catch (err) {
+    console.warn(`${TAG}[HUD_FOLLOW][ERROR]`, err);
+  }
+
+  return false;
+}
+
+function scheduleHudFollow(combat = game.combat, { forceOpen = false, reason = "combat" } = {}) {
+  if (!combat) return;
+  clearTimeout(hudFollowTimer);
+  hudFollowTimer = setTimeout(() => syncActionHudToCombatant(combat, { forceOpen, reason }), 80);
+}
+
 function exposeGlobals() {
+  game.add2e = game.add2e ?? {};
+  game.add2e.initiativeVersion = ADD2E_INITIATIVE_VERSION;
+  game.add2e.initiativeHudFollowVersion = ADD2E_INITIATIVE_HUD_FOLLOW_VERSION;
+
   globalThis.add2eConfigureInitiative = configureInitiative;
   globalThis.add2eSortInitiativeAscending = sortInitiativeAscending;
   globalThis.add2eScheduleInitiativeSort = scheduleInitiativeSort;
   globalThis.add2ePatchCombatTrackerInitiativeIcons = patchInitiativeIcons;
   globalThis.add2eCanActorActNow = canActorActNow;
+  globalThis.add2eSyncActionHudToCombatant = syncActionHudToCombatant;
   globalThis.triInitiativeAscendant = sortInitiativeAscending;
 }
 
 function installHooks() {
-  Hooks.on("updateCombatant", (combatant, changes, options, userId) => {
+  Hooks.on("updateCombatant", (combatant, changes, options) => {
     if (options?.add2eInitiativeSort) return;
-    if (!foundry.utils.hasProperty(changes ?? {}, "initiative")) return;
+    if (foundry.utils.hasProperty(changes ?? {}, "initiative")) scheduleInitiativeSort(combatant.combat ?? game.combat);
+  });
+
+  Hooks.on("createCombatant", (combatant, options) => {
+    if (options?.add2eInitiativeSort) return;
     scheduleInitiativeSort(combatant.combat ?? game.combat);
   });
 
-  Hooks.on("createCombatant", (combatant, options, userId) => {
+  Hooks.on("deleteCombatant", (combatant, options) => {
     if (options?.add2eInitiativeSort) return;
     scheduleInitiativeSort(combatant.combat ?? game.combat);
   });
 
-  Hooks.on("deleteCombatant", (combatant, options, userId) => {
+  Hooks.on("updateCombat", (combat, changes, options) => {
     if (options?.add2eInitiativeSort) return;
-    scheduleInitiativeSort(combatant.combat ?? game.combat);
+    if (
+      foundry.utils.hasProperty(changes ?? {}, "turn") ||
+      foundry.utils.hasProperty(changes ?? {}, "round") ||
+      foundry.utils.hasProperty(changes ?? {}, "current") ||
+      foundry.utils.hasProperty(changes ?? {}, "started")
+    ) {
+      scheduleHudFollow(combat, { forceOpen: false, reason: "updateCombat" });
+    }
   });
+
+  Hooks.on("combatTurn", combat => scheduleHudFollow(combat, { forceOpen: false, reason: "combatTurn" }));
+  Hooks.on("combatRound", combat => scheduleHudFollow(combat, { forceOpen: false, reason: "combatRound" }));
+  Hooks.on("deleteCombat", () => { lastHudCombatantKey = ""; });
 
   Hooks.on("renderCombatTracker", (app, html) => patchInitiativeIcons(html));
   Hooks.on("renderCombatantConfig", () => setTimeout(() => patchInitiativeIcons(document), 50));
@@ -410,7 +490,10 @@ function installHooks() {
   });
 
   installInitiativeChatCard();
-  console.log(`${TAG}[HOOKS_INSTALLED]`, { version: ADD2E_INITIATIVE_VERSION });
+  console.log(`${TAG}[HOOKS_INSTALLED]`, {
+    version: ADD2E_INITIATIVE_VERSION,
+    hudFollow: ADD2E_INITIATIVE_HUD_FOLLOW_VERSION
+  });
 }
 
 Hooks.once("init", configureInitiative);
@@ -421,13 +504,19 @@ Hooks.once("ready", () => {
   exposeGlobals();
   patchInitiativeIcons(document);
   installActionLocks();
+  installHooks();
 
   setTimeout(() => patchInitiativeIcons(document), 500);
   setTimeout(() => patchInitiativeIcons(document), 1500);
   setTimeout(() => installActionLocks(), 800);
   setTimeout(() => installActionLocks(), 2000);
   setTimeout(() => installActionLocks(), 4000);
+  setTimeout(() => scheduleHudFollow(game.combat, { forceOpen: false, reason: "ready" }), 1000);
 });
 
-exposeGlobals();
-installHooks();
+export {
+  configureInitiative as add2eConfigureInitiative,
+  sortInitiativeAscending as add2eSortInitiativeAscending,
+  canActorActNow as add2eCanActorActNow,
+  syncActionHudToCombatant as add2eSyncActionHudToCombatant
+};
