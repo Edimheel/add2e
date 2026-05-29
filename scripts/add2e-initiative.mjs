@@ -1,15 +1,15 @@
 // scripts/add2e-initiative.mjs
 // ADD2E — Initiative propre.
 // Règle système : initiative 1d6, le plus petit résultat agit en premier.
-// Responsabilités : configuration initiative, tri ascendant réel, carte de chat, icône D6,
-// verrou des actions hors tour, synchronisation du HUD sur le combattant actif.
+// Responsabilités : initiative, tri réel des tours, flèches suivant/précédent,
+// carte de chat, icône D6, verrou des actions hors tour, suivi HUD.
 // Ne gère pas le déplacement, les chemins, les traces ou le ruler.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-real-turns-hud-v2";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-navigation-hud-v3";
 const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v1";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
-const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v2";
-const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-29-no-movement-history-record-v1";
+const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v3";
+const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-29-no-movement-history-record-v2";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
@@ -19,7 +19,7 @@ let sortTimer = null;
 let hudFollowTimer = null;
 let warningAt = 0;
 let cleanedLegacyHooks = false;
-let combatTurnsPatchInstalled = false;
+let combatPatchInstalled = false;
 let movementHistoryPatchInstalled = false;
 let lastHudCombatantKey = "";
 
@@ -32,19 +32,9 @@ globalThis.ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = ADD2E_MOVEMENT_HISTORY_DISA
 function configureInitiative() {
   if (configured) return;
   configured = true;
-
   CONFIG.Combat ??= {};
-  CONFIG.Combat.initiative = {
-    formula: "1d6",
-    decimals: 2
-  };
-
-  console.log(`${TAG}[CONFIG]`, {
-    version: ADD2E_INITIATIVE_VERSION,
-    formula: "1d6",
-    order: "ascending",
-    rule: "le plus petit résultat agit en premier"
-  });
+  CONFIG.Combat.initiative = { formula: "1d6", decimals: 2 };
+  console.log(`${TAG}[CONFIG]`, { version: ADD2E_INITIATIVE_VERSION, formula: "1d6", order: "ascending", rule: "le plus petit résultat agit en premier" });
 }
 
 function initiativeValue(value) {
@@ -56,12 +46,10 @@ function initiativeValue(value) {
 function compareCombatantsAscending(a, b) {
   const ai = initiativeValue(a?.initiative);
   const bi = initiativeValue(b?.initiative);
-
   if (ai === null && bi === null) return 0;
   if (ai === null) return 1;
   if (bi === null) return -1;
   if (ai !== bi) return ai - bi;
-
   return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
 }
 
@@ -75,57 +63,64 @@ function hookSource(entry) {
   try { return Function.prototype.toString.call(fn); } catch (_e) { return ""; }
 }
 
+function cleanupHooksFromStore(store, hookName, predicate) {
+  const entries = store?.[hookName];
+  if (!Array.isArray(entries)) return 0;
+  const before = entries.length;
+  store[hookName] = entries.filter(entry => !predicate(hookSource(entry), entry));
+  return before - store[hookName].length;
+}
+
 function cleanupLegacyInitiativeHooksFromStore(store) {
   if (!store || typeof store !== "object") return 0;
   let removed = 0;
-
   for (const hookName of ["updateCombatant", "updateCombat"]) {
-    const entries = store[hookName];
-    if (!Array.isArray(entries)) continue;
-
-    const before = entries.length;
-    store[hookName] = entries.filter(entry => {
-      const source = hookSource(entry);
-      return !(
-        source.includes("triInitiativeAscendant") ||
-        source.includes("add2eClearCombatMovementHistoryOnce") ||
-        source.includes("add2eClearTokenMovementHistory") ||
-        source.includes("add2ePurgeCombatantMovementHistory") ||
-        source.includes("movementHistory") ||
-        source.includes("showMovementHistory") ||
-        source.includes("updateEmbeddedDocuments(\"Combatant\"")
-      );
-    });
-    removed += before - store[hookName].length;
+    removed += cleanupHooksFromStore(store, hookName, source => (
+      source.includes("triInitiativeAscendant") ||
+      source.includes("add2eClearCombatMovementHistoryOnce") ||
+      source.includes("add2eClearTokenMovementHistory") ||
+      source.includes("add2ePurgeCombatantMovementHistory") ||
+      source.includes("movementHistory") ||
+      source.includes("showMovementHistory") ||
+      source.includes("updateEmbeddedDocuments(\"Combatant\"")
+    ));
   }
-
   return removed;
 }
 
 function cleanupLegacyInitiativeHooks() {
   if (cleanedLegacyHooks) return 0;
   cleanedLegacyHooks = true;
-
   let removed = 0;
   try { removed += cleanupLegacyInitiativeHooksFromStore(Hooks.events); } catch (_e) {}
   try { removed += cleanupLegacyInitiativeHooksFromStore(Hooks._hooks); } catch (_e) {}
-
   console.log(`${TAG}[LEGACY_CLEAN]`, { removed });
   return removed;
 }
 
-function applyAscendingTurns(combat = game.combat) {
-  if (!combat) return false;
+function activeCombatantId(combat = game.combat) {
+  return combat?.current?.combatantId ?? combat?.combatantId ?? combat?.combatant?.id ?? null;
+}
 
+function currentCombatant(combat = game.combat) {
+  if (!combat) return null;
+  const activeId = activeCombatantId(combat);
+  if (activeId) {
+    const byId = combat.combatants?.get?.(activeId) ?? null;
+    if (byId) return byId;
+  }
+  const turnIndex = Number(combat.turn ?? combat.current?.turn);
+  if (Number.isInteger(turnIndex) && turnIndex >= 0 && Array.isArray(combat.turns)) return combat.turns[turnIndex] ?? null;
+  return combat.combatant ?? null;
+}
+
+function applyAscendingTurns(combat = game.combat, { preserveActive = true } = {}) {
+  if (!combat) return false;
   const turns = sortedCombatants(combat);
   if (!turns.length) return false;
-
-  const previous = currentCombatant(combat);
-  const previousId = previous?.id ?? combat.current?.combatantId ?? null;
-
+  const previousId = preserveActive ? activeCombatantId(combat) : null;
   try {
     combat.turns = turns;
-
     if (previousId) {
       const nextIndex = turns.findIndex(c => c.id === previousId);
       if (nextIndex >= 0) {
@@ -133,7 +128,6 @@ function applyAscendingTurns(combat = game.combat) {
         if (combat.current && typeof combat.current === "object") combat.current.turn = nextIndex;
       }
     }
-
     return true;
   } catch (err) {
     console.warn(`${TAG}[APPLY_TURNS][ERROR]`, err);
@@ -141,40 +135,81 @@ function applyAscendingTurns(combat = game.combat) {
   }
 }
 
-function installCombatTurnsPatch() {
-  if (combatTurnsPatchInstalled) return true;
-  const proto = globalThis.Combat?.prototype;
-  if (!proto?.setupTurns) return false;
+async function updateCombatTurnBySortedIndex(combat, newIndex, { roundDelta = 0 } = {}) {
+  const turns = sortedCombatants(combat);
+  if (!turns.length) return combat;
+  const index = Math.max(0, Math.min(turns.length - 1, Number(newIndex) || 0));
+  const nextRound = Math.max(1, Number(combat.round ?? 1) + roundDelta);
+  await combat.update({ round: nextRound, turn: index });
+  combat.setupTurns?.();
+  applyAscendingTurns(combat, { preserveActive: false });
+  scheduleHudFollow(combat, { forceOpen: false, reason: "navigation" });
+  ui.combat?.render?.(true);
+  return combat;
+}
 
-  const original = proto.setupTurns;
-  if (original.__add2eD6LowFirstTurnsPatch === ADD2E_INITIATIVE_VERSION) {
-    combatTurnsPatchInstalled = true;
-    return true;
+async function advanceSortedTurn(combat = game.combat, direction = 1) {
+  if (!combat) return combat;
+  combat.setupTurns?.();
+  applyAscendingTurns(combat);
+  const turns = sortedCombatants(combat);
+  if (!turns.length) return combat;
+  const activeId = activeCombatantId(combat);
+  let index = turns.findIndex(c => c.id === activeId);
+  if (index < 0) index = Math.max(0, Math.min(turns.length - 1, Number(combat.turn ?? combat.current?.turn ?? 0) || 0));
+  let next = index + direction;
+  let roundDelta = 0;
+  if (next >= turns.length) { next = 0; roundDelta = 1; }
+  if (next < 0) { next = turns.length - 1; roundDelta = combat.round > 1 ? -1 : 0; }
+  return updateCombatTurnBySortedIndex(combat, next, { roundDelta });
+}
+
+function installCombatPatch() {
+  if (combatPatchInstalled) return true;
+  const proto = globalThis.Combat?.prototype;
+  if (!proto) return false;
+
+  if (proto.setupTurns && proto.setupTurns.__add2eD6LowFirstTurnsPatch !== ADD2E_INITIATIVE_VERSION) {
+    const originalSetupTurns = proto.setupTurns.__add2eOriginal ?? proto.setupTurns;
+    proto.setupTurns = function add2eD6LowFirstSetupTurns(...args) {
+      const result = originalSetupTurns.apply(this, args);
+      try { if (game?.system?.id === "add2e") applyAscendingTurns(this); }
+      catch (err) { console.warn(`${TAG}[SETUP_TURNS_PATCH][ERROR]`, err); }
+      return result;
+    };
+    proto.setupTurns.__add2eD6LowFirstTurnsPatch = ADD2E_INITIATIVE_VERSION;
+    proto.setupTurns.__add2eOriginal = originalSetupTurns;
   }
 
-  proto.setupTurns = function add2eD6LowFirstSetupTurns(...args) {
-    const result = original.apply(this, args);
-    try {
-      if (game?.system?.id === "add2e") applyAscendingTurns(this);
-    } catch (err) {
-      console.warn(`${TAG}[SETUP_TURNS_PATCH][ERROR]`, err);
-    }
-    return result;
-  };
+  if (proto.nextTurn && proto.nextTurn.__add2eD6LowFirstNavigationPatch !== ADD2E_INITIATIVE_VERSION) {
+    const originalNextTurn = proto.nextTurn.__add2eOriginal ?? proto.nextTurn;
+    proto.nextTurn = function add2eD6LowFirstNextTurn(...args) {
+      if (game?.system?.id !== "add2e") return originalNextTurn.apply(this, args);
+      return advanceSortedTurn(this, 1);
+    };
+    proto.nextTurn.__add2eD6LowFirstNavigationPatch = ADD2E_INITIATIVE_VERSION;
+    proto.nextTurn.__add2eOriginal = originalNextTurn;
+  }
 
-  proto.setupTurns.__add2eD6LowFirstTurnsPatch = ADD2E_INITIATIVE_VERSION;
-  proto.setupTurns.__add2eOriginal = original;
-  combatTurnsPatchInstalled = true;
-  console.log(`${TAG}[SETUP_TURNS_PATCH]`, ADD2E_INITIATIVE_VERSION);
+  if (proto.previousTurn && proto.previousTurn.__add2eD6LowFirstNavigationPatch !== ADD2E_INITIATIVE_VERSION) {
+    const originalPreviousTurn = proto.previousTurn.__add2eOriginal ?? proto.previousTurn;
+    proto.previousTurn = function add2eD6LowFirstPreviousTurn(...args) {
+      if (game?.system?.id !== "add2e") return originalPreviousTurn.apply(this, args);
+      return advanceSortedTurn(this, -1);
+    };
+    proto.previousTurn.__add2eD6LowFirstNavigationPatch = ADD2E_INITIATIVE_VERSION;
+    proto.previousTurn.__add2eOriginal = originalPreviousTurn;
+  }
+
+  combatPatchInstalled = true;
+  console.log(`${TAG}[COMBAT_PATCH]`, ADD2E_INITIATIVE_VERSION);
   return true;
 }
 
 async function sortInitiativeAscending(combat = game.combat) {
   if (!combat || sorting) return false;
-
   const combatants = Array.from(combat.combatants ?? []);
   if (!combatants.length) return false;
-
   const sorted = sortedCombatants(combat);
   const updates = sorted
     .map((combatant, index) => ({ _id: combatant.id, sort: index }))
@@ -234,7 +269,6 @@ function isInitiativeMessage(message, data = {}) {
   const speaker = data.speaker ?? message?.speaker ?? {};
   const roll = (data.rolls ?? message?.rolls ?? [])?.[0] ?? null;
   const formula = String(roll?.formula ?? roll?._formula ?? "").replace(/\s+/g, "").toLowerCase();
-
   if (flags?.add2e?.initiativeRoll || flags?.core?.initiativeRoll) return true;
   if (flavor.includes("initiative")) return true;
   return formula === "1d6" && !!speaker?.actor && game.combat?.combatants?.some?.(c => c.actor?.id === speaker.actor);
@@ -254,7 +288,6 @@ function initiativeChatContent(message, data = {}) {
   const img = token?.document?.texture?.src ?? actor?.img ?? ADD2E_INITIATIVE_D6_ICON;
   const total = initiativeTotal(message, data);
   const result = total === null ? "—" : total;
-
   return `
     <div class="add2e-init-chat-card" style="border:1px solid #7c4a16;border-radius:10px;background:linear-gradient(135deg,#2a1708,#4b2a0e);color:#f7ead2;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.35);font-family:serif;">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -278,7 +311,6 @@ function initiativeChatContent(message, data = {}) {
 function installInitiativeChatCard() {
   if (globalThis.__ADD2E_INIT_CHAT_CARD_INSTALLED === ADD2E_INITIATIVE_CHAT_VERSION) return;
   globalThis.__ADD2E_INIT_CHAT_CARD_INSTALLED = ADD2E_INITIATIVE_CHAT_VERSION;
-
   Hooks.on("preCreateChatMessage", (message, data) => {
     try {
       if (!isInitiativeMessage(message, data)) return;
@@ -292,19 +324,6 @@ function installInitiativeChatCard() {
       console.warn(`${TAG}[CHAT][ERROR]`, err);
     }
   });
-}
-
-function currentCombatant(combat = game.combat) {
-  if (!combat) return null;
-
-  const turnIndex = Number(combat.turn ?? combat.current?.turn);
-  if (Number.isInteger(turnIndex) && turnIndex >= 0 && Array.isArray(combat.turns)) {
-    const byTurn = combat.turns[turnIndex];
-    if (byTurn) return byTurn;
-  }
-
-  const id = combat.current?.combatantId ?? combat.combatantId ?? null;
-  return (id ? combat.combatants?.get?.(id) : null) ?? combat.combatant ?? null;
 }
 
 function tokenFromCombatant(combatant) {
@@ -326,7 +345,6 @@ function notifyNotTurn(actor = null) {
   const now = Date.now();
   if (now - warningAt < 900) return;
   warningAt = now;
-
   const active = currentCombatant();
   const activeName = active?.name ?? active?.actor?.name ?? "l'acteur actif";
   const actorName = actor?.name ? `${actor.name} ne peut pas agir.` : "Cet acteur ne peut pas agir.";
@@ -338,7 +356,6 @@ function canActorActNow(actor, { notify = false } = {}) {
   if (!combatActive(combat)) return true;
   if (game.user?.isGM) return true;
   if (combatantMatchesActor(currentCombatant(combat), actor)) return true;
-
   if (notify) notifyNotTurn(actor);
   return false;
 }
@@ -347,12 +364,10 @@ function resolveActionActor(argsLike) {
   const args = Array.isArray(argsLike) ? argsLike : [];
   const first = args[0] ?? null;
   const source = first && typeof first === "object" ? first : {};
-
   if (source.actor) return source.actor;
   if (source.actorId) return game.actors?.get?.(source.actorId) ?? null;
   if (source.token?.actor) return source.token.actor;
   if (source.tokenId && canvas?.tokens?.get?.(source.tokenId)?.actor) return canvas.tokens.get(source.tokenId).actor;
-
   return canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null;
 }
 
@@ -360,17 +375,14 @@ function wrapActionFunction(name, label) {
   const current = globalThis[name];
   if (typeof current !== "function") return false;
   if (current.__add2eCleanInitiativeActionLock === ADD2E_INITIATIVE_ACTION_LOCK_VERSION) return true;
-
   const wrapped = async function add2eCleanInitiativeActionLock(...args) {
     const actor = resolveActionActor(args);
     if (!canActorActNow(actor, { notify: true })) return false;
     return current.apply(this, args);
   };
-
   wrapped.__add2eCleanInitiativeActionLock = ADD2E_INITIATIVE_ACTION_LOCK_VERSION;
   wrapped.__add2eOriginal = current;
   globalThis[name] = wrapped;
-
   console.log(`${TAG}[ACTION_LOCK]`, { name, label, version: ADD2E_INITIATIVE_ACTION_LOCK_VERSION });
   return true;
 }
@@ -402,28 +414,19 @@ function isInitiativeButton(button) {
   if (!button?.closest) return false;
   const row = button.closest(".combatant, li[data-combatant-id], [data-combatant-id]");
   if (!row) return false;
-
-  return Boolean(
-    button.matches?.("button.combatant-control.roll") ||
-    button.matches?.("[data-action='rollInitiative']") ||
-    button.matches?.("[data-control='rollInitiative']") ||
-    button.classList?.contains("roll")
-  );
+  return Boolean(button.matches?.("button.combatant-control.roll") || button.matches?.("[data-action='rollInitiative']") || button.matches?.("[data-control='rollInitiative']") || button.classList?.contains("roll"));
 }
 
 function patchInitiativeButton(button) {
   if (!isInitiativeButton(button)) return false;
-
   const icon = button.querySelector?.("i.fa-dice-d20, i.fa-dice-d6, i.fa-dice");
   if (icon && !button.querySelector(".add2e-init-d6-icon")) icon.replaceWith(makeD6Image());
-
   button.style.setProperty("background-image", `url('${ADD2E_INITIATIVE_D6_ICON}')`, "important");
   button.style.setProperty("background-size", "contain", "important");
   button.style.setProperty("background-repeat", "no-repeat", "important");
   button.style.setProperty("background-position", "center", "important");
   button.dataset.add2eD6InitiativeIcon = "1";
   button.title = "Lancer l'initiative ADD2E (1d6, le plus petit commence)";
-
   return true;
 }
 
@@ -431,7 +434,6 @@ function patchInitiativeIcons(root = document) {
   try {
     const scope = root?.jquery ? root[0] : root;
     if (!scope?.querySelectorAll) return 0;
-
     const selectors = [
       "#combat-tracker .combatant button.combatant-control.roll",
       "#combat .combatant button.combatant-control.roll",
@@ -446,12 +448,8 @@ function patchInitiativeIcons(root = document) {
       "#combat [data-combatant-id] [data-action='rollInitiative']",
       ".combat-sidebar [data-combatant-id] [data-action='rollInitiative']"
     ];
-
     const elements = new Set();
-    for (const selector of selectors) {
-      for (const el of scope.querySelectorAll(selector)) elements.add(el);
-    }
-
+    for (const selector of selectors) for (const el of scope.querySelectorAll(selector)) elements.add(el);
     let changed = 0;
     for (const el of elements) if (patchInitiativeButton(el)) changed++;
     return changed;
@@ -468,24 +466,20 @@ function actionHudIsOpen() {
 function syncActionHudToCombatant(combat = game.combat, { forceOpen = false, reason = "combat" } = {}) {
   combat?.setupTurns?.();
   applyAscendingTurns(combat);
-
   const combatant = currentCombatant(combat);
   const actor = combatant?.actor ?? null;
   if (!actor) return false;
   if (!forceOpen && !actionHudIsOpen()) return false;
-
   const token = tokenFromCombatant(combatant);
   const key = `${combat?.id ?? "combat"}.${combatant.id}.${actor.id}.${token?.id ?? "no-token"}`;
   if (lastHudCombatantKey === key && reason !== "manual") return true;
   lastHudCombatantKey = key;
-
   try {
     if (typeof globalThis.add2eRenderActionHud === "function") {
       globalThis.add2eRenderActionHud(actor, token, { reason: `initiative-${reason}` });
       console.log(`${TAG}[HUD_FOLLOW]`, { actor: actor.name, token: token?.name ?? null, reason });
       return true;
     }
-
     if (typeof game.add2e?.openActionHud === "function") {
       game.add2e.openActionHud(actor);
       console.log(`${TAG}[HUD_FOLLOW][API]`, { actor: actor.name, token: token?.name ?? null, reason });
@@ -494,7 +488,6 @@ function syncActionHudToCombatant(combat = game.combat, { forceOpen = false, rea
   } catch (err) {
     console.warn(`${TAG}[HUD_FOLLOW][ERROR]`, err);
   }
-
   return false;
 }
 
@@ -506,14 +499,13 @@ function scheduleHudFollow(combat = game.combat, { forceOpen = false, reason = "
 
 function isMovementHistoryFlag(scope, key) {
   if (scope !== "add2e") return false;
-  return ["movementTurnKey", "movementSpentMeters", "lastAllowedPosition"].includes(String(key));
+  return ["movementTurnKey", "movementSpentMeters", "lastAllowedPosition", "movementScale"].includes(String(key));
 }
 
 function patchSetFlagHistoryBlock(cls, label) {
   const proto = cls?.prototype;
   if (!proto?.setFlag || proto.setFlag.__add2eNoMovementHistory === ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION) return false;
-
-  const original = proto.setFlag;
+  const original = proto.setFlag.__add2eOriginal ?? proto.setFlag;
   proto.setFlag = function add2eNoMovementHistorySetFlag(scope, key, value, ...rest) {
     if (isMovementHistoryFlag(scope, key)) {
       console.log(`${TAG}[MOVE_HISTORY][BLOCK_SETFLAG]`, { document: label, name: this?.name ?? this?.id ?? null, key });
@@ -521,20 +513,35 @@ function patchSetFlagHistoryBlock(cls, label) {
     }
     return original.call(this, scope, key, value, ...rest);
   };
-
   proto.setFlag.__add2eNoMovementHistory = ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION;
   proto.setFlag.__add2eOriginal = original;
   return true;
 }
 
+function cleanupMovementHistoryHooksFromStore(store) {
+  if (!store || typeof store !== "object") return 0;
+  let removed = 0;
+  removed += cleanupHooksFromStore(store, "updateToken", source => source.includes("computeTokenMovementScale") || source.includes("movementScale"));
+  removed += cleanupHooksFromStore(store, "controlToken", source => source.includes("lastAllowedPosition") || source.includes("computeTokenMovementScale"));
+  removed += cleanupHooksFromStore(store, "updateCombat", source => source.includes("movementTurnKey") || source.includes("movementSpentMeters"));
+  return removed;
+}
+
+function cleanupMovementHistoryHooks() {
+  let removed = 0;
+  try { removed += cleanupMovementHistoryHooksFromStore(Hooks.events); } catch (_e) {}
+  try { removed += cleanupMovementHistoryHooksFromStore(Hooks._hooks); } catch (_e) {}
+  if (removed) console.log(`${TAG}[MOVE_HISTORY][HOOKS_REMOVED]`, { removed });
+  return removed;
+}
+
 function installMovementHistoryBlock() {
   if (movementHistoryPatchInstalled) return true;
   movementHistoryPatchInstalled = true;
-
   const patched = [];
   if (patchSetFlagHistoryBlock(globalThis.Actor, "Actor")) patched.push("Actor");
   if (patchSetFlagHistoryBlock(globalThis.TokenDocument ?? foundry?.documents?.TokenDocument, "TokenDocument")) patched.push("TokenDocument");
-
+  cleanupMovementHistoryHooks();
   game.add2e = game.add2e ?? {};
   game.add2e.movementHistoryDisabledVersion = ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION;
   console.log(`${TAG}[MOVE_HISTORY][DISABLED]`, { version: ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION, patched });
@@ -543,7 +550,6 @@ function installMovementHistoryBlock() {
 
 async function clearExistingMovementHistoryFlags() {
   if (!game.user?.isGM) return;
-
   const actorUpdates = [];
   for (const actor of game.actors ?? []) {
     if (actor?.flags?.add2e?.movementTurnKey !== undefined || actor?.flags?.add2e?.movementSpentMeters !== undefined) {
@@ -551,15 +557,15 @@ async function clearExistingMovementHistoryFlags() {
     }
   }
   if (actorUpdates.length) await Actor.updateDocuments(actorUpdates, { add2eIgnoreMovementHistoryCleanup: true });
-
   for (const scene of game.scenes ?? []) {
     const tokenUpdates = [];
     for (const token of scene.tokens ?? []) {
-      if (token?.flags?.add2e?.lastAllowedPosition !== undefined) tokenUpdates.push({ _id: token.id, "flags.add2e.-=lastAllowedPosition": null });
+      if (token?.flags?.add2e?.lastAllowedPosition !== undefined || token?.flags?.add2e?.movementScale !== undefined) {
+        tokenUpdates.push({ _id: token.id, "flags.add2e.-=lastAllowedPosition": null, "flags.add2e.-=movementScale": null });
+      }
     }
     if (tokenUpdates.length) await scene.updateEmbeddedDocuments("Token", tokenUpdates, { add2eIgnoreMovementHistoryCleanup: true });
   }
-
   if (actorUpdates.length) console.log(`${TAG}[MOVE_HISTORY][CLEAN_ACTORS]`, actorUpdates.length);
 }
 
@@ -568,7 +574,6 @@ function exposeGlobals() {
   game.add2e.initiativeVersion = ADD2E_INITIATIVE_VERSION;
   game.add2e.initiativeHudFollowVersion = ADD2E_INITIATIVE_HUD_FOLLOW_VERSION;
   game.add2e.movementHistoryDisabledVersion = ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION;
-
   globalThis.add2eConfigureInitiative = configureInitiative;
   globalThis.add2eSortInitiativeAscending = sortInitiativeAscending;
   globalThis.add2eScheduleInitiativeSort = scheduleInitiativeSort;
@@ -577,6 +582,7 @@ function exposeGlobals() {
   globalThis.add2eSyncActionHudToCombatant = syncActionHudToCombatant;
   globalThis.add2eDisableMovementHistoryRecording = installMovementHistoryBlock;
   globalThis.add2eClearExistingMovementHistoryFlags = clearExistingMovementHistoryFlags;
+  globalThis.add2eCleanupMovementHistoryHooks = cleanupMovementHistoryHooks;
   globalThis.triInitiativeAscendant = sortInitiativeAscending;
 }
 
@@ -585,36 +591,20 @@ function installHooks() {
     if (options?.add2eInitiativeSort) return;
     if (foundry.utils.hasProperty(changes ?? {}, "initiative")) scheduleInitiativeSort(combatant.combat ?? game.combat);
   });
-
-  Hooks.on("createCombatant", (combatant, options) => {
-    if (options?.add2eInitiativeSort) return;
-    scheduleInitiativeSort(combatant.combat ?? game.combat);
-  });
-
-  Hooks.on("deleteCombatant", (combatant, options) => {
-    if (options?.add2eInitiativeSort) return;
-    scheduleInitiativeSort(combatant.combat ?? game.combat);
-  });
-
+  Hooks.on("createCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatant.combat ?? game.combat); });
+  Hooks.on("deleteCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatant.combat ?? game.combat); });
   Hooks.on("updateCombat", (combat, changes, options) => {
     if (options?.add2eInitiativeSort) return;
-    if (
-      foundry.utils.hasProperty(changes ?? {}, "turn") ||
-      foundry.utils.hasProperty(changes ?? {}, "round") ||
-      foundry.utils.hasProperty(changes ?? {}, "current") ||
-      foundry.utils.hasProperty(changes ?? {}, "started")
-    ) {
+    if (foundry.utils.hasProperty(changes ?? {}, "turn") || foundry.utils.hasProperty(changes ?? {}, "round") || foundry.utils.hasProperty(changes ?? {}, "current") || foundry.utils.hasProperty(changes ?? {}, "started")) {
       combat.setupTurns?.();
       applyAscendingTurns(combat);
       scheduleHudFollow(combat, { forceOpen: false, reason: "updateCombat" });
       ui.combat?.render?.(true);
     }
   });
-
   Hooks.on("combatTurn", combat => scheduleHudFollow(combat, { forceOpen: false, reason: "combatTurn" }));
   Hooks.on("combatRound", combat => scheduleHudFollow(combat, { forceOpen: false, reason: "combatRound" }));
   Hooks.on("deleteCombat", () => { lastHudCombatantKey = ""; });
-
   Hooks.on("renderCombatTracker", (app, html) => patchInitiativeIcons(html));
   Hooks.on("renderCombatantConfig", () => setTimeout(() => patchInitiativeIcons(document), 50));
   Hooks.on("renderSidebarTab", (app, html) => {
@@ -623,13 +613,8 @@ function installHooks() {
       setTimeout(() => patchInitiativeIcons(document), 50);
     }
   });
-
   installInitiativeChatCard();
-  console.log(`${TAG}[HOOKS_INSTALLED]`, {
-    version: ADD2E_INITIATIVE_VERSION,
-    hudFollow: ADD2E_INITIATIVE_HUD_FOLLOW_VERSION,
-    movementHistoryDisabled: ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION
-  });
+  console.log(`${TAG}[HOOKS_INSTALLED]`, { version: ADD2E_INITIATIVE_VERSION, hudFollow: ADD2E_INITIATIVE_HUD_FOLLOW_VERSION, movementHistoryDisabled: ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION });
 }
 
 Hooks.once("init", configureInitiative);
@@ -637,15 +622,14 @@ Hooks.once("init", configureInitiative);
 Hooks.once("ready", () => {
   configureInitiative();
   cleanupLegacyInitiativeHooks();
-  installCombatTurnsPatch();
+  installCombatPatch();
   installMovementHistoryBlock();
   exposeGlobals();
   patchInitiativeIcons(document);
   installActionLocks();
   installHooks();
-
   clearExistingMovementHistoryFlags().catch(err => console.warn(`${TAG}[MOVE_HISTORY][CLEAN_ERROR]`, err));
-
+  setTimeout(() => cleanupMovementHistoryHooks(), 300);
   setTimeout(() => patchInitiativeIcons(document), 500);
   setTimeout(() => patchInitiativeIcons(document), 1500);
   setTimeout(() => installActionLocks(), 800);
