@@ -1,8 +1,12 @@
 // ADD2E — Consommables : composants de sorts, projectiles et carquois
 // Phase 2/3/4 dev-composant : réglages, carquois, drop de munitions, attaque projectile et restitution.
 
-const ADD2E_CONSUMABLES_VERSION = "2026-05-26-dev-composant-phase4-projectiles-v3-dialogs";
+const ADD2E_CONSUMABLES_VERSION = "2026-05-29-dev-composant-phase4-projectiles-v4-recovery-popups";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
+
+const ADD2E_PROJECTILE_GM_OPERATION_TYPE = "ADD2E_GM_OPERATION";
+const ADD2E_PROJECTILE_GM_CONSUME_OPERATION = "consumeProjectile";
+const ADD2E_PROJECTILE_RESTORE_SOCKET = "ADD2E_PROJECTILE_RESTORE_POPUP";
 
 function add2eConsumablesLog(...args) {
   if (globalThis.ADD2E_DEBUG_CONSUMABLES) console.log("[ADD2E][CONSUMABLES]", ...args);
@@ -62,33 +66,36 @@ function add2eSettingBool(key) {
   catch (_err) { return false; }
 }
 
-async function add2eConsumablesAlert({ title = "Action impossible", message = "Action impossible.", icon = "fa-triangle-exclamation" } = {}) {
+function add2eEscapeHtml(value) {
+  const div = document.createElement("div");
+  div.textContent = String(value ?? "");
+  return div.innerHTML;
+}
+
+async function add2eDialogPopup({ title = "Information", content = "", modal = false } = {}) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (DialogV2?.alert) {
+    await DialogV2.alert({ window: { title }, content, ok: { label: "Compris" }, modal });
+    return true;
+  }
+  if (DialogV2?.confirm) {
+    await DialogV2.confirm({ window: { title }, content, yes: { label: "Compris" }, no: { label: "Fermer" }, modal });
+    return true;
+  }
+  ui.notifications?.info?.(String(content).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || title);
+  return false;
+}
+
+async function add2eConsumablesAlert({ title = "Action impossible", message = "Action impossible.", icon = "fa-triangle-exclamation" } = {}) {
   const content = `
     <div class="add2e-dialog add2e-consumable-alert" style="display:flex;gap:12px;align-items:flex-start;">
       <div style="font-size:28px;color:#8a5a00;"><i class="fas ${icon}"></i></div>
       <div>
-        <h3 style="margin:0 0 6px 0;">${title}</h3>
-        <p style="margin:0;">${message}</p>
+        <h3 style="margin:0 0 6px 0;">${add2eEscapeHtml(title)}</h3>
+        <p style="margin:0;">${add2eEscapeHtml(message)}</p>
       </div>
     </div>`;
-
-  if (DialogV2?.alert) {
-    try {
-      await DialogV2.alert({
-        window: { title },
-        content,
-        ok: { label: "Compris" },
-        modal: true
-      });
-      return true;
-    } catch (err) {
-      console.warn("[ADD2E][CONSUMABLES][DIALOG_ALERT_ERROR]", err);
-    }
-  }
-
-  ui.notifications?.warn?.(message);
-  return false;
+  return add2eDialogPopup({ title, content, modal: true });
 }
 
 function add2eChangeSetsEquippedTrue(changes) {
@@ -194,7 +201,7 @@ export function add2eGetEquippedProjectileForWeapon(actor, arme) {
 export async function add2eEquipProjectile(actor, projectile) {
   if (!actor || !projectile) return false;
   if (!add2eIsAmmunition(projectile)) {
-    ui.notifications?.warn?.(`${projectile.name} n'est pas une munition.`);
+    await add2eConsumablesAlert({ title: "Munition invalide", message: `${projectile.name} n'est pas une munition.`, icon: "fa-bullseye" });
     return false;
   }
 
@@ -281,39 +288,64 @@ function add2eBuildRestoreRows(combat) {
   return Object.values(registry).map(row => {
     const spent = add2eNumber(row.spent, 0);
     const rate = row.recoverable === false ? 0 : add2eNumber(row.restoreRate, 0.6);
-    return { ...row, spent, restoreRate: rate, restored: Math.floor(spent * rate) };
+    return { ...row, spent, restoreRate: rate, restored: Math.round(spent * rate) };
   }).filter(row => row.spent > 0);
 }
 
-async function add2eConfirmRestoreProjectiles(rows) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.confirm) {
-    ui.notifications?.warn?.("Projectiles dépensés détectés, mais DialogV2 est indisponible pour la restitution.");
-    return false;
+async function add2eShowRestoreProjectilesPopup(rows) {
+  const lines = rows.map(row => `
+    <tr>
+      <td>${add2eEscapeHtml(row.actorName)}</td>
+      <td>${add2eEscapeHtml(row.itemName)}</td>
+      <td style="text-align:center;">${row.spent}</td>
+      <td style="text-align:center;"><b>${row.restored}</b></td>
+    </tr>`).join("");
+
+  const content = `
+    <div class="add2e-dialog add2e-projectile-restore-dialog">
+      <h3>Récupération des projectiles</h3>
+      <p>À la fin du combat, les tireurs récupèrent <b>60 %</b> des projectiles dépensés.</p>
+      <table class="a2e-table" style="width:100%;">
+        <thead>
+          <tr>
+            <th>Tireur</th>
+            <th>Projectile</th>
+            <th style="text-align:center;">Dépensés</th>
+            <th style="text-align:center;">Récupérés</th>
+          </tr>
+        </thead>
+        <tbody>${lines}</tbody>
+      </table>
+    </div>`;
+
+  return add2eDialogPopup({ title: "ADD2E — Récupération des projectiles", content, modal: false });
+}
+
+function add2eSendRestorePopupToOwners(rows) {
+  const byUser = {};
+  for (const row of rows) {
+    const actor = game.actors?.get(row.actorId);
+    if (!actor) continue;
+    for (const user of game.users ?? []) {
+      if (user.isGM || !user.active) continue;
+      if (!actor.testUserPermission?.(user, "OWNER")) continue;
+      byUser[user.id] ??= [];
+      byUser[user.id].push(row);
+    }
   }
 
-  const lines = rows.map(row => `<li><strong>${row.actorName}</strong> — ${row.itemName} : ${row.spent} tiré(s) → ${row.restored} récupéré(s)</li>`).join("");
-  const content = `<div class="add2e-dialog"><p>Projectiles utilisés pendant le combat :</p><ul>${lines}</ul><p>Restituer les projectiles récupérables ?</p></div>`;
-  try {
-    return !!await DialogV2.confirm({
-      window: { title: "ADD2E — Restitution des projectiles" },
-      content,
-      yes: { label: "Restituer" },
-      no: { label: "Ignorer" },
-      modal: true
-    });
-  } catch (err) {
-    console.warn("[ADD2E][CONSUMABLES][RESTORE_DIALOG_ERROR]", err);
-    return false;
+  for (const [userId, userRows] of Object.entries(byUser)) {
+    game.socket?.emit?.("system.add2e", { type: ADD2E_PROJECTILE_RESTORE_SOCKET, userId, rows: userRows });
   }
 }
 
 export async function add2eRestoreProjectilesAtCombatEnd(combat) {
   if (!add2eSettingBool("gestionProjectiles")) return false;
+  if (!combat?.getFlag || !combat?.setFlag) return false;
+  if (combat.getFlag("add2e", "projectilesRestitues")) return false;
+
   const rows = add2eBuildRestoreRows(combat);
   if (!rows.length) return false;
-  const accepted = await add2eConfirmRestoreProjectiles(rows);
-  if (!accepted) return false;
 
   for (const row of rows) {
     if (row.restored <= 0) continue;
@@ -323,6 +355,11 @@ export async function add2eRestoreProjectilesAtCombatEnd(combat) {
     const current = add2eQuantity(item);
     await item.update(add2eUpdatePath("system.quantite", current + row.restored), { add2eReason: "restore-projectiles-combat-end" });
   }
+
+  await combat.setFlag("add2e", "projectilesRestitues", true);
+  await combat.setFlag("add2e", "projectilesDepenses", {});
+  add2eSendRestorePopupToOwners(rows);
+  await add2eShowRestoreProjectilesPopup(rows);
   return true;
 }
 
@@ -552,22 +589,70 @@ function add2eWrapAttackRollForProjectiles() {
   };
 }
 
+function add2eConsumablesIsResponsibleGM() {
+  if (!game.user?.isGM) return false;
+  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+  return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
+}
+
+function add2eConsumablesRequestSet() {
+  const set = globalThis.__ADD2E_CONSUMABLES_PROJECTILE_REQUESTS ?? new Set();
+  globalThis.__ADD2E_CONSUMABLES_PROJECTILE_REQUESTS = set;
+  return set;
+}
+
+async function add2eGmConsumeProjectileFromSocket(payload = {}) {
+  if (!add2eConsumablesIsResponsibleGM()) return false;
+
+  const requestId = payload.requestId ?? null;
+  const seen = add2eConsumablesRequestSet();
+  if (requestId && seen.has(requestId)) return true;
+
+  let actor = null;
+  if (payload.actorUuid) {
+    try { actor = await fromUuid(payload.actorUuid); }
+    catch (err) { console.warn("[ADD2E][CONSUMABLES][GM_PROJECTILE][UUID]", err); }
+  }
+  if (!actor && payload.actorId) actor = game.actors?.get(payload.actorId) ?? null;
+  if (!actor) return false;
+
+  const projectile = actor.items?.get(payload.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === payload.itemName && add2eIsAmmunition(i));
+  if (!projectile) return false;
+
+  const q = Math.max(1, Math.floor(add2eNumber(payload.quantity, 1)));
+  const before = add2eQuantity(projectile);
+  const after = Math.max(0, before - q);
+  await projectile.update(add2eUpdatePath("system.quantite", after), { add2eReason: "gm-relay-consume-projectile" });
+  await add2eRegisterProjectileSpentInCombat(actor, projectile, q);
+
+  if (requestId) seen.add(requestId);
+  console.log("[ADD2E][CONSUMABLES][GM_PROJECTILE][CONSUME]", { actor: actor.name, projectile: projectile.name, before, after, quantity: q, requestId });
+  return true;
+}
+
 function add2eRegisterConsumableHooks() {
   if (globalThis.__ADD2E_CONSUMABLES_HOOKS_REGISTERED) return;
   globalThis.__ADD2E_CONSUMABLES_HOOKS_REGISTERED = true;
 
   Hooks.on("combatStart", async combat => {
     if (!add2eSettingBool("gestionProjectiles")) return;
-    try { await combat.setFlag("add2e", "projectilesDepenses", {}); }
-    catch (err) { console.warn("[ADD2E][CONSUMABLES][COMBAT_START]", err); }
+    try {
+      await combat.setFlag("add2e", "projectilesDepenses", {});
+      await combat.unsetFlag?.("add2e", "projectilesRestitues");
+    } catch (err) { console.warn("[ADD2E][CONSUMABLES][COMBAT_START]", err); }
   });
 
   Hooks.on("updateCombat", async (combat, changes) => {
     if (!add2eSettingBool("gestionProjectiles")) return;
-    if (!changes || changes.round !== 1) return;
-    if (combat.getFlag("add2e", "projectilesDepenses")) return;
-    try { await combat.setFlag("add2e", "projectilesDepenses", {}); }
-    catch (err) { console.warn("[ADD2E][CONSUMABLES][COMBAT_ROUND_INIT]", err); }
+    try {
+      if (changes?.active === false || changes?.round === null || changes?.turn === null) {
+        await add2eRestoreProjectilesAtCombatEnd(combat);
+        return;
+      }
+      if (changes?.round !== 1) return;
+      if (combat.getFlag("add2e", "projectilesDepenses")) return;
+      await combat.setFlag("add2e", "projectilesDepenses", {});
+    } catch (err) { console.warn("[ADD2E][CONSUMABLES][COMBAT_UPDATE]", err); }
   });
 
   Hooks.on("deleteCombat", async combat => {
@@ -591,6 +676,17 @@ function add2eRegisterConsumableHooks() {
     } finally {
       globalThis.__ADD2E_CONSUMABLES_EQUIP_GUARD = false;
     }
+  });
+
+  game.socket?.on?.("system.add2e", data => {
+    if (!data || typeof data !== "object") return;
+    if (data.type === ADD2E_PROJECTILE_RESTORE_SOCKET) {
+      if (data.userId === game.user?.id) add2eShowRestoreProjectilesPopup(data.rows ?? []);
+      return;
+    }
+    if (data.type !== ADD2E_PROJECTILE_GM_OPERATION_TYPE) return;
+    if (data.operation !== ADD2E_PROJECTILE_GM_CONSUME_OPERATION) return;
+    add2eGmConsumeProjectileFromSocket(data.payload ?? {}).catch(err => console.warn("[ADD2E][CONSUMABLES][GM_PROJECTILE][SOCKET]", err));
   });
 }
 
