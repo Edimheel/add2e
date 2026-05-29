@@ -1,6 +1,9 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Rendu du message de combat.
-// Version : 2026-05-29-attack-chat-public-roleplay-gm-technical-v2
+// Version : 2026-05-29-attack-chat-split-visibility-v3
+
+const ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = "2026-05-29-attack-chat-split-visibility-v3";
+globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = ADD2E_ATTACK_CHAT_VISIBILITY_VERSION;
 
 function esc(value) {
   const div = document.createElement("div");
@@ -62,11 +65,72 @@ function roleplay(ctx) {
   ]);
 }
 
-function gmIds() {
+function gmUsers() {
   const recipients = ChatMessage.getWhisperRecipients?.("GM") ?? [];
-  const ids = recipients.map(u => u.id).filter(Boolean);
-  return ids.length ? ids : Array.from(game.users ?? []).filter(u => u.isGM).map(u => u.id).filter(Boolean);
+  const users = recipients.length ? recipients : Array.from(game.users ?? []).filter(u => u.isGM);
+  return users.filter(u => u?.id);
 }
+
+function gmIds() {
+  return gmUsers().map(u => u.id).filter(Boolean);
+}
+
+function playerUsers() {
+  return Array.from(game.users ?? []).filter(u => u && !u.isGM && u.id);
+}
+
+function playerIds() {
+  return playerUsers().map(u => u.id).filter(Boolean);
+}
+
+function preferredGmUserId() {
+  return gmUsers().find(u => u.active)?.id ?? gmUsers()[0]?.id ?? game.user?.id ?? null;
+}
+
+function preferredPlayerUserId() {
+  if (!game.user?.isGM && game.user?.id) return game.user.id;
+  return playerUsers().find(u => u.active)?.id ?? playerUsers()[0]?.id ?? game.user?.id ?? null;
+}
+
+function forceAttackChatVisibility(message, data = {}) {
+  const content = String(data.content ?? message?.content ?? "");
+  const isPlayerCard = content.includes("add2e-attack-chat-card-player-v2");
+  const isGmCard = content.includes("add2e-attack-chat-card-gm-v2");
+  if (!isPlayerCard && !isGmCard) return;
+
+  if (isPlayerCard) {
+    const whisper = playerIds();
+    const update = {
+      whisper,
+      blind: false,
+      "flags.add2e.attackChatVisibility": "players-only",
+      "flags.add2e.attackChatVisibilityVersion": ADD2E_ATTACK_CHAT_VISIBILITY_VERSION
+    };
+    const user = preferredPlayerUserId();
+    if (user) update.user = user;
+    message.updateSource?.(update);
+    return;
+  }
+
+  const whisper = gmIds();
+  const update = {
+    whisper,
+    blind: true,
+    "flags.add2e.attackChatVisibility": "gm-only",
+    "flags.add2e.attackChatVisibilityVersion": ADD2E_ATTACK_CHAT_VISIBILITY_VERSION
+  };
+  const user = preferredGmUserId();
+  if (user) update.user = user;
+  message.updateSource?.(update);
+}
+
+function installAttackChatVisibilityGuard() {
+  if (globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD === ADD2E_ATTACK_CHAT_VISIBILITY_VERSION) return;
+  globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = ADD2E_ATTACK_CHAT_VISIBILITY_VERSION;
+  Hooks.on("preCreateChatMessage", forceAttackChatVisibility);
+}
+
+installAttackChatVisibilityGuard();
 
 function buildPublicCard(ctx) {
   const o = outcome(ctx);
@@ -93,15 +157,40 @@ function buildGmCard(ctx) {
   const positionDetails = ctx.activePositionAttackAdjustment?.details ?? [];
   const calculSimple = `<b>${ctx.d20}</b> <span style="color:#6d654f;font-size:0.8em;">(d20)</span> ${signed(ctx.totalBonusToucher)} = <b style="font-size:1.1em;">${ctx.totalAuToucher}</b>`;
   const naturalLine = o.key === "natural20" ? `<div style="color:#b7791f;"><b>20 naturel :</b> coup exceptionnel, réussite automatique.</div>` : o.key === "natural1" ? `<div style="color:#9f1239;"><b>1 naturel :</b> échec critique, échec automatique.</div>` : "";
-  const touchLines = [naturalLine, `<div><b>Base THAC0 :</b> ${ctx.thaco}</div>`, `<div><b>Classe d’armure cible :</b> ${ctx.caFinaleCible}${ctx.activePositionAttackAdjustment?.caAdjustment ? ` <span style="color:#7a4b00;">(position : ${ctx.caAvantPosition} → ${ctx.caAvantConditionnelle})</span>` : ""}</div>`, ctx.conditionalACLine || "", positionDetails.length ? `<div><b>Position :</b> ${positionDetails.join(" ; ")}</div>` : "", `<div><b>Seuil sans modificateur :</b> ${ctx.valeurPourToucher}</div>`, `<hr style="border:0;border-top:1px solid #e0d3ad;margin:6px 0;">`, `<div><b>Modificateur ${esc(ctx.modCaracToucherLabel)} :</b> ${signed(ctx.modCaracToucher)}</div>`, `<div><b>Modificateur magique arme :</b> ${signed(ctx.bonusHit)}</div>`, `<div><b>Modificateur effets actifs :</b> ${signed(ctx.bonusToucheEffets)}</div>`, `<div><b>Modificateur portée :</b> ${signed(ctx.malusPortee)} (${esc(ctx.descPortee)})</div>`, `<div><b>Modificateur temporaire :</b> ${signed(ctx.userBonus)}</div>`, ctx.useBackstab ? `<div><b>Attaque sournoise :</b> +4 toucher, dégâts ×${ctx.backstabMultiplier}</div>` : "", ctx.useAssassination ? `<div><b>Assassinat :</b> ${ctx.assassinationInfo?.score ?? 0}%${ctx.assassinatMod ? ` (${signed(ctx.assassinatMod)} situation)` : ""}</div>` : "", `<div><b>Modificateur armure / arme :</b> ${signed(ctx.ajustementCA)}</div>`, `<hr style="border:0;border-top:1px solid #e0d3ad;margin:6px 0;">`, `<div style="font-size:1.08em;"><b>Total modificateur :</b><span style="font-weight:bold;color:#2563eb;"> ${signed(ctx.totalBonusToucher)}</span></div>`, `<div style="font-size:1.08em;"><b>Seuil final au d20 :</b><span style="font-weight:bold;color:#15803d;"> ${ctx.seuilFinalD20}</span></div>`].filter(Boolean).join("");
-  const damageLines = hit ? [`<div><b>Dégâts :</b> ${esc(ctx.degats)}</div>`, `<div><b>Calcul :</b> ${esc(ctx.formulaDegats)} → ${esc(ctx.detailsDegats)}</div>`, ctx.useBackstab ? `<div><b>Attaque sournoise :</b> dégâts ×${ctx.backstabMultiplier}</div>` : ""].filter(Boolean).join("") : `<div>Aucun dommage : l’attaque ne touche pas.</div>`;
+  const touchLines = [
+    naturalLine,
+    `<div><b>Base THAC0 :</b> ${ctx.thaco}</div>`,
+    `<div><b>Classe d’armure cible :</b> ${ctx.caFinaleCible}${ctx.activePositionAttackAdjustment?.caAdjustment ? ` <span style="color:#7a4b00;">(position : ${ctx.caAvantPosition} → ${ctx.caAvantConditionnelle})</span>` : ""}</div>`,
+    ctx.conditionalACLine || "",
+    positionDetails.length ? `<div><b>Position :</b> ${positionDetails.join(" ; ")}</div>` : "",
+    `<div><b>Seuil sans modificateur :</b> ${ctx.valeurPourToucher}</div>`,
+    `<hr style="border:0;border-top:1px solid #e0d3ad;margin:6px 0;">`,
+    `<div><b>Modificateur ${esc(ctx.modCaracToucherLabel)} :</b> ${signed(ctx.modCaracToucher)}</div>`,
+    `<div><b>Modificateur magique arme :</b> ${signed(ctx.bonusHit)}</div>`,
+    `<div><b>Modificateur effets actifs :</b> ${signed(ctx.bonusToucheEffets)}</div>`,
+    `<div><b>Modificateur portée :</b> ${signed(ctx.malusPortee)} (${esc(ctx.descPortee)})</div>`,
+    `<div><b>Modificateur temporaire :</b> ${signed(ctx.userBonus)}</div>`,
+    ctx.useBackstab ? `<div><b>Attaque sournoise :</b> +4 toucher, dégâts ×${ctx.backstabMultiplier}</div>` : "",
+    ctx.useAssassination ? `<div><b>Assassinat :</b> ${ctx.assassinationInfo?.score ?? 0}%${ctx.assassinatMod ? ` (${signed(ctx.assassinatMod)} situation)` : ""}</div>` : "",
+    `<div><b>Modificateur armure / arme :</b> ${signed(ctx.ajustementCA)}</div>`,
+    `<hr style="border:0;border-top:1px solid #e0d3ad;margin:6px 0;">`,
+    `<div style="font-size:1.08em;"><b>Total modificateur :</b><span style="font-weight:bold;color:#2563eb;"> ${signed(ctx.totalBonusToucher)}</span></div>`,
+    `<div style="font-size:1.08em;"><b>Seuil final au d20 :</b><span style="font-weight:bold;color:#15803d;"> ${ctx.seuilFinalD20}</span></div>`
+  ].filter(Boolean).join("");
+  const damageLines = hit ? [
+    `<div><b>Dégâts :</b> ${esc(ctx.degats)}</div>`,
+    `<div><b>Calcul :</b> ${esc(ctx.formulaDegats)} → ${esc(ctx.detailsDegats)}</div>`,
+    ctx.useBackstab ? `<div><b>Attaque sournoise :</b> dégâts ×${ctx.backstabMultiplier}</div>` : ""
+  ].filter(Boolean).join("") : `<div>Aucun dommage : l’attaque ne touche pas.</div>`;
   const assassination = ctx.assassinatResult ? `<div style="border:1px solid ${ctx.assassinatResult.success ? "#1f8f4d" : "#b3261e"};background:${ctx.assassinatResult.success ? "#eefaf2" : "#fff1f0"};border-radius:8px;padding:7px;margin-bottom:10px;text-align:center;"><div style="font-weight:900;color:${ctx.assassinatResult.success ? "#1f8f4d" : "#b3261e"};">Assassinat ${ctx.assassinatResult.success ? "réussi" : "échoué"}</div><div style="font-size:.92em;">Jet : <b>${ctx.assassinatResult.total}</b> / Score : <b>${ctx.assassinatResult.finalScore}%</b></div><div style="font-size:.82em;color:#666;">${esc(ctx.assassinationInfo?.breakdownTitle ?? "")}</div></div>` : "";
   return [`<div class="add2e-chat-card add2e-attack-chat-card-gm-v2" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
     `<div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;"><i class="fas ${o.icon}" style="font-size:1.22rem;color:#ffd978;"></i><div style="min-width:0;flex:1;"><div style="font-size:1.04rem;font-weight:950;line-height:1.1;">Attaque — MJ</div><div style="font-size:.78rem;font-weight:750;color:#f7e3b1;line-height:1.18;margin-top:2px;">${esc(ctx.actor?.name)} attaque ${esc(ctx.nomCible)} avec ${esc(ctx.arme?.name)}</div></div><div style="white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${o.color};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.86rem;">${esc(o.title)}</div></div>`,
     `<div style="padding:10px;"><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px;">${chip("Portée", `${esc(ctx.descPortee || "—")} <span style=\"font-size:.78rem;color:#7b6a40;\">${esc(ctx.typePortee || "")}</span>`)}${chip("Seuil", esc(ctx.seuilFinalD20), "#c06000")}${chip("Issue", esc(o.title), o.color)}</div>`,
     `<div style="border:1px solid #d7c28a;background:#f7f0df;border-radius:9px;padding:8px;text-align:center;margin-bottom:8px;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#6f5520;">Jet d’attaque</div><div style="font-size:1.1rem;font-weight:950;margin-top:2px;"><i class="fas fa-dice-d20"></i> ${calculSimple}</div></div>`,
-    hit ? `<div style="border:1px solid #c8a557;background:#fff6df;border-radius:9px;padding:8px;text-align:center;margin-bottom:8px;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#6f5520;">Dégâts infligés</div><div style="font-size:1.25rem;font-weight:950;color:#7a2e17;margin-top:2px;">${esc(ctx.degats)}</div><div style="font-size:.78rem;color:#71624b;font-weight:850;">${esc(ctx.formulaDegats)} → ${esc(ctx.detailsDegats)}</div></div>` : "", assassination,
-    `<details style="margin-top:8px;border:1px solid #c6a85b;border-radius:9px;background:#fffdf6;overflow:hidden;"><summary style="cursor:pointer;background:#ead7a4;color:#3f2d0e;padding:7px 9px;font-weight:950;"><i class="fas fa-list-check"></i> Détails du jet</summary><div style="padding:8px;display:grid;gap:7px;"><details style="border:1px solid #d9c894;border-radius:8px;background:#fff;overflow:hidden;"><summary style="cursor:pointer;padding:6px 8px;background:#f4ead1;font-weight:950;color:#5a3c11;"><i class="fas fa-bullseye"></i> Toucher</summary><div style="padding:8px;line-height:1.55;color:#2f2a20;">${touchLines}</div></details><details style="border:1px solid #d9c894;border-radius:8px;background:#fff;overflow:hidden;"><summary style="cursor:pointer;padding:6px 8px;background:#f4ead1;font-weight:950;color:#5a3c11;"><i class="fas fa-burst"></i> Dommages</summary><div style="padding:8px;line-height:1.55;color:#2f2a20;">${damageLines}</div></details></div></details></div></div>`].filter(Boolean).join("");
+    hit ? `<div style="border:1px solid #c8a557;background:#fff6df;border-radius:9px;padding:8px;text-align:center;margin-bottom:8px;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#6f5520;">Dégâts infligés</div><div style="font-size:1.25rem;font-weight:950;color:#7a2e17;margin-top:2px;">${esc(ctx.degats)}</div><div style="font-size:.78rem;color:#71624b;font-weight:850;">${esc(ctx.formulaDegats)} → ${esc(ctx.detailsDegats)}</div></div>` : "",
+    assassination,
+    `<details style="margin-top:8px;border:1px solid #c6a85b;border-radius:9px;background:#fffdf6;overflow:hidden;"><summary style="cursor:pointer;background:#ead7a4;color:#3f2d0e;padding:7px 9px;font-weight:950;"><i class="fas fa-list-check"></i> Détails du jet</summary><div style="padding:8px;display:grid;gap:7px;"><details style="border:1px solid #d9c894;border-radius:8px;background:#fff;overflow:hidden;"><summary style="cursor:pointer;padding:6px 8px;background:#f4ead1;font-weight:950;color:#5a3c11;"><i class="fas fa-bullseye"></i> Toucher</summary><div style="padding:8px;line-height:1.55;color:#2f2a20;">${touchLines}</div></details><details style="border:1px solid #d9c894;border-radius:8px;background:#fff;overflow:hidden;"><summary style="cursor:pointer;padding:6px 8px;background:#f4ead1;font-weight:950;color:#5a3c11;"><i class="fas fa-burst"></i> Dommages</summary><div style="padding:8px;line-height:1.55;color:#2f2a20;">${damageLines}</div></details></div></details></div></div>`
+  ].filter(Boolean).join("");
 }
 
 export function add2eBuildAttackPlayerChatCard(ctx) {
@@ -112,12 +201,22 @@ export function add2eBuildAttackChatCard(ctx) {
   setTimeout(() => {
     const whisper = gmIds();
     if (!whisper.length) return;
-    ChatMessage.create({
+    const messageData = {
       speaker: ChatMessage.getSpeaker({ actor: ctx.actor }),
       content: buildGmCard(ctx),
       avatar: ctx.chatImg,
-      whisper
-    }).catch(err => console.warn("[ADD2E][ATTACK][GM_CHAT_CARD]", err));
+      whisper,
+      blind: true,
+      flags: {
+        add2e: {
+          attackChatVisibility: "gm-only",
+          attackChatVisibilityVersion: ADD2E_ATTACK_CHAT_VISIBILITY_VERSION
+        }
+      }
+    };
+    const user = preferredGmUserId();
+    if (user) messageData.user = user;
+    ChatMessage.create(messageData).catch(err => console.warn("[ADD2E][ATTACK][GM_CHAT_CARD]", err));
   }, 0);
   return buildPublicCard(ctx);
 }
