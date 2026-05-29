@@ -1,10 +1,10 @@
 // scripts/add2e-initiative.mjs
 // ADD2E — Initiative indépendante.
 // Initiative simple au d6, ordre ascendant.
-// Le verrou de combat agit comme une pause sélective côté joueur : seul le token du tour reste interactif.
+// Verrou de tour non intrusif : les tokens restent cliquables, seul le contrôle/déplacement hors tour est refusé côté joueur.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-selective-token-lock-v9";
-const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-selective-token-lock-v9";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-selective-control-lock-v10";
+const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-selective-control-lock-v10";
 const ADD2E_INIT_CHAT_CARD_VERSION = "2026-05-28-init-chat-card-v1";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
@@ -275,26 +275,12 @@ function add2eHasMovementChange(changes = {}) {
   return ["x", "y", "elevation", "rotation"].some(path => foundry.utils.hasProperty(changes, path));
 }
 
-function add2eApplyTokenInteractivity() {
-  try {
-    const combat = game.combat;
-    const tokens = Array.from(canvas?.tokens?.placeables ?? []);
-    for (const token of tokens) {
-      if (!token) continue;
-      const locked = !game.user?.isGM && add2eIsCombatActive(combat) && add2eIsCombatToken(token, combat) && !add2eIsActiveCombatToken(token, combat);
-      token.__add2eTurnLocked = locked;
-      token.interactive = !locked;
-      if ("eventMode" in token) token.eventMode = locked ? "none" : "auto";
-      if ("cursor" in token) token.cursor = locked ? "not-allowed" : null;
-      if (locked && token.controlled) token.release({ add2eTurnLockRelease: true });
-    }
-  } catch (err) {
-    console.warn(`${TAG}[TURN_LOCK][INTERACTIVITY_ERROR]`, err);
+function add2eReleaseInvalidControlledTokens({ notify = false } = {}) {
+  if (game.user?.isGM || !add2eIsCombatActive()) return;
+  for (const token of Array.from(canvas?.tokens?.controlled ?? [])) {
+    if (add2eCanTokenActNow(token?.document ?? token, { notify })) continue;
+    token.release({ add2eTurnLockRelease: true });
   }
-}
-
-function add2eScheduleApplyTokenInteractivity(delay = 0) {
-  setTimeout(() => add2eApplyTokenInteractivity(), delay);
 }
 
 function add2ePatchTokenDragGuard() {
@@ -321,11 +307,9 @@ function add2eInstallMovementTurnLock() {
   add2ePatchTokenDragGuard();
 
   Hooks.on("controlToken", (token, controlled) => {
-    if (game.user?.isGM) return;
-    if (!controlled) return;
+    if (game.user?.isGM || !controlled) return;
     if (add2eCanTokenActNow(token?.document ?? token, { notify: true })) return;
     token?.release?.({ add2eTurnLockRelease: true });
-    add2eScheduleApplyTokenInteractivity(0);
   });
 
   Hooks.on("preUpdateToken", (tokenDocument, changes, options, userId) => {
@@ -340,12 +324,10 @@ function add2eInstallMovementTurnLock() {
     }
   });
 
-  Hooks.on("canvasReady", () => add2eScheduleApplyTokenInteractivity(100));
-  Hooks.on("createCombatant", () => add2eScheduleApplyTokenInteractivity(100));
-  Hooks.on("deleteCombatant", () => add2eScheduleApplyTokenInteractivity(100));
-  Hooks.on("updateCombat", () => add2eScheduleApplyTokenInteractivity(50));
-  Hooks.on("combatTurn", () => add2eScheduleApplyTokenInteractivity(50));
-  Hooks.on("combatRound", () => add2eScheduleApplyTokenInteractivity(50));
+  Hooks.on("canvasReady", () => setTimeout(() => add2eReleaseInvalidControlledTokens({ notify: false }), 100));
+  Hooks.on("updateCombat", () => setTimeout(() => add2eReleaseInvalidControlledTokens({ notify: false }), 50));
+  Hooks.on("combatTurn", () => setTimeout(() => add2eReleaseInvalidControlledTokens({ notify: false }), 50));
+  Hooks.on("combatRound", () => setTimeout(() => add2eReleaseInvalidControlledTokens({ notify: false }), 50));
 }
 
 function add2eWrapActionFunction(name, label) {
@@ -377,7 +359,7 @@ function add2eExposeInitiativeGlobals() {
   globalThis.add2ePatchCombatTrackerInitiativeIcons = add2ePatchCombatTrackerInitiativeIcons;
   globalThis.add2eCanActorActNow = add2eCanActorActNow;
   globalThis.add2eCanTokenActNow = add2eCanTokenActNow;
-  globalThis.add2eApplyTokenInteractivity = add2eApplyTokenInteractivity;
+  globalThis.add2eReleaseInvalidControlledTokens = add2eReleaseInvalidControlledTokens;
   globalThis.triInitiativeAscendant = add2eSortInitiativeAscending;
 }
 
@@ -456,22 +438,20 @@ function add2ePatchCombatTrackerInitiativeIcons(root = document) {
 function add2eInstallInitiativeHooks() {
   Hooks.on("updateCombatant", (combatant, changes, options, userId) => {
     if (options?.add2eInitiativeSort) return;
-    if (foundry.utils.hasProperty(changes ?? {}, "initiative")) {
-      add2eScheduleInitiativeSort(combatant.combat ?? game.combat);
-    }
-    add2eScheduleApplyTokenInteractivity(100);
+    if (foundry.utils.hasProperty(changes ?? {}, "initiative")) add2eScheduleInitiativeSort(combatant.combat ?? game.combat);
+    setTimeout(() => add2eReleaseInvalidControlledTokens({ notify: false }), 100);
   });
 
   Hooks.on("createCombatant", (combatant, options, userId) => {
     if (options?.add2eInitiativeSort) return;
     add2eScheduleInitiativeSort(combatant.combat ?? game.combat);
-    add2eScheduleApplyTokenInteractivity(100);
+    setTimeout(() => add2eReleaseInvalidControlledTokens({ notify: false }), 100);
   });
 
   Hooks.on("deleteCombatant", (combatant, options, userId) => {
     if (options?.add2eInitiativeSort) return;
     add2eScheduleInitiativeSort(combatant.combat ?? game.combat);
-    add2eScheduleApplyTokenInteractivity(100);
+    setTimeout(() => add2eReleaseInvalidControlledTokens({ notify: false }), 100);
   });
 
   Hooks.on("renderCombatTracker", (app, html) => add2ePatchCombatTrackerInitiativeIcons(html));
@@ -496,7 +476,7 @@ Hooks.once("ready", () => {
   add2ePatchCombatTrackerInitiativeIcons(document);
   add2eInstallActionTurnLocks();
   add2eInstallMovementTurnLock();
-  add2eScheduleApplyTokenInteractivity(500);
+  setTimeout(() => add2eReleaseInvalidControlledTokens({ notify: false }), 500);
   setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 500);
   setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 1500);
   setTimeout(() => add2eInstallActionTurnLocks(), 800);
