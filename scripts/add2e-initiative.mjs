@@ -1,11 +1,10 @@
 // scripts/add2e-initiative.mjs
 // ADD2E — Initiative propre.
-// Responsabilités : initiative 1d6, ordre ascendant, icône D6, carte de chat et pause sélective des actions.
-// Aucune gestion de déplacement, drag, ruler, trace, chemin ou historique de mouvement.
+// Responsabilités uniques : initiative 1d6, ordre ascendant, icône D6 et carte de chat.
+// Aucun blocage d'action, aucune gestion de déplacement, aucun drag, ruler, trace, chemin ou historique de mouvement.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-clean-initiative-action-lock-v3";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-clean-initiative-no-lock-v2";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-clean-initiative-chat-v2";
-const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-clean-action-lock-v3";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
@@ -13,11 +12,9 @@ let configured = false;
 let sorting = false;
 let sortTimer = null;
 let cleanedLegacyHooks = false;
-let actionWarningAt = 0;
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
 globalThis.ADD2E_INITIATIVE_CHAT_VERSION = ADD2E_INITIATIVE_CHAT_VERSION;
-globalThis.ADD2E_INITIATIVE_ACTION_LOCK_VERSION = ADD2E_INITIATIVE_ACTION_LOCK_VERSION;
 
 function configureInitiative() {
   if (configured) return;
@@ -33,8 +30,7 @@ function configureInitiative() {
     version: ADD2E_INITIATIVE_VERSION,
     formula: "1d6",
     order: "ascending",
-    movement: "not-managed",
-    actionLock: "active-combatant"
+    locks: "none"
   });
 }
 
@@ -63,6 +59,7 @@ function cleanupLegacyInitiativeHooksFromStore(store) {
       const source = hookSource(entry);
       return !(
         source.includes("triInitiativeAscendant") ||
+        source.includes("add2eCanActorActNow") ||
         source.includes("add2eCanTokenActNow") ||
         source.includes("add2eClearCombatMovementHistoryOnce") ||
         source.includes("add2eClearTokenMovementHistory") ||
@@ -75,7 +72,8 @@ function cleanupLegacyInitiativeHooksFromStore(store) {
         source.includes("_canDrag") ||
         source.includes("_onDragLeft") ||
         source.includes("Token.ruler") ||
-        source.includes("add2eTurnLock")
+        source.includes("add2eTurnLock") ||
+        source.includes("ACTION_LOCK")
       );
     });
     removed += before - store[hookName].length;
@@ -229,82 +227,6 @@ function installInitiativeChatCard() {
   });
 }
 
-function currentCombatant(combat = game.combat) {
-  if (!combat) return null;
-  return combat.combatant ?? combat.combatants?.get?.(combat.current?.combatantId) ?? null;
-}
-
-function combatActive(combat = game.combat) {
-  return Boolean(combat && combat.started && currentCombatant(combat));
-}
-
-function combatantMatchesActor(combatant, actor) {
-  if (!combatant || !actor) return false;
-  if (combatant.actor?.id && combatant.actor.id === actor.id) return true;
-  if (combatant.actorId && combatant.actorId === actor.id) return true;
-  return false;
-}
-
-function notifyNotTurn(actor = null) {
-  const now = Date.now();
-  if (now - actionWarningAt < 900) return;
-  actionWarningAt = now;
-
-  const active = currentCombatant();
-  const activeName = active?.name ?? active?.actor?.name ?? "l'acteur actif";
-  const actorName = actor?.name ? `${actor.name} ne peut pas agir.` : "Cet acteur ne peut pas agir.";
-  ui.notifications?.info?.(`${actorName} C'est le tour de ${activeName}.`);
-}
-
-function canActorActNow(actor, { notify = false } = {}) {
-  const combat = game.combat;
-  if (!combatActive(combat)) return true;
-  if (game.user?.isGM) return true;
-  if (combatantMatchesActor(currentCombatant(combat), actor)) return true;
-
-  if (notify) notifyNotTurn(actor);
-  return false;
-}
-
-function resolveActionActor(argsLike) {
-  const args = Array.isArray(argsLike) ? argsLike : [];
-  const first = args[0] ?? null;
-  const source = first && typeof first === "object" ? first : {};
-
-  if (source.actor) return source.actor;
-  if (source.actorId) return game.actors?.get?.(source.actorId) ?? null;
-  if (source.token?.actor) return source.token.actor;
-  if (source.tokenId && canvas?.tokens?.get?.(source.tokenId)?.actor) return canvas.tokens.get(source.tokenId).actor;
-
-  return canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null;
-}
-
-function wrapActionFunction(name, label) {
-  const current = globalThis[name];
-  if (typeof current !== "function") return false;
-  if (current.__add2eCleanInitiativeActionLock === ADD2E_INITIATIVE_ACTION_LOCK_VERSION) return true;
-
-  const wrapped = async function add2eCleanInitiativeActionLock(...args) {
-    const actor = resolveActionActor(args);
-    if (!canActorActNow(actor, { notify: true })) return false;
-    return current.apply(this, args);
-  };
-
-  wrapped.__add2eCleanInitiativeActionLock = ADD2E_INITIATIVE_ACTION_LOCK_VERSION;
-  wrapped.__add2eOriginal = current;
-  globalThis[name] = wrapped;
-
-  console.log(`${TAG}[ACTION_LOCK]`, { name, label, version: ADD2E_INITIATIVE_ACTION_LOCK_VERSION });
-  return true;
-}
-
-function installActionLocks() {
-  wrapActionFunction("add2eAttackRoll", "attaque");
-  wrapActionFunction("add2eCastSpell", "sort");
-  wrapActionFunction("cast_spell", "sort alias");
-  wrapActionFunction("add2eExecuteClassFeatureOnUse", "capacité");
-}
-
 function makeD6Image() {
   const img = document.createElement("img");
   img.src = ADD2E_INITIATIVE_D6_ICON;
@@ -389,7 +311,6 @@ function exposeGlobals() {
   globalThis.add2eSortInitiativeAscending = sortInitiativeAscending;
   globalThis.add2eScheduleInitiativeSort = scheduleInitiativeSort;
   globalThis.add2ePatchCombatTrackerInitiativeIcons = patchInitiativeIcons;
-  globalThis.add2eCanActorActNow = canActorActNow;
   globalThis.triInitiativeAscendant = sortInitiativeAscending;
 }
 
@@ -430,13 +351,9 @@ Hooks.once("ready", () => {
   cleanupLegacyInitiativeHooks();
   exposeGlobals();
   patchInitiativeIcons(document);
-  installActionLocks();
 
   setTimeout(() => patchInitiativeIcons(document), 500);
   setTimeout(() => patchInitiativeIcons(document), 1500);
-  setTimeout(() => installActionLocks(), 800);
-  setTimeout(() => installActionLocks(), 2000);
-  setTimeout(() => installActionLocks(), 4000);
 });
 
 exposeGlobals();
