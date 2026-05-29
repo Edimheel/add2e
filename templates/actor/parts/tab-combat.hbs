@@ -10,7 +10,7 @@
                   <tr><th>Armure</th><td>{{{combatDefense.armure}}}</td></tr>
                   <tr><th>Bouclier</th><td>{{{combatDefense.bouclier}}}</td></tr>
                   <tr><th>Bonus magique</th><td title="{{magicSourceNames combatDefense.objets_magiques_defense.objectSources 'Aucun bonus magique hors armure/bouclier.'}}">{{negativeNumber combatDefense.objets_magiques_defense.objectProtectionBonus}}</td></tr>
-                  <tr><th>Mod. DEX défense</th><td>{{#if (gt actor.system.dex_def 0)}}+{{/if}}{{#if (eq actor.system.dex_def 0)}}+{{/if}}{{actor.system.dex_def}}</td></tr>
+                  <tr><th>Mod. DEX défense</th><td>{{signedNumber actor.system.dex_def}}</td></tr>
                 </tbody>
               </table>
             </div>
@@ -21,19 +21,29 @@
             <div class="a2e-panel-body">
               <table class="a2e-table">
                 <thead>
-                  <tr><th>Arme</th><th>Dégâts</th><th>Toucher</th><th>Dégâts</th><th>THAC0</th></tr>
+                  <tr>
+                    <th>Arme</th>
+                    <th>Dégâts</th>
+                    <th>Magie</th>
+                    <th>Carac.</th>
+                    <th>Autres</th>
+                    <th>Total toucher</th>
+                    <th>Total dégâts</th>
+                    <th>THAC0 effectif</th>
+                  </tr>
                 </thead>
                 <tbody>
-                  {{#each listeArmes as |arme|}}
-                    {{#if arme.system.equipee}}
-                      <tr>
-                        <td><b>{{arme.name}}</b></td>
-                        <td>{{add2eWeaponDisplayDamage arme ../listeObjets}}</td>
-                        <td>{{#if (gt arme.system.bonus_hit 0)}}+{{/if}}{{#if (eq arme.system.bonus_hit 0)}}+{{/if}}{{arme.system.bonus_hit}}</td>
-                        <td>{{#if (gt arme.system.bonus_dom 0)}}+{{/if}}{{#if (eq arme.system.bonus_dom 0)}}+{{/if}}{{arme.system.bonus_dom}}</td>
-                        <td>{{../combatDefense.thaco}}</td>
-                      </tr>
-                    {{/if}}
+                  {{#each (add2eEquippedWeaponRows actor listeArmes listeObjets combatDefense) as |row|}}
+                    <tr title="Toucher : magie {{row.magicHitSigned}} + {{row.abilityLabel}} {{row.abilityHitSigned}} + autres {{row.otherHitSigned}} = {{row.totalHitSigned}}&#10;Dégâts : magie {{row.magicDamageSigned}} + {{row.abilityLabel}} {{row.abilityDamageSigned}} + autres {{row.otherDamageSigned}} = {{row.totalDamageSigned}}&#10;THAC0 : {{row.thacoBase}} - bonus toucher {{row.totalHitSigned}} = {{row.thacoEffectif}}">
+                      <td><b>{{row.name}}</b></td>
+                      <td>{{row.damage}}</td>
+                      <td>{{row.magicHitSigned}} / {{row.magicDamageSigned}}</td>
+                      <td>{{row.abilityLabel}} {{row.abilityHitSigned}} / {{row.abilityDamageSigned}}</td>
+                      <td>{{row.otherHitSigned}} / {{row.otherDamageSigned}}</td>
+                      <td><b>{{row.totalHitSigned}}</b></td>
+                      <td><b>{{row.totalDamageSigned}}</b></td>
+                      <td><b>{{row.thacoEffectif}}</b></td>
+                    </tr>
                   {{/each}}
                 </tbody>
               </table>
@@ -57,8 +67,8 @@
                       <td>{{#if arme.system.equipee}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td>
                       <td>{{add2eWeaponDisplayDamage arme ../listeObjets}}</td>
                       <td>{{arme.system.type_degats}}</td>
-                      <td>{{#if (gt arme.system.bonus_hit 0)}}+{{/if}}{{#if (eq arme.system.bonus_hit 0)}}+{{/if}}{{arme.system.bonus_hit}}</td>
-                      <td>{{#if (gt arme.system.bonus_dom 0)}}+{{/if}}{{#if (eq arme.system.bonus_dom 0)}}+{{/if}}{{arme.system.bonus_dom}}</td>
+                      <td>{{signedNumber arme.system.bonus_hit}}</td>
+                      <td>{{signedNumber arme.system.bonus_dom}}</td>
                       <td>{{arme.system.facteur_rapidité}}</td>
                       <td>
                         <div class="a2e-actions">
@@ -93,7 +103,7 @@
                       <td>{{munition.system.sousType}}{{munition.system.sous_type}}{{munition.system.munitionType}}</td>
                       <td>{{add2eItemDisplayDamage munition}}</td>
                       <td>{{munition.system.quantite}}</td>
-                      <td>{{#if (gt munition.system.bonus_hit 0)}}+{{/if}}{{#if (eq munition.system.bonus_hit 0)}}+{{/if}}{{munition.system.bonus_hit}} / {{#if (gt munition.system.bonus_dom 0)}}+{{/if}}{{#if (eq munition.system.bonus_dom 0)}}+{{/if}}{{munition.system.bonus_dom}}</td>
+                      <td>{{signedNumber munition.system.bonus_hit}} / {{signedNumber munition.system.bonus_dom}}</td>
                       <td>{{#if munition.system.recuperable}}{{munition.system.taux_recuperation}}{{else}}Non{{/if}}</td>
                       <td>
                         <div class="a2e-actions">
@@ -128,7 +138,7 @@
                     <tr class="item" data-item-id="{{armure._id}}">
                       <td><b>{{armure.name}}</b></td>
                       <td>{{armure.system.ac}}</td>
-                      <td>{{#if (gt armure.system.bonus_ac 0)}}+{{/if}}{{#if (eq armure.system.bonus_ac 0)}}+{{/if}}{{armure.system.bonus_ac}}</td>
+                      <td>{{signedNumber armure.system.bonus_ac}}</td>
                       <td>
                         <div class="a2e-actions">
                           <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if armure.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{armure._id}}" title="{{#if armure.system.equipee}}Équipée — cliquer pour retirer{{else}}Non équipée — cliquer pour équiper{{/if}}"><i class="fas fa-shield-alt"></i></a>
