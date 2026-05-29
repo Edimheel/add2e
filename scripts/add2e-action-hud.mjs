@@ -1,9 +1,9 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-05-28-v37-values-colored-large
+// Version : 2026-05-29-v38-monsters-ignore-ammo-display
 // Principe : le HUD est une interface. Les jets et actions délèguent strictement aux fonctions de la feuille/système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-28-v37-values-colored-large";
+const ADD2E_ACTION_HUD_VERSION = "2026-05-29-v38-monsters-ignore-ammo-display";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
 const STORAGE_KEY = "add2e.actionHud.state.v34";
@@ -31,7 +31,10 @@ function hud() { return document.getElementById(HUD_ID); }
 function currentActor() { return hudActor ?? canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null; }
 function tokenFor(actor) { return canvas?.tokens?.controlled?.find?.(t => t.actor?.id === actor?.id) ?? actor?.getActiveTokens?.()[0] ?? null; }
 function canUse(actor) { return !!actor && (game.user?.isGM || actor.isOwner || actor.testUserPermission?.(game.user, "OWNER")); }
-function relevant(actor) { const t = String(actor?.type ?? "").toLowerCase(); return t === "personnage" ? canUse(actor) : (t === "monster" ? game.user?.isGM === true : false); }
+function actorType(actor) { return norm(actor?.type ?? actor?._source?.type ?? actor?.baseActor?.type ?? ""); }
+function isMonsterActor(actor) { return actorType(actor) === "monster"; }
+function usesProjectileInventory(actor) { return actorType(actor) === "personnage"; }
+function relevant(actor) { const t = actorType(actor); return t === "personnage" ? canUse(actor) : (t === "monster" ? game.user?.isGM === true : false); }
 
 function defaultState() { return { left: 116, bottom: 22, width: 640, maxMenuHeight: 360, collapsed: false }; }
 function loadState() { if (state) return state; try { state = { ...defaultState(), ...(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || {}) }; } catch (_e) { state = defaultState(); } return state; }
@@ -57,7 +60,7 @@ function isPropelledWeapon(item) { const tags = itemTags(item), n = norm(item?.n
 function projectileKeys(item) { const text = `${norm(item?.name)} ${itemTags(item).join(" ")}`; if (text.includes("arbalete")) return ["carreau", "carreaux", "bolt"]; if (text.includes("arc")) return ["fleche", "fleches", "arrow"]; if (text.includes("fronde")) return ["bille", "billes", "pierre", "pierres", "bullet"]; return ["munition", "projectile", "ammo"]; }
 function quantity(item) { const s = item?.system ?? {}; const q = s.quantite ?? s.quantity ?? s.qty ?? s.nombre ?? s.nb ?? s.uses?.value ?? s.charges?.value; return q === undefined || q === null || q === "" ? "—" : String(q); }
 function quantityNumber(item, fallback = 1) { const q = quantity(item); if (q === "—") return fallback; return num(q, fallback); }
-function equippedProjectile(actor, weapon) { if (!actor || !isPropelledWeapon(weapon)) return null; const keys = projectileKeys(weapon).map(norm); const items = actor.items?.filter?.(i => i.id !== weapon.id && itemEquipped(i) && keys.some(k => norm(i.name).includes(k) || itemTags(i).some(t => t.includes(k)))) ?? []; return items.find(i => quantity(i) !== "0") ?? items[0] ?? null; }
+function equippedProjectile(actor, weapon) { if (!usesProjectileInventory(actor) || !isPropelledWeapon(weapon)) return null; const keys = projectileKeys(weapon).map(norm); const items = actor.items?.filter?.(i => i.id !== weapon.id && itemEquipped(i) && keys.some(k => norm(i.name).includes(k) || itemTags(i).some(t => t.includes(k)))) ?? []; return items.find(i => quantity(i) !== "0") ?? items[0] ?? null; }
 function damage(item) { const s = item?.system ?? {}; return s?.dégâts?.contre_moyen ?? s?.degats?.contre_moyen ?? s?.degats_moyen ?? s?.damage ?? s?.degats ?? s?.dmg ?? "—"; }
 function range(item) { const s = item?.system ?? {}; const p = [s.portee_courte ?? s.portee_short, s.portee_moyenne ?? s.portee_medium, s.portee_longue ?? s.portee_long].filter(v => v !== undefined && v !== null && String(v) !== ""); return p.length ? p.join(" / ") : "Contact"; }
 function weapons(actor) { return actor?.items?.filter?.(i => String(i.type ?? "").toLowerCase() === "arme" && itemEquipped(i)) ?? []; }
@@ -130,7 +133,7 @@ function injectStyle() {
 #${HUD_ID} .img-act{width:38px;height:38px;padding:0;border:1px solid rgba(214,176,90,.75);border-radius:8px;background:rgba(0,0,0,.22);cursor:pointer;display:flex;align-items:center;justify-content:center}#${HUD_ID} .img-act:hover{filter:brightness(1.22)}#${HUD_ID} .img-act img{width:34px;height:34px;border:0;border-radius:7px}
 #${HUD_ID} .title{color:#fff4cf;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#${HUD_ID} .meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px}
 #${HUD_ID} .component-ok{color:#b8ffb8;border:1px solid rgba(80,180,80,.55);background:rgba(35,100,35,.35);padding:1px 6px;border-radius:999px}#${HUD_ID} .component-bad{color:#ffb1a8;border:1px solid rgba(190,55,45,.62);background:rgba(110,25,20,.42);padding:1px 6px;border-radius:999px}
-#${HUD_ID} .ammo{display:inline-flex;align-items:center;gap:4px;color:#b8ffb8}#${HUD_ID} .ammo-missing{color:#ffb1a8}#${HUD_ID} .ammo img{width:18px;height:18px;border-radius:4px;border:1px solid rgba(214,176,90,.4)}
+#${HUD_ID} .ammo{display:inline-flex;align-items:center;gap:4px;color:#b8ffb8}#${HUD_ID} .ammo-missing{color:#ffb1a8}#${HUD_ID} .ammo-free{color:#ffe4a1;border:1px solid rgba(214,176,90,.4);border-radius:999px;padding:1px 6px;background:rgba(214,176,90,.12)}#${HUD_ID} .ammo img{width:18px;height:18px;border-radius:4px;border:1px solid rgba(214,176,90,.4)}
 #${HUD_ID} .act{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap}#${HUD_ID} .danger{min-width:36px;width:36px;color:#ffd0c8;border-color:#b94735;background:linear-gradient(180deg,#7d241b,#42120d)}
 #${HUD_ID} .empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center}
 #${HUD_ID} .spell-layout{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}#${HUD_ID} .spell-levels{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;border-bottom:1px solid rgba(214,176,90,.28)}#${HUD_ID} .spell-level{min-height:30px;padding:5px 10px;border:1px solid rgba(214,176,90,.55);border-radius:999px;background:rgba(214,176,90,.12);color:#ffe4a1;font-weight:950;font-size:.82em;cursor:pointer}#${HUD_ID} .spell-level.active{background:linear-gradient(180deg,#f0c66d,#c78d2e);color:#211307}#${HUD_ID} .spell-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;padding-right:3px}#${HUD_ID} .spell-list-title{color:#ffe4a1;font-weight:950;font-size:.82em;margin:0 0 2px 2px}
@@ -146,7 +149,7 @@ function weaponRows(actor) {
     const projectile = equippedProjectile(actor, i);
     const propelled = isPropelledWeapon(i);
     const dmg = propelled && projectile ? `Dégâts projectile ${damage(projectile)}` : `Dégâts ${damage(i)}`;
-    const ammo = propelled ? (projectile ? `<span class="ammo"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>` : `<span class="ammo-missing">Aucune munition équipée</span>`) : "";
+    const ammo = propelled ? (usesProjectileInventory(actor) ? (projectile ? `<span class="ammo"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>` : `<span class="ammo-missing">Aucune munition équipée</span>`) : `<span class="ammo-free">Munition PNJ non suivie</span>`) : "";
     return `<div class="row"><button type="button" class="img-act" data-action="attack" data-item-id="${esc(i.id)}" title="Attaquer avec ${esc(i.name)}"><img src="${esc(i.img || "icons/svg/sword.svg")}" alt=""></button><div><div class="title">${esc(i.name)}</div><div class="meta"><span>${esc(dmg)}</span><span>Portée ${esc(range(i))}</span>${ammo}</div></div></div>`;
   }).join("");
 }
@@ -177,7 +180,7 @@ function abilityRows(actor) { return `<div class="grid">${CARACS.map(c => `<div 
 
 function hudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
-  const isMonster = String(actor.type).toLowerCase() === "monster";
+  const isMonster = isMonsterActor(actor);
   const race = isMonster ? (actor.system?.type ?? "Monstre") : (actor.system?.race || actor.system?.details_race?.label || actor.items?.find?.(i => i.type === "race")?.name || "Race");
   const classe = isMonster ? (actor.system?.taille ?? actor.system?.size ?? "MJ") : (actor.system?.classe || actor.system?.details_classe?.label || actor.items?.find?.(i => i.type === "classe")?.name || "Classe");
   const niveau = isMonster ? (actor.system?.dv ?? actor.system?.hitDice ?? actor.system?.niveau ?? "—") : (actor.system?.niveau ?? "—");
