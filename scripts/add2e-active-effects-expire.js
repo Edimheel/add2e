@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-29-vital-status-valid-icons-v3
+// Version : 2026-05-29-vital-status-readable-core-icons-v4
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-valid-icons-v3";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-readable-core-icons-v4";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -12,13 +12,13 @@ const ADD2E_VITAL_STATUS = {
     key: "unconscious",
     statusId: "unconscious",
     name: "Inconscient",
-    icon: "icons/svg/unconscious.svg"
+    icon: "icons/svg/daze.svg"
   },
   dead: {
     key: "dead",
     statusId: "dead",
     name: "Mort",
-    icon: "icons/svg/skull.svg"
+    icon: "icons/svg/blood.svg"
   }
 };
 
@@ -97,8 +97,8 @@ function add2eVitalEffectKind(effect) {
   const statuses = add2eVitalEffectStatusSet(effect);
   const flag = add2eVitalEffectFlag(effect);
 
-  if (flag === "dead" || flag === "mort" || statuses.has("dead") || name === "mort" || icon.includes("skull")) return "dead";
-  if (flag === "unconscious" || flag === "inconscient" || statuses.has("unconscious") || name === "inconscient" || icon.includes("unconscious")) return "unconscious";
+  if (flag === "dead" || flag === "mort" || statuses.has("dead") || name === "mort" || icon.includes("skull") || icon.includes("blood")) return "dead";
+  if (flag === "unconscious" || flag === "inconscient" || statuses.has("unconscious") || name === "inconscient" || icon.includes("unconscious") || icon.includes("daze")) return "unconscious";
   return null;
 }
 
