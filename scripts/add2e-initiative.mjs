@@ -3,13 +3,13 @@
 // Règle système : initiative 1d6, le plus petit résultat agit en premier.
 // Responsabilités : initiative, tri réel des tours, flèches suivant/précédent,
 // carte de chat, icône D6, verrou des actions hors tour, suivi HUD.
-// Ne gère pas le déplacement, les chemins, les traces ou le ruler.
+// Le fichier ne gère pas le déplacement ; il neutralise seulement l'historique visuel/persisté.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-navigation-hud-v3";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-navigation-hud-v4";
 const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v1";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
-const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v3";
-const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-29-no-movement-history-record-v2";
+const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v4";
+const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-29-no-movement-history-record-v3";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
@@ -17,6 +17,7 @@ let configured = false;
 let sorting = false;
 let sortTimer = null;
 let hudFollowTimer = null;
+let movementTrailTimer = null;
 let warningAt = 0;
 let cleanedLegacyHooks = false;
 let combatPatchInstalled = false;
@@ -55,6 +56,30 @@ function compareCombatantsAscending(a, b) {
 
 function sortedCombatants(combat = game.combat) {
   return Array.from(combat?.combatants ?? []).sort(compareCombatantsAscending);
+}
+
+function sortedTurnIndex(combat = game.combat) {
+  const n = Number(combat?.turn ?? combat?.current?.turn ?? 0);
+  return Number.isInteger(n) && n >= 0 ? n : 0;
+}
+
+function sortedCombatantAt(combat = game.combat, index = null) {
+  const turns = Array.isArray(combat?.turns) && combat.turns.length ? combat.turns : sortedCombatants(combat);
+  if (!turns.length) return null;
+  const i = Math.max(0, Math.min(turns.length - 1, Number(index ?? sortedTurnIndex(combat)) || 0));
+  return turns[i] ?? null;
+}
+
+function currentCombatant(combat = game.combat) {
+  return sortedCombatantAt(combat, sortedTurnIndex(combat)) ?? combat?.combatant ?? null;
+}
+
+function activeSortedIndex(combat = game.combat) {
+  const turns = sortedCombatants(combat);
+  if (!turns.length) return 0;
+  const raw = sortedTurnIndex(combat);
+  if (raw >= 0 && raw < turns.length) return raw;
+  return 0;
 }
 
 function hookSource(entry) {
@@ -98,35 +123,17 @@ function cleanupLegacyInitiativeHooks() {
   return removed;
 }
 
-function activeCombatantId(combat = game.combat) {
-  return combat?.current?.combatantId ?? combat?.combatantId ?? combat?.combatant?.id ?? null;
-}
-
-function currentCombatant(combat = game.combat) {
-  if (!combat) return null;
-  const activeId = activeCombatantId(combat);
-  if (activeId) {
-    const byId = combat.combatants?.get?.(activeId) ?? null;
-    if (byId) return byId;
-  }
-  const turnIndex = Number(combat.turn ?? combat.current?.turn);
-  if (Number.isInteger(turnIndex) && turnIndex >= 0 && Array.isArray(combat.turns)) return combat.turns[turnIndex] ?? null;
-  return combat.combatant ?? null;
-}
-
-function applyAscendingTurns(combat = game.combat, { preserveActive = true } = {}) {
+function applyAscendingTurns(combat = game.combat) {
   if (!combat) return false;
   const turns = sortedCombatants(combat);
   if (!turns.length) return false;
-  const previousId = preserveActive ? activeCombatantId(combat) : null;
+  const oldIndex = sortedTurnIndex(combat);
   try {
     combat.turns = turns;
-    if (previousId) {
-      const nextIndex = turns.findIndex(c => c.id === previousId);
-      if (nextIndex >= 0) {
-        combat.turn = nextIndex;
-        if (combat.current && typeof combat.current === "object") combat.current.turn = nextIndex;
-      }
+    combat.turn = Math.max(0, Math.min(turns.length - 1, oldIndex));
+    if (combat.current && typeof combat.current === "object") {
+      combat.current.turn = combat.turn;
+      combat.current.combatantId = turns[combat.turn]?.id ?? combat.current.combatantId;
     }
     return true;
   } catch (err) {
@@ -139,12 +146,25 @@ async function updateCombatTurnBySortedIndex(combat, newIndex, { roundDelta = 0 
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
   const index = Math.max(0, Math.min(turns.length - 1, Number(newIndex) || 0));
-  const nextRound = Math.max(1, Number(combat.round ?? 1) + roundDelta);
-  await combat.update({ round: nextRound, turn: index });
-  combat.setupTurns?.();
-  applyAscendingTurns(combat, { preserveActive: false });
-  scheduleHudFollow(combat, { forceOpen: false, reason: "navigation" });
+  const round = Math.max(1, Number(combat.round ?? 1) + roundDelta);
+  const target = turns[index];
+
+  await combat.update({ round, turn: index });
+
+  try {
+    combat.turns = turns;
+    combat.turn = index;
+    if (combat.current && typeof combat.current === "object") {
+      combat.current.round = round;
+      combat.current.turn = index;
+      combat.current.combatantId = target?.id ?? combat.current.combatantId;
+    }
+  } catch (_e) {}
+
   ui.combat?.render?.(true);
+  scheduleHudFollow(combat, { forceOpen: false, reason: "navigation" });
+  scheduleClearMovementTrail();
+  console.log(`${TAG}[NAV]`, { round, index, target: target?.name ?? null, order: turns.map(c => `${c.name}:${c.initiative}`) });
   return combat;
 }
 
@@ -154,13 +174,19 @@ async function advanceSortedTurn(combat = game.combat, direction = 1) {
   applyAscendingTurns(combat);
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
-  const activeId = activeCombatantId(combat);
-  let index = turns.findIndex(c => c.id === activeId);
-  if (index < 0) index = Math.max(0, Math.min(turns.length - 1, Number(combat.turn ?? combat.current?.turn ?? 0) || 0));
+
+  const index = activeSortedIndex(combat);
   let next = index + direction;
   let roundDelta = 0;
-  if (next >= turns.length) { next = 0; roundDelta = 1; }
-  if (next < 0) { next = turns.length - 1; roundDelta = combat.round > 1 ? -1 : 0; }
+
+  if (next >= turns.length) {
+    next = 0;
+    roundDelta = 1;
+  } else if (next < 0) {
+    next = turns.length - 1;
+    roundDelta = Number(combat.round ?? 1) > 1 ? -1 : 0;
+  }
+
   return updateCombatTurnBySortedIndex(combat, next, { roundDelta });
 }
 
@@ -464,25 +490,24 @@ function actionHudIsOpen() {
 }
 
 function syncActionHudToCombatant(combat = game.combat, { forceOpen = false, reason = "combat" } = {}) {
-  combat?.setupTurns?.();
   applyAscendingTurns(combat);
   const combatant = currentCombatant(combat);
   const actor = combatant?.actor ?? null;
   if (!actor) return false;
   if (!forceOpen && !actionHudIsOpen()) return false;
   const token = tokenFromCombatant(combatant);
-  const key = `${combat?.id ?? "combat"}.${combatant.id}.${actor.id}.${token?.id ?? "no-token"}`;
+  const key = `${combat?.id ?? "combat"}.${combat?.turn ?? combat?.current?.turn ?? 0}.${combatant.id}.${actor.id}.${token?.id ?? "no-token"}`;
   if (lastHudCombatantKey === key && reason !== "manual") return true;
   lastHudCombatantKey = key;
   try {
     if (typeof globalThis.add2eRenderActionHud === "function") {
       globalThis.add2eRenderActionHud(actor, token, { reason: `initiative-${reason}` });
-      console.log(`${TAG}[HUD_FOLLOW]`, { actor: actor.name, token: token?.name ?? null, reason });
+      console.log(`${TAG}[HUD_FOLLOW]`, { actor: actor.name, token: token?.name ?? null, turn: combat?.turn, reason });
       return true;
     }
     if (typeof game.add2e?.openActionHud === "function") {
       game.add2e.openActionHud(actor);
-      console.log(`${TAG}[HUD_FOLLOW][API]`, { actor: actor.name, token: token?.name ?? null, reason });
+      console.log(`${TAG}[HUD_FOLLOW][API]`, { actor: actor.name, token: token?.name ?? null, turn: combat?.turn, reason });
       return true;
     }
   } catch (err) {
@@ -535,6 +560,38 @@ function cleanupMovementHistoryHooks() {
   return removed;
 }
 
+function clearObjectMovementTrail(obj) {
+  if (!obj) return;
+  for (const target of [obj, obj.document].filter(Boolean)) {
+    try { if (typeof target.clearMovementHistory === "function") target.clearMovementHistory(); } catch (_e) {}
+    try { if (Array.isArray(target.movementHistory)) target.movementHistory.length = 0; } catch (_e) {}
+    try { if (Array.isArray(target._movementHistory)) target._movementHistory.length = 0; } catch (_e) {}
+    try { if (target._movementHistory?.clear) target._movementHistory.clear(); } catch (_e) {}
+    try { if (target.movementHistory?.clear) target.movementHistory.clear(); } catch (_e) {}
+  }
+  try { obj._movementPath?.clear?.(); } catch (_e) {}
+  try { obj._movementPath?.destroy?.({ children: true }); obj._movementPath = null; } catch (_e) {}
+  try { obj._ruler?.clear?.(); } catch (_e) {}
+}
+
+function clearFoundryMovementTrail(token = null) {
+  const tokens = token ? [token] : Array.from(canvas?.tokens?.placeables ?? []);
+  for (const t of tokens) clearObjectMovementTrail(t);
+  try { canvas?.controls?.ruler?.clear?.(); } catch (_e) {}
+  try { canvas?.controls?.ruler?.clearPath?.(); } catch (_e) {}
+  try { canvas?.controls?.ruler?._clear?.(); } catch (_e) {}
+  try { canvas?.grid?.clearHighlightLayer?.("Token.Ruler"); } catch (_e) {}
+  try { canvas?.grid?.clearHighlightLayer?.("movement"); } catch (_e) {}
+  try { canvas?.interface?.grid?.clearHighlightLayer?.("Token.Ruler"); } catch (_e) {}
+  try { canvas?.interface?.grid?.clearHighlightLayer?.("movement"); } catch (_e) {}
+  return true;
+}
+
+function scheduleClearMovementTrail(token = null) {
+  clearTimeout(movementTrailTimer);
+  movementTrailTimer = setTimeout(() => clearFoundryMovementTrail(token), 40);
+}
+
 function installMovementHistoryBlock() {
   if (movementHistoryPatchInstalled) return true;
   movementHistoryPatchInstalled = true;
@@ -583,6 +640,7 @@ function exposeGlobals() {
   globalThis.add2eDisableMovementHistoryRecording = installMovementHistoryBlock;
   globalThis.add2eClearExistingMovementHistoryFlags = clearExistingMovementHistoryFlags;
   globalThis.add2eCleanupMovementHistoryHooks = cleanupMovementHistoryHooks;
+  globalThis.add2eClearFoundryMovementTrail = clearFoundryMovementTrail;
   globalThis.triInitiativeAscendant = sortInitiativeAscending;
 }
 
@@ -596,15 +654,19 @@ function installHooks() {
   Hooks.on("updateCombat", (combat, changes, options) => {
     if (options?.add2eInitiativeSort) return;
     if (foundry.utils.hasProperty(changes ?? {}, "turn") || foundry.utils.hasProperty(changes ?? {}, "round") || foundry.utils.hasProperty(changes ?? {}, "current") || foundry.utils.hasProperty(changes ?? {}, "started")) {
-      combat.setupTurns?.();
       applyAscendingTurns(combat);
       scheduleHudFollow(combat, { forceOpen: false, reason: "updateCombat" });
+      scheduleClearMovementTrail();
       ui.combat?.render?.(true);
     }
   });
-  Hooks.on("combatTurn", combat => scheduleHudFollow(combat, { forceOpen: false, reason: "combatTurn" }));
-  Hooks.on("combatRound", combat => scheduleHudFollow(combat, { forceOpen: false, reason: "combatRound" }));
-  Hooks.on("deleteCombat", () => { lastHudCombatantKey = ""; });
+  Hooks.on("combatTurn", combat => { scheduleHudFollow(combat, { forceOpen: false, reason: "combatTurn" }); scheduleClearMovementTrail(); });
+  Hooks.on("combatRound", combat => { scheduleHudFollow(combat, { forceOpen: false, reason: "combatRound" }); scheduleClearMovementTrail(); });
+  Hooks.on("updateToken", tokenDoc => scheduleClearMovementTrail(tokenDoc?.object ?? null));
+  Hooks.on("controlToken", token => scheduleClearMovementTrail(token));
+  Hooks.on("refreshToken", token => scheduleClearMovementTrail(token));
+  Hooks.on("canvasReady", () => scheduleClearMovementTrail());
+  Hooks.on("deleteCombat", () => { lastHudCombatantKey = ""; scheduleClearMovementTrail(); });
   Hooks.on("renderCombatTracker", (app, html) => patchInitiativeIcons(html));
   Hooks.on("renderCombatantConfig", () => setTimeout(() => patchInitiativeIcons(document), 50));
   Hooks.on("renderSidebarTab", (app, html) => {
@@ -637,6 +699,7 @@ Hooks.once("ready", () => {
   setTimeout(() => installActionLocks(), 4000);
   setTimeout(() => scheduleInitiativeSort(game.combat), 700);
   setTimeout(() => scheduleHudFollow(game.combat, { forceOpen: false, reason: "ready" }), 1000);
+  setTimeout(() => scheduleClearMovementTrail(), 1200);
 });
 
 export {
