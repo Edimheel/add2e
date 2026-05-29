@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-29-vital-status-quarantine-v7
+// Version : 2026-05-29-vital-status-single-source-v8
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-quarantine-v7";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-single-source-v8";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -22,7 +22,6 @@ const ADD2E_VITAL_STATUS = {
 
 const ADD2E_VITAL_ICONS = new Set(Object.values(ADD2E_VITAL_STATUS).map(s => s.icon));
 const ADD2E_VITAL_SYNC_LOCK = new Set();
-const ADD2E_VITAL_EFFECT_DELETE_LOCK = new Set();
 
 function add2eVitalArray(value) {
   if (value === undefined || value === null || value === "") return [];
@@ -134,13 +133,6 @@ function add2eVitalGetActorTokens(actor) {
   });
 }
 
-function add2eVitalIsVitalOverlay(value) {
-  if (!value) return false;
-  if (ADD2E_VITAL_ICONS.has(value)) return true;
-  const n = add2eVitalNorm(value);
-  return n.includes("skull") || n.includes("unconscious") || n.includes("daze");
-}
-
 function add2eVitalCleanTokenEffects(effects) {
   const clean = [];
   for (const value of add2eVitalArray(effects)) {
@@ -152,22 +144,20 @@ function add2eVitalCleanTokenEffects(effects) {
   return clean;
 }
 
-async function add2eVitalSetTokenVisualState(token, desired) {
+async function add2eVitalSetTokenEffects(token, desired) {
   const doc = token?.document ?? token;
   if (!doc?.update) return false;
 
-  const icon = desired ? ADD2E_VITAL_STATUS[desired]?.icon : null;
-  const currentOverlay = doc.overlayEffect ?? doc._source?.overlayEffect ?? "";
   const currentEffects = add2eVitalArray(doc.effects ?? doc._source?.effects ?? []);
   const cleanEffects = add2eVitalCleanTokenEffects(currentEffects);
 
-  let nextOverlay = currentOverlay;
-  if (desired) nextOverlay = icon;
-  else if (add2eVitalIsVitalOverlay(currentOverlay)) nextOverlay = null;
+  if (desired === "unconscious") cleanEffects.push(ADD2E_VITAL_STATUS.unconscious.icon);
 
+  const currentOverlay = doc.overlayEffect ?? doc._source?.overlayEffect ?? "";
   const patch = {};
-  if (nextOverlay !== currentOverlay) patch.overlayEffect = nextOverlay;
-  if (cleanEffects.length !== currentEffects.length) patch.effects = cleanEffects;
+
+  if (currentEffects.length !== cleanEffects.length || currentEffects.some((v, i) => v !== cleanEffects[i])) patch.effects = cleanEffects;
+  if (ADD2E_VITAL_ICONS.has(currentOverlay) || add2eVitalNorm(currentOverlay).includes("skull") || add2eVitalNorm(currentOverlay).includes("daze") || add2eVitalNorm(currentOverlay).includes("unconscious")) patch.overlayEffect = null;
 
   if (!Object.keys(patch).length) return false;
   await doc.update(patch);
@@ -214,18 +204,18 @@ async function add2eVitalSetDefeated(actor, defeated) {
 
 async function add2eVitalSyncTokenState(actor, desired) {
   const tokens = add2eVitalGetActorTokens(actor);
-  let visuals = 0;
+  let tokenEffects = 0;
 
   for (const token of tokens) {
     try {
-      if (await add2eVitalSetTokenVisualState(token, desired)) visuals += 1;
+      if (await add2eVitalSetTokenEffects(token, desired)) tokenEffects += 1;
     } catch (err) {
-      console.warn("[ADD2E][VITAL_STATUS][TOKEN_VISUAL][WARN]", { actor: actor?.name, token: token?.name, desired, err });
+      console.warn("[ADD2E][VITAL_STATUS][TOKEN_EFFECT][WARN]", { actor: actor?.name, token: token?.name, desired, err });
     }
   }
 
   const defeated = await add2eVitalSetDefeated(actor, desired === "dead");
-  return { visuals, defeated, tokenCount: tokens.length };
+  return { tokenEffects, defeated, tokenCount: tokens.length };
 }
 
 async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
@@ -263,32 +253,7 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
   }
 }
 
-async function add2eQuarantineVitalEffect(effect, reason = "quarantine") {
-  if (!game.user?.isGM || !effect?.id) return false;
-  if (!add2eVitalEffectKind(effect)) return false;
-
-  const actor = effect.parent;
-  if (!actor?.deleteEmbeddedDocuments) return false;
-
-  const lockKey = `${actor.uuid ?? actor.id}:${effect.id}`;
-  if (ADD2E_VITAL_EFFECT_DELETE_LOCK.has(lockKey)) return false;
-  ADD2E_VITAL_EFFECT_DELETE_LOCK.add(lockKey);
-
-  try {
-    if (actor.effects?.get?.(effect.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
-    window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason }), 30);
-    console.warn("[ADD2E][VITAL_STATUS][QUARANTINE] Effet vital ActiveEffect supprimé", { reason, actor: actor.name, effect: effect.name, effectId: effect.id });
-    return true;
-  } catch (err) {
-    console.error("[ADD2E][VITAL_STATUS][QUARANTINE][ERROR]", { actor: actor?.name, effect: effect?.name, err });
-    return false;
-  } finally {
-    ADD2E_VITAL_EFFECT_DELETE_LOCK.delete(lockKey);
-  }
-}
-
 globalThis.add2eSyncActorVitalStatus = add2eSyncActorVitalStatus;
-globalThis.add2eQuarantineVitalEffect = add2eQuarantineVitalEffect;
 
 Hooks.on("updateActor", async (actor, changed, options, userId) => {
   if (!game.user?.isGM) return;
@@ -298,18 +263,6 @@ Hooks.on("updateActor", async (actor, changed, options, userId) => {
     foundry.utils.hasProperty(changed, "system.points_de_coup");
   if (!hpChanged) return;
   window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason: "updateActor:hp" }), 30);
-});
-
-Hooks.on("createActiveEffect", (effect) => {
-  if (!game.user?.isGM) return;
-  if (!add2eVitalEffectKind(effect)) return;
-  window.setTimeout(() => add2eQuarantineVitalEffect(effect, "createActiveEffect:vital"), 0);
-});
-
-Hooks.on("updateActiveEffect", (effect) => {
-  if (!game.user?.isGM) return;
-  if (!add2eVitalEffectKind(effect)) return;
-  window.setTimeout(() => add2eQuarantineVitalEffect(effect, "updateActiveEffect:vital"), 0);
 });
 
 Hooks.once("ready", () => {
@@ -383,34 +336,34 @@ Hooks.on("updateCombat", async (combat, changed, options, userId) => {
       }
 
       const validIds = toDelete.filter(id => id && actor.effects.get(id));
-      if (!validIds.length) continue;
+      if (validIds.length) {
+        console.log("[ADD2E][AUTO-REMOVE] Suppression auto des effets expirés", {
+          actor: actor.name,
+          ids: validIds
+        });
 
-      console.log("[ADD2E][AUTO-REMOVE] Suppression auto des effets expirés", {
-        actor: actor.name,
-        ids: validIds
-      });
+        for (const effectId of validIds) {
+          if (!actor.effects.get(effectId)) continue;
 
-      for (const effectId of validIds) {
-        if (!actor.effects.get(effectId)) continue;
+          try {
+            await actor.deleteEmbeddedDocuments("ActiveEffect", [effectId]);
+          } catch (err) {
+            const msg = String(err?.message || err || "");
+            if (msg.includes("does not exist") || msg.includes("n'existe pas")) {
+              console.warn("[ADD2E][AUTO-REMOVE][ALREADY_GONE] Effet déjà absent, suppression ignorée", {
+                actor: actor.name,
+                effectId,
+                err
+              });
+              continue;
+            }
 
-        try {
-          await actor.deleteEmbeddedDocuments("ActiveEffect", [effectId]);
-        } catch (err) {
-          const msg = String(err?.message || err || "");
-          if (msg.includes("does not exist") || msg.includes("n'existe pas")) {
-            console.warn("[ADD2E][AUTO-REMOVE][ALREADY_GONE] Effet déjà absent, suppression ignorée", {
+            console.error("[ADD2E][AUTO-REMOVE][DELETE_ERROR] Suppression impossible", {
               actor: actor.name,
               effectId,
               err
             });
-            continue;
           }
-
-          console.error("[ADD2E][AUTO-REMOVE][DELETE_ERROR] Suppression impossible", {
-            actor: actor.name,
-            effectId,
-            err
-          });
         }
       }
 
