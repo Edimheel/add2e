@@ -1,18 +1,22 @@
 // scripts/add2e-initiative.mjs
 // ADD2E — Initiative propre.
-// Responsabilités uniques : initiative 1d6, ordre ascendant, icône D6 et carte de chat.
-// Aucun blocage d'action, aucune gestion de déplacement, aucun drag, ruler, trace, chemin ou historique de mouvement.
+// Responsabilités uniques : initiative 1d6, ordre ascendant, icône D6, verrou des actions hors tour.
+// Aucune gestion de déplacement, drag, ruler, trace, chemin ou historique de mouvement.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-clean-initiative-no-lock-v3";
-const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-clean-initiative-chat-v3";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-clean-recreated-initiative-v1";
+const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-clean-recreated-action-lock-v1";
+const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-clean-recreated-chat-v1";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
 let configured = false;
 let sorting = false;
 let sortTimer = null;
+let warningAt = 0;
+let cleanedLegacyHooks = false;
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
+globalThis.ADD2E_INITIATIVE_ACTION_LOCK_VERSION = ADD2E_INITIATIVE_ACTION_LOCK_VERSION;
 globalThis.ADD2E_INITIATIVE_CHAT_VERSION = ADD2E_INITIATIVE_CHAT_VERSION;
 
 function configureInitiative() {
@@ -28,9 +32,7 @@ function configureInitiative() {
   console.log(`${TAG}[CONFIG]`, {
     version: ADD2E_INITIATIVE_VERSION,
     formula: "1d6",
-    order: "ascending",
-    locks: "none",
-    movement: "not-managed"
+    order: "ascending"
   });
 }
 
@@ -38,6 +40,51 @@ function initiativeValue(value) {
   if (value === undefined || value === null || value === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function hookSource(entry) {
+  const fn = entry?.fn ?? entry?.callback ?? entry;
+  if (typeof fn !== "function") return "";
+  try { return Function.prototype.toString.call(fn); } catch (_e) { return ""; }
+}
+
+function cleanupLegacyInitiativeHooksFromStore(store) {
+  if (!store || typeof store !== "object") return 0;
+  let removed = 0;
+
+  for (const hookName of ["updateCombatant", "updateCombat"]) {
+    const entries = store[hookName];
+    if (!Array.isArray(entries)) continue;
+
+    const before = entries.length;
+    store[hookName] = entries.filter(entry => {
+      const source = hookSource(entry);
+      return !(
+        source.includes("triInitiativeAscendant") ||
+        source.includes("add2eClearCombatMovementHistoryOnce") ||
+        source.includes("add2eClearTokenMovementHistory") ||
+        source.includes("add2ePurgeCombatantMovementHistory") ||
+        source.includes("movementHistory") ||
+        source.includes("showMovementHistory") ||
+        source.includes("updateEmbeddedDocuments(\"Combatant\"")
+      );
+    });
+    removed += before - store[hookName].length;
+  }
+
+  return removed;
+}
+
+function cleanupLegacyInitiativeHooks() {
+  if (cleanedLegacyHooks) return 0;
+  cleanedLegacyHooks = true;
+
+  let removed = 0;
+  try { removed += cleanupLegacyInitiativeHooksFromStore(Hooks.events); } catch (_e) {}
+  try { removed += cleanupLegacyInitiativeHooksFromStore(Hooks._hooks); } catch (_e) {}
+
+  console.log(`${TAG}[LEGACY_CLEAN]`, { removed });
+  return removed;
 }
 
 async function sortInitiativeAscending(combat = game.combat) {
@@ -173,6 +220,82 @@ function installInitiativeChatCard() {
   });
 }
 
+function currentCombatant(combat = game.combat) {
+  if (!combat) return null;
+  return combat.combatant ?? combat.combatants?.get?.(combat.current?.combatantId) ?? null;
+}
+
+function combatantMatchesActor(combatant, actor) {
+  if (!combatant || !actor) return false;
+  if (combatant.actor?.id && combatant.actor.id === actor.id) return true;
+  if (combatant.actorId && combatant.actorId === actor.id) return true;
+  return false;
+}
+
+function combatActive(combat = game.combat) {
+  return Boolean(combat && combat.started && currentCombatant(combat));
+}
+
+function notifyNotTurn(actor = null) {
+  const now = Date.now();
+  if (now - warningAt < 900) return;
+  warningAt = now;
+
+  const active = currentCombatant();
+  const activeName = active?.name ?? active?.actor?.name ?? "l'acteur actif";
+  const actorName = actor?.name ? `${actor.name} ne peut pas agir.` : "Cet acteur ne peut pas agir.";
+  ui.notifications?.info?.(`${actorName} C'est le tour de ${activeName}.`);
+}
+
+function canActorActNow(actor, { notify = false } = {}) {
+  const combat = game.combat;
+  if (!combatActive(combat)) return true;
+  if (game.user?.isGM) return true;
+  if (combatantMatchesActor(currentCombatant(combat), actor)) return true;
+
+  if (notify) notifyNotTurn(actor);
+  return false;
+}
+
+function resolveActionActor(argsLike) {
+  const args = Array.isArray(argsLike) ? argsLike : [];
+  const first = args[0] ?? null;
+  const source = first && typeof first === "object" ? first : {};
+
+  if (source.actor) return source.actor;
+  if (source.actorId) return game.actors?.get?.(source.actorId) ?? null;
+  if (source.token?.actor) return source.token.actor;
+  if (source.tokenId && canvas?.tokens?.get?.(source.tokenId)?.actor) return canvas.tokens.get(source.tokenId).actor;
+
+  return canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null;
+}
+
+function wrapActionFunction(name, label) {
+  const current = globalThis[name];
+  if (typeof current !== "function") return false;
+  if (current.__add2eCleanInitiativeActionLock === ADD2E_INITIATIVE_ACTION_LOCK_VERSION) return true;
+
+  const wrapped = async function add2eCleanInitiativeActionLock(...args) {
+    const actor = resolveActionActor(args);
+    if (!canActorActNow(actor, { notify: true })) return false;
+    return current.apply(this, args);
+  };
+
+  wrapped.__add2eCleanInitiativeActionLock = ADD2E_INITIATIVE_ACTION_LOCK_VERSION;
+  wrapped.__add2eOriginal = current;
+  globalThis[name] = wrapped;
+
+  console.log(`${TAG}[ACTION_LOCK]`, { name, label, version: ADD2E_INITIATIVE_ACTION_LOCK_VERSION });
+  return true;
+}
+
+function installActionLocks() {
+  wrapActionFunction("add2eAttackRoll", "attaque");
+  wrapActionFunction("add2eCastSpell", "sort");
+  wrapActionFunction("cast_spell", "sort alias");
+  wrapActionFunction("add2eExecuteClassFeatureOnUse", "capacité");
+}
+
 function makeD6Image() {
   const img = document.createElement("img");
   img.src = ADD2E_INITIATIVE_D6_ICON;
@@ -257,10 +380,8 @@ function exposeGlobals() {
   globalThis.add2eSortInitiativeAscending = sortInitiativeAscending;
   globalThis.add2eScheduleInitiativeSort = scheduleInitiativeSort;
   globalThis.add2ePatchCombatTrackerInitiativeIcons = patchInitiativeIcons;
+  globalThis.add2eCanActorActNow = canActorActNow;
   globalThis.triInitiativeAscendant = sortInitiativeAscending;
-
-  try { delete globalThis.add2eCanActorActNow; } catch (_e) { globalThis.add2eCanActorActNow = undefined; }
-  try { delete globalThis.add2eCanTokenActNow; } catch (_e) { globalThis.add2eCanTokenActNow = undefined; }
 }
 
 function installHooks() {
@@ -297,11 +418,16 @@ Hooks.once("init", configureInitiative);
 
 Hooks.once("ready", () => {
   configureInitiative();
+  cleanupLegacyInitiativeHooks();
   exposeGlobals();
   patchInitiativeIcons(document);
+  installActionLocks();
 
   setTimeout(() => patchInitiativeIcons(document), 500);
   setTimeout(() => patchInitiativeIcons(document), 1500);
+  setTimeout(() => installActionLocks(), 800);
+  setTimeout(() => installActionLocks(), 2000);
+  setTimeout(() => installActionLocks(), 4000);
 });
 
 exposeGlobals();
