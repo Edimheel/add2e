@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-29-vital-status-token-overlay-v6
+// Version : 2026-05-29-vital-status-quarantine-v7
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-token-overlay-v6";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-quarantine-v7";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -22,6 +22,7 @@ const ADD2E_VITAL_STATUS = {
 
 const ADD2E_VITAL_ICONS = new Set(Object.values(ADD2E_VITAL_STATUS).map(s => s.icon));
 const ADD2E_VITAL_SYNC_LOCK = new Set();
+const ADD2E_VITAL_EFFECT_DELETE_LOCK = new Set();
 
 function add2eVitalArray(value) {
   if (value === undefined || value === null || value === "") return [];
@@ -93,7 +94,6 @@ function add2eVitalEffectFlag(effect) {
 
 function add2eVitalEffectKind(effect) {
   const name = add2eVitalNorm(effect?.name ?? effect?.label ?? "");
-  const icon = add2eVitalNorm(effect?.icon ?? effect?.img ?? "");
   const statuses = add2eVitalEffectStatuses(effect);
   const flag = add2eVitalEffectFlag(effect);
 
@@ -106,9 +106,6 @@ function add2eVitalEffectKind(effect) {
 
   if (statuses.has("dead") || statuses.has("mort")) return "dead";
   if (statuses.has("unconscious") || statuses.has("inconscient")) return "unconscious";
-
-  if (icon.includes("skull")) return "dead";
-  if (icon.includes("unconscious") || icon.includes("daze")) return "unconscious";
 
   return null;
 }
@@ -144,17 +141,36 @@ function add2eVitalIsVitalOverlay(value) {
   return n.includes("skull") || n.includes("unconscious") || n.includes("daze");
 }
 
-async function add2eVitalSetTokenOverlay(token, desired) {
+function add2eVitalCleanTokenEffects(effects) {
+  const clean = [];
+  for (const value of add2eVitalArray(effects)) {
+    if (ADD2E_VITAL_ICONS.has(value)) continue;
+    const n = add2eVitalNorm(value);
+    if (n.includes("skull") || n.includes("unconscious") || n.includes("daze")) continue;
+    clean.push(value);
+  }
+  return clean;
+}
+
+async function add2eVitalSetTokenVisualState(token, desired) {
   const doc = token?.document ?? token;
   if (!doc?.update) return false;
 
   const icon = desired ? ADD2E_VITAL_STATUS[desired]?.icon : null;
-  const current = doc.overlayEffect ?? doc._source?.overlayEffect ?? "";
+  const currentOverlay = doc.overlayEffect ?? doc._source?.overlayEffect ?? "";
+  const currentEffects = add2eVitalArray(doc.effects ?? doc._source?.effects ?? []);
+  const cleanEffects = add2eVitalCleanTokenEffects(currentEffects);
 
-  if (desired && current === icon) return false;
-  if (!desired && !add2eVitalIsVitalOverlay(current)) return false;
+  let nextOverlay = currentOverlay;
+  if (desired) nextOverlay = icon;
+  else if (add2eVitalIsVitalOverlay(currentOverlay)) nextOverlay = null;
 
-  await doc.update({ overlayEffect: icon ?? null });
+  const patch = {};
+  if (nextOverlay !== currentOverlay) patch.overlayEffect = nextOverlay;
+  if (cleanEffects.length !== currentEffects.length) patch.effects = cleanEffects;
+
+  if (!Object.keys(patch).length) return false;
+  await doc.update(patch);
   return true;
 }
 
@@ -198,18 +214,18 @@ async function add2eVitalSetDefeated(actor, defeated) {
 
 async function add2eVitalSyncTokenState(actor, desired) {
   const tokens = add2eVitalGetActorTokens(actor);
-  let overlays = 0;
+  let visuals = 0;
 
   for (const token of tokens) {
     try {
-      if (await add2eVitalSetTokenOverlay(token, desired)) overlays += 1;
+      if (await add2eVitalSetTokenVisualState(token, desired)) visuals += 1;
     } catch (err) {
-      console.warn("[ADD2E][VITAL_STATUS][OVERLAY][WARN]", { actor: actor?.name, token: token?.name, desired, err });
+      console.warn("[ADD2E][VITAL_STATUS][TOKEN_VISUAL][WARN]", { actor: actor?.name, token: token?.name, desired, err });
     }
   }
 
   const defeated = await add2eVitalSetDefeated(actor, desired === "dead");
-  return { overlays, defeated, tokenCount: tokens.length };
+  return { visuals, defeated, tokenCount: tokens.length };
 }
 
 async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
@@ -247,7 +263,32 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
   }
 }
 
+async function add2eQuarantineVitalEffect(effect, reason = "quarantine") {
+  if (!game.user?.isGM || !effect?.id) return false;
+  if (!add2eVitalEffectKind(effect)) return false;
+
+  const actor = effect.parent;
+  if (!actor?.deleteEmbeddedDocuments) return false;
+
+  const lockKey = `${actor.uuid ?? actor.id}:${effect.id}`;
+  if (ADD2E_VITAL_EFFECT_DELETE_LOCK.has(lockKey)) return false;
+  ADD2E_VITAL_EFFECT_DELETE_LOCK.add(lockKey);
+
+  try {
+    if (actor.effects?.get?.(effect.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
+    window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason }), 30);
+    console.warn("[ADD2E][VITAL_STATUS][QUARANTINE] Effet vital ActiveEffect supprimé", { reason, actor: actor.name, effect: effect.name, effectId: effect.id });
+    return true;
+  } catch (err) {
+    console.error("[ADD2E][VITAL_STATUS][QUARANTINE][ERROR]", { actor: actor?.name, effect: effect?.name, err });
+    return false;
+  } finally {
+    ADD2E_VITAL_EFFECT_DELETE_LOCK.delete(lockKey);
+  }
+}
+
 globalThis.add2eSyncActorVitalStatus = add2eSyncActorVitalStatus;
+globalThis.add2eQuarantineVitalEffect = add2eQuarantineVitalEffect;
 
 Hooks.on("updateActor", async (actor, changed, options, userId) => {
   if (!game.user?.isGM) return;
@@ -259,10 +300,25 @@ Hooks.on("updateActor", async (actor, changed, options, userId) => {
   window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason: "updateActor:hp" }), 30);
 });
 
+Hooks.on("createActiveEffect", (effect) => {
+  if (!game.user?.isGM) return;
+  if (!add2eVitalEffectKind(effect)) return;
+  window.setTimeout(() => add2eQuarantineVitalEffect(effect, "createActiveEffect:vital"), 0);
+});
+
+Hooks.on("updateActiveEffect", (effect) => {
+  if (!game.user?.isGM) return;
+  if (!add2eVitalEffectKind(effect)) return;
+  window.setTimeout(() => add2eQuarantineVitalEffect(effect, "updateActiveEffect:vital"), 0);
+});
+
 Hooks.once("ready", () => {
   if (!game.user?.isGM) return;
   window.setTimeout(() => {
     for (const actor of game.actors ?? []) add2eSyncActorVitalStatus(actor, { reason: "ready-scan" });
+    for (const token of canvas?.tokens?.placeables ?? []) {
+      if (token?.actor) add2eSyncActorVitalStatus(token.actor, { reason: "ready-token-scan" });
+    }
   }, 500);
 });
 
@@ -357,6 +413,8 @@ Hooks.on("updateCombat", async (combat, changed, options, userId) => {
           });
         }
       }
+
+      await add2eSyncActorVitalStatus(actor, { reason: "updateCombat:scan" });
     }
   } catch (err) {
     console.error("[ADD2E][AUTO-REMOVE] ERREUR dans updateCombat(auto-remove-effects) :", err);
