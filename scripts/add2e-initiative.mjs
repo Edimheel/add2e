@@ -3,11 +3,11 @@
 // Règle gérée ici : initiative simple au d6, ordre ascendant.
 // Surprise volontairement non gérée dans ce module.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-28-init-chat-card-turn-lock-v2";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-turn-lock-no-path-remnant-v3";
 const TAG = "[ADD2E][INIT]";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 
-const ADD2E_TURN_LOCK_VERSION = "2026-05-28-turn-lock-actions-movement-v2";
+const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-no-path-remnant-v3";
 const ADD2E_INIT_CHAT_CARD_VERSION = "2026-05-28-init-chat-card-v1";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
@@ -60,7 +60,6 @@ function add2eRemoveLegacyInitiativeHooksFromStore(store) {
         src.includes("triInitiativeAscendant") ||
         src.includes("game.combat.combatants.contents.slice().sort") ||
         src.includes("updateEmbeddedDocuments(\"Combatant\"");
-
       return !isLegacyInitiativeHook;
     });
 
@@ -79,11 +78,7 @@ function add2eRemoveLegacyInitiativeHooks() {
   try { removed += add2eRemoveLegacyInitiativeHooksFromStore(Hooks.events); } catch (_e) {}
   try { removed += add2eRemoveLegacyInitiativeHooksFromStore(Hooks._hooks); } catch (_e) {}
 
-  console.log(`${TAG}[LEGACY_HOOKS_CLEAN]`, {
-    version: ADD2E_INITIATIVE_VERSION,
-    removed
-  });
-
+  console.log(`${TAG}[LEGACY_HOOKS_CLEAN]`, { version: ADD2E_INITIATIVE_VERSION, removed });
   return removed;
 }
 
@@ -124,18 +119,10 @@ async function add2eSortInitiativeAscending(combat = game.combat) {
   try {
     console.log(`${TAG}[SORT_ASC]`, {
       combat: combat.id,
-      order: sorted.map(c => ({
-        id: c.id,
-        name: c.name,
-        initiative: c.initiative,
-        sort: c.sort
-      }))
+      order: sorted.map(c => ({ id: c.id, name: c.name, initiative: c.initiative, sort: c.sort }))
     });
 
-    await combat.updateEmbeddedDocuments("Combatant", updates, {
-      add2eInitiativeSort: true
-    });
-
+    await combat.updateEmbeddedDocuments("Combatant", updates, { add2eInitiativeSort: true });
     ui.combat?.render?.(true);
     return true;
   } catch (err) {
@@ -149,9 +136,7 @@ async function add2eSortInitiativeAscending(combat = game.combat) {
 function add2eScheduleInitiativeSort(combat = game.combat) {
   if (!combat) return;
   clearTimeout(add2eInitiativeSortTimer);
-  add2eInitiativeSortTimer = setTimeout(() => {
-    add2eSortInitiativeAscending(combat);
-  }, 100);
+  add2eInitiativeSortTimer = setTimeout(() => add2eSortInitiativeAscending(combat), 100);
 }
 
 function add2eEscapeHtml(value) {
@@ -307,27 +292,30 @@ function add2eHasMovementChange(changes = {}) {
   return ["x", "y", "elevation", "rotation"].some(path => foundry.utils.hasProperty(changes, path));
 }
 
-function add2eResetDeniedTokenVisual(tokenDocument) {
+function add2eClearDeniedMovementPreview(tokenDocument = null) {
   const token = tokenDocument?.object ?? canvas?.tokens?.get?.(tokenDocument?.id) ?? null;
-  if (!token) return;
-
-  const x = Number(tokenDocument.x ?? token.document?.x ?? token.x ?? 0);
-  const y = Number(tokenDocument.y ?? token.document?.y ?? token.y ?? 0);
-  const elevation = Number(tokenDocument.elevation ?? token.document?.elevation ?? 0);
-  const rotation = Number(tokenDocument.rotation ?? token.document?.rotation ?? 0);
 
   window.setTimeout(() => {
     try {
-      token.document?.updateSource?.({ x, y, elevation, rotation });
-      token.x = x;
-      token.y = y;
-      token.position?.set?.(x, y);
-      token.refresh?.();
-      token.renderFlags?.set?.({ refresh: true, refreshPosition: true });
+      const ruler = canvas?.controls?.ruler;
+      ruler?.clear?.();
+      ruler?._endMeasurement?.();
+      ruler?._onMouseUp?.({});
+    } catch (_e) {}
+
+    try {
+      token?._onDragLeftCancel?.({});
+      token?.mouseInteractionManager?.cancel?.();
+      token?.renderFlags?.set?.({ refresh: true, refreshPosition: true });
+      token?.refresh?.();
+    } catch (_e) {}
+
+    try {
+      canvas?.controls?.clear?.();
+      canvas?.interface?.grid?.clearHighlightLayer?.("movement");
+      canvas?.grid?.clearHighlightLayer?.("movement");
       canvas?.perception?.update?.({ refresh: true }, true);
-    } catch (err) {
-      console.warn(`${TAG}[TURN_LOCK][MOVE_RESET][ERROR]`, err);
-    }
+    } catch (_e) {}
   }, 0);
 }
 
@@ -341,7 +329,8 @@ function add2eInstallMovementTurnLock() {
       if (!add2eHasMovementChange(changes)) return;
       if (options?.add2eAllowOutOfTurn || options?.add2eIgnoreTurnLock) return;
       if (add2eCanTokenActNow(tokenDocument, { notify: true })) return;
-      add2eResetDeniedTokenVisual(tokenDocument);
+
+      add2eClearDeniedMovementPreview(tokenDocument);
       return false;
     } catch (err) {
       console.warn(`${TAG}[TURN_LOCK][MOVE][ERROR]`, err);
@@ -359,6 +348,7 @@ function add2eWrapActionFunction(name, label) {
     if (!add2eCanActorActNow(actor, { notify: true })) return false;
     return current.apply(this, args);
   };
+
   wrapped.__add2eTurnGuardVersion = ADD2E_TURN_LOCK_VERSION;
   wrapped.__add2eOriginal = current;
   globalThis[name] = wrapped;
@@ -382,6 +372,7 @@ function add2eExposeInitiativeGlobals() {
   globalThis.add2ePatchCombatTrackerInitiativeIcons = add2ePatchCombatTrackerInitiativeIcons;
   globalThis.add2eCanActorActNow = add2eCanActorActNow;
   globalThis.add2eCanTokenActNow = add2eCanTokenActNow;
+  globalThis.add2eClearDeniedMovementPreview = add2eClearDeniedMovementPreview;
   globalThis.triInitiativeAscendant = add2eSortInitiativeAscending;
 }
 
