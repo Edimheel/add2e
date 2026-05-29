@@ -3,11 +3,11 @@
 // Règle gérée ici : initiative simple au d6, ordre ascendant.
 // Surprise volontairement non gérée dans ce module.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-turn-lock-no-path-remnant-v3";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-turn-lock-clear-move-history-v4";
 const TAG = "[ADD2E][INIT]";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 
-const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-no-path-remnant-v3";
+const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-clear-move-history-v4";
 const ADD2E_INIT_CHAT_CARD_VERSION = "2026-05-28-init-chat-card-v1";
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
@@ -292,31 +292,72 @@ function add2eHasMovementChange(changes = {}) {
   return ["x", "y", "elevation", "rotation"].some(path => foundry.utils.hasProperty(changes, path));
 }
 
-function add2eClearDeniedMovementPreview(tokenDocument = null) {
-  const token = tokenDocument?.object ?? canvas?.tokens?.get?.(tokenDocument?.id) ?? null;
+function add2eClearObjectMovementState(obj) {
+  if (!obj || typeof obj !== "object") return;
+  const clearArrayKeys = [
+    "movementHistory", "movement", "path", "waypoints", "segments",
+    "_movementHistory", "_movement", "_path", "_waypoints", "_segments",
+    "_dragPath", "_rulerPath", "_movementPath", "_previewPath"
+  ];
 
-  window.setTimeout(() => {
+  for (const key of clearArrayKeys) {
     try {
-      const ruler = canvas?.controls?.ruler;
-      ruler?.clear?.();
-      ruler?._endMeasurement?.();
-      ruler?._onMouseUp?.({});
+      if (Array.isArray(obj[key])) obj[key].length = 0;
+      else if (obj[key]?.clear instanceof Function) obj[key].clear();
     } catch (_e) {}
+  }
 
+  for (const key of ["_preview", "preview", "_dragRuler", "dragRuler", "_movementPreview", "movementPreview"]) {
     try {
+      if (obj[key]?.clear instanceof Function) obj[key].clear();
+      else if (obj[key]?.destroy instanceof Function) obj[key].destroy({ children: true });
+      obj[key] = null;
+    } catch (_e) {}
+  }
+}
+
+function add2eClearMovementHighlightLayers() {
+  const layerNames = ["movement", "move", "ruler", "ruler-history", "movement-history", "token-movement", "token-ruler", "drag-ruler", "add2e-movement"];
+  for (const name of layerNames) {
+    try { canvas?.interface?.grid?.clearHighlightLayer?.(name); } catch (_e) {}
+    try { canvas?.grid?.clearHighlightLayer?.(name); } catch (_e) {}
+  }
+}
+
+function add2eClearRulerState() {
+  try {
+    const ruler = canvas?.controls?.ruler;
+    add2eClearObjectMovementState(ruler);
+    ruler?.clear?.();
+    ruler?._endMeasurement?.();
+    ruler?._onMouseUp?.({});
+    ruler?.renderFlags?.set?.({ refresh: true });
+  } catch (_e) {}
+}
+
+function add2eClearTokenMovementHistory(tokenDocument = null) {
+  const targetToken = tokenDocument?.object ?? canvas?.tokens?.get?.(tokenDocument?.id) ?? null;
+  const tokens = targetToken ? [targetToken] : Array.from(canvas?.tokens?.placeables ?? []);
+
+  for (const token of tokens) {
+    try {
+      add2eClearObjectMovementState(token);
+      add2eClearObjectMovementState(token?.document);
       token?._onDragLeftCancel?.({});
       token?.mouseInteractionManager?.cancel?.();
       token?.renderFlags?.set?.({ refresh: true, refreshPosition: true });
       token?.refresh?.();
     } catch (_e) {}
+  }
 
-    try {
-      canvas?.controls?.clear?.();
-      canvas?.interface?.grid?.clearHighlightLayer?.("movement");
-      canvas?.grid?.clearHighlightLayer?.("movement");
-      canvas?.perception?.update?.({ refresh: true }, true);
-    } catch (_e) {}
-  }, 0);
+  add2eClearRulerState();
+  add2eClearMovementHighlightLayers();
+  try { canvas?.controls?.clear?.(); } catch (_e) {}
+  try { canvas?.perception?.update?.({ refresh: true }, true); } catch (_e) {}
+}
+
+function add2eClearDeniedMovementPreview(tokenDocument = null) {
+  window.setTimeout(() => add2eClearTokenMovementHistory(tokenDocument), 0);
 }
 
 function add2eInstallMovementTurnLock() {
@@ -329,12 +370,21 @@ function add2eInstallMovementTurnLock() {
       if (!add2eHasMovementChange(changes)) return;
       if (options?.add2eAllowOutOfTurn || options?.add2eIgnoreTurnLock) return;
       if (add2eCanTokenActNow(tokenDocument, { notify: true })) return;
-
       add2eClearDeniedMovementPreview(tokenDocument);
       return false;
     } catch (err) {
       console.warn(`${TAG}[TURN_LOCK][MOVE][ERROR]`, err);
     }
+  });
+
+  Hooks.on("hoverToken", (token, hovered) => {
+    if (!hovered || !add2eIsCombatActive()) return;
+    add2eClearTokenMovementHistory(token?.document ?? token);
+  });
+
+  Hooks.on("controlToken", token => {
+    if (!add2eIsCombatActive()) return;
+    add2eClearTokenMovementHistory(token?.document ?? token);
   });
 }
 
@@ -373,6 +423,7 @@ function add2eExposeInitiativeGlobals() {
   globalThis.add2eCanActorActNow = add2eCanActorActNow;
   globalThis.add2eCanTokenActNow = add2eCanTokenActNow;
   globalThis.add2eClearDeniedMovementPreview = add2eClearDeniedMovementPreview;
+  globalThis.add2eClearTokenMovementHistory = add2eClearTokenMovementHistory;
   globalThis.triInitiativeAscendant = add2eSortInitiativeAscending;
 }
 
@@ -495,6 +546,19 @@ function add2eInstallInitiativeHooks() {
   Hooks.on("deleteCombatant", (combatant, options, userId) => {
     if (options?.add2eInitiativeSort) return;
     add2eScheduleInitiativeSort(combatant.combat ?? game.combat);
+    setTimeout(() => add2eClearTokenMovementHistory(), 50);
+  });
+
+  Hooks.on("updateCombat", combat => {
+    setTimeout(() => add2eClearTokenMovementHistory(), 50);
+  });
+
+  Hooks.on("combatTurn", combat => {
+    setTimeout(() => add2eClearTokenMovementHistory(), 50);
+  });
+
+  Hooks.on("combatRound", combat => {
+    setTimeout(() => add2eClearTokenMovementHistory(), 50);
   });
 
   Hooks.on("renderCombatTracker", (app, html, data) => {
@@ -530,6 +594,7 @@ Hooks.once("ready", () => {
   setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 1500);
   setTimeout(() => add2eInstallActionTurnLocks(), 800);
   setTimeout(() => add2eInstallActionTurnLocks(), 2000);
+  setTimeout(() => add2eClearTokenMovementHistory(), 500);
 });
 
 add2eExposeInitiativeGlobals();
