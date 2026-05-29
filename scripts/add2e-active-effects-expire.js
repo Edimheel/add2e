@@ -1,24 +1,27 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-29-vital-status-sync-v1
+// Version : 2026-05-29-vital-status-visible-icons-v2
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-sync-v1";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-visible-icons-v2";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
+
+const ADD2E_ICON_DEAD = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#8b0000" stroke="#ffe08a" stroke-width="4"/><path d="M32 9c-12 0-21 8-21 20 0 8 5 14 12 17v8h18v-8c7-3 12-9 12-17C53 17 44 9 32 9Z" fill="#101010" stroke="#fff0c0" stroke-width="2"/><circle cx="24" cy="30" r="5" fill="#ffefcf"/><circle cx="40" cy="30" r="5" fill="#ffefcf"/><path d="M29 39h6l-3-7Z" fill="#ffefcf"/><path d="M22 49h20M25 55h14" stroke="#ffefcf" stroke-width="4" stroke-linecap="round"/></svg>`);
+const ADD2E_ICON_UNCONSCIOUS = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#c77b00" stroke="#fff0a8" stroke-width="4"/><path d="M18 38c2-9 9-15 14-15s12 6 14 15c-3 7-9 11-14 11s-11-4-14-11Z" fill="#1b160b" stroke="#fff4cf" stroke-width="2"/><path d="M22 31h8M34 31h8" stroke="#fff4cf" stroke-width="4" stroke-linecap="round"/><path d="M26 42c4 3 8 3 12 0" stroke="#fff4cf" stroke-width="3" stroke-linecap="round" fill="none"/><text x="41" y="20" font-family="Arial, sans-serif" font-size="16" font-weight="900" fill="#101010" stroke="#fff4cf" stroke-width="1">Z</text><text x="49" y="12" font-family="Arial, sans-serif" font-size="11" font-weight="900" fill="#101010" stroke="#fff4cf" stroke-width="1">Z</text></svg>`);
 
 const ADD2E_VITAL_STATUS = {
   unconscious: {
     key: "unconscious",
     statusId: "unconscious",
     name: "Inconscient",
-    icon: "icons/svg/unconscious.svg"
+    icon: ADD2E_ICON_UNCONSCIOUS
   },
   dead: {
     key: "dead",
     statusId: "dead",
     name: "Mort",
-    icon: "icons/svg/skull.svg"
+    icon: ADD2E_ICON_DEAD
   }
 };
 
@@ -102,8 +105,12 @@ function add2eVitalEffectKind(effect) {
   return null;
 }
 
+function add2eVitalFindEffect(actor, kind) {
+  return add2eVitalArray(actor?.effects).find(e => add2eVitalEffectKind(e) === kind && e.disabled !== true) ?? null;
+}
+
 function add2eVitalHasEffect(actor, kind) {
-  return add2eVitalArray(actor?.effects).some(e => add2eVitalEffectKind(e) === kind && e.disabled !== true);
+  return !!add2eVitalFindEffect(actor, kind);
 }
 
 function add2eVitalEffectData(kind) {
@@ -141,9 +148,29 @@ async function add2eVitalDeleteKinds(actor, kinds) {
   await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
 }
 
-async function add2eVitalCreateKind(actor, kind) {
-  if (!kind || add2eVitalHasEffect(actor, kind)) return;
-  await actor.createEmbeddedDocuments("ActiveEffect", [add2eVitalEffectData(kind)]);
+async function add2eVitalEnsureKind(actor, kind) {
+  if (!kind) return;
+  const cfg = ADD2E_VITAL_STATUS[kind];
+  const existing = add2eVitalFindEffect(actor, kind);
+
+  if (!existing) {
+    await actor.createEmbeddedDocuments("ActiveEffect", [add2eVitalEffectData(kind)]);
+    return;
+  }
+
+  const updates = {};
+  if (existing.name !== cfg.name) updates.name = cfg.name;
+  if (existing.label !== cfg.name) updates.label = cfg.name;
+  if (existing.icon !== cfg.icon) updates.icon = cfg.icon;
+  if (existing.img !== cfg.icon) updates.img = cfg.icon;
+  updates.statuses = [cfg.statusId];
+  updates["flags.add2e.vitalStatus"] = cfg.key;
+  updates["flags.add2e.autoVitalStatus"] = true;
+  updates["flags.add2e.source"] = "add2e-vital-status-sync";
+  updates["flags.core.statusId"] = cfg.statusId;
+  updates["flags.core.overlay"] = true;
+
+  await existing.update(updates);
 }
 
 async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
@@ -163,10 +190,10 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
 
     if (desired === "dead") {
       if (current.unconscious) await add2eVitalDeleteKinds(actor, ["unconscious"]);
-      if (!current.dead) await add2eVitalCreateKind(actor, "dead");
+      await add2eVitalEnsureKind(actor, "dead");
     } else if (desired === "unconscious") {
       if (current.dead) await add2eVitalDeleteKinds(actor, ["dead"]);
-      if (!current.unconscious) await add2eVitalCreateKind(actor, "unconscious");
+      await add2eVitalEnsureKind(actor, "unconscious");
     } else {
       if (current.dead || current.unconscious) await add2eVitalDeleteKinds(actor, ["dead", "unconscious"]);
     }
