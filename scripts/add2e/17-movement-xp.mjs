@@ -1,17 +1,17 @@
 // ADD2E — XP + Mouvement
-// Version : 2026-05-29-clean-movement-limit-no-visual-traces-v2
+// Version : 2026-05-21-clean-v2-gm-free-move-scale
 //
-// Objectif :
-// - conserver le calcul XP / niveau / mouvement ;
-// - empêcher un joueur de déplacer son token au-delà de son mouvement maximal ;
-// - ne plus dessiner de cercle, chemin, trace, ruler ou historique de mouvement ADD2E ;
-// - désactiver l'historique de mouvement Drag Ruler si le module est actif ;
-// - laisser le MJ libre.
+// Principes :
+// - pas de patch de render()
+// - pas d'actor.update() depuis getData()
+// - ajustements XP/niveau dans preUpdateActor pour éviter les rendus en cascade
+// - contrôle token sur la valeur affichée de mouvement en mètres
+// - MJ : jamais bloqué, mais échelle couleur visible
+// - Joueurs : blocage si dépassement, avec échelle couleur visible
 
-const VERSION = "2026-05-29-clean-movement-limit-no-visual-traces-v2";
+const VERSION = "2026-05-21-clean-v2-gm-free-move-scale";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
-const PENDING_MOVES = new Map();
 
 globalThis.ADD2E_MOVE_XP_VERSION = VERSION;
 
@@ -313,33 +313,27 @@ async function awardXp(actor, amount, { reason = "Gain d'expérience", percentBo
   return { before, after: result.updates["system.xp"], total, bonus, ...result };
 }
 
-async function promptXp(actor) {
+function promptXp(actor) {
   if (!actor || actor.type !== "personnage") return;
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.confirm) {
-    ui.notifications?.warn?.("DialogV2 est indisponible : impossible d'ouvrir l'attribution d'XP.");
-    return;
-  }
-
-  await DialogV2.confirm({
-    window: { title: `Attribuer de l'XP — ${actor.name}` },
-    content: `<form class="add2e-xp-dialog">
+  new Dialog({
+    title: `Attribuer de l'XP — ${actor.name}`,
+    content: `<form>
       <div class="form-group"><label>XP à ajouter</label><input type="number" name="amount" value="0" step="1"></div>
       <div class="form-group"><label>Bonus %</label><input type="number" name="percentBonus" value="0" step="1"></div>
       <div class="form-group"><label>Motif</label><input type="text" name="reason" value="Récompense d'aventure"></div>
     </form>`,
-    yes: {
-      label: "Ajouter",
-      callback: async (_event, _button, dialog) => {
-        const form = dialog?.element?.querySelector?.("form.add2e-xp-dialog");
-        if (!form) return false;
-        await awardXp(actor, form.amount.value, { reason: form.reason.value, percentBonus: form.percentBonus.value });
-        return true;
-      }
+    buttons: {
+      add: {
+        label: "Ajouter",
+        callback: async html => {
+          const form = (html[0] ?? html).querySelector("form");
+          await awardXp(actor, form.amount.value, { reason: form.reason.value, percentBonus: form.percentBonus.value });
+        }
+      },
+      cancel: { label: "Annuler" }
     },
-    no: { label: "Annuler" },
-    modal: true
-  });
+    default: "add"
+  }).render(true);
 }
 
 function rootEl(html) {
@@ -379,17 +373,11 @@ function ensureXpField(sheet, html) {
 function bindXpButton(sheet, html) {
   const actor = sheet?.actor;
   if (!actor || actor.type !== "personnage") return;
-  const root = rootEl(html);
-  if (!root?.querySelectorAll) return;
-  for (const button of root.querySelectorAll("[data-add2e-mx='xp']")) {
-    if (button.dataset.add2eXpBound === VERSION) continue;
-    button.dataset.add2eXpBound = VERSION;
-    button.addEventListener("click", ev => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      promptXp(actor);
-    });
-  }
+  html.find?.("[data-add2e-mx='xp']")?.off("click.add2eXp").on("click.add2eXp", ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    promptXp(actor);
+  });
 }
 
 function unitToMeters(distance, unit) {
@@ -399,69 +387,103 @@ function unitToMeters(distance, unit) {
   return distance;
 }
 
-function tokenDistanceMeters(tokenDoc, changes) {
+function tokenDistanceMeters(tokenDoc, changes, from = null) {
   const scene = tokenDoc.parent ?? canvas?.scene;
   const size = Number(scene?.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
   const distance = Number(scene?.grid?.distance ?? canvas?.scene?.grid?.distance ?? 1) || 1;
   const unit = scene?.grid?.units ?? canvas?.scene?.grid?.units ?? "m";
-  const ox = Number(tokenDoc.x ?? 0) + Number(tokenDoc.width ?? 1) * size / 2;
-  const oy = Number(tokenDoc.y ?? 0) + Number(tokenDoc.height ?? 1) * size / 2;
+  const ox = Number(from?.x ?? tokenDoc.x ?? 0) + Number(tokenDoc.width ?? 1) * size / 2;
+  const oy = Number(from?.y ?? tokenDoc.y ?? 0) + Number(tokenDoc.height ?? 1) * size / 2;
   const nx = Number(changes.x ?? tokenDoc.x ?? 0) + Number(tokenDoc.width ?? 1) * size / 2;
   const ny = Number(changes.y ?? tokenDoc.y ?? 0) + Number(tokenDoc.height ?? 1) * size / 2;
   return unitToMeters((Math.hypot(nx - ox, ny - oy) / size) * distance, unit);
 }
 
-function combatTurnKey(combat = game.combat) {
+function combatTurnKey() {
+  const combat = game.combat;
   return combat ? `${combat.id}:${combat.round ?? 0}:${combat.turn ?? 0}` : null;
 }
 
-function actorMovementSpent(actor, combat = game.combat) {
-  const key = combatTurnKey(combat);
-  if (!key || actor.getFlag("add2e", "movementTurnKey") !== key) return 0;
-  return Number(actor.getFlag("add2e", "movementSpentMeters")) || 0;
+function spentThisTurn(actor) {
+  const key = combatTurnKey();
+  if (!key) return 0;
+  return actor.getFlag("add2e", "movementTurnKey") === key ? Number(actor.getFlag("add2e", "movementSpentMeters")) || 0 : 0;
 }
 
-function maxMovementMeters(actor) {
-  const movement = computeMovement(actor);
-  return Math.max(0, Number(movement.actuel ?? actor?.system?.movement ?? actor?.system?.vitesse_deplacement ?? 0) || 0);
+function movementOrigin(tokenDoc) {
+  return tokenDoc.getFlag("add2e", "lastAllowedPosition") ?? { x: tokenDoc.x, y: tokenDoc.y };
 }
 
-function tokenMoveKey(tokenDoc) {
-  return tokenDoc?.uuid ?? `${tokenDoc?.parent?.id ?? "scene"}.${tokenDoc?.id ?? "token"}`;
+function movementScaleStatus(distance, max) {
+  if (max <= 0) return { key: "red", label: "rouge", color: 0xd91e18, blocked: true };
+  if (distance <= max + 0.01) return { key: "green", label: "vert", color: 0x2ecc71, blocked: false };
+  if (distance <= (max * 2) + 0.01) return { key: "orange", label: "orange", color: 0xf39c12, blocked: true };
+  return { key: "red", label: "rouge", color: 0xd91e18, blocked: true };
 }
 
-function buildMovementStatus(tokenDoc, changes = {}) {
-  const actor = tokenDoc?.actor;
+function drawMovementScale(tokenDoc, status, distance, max) {
+  const token = canvas?.tokens?.get?.(tokenDoc.id);
+  const Graphics = globalThis.PIXI?.Graphics;
+  if (!token || !Graphics) return;
+
+  try {
+    if (!token._add2eMovementScaleRing) {
+      token._add2eMovementScaleRing = new Graphics();
+      token.addChild(token._add2eMovementScaleRing);
+    }
+
+    const g = token._add2eMovementScaleRing;
+    const w = Number(token.w ?? token.width ?? canvas.grid.size) || canvas.grid.size;
+    const h = Number(token.h ?? token.height ?? canvas.grid.size) || canvas.grid.size;
+
+    g.clear();
+    g.lineStyle(5, status.color, 0.95);
+    g.drawRoundedRect(-3, -3, w + 6, h + 6, 10);
+    g.zIndex = 9999;
+    token.sortChildren?.();
+
+    token.document.setFlag("add2e", "movementScale", {
+      status: status.key,
+      label: status.label,
+      distance,
+      max,
+      gmFreeMove: game.user.isGM
+    });
+  } catch (err) {
+    console.warn(`${TAG}[TOKEN][SCALE_DRAW_ERROR]`, err);
+  }
+}
+
+function computeTokenMovementScale(tokenDoc, changes = {}, from = null) {
+  const actor = tokenDoc.actor;
   if (!actor || actor.type !== "personnage") return null;
-  if (!changes || (changes.x === undefined && changes.y === undefined)) return null;
 
-  const combat = game.combat ?? null;
-  const max = maxMovementMeters(actor);
-  const delta = Math.round(tokenDistanceMeters(tokenDoc, changes) * 100) / 100;
-  const spent = combat ? actorMovementSpent(actor, combat) : 0;
+  const movement = computeMovement(actor);
+  const max = Number(movement.actuel ?? actor.system?.movement ?? actor.system?.vitesse_deplacement ?? 0) || 0;
+  const origin = from ?? (game.combat ? { x: tokenDoc.x, y: tokenDoc.y } : movementOrigin(tokenDoc));
+  const delta = tokenDistanceMeters(tokenDoc, changes, origin);
+  const spent = game.combat ? spentThisTurn(actor) : 0;
   const next = Math.round((spent + delta) * 100) / 100;
-  const blocked = next > max + 0.01;
+  const status = movementScaleStatus(next, max);
 
-  return {
-    actor,
-    combat,
-    key: combatTurnKey(combat),
-    max,
-    delta,
-    spent,
-    next,
-    blocked
-  };
+  drawMovementScale(tokenDoc, status, next, max);
+
+  return { actor, movement, max, origin, delta, spent, next, status };
 }
 
 function validateTokenMovement(tokenDoc, changes, options = {}) {
   if (options?.add2eIgnoreMovement) return true;
   if (!game.settings.get("add2e", "enforceTokenMovement")) return true;
+  if (!changes || (changes.x === undefined && changes.y === undefined)) return true;
 
-  const status = buildMovementStatus(tokenDoc, changes);
-  if (!status) return true;
+  const actor = tokenDoc.actor;
+  if (!actor || actor.type !== "personnage") return true;
 
-  const { actor, combat, key, max, delta, spent, next, blocked } = status;
+  const result = computeTokenMovementScale(tokenDoc, changes);
+  if (!result) return true;
+
+  const { delta, spent, next, max, status } = result;
+
   log("[TOKEN][CHECK]", {
     actor: actor.name,
     token: tokenDoc.name,
@@ -469,70 +491,30 @@ function validateTokenMovement(tokenDoc, changes, options = {}) {
     spent,
     next,
     max,
-    blocked,
+    status: status.key,
     gm: game.user.isGM,
-    combat: !!combat
+    combat: !!game.combat
   });
 
   if (game.user.isGM) {
-    if (blocked) ui.notifications.info(`${actor.name} dépasse son mouvement : ${next.toFixed(1)} m / ${max.toFixed(1)} m. Déplacement MJ autorisé.`);
+    if (next > max + 0.01) ui.notifications.info(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m. Déplacement MJ autorisé.`);
     return true;
   }
 
-  if (blocked) {
-    ui.notifications.warn(`${actor.name} ne peut pas se déplacer aussi loin : ${next.toFixed(1)} m / ${max.toFixed(1)} m.`);
-    PENDING_MOVES.delete(tokenMoveKey(tokenDoc));
+  if (status.blocked) {
+    ui.notifications.warn(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m.`);
     return false;
   }
 
-  PENDING_MOVES.set(tokenMoveKey(tokenDoc), { actorId: actor.id, key, next, combat: !!combat });
+  if (game.combat) {
+    setTimeout(() => {
+      actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
+      actor.setFlag("add2e", "movementSpentMeters", next);
+    }, 0);
+  } else {
+    setTimeout(() => tokenDoc.setFlag("add2e", "lastAllowedPosition", { x: changes.x ?? tokenDoc.x, y: changes.y ?? tokenDoc.y }), 0);
+  }
   return true;
-}
-
-async function commitAcceptedTokenMovement(tokenDoc, changes = {}) {
-  if (!game.settings.get("add2e", "enforceTokenMovement")) return;
-  if (!changes || (changes.x === undefined && changes.y === undefined)) return;
-
-  const pending = PENDING_MOVES.get(tokenMoveKey(tokenDoc));
-  PENDING_MOVES.delete(tokenMoveKey(tokenDoc));
-  if (!pending?.combat || !pending.key) return;
-
-  const actor = tokenDoc.actor;
-  if (!actor || actor.type !== "personnage" || actor.id !== pending.actorId) return;
-
-  try {
-    await actor.setFlag("add2e", "movementTurnKey", pending.key);
-    await actor.setFlag("add2e", "movementSpentMeters", pending.next);
-  } catch (err) {
-    console.warn(`${TAG}[TOKEN][COMMIT_MOVE_ERROR]`, err);
-  }
-}
-
-function cleanupLegacyMovementVisuals() {
-  for (const token of canvas?.tokens?.placeables ?? []) {
-    try {
-      token._add2eMovementScaleRing?.destroy?.({ children: true });
-      token._add2eMovementScaleRing = null;
-    } catch (_e) {}
-  }
-}
-
-async function disableDragRulerMovementHistory() {
-  if (!game.user?.isGM) return false;
-  if (!game.modules?.get?.("drag-ruler")?.active) return false;
-  if (!game.settings?.settings?.has?.("drag-ruler.enableMovementHistory")) return false;
-
-  try {
-    const current = game.settings.get("drag-ruler", "enableMovementHistory");
-    if (current === false) return true;
-    await game.settings.set("drag-ruler", "enableMovementHistory", false);
-    ui.notifications?.info?.("ADD2E : l'historique de mouvement Drag Ruler a été désactivé.");
-    log("[DRAG_RULER][MOVEMENT_HISTORY_DISABLED]", { previous: current });
-    return true;
-  } catch (err) {
-    console.warn(`${TAG}[DRAG_RULER][DISABLE_HISTORY_ERROR]`, err);
-    return false;
-  }
 }
 
 Hooks.once("init", () => {
@@ -544,10 +526,9 @@ Hooks.once("init", () => {
     type: Boolean,
     default: true
   });
-
   game.settings.register("add2e", "enforceTokenMovement", {
     name: "ADD2E — Contrôler le déplacement des tokens",
-    hint: "Bloque les joueurs qui dépassent leur mouvement. Le MJ n'est jamais bloqué.",
+    hint: "Bloque les joueurs qui dépassent leur mouvement. Le MJ n'est jamais bloqué et voit seulement l'échelle de couleur.",
     scope: "world",
     config: true,
     type: Boolean,
@@ -557,14 +538,13 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", async () => {
   log("[READY]", { version: VERSION });
-  await disableDragRulerMovementHistory();
   if (game.user.isGM) {
     for (const actor of game.actors?.filter(a => a.type === "personnage") ?? []) await recalc(actor, { mode: "auto" }).catch(err => console.warn(`${TAG}[READY][SKIP]`, actor?.name, err));
   }
-  cleanupLegacyMovementVisuals();
+  for (const token of canvas?.tokens?.placeables ?? []) {
+    if (token.actor?.type === "personnage") token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+  }
 });
-
-Hooks.on("canvasReady", cleanupLegacyMovementVisuals);
 
 Hooks.on("preUpdateActor", (actor, changes, options) => {
   if (options?.[INTERNAL] || !actor || actor.type !== "personnage") return true;
@@ -599,14 +579,30 @@ Hooks.on("renderAdd2eActorSheet", (sheet, html) => {
 });
 
 Hooks.on("preUpdateToken", (tokenDoc, changes, options) => validateTokenMovement(tokenDoc, changes, options));
-Hooks.on("updateToken", (tokenDoc, changes) => commitAcceptedTokenMovement(tokenDoc, changes));
-
+Hooks.on("updateToken", (tokenDoc, changes) => {
+  if (!changes || (changes.x === undefined && changes.y === undefined)) return;
+  if (!game.settings.get("add2e", "enforceTokenMovement")) return;
+  computeTokenMovementScale(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y });
+});
+Hooks.on("controlToken", token => {
+  if (token?.actor?.type === "personnage") {
+    token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+    computeTokenMovementScale(token.document, { x: token.document.x, y: token.document.y });
+  }
+});
 for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
   Hooks.on(hookName, item => {
     const actor = item?.parent;
     if (actor?.documentName === "Actor" && actor.type === "personnage") recalc(actor, { mode: "movement" }).catch(err => console.warn(`${TAG}[${hookName}]`, err));
   });
 }
+
+Hooks.on("updateCombat", () => {
+  if (!game.user.isGM) return;
+  for (const combatant of game.combat?.combatants ?? []) {
+    if (combatant.actor?.type === "personnage") combatant.actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
+  }
+});
 
 globalThis.add2eComputeXp = computeXp;
 globalThis.add2eComputeMovement = computeMovement;
@@ -615,6 +611,4 @@ globalThis.add2eAwardXp = awardXp;
 globalThis.add2ePromptXp = promptXp;
 globalThis.add2eMinXpForLevel = minXpForLevel;
 globalThis.add2eValidateTokenMovement = validateTokenMovement;
-globalThis.add2eComputeTokenMovementScale = buildMovementStatus;
-globalThis.add2eComputeTokenMovementStatus = buildMovementStatus;
-globalThis.add2eDisableDragRulerMovementHistory = disableDragRulerMovementHistory;
+globalThis.add2eComputeTokenMovementScale = computeTokenMovementScale;
