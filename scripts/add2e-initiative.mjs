@@ -3,15 +3,14 @@
 // Responsabilités uniques : initiative 1d6, ordre ascendant, icône D6 et carte de chat.
 // Aucun blocage d'action, aucune gestion de déplacement, aucun drag, ruler, trace, chemin ou historique de mouvement.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-clean-initiative-no-lock-v2";
-const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-clean-initiative-chat-v2";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-clean-initiative-no-lock-v3";
+const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-clean-initiative-chat-v3";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
 let configured = false;
 let sorting = false;
 let sortTimer = null;
-let cleanedLegacyHooks = false;
 
 globalThis.ADD2E_INITIATIVE_VERSION = ADD2E_INITIATIVE_VERSION;
 globalThis.ADD2E_INITIATIVE_CHAT_VERSION = ADD2E_INITIATIVE_CHAT_VERSION;
@@ -30,7 +29,8 @@ function configureInitiative() {
     version: ADD2E_INITIATIVE_VERSION,
     formula: "1d6",
     order: "ascending",
-    locks: "none"
+    locks: "none",
+    movement: "not-managed"
   });
 }
 
@@ -38,60 +38,6 @@ function initiativeValue(value) {
   if (value === undefined || value === null || value === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
-}
-
-function hookSource(entry) {
-  const fn = entry?.fn ?? entry?.callback ?? entry;
-  if (typeof fn !== "function") return "";
-  try { return Function.prototype.toString.call(fn); } catch (_e) { return ""; }
-}
-
-function cleanupLegacyInitiativeHooksFromStore(store) {
-  if (!store || typeof store !== "object") return 0;
-  let removed = 0;
-
-  for (const hookName of ["updateCombatant", "updateCombat", "preUpdateToken", "controlToken", "hoverToken", "highlightToken", "updateToken", "combatTurn", "combatRound"]) {
-    const entries = store[hookName];
-    if (!Array.isArray(entries)) continue;
-
-    const before = entries.length;
-    store[hookName] = entries.filter(entry => {
-      const source = hookSource(entry);
-      return !(
-        source.includes("triInitiativeAscendant") ||
-        source.includes("add2eCanActorActNow") ||
-        source.includes("add2eCanTokenActNow") ||
-        source.includes("add2eClearCombatMovementHistoryOnce") ||
-        source.includes("add2eClearTokenMovementHistory") ||
-        source.includes("add2ePurgeCombatantMovementHistory") ||
-        source.includes("add2eReleaseInvalidControlledTokens") ||
-        source.includes("add2eApplyTokenInteractivity") ||
-        source.includes("movementHistory") ||
-        source.includes("showMovementHistory") ||
-        source.includes("showRuler") ||
-        source.includes("_canDrag") ||
-        source.includes("_onDragLeft") ||
-        source.includes("Token.ruler") ||
-        source.includes("add2eTurnLock") ||
-        source.includes("ACTION_LOCK")
-      );
-    });
-    removed += before - store[hookName].length;
-  }
-
-  return removed;
-}
-
-function cleanupLegacyInitiativeHooks() {
-  if (cleanedLegacyHooks) return 0;
-  cleanedLegacyHooks = true;
-
-  let removed = 0;
-  try { removed += cleanupLegacyInitiativeHooksFromStore(Hooks.events); } catch (_e) {}
-  try { removed += cleanupLegacyInitiativeHooksFromStore(Hooks._hooks); } catch (_e) {}
-
-  console.log(`${TAG}[LEGACY_CLEAN]`, { removed });
-  return removed;
 }
 
 async function sortInitiativeAscending(combat = game.combat) {
@@ -312,6 +258,9 @@ function exposeGlobals() {
   globalThis.add2eScheduleInitiativeSort = scheduleInitiativeSort;
   globalThis.add2ePatchCombatTrackerInitiativeIcons = patchInitiativeIcons;
   globalThis.triInitiativeAscendant = sortInitiativeAscending;
+
+  try { delete globalThis.add2eCanActorActNow; } catch (_e) { globalThis.add2eCanActorActNow = undefined; }
+  try { delete globalThis.add2eCanTokenActNow; } catch (_e) { globalThis.add2eCanTokenActNow = undefined; }
 }
 
 function installHooks() {
@@ -348,7 +297,6 @@ Hooks.once("init", configureInitiative);
 
 Hooks.once("ready", () => {
   configureInitiative();
-  cleanupLegacyInitiativeHooks();
   exposeGlobals();
   patchInitiativeIcons(document);
 
