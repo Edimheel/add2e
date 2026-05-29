@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Nuage puant
-// Version : 2026-05-28-magicien-attaque-n2-nuage-puant-vfx-only-v6
+// Version : 2026-05-29-magicien-attaque-n2-nuage-puant-loop-vfx-v7
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -16,7 +16,8 @@ return await (async () => {
     componentsText: "V, S, M",
     rangeMeters: 30,
     radiusMeters: 3,
-    vfxDurationMs: 30000,
+    vfxLoopMs: 2800,
+    vfxChunkMs: 3600,
     imgFallback: "systems/add2e/assets/icones/sorts/nuage-puant.webp",
     description: "Ce sort crée une masse de vapeurs nauséabondes qui rend les créatures présentes incapables d’agir normalement si elles ratent leur jet de protection contre le poison. Les créatures affectées chancellent, sont prises de nausées et ne peuvent pas attaquer tant qu’elles restent dans le nuage et pendant un court temps après en être sorties. Le nuage dérive selon le vent et peut être dissipé par un vent fort."
   };
@@ -95,25 +96,13 @@ return await (async () => {
     const scene = canvas.scene;
     if (!scene) return;
     if (game.user.isGM) {
-      const templateIds = Array.from(scene.templates ?? [])
-        .filter(t => t.flags?.add2e?.spell === SPELL.slug)
-        .map(t => t.id)
-        .filter(Boolean);
+      const templateIds = Array.from(scene.templates ?? []).filter(t => t.flags?.add2e?.spell === SPELL.slug).map(t => t.id).filter(Boolean);
       if (templateIds.length) await scene.deleteEmbeddedDocuments("MeasuredTemplate", templateIds);
-
-      const drawingIds = Array.from(scene.drawings ?? [])
-        .filter(d => d.flags?.add2e?.spell === SPELL.slug)
-        .map(d => d.id)
-        .filter(Boolean);
+      const drawingIds = Array.from(scene.drawings ?? []).filter(d => d.flags?.add2e?.spell === SPELL.slug).map(d => d.id).filter(Boolean);
       if (drawingIds.length) await scene.deleteEmbeddedDocuments("Drawing", drawingIds);
       return;
     }
-
-    game.socket?.emit?.("system.add2e", {
-      type: "ADD2E_GM_OPERATION",
-      operation: "deleteMeasuredTemplates",
-      payload: { sceneId: scene.id, spell: SPELL.slug }
-    });
+    game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "deleteMeasuredTemplates", payload: { sceneId: scene.id, spell: SPELL.slug } });
   }
 
   function drawPlacementMarker(g, point, valid) {
@@ -170,14 +159,7 @@ return await (async () => {
         drawPlacementMarker(g, current, valid);
       };
       function onMove(e) { update(e); }
-      function onDown(e) {
-        e.preventDefault(); e.stopPropagation();
-        if (e.button === 2) return cleanup(null);
-        if (e.button !== 0) return;
-        update(e);
-        if (!valid) return ui.notifications.warn(`${SPELL.name} : point d’impact hors portée.`);
-        cleanup({ point: current });
-      }
+      function onDown(e) { e.preventDefault(); e.stopPropagation(); if (e.button === 2) return cleanup(null); if (e.button !== 0) return; update(e); if (!valid) return ui.notifications.warn(`${SPELL.name} : point d’impact hors portée.`); cleanup({ point: current }); }
       function onContext(e) { e.preventDefault(); e.stopPropagation(); cleanup(null); }
       function onKey(e) { if (e.key !== "Escape") return; e.preventDefault(); e.stopPropagation(); cleanup(null); }
       drawPlacementMarker(g, current, valid);
@@ -202,15 +184,61 @@ return await (async () => {
       .filter(t => tokenSamplePoints(t).some(p => Math.hypot(p.x - center.x, p.y - center.y) <= radiusPx));
   }
 
-  function playPixiFog(point) {
-    const parent = canvas.interface ?? canvas.controls ?? canvas.stage;
-    if (!parent || typeof PIXI === "undefined") return false;
-    const previous = parent.getChildByName?.("add2e-nuage-puant-cloud-vfx");
-    if (previous) previous.destroy({ children: true });
+  async function createZoneControllerEffect(point, durationRounds) {
+    const old = caster.effects?.filter?.(e => e.flags?.add2e?.spell === SPELL.slug && e.flags?.add2e?.zoneController === true) ?? [];
+    for (const e of old) await e.delete();
+    const requestId = foundry.utils.randomID();
+    const created = await caster.createEmbeddedDocuments("ActiveEffect", [{
+      name: `${SPELL.name} — zone active`,
+      img: sourceItem?.img || SPELL.imgFallback,
+      disabled: false,
+      transfer: false,
+      type: "base",
+      system: {},
+      changes: [],
+      duration: { rounds: durationRounds, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
+      description: "Contrôle la durée visuelle du nuage. Supprimer cet effet arrête l’animation.",
+      flags: { add2e: { spell: SPELL.slug, zoneController: true, requestId, sceneId: canvas.scene?.id ?? null, x: point.x, y: point.y, radiusMeters: SPELL.radiusMeters } }
+    }]);
+    return created?.[0] ?? null;
+  }
 
+  function isControllerActive(effectId) {
+    const effect = caster?.effects?.get?.(effectId);
+    if (!effect || effect.disabled) return false;
+    const duration = effect.duration ?? {};
+    if (duration.remaining !== undefined && duration.remaining !== null && Number(duration.remaining) <= 0) return false;
+    return true;
+  }
+
+  async function playOneJb2aFog(point) {
+    if (typeof Sequence === "undefined") return false;
+    const radiusPx = metersToPx(SPELL.radiusMeters);
+    const files = [
+      "jb2a.fog_cloud.02.green",
+      "jb2a.fog_cloud.01.green",
+      "jb2a.smoke.puff.centered.green",
+      "jb2a.smoke.puff.centered.grey"
+    ];
+    for (const file of files) {
+      try {
+        const seq = new Sequence();
+        let effect = seq.effect().file(file).atLocation(point).duration(SPELL.vfxChunkMs).fadeIn(300).fadeOut(550).opacity(0.85).belowTokens();
+        if (typeof effect.scaleToObject === "function") effect = effect.scaleToObject(Math.max(2, radiusPx / gridSizePx()));
+        else if (typeof effect.scale === "function") effect = effect.scale(Math.max(1.2, radiusPx / gridSizePx()));
+        await seq.play();
+        return true;
+      } catch (_err) {}
+    }
+    return false;
+  }
+
+  function playOnePixiFog(point, durationMs = 3600) {
+    const parent = parentLayer();
+    if (!parent || typeof PIXI === "undefined") return false;
     const radius = metersToPx(SPELL.radiusMeters);
     const container = new PIXI.Container();
-    container.name = "add2e-nuage-puant-cloud-vfx";
+    container.name = `add2e-nuage-puant-cloud-vfx-${foundry.utils.randomID()}`;
     container.zIndex = 99999;
     container.eventMode = "none";
     container.alpha = 0.95;
@@ -218,50 +246,68 @@ return await (async () => {
     parent.addChild(container);
 
     const puffs = [];
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 18; i++) {
       const angle = Math.random() * Math.PI * 2;
       const dist = Math.sqrt(Math.random()) * radius * 0.82;
       const size = radius * (0.18 + Math.random() * 0.34);
       const g = new PIXI.Graphics();
       const color = [0x6f9f45, 0x8fbf64, 0x4f7f3a, 0x9fbf72, 0xb2c98a][Math.floor(Math.random() * 5)];
-      g.beginFill(color, 0.16 + Math.random() * 0.17);
+      g.beginFill(color, 0.15 + Math.random() * 0.16);
       g.drawCircle(0, 0, size);
       g.endFill();
       g.x = point.x + Math.cos(angle) * dist;
       g.y = point.y + Math.sin(angle) * dist;
-      g.blendMode = PIXI.BLEND_MODES.NORMAL;
       container.addChild(g);
-      puffs.push({ g, baseX: g.x, baseY: g.y, angle, speed: 0.0012 + Math.random() * 0.0022, drift: 7 + Math.random() * 18, phase: Math.random() * Math.PI * 2 });
+      puffs.push({ g, baseX: g.x, baseY: g.y, speed: 0.0012 + Math.random() * 0.0022, drift: 7 + Math.random() * 18, phase: Math.random() * Math.PI * 2 });
     }
 
     const started = performance.now();
     const ticker = canvas.app?.ticker;
     const animate = () => {
       const elapsed = performance.now() - started;
-      const life = Math.min(1, elapsed / SPELL.vfxDurationMs);
-      container.alpha = life < 0.08 ? life / 0.08 : life > 0.9 ? Math.max(0, (1 - life) / 0.10) : 1;
+      const life = Math.min(1, elapsed / durationMs);
+      container.alpha = life < 0.12 ? life / 0.12 : life > 0.78 ? Math.max(0, (1 - life) / 0.22) : 1;
       for (const p of puffs) {
         const t = elapsed * p.speed + p.phase;
         p.g.x = p.baseX + Math.cos(t) * p.drift;
         p.g.y = p.baseY + Math.sin(t * 0.85) * p.drift;
         p.g.scale.set(1 + Math.sin(t * 1.7) * 0.07);
       }
-      if (elapsed >= SPELL.vfxDurationMs) {
+      if (elapsed >= durationMs) {
         ticker?.remove?.(animate);
         if (!container.destroyed) container.destroy({ children: true });
       }
     };
     ticker?.add?.(animate);
-    window.setTimeout(() => {
-      ticker?.remove?.(animate);
-      if (!container.destroyed) container.destroy({ children: true });
-    }, SPELL.vfxDurationMs + 500);
+    window.setTimeout(() => { ticker?.remove?.(animate); if (!container.destroyed) container.destroy({ children: true }); }, durationMs + 750);
     return true;
+  }
+
+  function startLoopingCloudVfx(point, controllerEffect) {
+    const effectId = controllerEffect?.id;
+    if (!effectId) return;
+    const loopKey = `add2eNuagePuantLoop_${effectId}`;
+    globalThis.ADD2E_ACTIVE_SPELL_VFX ??= {};
+    if (globalThis.ADD2E_ACTIVE_SPELL_VFX[loopKey]) clearInterval(globalThis.ADD2E_ACTIVE_SPELL_VFX[loopKey]);
+
+    const tick = async () => {
+      if (!isControllerActive(effectId)) {
+        const id = globalThis.ADD2E_ACTIVE_SPELL_VFX?.[loopKey];
+        if (id) clearInterval(id);
+        delete globalThis.ADD2E_ACTIVE_SPELL_VFX?.[loopKey];
+        return;
+      }
+      const jb2aOk = await playOneJb2aFog(point);
+      if (!jb2aOk) playOnePixiFog(point, SPELL.vfxChunkMs);
+    };
+
+    tick();
+    globalThis.ADD2E_ACTIVE_SPELL_VFX[loopKey] = setInterval(tick, SPELL.vfxLoopMs);
   }
 
   async function applyNausea(targetActor, durationRounds) {
     if (!targetActor) return false;
-    const existing = targetActor.effects?.filter?.(e => e.flags?.add2e?.spell === SPELL.slug) ?? [];
+    const existing = targetActor.effects?.filter?.(e => e.flags?.add2e?.spell === SPELL.slug && e.flags?.add2e?.zoneController !== true) ?? [];
     for (const e of existing) await e.delete();
     await targetActor.createEmbeddedDocuments("ActiveEffect", [{
       name: `${SPELL.name} — nausée`,
@@ -300,7 +346,8 @@ return await (async () => {
   const placement = await waitForPlacement();
   if (!placement?.point) { ui.notifications.info(`${SPELL.name} : lancement annulé.`); return false; }
   await deleteOldTechnicalZones();
-  playPixiFog(placement.point);
+  const controller = await createZoneControllerEffect(placement.point, durationRounds);
+  startLoopingCloudVfx(placement.point, controller);
   const targets = tokensInCircle(placement.point);
   const rows = [];
   for (const t of targets) {
