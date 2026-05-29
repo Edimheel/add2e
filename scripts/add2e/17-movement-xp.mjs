@@ -1,13 +1,14 @@
 // ADD2E — XP + Mouvement
-// Version : 2026-05-29-clean-movement-limit-no-visual-traces-v1
+// Version : 2026-05-29-clean-movement-limit-no-visual-traces-v2
 //
 // Objectif :
 // - conserver le calcul XP / niveau / mouvement ;
 // - empêcher un joueur de déplacer son token au-delà de son mouvement maximal ;
 // - ne plus dessiner de cercle, chemin, trace, ruler ou historique de mouvement ADD2E ;
+// - désactiver l'historique de mouvement Drag Ruler si le module est actif ;
 // - laisser le MJ libre.
 
-const VERSION = "2026-05-29-clean-movement-limit-no-visual-traces-v1";
+const VERSION = "2026-05-29-clean-movement-limit-no-visual-traces-v2";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 const PENDING_MOVES = new Map();
@@ -516,6 +517,24 @@ function cleanupLegacyMovementVisuals() {
   }
 }
 
+async function disableDragRulerMovementHistory() {
+  if (!game.user?.isGM) return false;
+  if (!game.modules?.get?.("drag-ruler")?.active) return false;
+  if (!game.settings?.settings?.has?.("drag-ruler.enableMovementHistory")) return false;
+
+  try {
+    const current = game.settings.get("drag-ruler", "enableMovementHistory");
+    if (current === false) return true;
+    await game.settings.set("drag-ruler", "enableMovementHistory", false);
+    ui.notifications?.info?.("ADD2E : l'historique de mouvement Drag Ruler a été désactivé.");
+    log("[DRAG_RULER][MOVEMENT_HISTORY_DISABLED]", { previous: current });
+    return true;
+  } catch (err) {
+    console.warn(`${TAG}[DRAG_RULER][DISABLE_HISTORY_ERROR]`, err);
+    return false;
+  }
+}
+
 Hooks.once("init", () => {
   game.settings.register("add2e", "xpAutoLevel", {
     name: "ADD2E — XP : niveau automatique",
@@ -538,6 +557,7 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", async () => {
   log("[READY]", { version: VERSION });
+  await disableDragRulerMovementHistory();
   if (game.user.isGM) {
     for (const actor of game.actors?.filter(a => a.type === "personnage") ?? []) await recalc(actor, { mode: "auto" }).catch(err => console.warn(`${TAG}[READY][SKIP]`, actor?.name, err));
   }
@@ -597,3 +617,4 @@ globalThis.add2eMinXpForLevel = minXpForLevel;
 globalThis.add2eValidateTokenMovement = validateTokenMovement;
 globalThis.add2eComputeTokenMovementScale = buildMovementStatus;
 globalThis.add2eComputeTokenMovementStatus = buildMovementStatus;
+globalThis.add2eDisableDragRulerMovementHistory = disableDragRulerMovementHistory;
