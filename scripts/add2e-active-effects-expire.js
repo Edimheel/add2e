@@ -1,15 +1,212 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
-// Version : 2026-05-21-safe-delete-existing-script-v1
-// - Gère les effets à durée en rounds
-// - Fonctionne pour les sorts lancés en combat ET hors combat
-//   si lancé hors combat : startRound est initialisé au premier round rencontré
-// - Ne touche pas aux effets permanents ou sans "rounds"
-// - Suppression robuste : ignore les ActiveEffect déjà supprimés par un autre flux
+// + synchronisation automatique des états vitaux Inconscient / Mort.
+// Version : 2026-05-29-vital-status-sync-v1
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-21-safe-delete-existing-script-v1";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-sync-v1";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
+
+const ADD2E_VITAL_STATUS = {
+  unconscious: {
+    key: "unconscious",
+    statusId: "unconscious",
+    name: "Inconscient",
+    icon: "icons/svg/unconscious.svg"
+  },
+  dead: {
+    key: "dead",
+    statusId: "dead",
+    name: "Mort",
+    icon: "icons/svg/skull.svg"
+  }
+};
+
+const ADD2E_VITAL_SYNC_LOCK = new Set();
+
+function add2eVitalArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(add2eVitalArray);
+  if (value instanceof Set) return [...value];
+  if (typeof value?.values === "function") return [...value.values()];
+  if (typeof value === "object") return Object.values(value);
+  return [value];
+}
+
+function add2eVitalNorm(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9:_-]+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function add2eVitalNumber(value, fallback = NaN) {
+  if (typeof value === "string") {
+    const m = value.match(/-?\d+(?:[.,]\d+)?/);
+    if (!m) return fallback;
+    value = m[0].replace(",", ".");
+  }
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function add2eVitalReadHP(actor) {
+  const sys = actor?.system ?? {};
+  const raw = sys.pdv ?? sys.pv?.value ?? sys.hp?.value ?? sys.hp;
+  const fallback = sys.points_de_coup ?? sys.pv?.max ?? sys.hp?.max ?? 0;
+  return add2eVitalNumber(raw, add2eVitalNumber(fallback, 0));
+}
+
+function add2eVitalDesiredStatus(actor) {
+  const type = String(actor?.type ?? "").toLowerCase();
+  const hp = add2eVitalReadHP(actor);
+
+  if (type === "monster") return hp <= 0 ? "dead" : null;
+  if (type === "personnage") {
+    if (hp <= -11) return "dead";
+    if (hp <= 0) return "unconscious";
+    return null;
+  }
+
+  return null;
+}
+
+function add2eVitalEffectStatusSet(effect) {
+  const statuses = effect?.statuses ?? effect?.system?.statuses ?? effect?.flags?.core?.statusId ?? [];
+  return new Set(add2eVitalArray(statuses).map(add2eVitalNorm).filter(Boolean));
+}
+
+function add2eVitalEffectFlag(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  const values = [
+    flags.vitalStatus,
+    flags.status,
+    flags.etat,
+    typeof effect?.getFlag === "function" ? effect.getFlag("add2e", "vitalStatus") : null
+  ];
+  return values.map(add2eVitalNorm).find(v => v === "dead" || v === "unconscious" || v === "mort" || v === "inconscient") ?? "";
+}
+
+function add2eVitalEffectKind(effect) {
+  const name = add2eVitalNorm(effect?.name ?? effect?.label ?? "");
+  const icon = add2eVitalNorm(effect?.icon ?? effect?.img ?? "");
+  const statuses = add2eVitalEffectStatusSet(effect);
+  const flag = add2eVitalEffectFlag(effect);
+
+  if (flag === "dead" || flag === "mort" || statuses.has("dead") || name === "mort" || icon.includes("skull")) return "dead";
+  if (flag === "unconscious" || flag === "inconscient" || statuses.has("unconscious") || name === "inconscient" || icon.includes("unconscious")) return "unconscious";
+  return null;
+}
+
+function add2eVitalHasEffect(actor, kind) {
+  return add2eVitalArray(actor?.effects).some(e => add2eVitalEffectKind(e) === kind && e.disabled !== true);
+}
+
+function add2eVitalEffectData(kind) {
+  const cfg = ADD2E_VITAL_STATUS[kind];
+  return {
+    name: cfg.name,
+    label: cfg.name,
+    icon: cfg.icon,
+    img: cfg.icon,
+    disabled: false,
+    transfer: false,
+    statuses: [cfg.statusId],
+    changes: [],
+    flags: {
+      add2e: {
+        vitalStatus: cfg.key,
+        autoVitalStatus: true,
+        source: "add2e-vital-status-sync"
+      },
+      core: {
+        statusId: cfg.statusId,
+        overlay: true
+      }
+    }
+  };
+}
+
+async function add2eVitalDeleteKinds(actor, kinds) {
+  const wanted = new Set(kinds);
+  const ids = add2eVitalArray(actor?.effects)
+    .filter(e => e?.id && wanted.has(add2eVitalEffectKind(e)))
+    .map(e => e.id);
+
+  if (!ids.length) return;
+  await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
+}
+
+async function add2eVitalCreateKind(actor, kind) {
+  if (!kind || add2eVitalHasEffect(actor, kind)) return;
+  await actor.createEmbeddedDocuments("ActiveEffect", [add2eVitalEffectData(kind)]);
+}
+
+async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
+  if (!actor || !["personnage", "monster"].includes(String(actor.type ?? "").toLowerCase())) return false;
+  if (!game.user?.isGM) return false;
+
+  const lockKey = actor.uuid ?? actor.id;
+  if (ADD2E_VITAL_SYNC_LOCK.has(lockKey)) return false;
+  ADD2E_VITAL_SYNC_LOCK.add(lockKey);
+
+  try {
+    const desired = add2eVitalDesiredStatus(actor);
+    const current = {
+      unconscious: add2eVitalHasEffect(actor, "unconscious"),
+      dead: add2eVitalHasEffect(actor, "dead")
+    };
+
+    if (desired === "dead") {
+      if (current.unconscious) await add2eVitalDeleteKinds(actor, ["unconscious"]);
+      if (!current.dead) await add2eVitalCreateKind(actor, "dead");
+    } else if (desired === "unconscious") {
+      if (current.dead) await add2eVitalDeleteKinds(actor, ["dead"]);
+      if (!current.unconscious) await add2eVitalCreateKind(actor, "unconscious");
+    } else {
+      if (current.dead || current.unconscious) await add2eVitalDeleteKinds(actor, ["dead", "unconscious"]);
+    }
+
+    console.log("[ADD2E][VITAL_STATUS][SYNC]", {
+      reason,
+      actor: actor.name,
+      actorId: actor.id,
+      type: actor.type,
+      hp: add2eVitalReadHP(actor),
+      desired
+    });
+
+    return true;
+  } catch (err) {
+    console.error("[ADD2E][VITAL_STATUS][ERROR]", { actor: actor?.name, reason, err });
+    return false;
+  } finally {
+    ADD2E_VITAL_SYNC_LOCK.delete(lockKey);
+  }
+}
+
+globalThis.add2eSyncActorVitalStatus = add2eSyncActorVitalStatus;
+
+Hooks.on("updateActor", async (actor, changed, options, userId) => {
+  if (!game.user?.isGM) return;
+  const hpChanged = foundry.utils.hasProperty(changed, "system.pdv") ||
+    foundry.utils.hasProperty(changed, "system.pv") ||
+    foundry.utils.hasProperty(changed, "system.hp") ||
+    foundry.utils.hasProperty(changed, "system.points_de_coup");
+  if (!hpChanged) return;
+  window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason: "updateActor:hp" }), 30);
+});
+
+Hooks.once("ready", () => {
+  if (!game.user?.isGM) return;
+  window.setTimeout(() => {
+    for (const actor of game.actors ?? []) add2eSyncActorVitalStatus(actor, { reason: "ready-scan" });
+  }, 500);
+});
 
 Hooks.on("updateCombat", async (combat, changed, options, userId) => {
   if (!("round" in changed) && !("turn" in changed)) return;
@@ -33,6 +230,7 @@ Hooks.on("updateCombat", async (combat, changed, options, userId) => {
 
       for (const effect of Array.from(actor.effects ?? [])) {
         if (!effect) continue;
+        if (add2eVitalEffectKind(effect)) continue;
 
         const dur = effect.duration || {};
 
