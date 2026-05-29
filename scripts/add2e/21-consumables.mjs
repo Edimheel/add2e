@@ -1,7 +1,7 @@
 // ADD2E — Consommables : composants de sorts, projectiles et carquois
 // Phase 2/3/4 dev-composant : réglages, carquois, drop de munitions, attaque projectile et restitution.
 
-const ADD2E_CONSUMABLES_VERSION = "2026-05-29-dev-composant-phase4-projectiles-v5-monsters-ignore-ammo";
+const ADD2E_CONSUMABLES_VERSION = "2026-05-29-dev-composant-phase4-projectiles-v6-personnages-only";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 const ADD2E_PROJECTILE_GM_OPERATION_TYPE = "ADD2E_GM_OPERATION";
@@ -72,9 +72,25 @@ function add2eEscapeHtml(value) {
   return div.innerHTML;
 }
 
+function add2eActorDocumentType(actor) {
+  const candidates = [
+    actor?.type,
+    actor?._source?.type,
+    actor?.baseActor?.type,
+    actor?.document?.type,
+    actor?.parent?.actor?.type
+  ].filter(v => v !== null && v !== undefined && String(v).trim() !== "");
+
+  for (const value of candidates) {
+    const type = add2eSlugify(value);
+    if (type) return type;
+  }
+  return "";
+}
+
 function add2eActorUsesProjectileInventory(actor) {
   if (!actor) return false;
-  return String(actor.type ?? "").toLowerCase() !== "monster";
+  return add2eActorDocumentType(actor) === "personnage";
 }
 
 async function add2eDialogPopup({ title = "Information", content = "", modal = false } = {}) {
@@ -361,6 +377,7 @@ export async function add2eRestoreProjectilesAtCombatEnd(combat) {
     const actor = game.actors?.get(row.actorId);
     const item = actor?.items?.get(row.itemId);
     if (!item) continue;
+    if (!add2eActorUsesProjectileInventory(actor)) continue;
     const current = add2eQuantity(item);
     await item.update(add2eUpdatePath("system.quantite", current + row.restored), { add2eReason: "restore-projectiles-combat-end" });
   }
@@ -554,10 +571,17 @@ async function add2eNotifyProjectileUsed(_actor, _arme, _reservation) {
 }
 
 function add2eResolveAttackActorAndWeapon(args = {}) {
-  let actor = args.actor ?? null;
-  let arme = args.arme ?? null;
+  let actor = args.actor ?? args.token?.actor ?? args.token?.document?.actor ?? null;
+  let arme = args.arme ?? args.weapon ?? args.item ?? null;
+
   if (!actor && args.actorId) actor = game.actors?.get?.(args.actorId) ?? null;
+  if (!actor && args.tokenId) actor = canvas?.tokens?.get?.(args.tokenId)?.actor ?? null;
+  if (!actor && args.tokenDocumentId) actor = canvas?.scene?.tokens?.get?.(args.tokenDocumentId)?.actor ?? null;
+
   if (!arme && args.itemId && actor) arme = actor.items?.get?.(args.itemId) ?? null;
+  if (!actor && arme?.parent?.documentName === "Actor") actor = arme.parent;
+  if (!actor && arme?.actor) actor = arme.actor;
+
   return { actor, arme };
 }
 
@@ -569,11 +593,13 @@ function add2eProjectileDialogTitle(reservation) {
 function add2eWrapAttackRollForProjectiles() {
   if (globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED) return;
   if (typeof globalThis.add2eAttackRoll !== "function") return;
-  globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED = true;
+  globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED = ADD2E_CONSUMABLES_VERSION;
 
   const originalAttackRoll = globalThis.add2eAttackRoll;
   globalThis.add2eAttackRoll = async function add2eAttackRollWithProjectiles(args = {}) {
     const { actor, arme } = add2eResolveAttackActorAndWeapon(args);
+    if (!add2eActorUsesProjectileInventory(actor)) return await originalAttackRoll.call(this, args);
+
     const reservation = await add2eReserveProjectile(actor, arme);
     if (reservation?.blocked) {
       await add2eConsumablesAlert({
@@ -676,6 +702,7 @@ function add2eRegisterConsumableHooks() {
     if (!add2eIsAmmunition(item)) return;
     if (!add2eChangeSetsEquippedTrue(changes)) return;
     const actor = item.parent;
+    if (!add2eActorUsesProjectileInventory(actor)) return;
     if (!actor?.items || !actor?.updateEmbeddedDocuments) return;
     try {
       globalThis.__ADD2E_CONSUMABLES_EQUIP_GUARD = true;
@@ -718,7 +745,8 @@ const api = {
   add2eRefundSpellComponents,
   add2eTryMergeDroppedAmmunition,
   add2eWrapAttackRollForProjectiles,
-  add2eActorUsesProjectileInventory
+  add2eActorUsesProjectileInventory,
+  add2eActorDocumentType
 };
 
 globalThis.ADD2E_CONSUMABLES = api;
@@ -731,6 +759,7 @@ globalThis.add2eReserveSpellComponents = add2eReserveSpellComponents;
 globalThis.add2eRefundSpellComponents = add2eRefundSpellComponents;
 globalThis.add2eTryMergeDroppedAmmunition = add2eTryMergeDroppedAmmunition;
 globalThis.add2eActorUsesProjectileInventory = add2eActorUsesProjectileInventory;
+globalThis.add2eActorDocumentType = add2eActorDocumentType;
 
 Hooks.once("init", () => add2eRegisterConsumableHooks());
 Hooks.once("ready", () => {
