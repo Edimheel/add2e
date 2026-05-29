@@ -3,8 +3,8 @@
 // Initiative simple au d6, ordre ascendant.
 // Verrou de tour non intrusif : les tokens restent cliquables, seul le contrôle/déplacement hors tour est refusé côté joueur.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-selective-control-lock-v10";
-const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-selective-control-lock-v10";
+const ADD2E_INITIATIVE_VERSION = "2026-05-29-init-selective-control-lock-v11-no-move-history";
+const ADD2E_TURN_LOCK_VERSION = "2026-05-29-turn-lock-selective-control-lock-v11-no-move-history";
 const ADD2E_INIT_CHAT_CARD_VERSION = "2026-05-28-init-chat-card-v1";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
@@ -275,6 +275,50 @@ function add2eHasMovementChange(changes = {}) {
   return ["x", "y", "elevation", "rotation"].some(path => foundry.utils.hasProperty(changes, path));
 }
 
+function add2ePreventMovementHistoryOptions(options = {}) {
+  options.animate = false;
+  options.movementHistory = false;
+  options.showMovementHistory = false;
+  options.showRuler = false;
+  options.ruler = false;
+  options.add2eNoMovementHistory = true;
+  return options;
+}
+
+async function add2eClearCombatMovementHistoryOnce(combat = game.combat) {
+  if (!combat || !game.user?.isGM) return false;
+  const keys = ["movement", "movementHistory", "movementPath", "path", "waypoints", "segments", "ruler", "rulerPath", "distance", "trail", "trace", "history", "lastMovement"];
+  const updates = [];
+
+  for (const combatant of Array.from(combat.combatants ?? [])) {
+    const update = { _id: combatant.id };
+    for (const key of keys) {
+      update[key] = null;
+      update[`-=${key}`] = null;
+      update[`flags.core.-=${key}`] = null;
+      update[`flags.add2e.-=${key}`] = null;
+    }
+    for (const [scope, data] of Object.entries(combatant.flags ?? {})) {
+      if (!data || typeof data !== "object") continue;
+      for (const key of Object.keys(data)) {
+        if (/(movement|move|ruler|waypoint|path|history|trail|trace|distance|drag)/i.test(key)) update[`flags.${scope}.-=${key}`] = null;
+      }
+    }
+    updates.push(update);
+  }
+
+  if (!updates.length) return false;
+  try {
+    await combat.updateEmbeddedDocuments("Combatant", updates, { add2eClearMovementHistoryOnce: true, render: false });
+    ui.combat?.render?.(false);
+    console.log(`${TAG}[MOVE_HISTORY][CLEAR_ONCE]`, { combat: combat.id, count: updates.length });
+    return true;
+  } catch (err) {
+    console.warn(`${TAG}[MOVE_HISTORY][CLEAR_ONCE_ERROR]`, err);
+    return false;
+  }
+}
+
 function add2eReleaseInvalidControlledTokens({ notify = false } = {}) {
   if (game.user?.isGM || !add2eIsCombatActive()) return;
   for (const token of Array.from(canvas?.tokens?.controlled ?? [])) {
@@ -315,7 +359,7 @@ function add2eInstallMovementTurnLock() {
   Hooks.on("preUpdateToken", (tokenDocument, changes, options, userId) => {
     try {
       if (!add2eHasMovementChange(changes)) return;
-      options.animate = false;
+      add2ePreventMovementHistoryOptions(options);
       if (options?.add2eAllowOutOfTurn || options?.add2eIgnoreTurnLock) return;
       if (add2eCanTokenActNow(tokenDocument, { notify: userId === game.user?.id })) return;
       return false;
@@ -360,6 +404,7 @@ function add2eExposeInitiativeGlobals() {
   globalThis.add2eCanActorActNow = add2eCanActorActNow;
   globalThis.add2eCanTokenActNow = add2eCanTokenActNow;
   globalThis.add2eReleaseInvalidControlledTokens = add2eReleaseInvalidControlledTokens;
+  globalThis.add2eClearCombatMovementHistoryOnce = add2eClearCombatMovementHistoryOnce;
   globalThis.triInitiativeAscendant = add2eSortInitiativeAscending;
 }
 
@@ -477,6 +522,7 @@ Hooks.once("ready", () => {
   add2eInstallActionTurnLocks();
   add2eInstallMovementTurnLock();
   setTimeout(() => add2eReleaseInvalidControlledTokens({ notify: false }), 500);
+  setTimeout(() => add2eClearCombatMovementHistoryOnce(game.combat), 700);
   setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 500);
   setTimeout(() => add2ePatchCombatTrackerInitiativeIcons(document), 1500);
   setTimeout(() => add2eInstallActionTurnLocks(), 800);
