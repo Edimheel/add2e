@@ -1,8 +1,8 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Cartes de chat d'attaque.
-// Version : 2026-05-30-attack-chat-gm-local-player-card-v16
+// Version : 2026-05-30-attack-chat-real-player-hidden-from-gm-v17
 
-const VERSION = "2026-05-30-attack-chat-gm-local-player-card-v16";
+const VERSION = "2026-05-30-attack-chat-real-player-hidden-from-gm-v17";
 const SOCKET = "system.add2e";
 const PLAYER_LOCAL_TYPE = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
 const LOG = "[ADD2E][ATTACK_CHAT]";
@@ -132,7 +132,7 @@ function portrait(name, img, fallbackIcon = "fa-user") {
 function cardShell(kind, ctx, inner) {
   const o = outcome(ctx);
   const isGM = kind === "gm";
-  const cls = isGM ? "add2e-attack-chat-card-gm-v16" : "add2e-attack-chat-card-player-v16";
+  const cls = isGM ? "add2e-attack-chat-card-gm-v17" : "add2e-attack-chat-card-player-v17";
   const attackerImg = ctx.chatImg || ctx.actor?.img || "";
   const defenderImg = ctx.cible?.token?.texture?.src || ctx.cible?.img || "";
   return `<div class="add2e-chat-card ${cls}" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">
@@ -292,15 +292,10 @@ async function sendPlayerCard(ctx) {
     users,
     actor: ctx.actor?.name,
     target: ctx.nomCible,
-    route: game.user?.isGM ? "socket-local-player-only" : "chatmessage-players-only"
+    route: "chatmessage-players-only-with-gm-render-guard"
   });
 
   if (!users.length) return false;
-
-  if (game.user?.isGM) {
-    game.socket?.emit?.(SOCKET, { type: PLAYER_LOCAL_TYPE, payload });
-    return true;
-  }
 
   try {
     await ChatMessage.create({
@@ -326,12 +321,64 @@ async function sendPlayerCard(ctx) {
   }
 }
 
+function isPlayerAttackMessage(message, htmlContent = "") {
+  const flags = message?.flags?.add2e ?? {};
+  const content = String(htmlContent || message?.content || "");
+  return flags.attackChatVisibility === "players-only"
+    || flags.attackChatKind === "public-player-result"
+    || content.includes("add2e-attack-chat-card-player-v17")
+    || content.includes("add2e-attack-chat-card-player-v16")
+    || content.includes("add2e-attack-chat-card-player-v15")
+    || content.includes("add2e-attack-chat-card-player-v12")
+    || content.includes("add2e-attack-chat-card-player-v11");
+}
+
+function removeRenderedMessageElement(html) {
+  try {
+    if (!html) return false;
+    if (typeof html.remove === "function") {
+      html.remove();
+      return true;
+    }
+    if (html[0] && typeof html[0].remove === "function") {
+      html[0].remove();
+      return true;
+    }
+    if (html instanceof HTMLElement) {
+      html.remove();
+      return true;
+    }
+  } catch (err) {
+    console.warn(`${LOG}[REMOVE_RENDERED_MESSAGE_FAILED]`, err);
+  }
+  return false;
+}
+
+function hidePlayerCardFromGm(message, html) {
+  if (!game.user?.isGM) return;
+  if (!isPlayerAttackMessage(message)) return;
+  const removed = removeRenderedMessageElement(html);
+  console.log(`${LOG}[HIDE_PLAYER_CARD_FROM_GM]`, {
+    version: VERSION,
+    messageId: message?.id,
+    removed
+  });
+}
+
+function installRenderVisibilityGuard() {
+  if (globalThis.__ADD2E_ATTACK_CHAT_RENDER_GUARD === VERSION) return;
+  globalThis.__ADD2E_ATTACK_CHAT_RENDER_GUARD = VERSION;
+
+  Hooks.on("renderChatMessage", (message, html) => hidePlayerCardFromGm(message, html));
+  Hooks.on("renderChatMessageHTML", (message, html) => hidePlayerCardFromGm(message, html));
+}
+
 function installVisibilityGuard() {
   if (globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD === VERSION) return;
   globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = VERSION;
   Hooks.on("preCreateChatMessage", (message, data = {}) => {
     const content = String(data.content ?? message?.content ?? "");
-    if (content.includes("add2e-attack-chat-card-gm-v16") || content.includes("add2e-attack-chat-card-gm-v15") || content.includes("add2e-attack-chat-card-gm-v12") || content.includes("add2e-attack-chat-card-gm-v11")) {
+    if (content.includes("add2e-attack-chat-card-gm-v17") || content.includes("add2e-attack-chat-card-gm-v16") || content.includes("add2e-attack-chat-card-gm-v15") || content.includes("add2e-attack-chat-card-gm-v12") || content.includes("add2e-attack-chat-card-gm-v11")) {
       message.updateSource?.({
         whisper: gmIds(),
         blind: false,
@@ -340,12 +387,13 @@ function installVisibilityGuard() {
       });
       console.log(`${LOG}[PRECREATE_GM_ONLY]`, { whisper: gmIds(), blind: false });
     }
-    if (content.includes("add2e-attack-chat-card-player-v16") || content.includes("add2e-attack-chat-card-player-v15") || content.includes("add2e-attack-chat-card-player-v12") || content.includes("add2e-attack-chat-card-player-v11")) {
+    if (content.includes("add2e-attack-chat-card-player-v17") || content.includes("add2e-attack-chat-card-player-v16") || content.includes("add2e-attack-chat-card-player-v15") || content.includes("add2e-attack-chat-card-player-v12") || content.includes("add2e-attack-chat-card-player-v11")) {
       message.updateSource?.({
         whisper: playerIds(),
         blind: false,
         "flags.add2e.attackChatVisibility": "players-only",
-        "flags.add2e.attackChatVisibilityVersion": VERSION
+        "flags.add2e.attackChatVisibilityVersion": VERSION,
+        "flags.add2e.attackChatKind": "public-player-result"
       });
       console.log(`${LOG}[PRECREATE_PLAYER_ONLY]`, { whisper: playerIds(), blind: false });
     }
@@ -353,6 +401,7 @@ function installVisibilityGuard() {
 }
 
 installVisibilityGuard();
+installRenderVisibilityGuard();
 installSocket();
 
 globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
@@ -361,6 +410,7 @@ globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
     version: VERSION,
     socketRegistered: globalThis.__ADD2E_ATTACK_LOCAL_PLAYER_SOCKET,
     guardRegistered: globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD,
+    renderGuardRegistered: globalThis.__ADD2E_ATTACK_CHAT_RENDER_GUARD,
     user: game.user?.name,
     userId: game.user?.id,
     isGM: game.user?.isGM,
