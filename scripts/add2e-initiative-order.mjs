@@ -22,107 +22,12 @@ function logOrder(label, combat, turns = sortedCombatants(combat), extra = {}) {
       nativeCombatant: combat?.combatant?.id ?? null,
       activeId: activeCombatantId(combat),
       activeName: currentCombatant(combat)?.name ?? null,
-      turns: turns.map((c, index) => ({ index, id: c.id, name: c.name, initiative: c.initiative, sort: c.sort, inactive: isInactiveCombatant(c) })),
+      turns: turns.map((c, index) => ({ index, id: c.id, name: c.name, initiative: c.initiative, sort: c.sort })),
       ...extra
     });
   } catch (err) {
     console.warn(`${TAG}[ORDER][LOG_ERROR]`, err);
   }
-}
-
-function safeSettingGet(namespace, key) {
-  try {
-    return game.settings?.get?.(namespace, key);
-  } catch (_err) {
-    return undefined;
-  }
-}
-
-function settingBoolean(value) {
-  if (typeof value === "boolean") return value;
-  if (!value || typeof value !== "object") return null;
-  for (const key of ["skipInactive", "skipInactiveCombatants", "skipDefeated", "skipDefeatedCombatants"]) {
-    if (typeof value[key] === "boolean") return value[key];
-  }
-  return null;
-}
-
-function shouldSkipInactiveCombatants() {
-  for (const [namespace, key] of [
-    ["core", "combatTrackerConfig"],
-    ["core", "skipDefeated"],
-    ["core", "skipDefeatedCombatants"],
-    ["core", "skipInactive"],
-    ["core", "skipInactiveCombatants"],
-    ["add2e", "skipInactiveCombatants"]
-  ]) {
-    const parsed = settingBoolean(safeSettingGet(namespace, key));
-    if (parsed !== null) return parsed;
-  }
-  return false;
-}
-
-function getProperty(obj, path) {
-  try {
-    return globalThis.foundry?.utils?.getProperty ? foundry.utils.getProperty(obj, path) : path.split(".").reduce((o, k) => o?.[k], obj);
-  } catch (_err) {
-    return undefined;
-  }
-}
-
-function truthy(value) {
-  if (value === true) return true;
-  if (typeof value === "number") return value !== 0;
-  if (typeof value !== "string") return false;
-  return ["true", "1", "yes", "oui", "inactif", "inactive", "vaincu", "defeated"].includes(value.trim().toLowerCase());
-}
-
-function isInactiveCombatant(combatant) {
-  if (!combatant) return false;
-  if (truthy(combatant.defeated) || truthy(combatant.isDefeated)) return true;
-
-  const actor = combatant.actor ?? null;
-  const token = combatant.token ?? null;
-  for (const source of [combatant, actor, token]) {
-    if (!source) continue;
-    for (const path of [
-      "flags.add2e.inactif",
-      "flags.add2e.inactive",
-      "flags.add2e.horsJeu",
-      "flags.add2e.outOfCombat",
-      "system.inactif",
-      "system.inactive",
-      "system.horsJeu",
-      "system.outOfCombat"
-    ]) {
-      if (truthy(getProperty(source, path))) return true;
-    }
-  }
-
-  return false;
-}
-
-function nextTurnRespectingInactive(turns, current, direction) {
-  let next = current;
-  let roundDelta = 0;
-  const skipped = [];
-
-  for (let attempt = 0; attempt < turns.length; attempt += 1) {
-    next += direction;
-    if (next >= turns.length) {
-      next = 0;
-      roundDelta += 1;
-    } else if (next < 0) {
-      next = turns.length - 1;
-      roundDelta -= 1;
-    }
-
-    const combatant = turns[next];
-    if (!isInactiveCombatant(combatant)) return { next, roundDelta, skipped, allInactive: false };
-    skipped.push({ index: next, id: combatant?.id ?? null, name: combatant?.name ?? null });
-  }
-
-  return { next: current, roundDelta: 0, skipped, allInactive: true };
 }
 
 export function initiativeValue(value) {
@@ -272,18 +177,8 @@ export async function advanceSortedTurn(combat = game.combat, step = 1) {
   const direction = step >= 0 ? 1 : -1;
   let next = current + direction;
   let round = combatRound(combat);
-  const skipInactive = shouldSkipInactiveCombatants();
 
-  if (skipInactive) {
-    const resolved = nextTurnRespectingInactive(turns, current, direction);
-    if (resolved.allInactive) {
-      logOrder("SKIP_INACTIVE_ALL_SKIPPED", combat, turns, { step, current, skipped: resolved.skipped });
-      return combat;
-    }
-    next = resolved.next;
-    round = Math.max(1, round + resolved.roundDelta);
-    if (resolved.skipped.length) logOrder("SKIP_INACTIVE_RESOLVED", combat, turns, { step, current, next, round, skipped: resolved.skipped });
-  } else if (next >= turns.length) {
+  if (next >= turns.length) {
     next = 0;
     round += 1;
   } else if (next < 0) {
@@ -291,7 +186,7 @@ export async function advanceSortedTurn(combat = game.combat, step = 1) {
     round = Math.max(1, round - 1);
   }
 
-  logOrder("ADVANCE", combat, turns, { step, current, next, round, skipInactive });
+  logOrder("ADVANCE", combat, turns, { step, current, next, round });
   return updateTurn(combat, next, round);
 }
 
