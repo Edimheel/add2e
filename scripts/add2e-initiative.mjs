@@ -42,7 +42,10 @@ function exposeGlobals() {
   });
 }
 
-Hooks.once("init", configureInitiative);
+Hooks.once("init", () => {
+  configureInitiative();
+  installCombatPatch();
+});
 
 Hooks.once("ready", () => {
   configureInitiative();
