@@ -1,15 +1,14 @@
 // scripts/add2e-initiative.mjs
 // ADD2E — point d'entrée initiative.
-// Les modules préfixés add2e-initiative-* isolent le tri, les icônes, le chat, les verrous et les hooks.
 
 import { ADD2E_INITIATIVE_VERSION, configureInitiative } from "./add2e-initiative-constants.mjs";
 import {
+  forceFirstSortedTurn,
   installCombatPatch,
-  sortInitiativeAscending,
   scheduleInitiativeSort,
   scheduleLocalSync,
-  forceFirstSortedTurn,
-  selectCurrentToken
+  selectCurrentToken,
+  sortInitiativeAscending
 } from "./add2e-initiative-order.mjs";
 import { patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
 import {
@@ -20,25 +19,27 @@ import {
   installTokenMoveLock,
   syncActionHudToCombatant
 } from "./add2e-initiative-locks.mjs";
-import { installHooks, add2eInitiativeDebug } from "./add2e-initiative-hooks.mjs";
+import { add2eInitiativeDebug, installHooks } from "./add2e-initiative-hooks.mjs";
 
 function exposeGlobals() {
   game.add2e = game.add2e ?? {};
   game.add2e.initiativeVersion = ADD2E_INITIATIVE_VERSION;
 
-  globalThis.add2eConfigureInitiative = configureInitiative;
-  globalThis.add2eSortInitiativeAscending = sortInitiativeAscending;
-  globalThis.add2eScheduleInitiativeSort = scheduleInitiativeSort;
-  globalThis.add2eCanActorActNow = canActorActNow;
-  globalThis.add2eCanTokenInteractNow = canTokenInteractNow;
-  globalThis.add2eSyncActionHudToCombatant = syncActionHudToCombatant;
-  globalThis.add2eSyncCombatAfterRefresh = scheduleLocalSync;
-  globalThis.add2eScheduleRefreshSync = scheduleLocalSync;
-  globalThis.add2eDebugCombatState = add2eInitiativeDebug;
-  globalThis.add2eSelectActiveCombatantToken = selectCurrentToken;
-  globalThis.add2eClearFoundryMovementTrail = clearFoundryMovementTrailAggressive;
-  globalThis.add2eForceFirstSortedTurn = forceFirstSortedTurn;
-  globalThis.triInitiativeAscendant = sortInitiativeAscending;
+  Object.assign(globalThis, {
+    add2eConfigureInitiative: configureInitiative,
+    add2eSortInitiativeAscending: sortInitiativeAscending,
+    add2eScheduleInitiativeSort: scheduleInitiativeSort,
+    add2eCanActorActNow: canActorActNow,
+    add2eCanTokenInteractNow: canTokenInteractNow,
+    add2eSyncActionHudToCombatant: syncActionHudToCombatant,
+    add2eSyncCombatAfterRefresh: scheduleLocalSync,
+    add2eScheduleRefreshSync: scheduleLocalSync,
+    add2eDebugCombatState: add2eInitiativeDebug,
+    add2eSelectActiveCombatantToken: selectCurrentToken,
+    add2eClearFoundryMovementTrail: clearFoundryMovementTrailAggressive,
+    add2eForceFirstSortedTurn: forceFirstSortedTurn,
+    triInitiativeAscendant: sortInitiativeAscending
+  });
 }
 
 Hooks.once("init", configureInitiative);
