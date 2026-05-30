@@ -161,8 +161,10 @@ export async function forceFirstSortedTurn(combat = game.combat) {
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
   const existing = combatTurnIndex(combat, turns);
-  logOrder("START_SYNC_EXISTING_TURN", combat, turns, { existing });
-  return updateTurn(combat, existing, combatRound(combat));
+  logOrder("START_SYNC_EXISTING_TURN", combat, turns, { existing, write: false });
+  applyLocalOrder(combat, { reason: "start-sync" });
+  selectCurrentToken(combat);
+  return combat;
 }
 
 export async function advanceSortedTurn(combat = game.combat, step = 1) {
@@ -264,7 +266,7 @@ export function installCombatPatch() {
     const original = proto.startCombat.__add2eOriginal ?? proto.startCombat;
     proto.startCombat = async function add2eStartCombatLowFirst(...args) {
       const result = await original.apply(this, args);
-      if (game?.system?.id === "add2e") await forceFirstSortedTurn(this);
+      if (game?.system?.id === "add2e") scheduleLocalSync(this, { delay: 40, selectToken: true, reason: "startCombat" });
       return result;
     };
     proto.startCombat.__add2eLowFirstStart = ADD2E_INITIATIVE_VERSION;
