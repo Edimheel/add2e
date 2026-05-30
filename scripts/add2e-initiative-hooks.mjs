@@ -31,7 +31,7 @@ export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
     turn: combat?.turn ?? null,
     current: combat?.current ?? null,
     active: currentCombatant(combat)?.name ?? null,
-    turns: turns.map((c, index) => ({ index, id: c.id, name: c.name, initiative: c.initiative, tokenId: c.tokenId }))
+    turns: turns.map((c, index) => ({ index, id: c.id, name: c.name, initiative: c.initiative, sort: c.sort, tokenId: c.tokenId }))
   };
 }
 
@@ -55,12 +55,12 @@ export function installHooks() {
   Hooks.on("updateCombat", (combat, changes, options) => {
     if (options?.add2eInitiativeSort || options?.add2eInitiativeNavigation) return;
     if (hasProperty(changes ?? {}, "started") && combat?.started) return setTimeout(() => forceFirstSortedTurn(combat), 80);
-    if (hasAnyProperty(changes, ["turn", "round"])) scheduleLocalSync(combat, { delay: 40, selectToken: true });
+    if (hasAnyProperty(changes, ["turn", "round"])) scheduleLocalSync(combat, { delay: 40, selectToken: true, reason: "combat-update" });
   });
 
-  Hooks.on("combatTurn", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true }));
-  Hooks.on("combatRound", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true }));
-  Hooks.on("canvasReady", () => scheduleLocalSync(game.combat, { delay: 180, selectToken: game.combat?.started }));
+  Hooks.on("combatTurn", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-turn" }));
+  Hooks.on("combatRound", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-round" }));
+  Hooks.on("canvasReady", () => scheduleLocalSync(game.combat, { delay: 180, selectToken: game.combat?.started, reason: "refresh" }));
   Hooks.on("hoverToken", clearFoundryMovementTrailAggressive);
   Hooks.on("refreshToken", clearFoundryMovementTrailAggressive);
 
