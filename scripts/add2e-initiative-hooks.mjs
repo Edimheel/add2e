@@ -2,7 +2,7 @@
 // ADD2E — hooks d'initiative.
 
 import { ADD2E_INITIATIVE_VERSION, hasProperty, initiativeState } from "./add2e-initiative-constants.mjs";
-import { currentCombatant, forceFirstSortedTurn, scheduleInitiativeSort, scheduleLocalSync, sortedCombatants } from "./add2e-initiative-order.mjs";
+import { currentCombatant, scheduleInitiativeSort, scheduleLocalSync, sortedCombatants } from "./add2e-initiative-order.mjs";
 import { installInitiativeChatCard } from "./add2e-initiative-chat.mjs";
 import { patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
 import { canTokenInteractNow, clearFoundryMovementTrailAggressive } from "./add2e-initiative-locks.mjs";
@@ -54,7 +54,7 @@ export function installHooks() {
 
   Hooks.on("updateCombat", (combat, changes, options) => {
     if (options?.add2eInitiativeSort || options?.add2eInitiativeNavigation) return;
-    if (hasProperty(changes ?? {}, "started") && combat?.started) return setTimeout(() => forceFirstSortedTurn(combat), 80);
+    if (hasProperty(changes ?? {}, "started") && combat?.started) return scheduleLocalSync(combat, { delay: 80, selectToken: true, reason: "combat-start" });
     if (hasAnyProperty(changes, ["turn", "round"])) scheduleLocalSync(combat, { delay: 40, selectToken: true, reason: "combat-update" });
   });
 
