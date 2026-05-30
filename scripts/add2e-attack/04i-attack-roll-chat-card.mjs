@@ -1,12 +1,21 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
-// ADD2E — Rendu des messages d'attaque.
-// Version : 2026-05-30-attack-chat-local-player-card-v9
+// ADD2E — Cartes de chat d'attaque.
+// Version : 2026-05-30-attack-chat-socket-diagnostics-v11
 
-const ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = "2026-05-30-attack-chat-local-player-card-v9";
-const ADD2E_SOCKET = "system.add2e";
-const ADD2E_ATTACK_PLAYER_LOCAL_CHAT = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
+const VERSION = "2026-05-30-attack-chat-socket-diagnostics-v11";
+const SOCKET = "system.add2e";
+const PLAYER_LOCAL_TYPE = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
+const LOG = "[ADD2E][ATTACK_CHAT]";
 
-globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = ADD2E_ATTACK_CHAT_VISIBILITY_VERSION;
+globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
+
+console.log(`${LOG}[BOOT]`, {
+  version: VERSION,
+  user: game?.user?.name ?? null,
+  isGM: game?.user?.isGM ?? null,
+  ready: game?.ready ?? null,
+  hasSocket: !!game?.socket
+});
 
 function esc(value) {
   const div = document.createElement("div");
@@ -88,47 +97,6 @@ function playerIds() {
   return playerUsers().map(u => u.id).filter(Boolean);
 }
 
-function isPlayerCardContent(content = "") {
-  return String(content).includes("add2e-attack-chat-card-player-v9");
-}
-
-function isGmCardContent(content = "") {
-  return String(content).includes("add2e-attack-chat-card-gm-v9");
-}
-
-function forceAttackChatVisibility(message, data = {}) {
-  const content = String(data.content ?? message?.content ?? "");
-
-  if (isGmCardContent(content)) {
-    const update = {
-      whisper: gmIds(),
-      blind: false,
-      "flags.add2e.attackChatVisibility": "gm-only",
-      "flags.add2e.attackChatVisibilityVersion": ADD2E_ATTACK_CHAT_VISIBILITY_VERSION
-    };
-    const gm = gmUsers().find(u => u.active) ?? gmUsers()[0] ?? null;
-    if (gm?.id) update.author = gm.id;
-    message.updateSource?.(update);
-    return;
-  }
-
-  if (isPlayerCardContent(content)) {
-    const update = {
-      whisper: playerIds(),
-      blind: false,
-      "flags.add2e.attackChatVisibility": "players-only",
-      "flags.add2e.attackChatVisibilityVersion": ADD2E_ATTACK_CHAT_VISIBILITY_VERSION
-    };
-    message.updateSource?.(update);
-  }
-}
-
-function installAttackChatGuard() {
-  if (globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD === ADD2E_ATTACK_CHAT_VISIBILITY_VERSION) return;
-  globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = ADD2E_ATTACK_CHAT_VISIBILITY_VERSION;
-  Hooks.on("preCreateChatMessage", forceAttackChatVisibility);
-}
-
 function rollSummary(ctx) {
   const d20 = safeNumber(ctx.d20);
   const bonus = safeNumber(ctx.totalBonusToucher);
@@ -146,20 +114,30 @@ function chip(label, value, color = "#5d3d0d") {
   </div>`;
 }
 
+function cardShell(kind, ctx, inner) {
+  const o = outcome(ctx);
+  const isGM = kind === "gm";
+  const cls = isGM ? "add2e-attack-chat-card-gm-v11" : "add2e-attack-chat-card-player-v11";
+  const title = isGM ? "Attaque — MJ" : "Attaque";
+  return `<div class="add2e-chat-card ${cls}" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">
+    <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;">
+      <i class="fas ${o.icon}" style="font-size:1.22rem;color:#ffd978;"></i>
+      <div style="min-width:0;flex:1;"><div style="font-size:1.04rem;font-weight:950;line-height:1.1;">${title}</div><div style="font-size:.78rem;font-weight:750;color:#f7e3b1;line-height:1.18;margin-top:2px;">${esc(ctx.actor?.name)} attaque ${esc(ctx.nomCible)} avec ${esc(ctx.arme?.name)}</div></div>
+      <div style="white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${o.color};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.86rem;">${esc(o.title)}</div>
+    </div>
+    <div style="padding:10px;">${inner}</div>
+  </div>`;
+}
+
 function buildPublicCard(ctx) {
   const o = outcome(ctx);
   const showDamage = !!ctx.finalResult && Number(ctx.degats) > 0;
-
-  return [`<div class="add2e-chat-card add2e-attack-chat-card-player-v9" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
-    `<div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;">`,
-    `<i class="fas ${o.icon}" style="font-size:1.22rem;color:#ffd978;"></i>`,
-    `<div style="min-width:0;flex:1;"><div style="font-size:1.04rem;font-weight:950;line-height:1.1;">Attaque</div><div style="font-size:.78rem;font-weight:750;color:#f7e3b1;line-height:1.18;margin-top:2px;">${esc(ctx.actor?.name)} attaque ${esc(ctx.nomCible)} avec ${esc(ctx.arme?.name)}</div></div>`,
-    `<div style="white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${o.color};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.86rem;">${esc(o.title)}</div>`,
-    `</div><div style="padding:10px;">`,
-    rollSummary(ctx),
-    `<div style="border:1px solid ${o.color};background:${o.bg};border-radius:10px;padding:9px 10px;margin-bottom:8px;"><div style="font-weight:950;color:${o.color};font-size:1rem;margin-bottom:4px;"><i class="fas ${o.icon}"></i> ${esc(o.title)}</div><div style="font-size:.94rem;line-height:1.45;">${roleplay(ctx)}</div></div>`,
-    showDamage ? `<div style="border:1px solid #c8a557;background:#fff6df;border-radius:9px;padding:8px;text-align:center;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#6f5520;">Dégâts infligés</div><div style="font-size:1.25rem;font-weight:950;color:#7a2e17;margin-top:2px;">${esc(ctx.degats)}</div></div>` : "",
-    `</div></div>`].filter(Boolean).join("");
+  const damage = showDamage ? `<div style="border:1px solid #c8a557;background:#fff6df;border-radius:9px;padding:8px;text-align:center;margin-top:8px;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#6f5520;">Dégâts infligés</div><div style="font-size:1.25rem;font-weight:950;color:#7a2e17;margin-top:2px;">${esc(ctx.degats)}</div></div>` : "";
+  return cardShell("player", ctx, `
+    ${rollSummary(ctx)}
+    <div style="border:1px solid ${o.color};background:${o.bg};border-radius:10px;padding:9px 10px;margin-bottom:8px;"><div style="font-weight:950;color:${o.color};font-size:1rem;margin-bottom:4px;"><i class="fas ${o.icon}"></i> ${esc(o.title)}</div><div style="font-size:.94rem;line-height:1.45;">${roleplay(ctx)}</div></div>
+    ${damage}
+  `);
 }
 
 function buildGmCard(ctx) {
@@ -188,24 +166,20 @@ function buildGmCard(ctx) {
     `<div style="font-size:1.08em;"><b>Total modificateur :</b><span style="font-weight:bold;color:#2563eb;"> ${esc(signed(ctx.totalBonusToucher))}</span></div>`,
     `<div style="font-size:1.08em;"><b>Seuil final au d20 :</b><span style="font-weight:bold;color:#15803d;"> ${esc(ctx.seuilFinalD20)}</span></div>`
   ].filter(Boolean).join("");
-
   const damageLines = hit ? [
     `<div><b>Dégâts :</b> ${esc(ctx.degats)}</div>`,
     `<div><b>Calcul :</b> ${esc(ctx.formulaDegats)} → ${esc(ctx.detailsDegats)}</div>`,
     ctx.useBackstab ? `<div><b>Attaque sournoise :</b> dégâts ×${esc(ctx.backstabMultiplier)}</div>` : ""
   ].filter(Boolean).join("") : `<div>Aucun dommage : l’attaque ne touche pas.</div>`;
-
   const assassination = ctx.assassinatResult ? `<div style="border:1px solid ${ctx.assassinatResult.success ? "#1f8f4d" : "#b3261e"};background:${ctx.assassinatResult.success ? "#eefaf2" : "#fff1f0"};border-radius:8px;padding:7px;margin-bottom:10px;text-align:center;"><div style="font-weight:900;color:${ctx.assassinatResult.success ? "#1f8f4d" : "#b3261e"};">Assassinat ${ctx.assassinatResult.success ? "réussi" : "échoué"}</div><div style="font-size:.92em;">Jet : <b>${esc(ctx.assassinatResult.total)}</b> / Score : <b>${esc(ctx.assassinatResult.finalScore)}%</b></div><div style="font-size:.82em;color:#666;">${esc(ctx.assassinationInfo?.breakdownTitle ?? "")}</div></div>` : "";
 
-  return [`<div class="add2e-chat-card add2e-attack-chat-card-gm-v9" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">`,
-    `<div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;"><i class="fas ${o.icon}" style="font-size:1.22rem;color:#ffd978;"></i><div style="min-width:0;flex:1;"><div style="font-size:1.04rem;font-weight:950;line-height:1.1;">Attaque — MJ</div><div style="font-size:.78rem;font-weight:750;color:#f7e3b1;line-height:1.18;margin-top:2px;">${esc(ctx.actor?.name)} attaque ${esc(ctx.nomCible)} avec ${esc(ctx.arme?.name)}</div></div><div style="white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${o.color};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.86rem;">${esc(o.title)}</div></div>`,
-    `<div style="padding:10px;">`,
-    `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px;">${chip("Portée", `${esc(ctx.descPortee || "—")} <span style=\"font-size:.78rem;color:#7b6a40;\">${esc(ctx.typePortee || "")}</span>`)}${chip("Seuil", esc(ctx.seuilFinalD20), "#c06000")}${chip("Issue", esc(o.title), o.color)}</div>`,
-    `<div style="border:1px solid #d7c28a;background:#f7f0df;border-radius:9px;padding:8px;text-align:center;margin-bottom:8px;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#6f5520;">Jet d’attaque</div><div style="font-size:1.1rem;font-weight:950;margin-top:2px;"><i class="fas fa-dice-d20"></i> ${calculSimple}</div></div>`,
-    hit ? `<div style="border:1px solid #c8a557;background:#fff6df;border-radius:9px;padding:8px;text-align:center;margin-bottom:8px;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#6f5520;">Dégâts infligés</div><div style="font-size:1.25rem;font-weight:950;color:#7a2e17;margin-top:2px;">${esc(ctx.degats)}</div><div style="font-size:.78rem;color:#71624b;font-weight:850;">${esc(ctx.formulaDegats)} → ${esc(ctx.detailsDegats)}</div></div>` : "",
-    assassination,
-    `<details style="margin-top:8px;border:1px solid #c6a85b;border-radius:9px;background:#fffdf6;overflow:hidden;"><summary style="cursor:pointer;background:#ead7a4;color:#3f2d0e;padding:7px 9px;font-weight:950;"><i class="fas fa-list-check"></i> Détails du jet</summary><div style="padding:8px;display:grid;gap:7px;"><details style="border:1px solid #d9c894;border-radius:8px;background:#fff;overflow:hidden;"><summary style="cursor:pointer;padding:6px 8px;background:#f4ead1;font-weight:950;color:#5a3c11;"><i class="fas fa-bullseye"></i> Toucher</summary><div style="padding:8px;line-height:1.55;color:#2f2a20;">${touchLines}</div></details><details style="border:1px solid #d9c894;border-radius:8px;background:#fff;overflow:hidden;"><summary style="cursor:pointer;padding:6px 8px;background:#f4ead1;font-weight:950;color:#5a3c11;"><i class="fas fa-burst"></i> Dommages</summary><div style="padding:8px;line-height:1.55;color:#2f2a20;">${damageLines}</div></details></div></details></div></div>`
-  ].filter(Boolean).join("");
+  return cardShell("gm", ctx, `
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px;">${chip("Portée", `${esc(ctx.descPortee || "—")} <span style=\"font-size:.78rem;color:#7b6a40;\">${esc(ctx.typePortee || "")}</span>`)}${chip("Seuil", esc(ctx.seuilFinalD20), "#c06000")}${chip("Issue", esc(o.title), o.color)}</div>
+    <div style="border:1px solid #d7c28a;background:#f7f0df;border-radius:9px;padding:8px;text-align:center;margin-bottom:8px;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#6f5520;">Jet d’attaque</div><div style="font-size:1.1rem;font-weight:950;margin-top:2px;"><i class="fas fa-dice-d20"></i> ${calculSimple}</div></div>
+    ${hit ? `<div style="border:1px solid #c8a557;background:#fff6df;border-radius:9px;padding:8px;text-align:center;margin-bottom:8px;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#6f5520;">Dégâts infligés</div><div style="font-size:1.25rem;font-weight:950;color:#7a2e17;margin-top:2px;">${esc(ctx.degats)}</div><div style="font-size:.78rem;color:#71624b;font-weight:850;">${esc(ctx.formulaDegats)} → ${esc(ctx.detailsDegats)}</div></div>` : ""}
+    ${assassination}
+    <details style="margin-top:8px;border:1px solid #c6a85b;border-radius:9px;background:#fffdf6;overflow:hidden;"><summary style="cursor:pointer;background:#ead7a4;color:#3f2d0e;padding:7px 9px;font-weight:950;"><i class="fas fa-list-check"></i> Détails du jet</summary><div style="padding:8px;display:grid;gap:7px;"><details style="border:1px solid #d9c894;border-radius:8px;background:#fff;overflow:hidden;"><summary style="cursor:pointer;padding:6px 8px;background:#f4ead1;font-weight:950;color:#5a3c11;"><i class="fas fa-bullseye"></i> Toucher</summary><div style="padding:8px;line-height:1.55;color:#2f2a20;">${touchLines}</div></details><details style="border:1px solid #d9c894;border-radius:8px;background:#fff;overflow:hidden;"><summary style="cursor:pointer;padding:6px 8px;background:#f4ead1;font-weight:950;color:#5a3c11;"><i class="fas fa-burst"></i> Dommages</summary><div style="padding:8px;line-height:1.55;color:#2f2a20;">${damageLines}</div></details></div></details>
+  `);
 }
 
 function findChatLog() {
@@ -216,77 +190,140 @@ function findChatLog() {
     ?? null;
 }
 
-function appendFallbackLocalCard(content) {
+function appendLocalCard(payload = {}) {
+  const isGM = !!game.user?.isGM;
+  const targets = Array.isArray(payload.userIds) ? payload.userIds.filter(Boolean) : [];
+  const content = String(payload.content ?? "");
+
+  console.log(`${LOG}[RENDER_LOCAL]`, {
+    version: VERSION,
+    user: game.user?.name,
+    isGM,
+    userId: game.user?.id,
+    targets,
+    accepted: !isGM && (!targets.length || targets.includes(game.user.id)),
+    hasContent: !!content
+  });
+
+  if (isGM) return false;
+  if (targets.length && !targets.includes(game.user.id)) return false;
+  if (!content) return false;
+
   const log = findChatLog();
-  if (!log) return false;
+  if (!log) {
+    console.warn(`${LOG}[NO_CHAT_LOG]`, { user: game.user?.name, isGM, version: VERSION });
+    return false;
+  }
+
   const wrapper = document.createElement("li");
   wrapper.className = "chat-message message flexcol add2e-local-attack-player-message";
-  wrapper.innerHTML = `<header class="message-header flexrow"><h4 class="message-sender">ADD2E</h4></header><div class="message-content">${content}</div>`;
+  wrapper.dataset.add2eLocalAttackCard = VERSION;
+  wrapper.innerHTML = `<header class="message-header flexrow"><h4 class="message-sender">${esc(payload.speaker?.alias || "ADD2E")}</h4><span class="message-metadata"><time class="message-timestamp">${new Date().toLocaleTimeString()}</time></span></header><div class="message-content">${content}</div>`;
   log.appendChild(wrapper);
   ui.chat?.scrollBottom?.();
   return true;
 }
 
-async function renderLocalPlayerCard(payload = {}) {
-  if (game.user?.isGM) return false;
-  const targets = Array.isArray(payload.userIds) ? payload.userIds.filter(Boolean) : [];
-  if (targets.length && !targets.includes(game.user.id)) return false;
-  const content = String(payload.content ?? "");
-  if (!content) return false;
-
-  try {
-    const ChatMessageClass = ChatMessage.implementation ?? ChatMessage;
-    const message = new ChatMessageClass({
-      author: game.user.id,
-      speaker: payload.speaker ?? { alias: "ADD2E" },
-      content,
-      whisper: [game.user.id],
-      blind: false,
-      flags: {
-        add2e: {
-          attackChatVisibility: "players-local-only",
-          attackChatVisibilityVersion: ADD2E_ATTACK_CHAT_VISIBILITY_VERSION
-        }
-      }
-    });
-    const html = await message.renderHTML({ canDelete: false, canClose: false });
-    const log = findChatLog();
-    if (!log || !html) return appendFallbackLocalCard(content);
-    log.appendChild(html);
-    ui.chat?.scrollBottom?.();
-    return true;
-  } catch (err) {
-    console.warn("[ADD2E][ATTACK][LOCAL_PLAYER_CARD][FALLBACK]", err);
-    return appendFallbackLocalCard(content);
-  }
+function onSocketMessage(data) {
+  if (data?.type !== PLAYER_LOCAL_TYPE) return;
+  console.log(`${LOG}[RECEIVED_PLAYER_LOCAL]`, {
+    version: VERSION,
+    user: game.user?.name,
+    isGM: game.user?.isGM,
+    payloadVersion: data?.payload?.version,
+    targets: data?.payload?.userIds ?? []
+  });
+  appendLocalCard(data.payload ?? {});
 }
 
-function installLocalPlayerCardSocket() {
-  if (globalThis.__ADD2E_ATTACK_LOCAL_PLAYER_SOCKET === ADD2E_ATTACK_CHAT_VISIBILITY_VERSION) return;
-  globalThis.__ADD2E_ATTACK_LOCAL_PLAYER_SOCKET = ADD2E_ATTACK_CHAT_VISIBILITY_VERSION;
-  Hooks.once("ready", () => {
-    game.socket.on(ADD2E_SOCKET, data => {
-      if (data?.type !== ADD2E_ATTACK_PLAYER_LOCAL_CHAT) return;
-      renderLocalPlayerCard(data.payload ?? {});
-    });
-  });
+function registerSocket() {
+  if (!game?.socket?.on) {
+    console.warn(`${LOG}[SOCKET_NOT_READY]`, { version: VERSION, ready: game?.ready, hasSocket: !!game?.socket });
+    return false;
+  }
+  if (globalThis.__ADD2E_ATTACK_LOCAL_PLAYER_SOCKET === VERSION) return true;
+  globalThis.__ADD2E_ATTACK_LOCAL_PLAYER_SOCKET = VERSION;
+  game.socket.on(SOCKET, onSocketMessage);
+  console.log(`${LOG}[SOCKET_REGISTERED]`, { version: VERSION, user: game.user?.name, isGM: game.user?.isGM, ready: game?.ready });
+  return true;
+}
+
+function installSocket() {
+  if (registerSocket()) return;
+  Hooks.once("ready", registerSocket);
+  setTimeout(registerSocket, 250);
+  setTimeout(registerSocket, 1000);
+  setTimeout(registerSocket, 2500);
 }
 
 function sendPlayerCard(ctx) {
   const users = playerIds();
-  if (!users.length) return;
   const payload = {
     userIds: users,
     speaker: ChatMessage.getSpeaker({ actor: ctx.actor }),
     content: buildPublicCard(ctx),
     avatar: ctx.chatImg,
-    version: ADD2E_ATTACK_CHAT_VISIBILITY_VERSION
+    version: VERSION
   };
-  game.socket?.emit?.(ADD2E_SOCKET, { type: ADD2E_ATTACK_PLAYER_LOCAL_CHAT, payload });
+
+  console.log(`${LOG}[EMIT_PLAYER_LOCAL]`, {
+    version: VERSION,
+    from: game.user?.name,
+    isGM: game.user?.isGM,
+    users,
+    hasSocket: !!game.socket,
+    actor: ctx.actor?.name,
+    target: ctx.nomCible
+  });
+
+  if (!game.user?.isGM && users.includes(game.user.id)) appendLocalCard(payload);
+  game.socket?.emit?.(SOCKET, { type: PLAYER_LOCAL_TYPE, payload });
 }
 
-installAttackChatGuard();
-installLocalPlayerCardSocket();
+function installVisibilityGuard() {
+  if (globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD === VERSION) return;
+  globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = VERSION;
+  Hooks.on("preCreateChatMessage", (message, data = {}) => {
+    const content = String(data.content ?? message?.content ?? "");
+    if (content.includes("add2e-attack-chat-card-gm-v11")) {
+      message.updateSource?.({
+        whisper: gmIds(),
+        blind: false,
+        "flags.add2e.attackChatVisibility": "gm-only",
+        "flags.add2e.attackChatVisibilityVersion": VERSION
+      });
+      console.log(`${LOG}[PRECREATE_GM_ONLY]`, { whisper: gmIds(), blind: false });
+    }
+    if (content.includes("add2e-attack-chat-card-player-v11")) {
+      message.updateSource?.({
+        whisper: playerIds(),
+        blind: false,
+        "flags.add2e.attackChatVisibility": "players-only-guard",
+        "flags.add2e.attackChatVisibilityVersion": VERSION
+      });
+      console.warn(`${LOG}[PRECREATE_PLAYER_CARD_DETECTED]`, { reason: "A player card should normally be local-only, not persisted." });
+    }
+  });
+}
+
+installVisibilityGuard();
+installSocket();
+
+globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
+  const log = findChatLog();
+  return {
+    version: VERSION,
+    socketRegistered: globalThis.__ADD2E_ATTACK_LOCAL_PLAYER_SOCKET,
+    guardRegistered: globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD,
+    user: game.user?.name,
+    userId: game.user?.id,
+    isGM: game.user?.isGM,
+    ready: game?.ready,
+    hasSocket: !!game?.socket,
+    chatLog: !!log,
+    players: playerUsers().map(u => ({ id: u.id, name: u.name, active: u.active }))
+  };
+};
 
 export function add2eBuildAttackPlayerChatCard(ctx) {
   return buildPublicCard(ctx);
