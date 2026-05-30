@@ -1,11 +1,10 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Cartes de chat d'attaque.
-// Version : 2026-05-30-attack-chat-delegated-player-card-v15
+// Version : 2026-05-30-attack-chat-gm-local-player-card-v16
 
-const VERSION = "2026-05-30-attack-chat-delegated-player-card-v15";
+const VERSION = "2026-05-30-attack-chat-gm-local-player-card-v16";
 const SOCKET = "system.add2e";
 const PLAYER_LOCAL_TYPE = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
-const PLAYER_CREATE_TYPE = "ADD2E_ATTACK_PLAYER_CREATE_CHAT";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
@@ -98,11 +97,6 @@ function playerIds() {
   return playerUsers().map(u => u.id).filter(Boolean);
 }
 
-function pickPlayerCreatorId(users = playerUsers()) {
-  const list = Array.isArray(users) ? users.filter(u => u?.id) : [];
-  return (list.find(u => u.active)?.id ?? list[0]?.id ?? null);
-}
-
 function rollSummary(ctx) {
   const d20 = safeNumber(ctx.d20);
   const bonus = safeNumber(ctx.totalBonusToucher);
@@ -138,7 +132,7 @@ function portrait(name, img, fallbackIcon = "fa-user") {
 function cardShell(kind, ctx, inner) {
   const o = outcome(ctx);
   const isGM = kind === "gm";
-  const cls = isGM ? "add2e-attack-chat-card-gm-v15" : "add2e-attack-chat-card-player-v15";
+  const cls = isGM ? "add2e-attack-chat-card-gm-v16" : "add2e-attack-chat-card-player-v16";
   const attackerImg = ctx.chatImg || ctx.actor?.img || "";
   const defenderImg = ctx.cible?.token?.texture?.src || ctx.cible?.img || "";
   return `<div class="add2e-chat-card ${cls}" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">
@@ -220,7 +214,7 @@ function appendLocalCard(payload = {}) {
   const targets = Array.isArray(payload.userIds) ? payload.userIds.filter(Boolean) : [];
   const content = String(payload.content ?? "");
 
-  console.log(`${LOG}[RENDER_LOCAL_FALLBACK]`, {
+  console.log(`${LOG}[RENDER_LOCAL_PLAYER_ONLY]`, {
     version: VERSION,
     user: game.user?.name,
     isGM,
@@ -249,48 +243,9 @@ function appendLocalCard(payload = {}) {
   return true;
 }
 
-async function createPlayerChatFromPayload(payload = {}) {
-  if (game.user?.isGM) return false;
-  const creatorUserId = payload.creatorUserId ?? null;
-  if (!creatorUserId || creatorUserId !== game.user?.id) return false;
-  if (!String(payload.content ?? "")) return false;
-
-  console.log(`${LOG}[CREATE_PLAYER_CHAT_FROM_SOCKET]`, {
-    version: VERSION,
-    user: game.user?.name,
-    creatorUserId,
-    targets: payload.userIds ?? []
-  });
-
-  await ChatMessage.create({
-    speaker: payload.speaker ?? ChatMessage.getSpeaker(),
-    content: String(payload.content ?? ""),
-    avatar: payload.avatar,
-    whisper: Array.isArray(payload.userIds) ? payload.userIds.filter(Boolean) : playerIds(),
-    blind: false,
-    flags: {
-      add2e: {
-        attackChatVisibility: "players-only",
-        attackChatVisibilityVersion: VERSION,
-        attackChatKind: "public-player-result",
-        attackDelegatedByGM: true
-      }
-    }
-  });
-  return true;
-}
-
 function onSocketMessage(data) {
-  if (data?.type === PLAYER_CREATE_TYPE) {
-    createPlayerChatFromPayload(data.payload ?? {}).catch(err => {
-      console.warn(`${LOG}[CREATE_PLAYER_CHAT_FROM_SOCKET_FAILED_LOCAL_FALLBACK]`, err);
-      appendLocalCard(data.payload ?? {});
-    });
-    return;
-  }
-
   if (data?.type !== PLAYER_LOCAL_TYPE) return;
-  console.log(`${LOG}[RECEIVED_PLAYER_LOCAL_FALLBACK]`, {
+  console.log(`${LOG}[RECEIVED_PLAYER_LOCAL]`, {
     version: VERSION,
     user: game.user?.name,
     isGM: game.user?.isGM,
@@ -322,35 +277,29 @@ function installSocket() {
 
 async function sendPlayerCard(ctx) {
   const users = playerIds();
-  const creatorUserId = pickPlayerCreatorId(playerUsers());
   const payload = {
     userIds: users,
-    creatorUserId,
     speaker: ChatMessage.getSpeaker({ actor: ctx.actor }),
     content: buildPublicCard(ctx),
     avatar: ctx.chatImg,
     version: VERSION
   };
 
-  console.log(`${LOG}[CREATE_PLAYER_CHAT]`, {
+  console.log(`${LOG}[PLAYER_CARD_ROUTE]`, {
     version: VERSION,
     from: game.user?.name,
     isGM: game.user?.isGM,
     users,
-    creatorUserId,
     actor: ctx.actor?.name,
-    target: ctx.nomCible
+    target: ctx.nomCible,
+    route: game.user?.isGM ? "socket-local-player-only" : "chatmessage-players-only"
   });
 
   if (!users.length) return false;
 
   if (game.user?.isGM) {
-    if (creatorUserId) {
-      game.socket?.emit?.(SOCKET, { type: PLAYER_CREATE_TYPE, payload });
-      return true;
-    }
     game.socket?.emit?.(SOCKET, { type: PLAYER_LOCAL_TYPE, payload });
-    return false;
+    return true;
   }
 
   try {
@@ -382,7 +331,7 @@ function installVisibilityGuard() {
   globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = VERSION;
   Hooks.on("preCreateChatMessage", (message, data = {}) => {
     const content = String(data.content ?? message?.content ?? "");
-    if (content.includes("add2e-attack-chat-card-gm-v15") || content.includes("add2e-attack-chat-card-gm-v12") || content.includes("add2e-attack-chat-card-gm-v11")) {
+    if (content.includes("add2e-attack-chat-card-gm-v16") || content.includes("add2e-attack-chat-card-gm-v15") || content.includes("add2e-attack-chat-card-gm-v12") || content.includes("add2e-attack-chat-card-gm-v11")) {
       message.updateSource?.({
         whisper: gmIds(),
         blind: false,
@@ -391,7 +340,7 @@ function installVisibilityGuard() {
       });
       console.log(`${LOG}[PRECREATE_GM_ONLY]`, { whisper: gmIds(), blind: false });
     }
-    if (content.includes("add2e-attack-chat-card-player-v15") || content.includes("add2e-attack-chat-card-player-v12") || content.includes("add2e-attack-chat-card-player-v11")) {
+    if (content.includes("add2e-attack-chat-card-player-v16") || content.includes("add2e-attack-chat-card-player-v15") || content.includes("add2e-attack-chat-card-player-v12") || content.includes("add2e-attack-chat-card-player-v11")) {
       message.updateSource?.({
         whisper: playerIds(),
         blind: false,
