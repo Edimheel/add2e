@@ -5,13 +5,13 @@
 // carte de chat, icône D6, verrou des actions hors tour, suivi HUD.
 // Le fichier ne gère pas le déplacement ; il neutralise seulement l'historique visuel/persisté.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-30-d6-low-first-native-sort-v5-skip-defeated";
+const ADD2E_INITIATIVE_VERSION = "2026-05-30-d6-low-first-native-sort-v6-stable-focus";
 const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v2";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
 const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-30-d6-low-first-hud-follow-refresh-sync-v4";
 const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-30-no-movement-history-record-v5";
 const ADD2E_INDIVIDUAL_TURN_LOCK_VERSION = "2026-05-29-individual-turn-lock-v1";
-const ADD2E_INITIATIVE_REFRESH_SYNC_VERSION = "2026-05-30-refresh-combat-tracker-token-sync-v4";
+const ADD2E_INITIATIVE_REFRESH_SYNC_VERSION = "2026-05-30-refresh-combat-tracker-token-sync-v6";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
@@ -75,7 +75,9 @@ function sortedTurnIndex(combat = game.combat) {
 }
 
 function activeCombatantId(combat = game.combat) {
-  return combat?.current?.combatantId ?? combat?.combatant?.id ?? null;
+  const currentId = combat?.current?.combatantId;
+  if (currentId) return currentId;
+  return combat?.combatant?.id ?? null;
 }
 
 function coreCombatTrackerConfig() {
@@ -91,14 +93,12 @@ function skipDefeatedCombatantsEnabled() {
   const config = coreCombatTrackerConfig();
   if (typeof config.skipDefeated === "boolean") return config.skipDefeated;
   if (typeof config.skipDefeatedCombatants === "boolean") return config.skipDefeatedCombatants;
-  try {
-    const value = game.settings?.get?.("core", "skipDefeated");
-    if (typeof value === "boolean") return value;
-  } catch (_e) {}
-  try {
-    const value = game.settings?.get?.("core", "skipDefeatedCombatants");
-    if (typeof value === "boolean") return value;
-  } catch (_e) {}
+  for (const key of ["skipDefeated", "skipDefeatedCombatants"]) {
+    try {
+      const value = game.settings?.get?.("core", key);
+      if (typeof value === "boolean") return value;
+    } catch (_e) {}
+  }
   return false;
 }
 
@@ -146,20 +146,25 @@ function nextEligibleTurnIndex(turns, startIndex, direction) {
   return { index: start, wrapped: false };
 }
 
-function sortedIndexForActive(combat = game.combat, turns = sortedCombatants(combat)) {
+function stableIndexForCombatantId(id, turns) {
+  if (!id || !turns?.length) return -1;
+  return turns.findIndex(combatant => combatant?.id === id);
+}
+
+function sortedIndexForActive(combat = game.combat, turns = sortedCombatants(combat), { preferCombatantId = true } = {}) {
   if (!turns.length) return 0;
-  const byTurn = Math.max(0, Math.min(turns.length - 1, sortedTurnIndex(combat)));
-  if (Number.isFinite(Number(combat?.turn ?? combat?.current?.turn))) return byTurn;
-  const id = activeCombatantId(combat);
-  const byId = id ? turns.findIndex(c => c.id === id) : -1;
-  return byId >= 0 ? byId : byTurn;
+  if (preferCombatantId) {
+    const byId = stableIndexForCombatantId(activeCombatantId(combat), turns);
+    if (byId >= 0) return byId;
+  }
+  return Math.max(0, Math.min(turns.length - 1, sortedTurnIndex(combat)));
 }
 
 function currentCombatant(combat = game.combat) {
   if (!combat?.started) return null;
   const turns = Array.isArray(combat?.turns) && combat.turns.length ? combat.turns : sortedCombatants(combat);
   if (!turns.length) return combat?.combatant ?? null;
-  const index = sortedIndexForActive(combat, turns);
+  const index = sortedIndexForActive(combat, turns, { preferCombatantId: true });
   return turns[index] ?? combat?.combatant ?? null;
 }
 
@@ -225,12 +230,19 @@ function cleanupLegacyHooks() {
   return removed;
 }
 
-function applyAscendingTurns(combat = game.combat, { forceFirst = false } = {}) {
+function normalizeActiveIndex(combat, turns, { forceFirst = false, preferCombatantId = true } = {}) {
+  if (!turns.length) return 0;
+  let index = forceFirst ? firstEligibleTurnIndex(turns) : sortedIndexForActive(combat, turns, { preferCombatantId });
+  index = Math.max(0, Math.min(turns.length - 1, index));
+  if (shouldSkipCombatant(turns[index])) index = nextEligibleTurnIndex(turns, index, 1).index;
+  return index;
+}
+
+function applyAscendingTurns(combat = game.combat, { forceFirst = false, preferCombatantId = true } = {}) {
   if (!combat) return false;
   const turns = sortedCombatants(combat);
   if (!turns.length) return false;
-  let index = forceFirst ? firstEligibleTurnIndex(turns) : sortedIndexForActive(combat, turns);
-  index = Math.max(0, Math.min(turns.length - 1, index));
+  const index = normalizeActiveIndex(combat, turns, { forceFirst, preferCombatantId });
   try {
     combat.turns = turns;
     if (combat.started || forceFirst) {
@@ -266,7 +278,7 @@ function selectActiveCombatantToken(combat = game.combat, { reason = "sync" } = 
   }
 }
 
-async function syncCombatAfterRefresh(combat = game.combat, { reason = "refresh", render = true, selectToken = true } = {}) {
+async function syncCombatAfterRefresh(combat = game.combat, { reason = "refresh", render = true, selectToken = true, preferCombatantId = true } = {}) {
   if (!combat || refreshSyncing) return false;
   const sorted = sortedCombatants(combat);
   if (!sorted.length) return false;
@@ -280,10 +292,9 @@ async function syncCombatAfterRefresh(combat = game.combat, { reason = "refresh"
       return true;
     }
 
-    let index = sortedIndexForActive(combat, sorted);
-    if (shouldSkipCombatant(sorted[index])) index = nextEligibleTurnIndex(sorted, index, 1).index;
+    const index = normalizeActiveIndex(combat, sorted, { forceFirst: false, preferCombatantId });
     const active = sorted[index] ?? null;
-    const needsUpdate = Number(combat.turn) !== index;
+    const needsUpdate = Number(combat.turn) !== index || combat.current?.combatantId !== active?.id;
     if (needsUpdate && game.user?.isGM) await combat.update({ turn: index }, { add2eRefreshSync: true });
 
     combat.turns = sorted;
@@ -306,10 +317,10 @@ async function syncCombatAfterRefresh(combat = game.combat, { reason = "refresh"
   }
 }
 
-function scheduleRefreshSync(combat = game.combat, { reason = "refresh", delay = 120, render = true, selectToken = true } = {}) {
+function scheduleRefreshSync(combat = game.combat, { reason = "refresh", delay = 120, render = true, selectToken = true, preferCombatantId = true } = {}) {
   if (!combat) return;
   clearTimeout(refreshSyncTimer);
-  refreshSyncTimer = setTimeout(() => syncCombatAfterRefresh(combat, { reason, render, selectToken }), delay);
+  refreshSyncTimer = setTimeout(() => syncCombatAfterRefresh(combat, { reason, render, selectToken, preferCombatantId }), delay);
 }
 
 async function updateCombatTurnBySortedIndex(combat, newIndex, { roundDelta = 0 } = {}) {
@@ -361,7 +372,7 @@ async function forceFirstSortedTurn(combat = game.combat, reason = "start") {
 async function advanceSortedTurn(combat = game.combat, direction = 1) {
   if (!combat) return combat;
   combat.setupTurns?.();
-  applyAscendingTurns(combat, { reason: "advance" });
+  applyAscendingTurns(combat, { reason: "advance", preferCombatantId: false });
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
   const rawTurn = Number(combat.turn ?? combat.current?.turn);
@@ -403,7 +414,7 @@ function installCombatPatch() {
     const originalSetupTurns = proto.setupTurns.__add2eOriginal ?? proto.setupTurns;
     proto.setupTurns = function add2eD6LowFirstSetupTurns(...args) {
       const result = originalSetupTurns.apply(this, args);
-      try { if (game?.system?.id === "add2e") applyAscendingTurns(this, { reason: "setupTurnsPatch" }); }
+      try { if (game?.system?.id === "add2e") applyAscendingTurns(this, { reason: "setupTurnsPatch", preferCombatantId: true }); }
       catch (err) { console.warn(`${TAG}[SETUP_TURNS_PATCH][ERROR]`, err); }
       return result;
     };
@@ -459,9 +470,9 @@ async function sortInitiativeAscending(combat = game.combat) {
   try {
     if (updates.length) await combat.updateEmbeddedDocuments("Combatant", updates, { add2eInitiativeSort: true });
     combat.setupTurns?.();
-    applyAscendingTurns(combat, { reason: "sort" });
+    applyAscendingTurns(combat, { reason: "sort", preferCombatantId: true });
     ui.combat?.render?.(true);
-    if (combat.started) scheduleRefreshSync(combat, { reason: "sort", delay: 60 });
+    if (combat.started) scheduleRefreshSync(combat, { reason: "sort", delay: 60, preferCombatantId: true });
     return true;
   } catch (err) {
     console.error(`${TAG}[SORT_ASC][ERROR]`, err);
@@ -727,7 +738,7 @@ function actionHudIsOpen() {
 
 function syncActionHudToCombatant(combat = game.combat, { forceOpen = false, reason = "combat" } = {}) {
   if (!combat?.started) return false;
-  applyAscendingTurns(combat, { reason: `hud-${reason}` });
+  applyAscendingTurns(combat, { reason: `hud-${reason}`, preferCombatantId: true });
   const combatant = currentCombatant(combat);
   const actor = combatant?.actor ?? null;
   if (!actor) return false;
@@ -935,7 +946,7 @@ function installHooks() {
   Hooks.on("updateCombatant", (combatant, changes, options) => {
     if (options?.add2eInitiativeSort) return;
     if (hasProperty(changes ?? {}, "initiative")) scheduleInitiativeSort(combatant.combat ?? game.combat);
-    if (hasProperty(changes ?? {}, "defeated") || hasProperty(changes ?? {}, "flags.core.defeated")) scheduleRefreshSync(combatant.combat ?? game.combat, { reason: "defeatedChanged", delay: 40, selectToken: false });
+    if (hasProperty(changes ?? {}, "defeated") || hasProperty(changes ?? {}, "flags.core.defeated")) scheduleRefreshSync(combatant.combat ?? game.combat, { reason: "defeatedChanged", delay: 40, selectToken: false, preferCombatantId: true });
   });
   Hooks.on("createCombatant", (combatant, options) => {
     if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatant.combat ?? game.combat);
@@ -950,20 +961,20 @@ function installHooks() {
       return;
     }
     if (hasProperty(changes ?? {}, "turn") || hasProperty(changes ?? {}, "round") || hasProperty(changes ?? {}, "current")) {
-      applyAscendingTurns(combat, { reason: "updateCombat" });
-      if (combat?.started) scheduleRefreshSync(combat, { reason: "updateCombat", delay: 80 });
+      applyAscendingTurns(combat, { reason: "updateCombat", preferCombatantId: true });
+      if (combat?.started) scheduleRefreshSync(combat, { reason: "updateCombat", delay: 80, preferCombatantId: true });
       scheduleHudFollow(combat, { forceOpen: false, reason: "updateCombat" });
       scheduleClearMovementTrail();
       ui.combat?.render?.(true);
     }
   });
   Hooks.on("combatTurn", combat => {
-    scheduleRefreshSync(combat, { reason: "combatTurn", delay: 40 });
+    scheduleRefreshSync(combat, { reason: "combatTurn", delay: 40, preferCombatantId: true });
     scheduleHudFollow(combat, { forceOpen: false, reason: "combatTurn" });
     scheduleClearMovementTrail();
   });
   Hooks.on("combatRound", combat => {
-    scheduleRefreshSync(combat, { reason: "combatRound", delay: 40 });
+    scheduleRefreshSync(combat, { reason: "combatRound", delay: 40, preferCombatantId: true });
     scheduleHudFollow(combat, { forceOpen: false, reason: "combatRound" });
     scheduleClearMovementTrail();
   });
@@ -974,7 +985,7 @@ function installHooks() {
   Hooks.on("canvasReady", () => {
     installTokenHoverPatch();
     installTokenInteractionLock();
-    scheduleRefreshSync(game.combat, { reason: "canvasReady", delay: 180, selectToken: game.combat?.started });
+    scheduleRefreshSync(game.combat, { reason: "canvasReady", delay: 180, selectToken: game.combat?.started, preferCombatantId: true });
     scheduleClearMovementTrail();
   });
   Hooks.on("deleteCombat", () => {
@@ -983,13 +994,13 @@ function installHooks() {
   });
   Hooks.on("renderCombatTracker", (app, html) => {
     patchInitiativeIcons(html);
-    scheduleRefreshSync(game.combat, { reason: "renderCombatTracker", delay: 20, render: false, selectToken: game.combat?.started });
+    scheduleRefreshSync(game.combat, { reason: "renderCombatTracker", delay: 20, render: false, selectToken: game.combat?.started, preferCombatantId: true });
   });
   Hooks.on("renderCombatantConfig", () => setTimeout(() => patchInitiativeIcons(document), 50));
   Hooks.on("renderSidebarTab", (app, html) => {
     if (app?.options?.id === "combat" || app?.tabName === "combat" || app?.id === "combat") {
       patchInitiativeIcons(html);
-      scheduleRefreshSync(game.combat, { reason: "renderSidebarTab", delay: 30, render: false, selectToken: game.combat?.started });
+      scheduleRefreshSync(game.combat, { reason: "renderSidebarTab", delay: 30, render: false, selectToken: game.combat?.started, preferCombatantId: true });
       setTimeout(() => patchInitiativeIcons(document), 50);
     }
   });
@@ -1018,8 +1029,8 @@ Hooks.once("ready", () => {
   setTimeout(() => installActionLocks(), 2000);
   setTimeout(() => installActionLocks(), 4000);
   setTimeout(() => scheduleInitiativeSort(game.combat), 700);
-  setTimeout(() => scheduleRefreshSync(game.combat, { reason: "ready-early", delay: 0, selectToken: game.combat?.started }), 850);
-  setTimeout(() => scheduleRefreshSync(game.combat, { reason: "ready-late", delay: 0, selectToken: game.combat?.started }), 1400);
+  setTimeout(() => scheduleRefreshSync(game.combat, { reason: "ready-early", delay: 0, selectToken: game.combat?.started, preferCombatantId: true }), 850);
+  setTimeout(() => scheduleRefreshSync(game.combat, { reason: "ready-late", delay: 0, selectToken: game.combat?.started, preferCombatantId: true }), 1400);
   setTimeout(() => scheduleHudFollow(game.combat, { forceOpen: false, reason: "ready" }), 1000);
   setTimeout(() => scheduleClearMovementTrail(), 1200);
 });
