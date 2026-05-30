@@ -1,7 +1,7 @@
 // scripts/add2e-initiative-icons.mjs
 // ADD2E — icône D6 du bouton de jet d'initiative dans le tracker.
 
-import { TAG } from "./add2e-initiative-constants.mjs";
+import { ADD2E_INITIATIVE_D6_ICON, TAG } from "./add2e-initiative-constants.mjs";
 
 const INITIATIVE_ROLL_BUTTON_SELECTOR = [
   ".token-initiative button.combatant-control.roll",
@@ -10,9 +10,8 @@ const INITIATIVE_ROLL_BUTTON_SELECTOR = [
   "button.combatant-control.roll"
 ].join(",");
 
-const CORE_DICE_PATH = "../icons/svg/";
-const INITIATIVE_ICON = `url(${CORE_DICE_PATH}d6.svg)`;
-const INITIATIVE_ICON_HOVER = `url(${CORE_DICE_PATH}d6-highlight.svg)`;
+const INITIATIVE_ICON = `url(${ADD2E_INITIATIVE_D6_ICON})`;
+const INITIATIVE_ICON_HOVER = `url(${ADD2E_INITIATIVE_D6_ICON})`;
 
 function rootElement(root = document) {
   if (root?.jquery) return root[0];
@@ -45,7 +44,7 @@ export function patchInitiativeIcons(root = document) {
     for (const button of scope.querySelectorAll(INITIATIVE_ROLL_BUTTON_SELECTOR)) {
       if (patchRollButton(button)) patched += 1;
     }
-    if (patched) console.debug(`${TAG}[D6_ICON][PATCHED_CSS_VARS]`, { patched });
+    if (patched) console.debug(`${TAG}[D6_ICON][PATCHED_CSS_VARS]`, { patched, icon: INITIATIVE_ICON });
   } catch (err) {
     console.warn(`${TAG}[D6_ICON][ERROR]`, err);
   }
