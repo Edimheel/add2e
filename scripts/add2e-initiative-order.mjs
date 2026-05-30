@@ -8,10 +8,6 @@ function isCombatStarted(combat = game.combat) {
   return Boolean(combat?.started && Number(combat?.round ?? 0) > 0);
 }
 
-function activeCombatantId(combat = game.combat) {
-  return combat?.current?.combatantId ?? combat?.combatant?.id ?? null;
-}
-
 function orderSnapshot(turns = []) {
   return Array.from(turns ?? []).map((c, index) => ({
     index,
@@ -27,17 +23,35 @@ function nativeTurns(combat = game.combat) {
   return Array.isArray(combat?.turns) ? combat.turns : [];
 }
 
+function activeCombatantId(combat = game.combat, turns = nativeTurns(combat)) {
+  const currentId = combat?.current?.combatantId ?? null;
+  if (currentId) return currentId;
+
+  const raw = Number(combat?.turn ?? combat?.current?.turn ?? -1);
+  if (!Number.isFinite(raw)) return null;
+  const index = Math.floor(raw);
+  if (index < 0 || index >= turns.length) return null;
+  return turns[index]?.id ?? null;
+}
+
+function activeCombatantName(combat = game.combat, turns = nativeTurns(combat)) {
+  const activeId = activeCombatantId(combat, turns);
+  if (!activeId) return null;
+  return turns.find(c => c?.id === activeId)?.name ?? null;
+}
+
 function logOrder(label, combat, turns = sortedCombatants(combat), extra = {}) {
   try {
+    const native = nativeTurns(combat);
+    const activeId = activeCombatantId(combat, native);
     console.log(`${TAG}[ORDER][${label}]`, {
       started: combat?.started ?? null,
       round: combat?.round ?? null,
       turn: combat?.turn ?? null,
       current: combat?.current ?? null,
-      nativeCombatant: combat?.combatant?.id ?? null,
-      activeId: activeCombatantId(combat),
-      activeName: currentCombatant(combat)?.name ?? null,
-      nativeTurns: orderSnapshot(nativeTurns(combat)),
+      activeId,
+      activeName: activeCombatantName(combat, native),
+      nativeTurns: orderSnapshot(native),
       add2eSortedTurns: orderSnapshot(turns),
       ...extra
     });
@@ -69,7 +83,7 @@ export function sortedCombatants(combat = game.combat) {
 export function combatTurnIndex(combat = game.combat, turns = sortedCombatants(combat)) {
   if (!turns.length) return 0;
 
-  const activeId = activeCombatantId(combat);
+  const activeId = activeCombatantId(combat, nativeTurns(combat));
   const activeIndex = activeId ? turns.findIndex(c => c.id === activeId) : -1;
   const raw = Number(combat?.turn ?? combat?.current?.turn ?? 0);
   const rawIndex = Math.max(0, Math.min(turns.length - 1, Number.isFinite(raw) ? Math.floor(raw) : 0));
@@ -111,7 +125,7 @@ export function applyLocalOrder(combat = game.combat, { first = false, reason = 
   const before = {
     turn: combat.turn,
     currentId: combat.current?.combatantId ?? null,
-    combatantId: combat.combatant?.id ?? null,
+    combatantId: activeCombatantId(combat, nativeTurns(combat)),
     nativeTurns: orderSnapshot(nativeTurns(combat)),
     add2eSortedTurns: orderSnapshot(turns)
   };
@@ -125,7 +139,7 @@ export function applyLocalOrder(combat = game.combat, { first = false, reason = 
 export function currentCombatant(combat = game.combat) {
   if (!isCombatStarted(combat)) return null;
   const turns = Array.isArray(combat.turns) && combat.turns.length ? combat.turns : sortedCombatants(combat);
-  return turns[combatTurnIndex(combat, turns)] ?? combat.combatant ?? null;
+  return turns[combatTurnIndex(combat, turns)] ?? null;
 }
 
 export function tokenFromCombatant(combatant) {
