@@ -47,6 +47,11 @@ Hooks.once("init", () => {
   installCombatPatch();
 });
 
+Hooks.once("setup", () => {
+  configureInitiative();
+  installCombatPatch();
+});
+
 Hooks.once("ready", () => {
   configureInitiative();
   installCombatPatch();
