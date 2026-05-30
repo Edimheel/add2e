@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04-attack-roll.mjs
 // ADD2E — Résolution des attaques.
-// Version : 2026-05-29-attack-roll-v14-target-actor-v2
+// Version : 2026-05-30-attack-roll-gm-chat-relay-v3
 
 import { plageToRollFormula } from "./01-core-helpers.mjs";
 import { add2eApplyDamage } from "./02-damage.mjs";
@@ -45,6 +45,9 @@ import {
   add2eBuildAttackChatCard
 } from "./04i-attack-roll-chat-card.mjs";
 
+const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
+const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-gm-chat-relay-v3";
+
 function add2eAttackHtmlEscape(value) {
   const div = document.createElement("div");
   div.innerText = String(value ?? "");
@@ -84,6 +87,51 @@ function add2eResolveAttackSourceToken(actor) {
   if (active) return active;
 
   return actor?.token?.object ?? actor?.token ?? null;
+}
+
+function add2eGetGmWhisperIds() {
+  const recipients = ChatMessage.getWhisperRecipients?.("GM") ?? [];
+  const fromRecipients = recipients.map(u => u.id).filter(Boolean);
+  if (fromRecipients.length) return fromRecipients;
+  return Array.from(game.users ?? []).filter(u => u.isGM).map(u => u.id).filter(Boolean);
+}
+
+async function add2eCreateOrRelayGmAttackChat({ actor, content, avatar }) {
+  const whisper = add2eGetGmWhisperIds();
+  const speaker = ChatMessage.getSpeaker({ actor });
+  const messageData = {
+    speaker,
+    content,
+    avatar,
+    whisper,
+    blind: false,
+    flags: {
+      add2e: {
+        attackChatVisibility: "gm-only",
+        attackChatVisibilityVersion: globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION ?? ADD2E_ATTACK_GM_CHAT_VERSION,
+        attackGmChatRelayVersion: ADD2E_ATTACK_GM_CHAT_VERSION
+      }
+    }
+  };
+
+  console.log("[ADD2E][ATTAQUE][GM_CHAT][ROUTE]", {
+    version: ADD2E_ATTACK_GM_CHAT_VERSION,
+    user: game.user?.name,
+    isGM: game.user?.isGM,
+    whisper,
+    actor: actor?.name
+  });
+
+  if (game.user?.isGM) {
+    await ChatMessage.create(messageData);
+    return true;
+  }
+
+  game.socket?.emit?.("system.add2e", {
+    type: ADD2E_ATTACK_GM_DETAIL_CHAT,
+    payload: messageData
+  });
+  return true;
 }
 
 function add2eResolveAttackThac0(actor) {
@@ -417,7 +465,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         ajustementCA
       });
 
-      await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: chatContent, avatar: chatImg });
+      await add2eCreateOrRelayGmAttackChat({ actor, content: chatContent, avatar: chatImg });
       await add2eConsumeOneUseWeaponAfterAttack(actor, arme);
       console.log("[ADD2E][ATTAQUE][CA_CONDITIONNELLE]", {
         cible: cible?.name,
