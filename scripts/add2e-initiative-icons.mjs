@@ -26,23 +26,23 @@ function makeD6Icon() {
   return img;
 }
 
-function patchButton(button) {
-  if (!button || button.querySelector?.(".add2e-init-d6-icon")) return;
-  const icon = button.querySelector?.(ICON_SELECTOR);
-  if (!icon) return;
-  icon.replaceWith(makeD6Icon());
-  button.title = "Lancer l'initiative ADD2E (1d6, le plus petit commence)";
+function patchNow(root = document) {
+  const scope = rootElement(root);
+  for (const button of scope.querySelectorAll(SELECTOR)) {
+    if (button.querySelector?.(".add2e-init-d6-icon")) continue;
+    const icon = button.querySelector?.(ICON_SELECTOR);
+    if (!icon) continue;
+    icon.replaceWith(makeD6Icon());
+    button.title = "Lancer l'initiative ADD2E (1d6, le plus petit commence)";
+  }
 }
 
-export function patchInitiativeIcons(root = document, { retry = true } = {}) {
-  try {
-    const scope = rootElement(root);
-    for (const button of scope.querySelectorAll(SELECTOR)) patchButton(button);
-
-    if (retry) {
-      setTimeout(() => patchInitiativeIcons(document, { retry: false }), 50);
+export function patchInitiativeIcons(root = document) {
+  setTimeout(() => {
+    try {
+      patchNow(root);
+    } catch (err) {
+      console.warn(`${TAG}[D6_ICON][ERROR]`, err);
     }
-  } catch (err) {
-    console.warn(`${TAG}[D6_ICON][ERROR]`, err);
-  }
+  }, 50);
 }
