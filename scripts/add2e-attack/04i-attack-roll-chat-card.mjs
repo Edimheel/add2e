@@ -1,8 +1,8 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Cartes de chat d'attaque.
-// Version : 2026-05-30-attack-chat-socket-diagnostics-v11
+// Version : 2026-05-30-attack-chat-real-player-message-v12
 
-const VERSION = "2026-05-30-attack-chat-socket-diagnostics-v11";
+const VERSION = "2026-05-30-attack-chat-real-player-message-v12";
 const SOCKET = "system.add2e";
 const PLAYER_LOCAL_TYPE = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
 const LOG = "[ADD2E][ATTACK_CHAT]";
@@ -114,15 +114,34 @@ function chip(label, value, color = "#5d3d0d") {
   </div>`;
 }
 
+function portrait(name, img, fallbackIcon = "fa-user") {
+  const safeName = esc(name || "—");
+  const safeImg = esc(img || "");
+  const visual = safeImg
+    ? `<img src="${safeImg}" alt="${safeName}" style="width:30px;height:30px;border-radius:999px;object-fit:cover;border:1px solid rgba(255,255,255,.55);background:#2b1b08;">`
+    : `<span style="width:30px;height:30px;border-radius:999px;display:inline-grid;place-items:center;border:1px solid rgba(255,255,255,.55);background:#2b1b08;"><i class="fas ${fallbackIcon}"></i></span>`;
+  return `<div style="display:flex;align-items:center;gap:6px;min-width:0;">
+    ${visual}
+    <div style="min-width:0;">
+      <div style="font-size:.66rem;font-weight:900;text-transform:uppercase;color:#f0d796;line-height:1;">${fallbackIcon === "fa-shield-halved" ? "Défenseur" : "Attaquant"}</div>
+      <div style="font-size:.86rem;font-weight:950;color:#fff;line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px;">${safeName}</div>
+    </div>
+  </div>`;
+}
+
 function cardShell(kind, ctx, inner) {
   const o = outcome(ctx);
   const isGM = kind === "gm";
-  const cls = isGM ? "add2e-attack-chat-card-gm-v11" : "add2e-attack-chat-card-player-v11";
-  const title = isGM ? "Attaque — MJ" : "Attaque";
+  const cls = isGM ? "add2e-attack-chat-card-gm-v12" : "add2e-attack-chat-card-player-v12";
+  const attackerImg = ctx.chatImg || ctx.actor?.img || "";
+  const defenderImg = ctx.cible?.token?.texture?.src || ctx.cible?.img || "";
   return `<div class="add2e-chat-card ${cls}" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">
     <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;">
-      <i class="fas ${o.icon}" style="font-size:1.22rem;color:#ffd978;"></i>
-      <div style="min-width:0;flex:1;"><div style="font-size:1.04rem;font-weight:950;line-height:1.1;">${title}</div><div style="font-size:.78rem;font-weight:750;color:#f7e3b1;line-height:1.18;margin-top:2px;">${esc(ctx.actor?.name)} attaque ${esc(ctx.nomCible)} avec ${esc(ctx.arme?.name)}</div></div>
+      <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1;">
+        ${portrait(ctx.actor?.name, attackerImg, "fa-user")}
+        <i class="fas fa-arrow-right" style="color:#ffd978;font-size:.9rem;flex:0 0 auto;"></i>
+        ${portrait(ctx.nomCible ?? ctx.cible?.name, defenderImg, "fa-shield-halved")}
+      </div>
       <div style="white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${o.color};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.86rem;">${esc(o.title)}</div>
     </div>
     <div style="padding:10px;">${inner}</div>
@@ -195,7 +214,7 @@ function appendLocalCard(payload = {}) {
   const targets = Array.isArray(payload.userIds) ? payload.userIds.filter(Boolean) : [];
   const content = String(payload.content ?? "");
 
-  console.log(`${LOG}[RENDER_LOCAL]`, {
+  console.log(`${LOG}[RENDER_LOCAL_FALLBACK]`, {
     version: VERSION,
     user: game.user?.name,
     isGM,
@@ -226,7 +245,7 @@ function appendLocalCard(payload = {}) {
 
 function onSocketMessage(data) {
   if (data?.type !== PLAYER_LOCAL_TYPE) return;
-  console.log(`${LOG}[RECEIVED_PLAYER_LOCAL]`, {
+  console.log(`${LOG}[RECEIVED_PLAYER_LOCAL_FALLBACK]`, {
     version: VERSION,
     user: game.user?.name,
     isGM: game.user?.isGM,
@@ -256,7 +275,7 @@ function installSocket() {
   setTimeout(registerSocket, 2500);
 }
 
-function sendPlayerCard(ctx) {
+async function sendPlayerCard(ctx) {
   const users = playerIds();
   const payload = {
     userIds: users,
@@ -266,18 +285,39 @@ function sendPlayerCard(ctx) {
     version: VERSION
   };
 
-  console.log(`${LOG}[EMIT_PLAYER_LOCAL]`, {
+  console.log(`${LOG}[CREATE_PLAYER_CHAT]`, {
     version: VERSION,
     from: game.user?.name,
     isGM: game.user?.isGM,
     users,
-    hasSocket: !!game.socket,
     actor: ctx.actor?.name,
     target: ctx.nomCible
   });
 
-  if (!game.user?.isGM && users.includes(game.user.id)) appendLocalCard(payload);
-  game.socket?.emit?.(SOCKET, { type: PLAYER_LOCAL_TYPE, payload });
+  if (!users.length) return false;
+
+  try {
+    await ChatMessage.create({
+      speaker: payload.speaker,
+      content: payload.content,
+      avatar: payload.avatar,
+      whisper: users,
+      blind: false,
+      flags: {
+        add2e: {
+          attackChatVisibility: "players-only",
+          attackChatVisibilityVersion: VERSION,
+          attackChatKind: "public-player-result"
+        }
+      }
+    });
+    return true;
+  } catch (err) {
+    console.warn(`${LOG}[CREATE_PLAYER_CHAT_FAILED_FALLBACK_LOCAL]`, err);
+    if (!game.user?.isGM && users.includes(game.user.id)) appendLocalCard(payload);
+    game.socket?.emit?.(SOCKET, { type: PLAYER_LOCAL_TYPE, payload });
+    return false;
+  }
 }
 
 function installVisibilityGuard() {
@@ -285,7 +325,7 @@ function installVisibilityGuard() {
   globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = VERSION;
   Hooks.on("preCreateChatMessage", (message, data = {}) => {
     const content = String(data.content ?? message?.content ?? "");
-    if (content.includes("add2e-attack-chat-card-gm-v11")) {
+    if (content.includes("add2e-attack-chat-card-gm-v12") || content.includes("add2e-attack-chat-card-gm-v11")) {
       message.updateSource?.({
         whisper: gmIds(),
         blind: false,
@@ -294,14 +334,14 @@ function installVisibilityGuard() {
       });
       console.log(`${LOG}[PRECREATE_GM_ONLY]`, { whisper: gmIds(), blind: false });
     }
-    if (content.includes("add2e-attack-chat-card-player-v11")) {
+    if (content.includes("add2e-attack-chat-card-player-v12") || content.includes("add2e-attack-chat-card-player-v11")) {
       message.updateSource?.({
         whisper: playerIds(),
         blind: false,
-        "flags.add2e.attackChatVisibility": "players-only-guard",
+        "flags.add2e.attackChatVisibility": "players-only",
         "flags.add2e.attackChatVisibilityVersion": VERSION
       });
-      console.warn(`${LOG}[PRECREATE_PLAYER_CARD_DETECTED]`, { reason: "A player card should normally be local-only, not persisted." });
+      console.log(`${LOG}[PRECREATE_PLAYER_ONLY]`, { whisper: playerIds(), blind: false });
     }
   });
 }
