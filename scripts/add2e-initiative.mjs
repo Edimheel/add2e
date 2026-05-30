@@ -10,7 +10,7 @@ import {
   selectCurrentToken,
   sortInitiativeAscending
 } from "./add2e-initiative-order.mjs";
-import { patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
+import { installInitiativeIconPatch, patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
 import {
   canActorActNow,
   canTokenInteractNow,
@@ -47,11 +47,12 @@ Hooks.once("init", configureInitiative);
 Hooks.once("ready", () => {
   configureInitiative();
   installCombatPatch();
+  installInitiativeIconPatch();
   exposeGlobals();
   installTokenMoveLock();
   installActionLocks();
   installHooks();
-  patchInitiativeIcons(document);
+  patchInitiativeIcons(ui?.combat?.element ?? document);
   setTimeout(() => scheduleLocalSync(game.combat, { delay: 0, selectToken: game.combat?.started, reason: "ready" }), 900);
 });
 
