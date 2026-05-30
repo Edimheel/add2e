@@ -12,6 +12,21 @@ function activeCombatantId(combat = game.combat) {
   return combat?.current?.combatantId ?? combat?.combatant?.id ?? null;
 }
 
+function orderSnapshot(turns = []) {
+  return Array.from(turns ?? []).map((c, index) => ({
+    index,
+    id: c?.id ?? null,
+    name: c?.name ?? null,
+    initiative: c?.initiative ?? null,
+    sort: c?.sort ?? null,
+    tokenId: c?.tokenId ?? null
+  }));
+}
+
+function nativeTurns(combat = game.combat) {
+  return Array.isArray(combat?.turns) ? combat.turns : [];
+}
+
 function logOrder(label, combat, turns = sortedCombatants(combat), extra = {}) {
   try {
     console.log(`${TAG}[ORDER][${label}]`, {
@@ -22,7 +37,8 @@ function logOrder(label, combat, turns = sortedCombatants(combat), extra = {}) {
       nativeCombatant: combat?.combatant?.id ?? null,
       activeId: activeCombatantId(combat),
       activeName: currentCombatant(combat)?.name ?? null,
-      turns: turns.map((c, index) => ({ index, id: c.id, name: c.name, initiative: c.initiative, sort: c.sort })),
+      nativeTurns: orderSnapshot(nativeTurns(combat)),
+      add2eSortedTurns: orderSnapshot(turns),
       ...extra
     });
   } catch (err) {
@@ -92,11 +108,17 @@ export function applyLocalOrder(combat = game.combat, { first = false, reason = 
     return false;
   }
 
-  const before = { turn: combat.turn, currentId: combat.current?.combatantId ?? null, combatantId: combat.combatant?.id ?? null };
+  const before = {
+    turn: combat.turn,
+    currentId: combat.current?.combatantId ?? null,
+    combatantId: combat.combatant?.id ?? null,
+    nativeTurns: orderSnapshot(nativeTurns(combat)),
+    add2eSortedTurns: orderSnapshot(turns)
+  };
   const index = first ? 0 : combatTurnIndex(combat, turns);
   const changed = before.turn !== index || before.currentId !== turns[index]?.id;
   const ok = setLocalTurn(combat, turns, index);
-  if (changed || reason === "refresh") logOrder("APPLY_LOCAL_ORDER", combat, turns, { reason, before, index, ok });
+  if (changed || reason === "refresh" || reason === "ready" || reason === "setupTurns") logOrder("APPLY_LOCAL_ORDER", combat, turns, { reason, before, index, ok });
   return ok;
 }
 
@@ -131,8 +153,11 @@ export function selectCurrentToken(combat = game.combat) {
 export function scheduleLocalSync(combat = game.combat, { delay = 120, selectToken = false, reason = "sync" } = {}) {
   if (!combat) return;
   clearTimeout(initiativeState.localSyncTimer);
+  console.log(`${TAG}[ORDER][SCHEDULE_LOCAL_SYNC]`, { reason, delay, selectToken, started: combat?.started ?? null, round: combat?.round ?? null, turn: combat?.turn ?? null, current: combat?.current ?? null });
   initiativeState.localSyncTimer = setTimeout(() => {
+    logOrder("LOCAL_SYNC_BEFORE", combat, undefined, { reason, selectToken });
     applyLocalOrder(combat, { reason });
+    logOrder("LOCAL_SYNC_AFTER", combat, undefined, { reason, selectToken });
     if (selectToken) selectCurrentToken(combat);
   }, delay);
 }
@@ -240,6 +265,7 @@ export function patchNativeSort(target) {
   };
   target._sortCombatants.__add2eLowFirst = ADD2E_INITIATIVE_VERSION;
   target._sortCombatants.__add2eOriginal = original;
+  console.log(`${TAG}[ORDER][PATCH_NATIVE_SORT]`, { target: target?.name ?? target?.constructor?.name ?? "unknown", version: ADD2E_INITIATIVE_VERSION });
   return true;
 }
 
@@ -254,12 +280,16 @@ export function installCombatPatch() {
   if (proto.setupTurns && proto.setupTurns.__add2eLowFirstSetup !== ADD2E_INITIATIVE_VERSION) {
     const original = proto.setupTurns.__add2eOriginal ?? proto.setupTurns;
     proto.setupTurns = function add2eSetupTurnsLowFirst(...args) {
+      logOrder("SETUP_TURNS_BEFORE", this, sortedCombatants(this), { argsCount: args.length });
       const result = original.apply(this, args);
+      logOrder("SETUP_TURNS_AFTER_NATIVE", this, sortedCombatants(this), { argsCount: args.length });
       if (game?.system?.id === "add2e") applyLocalOrder(this, { reason: "setupTurns" });
+      logOrder("SETUP_TURNS_AFTER_ADD2E", this, sortedCombatants(this), { argsCount: args.length });
       return result;
     };
     proto.setupTurns.__add2eLowFirstSetup = ADD2E_INITIATIVE_VERSION;
     proto.setupTurns.__add2eOriginal = original;
+    console.log(`${TAG}[ORDER][PATCH_SETUP_TURNS]`, { version: ADD2E_INITIATIVE_VERSION });
   }
 
   if (proto.startCombat && proto.startCombat.__add2eLowFirstStart !== ADD2E_INITIATIVE_VERSION) {
@@ -294,5 +324,6 @@ export function installCombatPatch() {
   }
 
   initiativeState.patched = true;
+  console.log(`${TAG}[ORDER][PATCH_INSTALLED]`, { version: ADD2E_INITIATIVE_VERSION });
   return true;
 }
