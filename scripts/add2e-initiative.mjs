@@ -5,7 +5,7 @@
 // carte de chat, icône D6, verrou des actions hors tour, suivi HUD.
 // Le fichier ne gère pas le déplacement ; il neutralise seulement l'historique visuel/persisté.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-30-d6-low-first-native-sort-v4-no-logs";
+const ADD2E_INITIATIVE_VERSION = "2026-05-30-d6-low-first-native-sort-v4-no-logs-ruler-reset";
 const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v2";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
 const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-30-d6-low-first-hud-follow-refresh-sync-v4";
@@ -717,6 +717,19 @@ function cleanupMovementHistoryHooks() {
   return removed;
 }
 
+function resetRulerLike(ruler) {
+  if (!ruler) return;
+  try {
+    if (typeof ruler.reset === "function") {
+      ruler.reset();
+      return;
+    }
+  } catch (_e) {}
+  try {
+    if (typeof ruler.clear === "function") ruler.clear();
+  } catch (_e) {}
+}
+
 function clearObjectMovementTrail(obj) {
   if (!obj) return;
   for (const target of [obj, obj.document].filter(Boolean)) {
@@ -728,17 +741,14 @@ function clearObjectMovementTrail(obj) {
   }
   try { obj._movementPath?.clear?.(); } catch (_e) {}
   try { obj._movementPath?.destroy?.({ children: true }); obj._movementPath = null; } catch (_e) {}
-  try { obj._ruler?.reset?.(); } catch (_e) {}
-  try { obj._ruler?.clear?.(); } catch (_e) {}
-  try { obj._hoverRuler?.reset?.(); } catch (_e) {}
-  try { obj._hoverRuler?.clear?.(); } catch (_e) {}
+  resetRulerLike(obj._ruler);
+  resetRulerLike(obj._hoverRuler);
 }
 
 function clearFoundryMovementTrail(token = null) {
   const tokens = token ? [token] : Array.from(canvas?.tokens?.placeables ?? []);
   for (const t of tokens) clearObjectMovementTrail(t);
-  try { canvas?.controls?.ruler?.reset?.(); } catch (_e) {}
-  try { canvas?.controls?.ruler?.clear?.(); } catch (_e) {}
+  resetRulerLike(canvas?.controls?.ruler);
   try { canvas?.controls?.ruler?.clearPath?.(); } catch (_e) {}
   try { canvas?.controls?.ruler?._clear?.(); } catch (_e) {}
   for (const key of ["Token.Ruler", "movement", "Movement"]) {
