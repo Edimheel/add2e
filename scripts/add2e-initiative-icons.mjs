@@ -32,11 +32,12 @@ function patchRollButton(button) {
   button.style.setProperty("background-image", "var(--initiative-icon)");
   button.style.setProperty("background-repeat", "no-repeat");
   button.style.setProperty("background-position", "center");
-  button.style.setProperty("background-size", "26px 26px");
+  button.style.setProperty("background-size", "34px 34px");
   button.style.setProperty("filter", "none");
   button.style.setProperty("opacity", "1");
-  button.style.setProperty("background-color", "rgba(0, 0, 0, 0.18)");
-  button.style.setProperty("border-radius", "4px");
+  button.style.setProperty("background-color", "transparent");
+  button.style.setProperty("border-radius", "0");
+  button.style.setProperty("box-shadow", "none");
   button.title = "Lancer l'initiative ADD2E (1d6, le plus petit commence)";
   button.dataset.tooltip = "Lancer l'initiative ADD2E (1d6, le plus petit commence)";
 
