@@ -1,5 +1,5 @@
-// ADD2E — Relais socket central pour ADD2E_GM_OPERATION et messages locaux.
-// Version : 2026-05-30-local-player-attack-chat-relay-v1
+// ADD2E — Relais socket central pour ADD2E_GM_OPERATION et messages joueurs.
+// Version : 2026-05-30-player-owned-attack-chat-relay-v2
 
 import {
   ADD2E_GM_OPERATION,
@@ -25,76 +25,82 @@ import {
 import { vendorRecordProjectileSpent, consumeSpellComponent } from "./15b3-gm-relay-projectiles.mjs";
 
 const ADD2E_ATTACK_PLAYER_LOCAL_CHAT = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
-const LOCAL_CHAT_VERSION = "2026-05-30-local-player-attack-chat-relay-v1";
-
-function esc(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
-
-function findChatLog() {
-  return ui.chat?.element?.[0]?.querySelector?.("#chat-log")
-    ?? ui.chat?.element?.[0]?.querySelector?.(".chat-log")
-    ?? document.getElementById("chat-log")
-    ?? document.querySelector(".chat-log")
-    ?? null;
-}
+const LOCAL_CHAT_VERSION = "2026-05-30-player-owned-attack-chat-relay-v2";
 
 function localAttackCardKey(payload = {}) {
   return String(payload.id ?? `${payload.version ?? "no-version"}:${payload.speaker?.alias ?? "ADD2E"}:${String(payload.content ?? "").slice(0, 120)}`);
 }
 
-function renderLocalAttackPlayerChat(payload = {}) {
+function responsiblePlayerId(targets = []) {
+  const ordered = targets.filter(Boolean);
+  const activeTarget = ordered.find(id => game.users?.get?.(id)?.active && !game.users.get(id).isGM);
+  if (activeTarget) return activeTarget;
+  const anyTarget = ordered.find(id => !game.users?.get?.(id)?.isGM);
+  if (anyTarget) return anyTarget;
+  const activePlayer = Array.from(game.users ?? []).find(u => u.active && !u.isGM)?.id;
+  return activePlayer ?? null;
+}
+
+async function createPersistentPlayerAttackChat(payload = {}) {
   const targets = Array.isArray(payload.userIds) ? payload.userIds.filter(Boolean) : [];
   const content = String(payload.content ?? "");
-  const accepted = !game.user?.isGM && (!targets.length || targets.includes(game.user.id));
+  const responsible = responsiblePlayerId(targets);
+  const accepted = !game.user?.isGM && game.user?.id === responsible && !!content;
 
-  console.log("[ADD2E][ATTACK_CHAT][CENTRAL_RECEIVED_PLAYER_LOCAL]", {
+  console.log("[ADD2E][ATTACK_CHAT][PLAYER_CHAT_RECEIVED]", {
     relayVersion: LOCAL_CHAT_VERSION,
     payloadVersion: payload.version,
     user: game.user?.name,
     userId: game.user?.id,
     isGM: game.user?.isGM,
     targets,
+    responsible,
     accepted,
     hasContent: !!content
   });
 
-  if (!accepted || !content) return false;
+  if (!accepted) return false;
 
   globalThis.ADD2E_LOCAL_ATTACK_CHAT_SEEN ??= new Set();
   const key = localAttackCardKey(payload);
   if (globalThis.ADD2E_LOCAL_ATTACK_CHAT_SEEN.has(key)) {
-    console.log("[ADD2E][ATTACK_CHAT][CENTRAL_DUPLICATE_SKIPPED]", { key });
+    console.log("[ADD2E][ATTACK_CHAT][PLAYER_CHAT_DUPLICATE_SKIPPED]", { key });
     return false;
   }
   globalThis.ADD2E_LOCAL_ATTACK_CHAT_SEEN.add(key);
 
-  const log = findChatLog();
-  if (!log) {
-    console.warn("[ADD2E][ATTACK_CHAT][CENTRAL_NO_CHAT_LOG]", {
+  try {
+    await ChatMessage.create({
+      speaker: payload.speaker ?? { alias: "ADD2E" },
+      content,
+      whisper: targets,
+      blind: false,
+      flags: {
+        add2e: {
+          attackChatVisibility: "players-only",
+          attackChatVisibilityVersion: LOCAL_CHAT_VERSION,
+          localAttackKey: key,
+          createdByPlayerRelay: true
+        }
+      }
+    });
+
+    console.log("[ADD2E][ATTACK_CHAT][PLAYER_CHAT_CREATED]", {
       relayVersion: LOCAL_CHAT_VERSION,
-      user: game.user?.name,
-      isGM: game.user?.isGM
+      key,
+      author: game.user?.id,
+      whisper: targets
+    });
+    return true;
+  } catch (err) {
+    console.error("[ADD2E][ATTACK_CHAT][PLAYER_CHAT_CREATE_ERROR]", err, {
+      relayVersion: LOCAL_CHAT_VERSION,
+      key,
+      author: game.user?.id,
+      whisper: targets
     });
     return false;
   }
-
-  const wrapper = document.createElement("li");
-  wrapper.className = "chat-message message flexcol add2e-local-attack-player-message";
-  wrapper.dataset.add2eLocalAttackCard = payload.version ?? LOCAL_CHAT_VERSION;
-  wrapper.dataset.add2eLocalAttackKey = key;
-  wrapper.innerHTML = `<header class="message-header flexrow"><h4 class="message-sender">${esc(payload.speaker?.alias || "ADD2E")}</h4><span class="message-metadata"><time class="message-timestamp">${new Date().toLocaleTimeString()}</time></span></header><div class="message-content">${content}</div>`;
-  log.appendChild(wrapper);
-  ui.chat?.scrollBottom?.();
-
-  console.log("[ADD2E][ATTACK_CHAT][CENTRAL_RENDERED_PLAYER_LOCAL]", {
-    relayVersion: LOCAL_CHAT_VERSION,
-    key,
-    user: game.user?.name
-  });
-  return true;
 }
 
 Hooks.once("ready", () => {
@@ -130,7 +136,7 @@ Hooks.once("ready", () => {
     });
 
     if (data?.type === ADD2E_ATTACK_PLAYER_LOCAL_CHAT) {
-      renderLocalAttackPlayerChat(data.payload ?? {});
+      await createPersistentPlayerAttackChat(data.payload ?? {});
       return;
     }
 
