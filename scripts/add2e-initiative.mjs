@@ -5,7 +5,7 @@
 // carte de chat, icône D6, verrou des actions hors tour, suivi HUD.
 // Le fichier ne gère pas le déplacement ; il neutralise seulement l'historique visuel/persisté.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-30-d6-low-first-native-sort-v4-no-logs-ruler-reset";
+const ADD2E_INITIATIVE_VERSION = "2026-05-30-d6-low-first-native-sort-v5-skip-defeated";
 const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v2";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
 const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-30-d6-low-first-hud-follow-refresh-sync-v4";
@@ -78,6 +78,74 @@ function activeCombatantId(combat = game.combat) {
   return combat?.current?.combatantId ?? combat?.combatant?.id ?? null;
 }
 
+function coreCombatTrackerConfig() {
+  try {
+    const value = game.settings?.get?.("core", "combatTrackerConfig");
+    return value && typeof value === "object" ? value : {};
+  } catch (_e) {
+    return {};
+  }
+}
+
+function skipDefeatedCombatantsEnabled() {
+  const config = coreCombatTrackerConfig();
+  if (typeof config.skipDefeated === "boolean") return config.skipDefeated;
+  if (typeof config.skipDefeatedCombatants === "boolean") return config.skipDefeatedCombatants;
+  try {
+    const value = game.settings?.get?.("core", "skipDefeated");
+    if (typeof value === "boolean") return value;
+  } catch (_e) {}
+  try {
+    const value = game.settings?.get?.("core", "skipDefeatedCombatants");
+    if (typeof value === "boolean") return value;
+  } catch (_e) {}
+  return false;
+}
+
+function combatantIsDefeated(combatant) {
+  return Boolean(
+    combatant?.defeated ||
+    combatant?.isDefeated ||
+    combatant?.flags?.core?.defeated ||
+    combatant?.flags?.add2e?.defeated ||
+    combatant?.token?.flags?.core?.defeated ||
+    combatant?.actor?.statuses?.has?.("dead") ||
+    combatant?.actor?.statuses?.has?.("defeated") ||
+    combatant?.actor?.effects?.some?.(effect => effect?.statuses?.has?.("dead") || effect?.statuses?.has?.("defeated"))
+  );
+}
+
+function shouldSkipCombatant(combatant) {
+  return skipDefeatedCombatantsEnabled() && combatantIsDefeated(combatant);
+}
+
+function firstEligibleTurnIndex(turns) {
+  if (!turns.length) return 0;
+  if (!skipDefeatedCombatantsEnabled()) return 0;
+  const index = turns.findIndex(combatant => !shouldSkipCombatant(combatant));
+  return index >= 0 ? index : 0;
+}
+
+function nextEligibleTurnIndex(turns, startIndex, direction) {
+  if (!turns.length) return { index: 0, wrapped: false };
+  const dir = direction >= 0 ? 1 : -1;
+  const start = Math.max(0, Math.min(turns.length - 1, Number(startIndex) || 0));
+  if (!skipDefeatedCombatantsEnabled()) {
+    let index = start + dir;
+    let wrapped = false;
+    if (index >= turns.length) { index = 0; wrapped = true; }
+    else if (index < 0) { index = turns.length - 1; wrapped = true; }
+    return { index, wrapped };
+  }
+  for (let step = 1; step <= turns.length; step++) {
+    const raw = start + (dir * step);
+    const wrapped = raw >= turns.length || raw < 0;
+    const index = ((raw % turns.length) + turns.length) % turns.length;
+    if (!shouldSkipCombatant(turns[index])) return { index, wrapped };
+  }
+  return { index: start, wrapped: false };
+}
+
 function sortedIndexForActive(combat = game.combat, turns = sortedCombatants(combat)) {
   if (!turns.length) return 0;
   const byTurn = Math.max(0, Math.min(turns.length - 1, sortedTurnIndex(combat)));
@@ -116,7 +184,8 @@ function add2eInitiativeDebug(label, combat = game.combat, extra = {}) {
     turn: combat?.turn ?? null,
     current: combat?.current ? safeClone(combat.current) : null,
     activeId: activeCombatantId(combat),
-    sorted: sortedCombatants(combat).map(c => ({ id: c.id, name: c.name, initiative: c.initiative, sort: c.sort, tokenId: c.tokenId })),
+    skipDefeated: skipDefeatedCombatantsEnabled(),
+    sorted: sortedCombatants(combat).map(c => ({ id: c.id, name: c.name, initiative: c.initiative, sort: c.sort, tokenId: c.tokenId, defeated: combatantIsDefeated(c) })),
     extra
   };
 }
@@ -160,7 +229,7 @@ function applyAscendingTurns(combat = game.combat, { forceFirst = false } = {}) 
   if (!combat) return false;
   const turns = sortedCombatants(combat);
   if (!turns.length) return false;
-  let index = forceFirst ? 0 : sortedIndexForActive(combat, turns);
+  let index = forceFirst ? firstEligibleTurnIndex(turns) : sortedIndexForActive(combat, turns);
   index = Math.max(0, Math.min(turns.length - 1, index));
   try {
     combat.turns = turns;
@@ -211,7 +280,8 @@ async function syncCombatAfterRefresh(combat = game.combat, { reason = "refresh"
       return true;
     }
 
-    const index = sortedIndexForActive(combat, sorted);
+    let index = sortedIndexForActive(combat, sorted);
+    if (shouldSkipCombatant(sorted[index])) index = nextEligibleTurnIndex(sorted, index, 1).index;
     const active = sorted[index] ?? null;
     const needsUpdate = Number(combat.turn) !== index;
     if (needsUpdate && game.user?.isGM) await combat.update({ turn: index }, { add2eRefreshSync: true });
@@ -270,14 +340,15 @@ async function forceFirstSortedTurn(combat = game.combat, reason = "start") {
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
   const round = Math.max(1, Number(combat.round ?? 1));
-  await combat.update({ round, turn: 0 }, { add2eRefreshSync: true });
+  const index = firstEligibleTurnIndex(turns);
+  await combat.update({ round, turn: index }, { add2eRefreshSync: true });
   try {
     combat.turns = turns;
-    combat.turn = 0;
+    combat.turn = index;
     if (combat.current && typeof combat.current === "object") {
       combat.current.round = round;
-      combat.current.turn = 0;
-      combat.current.combatantId = turns[0]?.id ?? combat.current.combatantId;
+      combat.current.turn = index;
+      combat.current.combatantId = turns[index]?.id ?? combat.current.combatantId;
     }
   } catch (_e) {}
   ui.combat?.render?.(true);
@@ -294,13 +365,16 @@ async function advanceSortedTurn(combat = game.combat, direction = 1) {
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
   const rawTurn = Number(combat.turn ?? combat.current?.turn);
-  if (!Number.isFinite(rawTurn) || rawTurn < 0) return updateCombatTurnBySortedIndex(combat, direction >= 0 ? 0 : turns.length - 1);
+  if (!Number.isFinite(rawTurn) || rawTurn < 0) {
+    const fallback = direction >= 0 ? firstEligibleTurnIndex(turns) : turns.length - 1;
+    return updateCombatTurnBySortedIndex(combat, fallback);
+  }
   const index = Math.max(0, Math.min(turns.length - 1, Math.floor(rawTurn)));
-  let next = index + direction;
+  const next = nextEligibleTurnIndex(turns, index, direction);
   let roundDelta = 0;
-  if (next >= turns.length) { next = 0; roundDelta = 1; }
-  else if (next < 0) { next = turns.length - 1; roundDelta = Number(combat.round ?? 1) > 1 ? -1 : 0; }
-  return updateCombatTurnBySortedIndex(combat, next, { roundDelta });
+  if (direction >= 0 && next.wrapped) roundDelta = 1;
+  else if (direction < 0 && next.wrapped) roundDelta = Number(combat.round ?? 1) > 1 ? -1 : 0;
+  return updateCombatTurnBySortedIndex(combat, next.index, { roundDelta });
 }
 
 function patchNativeCombatantSort(target) {
@@ -861,6 +935,7 @@ function installHooks() {
   Hooks.on("updateCombatant", (combatant, changes, options) => {
     if (options?.add2eInitiativeSort) return;
     if (hasProperty(changes ?? {}, "initiative")) scheduleInitiativeSort(combatant.combat ?? game.combat);
+    if (hasProperty(changes ?? {}, "defeated") || hasProperty(changes ?? {}, "flags.core.defeated")) scheduleRefreshSync(combatant.combat ?? game.combat, { reason: "defeatedChanged", delay: 40, selectToken: false });
   });
   Hooks.on("createCombatant", (combatant, options) => {
     if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatant.combat ?? game.combat);
