@@ -5,13 +5,13 @@
 // carte de chat, icône D6, verrou des actions hors tour, suivi HUD.
 // Le fichier ne gère pas le déplacement ; il neutralise seulement l'historique visuel/persisté.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-30-d6-low-first-refresh-sync-v3";
+const ADD2E_INITIATIVE_VERSION = "2026-05-30-d6-low-first-native-sort-v4";
 const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v2";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
-const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-30-d6-low-first-hud-follow-refresh-sync-v3";
+const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-30-d6-low-first-hud-follow-refresh-sync-v4";
 const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-30-no-movement-history-record-v5";
 const ADD2E_INDIVIDUAL_TURN_LOCK_VERSION = "2026-05-29-individual-turn-lock-v1";
-const ADD2E_INITIATIVE_REFRESH_SYNC_VERSION = "2026-05-30-refresh-combat-tracker-token-sync-v3";
+const ADD2E_INITIATIVE_REFRESH_SYNC_VERSION = "2026-05-30-refresh-combat-tracker-token-sync-v4";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
@@ -60,10 +60,12 @@ function sortedCombatants(combat = game.combat) { return Array.from(combat?.comb
 function sortedTurnIndex(combat = game.combat) { const n = num(combat?.turn ?? combat?.current?.turn, 0); return n >= 0 ? Math.floor(n) : 0; }
 function activeCombatantId(combat = game.combat) { return combat?.current?.combatantId ?? combat?.combatant?.id ?? null; }
 function sortedIndexForActive(combat = game.combat, turns = sortedCombatants(combat)) {
+  if (!turns.length) return 0;
+  const byTurn = Math.max(0, Math.min(turns.length - 1, sortedTurnIndex(combat)));
+  if (Number.isFinite(Number(combat?.turn ?? combat?.current?.turn))) return byTurn;
   const id = activeCombatantId(combat);
   const byId = id ? turns.findIndex(c => c.id === id) : -1;
-  if (byId >= 0) return byId;
-  return Math.max(0, Math.min(turns.length - 1, sortedTurnIndex(combat)));
+  return byId >= 0 ? byId : byTurn;
 }
 function currentCombatant(combat = game.combat) {
   if (!combat?.started) return null;
@@ -258,10 +260,27 @@ async function advanceSortedTurn(combat = game.combat, direction = 1) {
   return updateCombatTurnBySortedIndex(combat, next, { roundDelta });
 }
 
+function patchNativeCombatantSort(target, label) {
+  if (!target || typeof target._sortCombatants !== "function") return false;
+  if (target._sortCombatants.__add2eLowFirstNativeSort === ADD2E_INITIATIVE_VERSION) return false;
+  const original = target._sortCombatants.__add2eOriginal ?? target._sortCombatants;
+  target._sortCombatants = function add2eLowFirstNativeCombatSort(a, b) {
+    if (game?.system?.id === "add2e") return compareCombatantsAscending(a, b);
+    return original.call(this, a, b);
+  };
+  target._sortCombatants.__add2eLowFirstNativeSort = ADD2E_INITIATIVE_VERSION;
+  target._sortCombatants.__add2eOriginal = original;
+  console.log(`${TAG}[NATIVE_SORT_PATCH]`, { label, version: ADD2E_INITIATIVE_VERSION });
+  return true;
+}
+
 function installCombatPatch() {
   if (combatPatchInstalled) return true;
   const proto = globalThis.Combat?.prototype;
+  const ctor = globalThis.Combat;
   if (!proto) return false;
+  patchNativeCombatantSort(proto, "Combat.prototype._sortCombatants");
+  patchNativeCombatantSort(ctor, "Combat._sortCombatants");
   if (proto.setupTurns && proto.setupTurns.__add2eD6LowFirstTurnsPatch !== ADD2E_INITIATIVE_VERSION) {
     const originalSetupTurns = proto.setupTurns.__add2eOriginal ?? proto.setupTurns;
     proto.setupTurns = function add2eD6LowFirstSetupTurns(...args) {
