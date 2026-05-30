@@ -31,17 +31,12 @@ export function combatTurnIndex(combat = game.combat, turns = sortedCombatants(c
   return Math.max(0, Math.min(turns.length - 1, n));
 }
 
-function adjacentSortedIndex(turns, startIndex, direction = 1) {
-  if (!turns.length) return { index: 0, wrapped: false };
-  const dir = direction >= 0 ? 1 : -1;
-  const start = Math.max(0, Math.min(turns.length - 1, Number(startIndex) || 0));
-  const raw = start + dir;
-  const wrapped = raw >= turns.length || raw < 0;
-  const index = ((raw % turns.length) + turns.length) % turns.length;
-  return { index, wrapped };
+function combatRound(combat = game.combat) {
+  const round = Number(combat?.round ?? 1);
+  return Number.isFinite(round) && round > 0 ? Math.floor(round) : 1;
 }
 
-export function setLocalTurn(combat, turns, index) {
+function setLocalTurn(combat, turns, index) {
   if (!combat || !turns?.length) return false;
   const safe = Math.max(0, Math.min(turns.length - 1, Number(index) || 0));
   combat.turns = turns;
@@ -59,8 +54,7 @@ export function applyLocalOrder(combat = game.combat, { first = false } = {}) {
   if (!combat) return false;
   const turns = sortedCombatants(combat);
   if (!turns.length) return false;
-  const index = first ? 0 : combatTurnIndex(combat, turns);
-  return setLocalTurn(combat, turns, index);
+  return setLocalTurn(combat, turns, first ? 0 : combatTurnIndex(combat, turns));
 }
 
 export function currentCombatant(combat = game.combat) {
@@ -95,38 +89,48 @@ export function scheduleLocalSync(combat = game.combat, { delay = 120, selectTok
   }, delay);
 }
 
-export async function setCombatTurn(combat, index, { roundDelta = 0 } = {}) {
+async function updateTurn(combat, index, round = combatRound(combat)) {
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
-  const safe = Math.max(0, Math.min(turns.length - 1, Number(index) || 0));
-  const round = Math.max(1, Number(combat.round ?? 1) + roundDelta);
-  await combat.update({ round, turn: safe }, { add2eInitiativeNavigation: true });
-  setLocalTurn(combat, turns, safe);
+  const safeIndex = Math.max(0, Math.min(turns.length - 1, Number(index) || 0));
+  const safeRound = Math.max(1, Math.floor(Number(round) || 1));
+
+  await combat.update({ round: safeRound, turn: safeIndex }, { add2eInitiativeNavigation: true });
+  setLocalTurn(combat, turns, safeIndex);
   selectCurrentToken(combat);
+
   if (typeof globalThis.add2eSyncActionHudToCombatant === "function") {
     globalThis.add2eSyncActionHudToCombatant(combat, { reason: "turn" });
   }
+
   return combat;
 }
 
 export async function forceFirstSortedTurn(combat = game.combat) {
   if (!combat) return combat;
-  const turns = sortedCombatants(combat);
-  if (!turns.length) return combat;
-  return setCombatTurn(combat, 0);
+  return updateTurn(combat, 0, combatRound(combat));
 }
 
-export async function advanceSortedTurn(combat = game.combat, direction = 1) {
+export async function advanceSortedTurn(combat = game.combat, step = 1) {
   if (!combat) return combat;
-  applyLocalOrder(combat);
+
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
+
   const current = combatTurnIndex(combat, turns);
-  const next = adjacentSortedIndex(turns, current, direction);
-  let roundDelta = 0;
-  if (direction >= 0 && next.wrapped) roundDelta = 1;
-  else if (direction < 0 && next.wrapped) roundDelta = Number(combat.round ?? 1) > 1 ? -1 : 0;
-  return setCombatTurn(combat, next.index, { roundDelta });
+  const direction = step >= 0 ? 1 : -1;
+  let next = current + direction;
+  let round = combatRound(combat);
+
+  if (next >= turns.length) {
+    next = 0;
+    round += 1;
+  } else if (next < 0) {
+    next = turns.length - 1;
+    round = Math.max(1, round - 1);
+  }
+
+  return updateTurn(combat, next, round);
 }
 
 export async function sortInitiativeAscending(combat = game.combat) {
