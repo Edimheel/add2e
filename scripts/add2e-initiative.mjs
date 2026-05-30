@@ -5,19 +5,22 @@
 // carte de chat, icône D6, verrou des actions hors tour, suivi HUD.
 // Le fichier ne gère pas le déplacement ; il neutralise seulement l'historique visuel/persisté.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-29-d6-low-first-start-first-v7";
+const ADD2E_INITIATIVE_VERSION = "2026-05-30-d6-low-first-refresh-sync-v1";
 const ADD2E_INITIATIVE_ACTION_LOCK_VERSION = "2026-05-29-d6-low-first-action-lock-v2";
 const ADD2E_INITIATIVE_CHAT_VERSION = "2026-05-29-d6-low-first-chat-v1";
-const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-29-d6-low-first-hud-follow-v7";
+const ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = "2026-05-30-d6-low-first-hud-follow-refresh-sync-v1";
 const ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = "2026-05-29-no-movement-history-record-v4";
 const ADD2E_INDIVIDUAL_TURN_LOCK_VERSION = "2026-05-29-individual-turn-lock-v1";
+const ADD2E_INITIATIVE_REFRESH_SYNC_VERSION = "2026-05-30-refresh-combat-tracker-token-sync-v1";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
 let configured = false;
 let sorting = false;
+let refreshSyncing = false;
 let sortTimer = null;
 let hudFollowTimer = null;
+let refreshSyncTimer = null;
 let movementTrailTimer = null;
 let warningAt = 0;
 let combatPatchInstalled = false;
@@ -32,6 +35,7 @@ globalThis.ADD2E_INITIATIVE_CHAT_VERSION = ADD2E_INITIATIVE_CHAT_VERSION;
 globalThis.ADD2E_INITIATIVE_HUD_FOLLOW_VERSION = ADD2E_INITIATIVE_HUD_FOLLOW_VERSION;
 globalThis.ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION = ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION;
 globalThis.ADD2E_INDIVIDUAL_TURN_LOCK_VERSION = ADD2E_INDIVIDUAL_TURN_LOCK_VERSION;
+globalThis.ADD2E_INITIATIVE_REFRESH_SYNC_VERSION = ADD2E_INITIATIVE_REFRESH_SYNC_VERSION;
 
 function configureInitiative() {
   if (configured) return;
@@ -98,13 +102,64 @@ function applyAscendingTurns(combat = game.combat, { forceFirst = false } = {}) 
   } catch (err) { console.warn(`${TAG}[APPLY_TURNS][ERROR]`, err); return false; }
 }
 
+function tokenFromCombatant(combatant) { return combatant?.token?.object ?? (combatant?.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? null; }
+
+function selectActiveCombatantToken(combat = game.combat, { reason = "sync" } = {}) {
+  const combatant = currentCombatant(combat);
+  const token = tokenFromCombatant(combatant);
+  if (!token?.control) return false;
+  try {
+    if (!token.controlled) token.control({ releaseOthers: true });
+    const others = Array.from(canvas?.tokens?.controlled ?? []).filter(t => t?.id !== token.id);
+    for (const other of others) other?.release?.();
+    console.log(`${TAG}[TOKEN_SYNC]`, { reason, combatant: combatant?.name ?? null, token: token?.name ?? null });
+    return true;
+  } catch (err) { console.warn(`${TAG}[TOKEN_SYNC][ERROR]`, err); return false; }
+}
+
+async function syncCombatAfterRefresh(combat = game.combat, { reason = "refresh", render = true, selectToken = true } = {}) {
+  if (!combat || refreshSyncing) return false;
+  const sorted = sortedCombatants(combat);
+  if (!sorted.length) return false;
+  refreshSyncing = true;
+  try {
+    const rawTurn = sortedTurnIndex(combat);
+    const index = Math.max(0, Math.min(sorted.length - 1, rawTurn));
+    const active = sorted[index] ?? null;
+    combat.turns = sorted;
+    combat.turn = index;
+    if (combat.current && typeof combat.current === "object") {
+      combat.current.round = Math.max(1, Number(combat.round ?? combat.current.round ?? 1));
+      combat.current.turn = index;
+      combat.current.combatantId = active?.id ?? combat.current.combatantId;
+    }
+    combat.setupTurns?.();
+    combat.turns = sorted;
+    combat.turn = index;
+    if (combat.current && typeof combat.current === "object") combat.current.combatantId = active?.id ?? combat.current.combatantId;
+    if (render) ui.combat?.render?.(true);
+    if (selectToken) setTimeout(() => selectActiveCombatantToken(combat, { reason }), 80);
+    scheduleHudFollow(combat, { forceOpen: false, reason });
+    scheduleClearMovementTrail();
+    console.log(`${TAG}[REFRESH_SYNC]`, { version: ADD2E_INITIATIVE_REFRESH_SYNC_VERSION, reason, round: combat.round, turn: index, active: active?.name ?? null, order: sorted.map(c => `${c.name}:${c.initiative}`) });
+    return true;
+  } catch (err) { console.warn(`${TAG}[REFRESH_SYNC][ERROR]`, err); return false; }
+  finally { refreshSyncing = false; }
+}
+
+function scheduleRefreshSync(combat = game.combat, { reason = "refresh", delay = 120, render = true, selectToken = true } = {}) {
+  if (!combat) return;
+  clearTimeout(refreshSyncTimer);
+  refreshSyncTimer = setTimeout(() => syncCombatAfterRefresh(combat, { reason, render, selectToken }), delay);
+}
+
 async function updateCombatTurnBySortedIndex(combat, newIndex, { roundDelta = 0 } = {}) {
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
   const index = Math.max(0, Math.min(turns.length - 1, Number(newIndex) || 0));
   const round = Math.max(1, Number(combat.round ?? 1) + roundDelta);
   const target = turns[index];
-  await combat.update({ round, turn: index });
+  await combat.update({ round, turn: index }, { add2eRefreshSync: true });
   try {
     combat.turns = turns;
     combat.turn = index;
@@ -115,6 +170,7 @@ async function updateCombatTurnBySortedIndex(combat, newIndex, { roundDelta = 0 
     }
   } catch (_e) {}
   ui.combat?.render?.(true);
+  selectActiveCombatantToken(combat, { reason: "navigation" });
   scheduleHudFollow(combat, { forceOpen: false, reason: "navigation" });
   scheduleClearMovementTrail();
   console.log(`${TAG}[NAV]`, { round, index, target: target?.name ?? null, order: turns.map(c => `${c.name}:${c.initiative}`) });
@@ -126,7 +182,7 @@ async function forceFirstSortedTurn(combat = game.combat, reason = "start") {
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
   const round = Math.max(1, Number(combat.round ?? 1));
-  await combat.update({ round, turn: 0 });
+  await combat.update({ round, turn: 0 }, { add2eRefreshSync: true });
   try {
     combat.turns = turns;
     combat.turn = 0;
@@ -137,6 +193,7 @@ async function forceFirstSortedTurn(combat = game.combat, reason = "start") {
     }
   } catch (_e) {}
   ui.combat?.render?.(true);
+  selectActiveCombatantToken(combat, { reason });
   scheduleHudFollow(combat, { forceOpen: false, reason });
   scheduleClearMovementTrail();
   console.log(`${TAG}[START_FIRST]`, { reason, first: turns[0]?.name ?? null, order: turns.map(c => `${c.name}:${c.initiative}`) });
@@ -204,6 +261,7 @@ async function sortInitiativeAscending(combat = game.combat) {
     combat.setupTurns?.();
     applyAscendingTurns(combat);
     ui.combat?.render?.(true);
+    scheduleRefreshSync(combat, { reason: "sort", delay: 60 });
     console.log(`${TAG}[SORT_ASC_REAL]`, sorted.map(c => `${c.name}:${c.initiative}`).join(" | "));
     return true;
   } catch (err) { console.error(`${TAG}[SORT_ASC][ERROR]`, err); return false; }
@@ -227,7 +285,6 @@ function initiativeChatContent(message, data = {}) {
 }
 function installInitiativeChatCard() { if (globalThis.__ADD2E_INIT_CHAT_CARD_INSTALLED === ADD2E_INITIATIVE_CHAT_VERSION) return; globalThis.__ADD2E_INIT_CHAT_CARD_INSTALLED = ADD2E_INITIATIVE_CHAT_VERSION; Hooks.on("preCreateChatMessage", (message, data) => { try { if (!isInitiativeMessage(message, data)) return; message.updateSource?.({ content: initiativeChatContent(message, data), flavor: "Initiative ADD2E", "flags.add2e.initiativeRoll": true, "flags.add2e.initiativeChatCardVersion": ADD2E_INITIATIVE_CHAT_VERSION }); } catch (err) { console.warn(`${TAG}[CHAT][ERROR]`, err); } }); }
 
-function tokenFromCombatant(combatant) { return combatant?.token?.object ?? (combatant?.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? null; }
 function combatantMatchesActor(combatant, actor) { if (!combatant || !actor) return false; if (combatant.actor?.id && combatant.actor.id === actor.id) return true; if (combatant.actorId && combatant.actorId === actor.id) return true; return false; }
 function combatActive(combat = game.combat) { return Boolean(combat && combat.started && currentCombatant(combat)); }
 function notifyNotTurn(actor = null) { const now = Date.now(); if (now - warningAt < 900) return; warningAt = now; const active = currentCombatant(); const activeName = active?.name ?? active?.actor?.name ?? "l'acteur actif"; const actorName = actor?.name ? `${actor.name} ne peut pas agir.` : "Cet acteur ne peut pas agir."; ui.notifications?.info?.(`${actorName} C'est le tour de ${activeName}.`); }
@@ -260,9 +317,9 @@ function patchTokenHoverMethod(proto, methodName) { const original = proto?.[met
 function installTokenHoverPatch() { if (tokenHoverPatchInstalled) return true; const proto = globalThis.Token?.prototype; if (!proto) return false; const patched = []; for (const methodName of ["_onHoverIn", "_onHoverOut", "_onMouseOver", "_onMouseOut", "_onClickLeft", "refresh"]) { if (patchTokenHoverMethod(proto, methodName)) patched.push(methodName); } tokenHoverPatchInstalled = true; console.log(`${TAG}[MOVE_HISTORY][TOKEN_HOVER_PATCH]`, { version: ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION, patched }); return true; }
 function installMovementHistoryBlock() { if (movementHistoryPatchInstalled) return true; movementHistoryPatchInstalled = true; const patched = []; if (patchSetFlagHistoryBlock(globalThis.Actor, "Actor")) patched.push("Actor"); if (patchSetFlagHistoryBlock(globalThis.TokenDocument ?? foundry?.documents?.TokenDocument, "TokenDocument")) patched.push("TokenDocument"); cleanupMovementHistoryHooks(); installTokenHoverPatch(); game.add2e = game.add2e ?? {}; game.add2e.movementHistoryDisabledVersion = ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION; console.log(`${TAG}[MOVE_HISTORY][DISABLED]`, { version: ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION, patched }); return true; }
 async function clearExistingMovementHistoryFlags() { if (!game.user?.isGM) return; const actorUpdates = []; for (const actor of game.actors ?? []) { if (actor?.flags?.add2e?.movementTurnKey !== undefined || actor?.flags?.add2e?.movementSpentMeters !== undefined) actorUpdates.push({ _id: actor.id, "flags.add2e.-=movementTurnKey": null, "flags.add2e.-=movementSpentMeters": null }); } if (actorUpdates.length) await Actor.updateDocuments(actorUpdates, { add2eIgnoreMovementHistoryCleanup: true }); for (const scene of game.scenes ?? []) { const tokenUpdates = []; for (const token of scene.tokens ?? []) { if (token?.flags?.add2e?.lastAllowedPosition !== undefined || token?.flags?.add2e?.movementScale !== undefined) tokenUpdates.push({ _id: token.id, "flags.add2e.-=lastAllowedPosition": null, "flags.add2e.-=movementScale": null }); } if (tokenUpdates.length) await scene.updateEmbeddedDocuments("Token", tokenUpdates, { add2eIgnoreMovementHistoryCleanup: true }); } }
-function exposeGlobals() { game.add2e = game.add2e ?? {}; game.add2e.initiativeVersion = ADD2E_INITIATIVE_VERSION; game.add2e.initiativeHudFollowVersion = ADD2E_INITIATIVE_HUD_FOLLOW_VERSION; game.add2e.movementHistoryDisabledVersion = ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION; game.add2e.individualTurnLockVersion = ADD2E_INDIVIDUAL_TURN_LOCK_VERSION; globalThis.add2eConfigureInitiative = configureInitiative; globalThis.add2eSortInitiativeAscending = sortInitiativeAscending; globalThis.add2eScheduleInitiativeSort = scheduleInitiativeSort; globalThis.add2ePatchCombatTrackerInitiativeIcons = patchInitiativeIcons; globalThis.add2eCanActorActNow = canActorActNow; globalThis.add2eCanTokenInteractNow = canTokenInteractNow; globalThis.add2eSyncActionHudToCombatant = syncActionHudToCombatant; globalThis.add2eDisableMovementHistoryRecording = installMovementHistoryBlock; globalThis.add2eInstallIndividualTurnLock = installTokenInteractionLock; globalThis.add2eClearExistingMovementHistoryFlags = clearExistingMovementHistoryFlags; globalThis.add2eCleanupMovementHistoryHooks = cleanupMovementHistoryHooks; globalThis.add2eClearFoundryMovementTrail = clearFoundryMovementTrailAggressive; globalThis.add2eInstallTokenHoverPatch = installTokenHoverPatch; globalThis.add2eForceFirstSortedTurn = forceFirstSortedTurn; globalThis.triInitiativeAscendant = sortInitiativeAscending; }
-function installHooks() { Hooks.on("preUpdateToken", (tokenDoc, changes, options, userId) => { if (options?.add2eIgnoreTurnLock || !isTokenPositionUpdate(changes)) return; const user = game.users?.get?.(userId); if (user?.isGM) return; if (!blockOutOfTurnTokenInteraction(tokenDoc, { notify: game.user?.id === userId })) return false; }); Hooks.on("updateCombatant", (combatant, changes, options) => { if (options?.add2eInitiativeSort) return; if (foundry.utils.hasProperty(changes ?? {}, "initiative")) scheduleInitiativeSort(combatant.combat ?? game.combat); }); Hooks.on("createCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatant.combat ?? game.combat); }); Hooks.on("deleteCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatant.combat ?? game.combat); }); Hooks.on("updateCombat", (combat, changes, options) => { if (options?.add2eInitiativeSort) return; if (foundry.utils.hasProperty(changes ?? {}, "started") && combat?.started) { setTimeout(() => forceFirstSortedTurn(combat, "updateCombat-started"), 80); return; } if (foundry.utils.hasProperty(changes ?? {}, "turn") || foundry.utils.hasProperty(changes ?? {}, "round") || foundry.utils.hasProperty(changes ?? {}, "current")) { applyAscendingTurns(combat); scheduleHudFollow(combat, { forceOpen: false, reason: "updateCombat" }); scheduleClearMovementTrail(); ui.combat?.render?.(true); } }); Hooks.on("combatTurn", combat => { scheduleHudFollow(combat, { forceOpen: false, reason: "combatTurn" }); scheduleClearMovementTrail(); }); Hooks.on("combatRound", combat => { scheduleHudFollow(combat, { forceOpen: false, reason: "combatRound" }); scheduleClearMovementTrail(); }); Hooks.on("hoverToken", token => { clearFoundryMovementTrailAggressive(token); }); Hooks.on("updateToken", tokenDoc => clearFoundryMovementTrailAggressive(tokenDoc?.object ?? null)); Hooks.on("controlToken", token => clearFoundryMovementTrailAggressive(token)); Hooks.on("refreshToken", token => clearFoundryMovementTrailAggressive(token)); Hooks.on("canvasReady", () => { installTokenHoverPatch(); installTokenInteractionLock(); scheduleClearMovementTrail(); }); Hooks.on("deleteCombat", () => { lastHudCombatantKey = ""; scheduleClearMovementTrail(); }); Hooks.on("renderCombatTracker", (app, html) => patchInitiativeIcons(html)); Hooks.on("renderCombatantConfig", () => setTimeout(() => patchInitiativeIcons(document), 50)); Hooks.on("renderSidebarTab", (app, html) => { if (app?.options?.id === "combat" || app?.tabName === "combat" || app?.id === "combat") { patchInitiativeIcons(html); setTimeout(() => patchInitiativeIcons(document), 50); } }); installInitiativeChatCard(); console.log(`${TAG}[HOOKS_INSTALLED]`, { version: ADD2E_INITIATIVE_VERSION, hudFollow: ADD2E_INITIATIVE_HUD_FOLLOW_VERSION, movementHistoryDisabled: ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION, individualTurnLock: ADD2E_INDIVIDUAL_TURN_LOCK_VERSION }); }
+function exposeGlobals() { game.add2e = game.add2e ?? {}; game.add2e.initiativeVersion = ADD2E_INITIATIVE_VERSION; game.add2e.initiativeHudFollowVersion = ADD2E_INITIATIVE_HUD_FOLLOW_VERSION; game.add2e.initiativeRefreshSyncVersion = ADD2E_INITIATIVE_REFRESH_SYNC_VERSION; game.add2e.movementHistoryDisabledVersion = ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION; game.add2e.individualTurnLockVersion = ADD2E_INDIVIDUAL_TURN_LOCK_VERSION; globalThis.add2eConfigureInitiative = configureInitiative; globalThis.add2eSortInitiativeAscending = sortInitiativeAscending; globalThis.add2eScheduleInitiativeSort = scheduleInitiativeSort; globalThis.add2ePatchCombatTrackerInitiativeIcons = patchInitiativeIcons; globalThis.add2eCanActorActNow = canActorActNow; globalThis.add2eCanTokenInteractNow = canTokenInteractNow; globalThis.add2eSyncActionHudToCombatant = syncActionHudToCombatant; globalThis.add2eSyncCombatAfterRefresh = syncCombatAfterRefresh; globalThis.add2eScheduleRefreshSync = scheduleRefreshSync; globalThis.add2eSelectActiveCombatantToken = selectActiveCombatantToken; globalThis.add2eDisableMovementHistoryRecording = installMovementHistoryBlock; globalThis.add2eInstallIndividualTurnLock = installTokenInteractionLock; globalThis.add2eClearExistingMovementHistoryFlags = clearExistingMovementHistoryFlags; globalThis.add2eCleanupMovementHistoryHooks = cleanupMovementHistoryHooks; globalThis.add2eClearFoundryMovementTrail = clearFoundryMovementTrailAggressive; globalThis.add2eInstallTokenHoverPatch = installTokenHoverPatch; globalThis.add2eForceFirstSortedTurn = forceFirstSortedTurn; globalThis.triInitiativeAscendant = sortInitiativeAscending; }
+function installHooks() { Hooks.on("preUpdateToken", (tokenDoc, changes, options, userId) => { if (options?.add2eIgnoreTurnLock || !isTokenPositionUpdate(changes)) return; const user = game.users?.get?.(userId); if (user?.isGM) return; if (!blockOutOfTurnTokenInteraction(tokenDoc, { notify: game.user?.id === userId })) return false; }); Hooks.on("updateCombatant", (combatant, changes, options) => { if (options?.add2eInitiativeSort) return; if (foundry.utils.hasProperty(changes ?? {}, "initiative")) scheduleInitiativeSort(combatant.combat ?? game.combat); }); Hooks.on("createCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatant.combat ?? game.combat); }); Hooks.on("deleteCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatant.combat ?? game.combat); }); Hooks.on("updateCombat", (combat, changes, options) => { if (options?.add2eInitiativeSort || options?.add2eRefreshSync) return; if (foundry.utils.hasProperty(changes ?? {}, "started") && combat?.started) { setTimeout(() => forceFirstSortedTurn(combat, "updateCombat-started"), 80); return; } if (foundry.utils.hasProperty(changes ?? {}, "turn") || foundry.utils.hasProperty(changes ?? {}, "round") || foundry.utils.hasProperty(changes ?? {}, "current")) { applyAscendingTurns(combat); scheduleRefreshSync(combat, { reason: "updateCombat", delay: 80 }); scheduleHudFollow(combat, { forceOpen: false, reason: "updateCombat" }); scheduleClearMovementTrail(); ui.combat?.render?.(true); } }); Hooks.on("combatTurn", combat => { scheduleRefreshSync(combat, { reason: "combatTurn", delay: 40 }); scheduleHudFollow(combat, { forceOpen: false, reason: "combatTurn" }); scheduleClearMovementTrail(); }); Hooks.on("combatRound", combat => { scheduleRefreshSync(combat, { reason: "combatRound", delay: 40 }); scheduleHudFollow(combat, { forceOpen: false, reason: "combatRound" }); scheduleClearMovementTrail(); }); Hooks.on("hoverToken", token => { clearFoundryMovementTrailAggressive(token); }); Hooks.on("updateToken", tokenDoc => clearFoundryMovementTrailAggressive(tokenDoc?.object ?? null)); Hooks.on("controlToken", token => clearFoundryMovementTrailAggressive(token)); Hooks.on("refreshToken", token => clearFoundryMovementTrailAggressive(token)); Hooks.on("canvasReady", () => { installTokenHoverPatch(); installTokenInteractionLock(); scheduleRefreshSync(game.combat, { reason: "canvasReady", delay: 180 }); scheduleClearMovementTrail(); }); Hooks.on("deleteCombat", () => { lastHudCombatantKey = ""; scheduleClearMovementTrail(); }); Hooks.on("renderCombatTracker", (app, html) => { patchInitiativeIcons(html); scheduleRefreshSync(game.combat, { reason: "renderCombatTracker", delay: 20, render: false }); }); Hooks.on("renderCombatantConfig", () => setTimeout(() => patchInitiativeIcons(document), 50)); Hooks.on("renderSidebarTab", (app, html) => { if (app?.options?.id === "combat" || app?.tabName === "combat" || app?.id === "combat") { patchInitiativeIcons(html); scheduleRefreshSync(game.combat, { reason: "renderSidebarTab", delay: 30, render: false }); setTimeout(() => patchInitiativeIcons(document), 50); } }); installInitiativeChatCard(); console.log(`${TAG}[HOOKS_INSTALLED]`, { version: ADD2E_INITIATIVE_VERSION, hudFollow: ADD2E_INITIATIVE_HUD_FOLLOW_VERSION, refreshSync: ADD2E_INITIATIVE_REFRESH_SYNC_VERSION, movementHistoryDisabled: ADD2E_MOVEMENT_HISTORY_DISABLED_VERSION, individualTurnLock: ADD2E_INDIVIDUAL_TURN_LOCK_VERSION }); }
 Hooks.once("init", configureInitiative);
-Hooks.once("ready", () => { configureInitiative(); cleanupLegacyHooks(); installCombatPatch(); installMovementHistoryBlock(); installTokenHoverPatch(); installTokenInteractionLock(); exposeGlobals(); patchInitiativeIcons(document); installActionLocks(); installHooks(); clearExistingMovementHistoryFlags().catch(err => console.warn(`${TAG}[MOVE_HISTORY][CLEAN_ERROR]`, err)); setTimeout(() => cleanupMovementHistoryHooks(), 300); setTimeout(() => installTokenHoverPatch(), 350); setTimeout(() => installTokenInteractionLock(), 360); setTimeout(() => patchInitiativeIcons(document), 500); setTimeout(() => patchInitiativeIcons(document), 1500); setTimeout(() => installActionLocks(), 800); setTimeout(() => installActionLocks(), 2000); setTimeout(() => installActionLocks(), 4000); setTimeout(() => scheduleInitiativeSort(game.combat), 700); setTimeout(() => scheduleHudFollow(game.combat, { forceOpen: false, reason: "ready" }), 1000); setTimeout(() => scheduleClearMovementTrail(), 1200); });
+Hooks.once("ready", () => { configureInitiative(); cleanupLegacyHooks(); installCombatPatch(); installMovementHistoryBlock(); installTokenHoverPatch(); installTokenInteractionLock(); exposeGlobals(); patchInitiativeIcons(document); installActionLocks(); installHooks(); clearExistingMovementHistoryFlags().catch(err => console.warn(`${TAG}[MOVE_HISTORY][CLEAN_ERROR]`, err)); setTimeout(() => cleanupMovementHistoryHooks(), 300); setTimeout(() => installTokenHoverPatch(), 350); setTimeout(() => installTokenInteractionLock(), 360); setTimeout(() => patchInitiativeIcons(document), 500); setTimeout(() => patchInitiativeIcons(document), 1500); setTimeout(() => installActionLocks(), 800); setTimeout(() => installActionLocks(), 2000); setTimeout(() => installActionLocks(), 4000); setTimeout(() => scheduleInitiativeSort(game.combat), 700); setTimeout(() => scheduleRefreshSync(game.combat, { reason: "ready-early", delay: 0 }), 850); setTimeout(() => scheduleRefreshSync(game.combat, { reason: "ready-late", delay: 0 }), 1400); setTimeout(() => scheduleHudFollow(game.combat, { forceOpen: false, reason: "ready" }), 1000); setTimeout(() => scheduleClearMovementTrail(), 1200); });
 
-export { configureInitiative as add2eConfigureInitiative, sortInitiativeAscending as add2eSortInitiativeAscending, canActorActNow as add2eCanActorActNow, syncActionHudToCombatant as add2eSyncActionHudToCombatant, installMovementHistoryBlock as add2eDisableMovementHistoryRecording };
+export { configureInitiative as add2eConfigureInitiative, sortInitiativeAscending as add2eSortInitiativeAscending, canActorActNow as add2eCanActorActNow, syncActionHudToCombatant as add2eSyncActionHudToCombatant, syncCombatAfterRefresh as add2eSyncCombatAfterRefresh, installMovementHistoryBlock as add2eDisableMovementHistoryRecording };
