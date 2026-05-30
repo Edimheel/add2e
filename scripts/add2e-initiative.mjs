@@ -53,7 +53,6 @@ Hooks.once("ready", () => {
   installActionLocks();
   installHooks();
   patchInitiativeIcons(ui?.combat?.element ?? document);
-  setTimeout(() => scheduleLocalSync(game.combat, { delay: 0, selectToken: game.combat?.started, reason: "ready" }), 900);
 });
 
 export {
