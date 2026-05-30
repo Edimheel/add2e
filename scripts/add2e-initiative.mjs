@@ -1,9 +1,8 @@
 // scripts/add2e-initiative.mjs
 // ADD2E — Initiative stable.
 // Règle : 1d6, le plus petit score agit en premier.
-// Cette version évite les boucles de rendu et ne modifie jamais l'état vaincu/hors combat.
 
-const ADD2E_INITIATIVE_VERSION = "2026-05-30-stable-initiative-refactor-v1";
+const ADD2E_INITIATIVE_VERSION = "2026-05-30-initiative-no-inactive-skip-v1";
 const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 const TAG = "[ADD2E][INIT]";
 
@@ -55,47 +54,14 @@ function combatTurnIndex(combat = game.combat, turns = sortedCombatants(combat))
   return Math.max(0, Math.min(turns.length - 1, n));
 }
 
-function combatTrackerConfig() {
-  try {
-    const cfg = game.settings?.get?.("core", "combatTrackerConfig");
-    return cfg && typeof cfg === "object" ? cfg : {};
-  } catch (_e) {
-    return {};
-  }
-}
-
-function skipDefeatedEnabled() {
-  const cfg = combatTrackerConfig();
-  if (typeof cfg.skipDefeated === "boolean") return cfg.skipDefeated;
-  if (typeof cfg.skipDefeatedCombatants === "boolean") return cfg.skipDefeatedCombatants;
-  return false;
-}
-
-function isDefeated(combatant) {
-  return Boolean(combatant?.defeated || combatant?.flags?.core?.defeated);
-}
-
-function shouldSkip(combatant) {
-  return skipDefeatedEnabled() && isDefeated(combatant);
-}
-
-function firstEligibleIndex(turns) {
-  if (!turns.length || !skipDefeatedEnabled()) return 0;
-  const index = turns.findIndex(c => !shouldSkip(c));
-  return index >= 0 ? index : 0;
-}
-
-function nextEligibleIndex(turns, startIndex, direction = 1) {
+function adjacentSortedIndex(turns, startIndex, direction = 1) {
   if (!turns.length) return { index: 0, wrapped: false };
   const dir = direction >= 0 ? 1 : -1;
   const start = Math.max(0, Math.min(turns.length - 1, Number(startIndex) || 0));
-  for (let step = 1; step <= turns.length; step++) {
-    const raw = start + (dir * step);
-    const wrapped = raw >= turns.length || raw < 0;
-    const index = ((raw % turns.length) + turns.length) % turns.length;
-    if (!shouldSkip(turns[index])) return { index, wrapped };
-  }
-  return { index: start, wrapped: false };
+  const raw = start + dir;
+  const wrapped = raw >= turns.length || raw < 0;
+  const index = ((raw % turns.length) + turns.length) % turns.length;
+  return { index, wrapped };
 }
 
 function setLocalTurn(combat, turns, index) {
@@ -116,7 +82,7 @@ function applyLocalOrder(combat = game.combat, { first = false } = {}) {
   if (!combat) return false;
   const turns = sortedCombatants(combat);
   if (!turns.length) return false;
-  const index = first ? firstEligibleIndex(turns) : combatTurnIndex(combat, turns);
+  const index = first ? 0 : combatTurnIndex(combat, turns);
   return setLocalTurn(combat, turns, index);
 }
 
@@ -168,7 +134,7 @@ async function forceFirstSortedTurn(combat = game.combat) {
   if (!combat) return combat;
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
-  return setCombatTurn(combat, firstEligibleIndex(turns));
+  return setCombatTurn(combat, 0);
 }
 
 async function advanceSortedTurn(combat = game.combat, direction = 1) {
@@ -177,7 +143,7 @@ async function advanceSortedTurn(combat = game.combat, direction = 1) {
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
   const current = combatTurnIndex(combat, turns);
-  const next = nextEligibleIndex(turns, current, direction);
+  const next = adjacentSortedIndex(turns, current, direction);
   let roundDelta = 0;
   if (direction >= 0 && next.wrapped) roundDelta = 1;
   else if (direction < 0 && next.wrapped) roundDelta = Number(combat.round ?? 1) > 1 ? -1 : 0;
@@ -473,8 +439,7 @@ function add2eInitiativeDebug(label = "debug", combat = game.combat) {
     turn: combat?.turn ?? null,
     current: combat?.current ?? null,
     active: currentCombatant(combat)?.name ?? null,
-    skipDefeated: skipDefeatedEnabled(),
-    turns: turns.map((c, i) => ({ index: i, id: c.id, name: c.name, initiative: c.initiative, defeated: isDefeated(c), tokenId: c.tokenId }))
+    turns: turns.map((c, i) => ({ index: i, id: c.id, name: c.name, initiative: c.initiative, tokenId: c.tokenId }))
   };
 }
 
