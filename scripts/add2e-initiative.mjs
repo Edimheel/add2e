@@ -52,8 +52,7 @@ Hooks.once("ready", () => {
   installActionLocks();
   installHooks();
   patchInitiativeIcons(document);
-  setTimeout(() => scheduleInitiativeSort(game.combat), 500);
-  setTimeout(() => scheduleLocalSync(game.combat, { delay: 0, selectToken: game.combat?.started }), 900);
+  setTimeout(() => scheduleLocalSync(game.combat, { delay: 0, selectToken: game.combat?.started, reason: "ready" }), 900);
 });
 
 export {
