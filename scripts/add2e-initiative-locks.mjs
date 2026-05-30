@@ -70,13 +70,17 @@ function resetRuler(ruler) {
   try { ruler?.reset?.(); } catch (_e) {}
 }
 
-export function clearFoundryMovementTrailAggressive(token = null) {
+function clearMovementTrailOnce(token = null) {
   for (const t of (token ? [token] : Array.from(canvas?.tokens?.placeables ?? []))) {
     resetRuler(t?._ruler);
     resetRuler(t?._hoverRuler);
   }
   resetRuler(canvas?.controls?.ruler);
-  setTimeout(() => clearFoundryMovementTrailAggressive(token), 20);
+}
+
+export function clearFoundryMovementTrailAggressive(token = null) {
+  clearMovementTrailOnce(token);
+  setTimeout(() => clearMovementTrailOnce(token), 20);
   return true;
 }
 
