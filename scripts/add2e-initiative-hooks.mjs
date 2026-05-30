@@ -60,7 +60,7 @@ export function installHooks() {
 
   Hooks.on("combatTurn", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-turn" }));
   Hooks.on("combatRound", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-round" }));
-  Hooks.on("canvasReady", () => scheduleLocalSync(game.combat, { delay: 180, selectToken: game.combat?.started, reason: "refresh" }));
+  Hooks.on("canvasReady", () => scheduleLocalSync(game.combat, { delay: 180, selectToken: false, reason: "refresh" }));
   Hooks.on("hoverToken", clearFoundryMovementTrailAggressive);
   Hooks.on("refreshToken", clearFoundryMovementTrailAggressive);
 
