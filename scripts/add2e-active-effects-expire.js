@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-preserve-tracker-defeated-v9
+// Version : 2026-05-31-vital-status-register-dead-v10
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-preserve-tracker-defeated-v9";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-register-dead-v10";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -41,6 +41,71 @@ function add2eVitalNorm(value) {
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9:_-]+/g, "_")
     .replace(/^_|_$/g, "");
+}
+
+function add2eVitalStatusAliases(effect) {
+  return [
+    effect?.id,
+    effect?._id,
+    effect?.name,
+    effect?.label,
+    effect?.flags?.core?.statusId,
+    effect?.flags?.add2e?.vitalStatus
+  ].map(add2eVitalNorm).filter(Boolean);
+}
+
+function add2eVitalMergeObject(base, patch) {
+  try {
+    return foundry.utils.mergeObject(
+      foundry.utils.deepClone(base ?? {}),
+      foundry.utils.deepClone(patch ?? {}),
+      { inplace: false, insertKeys: true, overwrite: true }
+    );
+  } catch (_err) {
+    return { ...(base ?? {}), ...(patch ?? {}) };
+  }
+}
+
+function add2eVitalRegisterStatusEffects() {
+  CONFIG.statusEffects = Array.isArray(CONFIG.statusEffects) ? CONFIG.statusEffects : [];
+  CONFIG.specialStatusEffects ??= {};
+  CONFIG.specialStatusEffects.DEFEATED = "dead";
+
+  const definitions = [
+    {
+      id: "dead",
+      name: "Mort",
+      label: "Mort",
+      img: ADD2E_VITAL_STATUS.dead.icon,
+      icon: ADD2E_VITAL_STATUS.dead.icon,
+      statuses: ["dead"],
+      special: "DEFEATED",
+      flags: { add2e: { vitalStatus: "dead", autoVitalStatus: true } }
+    },
+    {
+      id: "unconscious",
+      name: "Inconscient",
+      label: "Inconscient",
+      img: ADD2E_VITAL_STATUS.unconscious.icon,
+      icon: ADD2E_VITAL_STATUS.unconscious.icon,
+      statuses: ["unconscious", "incapacitated"],
+      flags: { add2e: { vitalStatus: "unconscious", autoVitalStatus: true } }
+    }
+  ];
+
+  for (const definition of definitions) {
+    const wanted = add2eVitalNorm(definition.id);
+    const index = CONFIG.statusEffects.findIndex(effect => add2eVitalStatusAliases(effect).includes(wanted));
+    if (index >= 0) CONFIG.statusEffects[index] = add2eVitalMergeObject(CONFIG.statusEffects[index], definition);
+    else CONFIG.statusEffects.push(foundry.utils?.deepClone ? foundry.utils.deepClone(definition) : { ...definition });
+  }
+
+  console.log("[ADD2E][VITAL_STATUS][REGISTER_STATUS]", {
+    version: globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION,
+    defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
+    hasDead: CONFIG.statusEffects.some(effect => add2eVitalStatusAliases(effect).includes("dead")),
+    hasUnconscious: CONFIG.statusEffects.some(effect => add2eVitalStatusAliases(effect).includes("unconscious"))
+  });
 }
 
 function add2eVitalNumber(value, fallback = NaN) {
@@ -233,6 +298,7 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
   ADD2E_VITAL_SYNC_LOCK.add(lockKey);
 
   try {
+    add2eVitalRegisterStatusEffects();
     const desired = add2eVitalDesiredStatus(actor);
     const trackerDefeated = add2eVitalActorHasDefeatedCombatant(actor);
     const preserveDefeated = trackerDefeated && desired === null;
@@ -264,6 +330,11 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
 }
 
 globalThis.add2eSyncActorVitalStatus = add2eSyncActorVitalStatus;
+globalThis.add2eVitalRegisterStatusEffects = add2eVitalRegisterStatusEffects;
+
+Hooks.once("init", add2eVitalRegisterStatusEffects);
+Hooks.once("setup", add2eVitalRegisterStatusEffects);
+Hooks.once("ready", add2eVitalRegisterStatusEffects);
 
 Hooks.on("updateActor", async (actor, changed, options, userId) => {
   if (!game.user?.isGM) return;
@@ -278,6 +349,7 @@ Hooks.on("updateActor", async (actor, changed, options, userId) => {
 Hooks.once("ready", () => {
   if (!game.user?.isGM) return;
   window.setTimeout(() => {
+    add2eVitalRegisterStatusEffects();
     for (const actor of game.actors ?? []) add2eSyncActorVitalStatus(actor, { reason: "ready-scan" });
     for (const token of canvas?.tokens?.placeables ?? []) {
       if (token?.actor) add2eSyncActorVitalStatus(token.actor, { reason: "ready-token-scan" });
@@ -292,6 +364,7 @@ Hooks.on("updateCombat", async (combat, changed, options, userId) => {
   console.log("[ADD2E][AUTO-REMOVE] updateCombat déclenché :", { round: currentRound, changed });
 
   try {
+    add2eVitalRegisterStatusEffects();
     const combatants = combat.combatants || [];
 
     for (const combatant of combatants) {
