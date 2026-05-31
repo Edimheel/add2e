@@ -121,7 +121,6 @@ export function add2eBuildAttackDialogContent({
   const attackerName = add2eAttackEscapeHtml(actor?.name ?? "Attaquant");
   const targetName = add2eAttackEscapeHtml(cible?.name ?? "Cible");
   const weaponName = add2eAttackEscapeHtml(arme?.name ?? "Arme");
-  const distanceLabel = add2eAttackEscapeHtml(attackDistanceLabel ?? "Contact");
   const backLabel = add2eAttackEscapeHtml(backArcInfo?.label ?? "Face");
   const attackerImg = add2eAttackImage(actor);
   const targetImg = add2eAttackImage(cible);
@@ -131,6 +130,11 @@ export function add2eBuildAttackDialogContent({
   const showBackstabForClass = !!canUseBackstab && add2eAttackIsThiefOrAssassin(actor);
   const showAssassinationForClass = !!canUseAssassination && add2eAttackIsAssassin(actor);
   const hasRearSpecial = showBackstabForClass || showAssassinationForClass;
+  const allowedZones = new Set(["front", "flank", "rear-flank", "rear"]);
+  const autoZone = allowedZones.has(String(backArcInfo?.zone ?? "")) ? String(backArcInfo.zone) : "front";
+  const isRearSelected = autoZone === "rear";
+  const rearDisplay = isRearSelected ? "grid" : "none";
+  const selected = (zone) => autoZone === zone ? " selected" : "";
 
   return `
         <style>
@@ -166,11 +170,6 @@ export function add2eBuildAttackDialogContent({
             line-height: 1.1;
             margin: 2px 3px 0 0;
           }
-          .add2e-attack-pill.red {
-            border-color: #d69a76;
-            background: #fff1e9;
-            color: var(--a2e-red);
-          }
           .add2e-attack-label {
             font-size: .78rem;
             font-weight: 950;
@@ -185,23 +184,29 @@ export function add2eBuildAttackDialogContent({
             color: #71581d;
             font-weight: 700;
           }
-          .add2e-check {
+          .add2e-inline-check {
             display: flex;
-            gap: 8px;
             align-items: center;
-            padding: 8px 10px;
+            gap: 7px;
+            min-height: 32px;
+            padding: 4px 7px;
             border: 1px solid var(--a2e-line);
-            border-radius: 10px;
+            border-radius: 8px;
             background: #fffdf4;
+            font-weight: 900;
+            color: var(--a2e-brown);
             cursor: pointer;
           }
-          .add2e-check input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+          .add2e-inline-check input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
             accent-color: var(--a2e-red);
           }
-          .add2e-check-title { font-weight: 900; color: var(--a2e-brown); }
-          .add2e-check-meta { display: block; margin-top: 1px; font-size: .76rem; color: #71581d; font-weight: 800; }
+          .add2e-rear-specials {
+            display: none;
+            gap: 6px;
+            align-items: center;
+          }
           .add2e-position-result {
             margin-top: 5px;
             display: flex;
@@ -210,12 +215,6 @@ export function add2eBuildAttackDialogContent({
             color: #5d3d0d;
             font-size: .8rem;
             font-weight: 800;
-          }
-          .add2e-rear-specials {
-            display: none;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 8px;
           }
         </style>
 
@@ -240,29 +239,24 @@ export function add2eBuildAttackDialogContent({
               <div style="min-width:0;">
                 <div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#8f2d22;">Cible</div>
                 <div style="font-size:1.04rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${targetName}">${targetName}</div>
-                <div style="margin-top:4px;">
-                  <span class="add2e-attack-pill">${distanceLabel}</span>
-                  <span class="add2e-attack-pill red">Auto : ${backLabel}</span>
-                </div>
               </div>
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 210px 84px;gap:8px;align-items:end;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 210px 72px;gap:8px;align-items:end;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
             <div>
               <label class="add2e-attack-label" for="add2e-position-zone">Direction de l’attaque</label>
-              <div class="add2e-attack-help">Choix manuel de l’angle réellement utilisé. Les options sournoise/assassinat n’apparaissent qu’en position Dos.</div>
+              <div class="add2e-attack-help">La valeur automatique est appliquée par défaut. Tu peux la corriger manuellement.</div>
             </div>
-            <select id="add2e-position-zone" class="add2e-attack-select" style="width:210px !important;" onchange="var f=this.closest('form');var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=this.value==='rear'?'grid':'none';},this);">
-              <option value="front" selected>Face</option>
-              <option value="flank">Flanc</option>
-              <option value="rear-flank">Flanc arrière</option>
-              <option value="rear">Dos</option>
-              <option value="auto">Auto détecté (${backLabel})</option>
+            <select id="add2e-position-zone" class="add2e-attack-select" style="width:210px !important;" onchange="var f=this.closest('form');var rear=this.value==='rear';var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=rear?'grid':'none';});if(!rear&&f){f.querySelectorAll('#add2e-backstab,#add2e-assassinat-confirm').forEach(function(c){c.checked=false;});}">
+              <option value="front"${selected("front")}>Face</option>
+              <option value="flank"${selected("flank")}>Flanc</option>
+              <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
+              <option value="rear"${selected("rear")}>Dos</option>
             </select>
             <div style="text-align:right;">
               <div class="add2e-attack-label" style="font-size:.68rem;">Auto</div>
-              <span class="add2e-attack-pill red" style="margin-top:3px;">${backLabel}</span>
+              <span class="add2e-attack-pill" style="margin-top:3px;">${backLabel}</span>
             </div>
             ${positionAttackAdjustment.details.length ? `
             <div class="add2e-position-result" style="grid-column:1 / -1;">
@@ -271,36 +265,29 @@ export function add2eBuildAttackDialogContent({
             </div>` : ""}
           </div>
 
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:8px;align-items:center;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
-            <div>
-              <label class="add2e-attack-label" for="add2e-bonus-attaque">Bonus / malus au toucher</label>
-              <div class="add2e-attack-help">Valeur manuelle courte, par exemple -2, 0, +4.</div>
-            </div>
+          <div style="display:grid;grid-template-columns:auto 76px ${hasRearSpecial ? "minmax(0,1fr)" : "0"};gap:8px;align-items:center;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
+            <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;">Modificateurs</label>
             <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:76px !important;text-align:center !important;">
+            ${hasRearSpecial ? `
+            <div class="add2e-rear-specials" style="display:${rearDisplay};grid-template-columns:repeat(${showBackstabForClass && showAssassinationForClass ? 2 : 1}, minmax(0,1fr));">
+              ${showBackstabForClass ? `
+              <label class="add2e-inline-check" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}">
+                <input type="checkbox" id="add2e-backstab">
+                <span>Attaque sournoise</span>
+              </label>` : ""}
+              ${showAssassinationForClass ? `
+              <label class="add2e-inline-check" title="Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche">
+                <input type="checkbox" id="add2e-assassinat-confirm">
+                <span>Assassinat</span>
+              </label>` : ""}
+            </div>` : ""}
           </div>
 
-          ${hasRearSpecial ? `
-          <div class="add2e-rear-specials">
-            ${showBackstabForClass ? `
-            <label class="add2e-check">
-              <input type="checkbox" id="add2e-backstab">
-              <span><span class="add2e-check-title">Attaque sournoise</span><span class="add2e-check-meta">Voleur / assassin · Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}</span></span>
-            </label>` : ""}
-            ${showAssassinationForClass ? `
-            <label class="add2e-check">
-              <input type="checkbox" id="add2e-assassinat-confirm">
-              <span><span class="add2e-check-title">Assassinat</span><span class="add2e-check-meta">Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche</span></span>
-            </label>` : ""}
-          </div>
           ${showAssassinationForClass ? `
-          <div class="add2e-rear-specials" style="grid-template-columns:minmax(0,1fr) 76px;align-items:center;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
-            <div>
-              <label class="add2e-attack-label" for="add2e-assassinat-mod">Modificateur assassinat</label>
-              <div class="add2e-attack-help">Ajustement manuel du pourcentage d’assassinat.</div>
-            </div>
+          <div class="add2e-rear-specials" style="display:${rearDisplay};grid-template-columns:auto 76px;align-items:center;justify-content:end;gap:8px;margin-bottom:8px;">
+            <label class="add2e-attack-label" for="add2e-assassinat-mod" style="white-space:nowrap;">Mod. assassinat</label>
             <input id="add2e-assassinat-mod" class="add2e-attack-input" type="number" value="0" step="1" style="width:76px !important;text-align:center !important;">
           </div>` : ""}
-          ` : ""}
         </form>
       `;
 }
