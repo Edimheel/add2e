@@ -34,7 +34,7 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
     return await DialogV2.wait({
       window: { title },
       classes: classes ?? [],
-      position: { width: width ?? 680 },
+      position: { width: width ?? 640 },
       content,
       buttons: [
         {
@@ -70,7 +70,7 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
       },
       default: defaultAction ?? "ok"
     }, {
-      width: width ?? 680,
+      width: width ?? 640,
       classes: classes ?? []
     }).render(true);
   });
@@ -105,66 +105,25 @@ export function add2eBuildAttackDialogContent({
           form.add2e-attack-form {
             --a2e-ink: #24170a;
             --a2e-brown: #5a3510;
-            --a2e-gold: #c99222;
             --a2e-line: #d5b15a;
-            --a2e-paper: #fff8e4;
-            --a2e-panel: #fffdf4;
             --a2e-red: #8f2d22;
-            display: grid;
-            gap: 10px;
+            display: block;
             color: var(--a2e-ink);
             padding: 2px;
           }
-          .add2e-attack-vs {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
-            gap: 10px;
-            align-items: center;
-          }
-          .add2e-attack-card {
-            display: grid;
-            grid-template-columns: 64px minmax(0, 1fr);
-            gap: 10px;
-            align-items: center;
-            min-height: 86px;
-            padding: 9px;
-            border: 1px solid var(--a2e-line);
-            border-radius: 12px;
-            background: linear-gradient(180deg, #fffdf5, #fff0c8);
-            box-shadow: 0 2px 8px rgba(70, 40, 10, .12);
-          }
-          .add2e-attack-card.target {
-            background: linear-gradient(180deg, #fffdf5, #ffe8dc);
-            border-color: #d69a76;
-          }
-          .add2e-attack-role {
-            font-size: .72rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            color: var(--a2e-brown);
-          }
-          .add2e-attack-card.target .add2e-attack-role { color: var(--a2e-red); }
-          .add2e-attack-name {
-            margin-top: 1px;
-            font-size: 1.12rem;
-            line-height: 1.05;
-            font-weight: 900;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-          }
-          .add2e-attack-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 6px;
+          .add2e-attack-input,
+          .add2e-attack-select {
+            border: 1px solid var(--a2e-line) !important;
+            border-radius: 8px !important;
+            background: #fffaf0 !important;
+            color: #24170a !important;
+            font-weight: 900 !important;
+            min-height: 32px !important;
+            padding: 4px 7px !important;
           }
           .add2e-attack-pill {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            max-width: 100%;
             padding: 3px 8px;
             border: 1px solid #d1a13d;
             border-radius: 999px;
@@ -173,71 +132,34 @@ export function add2eBuildAttackDialogContent({
             font-size: .78rem;
             font-weight: 850;
             line-height: 1.1;
+            margin: 2px 3px 0 0;
           }
           .add2e-attack-pill.red {
             border-color: #d69a76;
             background: #fff1e9;
             color: var(--a2e-red);
           }
-          .add2e-attack-arrow {
-            width: 36px;
-            height: 36px;
-            display: grid;
-            place-items: center;
-            border-radius: 999px;
-            background: #6b4312;
-            color: #fff7dc;
-            font-size: 1.3rem;
-            font-weight: 900;
-          }
-          .add2e-attack-section {
-            padding: 9px 10px;
-            border: 1px solid var(--a2e-line);
-            border-radius: 12px;
-            background: var(--a2e-panel);
-          }
-          .add2e-attack-field {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 130px;
-            gap: 10px;
-            align-items: center;
-          }
           .add2e-attack-label {
-            font-weight: 900;
+            font-size: .78rem;
+            font-weight: 950;
+            text-transform: uppercase;
+            letter-spacing: .03em;
             color: var(--a2e-brown);
           }
           .add2e-attack-help {
-            margin-top: 2px;
-            font-size: .78rem;
-            line-height: 1.25;
+            margin-top: 1px;
+            font-size: .76rem;
+            line-height: 1.2;
             color: #71581d;
             font-weight: 700;
           }
-          .add2e-attack-form input[type="number"].add2e-attack-input,
-          .add2e-attack-form select.add2e-attack-select {
-            width: 100%;
-            min-height: 34px;
-            border: 1px solid var(--a2e-line);
-            border-radius: 8px;
-            background: #fffaf0 !important;
-            color: #24170a !important;
-            padding: 5px 8px;
-            font-weight: 900;
-          }
-          .add2e-attack-form input[type="number"].add2e-attack-input { text-align: center; }
-          .add2e-special-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-          }
           .add2e-check {
-            display: grid;
-            grid-template-columns: 24px minmax(0, 1fr);
-            gap: 9px;
+            display: flex;
+            gap: 8px;
             align-items: center;
-            padding: 9px 10px;
+            padding: 8px 10px;
             border: 1px solid var(--a2e-line);
-            border-radius: 12px;
+            border-radius: 10px;
             background: #fffdf4;
             cursor: pointer;
           }
@@ -247,86 +169,80 @@ export function add2eBuildAttackDialogContent({
             accent-color: var(--a2e-red);
           }
           .add2e-check-title { font-weight: 900; color: var(--a2e-brown); }
-          .add2e-check-meta { display: block; margin-top: 1px; font-size: .78rem; color: #71581d; font-weight: 800; }
+          .add2e-check-meta { display: block; margin-top: 1px; font-size: .76rem; color: #71581d; font-weight: 800; }
           .add2e-position-result {
-            margin-top: 7px;
+            margin-top: 5px;
             display: flex;
             justify-content: space-between;
             gap: 10px;
             color: #5d3d0d;
-            font-size: .82rem;
+            font-size: .8rem;
             font-weight: 800;
-          }
-          @media (max-width: 640px) {
-            .add2e-attack-vs { grid-template-columns: 1fr; }
-            .add2e-attack-arrow { transform: rotate(90deg); justify-self: center; }
-            .add2e-attack-field, .add2e-special-grid { grid-template-columns: 1fr; }
           }
         </style>
 
         <form class="add2e-attack-form">
-          <div class="add2e-attack-vs">
-            <div class="add2e-attack-card attacker">
-              <img src="${attackerImg}" alt="" style="width:64px !important;height:64px !important;max-width:64px !important;max-height:64px !important;min-width:64px !important;min-height:64px !important;object-fit:cover !important;display:block !important;border-radius:10px !important;border:2px solid #fff7dc !important;background:#2a1908 !important;box-shadow:0 2px 7px rgba(0,0,0,.25) !important;">
-              <div>
-                <div class="add2e-attack-role">Attaquant</div>
-                <div class="add2e-attack-name" title="${attackerName}">${attackerName}</div>
-                <div class="add2e-attack-pills">
-                  <img src="${weaponImg}" alt="" style="width:22px !important;height:22px !important;max-width:22px !important;max-height:22px !important;object-fit:cover !important;display:inline-block !important;border-radius:6px !important;vertical-align:middle !important;">
+          <div style="display:flex;align-items:stretch;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #d5b15a;border-radius:12px;background:linear-gradient(180deg,#fffdf5,#fff0c8);">
+              <img src="${attackerImg}" alt="" style="width:56px !important;height:56px !important;max-width:56px !important;max-height:56px !important;min-width:56px !important;min-height:56px !important;object-fit:cover !important;display:block !important;border-radius:10px !important;border:2px solid #fff7dc !important;background:#2a1908 !important;box-shadow:0 2px 7px rgba(0,0,0,.25) !important;">
+              <div style="min-width:0;">
+                <div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#5a3510;">Attaquant</div>
+                <div style="font-size:1.04rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${attackerName}">${attackerName}</div>
+                <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+                  <img src="${weaponImg}" alt="" style="width:20px !important;height:20px !important;max-width:20px !important;max-height:20px !important;object-fit:cover !important;display:inline-block !important;border-radius:5px !important;vertical-align:middle !important;">
                   <span class="add2e-attack-pill">${weaponName}</span>
                 </div>
               </div>
             </div>
 
-            <div class="add2e-attack-arrow">→</div>
+            <div style="width:34px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:950;color:#6b4312;">→</div>
 
-            <div class="add2e-attack-card target">
-              <img src="${targetImg}" alt="" style="width:64px !important;height:64px !important;max-width:64px !important;max-height:64px !important;min-width:64px !important;min-height:64px !important;object-fit:cover !important;display:block !important;border-radius:10px !important;border:2px solid #fff7dc !important;background:#2a1908 !important;box-shadow:0 2px 7px rgba(0,0,0,.25) !important;">
-              <div>
-                <div class="add2e-attack-role">Cible</div>
-                <div class="add2e-attack-name" title="${targetName}">${targetName}</div>
-                <div class="add2e-attack-pills">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #d69a76;border-radius:12px;background:linear-gradient(180deg,#fffdf5,#ffe8dc);">
+              <img src="${targetImg}" alt="" style="width:56px !important;height:56px !important;max-width:56px !important;max-height:56px !important;min-width:56px !important;min-height:56px !important;object-fit:cover !important;display:block !important;border-radius:10px !important;border:2px solid #fff7dc !important;background:#2a1908 !important;box-shadow:0 2px 7px rgba(0,0,0,.25) !important;">
+              <div style="min-width:0;">
+                <div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#8f2d22;">Cible</div>
+                <div style="font-size:1.04rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${targetName}">${targetName}</div>
+                <div style="margin-top:4px;">
                   <span class="add2e-attack-pill">${distanceLabel}</span>
-                  <span class="add2e-attack-pill red">Position : Face</span>
-                  <span class="add2e-attack-pill">Auto : ${backLabel}</span>
+                  <span class="add2e-attack-pill red">Auto : ${backLabel}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="add2e-attack-section">
-            <div class="add2e-attack-field">
-              <div>
-                <label class="add2e-attack-label" for="add2e-bonus-attaque">Modificateur au toucher</label>
-                <div class="add2e-attack-help">Bonus ou malus manuel appliqué au jet d’attaque.</div>
-              </div>
-              <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 210px 84px;gap:8px;align-items:end;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
+            <div>
+              <label class="add2e-attack-label" for="add2e-position-zone">Direction de l’attaque</label>
+              <div class="add2e-attack-help">Choix manuel de l’angle réellement utilisé pour résoudre le bonus de position.</div>
             </div>
-          </div>
-
-          <div class="add2e-attack-section">
-            <div class="add2e-attack-field">
-              <div>
-                <label class="add2e-attack-label" for="add2e-position-zone">Position réelle</label>
-                <div class="add2e-attack-help">Par défaut : Face. L’auto-détection reste indicative pour éviter les faux dos liés à l’image du token.</div>
-              </div>
-              <select id="add2e-position-zone" class="add2e-attack-select">
-                <option value="front" selected>Face</option>
-                <option value="flank">Flanc</option>
-                <option value="rear-flank">Flanc arrière</option>
-                <option value="rear">Dos</option>
-                <option value="auto">Auto détecté (${backLabel})</option>
-              </select>
+            <select id="add2e-position-zone" class="add2e-attack-select" style="width:210px !important;">
+              <option value="front" selected>Face</option>
+              <option value="flank">Flanc</option>
+              <option value="rear-flank">Flanc arrière</option>
+              <option value="rear">Dos</option>
+              <option value="auto">Auto détecté (${backLabel})</option>
+            </select>
+            <div style="text-align:right;">
+              <div class="add2e-attack-label" style="font-size:.68rem;">Auto</div>
+              <span class="add2e-attack-pill red" style="margin-top:3px;">${backLabel}</span>
             </div>
             ${positionAttackAdjustment.details.length ? `
-            <div class="add2e-position-result">
+            <div class="add2e-position-result" style="grid-column:1 / -1;">
               <span>Effet de position</span>
               <span>${positionAttackAdjustment.details.map(add2eAttackEscapeHtml).join("<br>")}</span>
             </div>` : ""}
           </div>
 
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:8px;align-items:center;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
+            <div>
+              <label class="add2e-attack-label" for="add2e-bonus-attaque">Bonus / malus au toucher</label>
+              <div class="add2e-attack-help">Valeur manuelle courte, par exemple -2, 0, +4.</div>
+            </div>
+            <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:76px !important;text-align:center !important;">
+          </div>
+
           ${specialOptionsVisible ? `
-          <div class="add2e-special-grid">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px;">
             ${canUseBackstab ? `
             <label class="add2e-check">
               <input type="checkbox" id="add2e-backstab">
@@ -339,14 +255,12 @@ export function add2eBuildAttackDialogContent({
             </label>` : ""}
           </div>
           ${canUseAssassination ? `
-          <div class="add2e-attack-section">
-            <div class="add2e-attack-field">
-              <div>
-                <label class="add2e-attack-label" for="add2e-assassinat-mod">Modificateur assassinat</label>
-                <div class="add2e-attack-help">Ajustement manuel du pourcentage d’assassinat.</div>
-              </div>
-              <input id="add2e-assassinat-mod" class="add2e-attack-input" type="number" value="0" step="1">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:8px;align-items:center;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
+            <div>
+              <label class="add2e-attack-label" for="add2e-assassinat-mod">Modificateur assassinat</label>
+              <div class="add2e-attack-help">Ajustement manuel du pourcentage d’assassinat.</div>
             </div>
+            <input id="add2e-assassinat-mod" class="add2e-attack-input" type="number" value="0" step="1" style="width:76px !important;text-align:center !important;">
           </div>` : ""}
           ` : ""}
         </form>
