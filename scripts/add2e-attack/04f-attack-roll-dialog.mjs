@@ -213,32 +213,36 @@ export function add2eBuildAttackDialogContent({
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:auto 180px;gap:7px;align-items:center;margin-bottom:6px;padding:6px 8px;border:1px solid #d5b15a;border-radius:10px;background:#fffdf4;">
-            <label class="add2e-attack-label" for="add2e-position-zone" style="white-space:nowrap;">Position</label>
-            <select id="add2e-position-zone" class="add2e-attack-select" style="width:180px !important;" onchange="var f=this.closest('form');var rear=this.value==='rear';var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=rear?'grid':'none';});if(!rear&&f){f.querySelectorAll('#add2e-backstab,#add2e-assassinat-confirm').forEach(function(c){c.checked=false;});}">
-              <option value="front"${selected("front")}>Face</option>
-              <option value="flank"${selected("flank")}>Flanc</option>
-              <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
-              <option value="rear"${selected("rear")}>Dos</option>
-            </select>
-          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 188px;gap:6px;align-items:start;margin-bottom:6px;">
+            <div style="min-width:0;padding:6px 8px;border:1px solid #d5b15a;border-radius:10px;background:#fffdf4;">
+              <div style="display:grid;grid-template-columns:auto 64px;gap:7px;align-items:center;margin-bottom:${hasRearSpecial ? "5px" : "0"};">
+                <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;">Modificateurs</label>
+                <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:64px !important;text-align:center !important;">
+              </div>
+              ${hasRearSpecial ? `
+              <div class="add2e-rear-specials" style="display:${rearDisplay};grid-template-columns:1fr;">
+                ${showBackstabForClass ? `
+                <label class="add2e-inline-check" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}">
+                  <input type="checkbox" id="add2e-backstab">
+                  <span>Attaque sournoise</span>
+                </label>` : ""}
+                ${showAssassinationForClass ? `
+                <label class="add2e-inline-check" title="Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche">
+                  <input type="checkbox" id="add2e-assassinat-confirm">
+                  <span>Assassinat</span>
+                </label>` : ""}
+              </div>` : ""}
+            </div>
 
-          <div style="display:grid;grid-template-columns:auto 64px minmax(0,1fr);gap:7px;align-items:start;margin-bottom:6px;padding:6px 8px;border:1px solid #d5b15a;border-radius:10px;background:#fffdf4;">
-            <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;margin-top:6px;">Modificateurs</label>
-            <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:64px !important;text-align:center !important;">
-            ${hasRearSpecial ? `
-            <div class="add2e-rear-specials" style="display:${rearDisplay};grid-template-columns:1fr;">
-              ${showBackstabForClass ? `
-              <label class="add2e-inline-check" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}">
-                <input type="checkbox" id="add2e-backstab">
-                <span>Attaque sournoise</span>
-              </label>` : ""}
-              ${showAssassinationForClass ? `
-              <label class="add2e-inline-check" title="Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche">
-                <input type="checkbox" id="add2e-assassinat-confirm">
-                <span>Assassinat</span>
-              </label>` : ""}
-            </div>` : ""}
+            <div style="padding:6px 8px;border:1px solid #d5b15a;border-radius:10px;background:#fffdf4;">
+              <label class="add2e-attack-label" for="add2e-position-zone" style="display:block;margin-bottom:4px;white-space:nowrap;">Position</label>
+              <select id="add2e-position-zone" class="add2e-attack-select" style="width:100% !important;" onchange="var f=this.closest('form');var rear=this.value==='rear';var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=rear?'grid':'none';});if(!rear&&f){f.querySelectorAll('#add2e-backstab,#add2e-assassinat-confirm').forEach(function(c){c.checked=false;});}">
+                <option value="front"${selected("front")}>Face</option>
+                <option value="flank"${selected("flank")}>Flanc</option>
+                <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
+                <option value="rear"${selected("rear")}>Dos</option>
+              </select>
+            </div>
           </div>
         </form>
       `;
