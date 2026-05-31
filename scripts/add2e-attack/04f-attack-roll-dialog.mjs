@@ -66,46 +66,29 @@ function add2eGetDialogRoot(dialog) {
 }
 
 function add2eUpdateRearSpecialVisibility(rootOrForm) {
-  const form = rootOrForm?.matches?.("form.add2e-attack-form")
+  const container = rootOrForm?.matches?.("form.add2e-attack-form")
     ? rootOrForm
-    : (rootOrForm?.querySelector?.("form.add2e-attack-form") ?? null);
-  const select = form?.querySelector?.("#add2e-position-zone");
-  if (!form || !select) return;
+    : (rootOrForm?.querySelector?.("form.add2e-attack-form") ?? rootOrForm);
+  const select = container?.querySelector?.("#add2e-position-zone");
+  if (!select) return;
 
   const rear = select.value === "rear";
-  form.classList.toggle("add2e-rear-active", rear);
+  const blocks = container.querySelectorAll?.(".add2e-rear-specials") ?? [];
+  for (const block of blocks) {
+    block.style.setProperty("display", rear ? "flex" : "none", "important");
+    block.style.setProperty("flex-direction", "column", "important");
+  }
 
   if (!rear) {
-    form.querySelectorAll?.("#add2e-backstab,#add2e-assassinat-confirm")?.forEach(c => {
+    container.querySelectorAll?.("#add2e-backstab,#add2e-assassinat-confirm")?.forEach(c => {
       c.checked = false;
     });
   }
-
-  console.log("[ADD2E][ATTAQUE][REAR_OPTIONS]", {
-    position: select.value,
-    rear,
-    formClass: form.className,
-    blocks: form.querySelectorAll?.(".add2e-rear-specials")?.length ?? 0
-  });
 }
 
 window.add2eAttackToggleRearSpecials = function add2eAttackToggleRearSpecials(form) {
   add2eUpdateRearSpecialVisibility(form);
 };
-
-if (!window.__add2eAttackRearToggleDelegated) {
-  window.__add2eAttackRearToggleDelegated = true;
-  document.addEventListener("change", (event) => {
-    const select = event.target?.closest?.("#add2e-position-zone");
-    if (!select) return;
-    add2eUpdateRearSpecialVisibility(select.closest?.("form.add2e-attack-form"));
-  }, true);
-  document.addEventListener("input", (event) => {
-    const select = event.target?.closest?.("#add2e-position-zone");
-    if (!select) return;
-    add2eUpdateRearSpecialVisibility(select.closest?.("form.add2e-attack-form"));
-  }, true);
-}
 
 function add2eAttachAttackDialogEvents(dialog) {
   const root = add2eGetDialogRoot(dialog);
@@ -260,7 +243,7 @@ export function add2eBuildAttackDialogContent({
   const allowedZones = new Set(["front", "flank", "rear-flank", "rear"]);
   const autoZone = allowedZones.has(String(backArcInfo?.zone ?? "")) ? String(backArcInfo.zone) : "front";
   const isRearSelected = autoZone === "rear";
-  const rearActiveClass = isRearSelected ? " add2e-rear-active" : "";
+  const rearDisplay = isRearSelected ? "flex" : "none";
   const selected = (zone) => autoZone === zone ? " selected" : "";
 
   return `
@@ -358,19 +341,16 @@ export function add2eBuildAttackDialogContent({
             accent-color: var(--a2e-red);
           }
           .add2e-rear-specials {
-            display: none !important;
+            display: none;
             flex-direction: column !important;
             gap: 2px;
             margin-top: 4px;
             min-width: 210px;
             overflow: visible !important;
           }
-          form.add2e-attack-form.add2e-rear-active .add2e-rear-specials {
-            display: flex !important;
-          }
         </style>
 
-        <form class="add2e-attack-form${rearActiveClass}">
+        <form class="add2e-attack-form">
           <div style="display:flex;align-items:stretch;gap:3px;margin-bottom:4px;">
             <div style="flex:1 1 0;min-width:0;display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #d5b15a;border-radius:7px;background:linear-gradient(180deg,#fffdf5,#fff0c8);">
               <img src="${attackerImg}" alt="" style="width:32px !important;height:32px !important;max-width:32px !important;max-height:32px !important;min-width:32px !important;min-height:32px !important;object-fit:cover !important;display:block !important;border-radius:6px !important;border:1px solid #fff7dc !important;background:#2a1908 !important;box-shadow:0 1px 3px rgba(0,0,0,.18) !important;">
@@ -396,7 +376,7 @@ export function add2eBuildAttackDialogContent({
           </div>
 
           <div style="display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:4px;align-items:start;margin-bottom:0;">
-            <div style="min-width:0;display:flex;align-items:center;gap:5px;padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
+            <div style="min-width:0;display:flex;align-items:center;gap:5px;margin-left:28px;padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
               <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;margin:0;">Modificateurs</label>
               <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:48px !important;min-width:48px !important;text-align:center !important;">
             </div>
@@ -410,7 +390,7 @@ export function add2eBuildAttackDialogContent({
                 <option value="rear"${selected("rear")}>Dos</option>
               </select>
               ${hasRearSpecial ? `
-              <div class="add2e-rear-specials">
+              <div class="add2e-rear-specials" style="display:${rearDisplay};flex-direction:column !important;">
                 ${showBackstabForClass ? `
                 <label class="add2e-inline-check" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}">
                   <input type="checkbox" id="add2e-backstab">
