@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04-attack-roll.mjs
 // ADD2E — Résolution des attaques.
-// Version : 2026-05-30-attack-roll-gm-create-only-v6
+// Version : 2026-05-30-attack-roll-gm-create-only-dedupe-v7
 
 import { plageToRollFormula } from "./01-core-helpers.mjs";
 import { add2eApplyDamage } from "./02-damage.mjs";
@@ -46,12 +46,33 @@ import {
 } from "./04i-attack-roll-chat-card.mjs";
 
 const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
-const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-gm-create-only-v6";
+const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-gm-create-only-dedupe-v7";
+const ADD2E_ATTACK_GM_DETAIL_DEDUPE_MS = 4000;
+
+globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS ??= new Map();
 
 function add2eAttackHtmlEscape(value) {
   const div = document.createElement("div");
   div.innerText = String(value ?? "");
   return div.innerHTML;
+}
+
+function add2eAttackHash(value) {
+  const text = String(value ?? "");
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
+function add2ePruneGmDetailDedupe(now = Date.now()) {
+  const map = globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS;
+  if (!(map instanceof Map)) return;
+  for (const [key, ts] of map.entries()) {
+    if ((now - Number(ts || 0)) > ADD2E_ATTACK_GM_DETAIL_DEDUPE_MS) map.delete(key);
+  }
 }
 
 function add2eReadSystemNumber(system, ...paths) {
@@ -96,12 +117,38 @@ function add2eGetGmWhisperIds() {
   return Array.from(game.users ?? []).filter(u => u.isGM).map(u => u.id).filter(Boolean);
 }
 
+function add2eBuildGmDetailAttackMessageId({ actor, content, sourceUserId }) {
+  return `gm-detail-${add2eAttackHash([sourceUserId ?? game.user?.id ?? "", actor?.id ?? actor?.name ?? "", content ?? ""].join("|"))}`;
+}
+
 async function add2eCreateGmAttackChatMessage(payload = {}) {
   if (!game.user?.isGM) return false;
   if (!payload.content) {
     console.warn("[ADD2E][ATTAQUE][GM_DETAIL][EMPTY_CONTENT]", { payload });
     return false;
   }
+
+  const now = Date.now();
+  add2ePruneGmDetailDedupe(now);
+
+  const attackMessageId = payload.flags?.add2e?.attackMessageId
+    ?? add2eBuildGmDetailAttackMessageId({
+      actor: payload.speaker?.actor ? game.actors?.get?.(payload.speaker.actor) : null,
+      content: payload.content,
+      sourceUserId: payload.flags?.add2e?.attackSourceUserId
+    });
+  const handled = globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS;
+
+  if (attackMessageId && handled?.has?.(attackMessageId)) {
+    console.warn("[ADD2E][ATTAQUE][GM_DETAIL][SKIP_DUPLICATE]", {
+      version: ADD2E_ATTACK_GM_CHAT_VERSION,
+      attackMessageId,
+      user: game.user?.name
+    });
+    return false;
+  }
+
+  if (attackMessageId) handled?.set?.(attackMessageId, now);
 
   await ChatMessage.create({
     speaker: payload.speaker ?? ChatMessage.getSpeaker(),
@@ -116,7 +163,8 @@ async function add2eCreateGmAttackChatMessage(payload = {}) {
         attackChatVisibility: "gm-only",
         attackChatVisibilityVersion: globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION ?? ADD2E_ATTACK_GM_CHAT_VERSION,
         attackGmChatVersion: ADD2E_ATTACK_GM_CHAT_VERSION,
-        attackGmCreatedBy: game.user?.id ?? null
+        attackGmCreatedBy: game.user?.id ?? null,
+        attackMessageId
       }
     }
   });
@@ -125,6 +173,7 @@ async function add2eCreateGmAttackChatMessage(payload = {}) {
 
 async function add2eRouteGmAttackChat({ actor, content, avatar }) {
   const whisper = add2eGetGmWhisperIds();
+  const attackMessageId = add2eBuildGmDetailAttackMessageId({ actor, content, sourceUserId: game.user?.id });
   const messageData = {
     speaker: ChatMessage.getSpeaker({ actor }),
     content,
@@ -135,7 +184,9 @@ async function add2eRouteGmAttackChat({ actor, content, avatar }) {
       add2e: {
         attackChatVisibility: "gm-only",
         attackChatVisibilityVersion: globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION ?? ADD2E_ATTACK_GM_CHAT_VERSION,
-        attackGmChatVersion: ADD2E_ATTACK_GM_CHAT_VERSION
+        attackGmChatVersion: ADD2E_ATTACK_GM_CHAT_VERSION,
+        attackMessageId,
+        attackSourceUserId: game.user?.id ?? null
       }
     }
   };
@@ -147,6 +198,7 @@ async function add2eRouteGmAttackChat({ actor, content, avatar }) {
     whisper,
     actor: actor?.name,
     hasContent: !!content,
+    attackMessageId,
     route: game.user?.isGM ? "CREATE_BY_GM" : "REQUEST_TO_GM"
   });
 
@@ -156,7 +208,8 @@ async function add2eRouteGmAttackChat({ actor, content, avatar }) {
     console.log("[ADD2E][ATTAQUE][GM_DETAIL][CREATE_BY_GM]", {
       version: ADD2E_ATTACK_GM_CHAT_VERSION,
       actor: actor?.name,
-      user: game.user?.name
+      user: game.user?.name,
+      attackMessageId
     });
     return add2eCreateGmAttackChatMessage(messageData);
   }
@@ -181,7 +234,8 @@ function add2eRegisterGmAttackChatRelay() {
         version: ADD2E_ATTACK_GM_CHAT_VERSION,
         user: game.user?.name,
         isGM: game.user?.isGM,
-        hasContent: !!data?.payload?.content
+        hasContent: !!data?.payload?.content,
+        attackMessageId: data?.payload?.flags?.add2e?.attackMessageId ?? null
       });
 
       if (!game.user?.isGM) return;
@@ -189,7 +243,8 @@ function add2eRegisterGmAttackChatRelay() {
       console.log("[ADD2E][ATTAQUE][GM_DETAIL][CREATE_BY_GM]", {
         version: ADD2E_ATTACK_GM_CHAT_VERSION,
         user: game.user?.name,
-        fromSocket: true
+        fromSocket: true,
+        attackMessageId: data?.payload?.flags?.add2e?.attackMessageId ?? null
       });
       await add2eCreateGmAttackChatMessage(data.payload ?? {});
     });
