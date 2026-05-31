@@ -60,35 +60,75 @@ function add2eAttackDialogClasses(classes) {
   return Array.from(new Set([...(classes ?? []), "add2e-attack-dialog-compact"]));
 }
 
+function add2eForceAttackDialogSize(dialog, width = 350) {
+  try {
+    dialog?.setPosition?.({ width, height: "auto" });
+
+    const element = dialog?.element ?? null;
+    const roots = [
+      element,
+      element?.closest?.(".application"),
+      element?.closest?.(".window-app"),
+      element?.closest?.(".app"),
+      element?.closest?.(".dialog")
+    ].filter(Boolean);
+
+    for (const root of new Set(roots)) {
+      root.style.width = `${width}px`;
+      root.style.minWidth = `${width}px`;
+      root.style.maxWidth = `${width}px`;
+      root.style.height = "auto";
+      root.style.minHeight = "0";
+    }
+  } catch (err) {
+    console.warn("[ADD2E][ATTAQUE][DIALOG_SIZE][ERROR]", err);
+  }
+}
+
 export async function add2eAttackOpenDialogV2({ title, content, width, classes, defaultAction, onOk }) {
   const DialogV2 = foundry.applications?.api?.DialogV2;
   const compactWidth = 350;
   const dialogClasses = add2eAttackDialogClasses(classes);
 
-  if (DialogV2?.wait) {
-    return await DialogV2.wait({
-      window: { title },
-      classes: dialogClasses,
-      position: { width: compactWidth },
-      content,
-      buttons: [
-        {
-          action: "ok",
-          label: "Lancer l'attaque",
-          default: defaultAction === "ok",
-          callback: async (event, button, dialog) => {
-            const form = button?.form ?? dialog?.element?.querySelector?.("form") ?? document.querySelector("form.add2e-attack-form");
-            return await onOk(add2eAttackFormAdapter(form));
-          }
-        },
-        {
-          action: "cancel",
-          label: "Annuler",
-          callback: () => false
+  if (DialogV2) {
+    return await new Promise((resolve) => {
+      let settled = false;
+      const finish = (value) => {
+        if (!settled) {
+          settled = true;
+          resolve(value);
         }
-      ],
-      default: defaultAction ?? "ok",
-      rejectClose: false
+        return value;
+      };
+
+      const dialog = new DialogV2({
+        window: { title },
+        classes: dialogClasses,
+        content,
+        buttons: [
+          {
+            action: "ok",
+            label: "Lancer l'attaque",
+            default: defaultAction === "ok",
+            callback: async (event, button, dlg) => {
+              const form = button?.form ?? dlg?.element?.querySelector?.("form") ?? document.querySelector("form.add2e-attack-form");
+              return finish(await onOk(add2eAttackFormAdapter(form)));
+            }
+          },
+          {
+            action: "cancel",
+            label: "Annuler",
+            callback: () => finish(false)
+          }
+        ],
+        default: defaultAction ?? "ok"
+      });
+
+      dialog.addEventListener?.("close", () => finish(false), { once: true });
+      dialog.render({ force: true });
+      setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 0);
+      setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 50);
+      setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 150);
     });
   }
 
