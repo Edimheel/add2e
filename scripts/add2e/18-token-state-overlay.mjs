@@ -1,13 +1,14 @@
 // ADD2E — Compatibilité ancienne gestion d'états Mort / Inconscient
-// Version : 2026-05-31-token-state-overlay-delegates-to-vital-sync-v4
+// Version : 2026-05-31-token-state-overlay-passive-v5
 //
-// La gestion active des états vitaux est maintenant centralisée dans :
+// La gestion active des états vitaux est centralisée dans :
 // scripts/add2e-active-effects-expire.js
 //
-// Ce fichier ne crée plus d'ActiveEffect et n'appelle plus actor.toggleStatusEffect.
+// Ce fichier ne crée plus d'ActiveEffect, n'appelle plus actor.toggleStatusEffect
+// et ne déclenche plus de hook updateActor pour éviter les doubles synchronisations.
 // Il conserve uniquement les noms globaux historiques pour éviter de casser les appels existants.
 
-const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-31-token-state-overlay-delegates-to-vital-sync-v4";
+const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-31-token-state-overlay-passive-v5";
 globalThis.ADD2E_TOKEN_STATE_OVERLAY_VERSION = ADD2E_TOKEN_STATE_OVERLAY_VERSION;
 globalThis.ADD2E_TOKEN_STATUS_ICON_VERSION = ADD2E_TOKEN_STATE_OVERLAY_VERSION;
 
@@ -96,22 +97,6 @@ function add2eRegisterHpStatusEffects() {
   return true;
 }
 
-function add2eUpdateChangesContainHp(changes = {}) {
-  const paths = [
-    "system.pdv",
-    "system.pv",
-    "system.pv_courant",
-    "system.pvCourant",
-    "system.points_de_vie",
-    "system.points_de_vie_courants",
-    "system.points_de_coup_courants",
-    "system.hp.value",
-    "system.hp.current",
-    "system.attributes.hp.value"
-  ];
-  return paths.some(path => foundry.utils.hasProperty(changes, path));
-}
-
 function add2eRefreshTokenOverlay(token) {
   if (!token?.actor) return;
   add2eSyncActorHpStatus(token.actor, { reason: "refreshTokenOverlay" }).catch(() => null);
@@ -122,12 +107,6 @@ function add2eRefreshActorTokens(actor) {
 }
 
 Hooks.once("ready", add2eRegisterHpStatusEffects);
-
-Hooks.on("updateActor", (actor, changes = {}, options = {}) => {
-  if (options?.add2eHpStatusSync || options?.add2eVitalStatusSync) return;
-  if (!add2eUpdateChangesContainHp(changes)) return;
-  add2eSyncActorHpStatus(actor, { reason: "updateActor:hp" }).catch(() => null);
-});
 
 try { globalThis.ADD2E_STATUS_EFFECTS = ADD2E_STATUS_EFFECTS; } catch (_e) {}
 try { globalThis.add2eRegisterHpStatusEffects = add2eRegisterHpStatusEffects; } catch (_e) {}
