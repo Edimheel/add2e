@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-no-duplicate-status-v15
+// Version : 2026-05-31-vital-status-no-auto-duplicate-effects-v16
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-no-duplicate-status-v15";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-no-auto-duplicate-effects-v16";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -179,27 +179,35 @@ function add2eVitalFindActorStatusEffect(actor, statusId) {
 }
 
 async function add2eVitalSetActorStatus(actor, statusId, active, overlay = false) {
-  if (!actor || typeof actor.toggleStatusEffect !== "function") return false;
+  if (!actor) return false;
   add2eVitalRegisterStatusEffects();
 
   const existing = add2eVitalFindActorStatusEffect(actor, statusId);
-  if (active && existing) {
-    console.log("[ADD2E][VITAL_STATUS][ACTOR_STATUS][SKIP_EXISTS]", {
+  if (active) {
+    if (existing) {
+      console.log("[ADD2E][VITAL_STATUS][ACTOR_STATUS][SKIP_EXISTS]", {
+        actor: actor?.name,
+        statusId,
+        effectId: existing.id,
+        effectName: existing.name
+      });
+      return false;
+    }
+
+    console.log("[ADD2E][VITAL_STATUS][ACTOR_STATUS][SKIP_CREATE]", {
       actor: actor?.name,
       statusId,
-      effectId: existing.id,
-      effectName: existing.name
+      reason: "automatic-vital-status-uses-token-and-combatant-state"
     });
     return false;
   }
 
-  if (!active && !existing) return false;
-
+  if (!existing) return false;
   try {
-    await actor.toggleStatusEffect(statusId, { active, overlay });
+    await actor.deleteEmbeddedDocuments("ActiveEffect", [existing.id], { add2eVitalStatusSync: true });
     return true;
   } catch (err) {
-    console.warn("[ADD2E][VITAL_STATUS][ACTOR_STATUS][WARN]", { actor: actor?.name, statusId, active, overlay, err });
+    console.warn("[ADD2E][VITAL_STATUS][ACTOR_STATUS][DELETE_WARN]", { actor: actor?.name, statusId, effectId: existing.id, err });
     return false;
   }
 }
