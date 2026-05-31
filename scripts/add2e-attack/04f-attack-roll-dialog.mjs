@@ -63,7 +63,7 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
     return await DialogV2.wait({
       window: { title },
       classes: classes ?? [],
-      position: { width: width ?? 640 },
+      position: { width: width ?? 560 },
       content,
       buttons: [
         {
@@ -99,7 +99,7 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
       },
       default: defaultAction ?? "ok"
     }, {
-      width: width ?? 640,
+      width: width ?? 560,
       classes: classes ?? []
     }).render(true);
   });
@@ -144,20 +144,20 @@ export function add2eBuildAttackDialogContent({
             --a2e-red: #8f2d22;
             display: block;
             color: var(--a2e-ink);
-            padding: 2px;
+            padding: 0;
           }
           .add2e-attack-input,
           .add2e-attack-select {
             border: 1px solid var(--a2e-line) !important;
-            border-radius: 8px !important;
+            border-radius: 7px !important;
             background: #fffaf0 !important;
             color: #24170a !important;
             font-weight: 900 !important;
-            min-height: 32px !important;
-            padding: 4px 7px !important;
+            min-height: 28px !important;
+            padding: 3px 6px !important;
           }
           .add2e-attack-label {
-            font-size: .78rem;
+            font-size: .72rem;
             font-weight: 950;
             text-transform: uppercase;
             letter-spacing: .03em;
@@ -166,56 +166,56 @@ export function add2eBuildAttackDialogContent({
           .add2e-inline-check {
             display: flex;
             align-items: center;
-            gap: 7px;
-            min-height: 32px;
-            padding: 4px 7px;
+            gap: 6px;
+            min-height: 28px;
+            padding: 3px 6px;
             border: 1px solid var(--a2e-line);
-            border-radius: 8px;
+            border-radius: 7px;
             background: #fffdf4;
             font-weight: 900;
             color: var(--a2e-brown);
             cursor: pointer;
           }
           .add2e-inline-check input[type="checkbox"] {
-            width: 17px;
-            height: 17px;
+            width: 16px;
+            height: 16px;
             accent-color: var(--a2e-red);
           }
           .add2e-rear-specials {
             display: none;
-            gap: 6px;
+            gap: 5px;
             align-items: stretch;
           }
         </style>
 
         <form class="add2e-attack-form">
-          <div style="display:flex;align-items:stretch;gap:8px;margin-bottom:8px;">
-            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #d5b15a;border-radius:12px;background:linear-gradient(180deg,#fffdf5,#fff0c8);">
-              <img src="${attackerImg}" alt="" style="width:56px !important;height:56px !important;max-width:56px !important;max-height:56px !important;min-width:56px !important;min-height:56px !important;object-fit:cover !important;display:block !important;border-radius:10px !important;border:2px solid #fff7dc !important;background:#2a1908 !important;box-shadow:0 2px 7px rgba(0,0,0,.25) !important;">
+          <div style="display:flex;align-items:stretch;gap:6px;margin-bottom:6px;">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:6px;border:1px solid #d5b15a;border-radius:10px;background:linear-gradient(180deg,#fffdf5,#fff0c8);">
+              <img src="${attackerImg}" alt="" style="width:44px !important;height:44px !important;max-width:44px !important;max-height:44px !important;min-width:44px !important;min-height:44px !important;object-fit:cover !important;display:block !important;border-radius:8px !important;border:2px solid #fff7dc !important;background:#2a1908 !important;box-shadow:0 2px 6px rgba(0,0,0,.22) !important;">
               <div style="min-width:0;">
-                <div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#5a3510;">Attaquant</div>
-                <div style="font-size:1.04rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${attackerName}">${attackerName}</div>
-                <div style="display:flex;align-items:center;gap:5px;margin-top:4px;font-weight:900;color:#5a3510;">
-                  <img src="${weaponImg}" alt="" style="width:20px !important;height:20px !important;max-width:20px !important;max-height:20px !important;object-fit:cover !important;display:inline-block !important;border-radius:5px !important;vertical-align:middle !important;">
+                <div style="font-size:.66rem;font-weight:950;text-transform:uppercase;color:#5a3510;">Attaquant</div>
+                <div style="font-size:.96rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${attackerName}">${attackerName}</div>
+                <div style="display:flex;align-items:center;gap:4px;margin-top:2px;font-size:.82rem;font-weight:900;color:#5a3510;">
+                  <img src="${weaponImg}" alt="" style="width:17px !important;height:17px !important;max-width:17px !important;max-height:17px !important;object-fit:cover !important;display:inline-block !important;border-radius:4px !important;vertical-align:middle !important;">
                   <span>${weaponName}</span>
                 </div>
               </div>
             </div>
 
-            <div style="width:34px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:950;color:#6b4312;">→</div>
+            <div style="width:24px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;font-weight:950;color:#6b4312;">→</div>
 
-            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #d69a76;border-radius:12px;background:linear-gradient(180deg,#fffdf5,#ffe8dc);">
-              <img src="${targetImg}" alt="" style="width:56px !important;height:56px !important;max-width:56px !important;max-height:56px !important;min-width:56px !important;min-height:56px !important;object-fit:cover !important;display:block !important;border-radius:10px !important;border:2px solid #fff7dc !important;background:#2a1908 !important;box-shadow:0 2px 7px rgba(0,0,0,.25) !important;">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:6px;border:1px solid #d69a76;border-radius:10px;background:linear-gradient(180deg,#fffdf5,#ffe8dc);">
+              <img src="${targetImg}" alt="" style="width:44px !important;height:44px !important;max-width:44px !important;max-height:44px !important;min-width:44px !important;min-height:44px !important;object-fit:cover !important;display:block !important;border-radius:8px !important;border:2px solid #fff7dc !important;background:#2a1908 !important;box-shadow:0 2px 6px rgba(0,0,0,.22) !important;">
               <div style="min-width:0;">
-                <div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#8f2d22;">Cible</div>
-                <div style="font-size:1.04rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${targetName}">${targetName}</div>
+                <div style="font-size:.66rem;font-weight:950;text-transform:uppercase;color:#8f2d22;">Cible</div>
+                <div style="font-size:.96rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${targetName}">${targetName}</div>
               </div>
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:auto 210px;gap:8px;align-items:center;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
+          <div style="display:grid;grid-template-columns:auto 180px;gap:7px;align-items:center;margin-bottom:6px;padding:6px 8px;border:1px solid #d5b15a;border-radius:10px;background:#fffdf4;">
             <label class="add2e-attack-label" for="add2e-position-zone" style="white-space:nowrap;">Position</label>
-            <select id="add2e-position-zone" class="add2e-attack-select" style="width:210px !important;" onchange="var f=this.closest('form');var rear=this.value==='rear';var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=rear?'grid':'none';});if(!rear&&f){f.querySelectorAll('#add2e-backstab,#add2e-assassinat-confirm').forEach(function(c){c.checked=false;});}">
+            <select id="add2e-position-zone" class="add2e-attack-select" style="width:180px !important;" onchange="var f=this.closest('form');var rear=this.value==='rear';var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=rear?'grid':'none';});if(!rear&&f){f.querySelectorAll('#add2e-backstab,#add2e-assassinat-confirm').forEach(function(c){c.checked=false;});}">
               <option value="front"${selected("front")}>Face</option>
               <option value="flank"${selected("flank")}>Flanc</option>
               <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
@@ -223,9 +223,9 @@ export function add2eBuildAttackDialogContent({
             </select>
           </div>
 
-          <div style="display:grid;grid-template-columns:auto 76px minmax(0,1fr);gap:8px;align-items:start;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
-            <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;margin-top:8px;">Modificateurs</label>
-            <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:76px !important;text-align:center !important;">
+          <div style="display:grid;grid-template-columns:auto 64px minmax(0,1fr);gap:7px;align-items:start;margin-bottom:6px;padding:6px 8px;border:1px solid #d5b15a;border-radius:10px;background:#fffdf4;">
+            <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;margin-top:6px;">Modificateurs</label>
+            <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:64px !important;text-align:center !important;">
             ${hasRearSpecial ? `
             <div class="add2e-rear-specials" style="display:${rearDisplay};grid-template-columns:1fr;">
               ${showBackstabForClass ? `
