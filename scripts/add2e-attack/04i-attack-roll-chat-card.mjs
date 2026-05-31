@@ -1,13 +1,14 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Cartes de chat d'attaque.
-// Version : 2026-05-30-attack-chat-real-player-hidden-from-gm-v17
+// Version : 2026-05-30-attack-chat-unified-routing-v18
 
-const VERSION = "2026-05-30-attack-chat-real-player-hidden-from-gm-v17";
+const VERSION = "2026-05-30-attack-chat-unified-routing-v18";
 const SOCKET = "system.add2e";
-const PLAYER_LOCAL_TYPE = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
+const PLAYER_ROLEPLAY_TYPE = "ADD2E_ATTACK_PLAYER_ROLEPLAY_CHAT";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
+globalThis.__ADD2E_ATTACK_ROLEPLAY_RENDERED_IDS ??= new Set();
 
 console.log(`${LOG}[BOOT]`, {
   version: VERSION,
@@ -132,7 +133,7 @@ function portrait(name, img, fallbackIcon = "fa-user") {
 function cardShell(kind, ctx, inner) {
   const o = outcome(ctx);
   const isGM = kind === "gm";
-  const cls = isGM ? "add2e-attack-chat-card-gm-v17" : "add2e-attack-chat-card-player-v17";
+  const cls = isGM ? "add2e-attack-chat-card-gm-v18" : "add2e-attack-chat-card-player-v18";
   const attackerImg = ctx.chatImg || ctx.actor?.img || "";
   const defenderImg = ctx.cible?.token?.texture?.src || ctx.cible?.img || "";
   return `<div class="add2e-chat-card ${cls}" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">
@@ -209,34 +210,43 @@ function findChatLog() {
     ?? null;
 }
 
-function appendLocalCard(payload = {}) {
+function appendLocalRoleplayCard(payload = {}) {
   const isGM = !!game.user?.isGM;
   const targets = Array.isArray(payload.userIds) ? payload.userIds.filter(Boolean) : [];
   const content = String(payload.content ?? "");
+  const messageId = String(payload.messageId ?? "");
+  const rendered = globalThis.__ADD2E_ATTACK_ROLEPLAY_RENDERED_IDS;
 
-  console.log(`${LOG}[RENDER_LOCAL_PLAYER_ONLY]`, {
+  console.log(`${LOG}[ROLEPLAY_RENDER_REQUEST]`, {
     version: VERSION,
     user: game.user?.name,
     isGM,
     userId: game.user?.id,
     targets,
     accepted: !isGM && (!targets.length || targets.includes(game.user.id)),
-    hasContent: !!content
+    hasContent: !!content,
+    messageId
   });
 
   if (isGM) return false;
   if (targets.length && !targets.includes(game.user.id)) return false;
   if (!content) return false;
+  if (messageId && rendered?.has?.(messageId)) return false;
 
   const log = findChatLog();
   if (!log) {
     console.warn(`${LOG}[NO_CHAT_LOG]`, { user: game.user?.name, isGM, version: VERSION });
+    setTimeout(() => appendLocalRoleplayCard(payload), 250);
+    setTimeout(() => appendLocalRoleplayCard(payload), 1000);
     return false;
   }
+
+  if (messageId) rendered?.add?.(messageId);
 
   const wrapper = document.createElement("li");
   wrapper.className = "chat-message message flexcol add2e-local-attack-player-message";
   wrapper.dataset.add2eLocalAttackCard = VERSION;
+  if (messageId) wrapper.dataset.add2eAttackRoleplayMessageId = messageId;
   wrapper.innerHTML = `<header class="message-header flexrow"><h4 class="message-sender">${esc(payload.speaker?.alias || "ADD2E")}</h4><span class="message-metadata"><time class="message-timestamp">${new Date().toLocaleTimeString()}</time></span></header><div class="message-content">${content}</div>`;
   log.appendChild(wrapper);
   ui.chat?.scrollBottom?.();
@@ -244,15 +254,16 @@ function appendLocalCard(payload = {}) {
 }
 
 function onSocketMessage(data) {
-  if (data?.type !== PLAYER_LOCAL_TYPE) return;
-  console.log(`${LOG}[RECEIVED_PLAYER_LOCAL]`, {
+  if (data?.type !== PLAYER_ROLEPLAY_TYPE) return;
+  console.log(`${LOG}[ROLEPLAY_SOCKET_RECEIVED]`, {
     version: VERSION,
     user: game.user?.name,
     isGM: game.user?.isGM,
     payloadVersion: data?.payload?.version,
-    targets: data?.payload?.userIds ?? []
+    targets: data?.payload?.userIds ?? [],
+    messageId: data?.payload?.messageId ?? null
   });
-  appendLocalCard(data.payload ?? {});
+  appendLocalRoleplayCard(data.payload ?? {});
 }
 
 function registerSocket() {
@@ -260,8 +271,8 @@ function registerSocket() {
     console.warn(`${LOG}[SOCKET_NOT_READY]`, { version: VERSION, ready: game?.ready, hasSocket: !!game?.socket });
     return false;
   }
-  if (globalThis.__ADD2E_ATTACK_LOCAL_PLAYER_SOCKET === VERSION) return true;
-  globalThis.__ADD2E_ATTACK_LOCAL_PLAYER_SOCKET = VERSION;
+  if (globalThis.__ADD2E_ATTACK_ROLEPLAY_SOCKET === VERSION) return true;
+  globalThis.__ADD2E_ATTACK_ROLEPLAY_SOCKET = VERSION;
   game.socket.on(SOCKET, onSocketMessage);
   console.log(`${LOG}[SOCKET_REGISTERED]`, { version: VERSION, user: game.user?.name, isGM: game.user?.isGM, ready: game?.ready });
   return true;
@@ -275,9 +286,11 @@ function installSocket() {
   setTimeout(registerSocket, 2500);
 }
 
-async function sendPlayerCard(ctx) {
+async function sendPlayerRoleplayCard(ctx) {
   const users = playerIds();
+  const messageId = `attack-roleplay-${game.user?.id ?? "unknown"}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const payload = {
+    messageId,
     userIds: users,
     speaker: ChatMessage.getSpeaker({ actor: ctx.actor }),
     content: buildPublicCard(ctx),
@@ -285,92 +298,21 @@ async function sendPlayerCard(ctx) {
     version: VERSION
   };
 
-  console.log(`${LOG}[PLAYER_CARD_ROUTE]`, {
+  console.log(`${LOG}[ROLEPLAY_ROUTE]`, {
     version: VERSION,
     from: game.user?.name,
     isGM: game.user?.isGM,
     users,
     actor: ctx.actor?.name,
     target: ctx.nomCible,
-    route: "chatmessage-players-only-with-gm-render-guard"
+    messageId
   });
 
   if (!users.length) return false;
 
-  try {
-    await ChatMessage.create({
-      speaker: payload.speaker,
-      content: payload.content,
-      avatar: payload.avatar,
-      whisper: users,
-      blind: false,
-      flags: {
-        add2e: {
-          attackChatVisibility: "players-only",
-          attackChatVisibilityVersion: VERSION,
-          attackChatKind: "public-player-result"
-        }
-      }
-    });
-    return true;
-  } catch (err) {
-    console.warn(`${LOG}[CREATE_PLAYER_CHAT_FAILED_FALLBACK_LOCAL]`, err);
-    if (!game.user?.isGM && users.includes(game.user.id)) appendLocalCard(payload);
-    game.socket?.emit?.(SOCKET, { type: PLAYER_LOCAL_TYPE, payload });
-    return false;
-  }
-}
-
-function isPlayerAttackMessage(message, htmlContent = "") {
-  const flags = message?.flags?.add2e ?? {};
-  const content = String(htmlContent || message?.content || "");
-  return flags.attackChatVisibility === "players-only"
-    || flags.attackChatKind === "public-player-result"
-    || content.includes("add2e-attack-chat-card-player-v17")
-    || content.includes("add2e-attack-chat-card-player-v16")
-    || content.includes("add2e-attack-chat-card-player-v15")
-    || content.includes("add2e-attack-chat-card-player-v12")
-    || content.includes("add2e-attack-chat-card-player-v11");
-}
-
-function removeRenderedMessageElement(html) {
-  try {
-    if (!html) return false;
-    if (typeof html.remove === "function") {
-      html.remove();
-      return true;
-    }
-    if (html[0] && typeof html[0].remove === "function") {
-      html[0].remove();
-      return true;
-    }
-    if (html instanceof HTMLElement) {
-      html.remove();
-      return true;
-    }
-  } catch (err) {
-    console.warn(`${LOG}[REMOVE_RENDERED_MESSAGE_FAILED]`, err);
-  }
-  return false;
-}
-
-function hidePlayerCardFromGm(message, html) {
-  if (!game.user?.isGM) return;
-  if (!isPlayerAttackMessage(message)) return;
-  const removed = removeRenderedMessageElement(html);
-  console.log(`${LOG}[HIDE_PLAYER_CARD_FROM_GM]`, {
-    version: VERSION,
-    messageId: message?.id,
-    removed
-  });
-}
-
-function installRenderVisibilityGuard() {
-  if (globalThis.__ADD2E_ATTACK_CHAT_RENDER_GUARD === VERSION) return;
-  globalThis.__ADD2E_ATTACK_CHAT_RENDER_GUARD = VERSION;
-
-  Hooks.on("renderChatMessage", (message, html) => hidePlayerCardFromGm(message, html));
-  Hooks.on("renderChatMessageHTML", (message, html) => hidePlayerCardFromGm(message, html));
+  appendLocalRoleplayCard(payload);
+  game.socket?.emit?.(SOCKET, { type: PLAYER_ROLEPLAY_TYPE, payload });
+  return true;
 }
 
 function installVisibilityGuard() {
@@ -378,7 +320,7 @@ function installVisibilityGuard() {
   globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = VERSION;
   Hooks.on("preCreateChatMessage", (message, data = {}) => {
     const content = String(data.content ?? message?.content ?? "");
-    if (content.includes("add2e-attack-chat-card-gm-v17") || content.includes("add2e-attack-chat-card-gm-v16") || content.includes("add2e-attack-chat-card-gm-v15") || content.includes("add2e-attack-chat-card-gm-v12") || content.includes("add2e-attack-chat-card-gm-v11")) {
+    if (content.includes("add2e-attack-chat-card-gm-v18") || content.includes("add2e-attack-chat-card-gm-v17") || content.includes("add2e-attack-chat-card-gm-v16") || content.includes("add2e-attack-chat-card-gm-v15") || content.includes("add2e-attack-chat-card-gm-v12") || content.includes("add2e-attack-chat-card-gm-v11")) {
       message.updateSource?.({
         whisper: gmIds(),
         blind: false,
@@ -387,30 +329,18 @@ function installVisibilityGuard() {
       });
       console.log(`${LOG}[PRECREATE_GM_ONLY]`, { whisper: gmIds(), blind: false });
     }
-    if (content.includes("add2e-attack-chat-card-player-v17") || content.includes("add2e-attack-chat-card-player-v16") || content.includes("add2e-attack-chat-card-player-v15") || content.includes("add2e-attack-chat-card-player-v12") || content.includes("add2e-attack-chat-card-player-v11")) {
-      message.updateSource?.({
-        whisper: playerIds(),
-        blind: false,
-        "flags.add2e.attackChatVisibility": "players-only",
-        "flags.add2e.attackChatVisibilityVersion": VERSION,
-        "flags.add2e.attackChatKind": "public-player-result"
-      });
-      console.log(`${LOG}[PRECREATE_PLAYER_ONLY]`, { whisper: playerIds(), blind: false });
-    }
   });
 }
 
 installVisibilityGuard();
-installRenderVisibilityGuard();
 installSocket();
 
 globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
   const log = findChatLog();
   return {
     version: VERSION,
-    socketRegistered: globalThis.__ADD2E_ATTACK_LOCAL_PLAYER_SOCKET,
+    roleplaySocketRegistered: globalThis.__ADD2E_ATTACK_ROLEPLAY_SOCKET,
     guardRegistered: globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD,
-    renderGuardRegistered: globalThis.__ADD2E_ATTACK_CHAT_RENDER_GUARD,
     user: game.user?.name,
     userId: game.user?.id,
     isGM: game.user?.isGM,
@@ -426,6 +356,6 @@ export function add2eBuildAttackPlayerChatCard(ctx) {
 }
 
 export function add2eBuildAttackChatCard(ctx) {
-  setTimeout(() => sendPlayerCard(ctx), 0);
+  setTimeout(() => sendPlayerRoleplayCard(ctx), 0);
   return buildGmCard(ctx);
 }
