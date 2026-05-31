@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04-attack-roll.mjs
 // ADD2E — Résolution des attaques.
-// Version : 2026-05-30-attack-roll-gm-create-only-dedupe-v7
+// Version : 2026-05-30-attack-roll-invocation-dedupe-v8
 
 import { plageToRollFormula } from "./01-core-helpers.mjs";
 import { add2eApplyDamage } from "./02-damage.mjs";
@@ -46,10 +46,12 @@ import {
 } from "./04i-attack-roll-chat-card.mjs";
 
 const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
-const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-gm-create-only-dedupe-v7";
+const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-invocation-dedupe-v8";
 const ADD2E_ATTACK_GM_DETAIL_DEDUPE_MS = 4000;
+const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
 globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS ??= new Map();
+globalThis.__ADD2E_ATTACK_ROLL_INVOKE_KEYS ??= new Map();
 
 function add2eAttackHtmlEscape(value) {
   const div = document.createElement("div");
@@ -67,12 +69,45 @@ function add2eAttackHash(value) {
   return (h >>> 0).toString(36);
 }
 
-function add2ePruneGmDetailDedupe(now = Date.now()) {
-  const map = globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS;
+function add2ePruneTimedMap(map, ttlMs, now = Date.now()) {
   if (!(map instanceof Map)) return;
   for (const [key, ts] of map.entries()) {
-    if ((now - Number(ts || 0)) > ADD2E_ATTACK_GM_DETAIL_DEDUPE_MS) map.delete(key);
+    if ((now - Number(ts || 0)) > ttlMs) map.delete(key);
   }
+}
+
+function add2ePruneGmDetailDedupe(now = Date.now()) {
+  add2ePruneTimedMap(globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS, ADD2E_ATTACK_GM_DETAIL_DEDUPE_MS, now);
+}
+
+function add2eBuildAttackInvocationKey({ actor, arme, cibleToken }) {
+  const tokenDocument = cibleToken?.document ?? cibleToken;
+  const targetKey = tokenDocument?.uuid ?? tokenDocument?.id ?? cibleToken?.id ?? cibleToken?.name ?? "target";
+  return [
+    game.user?.id ?? "user",
+    actor?.id ?? actor?.name ?? "actor",
+    arme?.id ?? arme?.name ?? "weapon",
+    targetKey
+  ].join("|");
+}
+
+function add2eEnterAttackInvocationGuard(key) {
+  const now = Date.now();
+  const map = globalThis.__ADD2E_ATTACK_ROLL_INVOKE_KEYS;
+  add2ePruneTimedMap(map, ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS, now);
+
+  if (map?.has?.(key)) {
+    console.warn("[ADD2E][ATTAQUE][ROLL][SKIP_DUPLICATE_INVOCATION]", {
+      version: ADD2E_ATTACK_GM_CHAT_VERSION,
+      user: game.user?.name,
+      isGM: game.user?.isGM,
+      key
+    });
+    return false;
+  }
+
+  map?.set?.(key, now);
+  return true;
 }
 
 function add2eReadSystemNumber(system, ...paths) {
@@ -393,6 +428,9 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
     return ui.notifications.warn("La cible sélectionnée n'a pas d'acteur utilisable.");
   }
 
+  const invocationKey = add2eBuildAttackInvocationKey({ actor, arme, cibleToken });
+  if (!add2eEnterAttackInvocationGuard(invocationKey)) return false;
+
   console.log("[ADD2E][ATTAQUE][TARGET][RESOLVED]", {
     foundry: game?.version ?? game?.release?.version,
     token: cibleToken?.name ?? cibleToken?.document?.name,
@@ -402,6 +440,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
     tokenActorId: cibleToken?.actor?.id ?? null,
     documentActorId: cibleToken?.document?.actor?.id ?? null,
     tokenDocumentActorId: cibleToken?.document?.actorId ?? null,
+    invocationKey,
     armorValues: {
       armorClass: cible?.system?.armorClass,
       ca_total: cible?.system?.ca_total,
