@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-static-status-ids-v13
+// Version : 2026-05-31-vital-status-valid-static-ids-v14
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-static-status-ids-v13";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-valid-static-ids-v14";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -56,7 +56,7 @@ function add2eVitalRegisterStatusEffects() {
 
   const definitions = [
     {
-      _id: "dead",
+      _id: "ADD2Edead0000000",
       id: "dead",
       name: "Mort",
       label: "Mort",
@@ -67,7 +67,7 @@ function add2eVitalRegisterStatusEffects() {
       flags: { core: { statusId: "dead" }, add2e: { vitalStatus: "dead", autoVitalStatus: true } }
     },
     {
-      _id: "unconscious",
+      _id: "ADD2Eunconsc0000",
       id: "unconscious",
       name: "Inconscient",
       label: "Inconscient",
