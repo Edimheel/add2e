@@ -1,5 +1,5 @@
 // ADD2E — Icônes d'état façon DnD5e pour Mort et Inconscient
-// Version : 2026-05-31-dnd5e-style-status-icons-preserve-manual-defeated-v2
+// Version : 2026-05-31-dnd5e-style-status-icons-preserve-tracker-defeated-v3
 //
 // Principe repris du système DnD5e :
 // - Inconscient est un état/condition avec sa propre icône.
@@ -8,7 +8,7 @@
 // - Pas d'overlay PIXI plein token, pas d'accès déprécié TokenDocument#effects / overlayEffect.
 // - La synchronisation PV ne supprime jamais un état vaincu posé manuellement depuis le tracker.
 
-const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-31-dnd5e-style-status-icons-preserve-manual-defeated-v2";
+const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-31-dnd5e-style-status-icons-preserve-tracker-defeated-v3";
 globalThis.ADD2E_TOKEN_STATE_OVERLAY_VERSION = ADD2E_TOKEN_STATE_OVERLAY_VERSION;
 
 globalThis.ADD2E_TOKEN_STATUS_ICON_VERSION = ADD2E_TOKEN_STATE_OVERLAY_VERSION;
@@ -158,6 +158,30 @@ function add2eHasManualStatus(actor, statusId) {
   return false;
 }
 
+function add2eActorMatchesCombatant(actor, combatant) {
+  if (!actor || !combatant) return false;
+  const combatantActor = combatant.actor ?? combatant.token?.actor ?? combatant.token?.object?.actor ?? null;
+  return Boolean(
+    combatantActor?.id === actor.id ||
+    combatant.actorId === actor.id ||
+    combatantActor?.uuid === actor.uuid
+  );
+}
+
+function add2eActorIsDefeatedInTracker(actor) {
+  if (!actor) return false;
+  const combats = Array.from(game.combats ?? []);
+  if (game.combat && !combats.includes(game.combat)) combats.push(game.combat);
+
+  for (const combat of combats) {
+    for (const combatant of combat?.combatants ?? []) {
+      if (!add2eActorMatchesCombatant(actor, combatant)) continue;
+      if (combatant.defeated === true || combatant.flags?.core?.defeated === true) return true;
+    }
+  }
+  return false;
+}
+
 async function add2eRemoveHpManagedStatus(actor, statusId) {
   if (!actor) return 0;
   const ids = [];
@@ -183,6 +207,7 @@ async function add2eSyncActorHpStatus(actor, { reason = "sync" } = {}) {
   const state = add2eActorHpState(actor);
   const manualDead = add2eHasManualStatus(actor, "dead");
   const manualUnconscious = add2eHasManualStatus(actor, "unconscious");
+  const trackerDefeated = add2eActorIsDefeatedInTracker(actor);
 
   if (state === "dead") {
     await add2eRemoveHpManagedStatus(actor, "unconscious");
@@ -190,9 +215,11 @@ async function add2eSyncActorHpStatus(actor, { reason = "sync" } = {}) {
   } else if (state === "unconscious") {
     await add2eRemoveHpManagedStatus(actor, "dead");
     if (!manualDead && !manualUnconscious) await add2eSetActorStatus(actor, "unconscious", true, true);
+  } else if (trackerDefeated || manualDead || manualUnconscious) {
+    // PV positifs, mais l'état hors combat a été posé manuellement.
+    // Ne pas retirer dead/unconscious ici, car dead porte le special DEFEATED de Foundry.
   } else {
     // PV positifs : on retire uniquement les états automatiques liés aux PV.
-    // Les états posés manuellement depuis le tracker, notamment defeated/dead, sont conservés.
     await add2eRemoveHpManagedStatus(actor, "dead");
     await add2eRemoveHpManagedStatus(actor, "unconscious");
   }
@@ -204,6 +231,7 @@ async function add2eSyncActorHpStatus(actor, { reason = "sync" } = {}) {
     actorId: actor.id,
     hp: add2eActorCurrentHp(actor),
     desired: state,
+    trackerDefeated,
     manualDead,
     manualUnconscious
   });
