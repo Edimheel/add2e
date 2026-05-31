@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-29-vital-status-single-source-v8
+// Version : 2026-05-31-vital-status-preserve-tracker-defeated-v9
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-29-vital-status-single-source-v8";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-preserve-tracker-defeated-v9";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -184,6 +184,10 @@ function add2eVitalCombatantsForActor(actor) {
   return out;
 }
 
+function add2eVitalActorHasDefeatedCombatant(actor) {
+  return add2eVitalCombatantsForActor(actor).some(combatant => combatant?.defeated === true || combatant?.flags?.core?.defeated === true);
+}
+
 async function add2eVitalSetDefeated(actor, defeated) {
   const combatants = add2eVitalCombatantsForActor(actor);
   let changed = 0;
@@ -202,20 +206,22 @@ async function add2eVitalSetDefeated(actor, defeated) {
   return changed;
 }
 
-async function add2eVitalSyncTokenState(actor, desired) {
+async function add2eVitalSyncTokenState(actor, desired, { preserveDefeated = false } = {}) {
   const tokens = add2eVitalGetActorTokens(actor);
   let tokenEffects = 0;
 
-  for (const token of tokens) {
-    try {
-      if (await add2eVitalSetTokenEffects(token, desired)) tokenEffects += 1;
-    } catch (err) {
-      console.warn("[ADD2E][VITAL_STATUS][TOKEN_EFFECT][WARN]", { actor: actor?.name, token: token?.name, desired, err });
+  if (!preserveDefeated) {
+    for (const token of tokens) {
+      try {
+        if (await add2eVitalSetTokenEffects(token, desired)) tokenEffects += 1;
+      } catch (err) {
+        console.warn("[ADD2E][VITAL_STATUS][TOKEN_EFFECT][WARN]", { actor: actor?.name, token: token?.name, desired, err });
+      }
     }
   }
 
-  const defeated = await add2eVitalSetDefeated(actor, desired === "dead");
-  return { tokenEffects, defeated, tokenCount: tokens.length };
+  const defeated = preserveDefeated ? 0 : await add2eVitalSetDefeated(actor, desired === "dead");
+  return { tokenEffects, defeated, tokenCount: tokens.length, preserveDefeated };
 }
 
 async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
@@ -228,9 +234,11 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
 
   try {
     const desired = add2eVitalDesiredStatus(actor);
+    const trackerDefeated = add2eVitalActorHasDefeatedCombatant(actor);
+    const preserveDefeated = trackerDefeated && desired === null;
     const before = add2eVitalArray(actor?.effects).filter(e => add2eVitalEffectKind(e)).map(e => ({ id: e.id, name: e.name, kind: add2eVitalEffectKind(e), icon: e.icon }));
-    const removed = await add2eVitalRemoveActorVitalEffects(actor);
-    const tokenState = await add2eVitalSyncTokenState(actor, desired);
+    const removed = preserveDefeated ? 0 : await add2eVitalRemoveActorVitalEffects(actor);
+    const tokenState = await add2eVitalSyncTokenState(actor, desired, { preserveDefeated });
 
     console.log("[ADD2E][VITAL_STATUS][SYNC]", {
       reason,
@@ -239,6 +247,8 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
       type: actor.type,
       hp: add2eVitalReadHP(actor),
       desired,
+      trackerDefeated,
+      preserveDefeated,
       removed,
       before,
       tokenState
@@ -297,10 +307,7 @@ Hooks.on("updateCombat", async (combat, changed, options, userId) => {
 
       for (const effect of Array.from(actor.effects ?? [])) {
         if (!effect) continue;
-        if (add2eVitalEffectKind(effect)) {
-          toDelete.push(effect.id);
-          continue;
-        }
+        if (add2eVitalEffectKind(effect)) continue;
 
         const dur = effect.duration || {};
 
