@@ -2,6 +2,7 @@
 // ADD2E — Dialogue d'attaque.
 // Compatible Foundry V13/V14/V15 : DialogV2 prioritaire, fallback Dialog conservé.
 
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-05-31-attack-dialog-v2-rebuilt-layout-repush-1";
 const ADD2E_ATTACK_DIALOG_WIDTH = 480;
 
 function add2eAttackFormAdapter(root) {
@@ -157,6 +158,7 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
         default: defaultAction ?? "ok"
       });
 
+      console.log("[ADD2E][ATTAQUE][DIALOG_VERSION]", ADD2E_ATTACK_DIALOG_VERSION);
       dialog.addEventListener?.("close", () => finish(false), { once: true });
       const rendered = dialog.render({ force: true });
       Promise.resolve(rendered).then(() => dialog.add2eBindAttackDialog?.());
