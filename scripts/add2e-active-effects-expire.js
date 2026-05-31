@@ -1,23 +1,15 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-apply-actor-status-v11
+// Version : 2026-05-31-vital-status-unconscious-inactive-v12
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-apply-actor-status-v11";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-unconscious-inactive-v12";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
-  unconscious: {
-    key: "unconscious",
-    name: "Inconscient",
-    icon: "icons/svg/daze.svg"
-  },
-  dead: {
-    key: "dead",
-    name: "Mort",
-    icon: "icons/svg/skull.svg"
-  }
+  unconscious: { key: "unconscious", name: "Inconscient", icon: "icons/svg/daze.svg" },
+  dead: { key: "dead", name: "Mort", icon: "icons/svg/skull.svg" }
 };
 
 const ADD2E_VITAL_ICONS = new Set(Object.values(ADD2E_VITAL_STATUS).map(s => s.icon));
@@ -44,23 +36,14 @@ function add2eVitalNorm(value) {
 }
 
 function add2eVitalStatusAliases(effect) {
-  return [
-    effect?.id,
-    effect?._id,
-    effect?.name,
-    effect?.label,
-    effect?.flags?.core?.statusId,
-    effect?.flags?.add2e?.vitalStatus
-  ].map(add2eVitalNorm).filter(Boolean);
+  return [effect?.id, effect?._id, effect?.name, effect?.label, effect?.flags?.core?.statusId, effect?.flags?.add2e?.vitalStatus]
+    .map(add2eVitalNorm)
+    .filter(Boolean);
 }
 
 function add2eVitalMergeObject(base, patch) {
   try {
-    return foundry.utils.mergeObject(
-      foundry.utils.deepClone(base ?? {}),
-      foundry.utils.deepClone(patch ?? {}),
-      { inplace: false, insertKeys: true, overwrite: true }
-    );
+    return foundry.utils.mergeObject(foundry.utils.deepClone(base ?? {}), foundry.utils.deepClone(patch ?? {}), { inplace: false, insertKeys: true, overwrite: true });
   } catch (_err) {
     return { ...(base ?? {}), ...(patch ?? {}) };
   }
@@ -128,14 +111,11 @@ function add2eVitalReadHP(actor) {
 function add2eVitalDesiredStatus(actor) {
   const type = String(actor?.type ?? "").toLowerCase();
   const hp = add2eVitalReadHP(actor);
-
   if (type === "monster") return hp <= 0 ? "dead" : null;
   if (type === "personnage") {
     if (hp <= -11) return "dead";
     if (hp <= 0) return "unconscious";
-    return null;
   }
-
   return null;
 }
 
@@ -160,25 +140,18 @@ function add2eVitalEffectKind(effect) {
   const name = add2eVitalNorm(effect?.name ?? effect?.label ?? "");
   const statuses = add2eVitalEffectStatuses(effect);
   const flag = add2eVitalEffectFlag(effect);
-
   if (flag === "dead" || flag === "mort") return "dead";
   if (flag === "unconscious" || flag === "inconscient") return "unconscious";
   if (flag === "autovitalstatus") return "vital";
-
   if (name === "mort" || name === "dead" || name === "etat_mort") return "dead";
   if (name === "inconscient" || name === "unconscious" || name === "etat_inconscient") return "unconscious";
-
   if (statuses.has("dead") || statuses.has("mort")) return "dead";
   if (statuses.has("unconscious") || statuses.has("inconscient")) return "unconscious";
-
   return null;
 }
 
 async function add2eVitalRemoveActorVitalEffects(actor) {
-  const ids = add2eVitalArray(actor?.effects)
-    .filter(e => e?.id && add2eVitalEffectKind(e))
-    .map(e => e.id);
-
+  const ids = add2eVitalArray(actor?.effects).filter(e => e?.id && add2eVitalEffectKind(e)).map(e => e.id);
   if (!ids.length) return 0;
   await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
   return ids.length;
@@ -200,7 +173,6 @@ function add2eVitalGetActorTokens(actor) {
   const tokens = [];
   try { tokens.push(...(actor?.getActiveTokens?.(true, true) ?? [])); } catch (_e) {}
   try { tokens.push(...(canvas?.tokens?.placeables ?? []).filter(t => t?.actor?.id === actor?.id || t?.document?.actorId === actor?.id)); } catch (_e) {}
-
   const seen = new Set();
   return tokens.filter(t => {
     const id = t?.document?.uuid ?? t?.id ?? t?.document?.id;
@@ -224,18 +196,13 @@ function add2eVitalCleanTokenEffects(effects) {
 async function add2eVitalSetTokenEffects(token, desired) {
   const doc = token?.document ?? token;
   if (!doc?.update) return false;
-
   const currentEffects = add2eVitalArray(doc.effects ?? doc._source?.effects ?? []);
   const cleanEffects = add2eVitalCleanTokenEffects(currentEffects);
-
   if (desired === "unconscious") cleanEffects.push(ADD2E_VITAL_STATUS.unconscious.icon);
-
   const currentOverlay = doc.overlayEffect ?? doc._source?.overlayEffect ?? "";
   const patch = {};
-
   if (currentEffects.length !== cleanEffects.length || currentEffects.some((v, i) => v !== cleanEffects[i])) patch.effects = cleanEffects;
   if (ADD2E_VITAL_ICONS.has(currentOverlay) || add2eVitalNorm(currentOverlay).includes("skull") || add2eVitalNorm(currentOverlay).includes("daze") || add2eVitalNorm(currentOverlay).includes("unconscious")) patch.overlayEffect = null;
-
   if (!Object.keys(patch).length) return false;
   await doc.update(patch);
   return true;
@@ -245,7 +212,6 @@ function add2eVitalCombatantsForActor(actor) {
   const combats = [game.combat, ...add2eVitalArray(game.combats)].filter(Boolean);
   const out = [];
   const seen = new Set();
-
   for (const combat of combats) {
     for (const combatant of add2eVitalArray(combat?.combatants)) {
       if (!combatant?.id) continue;
@@ -257,7 +223,6 @@ function add2eVitalCombatantsForActor(actor) {
       out.push(combatant);
     }
   }
-
   return out;
 }
 
@@ -268,7 +233,6 @@ function add2eVitalActorHasDefeatedCombatant(actor) {
 async function add2eVitalSetDefeated(actor, defeated) {
   const combatants = add2eVitalCombatantsForActor(actor);
   let changed = 0;
-
   for (const combatant of combatants) {
     if (!combatant?.update) continue;
     if (combatant.defeated === defeated) continue;
@@ -279,14 +243,12 @@ async function add2eVitalSetDefeated(actor, defeated) {
       console.warn("[ADD2E][VITAL_STATUS][DEFEATED][WARN]", { actor: actor?.name, combatant: combatant?.id, defeated, err });
     }
   }
-
   return changed;
 }
 
 async function add2eVitalSyncTokenState(actor, desired, { preserveDefeated = false } = {}) {
   const tokens = add2eVitalGetActorTokens(actor);
   let tokenEffects = 0;
-
   if (!preserveDefeated) {
     for (const token of tokens) {
       try {
@@ -296,19 +258,16 @@ async function add2eVitalSyncTokenState(actor, desired, { preserveDefeated = fal
       }
     }
   }
-
-  const defeated = preserveDefeated ? 0 : await add2eVitalSetDefeated(actor, desired === "dead");
+  const defeated = preserveDefeated ? 0 : await add2eVitalSetDefeated(actor, desired !== null);
   return { tokenEffects, defeated, tokenCount: tokens.length, preserveDefeated };
 }
 
 async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
   if (!actor || !["personnage", "monster"].includes(String(actor.type ?? "").toLowerCase())) return false;
   if (!game.user?.isGM) return false;
-
   const lockKey = actor.uuid ?? actor.id;
   if (ADD2E_VITAL_SYNC_LOCK.has(lockKey)) return false;
   ADD2E_VITAL_SYNC_LOCK.add(lockKey);
-
   try {
     add2eVitalRegisterStatusEffects();
     const desired = add2eVitalDesiredStatus(actor);
@@ -316,13 +275,10 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
     const preserveDefeated = trackerDefeated && desired === null;
     const before = add2eVitalArray(actor?.effects).filter(e => add2eVitalEffectKind(e)).map(e => ({ id: e.id, name: e.name, kind: add2eVitalEffectKind(e), icon: e.icon }));
     const removed = preserveDefeated ? 0 : await add2eVitalRemoveActorVitalEffects(actor);
-
     let actorStatus = null;
     if (!preserveDefeated && desired === "dead") actorStatus = await add2eVitalSetActorStatus(actor, "dead", true, true);
     else if (!preserveDefeated && desired === "unconscious") actorStatus = await add2eVitalSetActorStatus(actor, "unconscious", true, true);
-
     const tokenState = await add2eVitalSyncTokenState(actor, desired, { preserveDefeated });
-
     console.log("[ADD2E][VITAL_STATUS][SYNC]", {
       reason,
       actor: actor.name,
@@ -337,7 +293,6 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
       before,
       tokenState
     });
-
     return true;
   } catch (err) {
     console.error("[ADD2E][VITAL_STATUS][ERROR]", { actor: actor?.name, reason, err });
@@ -377,37 +332,27 @@ Hooks.once("ready", () => {
 
 Hooks.on("updateCombat", async (combat, changed, options, userId) => {
   if (!("round" in changed) && !("turn" in changed)) return;
-
   const currentRound = combat.round ?? 0;
   console.log("[ADD2E][AUTO-REMOVE] updateCombat déclenché :", { round: currentRound, changed });
-
   try {
     add2eVitalRegisterStatusEffects();
     const combatants = combat.combatants || [];
-
     for (const combatant of combatants) {
       if (!combatant) continue;
-
       const actor = combatant.actor;
       if (!actor) {
         console.warn("[ADD2E][AUTO-REMOVE] combatant sans actor :", combatant);
         continue;
       }
-
       const toDelete = [];
-
       for (const effect of Array.from(actor.effects ?? [])) {
         if (!effect) continue;
         if (add2eVitalEffectKind(effect)) continue;
-
         const dur = effect.duration || {};
-
         if (effect.disabled) continue;
         if (typeof dur.rounds !== "number" || isNaN(dur.rounds)) continue;
-
         const totalRounds = dur.rounds;
         let startRound = dur.startRound;
-
         if (typeof startRound !== "number" || isNaN(startRound)) {
           try {
             if (!actor.effects.get(effect.id)) continue;
@@ -416,55 +361,33 @@ Hooks.on("updateCombat", async (combat, changed, options, userId) => {
           } catch (err) {
             const msg = String(err?.message || err || "");
             if (msg.includes("does not exist") || msg.includes("n'existe pas")) {
-              console.warn("[ADD2E][AUTO-REMOVE][STALE_UPDATE] Effet déjà absent pendant l'initialisation startRound", {
-                actor: actor.name,
-                effectId: effect.id,
-                effectName: effect.name
-              });
+              console.warn("[ADD2E][AUTO-REMOVE][STALE_UPDATE] Effet déjà absent pendant l'initialisation startRound", { actor: actor.name, effectId: effect.id, effectName: effect.name });
               continue;
             }
             throw err;
           }
         }
-
         const elapsed = Math.max(0, currentRound - startRound);
         const remaining = totalRounds - elapsed;
-
         if (remaining <= 0) toDelete.push(effect.id);
       }
-
       const validIds = toDelete.filter(id => id && actor.effects.get(id));
       if (validIds.length) {
-        console.log("[ADD2E][AUTO-REMOVE] Suppression auto des effets expirés", {
-          actor: actor.name,
-          ids: validIds
-        });
-
+        console.log("[ADD2E][AUTO-REMOVE] Suppression auto des effets expirés", { actor: actor.name, ids: validIds });
         for (const effectId of validIds) {
           if (!actor.effects.get(effectId)) continue;
-
           try {
             await actor.deleteEmbeddedDocuments("ActiveEffect", [effectId]);
           } catch (err) {
             const msg = String(err?.message || err || "");
             if (msg.includes("does not exist") || msg.includes("n'existe pas")) {
-              console.warn("[ADD2E][AUTO-REMOVE][ALREADY_GONE] Effet déjà absent, suppression ignorée", {
-                actor: actor.name,
-                effectId,
-                err
-              });
+              console.warn("[ADD2E][AUTO-REMOVE][ALREADY_GONE] Effet déjà absent, suppression ignorée", { actor: actor.name, effectId, err });
               continue;
             }
-
-            console.error("[ADD2E][AUTO-REMOVE][DELETE_ERROR] Suppression impossible", {
-              actor: actor.name,
-              effectId,
-              err
-            });
+            console.error("[ADD2E][AUTO-REMOVE][DELETE_ERROR] Suppression impossible", { actor: actor.name, effectId, err });
           }
         }
       }
-
       await add2eSyncActorVitalStatus(actor, { reason: "updateCombat:scan" });
     }
   } catch (err) {
