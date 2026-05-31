@@ -1,13 +1,14 @@
 // ADD2E — Icônes d'état façon DnD5e pour Mort et Inconscient
-// Version : 2026-05-24-dnd5e-style-status-icons-v1
+// Version : 2026-05-31-dnd5e-style-status-icons-preserve-manual-defeated-v2
 //
 // Principe repris du système DnD5e :
 // - Inconscient est un état/condition avec sa propre icône.
 // - Mort est un statut séparé avec le special DEFEATED.
 // - Les icônes sont gérées par CONFIG.statusEffects et actor.toggleStatusEffect.
 // - Pas d'overlay PIXI plein token, pas d'accès déprécié TokenDocument#effects / overlayEffect.
+// - La synchronisation PV ne supprime jamais un état vaincu posé manuellement depuis le tracker.
 
-const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-24-dnd5e-style-status-icons-v1";
+const ADD2E_TOKEN_STATE_OVERLAY_VERSION = "2026-05-31-dnd5e-style-status-icons-preserve-manual-defeated-v2";
 globalThis.ADD2E_TOKEN_STATE_OVERLAY_VERSION = ADD2E_TOKEN_STATE_OVERLAY_VERSION;
 
 globalThis.ADD2E_TOKEN_STATUS_ICON_VERSION = ADD2E_TOKEN_STATE_OVERLAY_VERSION;
@@ -21,7 +22,7 @@ const ADD2E_STATUS_EFFECTS = {
     special: "DEFEATED",
     order: 1,
     neverBlockMovement: true,
-    flags: { add2e: { hpState: "dead" } }
+    flags: { add2e: { hpState: "dead", hpManaged: true } }
   },
   unconscious: {
     id: "unconscious",
@@ -30,7 +31,7 @@ const ADD2E_STATUS_EFFECTS = {
     icon: "icons/svg/unconscious.svg",
     statuses: ["incapacitated"],
     riders: ["prone"],
-    flags: { add2e: { hpState: "unconscious" } }
+    flags: { add2e: { hpState: "unconscious", hpManaged: true } }
   }
 };
 
@@ -125,15 +126,47 @@ function add2eActorHpState(actor) {
   return null;
 }
 
-function add2eHasStatus(actor, statusId) {
+function add2eEffectHasStatus(effect, statusId) {
   const wanted = add2eNormalizeStatusId(statusId);
+  if (effect?.disabled) return false;
+  if (effect?.statuses instanceof Set && effect.statuses.has(statusId)) return true;
+  if (Array.isArray(effect?.statuses) && effect.statuses.includes(statusId)) return true;
+  return add2eStatusAliases(effect).includes(wanted);
+}
+
+function add2eHasStatus(actor, statusId) {
   for (const effect of actor?.effects ?? []) {
-    if (effect?.disabled) continue;
-    if (effect?.statuses instanceof Set && effect.statuses.has(statusId)) return true;
-    if (Array.isArray(effect?.statuses) && effect.statuses.includes(statusId)) return true;
-    if (add2eStatusAliases(effect).includes(wanted)) return true;
+    if (add2eEffectHasStatus(effect, statusId)) return true;
   }
   return false;
+}
+
+function add2eIsHpManagedStatusEffect(effect, statusId = null) {
+  if (!effect || effect.disabled) return false;
+  const hpState = add2eNormalizeStatusId(effect?.flags?.add2e?.hpState);
+  const hpManaged = effect?.flags?.add2e?.hpManaged === true || Boolean(hpState);
+  if (!hpManaged) return false;
+  if (!statusId) return true;
+  return hpState === add2eNormalizeStatusId(statusId) || add2eEffectHasStatus(effect, statusId);
+}
+
+function add2eHasManualStatus(actor, statusId) {
+  for (const effect of actor?.effects ?? []) {
+    if (!add2eEffectHasStatus(effect, statusId)) continue;
+    if (!add2eIsHpManagedStatusEffect(effect, statusId)) return true;
+  }
+  return false;
+}
+
+async function add2eRemoveHpManagedStatus(actor, statusId) {
+  if (!actor) return 0;
+  const ids = [];
+  for (const effect of actor.effects ?? []) {
+    if (add2eIsHpManagedStatusEffect(effect, statusId)) ids.push(effect.id);
+  }
+  if (!ids.length) return 0;
+  await actor.deleteEmbeddedDocuments("ActiveEffect", ids, { add2eHpStatusSync: true });
+  return ids.length;
 }
 
 async function add2eSetActorStatus(actor, statusId, active, overlay = false) {
@@ -144,21 +177,36 @@ async function add2eSetActorStatus(actor, statusId, active, overlay = false) {
   return true;
 }
 
-async function add2eSyncActorHpStatus(actor) {
+async function add2eSyncActorHpStatus(actor, { reason = "sync" } = {}) {
   if (!game.user?.isGM || !actor) return null;
 
   const state = add2eActorHpState(actor);
+  const manualDead = add2eHasManualStatus(actor, "dead");
+  const manualUnconscious = add2eHasManualStatus(actor, "unconscious");
 
   if (state === "dead") {
-    await add2eSetActorStatus(actor, "unconscious", false, false);
-    await add2eSetActorStatus(actor, "dead", true, true);
+    await add2eRemoveHpManagedStatus(actor, "unconscious");
+    if (!manualDead) await add2eSetActorStatus(actor, "dead", true, true);
   } else if (state === "unconscious") {
-    await add2eSetActorStatus(actor, "dead", false, false);
-    await add2eSetActorStatus(actor, "unconscious", true, true);
+    await add2eRemoveHpManagedStatus(actor, "dead");
+    if (!manualDead && !manualUnconscious) await add2eSetActorStatus(actor, "unconscious", true, true);
   } else {
-    await add2eSetActorStatus(actor, "dead", false, false);
-    await add2eSetActorStatus(actor, "unconscious", false, false);
+    // PV positifs : on retire uniquement les états automatiques liés aux PV.
+    // Les états posés manuellement depuis le tracker, notamment defeated/dead, sont conservés.
+    await add2eRemoveHpManagedStatus(actor, "dead");
+    await add2eRemoveHpManagedStatus(actor, "unconscious");
   }
+
+  console.log("[ADD2E][VITAL_STATUS][HP_SYNC]", {
+    version: ADD2E_TOKEN_STATE_OVERLAY_VERSION,
+    reason,
+    actor: actor.name,
+    actorId: actor.id,
+    hp: add2eActorCurrentHp(actor),
+    desired: state,
+    manualDead,
+    manualUnconscious
+  });
 
   return state;
 }
@@ -181,11 +229,11 @@ function add2eUpdateChangesContainHp(changes = {}) {
 
 function add2eRefreshTokenOverlay(token) {
   if (!token?.actor) return;
-  add2eSyncActorHpStatus(token.actor).catch(() => null);
+  add2eSyncActorHpStatus(token.actor, { reason: "refreshTokenOverlay" }).catch(() => null);
 }
 
 function add2eRefreshActorTokens(actor) {
-  add2eSyncActorHpStatus(actor).catch(() => null);
+  add2eSyncActorHpStatus(actor, { reason: "refreshActorTokens" }).catch(() => null);
 }
 
 Hooks.once("init", add2eRegisterHpStatusEffects);
@@ -195,13 +243,13 @@ Hooks.once("ready", add2eRegisterHpStatusEffects);
 Hooks.on("updateActor", (actor, changes = {}, options = {}) => {
   if (options?.add2eHpStatusSync) return;
   if (!add2eUpdateChangesContainHp(changes)) return;
-  add2eSyncActorHpStatus(actor).catch(() => null);
+  add2eSyncActorHpStatus(actor, { reason: "updateActor:hp" }).catch(() => null);
 });
 
 Hooks.once("canvasReady", () => {
   if (!game.user?.isGM) return;
   for (const token of canvas?.tokens?.placeables ?? []) {
-    if (token?.actor) add2eSyncActorHpStatus(token.actor).catch(() => null);
+    if (token?.actor) add2eSyncActorHpStatus(token.actor, { reason: "canvasReady" }).catch(() => null);
   }
 });
 
