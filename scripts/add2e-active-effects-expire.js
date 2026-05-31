@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-register-dead-v10
+// Version : 2026-05-31-vital-status-apply-actor-status-v11
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-register-dead-v10";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-apply-actor-status-v11";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -184,6 +184,18 @@ async function add2eVitalRemoveActorVitalEffects(actor) {
   return ids.length;
 }
 
+async function add2eVitalSetActorStatus(actor, statusId, active, overlay = false) {
+  if (!actor || typeof actor.toggleStatusEffect !== "function") return false;
+  add2eVitalRegisterStatusEffects();
+  try {
+    await actor.toggleStatusEffect(statusId, { active, overlay });
+    return true;
+  } catch (err) {
+    console.warn("[ADD2E][VITAL_STATUS][ACTOR_STATUS][WARN]", { actor: actor?.name, statusId, active, overlay, err });
+    return false;
+  }
+}
+
 function add2eVitalGetActorTokens(actor) {
   const tokens = [];
   try { tokens.push(...(actor?.getActiveTokens?.(true, true) ?? [])); } catch (_e) {}
@@ -304,6 +316,11 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
     const preserveDefeated = trackerDefeated && desired === null;
     const before = add2eVitalArray(actor?.effects).filter(e => add2eVitalEffectKind(e)).map(e => ({ id: e.id, name: e.name, kind: add2eVitalEffectKind(e), icon: e.icon }));
     const removed = preserveDefeated ? 0 : await add2eVitalRemoveActorVitalEffects(actor);
+
+    let actorStatus = null;
+    if (!preserveDefeated && desired === "dead") actorStatus = await add2eVitalSetActorStatus(actor, "dead", true, true);
+    else if (!preserveDefeated && desired === "unconscious") actorStatus = await add2eVitalSetActorStatus(actor, "unconscious", true, true);
+
     const tokenState = await add2eVitalSyncTokenState(actor, desired, { preserveDefeated });
 
     console.log("[ADD2E][VITAL_STATUS][SYNC]", {
@@ -315,6 +332,7 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
       desired,
       trackerDefeated,
       preserveDefeated,
+      actorStatus,
       removed,
       before,
       tokenState
