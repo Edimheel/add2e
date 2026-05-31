@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-idempotent-actor-effects-v18
+// Version : 2026-05-31-vital-status-token-only-v19
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-idempotent-actor-effects-v18";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-token-only-v19";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -118,11 +118,13 @@ function add2eVitalReadHP(actor) {
 function add2eVitalDesiredStatus(actor) {
   const type = String(actor?.type ?? "").toLowerCase();
   const hp = add2eVitalReadHP(actor);
+
   if (type === "monster") return hp <= 0 ? "dead" : null;
   if (type === "personnage") {
     if (hp <= -11) return "dead";
     if (hp <= 0) return "unconscious";
   }
+
   return null;
 }
 
@@ -157,34 +159,13 @@ function add2eVitalEffectKind(effect) {
   return null;
 }
 
-async function add2eVitalRemoveActorVitalEffects(actor) {
-  const ids = add2eVitalArray(actor?.effects).filter(e => e?.id && add2eVitalEffectKind(e)).map(e => e.id);
-  if (!ids.length) return 0;
-  await actor.deleteEmbeddedDocuments("ActiveEffect", ids, { add2eVitalStatusSync: true });
-  return ids.length;
-}
-
-function add2eVitalFindActorStatusEffect(actor, statusId) {
-  const normalizedStatus = add2eVitalNorm(statusId);
-  const staticId = ADD2E_VITAL_STATUS_EFFECT_IDS[normalizedStatus] ?? null;
-
-  for (const effect of actor?.effects ?? []) {
-    const effectId = String(effect?.id ?? effect?._id ?? "");
-    if (staticId && effectId === staticId) return effect;
-    if (add2eVitalEffectKind(effect) === normalizedStatus) return effect;
-    if (add2eVitalStatusAliases(effect).includes(normalizedStatus)) return effect;
-  }
-
-  return null;
-}
-
 function add2eVitalActorEffectData(statusId) {
   const normalizedStatus = add2eVitalNorm(statusId);
   const status = ADD2E_VITAL_STATUS[normalizedStatus];
   const effectId = ADD2E_VITAL_STATUS_EFFECT_IDS[normalizedStatus];
   if (!status || !effectId) return null;
 
-  const data = {
+  return {
     _id: effectId,
     name: status.name,
     label: status.name,
@@ -197,53 +178,18 @@ function add2eVitalActorEffectData(statusId) {
       add2e: { vitalStatus: normalizedStatus, autoVitalStatus: true }
     }
   };
-
-  if (normalizedStatus === "dead") data.special = "DEFEATED";
-  return data;
 }
 
-async function add2eVitalSetActorStatus(actor, statusId, active, overlay = false) {
-  if (!actor) return false;
-  add2eVitalRegisterStatusEffects();
+async function add2eVitalRemoveActorVitalEffects(_actor) {
+  // Depuis v19, les états vitaux automatiques ne modifient plus Actor.effects.
+  // Cela évite les courses Foundry : _id déjà existant / effet déjà supprimé.
+  return 0;
+}
 
-  const existing = add2eVitalFindActorStatusEffect(actor, statusId);
-  if (active) {
-    if (existing) {
-      console.log("[ADD2E][VITAL_STATUS][ACTOR_STATUS][SKIP_EXISTS]", {
-        actor: actor?.name,
-        statusId,
-        effectId: existing.id,
-        effectName: existing.name
-      });
-      return false;
-    }
-
-    const data = add2eVitalActorEffectData(statusId);
-    if (!data) return false;
-
-    try {
-      await actor.createEmbeddedDocuments("ActiveEffect", [data], { keepId: true, add2eVitalStatusSync: true });
-      console.log("[ADD2E][VITAL_STATUS][ACTOR_STATUS][CREATED]", { actor: actor?.name, statusId, effectId: data._id });
-      return true;
-    } catch (err) {
-      const msg = String(err?.message || err || "");
-      if (msg.includes("already exists") || msg.includes("existe déjà")) {
-        console.warn("[ADD2E][VITAL_STATUS][ACTOR_STATUS][ALREADY_EXISTS]", { actor: actor?.name, statusId, effectId: data._id });
-        return false;
-      }
-      console.warn("[ADD2E][VITAL_STATUS][ACTOR_STATUS][CREATE_WARN]", { actor: actor?.name, statusId, effectId: data._id, err });
-      return false;
-    }
-  }
-
-  if (!existing) return false;
-  try {
-    await actor.deleteEmbeddedDocuments("ActiveEffect", [existing.id], { add2eVitalStatusSync: true });
-    return true;
-  } catch (err) {
-    console.warn("[ADD2E][VITAL_STATUS][ACTOR_STATUS][DELETE_WARN]", { actor: actor?.name, statusId, effectId: existing.id, err });
-    return false;
-  }
+async function add2eVitalSetActorStatus(_actor, _statusId, _active, _overlay = false) {
+  // Depuis v19, l'état visible est porté par TokenDocument.effects,
+  // et l'état d'initiative par Combatant.defeated.
+  return false;
 }
 
 function add2eVitalGetActorTokens(actor) {
@@ -377,10 +323,8 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
     const trackerDefeated = add2eVitalActorHasDefeatedCombatant(actor);
     const preserveDefeated = trackerDefeated && desired === null;
     const before = add2eVitalArray(actor?.effects).filter(e => add2eVitalEffectKind(e)).map(e => ({ id: e.id, name: e.name, kind: add2eVitalEffectKind(e), icon: e.icon }));
-    const removed = preserveDefeated ? 0 : await add2eVitalRemoveActorVitalEffects(actor);
-    let actorStatus = null;
-    if (!preserveDefeated && desired === "dead") actorStatus = await add2eVitalSetActorStatus(actor, "dead", true, true);
-    else if (!preserveDefeated && desired === "unconscious") actorStatus = await add2eVitalSetActorStatus(actor, "unconscious", true, true);
+    const removed = 0;
+    const actorStatus = null;
     const tokenState = await add2eVitalSyncTokenState(actor, desired, { preserveDefeated });
     console.log("[ADD2E][VITAL_STATUS][SYNC]", {
       reason,
