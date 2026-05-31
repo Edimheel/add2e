@@ -58,12 +58,16 @@ function add2eAttackIsAssassin(actor) {
 
 export async function add2eAttackOpenDialogV2({ title, content, width, classes, defaultAction, onOk }) {
   const DialogV2 = foundry.applications?.api?.DialogV2;
+  const requestedWidth = Number(width);
+  const compactWidth = Number.isFinite(requestedWidth) && requestedWidth > 0
+    ? Math.min(requestedWidth, 360)
+    : 360;
 
   if (DialogV2?.wait) {
     return await DialogV2.wait({
       window: { title },
       classes: classes ?? [],
-      position: { width: width ?? 360 },
+      position: { width: compactWidth },
       content,
       buttons: [
         {
@@ -99,7 +103,7 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
       },
       default: defaultAction ?? "ok"
     }, {
-      width: width ?? 360,
+      width: compactWidth,
       classes: classes ?? []
     }).render(true);
   });
@@ -143,8 +147,11 @@ export function add2eBuildAttackDialogContent({
             --a2e-line: #d5b15a;
             --a2e-red: #8f2d22;
             display: block;
+            width: 100%;
+            max-width: 330px;
             color: var(--a2e-ink);
             padding: 0;
+            margin: 0;
           }
           .add2e-attack-input,
           .add2e-attack-select {
@@ -170,6 +177,7 @@ export function add2eBuildAttackDialogContent({
             min-height: 24px;
             padding: 1px 2px;
             font-size: .78rem;
+            line-height: 1.05;
             font-weight: 900;
             color: var(--a2e-brown);
             cursor: pointer;
@@ -177,11 +185,12 @@ export function add2eBuildAttackDialogContent({
           .add2e-inline-check input[type="checkbox"] {
             width: 14px;
             height: 14px;
+            min-width: 14px;
             accent-color: var(--a2e-red);
           }
           .add2e-rear-specials {
             display: none;
-            flex-direction: column;
+            flex-direction: column !important;
             gap: 2px;
             margin-top: 4px;
           }
@@ -220,14 +229,14 @@ export function add2eBuildAttackDialogContent({
 
             <div style="padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
               <label class="add2e-attack-label" for="add2e-position-zone" style="display:block;margin-bottom:2px;white-space:nowrap;">Position</label>
-              <select id="add2e-position-zone" class="add2e-attack-select" style="width:100% !important;" onchange="var f=this.closest('form');var rear=this.value==='rear';var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=rear?'flex':'none';});if(!rear&&f){f.querySelectorAll('#add2e-backstab,#add2e-assassinat-confirm').forEach(function(c){c.checked=false;});}">
+              <select id="add2e-position-zone" class="add2e-attack-select" style="width:100% !important;" onchange="var f=this.closest('form');var rear=this.value==='rear';var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=rear?'flex':'none';b.style.flexDirection='column';});if(!rear&&f){f.querySelectorAll('#add2e-backstab,#add2e-assassinat-confirm').forEach(function(c){c.checked=false;});}">
                 <option value="front"${selected("front")}>Face</option>
                 <option value="flank"${selected("flank")}>Flanc</option>
                 <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
                 <option value="rear"${selected("rear")}>Dos</option>
               </select>
               ${hasRearSpecial ? `
-              <div class="add2e-rear-specials" style="display:${rearDisplay};">
+              <div class="add2e-rear-specials" style="display:${rearDisplay};flex-direction:column !important;">
                 ${showBackstabForClass ? `
                 <label class="add2e-inline-check" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}">
                   <input type="checkbox" id="add2e-backstab">
