@@ -65,8 +65,10 @@ function add2eGetDialogRoot(dialog) {
   return element?.closest?.("dialog") ?? element?.closest?.(".application") ?? element;
 }
 
-function add2eUpdateRearSpecialVisibility(root) {
-  const container = root?.querySelector?.("form.add2e-attack-form") ?? root;
+function add2eUpdateRearSpecialVisibility(rootOrForm) {
+  const container = rootOrForm?.matches?.("form.add2e-attack-form")
+    ? rootOrForm
+    : (rootOrForm?.querySelector?.("form.add2e-attack-form") ?? rootOrForm);
   const select = container?.querySelector?.("#add2e-position-zone");
   if (!select) return;
 
@@ -84,6 +86,10 @@ function add2eUpdateRearSpecialVisibility(root) {
   }
 }
 
+window.add2eAttackToggleRearSpecials = function add2eAttackToggleRearSpecials(form) {
+  add2eUpdateRearSpecialVisibility(form);
+};
+
 function add2eAttachAttackDialogEvents(dialog) {
   const root = add2eGetDialogRoot(dialog);
   const form = root?.querySelector?.("form.add2e-attack-form");
@@ -94,11 +100,12 @@ function add2eAttachAttackDialogEvents(dialog) {
   }
 
   select.dataset.add2eRearToggleBound = "1";
-  select.addEventListener("change", () => add2eUpdateRearSpecialVisibility(root));
-  add2eUpdateRearSpecialVisibility(root);
+  select.addEventListener("change", () => add2eUpdateRearSpecialVisibility(form));
+  select.addEventListener("input", () => add2eUpdateRearSpecialVisibility(form));
+  add2eUpdateRearSpecialVisibility(form);
 }
 
-function add2eForceAttackDialogSize(dialog, width = 460) {
+function add2eForceAttackDialogSize(dialog, width = 480) {
   try {
     dialog?.setPosition?.({ width, height: "auto" });
 
@@ -144,7 +151,7 @@ function add2eForceAttackDialogSize(dialog, width = 460) {
 
 export async function add2eAttackOpenDialogV2({ title, content, width, classes, defaultAction, onOk }) {
   const DialogV2 = foundry.applications?.api?.DialogV2;
-  const compactWidth = 460;
+  const compactWidth = 480;
   const dialogClasses = add2eAttackDialogClasses(classes);
 
   if (DialogV2) {
@@ -246,9 +253,9 @@ export function add2eBuildAttackDialogContent({
           .application.add2e-attack-dialog-compact,
           .window-app.add2e-attack-dialog-compact,
           .dialog.add2e-attack-dialog-compact {
-            width: 460px !important;
-            min-width: 460px !important;
-            max-width: 460px !important;
+            width: 480px !important;
+            min-width: 480px !important;
+            max-width: 480px !important;
             height: auto !important;
             min-height: 0 !important;
             max-height: none !important;
@@ -257,7 +264,7 @@ export function add2eBuildAttackDialogContent({
           .add2e-attack-dialog-compact .standard-form {
             width: 100% !important;
             min-width: 0 !important;
-            max-width: 460px !important;
+            max-width: 480px !important;
             height: auto !important;
             min-height: 0 !important;
             padding: 6px !important;
@@ -283,7 +290,7 @@ export function add2eBuildAttackDialogContent({
             --a2e-red: #8f2d22;
             display: block;
             width: 100%;
-            max-width: 436px;
+            max-width: 456px;
             color: var(--a2e-ink);
             padding: 0;
             margin: 0;
@@ -309,6 +316,9 @@ export function add2eBuildAttackDialogContent({
             display: flex;
             align-items: center;
             gap: 5px;
+            width: max-content !important;
+            min-width: max-content !important;
+            max-width: none !important;
             min-height: 24px;
             padding: 1px 2px;
             font-size: .78rem;
@@ -321,6 +331,8 @@ export function add2eBuildAttackDialogContent({
           .add2e-inline-check span {
             display: inline-block;
             white-space: nowrap !important;
+            width: max-content !important;
+            min-width: max-content !important;
           }
           .add2e-inline-check input[type="checkbox"] {
             width: 14px;
@@ -333,7 +345,8 @@ export function add2eBuildAttackDialogContent({
             flex-direction: column !important;
             gap: 2px;
             margin-top: 4px;
-            min-width: 190px;
+            min-width: 210px;
+            overflow: visible !important;
           }
         </style>
 
@@ -362,15 +375,15 @@ export function add2eBuildAttackDialogContent({
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:4px;align-items:start;margin-bottom:0;">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:4px;align-items:start;margin-bottom:0;">
             <div style="min-width:0;display:flex;align-items:center;gap:5px;padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
               <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;margin:0;">Modificateurs</label>
               <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:48px !important;min-width:48px !important;text-align:center !important;">
             </div>
 
-            <div style="padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
+            <div style="padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;overflow:visible !important;">
               <label class="add2e-attack-label" for="add2e-position-zone" style="display:block;margin-bottom:2px;white-space:nowrap;">Position</label>
-              <select id="add2e-position-zone" class="add2e-attack-select" style="width:100% !important;">
+              <select id="add2e-position-zone" class="add2e-attack-select" style="width:100% !important;" onchange="if(window.add2eAttackToggleRearSpecials) window.add2eAttackToggleRearSpecials(this.closest('form'))">
                 <option value="front"${selected("front")}>Face</option>
                 <option value="flank"${selected("flank")}>Flanc</option>
                 <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
