@@ -60,7 +60,45 @@ function add2eAttackDialogClasses(classes) {
   return Array.from(new Set([...(classes ?? []), "add2e-attack-dialog-compact"]));
 }
 
-function add2eForceAttackDialogSize(dialog, width = 415) {
+function add2eGetDialogRoot(dialog) {
+  const element = dialog?.element ?? null;
+  return element?.closest?.("dialog") ?? element?.closest?.(".application") ?? element;
+}
+
+function add2eUpdateRearSpecialVisibility(root) {
+  const container = root?.querySelector?.("form.add2e-attack-form") ?? root;
+  const select = container?.querySelector?.("#add2e-position-zone");
+  if (!select) return;
+
+  const rear = select.value === "rear";
+  const blocks = container.querySelectorAll?.(".add2e-rear-specials") ?? [];
+  for (const block of blocks) {
+    block.style.setProperty("display", rear ? "flex" : "none", "important");
+    block.style.setProperty("flex-direction", "column", "important");
+  }
+
+  if (!rear) {
+    container.querySelectorAll?.("#add2e-backstab,#add2e-assassinat-confirm")?.forEach(c => {
+      c.checked = false;
+    });
+  }
+}
+
+function add2eAttachAttackDialogEvents(dialog) {
+  const root = add2eGetDialogRoot(dialog);
+  const form = root?.querySelector?.("form.add2e-attack-form");
+  const select = form?.querySelector?.("#add2e-position-zone");
+  if (!form || !select || select.dataset.add2eRearToggleBound === "1") {
+    add2eUpdateRearSpecialVisibility(root);
+    return;
+  }
+
+  select.dataset.add2eRearToggleBound = "1";
+  select.addEventListener("change", () => add2eUpdateRearSpecialVisibility(root));
+  add2eUpdateRearSpecialVisibility(root);
+}
+
+function add2eForceAttackDialogSize(dialog, width = 460) {
   try {
     dialog?.setPosition?.({ width, height: "auto" });
 
@@ -83,7 +121,9 @@ function add2eForceAttackDialogSize(dialog, width = 415) {
       root.style.setProperty("max-height", "none", "important");
     }
 
-    const measured = element?.closest?.("dialog") ?? element?.closest?.(".application") ?? element;
+    add2eAttachAttackDialogEvents(dialog);
+
+    const measured = add2eGetDialogRoot(dialog);
     if (measured) {
       const cs = getComputedStyle(measured);
       console.log("[ADD2E][ATTAQUE][DIALOG_SIZE]", {
@@ -104,7 +144,7 @@ function add2eForceAttackDialogSize(dialog, width = 415) {
 
 export async function add2eAttackOpenDialogV2({ title, content, width, classes, defaultAction, onOk }) {
   const DialogV2 = foundry.applications?.api?.DialogV2;
-  const compactWidth = 415;
+  const compactWidth = 460;
   const dialogClasses = add2eAttackDialogClasses(classes);
 
   if (DialogV2) {
@@ -206,9 +246,9 @@ export function add2eBuildAttackDialogContent({
           .application.add2e-attack-dialog-compact,
           .window-app.add2e-attack-dialog-compact,
           .dialog.add2e-attack-dialog-compact {
-            width: 415px !important;
-            min-width: 415px !important;
-            max-width: 415px !important;
+            width: 460px !important;
+            min-width: 460px !important;
+            max-width: 460px !important;
             height: auto !important;
             min-height: 0 !important;
             max-height: none !important;
@@ -217,7 +257,7 @@ export function add2eBuildAttackDialogContent({
           .add2e-attack-dialog-compact .standard-form {
             width: 100% !important;
             min-width: 0 !important;
-            max-width: 415px !important;
+            max-width: 460px !important;
             height: auto !important;
             min-height: 0 !important;
             padding: 6px !important;
@@ -243,7 +283,7 @@ export function add2eBuildAttackDialogContent({
             --a2e-red: #8f2d22;
             display: block;
             width: 100%;
-            max-width: 391px;
+            max-width: 436px;
             color: var(--a2e-ink);
             padding: 0;
             margin: 0;
@@ -276,10 +316,11 @@ export function add2eBuildAttackDialogContent({
             font-weight: 900;
             color: var(--a2e-brown);
             cursor: pointer;
-            white-space: nowrap;
+            white-space: nowrap !important;
           }
           .add2e-inline-check span {
-            white-space: nowrap;
+            display: inline-block;
+            white-space: nowrap !important;
           }
           .add2e-inline-check input[type="checkbox"] {
             width: 14px;
@@ -292,6 +333,7 @@ export function add2eBuildAttackDialogContent({
             flex-direction: column !important;
             gap: 2px;
             margin-top: 4px;
+            min-width: 190px;
           }
         </style>
 
@@ -320,7 +362,7 @@ export function add2eBuildAttackDialogContent({
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:4px;align-items:start;margin-bottom:0;">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:4px;align-items:start;margin-bottom:0;">
             <div style="min-width:0;display:flex;align-items:center;gap:5px;padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
               <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;margin:0;">Modificateurs</label>
               <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:48px !important;min-width:48px !important;text-align:center !important;">
@@ -328,7 +370,7 @@ export function add2eBuildAttackDialogContent({
 
             <div style="padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
               <label class="add2e-attack-label" for="add2e-position-zone" style="display:block;margin-bottom:2px;white-space:nowrap;">Position</label>
-              <select id="add2e-position-zone" class="add2e-attack-select" style="width:100% !important;" onchange="var f=this.closest('form');var rear=this.value==='rear';var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=rear?'flex':'none';b.style.flexDirection='column';});if(!rear&&f){f.querySelectorAll('#add2e-backstab,#add2e-assassinat-confirm').forEach(function(c){c.checked=false;});}">
+              <select id="add2e-position-zone" class="add2e-attack-select" style="width:100% !important;">
                 <option value="front"${selected("front")}>Face</option>
                 <option value="flank"${selected("flank")}>Flanc</option>
                 <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
