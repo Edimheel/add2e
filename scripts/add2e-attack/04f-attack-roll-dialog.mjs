@@ -67,6 +67,7 @@ function add2eForceAttackDialogSize(dialog, width = 350) {
     const element = dialog?.element ?? null;
     const roots = [
       element,
+      element?.closest?.("dialog"),
       element?.closest?.(".application"),
       element?.closest?.(".window-app"),
       element?.closest?.(".app"),
@@ -74,11 +75,27 @@ function add2eForceAttackDialogSize(dialog, width = 350) {
     ].filter(Boolean);
 
     for (const root of new Set(roots)) {
-      root.style.width = `${width}px`;
-      root.style.minWidth = `${width}px`;
-      root.style.maxWidth = `${width}px`;
-      root.style.height = "auto";
-      root.style.minHeight = "0";
+      root.style.setProperty("width", `${width}px`, "important");
+      root.style.setProperty("min-width", `${width}px`, "important");
+      root.style.setProperty("max-width", `${width}px`, "important");
+      root.style.setProperty("height", "auto", "important");
+      root.style.setProperty("min-height", "0", "important");
+      root.style.setProperty("max-height", "none", "important");
+    }
+
+    const measured = element?.closest?.("dialog") ?? element?.closest?.(".application") ?? element;
+    if (measured) {
+      const cs = getComputedStyle(measured);
+      console.log("[ADD2E][ATTAQUE][DIALOG_SIZE]", {
+        requested: width,
+        tag: measured.tagName,
+        classes: measured.className,
+        inlineWidth: measured.style.width,
+        inlineMinWidth: measured.style.minWidth,
+        computedWidth: cs.width,
+        computedMinWidth: cs.minWidth,
+        rectWidth: measured.getBoundingClientRect?.().width ?? null
+      });
     }
   } catch (err) {
     console.warn("[ADD2E][ATTAQUE][DIALOG_SIZE][ERROR]", err);
@@ -129,6 +146,7 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
       setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 0);
       setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 50);
       setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 150);
+      setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 300);
     });
   }
 
@@ -183,6 +201,7 @@ export function add2eBuildAttackDialogContent({
 
   return `
         <style>
+          dialog.add2e-attack-dialog-compact,
           .add2e-attack-dialog-compact,
           .application.add2e-attack-dialog-compact,
           .window-app.add2e-attack-dialog-compact,
@@ -192,6 +211,7 @@ export function add2eBuildAttackDialogContent({
             max-width: 350px !important;
             height: auto !important;
             min-height: 0 !important;
+            max-height: none !important;
           }
           .add2e-attack-dialog-compact .window-content,
           .add2e-attack-dialog-compact .standard-form {
