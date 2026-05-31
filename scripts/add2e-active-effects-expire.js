@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-no-auto-duplicate-effects-v16
+// Version : 2026-05-31-vital-status-token-icons-v17
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-no-auto-duplicate-effects-v16";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-token-icons-v17";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -227,27 +227,53 @@ function add2eVitalGetActorTokens(actor) {
 
 function add2eVitalCleanTokenEffects(effects) {
   const clean = [];
+  const removed = [];
   for (const value of add2eVitalArray(effects)) {
-    if (ADD2E_VITAL_ICONS.has(value)) continue;
+    if (ADD2E_VITAL_ICONS.has(value)) {
+      removed.push(value);
+      continue;
+    }
     const n = add2eVitalNorm(value);
-    if (n.includes("skull") || n.includes("unconscious") || n.includes("daze")) continue;
+    if (n.includes("skull") || n.includes("unconscious") || n.includes("daze")) {
+      removed.push(value);
+      continue;
+    }
     clean.push(value);
   }
-  return clean;
+  return { clean, removed };
+}
+
+function add2eVitalIconForDesired(desired) {
+  if (desired === "dead") return ADD2E_VITAL_STATUS.dead.icon;
+  if (desired === "unconscious") return ADD2E_VITAL_STATUS.unconscious.icon;
+  return null;
 }
 
 async function add2eVitalSetTokenEffects(token, desired) {
   const doc = token?.document ?? token;
   if (!doc?.update) return false;
+
   const currentEffects = add2eVitalArray(doc.effects ?? doc._source?.effects ?? []);
-  const cleanEffects = add2eVitalCleanTokenEffects(currentEffects);
-  if (desired === "unconscious") cleanEffects.push(ADD2E_VITAL_STATUS.unconscious.icon);
+  const { clean: cleanEffects, removed } = add2eVitalCleanTokenEffects(currentEffects);
+  const desiredIcon = add2eVitalIconForDesired(desired);
+  if (desiredIcon && !cleanEffects.includes(desiredIcon)) cleanEffects.push(desiredIcon);
+
   const currentOverlay = doc.overlayEffect ?? doc._source?.overlayEffect ?? "";
+  const currentOverlayNorm = add2eVitalNorm(currentOverlay);
   const patch = {};
+
   if (currentEffects.length !== cleanEffects.length || currentEffects.some((v, i) => v !== cleanEffects[i])) patch.effects = cleanEffects;
-  if (ADD2E_VITAL_ICONS.has(currentOverlay) || add2eVitalNorm(currentOverlay).includes("skull") || add2eVitalNorm(currentOverlay).includes("daze") || add2eVitalNorm(currentOverlay).includes("unconscious")) patch.overlayEffect = null;
+  if (ADD2E_VITAL_ICONS.has(currentOverlay) || currentOverlayNorm.includes("skull") || currentOverlayNorm.includes("daze") || currentOverlayNorm.includes("unconscious")) patch.overlayEffect = null;
+
   if (!Object.keys(patch).length) return false;
   await doc.update(patch);
+  console.log("[ADD2E][VITAL_STATUS][TOKEN_ICON]", {
+    token: doc.name,
+    desired,
+    desiredIcon,
+    removed,
+    effects: cleanEffects
+  });
   return true;
 }
 
