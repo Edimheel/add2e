@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-token-icons-v17
+// Version : 2026-05-31-vital-status-idempotent-actor-effects-v18
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-token-icons-v17";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-idempotent-actor-effects-v18";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -160,7 +160,7 @@ function add2eVitalEffectKind(effect) {
 async function add2eVitalRemoveActorVitalEffects(actor) {
   const ids = add2eVitalArray(actor?.effects).filter(e => e?.id && add2eVitalEffectKind(e)).map(e => e.id);
   if (!ids.length) return 0;
-  await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
+  await actor.deleteEmbeddedDocuments("ActiveEffect", ids, { add2eVitalStatusSync: true });
   return ids.length;
 }
 
@@ -176,6 +176,30 @@ function add2eVitalFindActorStatusEffect(actor, statusId) {
   }
 
   return null;
+}
+
+function add2eVitalActorEffectData(statusId) {
+  const normalizedStatus = add2eVitalNorm(statusId);
+  const status = ADD2E_VITAL_STATUS[normalizedStatus];
+  const effectId = ADD2E_VITAL_STATUS_EFFECT_IDS[normalizedStatus];
+  if (!status || !effectId) return null;
+
+  const data = {
+    _id: effectId,
+    name: status.name,
+    label: status.name,
+    img: status.icon,
+    icon: status.icon,
+    disabled: false,
+    statuses: normalizedStatus === "dead" ? ["dead"] : ["unconscious", "incapacitated"],
+    flags: {
+      core: { statusId: normalizedStatus },
+      add2e: { vitalStatus: normalizedStatus, autoVitalStatus: true }
+    }
+  };
+
+  if (normalizedStatus === "dead") data.special = "DEFEATED";
+  return data;
 }
 
 async function add2eVitalSetActorStatus(actor, statusId, active, overlay = false) {
@@ -194,12 +218,22 @@ async function add2eVitalSetActorStatus(actor, statusId, active, overlay = false
       return false;
     }
 
-    console.log("[ADD2E][VITAL_STATUS][ACTOR_STATUS][SKIP_CREATE]", {
-      actor: actor?.name,
-      statusId,
-      reason: "automatic-vital-status-uses-token-and-combatant-state"
-    });
-    return false;
+    const data = add2eVitalActorEffectData(statusId);
+    if (!data) return false;
+
+    try {
+      await actor.createEmbeddedDocuments("ActiveEffect", [data], { keepId: true, add2eVitalStatusSync: true });
+      console.log("[ADD2E][VITAL_STATUS][ACTOR_STATUS][CREATED]", { actor: actor?.name, statusId, effectId: data._id });
+      return true;
+    } catch (err) {
+      const msg = String(err?.message || err || "");
+      if (msg.includes("already exists") || msg.includes("existe déjà")) {
+        console.warn("[ADD2E][VITAL_STATUS][ACTOR_STATUS][ALREADY_EXISTS]", { actor: actor?.name, statusId, effectId: data._id });
+        return false;
+      }
+      console.warn("[ADD2E][VITAL_STATUS][ACTOR_STATUS][CREATE_WARN]", { actor: actor?.name, statusId, effectId: data._id, err });
+      return false;
+    }
   }
 
   if (!existing) return false;
@@ -266,7 +300,7 @@ async function add2eVitalSetTokenEffects(token, desired) {
   if (ADD2E_VITAL_ICONS.has(currentOverlay) || currentOverlayNorm.includes("skull") || currentOverlayNorm.includes("daze") || currentOverlayNorm.includes("unconscious")) patch.overlayEffect = null;
 
   if (!Object.keys(patch).length) return false;
-  await doc.update(patch);
+  await doc.update(patch, { add2eVitalStatusSync: true });
   console.log("[ADD2E][VITAL_STATUS][TOKEN_ICON]", {
     token: doc.name,
     desired,
@@ -306,7 +340,7 @@ async function add2eVitalSetDefeated(actor, defeated) {
     if (!combatant?.update) continue;
     if (combatant.defeated === defeated) continue;
     try {
-      await combatant.update({ defeated });
+      await combatant.update({ defeated }, { add2eVitalStatusSync: true });
       changed += 1;
     } catch (err) {
       console.warn("[ADD2E][VITAL_STATUS][DEFEATED][WARN]", { actor: actor?.name, combatant: combatant?.id, defeated, err });
@@ -380,6 +414,7 @@ Hooks.once("ready", add2eVitalRegisterStatusEffects);
 
 Hooks.on("updateActor", async (actor, changed, options, userId) => {
   if (!game.user?.isGM) return;
+  if (options?.add2eVitalStatusSync) return;
   const hpChanged = foundry.utils.hasProperty(changed, "system.pdv") ||
     foundry.utils.hasProperty(changed, "system.pv") ||
     foundry.utils.hasProperty(changed, "system.hp") ||
