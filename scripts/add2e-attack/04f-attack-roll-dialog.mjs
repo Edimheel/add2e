@@ -60,7 +60,7 @@ function add2eAttackDialogClasses(classes) {
   return Array.from(new Set([...(classes ?? []), "add2e-attack-dialog-compact"]));
 }
 
-function add2eForceAttackDialogSize(dialog, width = 350) {
+function add2eForceAttackDialogSize(dialog, width = 385) {
   try {
     dialog?.setPosition?.({ width, height: "auto" });
 
@@ -104,7 +104,7 @@ function add2eForceAttackDialogSize(dialog, width = 350) {
 
 export async function add2eAttackOpenDialogV2({ title, content, width, classes, defaultAction, onOk }) {
   const DialogV2 = foundry.applications?.api?.DialogV2;
-  const compactWidth = 350;
+  const compactWidth = 385;
   const dialogClasses = add2eAttackDialogClasses(classes);
 
   if (DialogV2) {
@@ -206,9 +206,9 @@ export function add2eBuildAttackDialogContent({
           .application.add2e-attack-dialog-compact,
           .window-app.add2e-attack-dialog-compact,
           .dialog.add2e-attack-dialog-compact {
-            width: 350px !important;
-            min-width: 350px !important;
-            max-width: 350px !important;
+            width: 385px !important;
+            min-width: 385px !important;
+            max-width: 385px !important;
             height: auto !important;
             min-height: 0 !important;
             max-height: none !important;
@@ -217,7 +217,7 @@ export function add2eBuildAttackDialogContent({
           .add2e-attack-dialog-compact .standard-form {
             width: 100% !important;
             min-width: 0 !important;
-            max-width: 350px !important;
+            max-width: 385px !important;
             height: auto !important;
             min-height: 0 !important;
             padding: 6px !important;
@@ -243,7 +243,7 @@ export function add2eBuildAttackDialogContent({
             --a2e-red: #8f2d22;
             display: block;
             width: 100%;
-            max-width: 326px;
+            max-width: 361px;
             color: var(--a2e-ink);
             padding: 0;
             margin: 0;
@@ -316,7 +316,7 @@ export function add2eBuildAttackDialogContent({
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:4px;align-items:start;margin-bottom:0;">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:4px;align-items:start;margin-bottom:0;">
             <div style="min-width:0;display:flex;align-items:center;gap:5px;padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
               <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;margin:0;">Modificateurs</label>
               <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:48px !important;min-width:48px !important;text-align:center !important;">
