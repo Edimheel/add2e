@@ -121,7 +121,6 @@ export function add2eBuildAttackDialogContent({
   const attackerName = add2eAttackEscapeHtml(actor?.name ?? "Attaquant");
   const targetName = add2eAttackEscapeHtml(cible?.name ?? "Cible");
   const weaponName = add2eAttackEscapeHtml(arme?.name ?? "Arme");
-  const backLabel = add2eAttackEscapeHtml(backArcInfo?.label ?? "Face");
   const attackerImg = add2eAttackImage(actor);
   const targetImg = add2eAttackImage(cible);
   const weaponImg = add2eAttackImage(arme, "icons/svg/sword.svg");
@@ -157,32 +156,12 @@ export function add2eBuildAttackDialogContent({
             min-height: 32px !important;
             padding: 4px 7px !important;
           }
-          .add2e-attack-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 3px 8px;
-            border: 1px solid #d1a13d;
-            border-radius: 999px;
-            background: #fff7da;
-            color: #68420e;
-            font-size: .78rem;
-            font-weight: 850;
-            line-height: 1.1;
-            margin: 2px 3px 0 0;
-          }
           .add2e-attack-label {
             font-size: .78rem;
             font-weight: 950;
             text-transform: uppercase;
             letter-spacing: .03em;
             color: var(--a2e-brown);
-          }
-          .add2e-attack-help {
-            margin-top: 1px;
-            font-size: .76rem;
-            line-height: 1.2;
-            color: #71581d;
-            font-weight: 700;
           }
           .add2e-inline-check {
             display: flex;
@@ -205,16 +184,7 @@ export function add2eBuildAttackDialogContent({
           .add2e-rear-specials {
             display: none;
             gap: 6px;
-            align-items: center;
-          }
-          .add2e-position-result {
-            margin-top: 5px;
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            color: #5d3d0d;
-            font-size: .8rem;
-            font-weight: 800;
+            align-items: stretch;
           }
         </style>
 
@@ -225,9 +195,9 @@ export function add2eBuildAttackDialogContent({
               <div style="min-width:0;">
                 <div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#5a3510;">Attaquant</div>
                 <div style="font-size:1.04rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${attackerName}">${attackerName}</div>
-                <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+                <div style="display:flex;align-items:center;gap:5px;margin-top:4px;font-weight:900;color:#5a3510;">
                   <img src="${weaponImg}" alt="" style="width:20px !important;height:20px !important;max-width:20px !important;max-height:20px !important;object-fit:cover !important;display:inline-block !important;border-radius:5px !important;vertical-align:middle !important;">
-                  <span class="add2e-attack-pill">${weaponName}</span>
+                  <span>${weaponName}</span>
                 </div>
               </div>
             </div>
@@ -243,33 +213,21 @@ export function add2eBuildAttackDialogContent({
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 210px 72px;gap:8px;align-items:end;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
-            <div>
-              <label class="add2e-attack-label" for="add2e-position-zone">Direction de l’attaque</label>
-              <div class="add2e-attack-help">La valeur automatique est appliquée par défaut. Tu peux la corriger manuellement.</div>
-            </div>
+          <div style="display:grid;grid-template-columns:auto 210px;gap:8px;align-items:center;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
+            <label class="add2e-attack-label" for="add2e-position-zone" style="white-space:nowrap;">Position</label>
             <select id="add2e-position-zone" class="add2e-attack-select" style="width:210px !important;" onchange="var f=this.closest('form');var rear=this.value==='rear';var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=rear?'grid':'none';});if(!rear&&f){f.querySelectorAll('#add2e-backstab,#add2e-assassinat-confirm').forEach(function(c){c.checked=false;});}">
               <option value="front"${selected("front")}>Face</option>
               <option value="flank"${selected("flank")}>Flanc</option>
               <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
               <option value="rear"${selected("rear")}>Dos</option>
             </select>
-            <div style="text-align:right;">
-              <div class="add2e-attack-label" style="font-size:.68rem;">Auto</div>
-              <span class="add2e-attack-pill" style="margin-top:3px;">${backLabel}</span>
-            </div>
-            ${positionAttackAdjustment.details.length ? `
-            <div class="add2e-position-result" style="grid-column:1 / -1;">
-              <span>Effet de position</span>
-              <span>${positionAttackAdjustment.details.map(add2eAttackEscapeHtml).join("<br>")}</span>
-            </div>` : ""}
           </div>
 
-          <div style="display:grid;grid-template-columns:auto 76px ${hasRearSpecial ? "minmax(0,1fr)" : "0"};gap:8px;align-items:center;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
-            <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;">Modificateurs</label>
+          <div style="display:grid;grid-template-columns:auto 76px minmax(0,1fr);gap:8px;align-items:start;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
+            <label class="add2e-attack-label" for="add2e-bonus-attaque" style="white-space:nowrap;margin-top:8px;">Modificateurs</label>
             <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:76px !important;text-align:center !important;">
             ${hasRearSpecial ? `
-            <div class="add2e-rear-specials" style="display:${rearDisplay};grid-template-columns:repeat(${showBackstabForClass && showAssassinationForClass ? 2 : 1}, minmax(0,1fr));">
+            <div class="add2e-rear-specials" style="display:${rearDisplay};grid-template-columns:1fr;">
               ${showBackstabForClass ? `
               <label class="add2e-inline-check" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}">
                 <input type="checkbox" id="add2e-backstab">
@@ -282,12 +240,6 @@ export function add2eBuildAttackDialogContent({
               </label>` : ""}
             </div>` : ""}
           </div>
-
-          ${showAssassinationForClass ? `
-          <div class="add2e-rear-specials" style="display:${rearDisplay};grid-template-columns:auto 76px;align-items:center;justify-content:end;gap:8px;margin-bottom:8px;">
-            <label class="add2e-attack-label" for="add2e-assassinat-mod" style="white-space:nowrap;">Mod. assassinat</label>
-            <input id="add2e-assassinat-mod" class="add2e-attack-input" type="number" value="0" step="1" style="width:76px !important;text-align:center !important;">
-          </div>` : ""}
         </form>
       `;
 }
