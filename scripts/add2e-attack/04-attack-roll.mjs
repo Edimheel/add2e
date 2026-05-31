@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04-attack-roll.mjs
 // ADD2E — Résolution des attaques.
-// Version : 2026-05-30-attack-roll-gm-chat-relay-v3
+// Version : 2026-05-30-attack-roll-gm-chat-relay-v4
 
 import { plageToRollFormula } from "./01-core-helpers.mjs";
 import { add2eApplyDamage } from "./02-damage.mjs";
@@ -46,7 +46,7 @@ import {
 } from "./04i-attack-roll-chat-card.mjs";
 
 const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
-const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-gm-chat-relay-v3";
+const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-gm-chat-relay-v4";
 
 function add2eAttackHtmlEscape(value) {
   const div = document.createElement("div");
@@ -119,7 +119,8 @@ async function add2eCreateOrRelayGmAttackChat({ actor, content, avatar }) {
     user: game.user?.name,
     isGM: game.user?.isGM,
     whisper,
-    actor: actor?.name
+    actor: actor?.name,
+    relay: !game.user?.isGM
   });
 
   if (game.user?.isGM) {
@@ -132,6 +133,64 @@ async function add2eCreateOrRelayGmAttackChat({ actor, content, avatar }) {
     payload: messageData
   });
   return true;
+}
+
+function add2eRegisterGmAttackChatRelay() {
+  const register = () => {
+    if (!game?.socket?.on) return false;
+    if (globalThis.__ADD2E_ATTACK_GM_DETAIL_SOCKET === ADD2E_ATTACK_GM_CHAT_VERSION) return true;
+    globalThis.__ADD2E_ATTACK_GM_DETAIL_SOCKET = ADD2E_ATTACK_GM_CHAT_VERSION;
+
+    game.socket.on("system.add2e", async (data = {}) => {
+      if (data?.type !== ADD2E_ATTACK_GM_DETAIL_CHAT) return;
+
+      console.log("[ADD2E][ATTAQUE][GM_CHAT][SOCKET_RECEIVED]", {
+        version: ADD2E_ATTACK_GM_CHAT_VERSION,
+        user: game.user?.name,
+        isGM: game.user?.isGM,
+        hasContent: !!data?.payload?.content
+      });
+
+      if (!game.user?.isGM) return;
+
+      const payload = data.payload ?? {};
+      if (!payload.content) {
+        console.warn("[ADD2E][ATTAQUE][GM_CHAT][SOCKET_EMPTY_CONTENT]", { payload });
+        return;
+      }
+
+      await ChatMessage.create({
+        speaker: payload.speaker ?? ChatMessage.getSpeaker(),
+        content: payload.content,
+        avatar: payload.avatar,
+        whisper: add2eGetGmWhisperIds(),
+        blind: false,
+        flags: {
+          ...(payload.flags ?? {}),
+          add2e: {
+            ...(payload.flags?.add2e ?? {}),
+            attackChatVisibility: "gm-only",
+            attackChatVisibilityVersion: globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION ?? ADD2E_ATTACK_GM_CHAT_VERSION,
+            attackGmChatRelayVersion: ADD2E_ATTACK_GM_CHAT_VERSION,
+            attackGmChatRelayedBySocket: true
+          }
+        }
+      });
+    });
+
+    console.log("[ADD2E][ATTAQUE][GM_CHAT][SOCKET_REGISTERED]", {
+      version: ADD2E_ATTACK_GM_CHAT_VERSION,
+      user: game.user?.name,
+      isGM: game.user?.isGM
+    });
+    return true;
+  };
+
+  if (register()) return;
+  Hooks.once("ready", register);
+  setTimeout(register, 250);
+  setTimeout(register, 1000);
+  setTimeout(register, 2500);
 }
 
 function add2eResolveAttackThac0(actor) {
@@ -483,4 +542,5 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   });
 }
 
+add2eRegisterGmAttackChatRelay();
 globalThis.add2eAttackRoll = add2eAttackRoll;
