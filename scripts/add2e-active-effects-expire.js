@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-unconscious-inactive-v12
+// Version : 2026-05-31-vital-status-static-status-ids-v13
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-unconscious-inactive-v12";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-static-status-ids-v13";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -56,6 +56,7 @@ function add2eVitalRegisterStatusEffects() {
 
   const definitions = [
     {
+      _id: "dead",
       id: "dead",
       name: "Mort",
       label: "Mort",
@@ -63,16 +64,17 @@ function add2eVitalRegisterStatusEffects() {
       icon: ADD2E_VITAL_STATUS.dead.icon,
       statuses: ["dead"],
       special: "DEFEATED",
-      flags: { add2e: { vitalStatus: "dead", autoVitalStatus: true } }
+      flags: { core: { statusId: "dead" }, add2e: { vitalStatus: "dead", autoVitalStatus: true } }
     },
     {
+      _id: "unconscious",
       id: "unconscious",
       name: "Inconscient",
       label: "Inconscient",
       img: ADD2E_VITAL_STATUS.unconscious.icon,
       icon: ADD2E_VITAL_STATUS.unconscious.icon,
       statuses: ["unconscious", "incapacitated"],
-      flags: { add2e: { vitalStatus: "unconscious", autoVitalStatus: true } }
+      flags: { core: { statusId: "unconscious" }, add2e: { vitalStatus: "unconscious", autoVitalStatus: true } }
     }
   ];
 
