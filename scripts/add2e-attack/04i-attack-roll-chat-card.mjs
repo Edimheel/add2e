@@ -1,8 +1,8 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Cartes de chat d'attaque.
-// Version : 2026-05-30-attack-chat-player-roleplay-local-chatmessage-v19
+// Version : 2026-05-30-attack-chat-player-roleplay-local-dom-v20
 
-const VERSION = "2026-05-30-attack-chat-player-roleplay-local-chatmessage-v19";
+const VERSION = "2026-05-30-attack-chat-player-roleplay-local-dom-v20";
 const SOCKET = "system.add2e";
 const PLAYER_ROLEPLAY_TYPE = "ADD2E_ATTACK_PLAYER_ROLEPLAY_CHAT";
 const LOG = "[ADD2E][ATTACK_CHAT]";
@@ -133,7 +133,7 @@ function portrait(name, img, fallbackIcon = "fa-user") {
 function cardShell(kind, ctx, inner) {
   const o = outcome(ctx);
   const isGM = kind === "gm";
-  const cls = isGM ? "add2e-attack-chat-card-gm-v19" : "add2e-attack-chat-card-player-v19";
+  const cls = isGM ? "add2e-attack-chat-card-gm-v20" : "add2e-attack-chat-card-player-v20";
   const attackerImg = ctx.chatImg || ctx.actor?.img || "";
   const defenderImg = ctx.cible?.token?.texture?.src || ctx.cible?.img || "";
   return `<div class="add2e-chat-card ${cls}" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">
@@ -202,45 +202,69 @@ function buildGmCard(ctx) {
   `);
 }
 
-async function createLocalPlayerRoleplayMessage(payload = {}) {
+function chatRootElement() {
+  const raw = ui.chat?.element;
+  if (!raw) return null;
+  if (raw instanceof HTMLElement) return raw;
+  if (raw[0] instanceof HTMLElement) return raw[0];
+  return null;
+}
+
+function findChatLog() {
+  const root = chatRootElement();
+  const selectors = ["#chat-log", ".chat-log", "ol.chat-log", "ul.chat-log", "[data-application-part='log']", ".chat-messages"];
+  for (const selector of selectors) {
+    const node = root?.querySelector?.(selector) ?? document.querySelector(selector);
+    if (node) return node;
+  }
+  return null;
+}
+
+function appendLocalRoleplayDom(payload = {}, attempt = 0) {
   const isGM = !!game.user?.isGM;
   const targets = Array.isArray(payload.userIds) ? payload.userIds.filter(Boolean) : [];
   const content = String(payload.content ?? "");
   const messageId = String(payload.messageId ?? "");
   const rendered = globalThis.__ADD2E_ATTACK_ROLEPLAY_RENDERED_IDS;
 
+  if (isGM) {
+    console.log(`${LOG}[PLAYER_ROLEPLAY][SKIP_GM]`, { version: VERSION, user: game.user?.name, messageId });
+    return false;
+  }
+
   console.log(`${LOG}[PLAYER_ROLEPLAY][RENDER_PLAYER_ONLY]`, {
     version: VERSION,
     user: game.user?.name,
-    isGM,
     userId: game.user?.id,
     targets,
-    accepted: !isGM && (!targets.length || targets.includes(game.user.id)),
+    accepted: !targets.length || targets.includes(game.user.id),
     hasContent: !!content,
-    messageId
+    messageId,
+    attempt
   });
 
-  if (isGM) return false;
   if (targets.length && !targets.includes(game.user.id)) return false;
   if (!content) return false;
   if (messageId && rendered?.has?.(messageId)) return false;
+
+  const log = findChatLog();
+  if (!log) {
+    ui.chat?.render?.(true);
+    if (attempt < 10) setTimeout(() => appendLocalRoleplayDom(payload, attempt + 1), 150 + attempt * 100);
+    else console.warn(`${LOG}[PLAYER_ROLEPLAY][NO_CHAT_LOG_AFTER_RETRIES]`, { version: VERSION, user: game.user?.name, messageId });
+    return false;
+  }
+
   if (messageId) rendered?.add?.(messageId);
 
-  await ChatMessage.create({
-    speaker: payload.speaker ?? ChatMessage.getSpeaker(),
-    content,
-    avatar: payload.avatar,
-    whisper: [game.user.id],
-    blind: false,
-    flags: {
-      add2e: {
-        attackChatVisibility: "player-roleplay-local",
-        attackChatVisibilityVersion: VERSION,
-        attackChatKind: "player-roleplay",
-        attackRoleplayMessageId: messageId
-      }
-    }
-  });
+  const wrapper = document.createElement("li");
+  wrapper.className = "chat-message message flexcol add2e-local-attack-player-message";
+  wrapper.dataset.add2eLocalAttackCard = VERSION;
+  if (messageId) wrapper.dataset.add2eAttackRoleplayMessageId = messageId;
+  wrapper.innerHTML = `<header class="message-header flexrow"><h4 class="message-sender">${esc(payload.speaker?.alias || "ADD2E")}</h4><span class="message-metadata"><time class="message-timestamp">${new Date().toLocaleTimeString()}</time></span></header><div class="message-content">${content}</div>`;
+
+  log.appendChild(wrapper);
+  ui.chat?.scrollBottom?.();
   return true;
 }
 
@@ -254,7 +278,7 @@ function onSocketMessage(data) {
     targets: data?.payload?.userIds ?? [],
     messageId: data?.payload?.messageId ?? null
   });
-  createLocalPlayerRoleplayMessage(data.payload ?? {}).catch(err => console.warn(`${LOG}[PLAYER_ROLEPLAY][CREATE_LOCAL_FAILED]`, err));
+  appendLocalRoleplayDom(data.payload ?? {});
 }
 
 function registerSocket() {
@@ -301,7 +325,7 @@ async function sendPlayerRoleplayCard(ctx) {
 
   if (!users.length) return false;
 
-  await createLocalPlayerRoleplayMessage(payload);
+  appendLocalRoleplayDom(payload);
   game.socket?.emit?.(SOCKET, { type: PLAYER_ROLEPLAY_TYPE, payload });
   return true;
 }
@@ -311,7 +335,7 @@ function installVisibilityGuard() {
   globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = VERSION;
   Hooks.on("preCreateChatMessage", (message, data = {}) => {
     const content = String(data.content ?? message?.content ?? "");
-    if (content.includes("add2e-attack-chat-card-gm-v19") || content.includes("add2e-attack-chat-card-gm-v18") || content.includes("add2e-attack-chat-card-gm-v17") || content.includes("add2e-attack-chat-card-gm-v16") || content.includes("add2e-attack-chat-card-gm-v15") || content.includes("add2e-attack-chat-card-gm-v12") || content.includes("add2e-attack-chat-card-gm-v11")) {
+    if (content.includes("add2e-attack-chat-card-gm-v20") || content.includes("add2e-attack-chat-card-gm-v19") || content.includes("add2e-attack-chat-card-gm-v18") || content.includes("add2e-attack-chat-card-gm-v17") || content.includes("add2e-attack-chat-card-gm-v16") || content.includes("add2e-attack-chat-card-gm-v15") || content.includes("add2e-attack-chat-card-gm-v12") || content.includes("add2e-attack-chat-card-gm-v11")) {
       message.updateSource?.({
         whisper: gmIds(),
         blind: false,
@@ -336,6 +360,7 @@ globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
     isGM: game.user?.isGM,
     ready: game?.ready,
     hasSocket: !!game?.socket,
+    chatLog: !!findChatLog(),
     players: playerUsers().map(u => ({ id: u.id, name: u.name, active: u.active }))
   };
 };
