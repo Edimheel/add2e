@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-token-only-v19
+// Version : 2026-05-31-vital-status-monster-hp-strict-v20
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-token-only-v19";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-monster-hp-strict-v20";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -115,11 +115,18 @@ function add2eVitalReadHP(actor) {
   return add2eVitalNumber(raw, add2eVitalNumber(fallback, 0));
 }
 
+function add2eVitalActorType(actor) {
+  return String(actor?.type ?? "").toLowerCase();
+}
+
 function add2eVitalDesiredStatus(actor) {
-  const type = String(actor?.type ?? "").toLowerCase();
+  const type = add2eVitalActorType(actor);
   const hp = add2eVitalReadHP(actor);
 
+  // Monstres : règle stricte demandée.
+  // PV > 0 = vivant ; PV <= 0 = mort.
   if (type === "monster") return hp <= 0 ? "dead" : null;
+
   if (type === "personnage") {
     if (hp <= -11) return "dead";
     if (hp <= 0) return "unconscious";
@@ -181,14 +188,10 @@ function add2eVitalActorEffectData(statusId) {
 }
 
 async function add2eVitalRemoveActorVitalEffects(_actor) {
-  // Depuis v19, les états vitaux automatiques ne modifient plus Actor.effects.
-  // Cela évite les courses Foundry : _id déjà existant / effet déjà supprimé.
   return 0;
 }
 
 async function add2eVitalSetActorStatus(_actor, _statusId, _active, _overlay = false) {
-  // Depuis v19, l'état visible est porté par TokenDocument.effects,
-  // et l'état d'initiative par Combatant.defeated.
   return false;
 }
 
@@ -247,13 +250,7 @@ async function add2eVitalSetTokenEffects(token, desired) {
 
   if (!Object.keys(patch).length) return false;
   await doc.update(patch, { add2eVitalStatusSync: true });
-  console.log("[ADD2E][VITAL_STATUS][TOKEN_ICON]", {
-    token: doc.name,
-    desired,
-    desiredIcon,
-    removed,
-    effects: cleanEffects
-  });
+  console.log("[ADD2E][VITAL_STATUS][TOKEN_ICON]", { token: doc.name, desired, desiredIcon, removed, effects: cleanEffects });
   return true;
 }
 
@@ -312,7 +309,7 @@ async function add2eVitalSyncTokenState(actor, desired, { preserveDefeated = fal
 }
 
 async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
-  if (!actor || !["personnage", "monster"].includes(String(actor.type ?? "").toLowerCase())) return false;
+  if (!actor || !["personnage", "monster"].includes(add2eVitalActorType(actor))) return false;
   if (!game.user?.isGM) return false;
   const lockKey = actor.uuid ?? actor.id;
   if (ADD2E_VITAL_SYNC_LOCK.has(lockKey)) return false;
@@ -320,8 +317,9 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
   try {
     add2eVitalRegisterStatusEffects();
     const desired = add2eVitalDesiredStatus(actor);
+    const actorType = add2eVitalActorType(actor);
     const trackerDefeated = add2eVitalActorHasDefeatedCombatant(actor);
-    const preserveDefeated = trackerDefeated && desired === null;
+    const preserveDefeated = actorType !== "monster" && trackerDefeated && desired === null;
     const before = add2eVitalArray(actor?.effects).filter(e => add2eVitalEffectKind(e)).map(e => ({ id: e.id, name: e.name, kind: add2eVitalEffectKind(e), icon: e.icon }));
     const removed = 0;
     const actorStatus = null;
@@ -335,6 +333,7 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
       desired,
       trackerDefeated,
       preserveDefeated,
+      monsterStrictHpRule: actorType === "monster",
       actorStatus,
       removed,
       before,
