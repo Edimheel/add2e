@@ -27,6 +27,35 @@ function add2eAttackImage(entity, fallback = "icons/svg/mystery-man.svg") {
   return add2eAttackEscapeHtml(entity?.img ?? entity?.texture?.src ?? entity?.document?.texture?.src ?? fallback);
 }
 
+function add2eAttackNormalizeText(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[\s\-]+/g, "_");
+}
+
+function add2eAttackClassNames(actor) {
+  const details = actor?.system?.details_classe ?? {};
+  return [
+    actor?.system?.classe,
+    details?.label,
+    details?.name,
+    details?.nom,
+    details?.classe,
+    details?.slug
+  ].map(add2eAttackNormalizeText).filter(Boolean);
+}
+
+function add2eAttackIsThiefOrAssassin(actor) {
+  return add2eAttackClassNames(actor).some(n => n.includes("voleur") || n.includes("assassin"));
+}
+
+function add2eAttackIsAssassin(actor) {
+  return add2eAttackClassNames(actor).some(n => n.includes("assassin"));
+}
+
 export async function add2eAttackOpenDialogV2({ title, content, width, classes, defaultAction, onOk }) {
   const DialogV2 = foundry.applications?.api?.DialogV2;
 
@@ -99,6 +128,9 @@ export function add2eBuildAttackDialogContent({
   const weaponImg = add2eAttackImage(arme, "icons/svg/sword.svg");
   const backstabMultiplier = add2eAttackEscapeHtml(backstabInfo?.multiplier ?? "");
   const assassinationScore = add2eAttackEscapeHtml(assassinationInfo?.score ?? "0");
+  const showBackstabForClass = !!canUseBackstab && add2eAttackIsThiefOrAssassin(actor);
+  const showAssassinationForClass = !!canUseAssassination && add2eAttackIsAssassin(actor);
+  const hasRearSpecial = showBackstabForClass || showAssassinationForClass;
 
   return `
         <style>
@@ -179,6 +211,12 @@ export function add2eBuildAttackDialogContent({
             font-size: .8rem;
             font-weight: 800;
           }
+          .add2e-rear-specials {
+            display: none;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 8px;
+          }
         </style>
 
         <form class="add2e-attack-form">
@@ -213,9 +251,9 @@ export function add2eBuildAttackDialogContent({
           <div style="display:grid;grid-template-columns:minmax(0,1fr) 210px 84px;gap:8px;align-items:end;margin-bottom:8px;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
             <div>
               <label class="add2e-attack-label" for="add2e-position-zone">Direction de l’attaque</label>
-              <div class="add2e-attack-help">Choix manuel de l’angle réellement utilisé pour résoudre le bonus de position.</div>
+              <div class="add2e-attack-help">Choix manuel de l’angle réellement utilisé. Les options sournoise/assassinat n’apparaissent qu’en position Dos.</div>
             </div>
-            <select id="add2e-position-zone" class="add2e-attack-select" style="width:210px !important;">
+            <select id="add2e-position-zone" class="add2e-attack-select" style="width:210px !important;" onchange="var f=this.closest('form');var blocks=f&&f.querySelectorAll('.add2e-rear-specials');blocks&&blocks.forEach(function(b){b.style.display=this.value==='rear'?'grid':'none';},this);">
               <option value="front" selected>Face</option>
               <option value="flank">Flanc</option>
               <option value="rear-flank">Flanc arrière</option>
@@ -241,21 +279,21 @@ export function add2eBuildAttackDialogContent({
             <input id="add2e-bonus-attaque" class="add2e-attack-input" type="number" value="0" step="1" style="width:76px !important;text-align:center !important;">
           </div>
 
-          ${specialOptionsVisible ? `
-          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px;">
-            ${canUseBackstab ? `
+          ${hasRearSpecial ? `
+          <div class="add2e-rear-specials">
+            ${showBackstabForClass ? `
             <label class="add2e-check">
               <input type="checkbox" id="add2e-backstab">
-              <span><span class="add2e-check-title">Attaque sournoise</span><span class="add2e-check-meta">+4 toucher · dégâts ×${backstabMultiplier}</span></span>
+              <span><span class="add2e-check-title">Attaque sournoise</span><span class="add2e-check-meta">Voleur / assassin · Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}</span></span>
             </label>` : ""}
-            ${canUseAssassination ? `
+            ${showAssassinationForClass ? `
             <label class="add2e-check">
               <input type="checkbox" id="add2e-assassinat-confirm">
-              <span><span class="add2e-check-title">Assassinat</span><span class="add2e-check-meta">${assassinationScore}% si l’attaque touche</span></span>
+              <span><span class="add2e-check-title">Assassinat</span><span class="add2e-check-meta">Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche</span></span>
             </label>` : ""}
           </div>
-          ${canUseAssassination ? `
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:8px;align-items:center;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
+          ${showAssassinationForClass ? `
+          <div class="add2e-rear-specials" style="grid-template-columns:minmax(0,1fr) 76px;align-items:center;padding:9px 10px;border:1px solid #d5b15a;border-radius:12px;background:#fffdf4;">
             <div>
               <label class="add2e-attack-label" for="add2e-assassinat-mod">Modificateur assassinat</label>
               <div class="add2e-attack-help">Ajustement manuel du pourcentage d’assassinat.</div>
