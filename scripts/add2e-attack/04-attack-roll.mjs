@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04-attack-roll.mjs
 // ADD2E — Résolution des attaques.
-// Version : 2026-05-30-attack-roll-invocation-dedupe-v8
+// Version : 2026-05-30-attack-roll-chat-duplicate-diagnostics-v9
 
 import { plageToRollFormula } from "./01-core-helpers.mjs";
 import { add2eApplyDamage } from "./02-damage.mjs";
@@ -46,12 +46,19 @@ import {
 } from "./04i-attack-roll-chat-card.mjs";
 
 const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
-const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-invocation-dedupe-v8";
+const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-chat-duplicate-diagnostics-v9";
 const ADD2E_ATTACK_GM_DETAIL_DEDUPE_MS = 4000;
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
 globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS ??= new Map();
 globalThis.__ADD2E_ATTACK_ROLL_INVOKE_KEYS ??= new Map();
+globalThis.__ADD2E_ATTACK_DIAG_SEQ ??= 0;
+globalThis.__ADD2E_ATTACK_GM_DETAIL_REGISTER_COUNT ??= 0;
+
+function add2eAttackNextDiagId(prefix = "atk") {
+  globalThis.__ADD2E_ATTACK_DIAG_SEQ = Number(globalThis.__ADD2E_ATTACK_DIAG_SEQ || 0) + 1;
+  return `${prefix}-${Date.now()}-${globalThis.__ADD2E_ATTACK_DIAG_SEQ}`;
+}
 
 function add2eAttackHtmlEscape(value) {
   const div = document.createElement("div");
@@ -91,14 +98,28 @@ function add2eBuildAttackInvocationKey({ actor, arme, cibleToken }) {
   ].join("|");
 }
 
-function add2eEnterAttackInvocationGuard(key) {
+function add2eEnterAttackInvocationGuard(key, diagId = null) {
   const now = Date.now();
   const map = globalThis.__ADD2E_ATTACK_ROLL_INVOKE_KEYS;
   add2ePruneTimedMap(map, ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS, now);
 
+  const existingTs = map instanceof Map ? map.get(key) : null;
+  console.log("[ADD2E][ATTAQUE][ROLL][INVOCATION_GUARD_CHECK]", {
+    version: ADD2E_ATTACK_GM_CHAT_VERSION,
+    diagId,
+    user: game.user?.name,
+    userId: game.user?.id,
+    isGM: game.user?.isGM,
+    key,
+    alreadyPresent: map?.has?.(key) ?? false,
+    ageMs: existingTs ? now - Number(existingTs) : null,
+    activeKeys: map instanceof Map ? Array.from(map.keys()) : []
+  });
+
   if (map?.has?.(key)) {
     console.warn("[ADD2E][ATTAQUE][ROLL][SKIP_DUPLICATE_INVOCATION]", {
       version: ADD2E_ATTACK_GM_CHAT_VERSION,
+      diagId,
       user: game.user?.name,
       isGM: game.user?.isGM,
       key
@@ -157,9 +178,22 @@ function add2eBuildGmDetailAttackMessageId({ actor, content, sourceUserId }) {
 }
 
 async function add2eCreateGmAttackChatMessage(payload = {}) {
+  const diagId = payload.flags?.add2e?.attackDiagId ?? null;
+
+  console.log("[ADD2E][ATTAQUE][GM_DETAIL][CREATE_ENTER]", {
+    version: ADD2E_ATTACK_GM_CHAT_VERSION,
+    diagId,
+    user: game.user?.name,
+    userId: game.user?.id,
+    isGM: game.user?.isGM,
+    hasContent: !!payload.content,
+    attackMessageId: payload.flags?.add2e?.attackMessageId ?? null,
+    handledIds: globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS instanceof Map ? Array.from(globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS.keys()) : []
+  });
+
   if (!game.user?.isGM) return false;
   if (!payload.content) {
-    console.warn("[ADD2E][ATTAQUE][GM_DETAIL][EMPTY_CONTENT]", { payload });
+    console.warn("[ADD2E][ATTAQUE][GM_DETAIL][EMPTY_CONTENT]", { diagId, payload });
     return false;
   }
 
@@ -177,6 +211,7 @@ async function add2eCreateGmAttackChatMessage(payload = {}) {
   if (attackMessageId && handled?.has?.(attackMessageId)) {
     console.warn("[ADD2E][ATTAQUE][GM_DETAIL][SKIP_DUPLICATE]", {
       version: ADD2E_ATTACK_GM_CHAT_VERSION,
+      diagId,
       attackMessageId,
       user: game.user?.name
     });
@@ -185,7 +220,7 @@ async function add2eCreateGmAttackChatMessage(payload = {}) {
 
   if (attackMessageId) handled?.set?.(attackMessageId, now);
 
-  await ChatMessage.create({
+  const createData = {
     speaker: payload.speaker ?? ChatMessage.getSpeaker(),
     content: payload.content,
     avatar: payload.avatar,
@@ -199,14 +234,37 @@ async function add2eCreateGmAttackChatMessage(payload = {}) {
         attackChatVisibilityVersion: globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION ?? ADD2E_ATTACK_GM_CHAT_VERSION,
         attackGmChatVersion: ADD2E_ATTACK_GM_CHAT_VERSION,
         attackGmCreatedBy: game.user?.id ?? null,
-        attackMessageId
+        attackMessageId,
+        attackDiagId: diagId
       }
     }
+  };
+
+  console.log("[ADD2E][ATTAQUE][GM_DETAIL][CHATMESSAGE_CREATE_CALL]", {
+    version: ADD2E_ATTACK_GM_CHAT_VERSION,
+    diagId,
+    attackMessageId,
+    user: game.user?.name,
+    whisper: createData.whisper,
+    contentHash: add2eAttackHash(createData.content),
+    contentLength: String(createData.content ?? "").length
   });
+
+  const created = await ChatMessage.create(createData);
+
+  console.log("[ADD2E][ATTAQUE][GM_DETAIL][CHATMESSAGE_CREATED]", {
+    version: ADD2E_ATTACK_GM_CHAT_VERSION,
+    diagId,
+    attackMessageId,
+    user: game.user?.name,
+    messageId: created?.id ?? null,
+    whisper: created?.whisper ?? null
+  });
+
   return true;
 }
 
-async function add2eRouteGmAttackChat({ actor, content, avatar }) {
+async function add2eRouteGmAttackChat({ actor, content, avatar, diagId = null }) {
   const whisper = add2eGetGmWhisperIds();
   const attackMessageId = add2eBuildGmDetailAttackMessageId({ actor, content, sourceUserId: game.user?.id });
   const messageData = {
@@ -221,18 +279,24 @@ async function add2eRouteGmAttackChat({ actor, content, avatar }) {
         attackChatVisibilityVersion: globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION ?? ADD2E_ATTACK_GM_CHAT_VERSION,
         attackGmChatVersion: ADD2E_ATTACK_GM_CHAT_VERSION,
         attackMessageId,
-        attackSourceUserId: game.user?.id ?? null
+        attackSourceUserId: game.user?.id ?? null,
+        attackDiagId: diagId
       }
     }
   };
 
   console.log("[ADD2E][ATTAQUE][GM_DETAIL][ROUTE]", {
     version: ADD2E_ATTACK_GM_CHAT_VERSION,
+    diagId,
     user: game.user?.name,
+    userId: game.user?.id,
     isGM: game.user?.isGM,
     whisper,
     actor: actor?.name,
+    actorId: actor?.id,
     hasContent: !!content,
+    contentHash: add2eAttackHash(content),
+    contentLength: String(content ?? "").length,
     attackMessageId,
     route: game.user?.isGM ? "CREATE_BY_GM" : "REQUEST_TO_GM"
   });
@@ -242,12 +306,23 @@ async function add2eRouteGmAttackChat({ actor, content, avatar }) {
   if (game.user?.isGM) {
     console.log("[ADD2E][ATTAQUE][GM_DETAIL][CREATE_BY_GM]", {
       version: ADD2E_ATTACK_GM_CHAT_VERSION,
+      diagId,
       actor: actor?.name,
       user: game.user?.name,
       attackMessageId
     });
     return add2eCreateGmAttackChatMessage(messageData);
   }
+
+  console.log("[ADD2E][ATTAQUE][GM_DETAIL][SOCKET_EMIT]", {
+    version: ADD2E_ATTACK_GM_CHAT_VERSION,
+    diagId,
+    fromUser: game.user?.name,
+    fromUserId: game.user?.id,
+    type: ADD2E_ATTACK_GM_DETAIL_CHAT,
+    attackMessageId,
+    whisper
+  });
 
   game.socket?.emit?.("system.add2e", {
     type: ADD2E_ATTACK_GM_DETAIL_CHAT,
@@ -261,31 +336,43 @@ function add2eRegisterGmAttackChatRelay() {
     if (!game?.socket?.on) return false;
     if (globalThis.__ADD2E_ATTACK_GM_DETAIL_SOCKET === ADD2E_ATTACK_GM_CHAT_VERSION) return true;
     globalThis.__ADD2E_ATTACK_GM_DETAIL_SOCKET = ADD2E_ATTACK_GM_CHAT_VERSION;
+    globalThis.__ADD2E_ATTACK_GM_DETAIL_REGISTER_COUNT = Number(globalThis.__ADD2E_ATTACK_GM_DETAIL_REGISTER_COUNT || 0) + 1;
+    const handlerId = `gm-detail-handler-${globalThis.__ADD2E_ATTACK_GM_DETAIL_REGISTER_COUNT}`;
 
     game.socket.on("system.add2e", async (data = {}) => {
       if (data?.type !== ADD2E_ATTACK_GM_DETAIL_CHAT) return;
 
       console.log("[ADD2E][ATTAQUE][GM_DETAIL][SOCKET_RECEIVED]", {
         version: ADD2E_ATTACK_GM_CHAT_VERSION,
+        handlerId,
         user: game.user?.name,
+        userId: game.user?.id,
         isGM: game.user?.isGM,
         hasContent: !!data?.payload?.content,
-        attackMessageId: data?.payload?.flags?.add2e?.attackMessageId ?? null
+        contentHash: add2eAttackHash(data?.payload?.content ?? ""),
+        attackMessageId: data?.payload?.flags?.add2e?.attackMessageId ?? null,
+        diagId: data?.payload?.flags?.add2e?.attackDiagId ?? null,
+        socketRegisteredVersion: globalThis.__ADD2E_ATTACK_GM_DETAIL_SOCKET,
+        registerCount: globalThis.__ADD2E_ATTACK_GM_DETAIL_REGISTER_COUNT
       });
 
       if (!game.user?.isGM) return;
 
       console.log("[ADD2E][ATTAQUE][GM_DETAIL][CREATE_BY_GM]", {
         version: ADD2E_ATTACK_GM_CHAT_VERSION,
+        handlerId,
         user: game.user?.name,
         fromSocket: true,
-        attackMessageId: data?.payload?.flags?.add2e?.attackMessageId ?? null
+        attackMessageId: data?.payload?.flags?.add2e?.attackMessageId ?? null,
+        diagId: data?.payload?.flags?.add2e?.attackDiagId ?? null
       });
       await add2eCreateGmAttackChatMessage(data.payload ?? {});
     });
 
     console.log("[ADD2E][ATTAQUE][GM_DETAIL][SOCKET_REGISTERED]", {
       version: ADD2E_ATTACK_GM_CHAT_VERSION,
+      handlerId,
+      registerCount: globalThis.__ADD2E_ATTACK_GM_DETAIL_REGISTER_COUNT,
       user: game.user?.name,
       isGM: game.user?.isGM
     });
@@ -409,6 +496,24 @@ function add2eResolveArmorAdjustment({ cible, arme, caBaseCible }) {
  * Script principal d'attaque AD&D2e
  */
 export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
+  const diagId = add2eAttackNextDiagId("attack-roll");
+
+  console.log("[ADD2E][ATTAQUE][ROLL][ENTER]", {
+    version: ADD2E_ATTACK_GM_CHAT_VERSION,
+    diagId,
+    user: game.user?.name,
+    userId: game.user?.id,
+    isGM: game.user?.isGM,
+    actorArg: actor?.name ?? null,
+    actorArgId: actor?.id ?? null,
+    actorId,
+    itemArg: arme?.name ?? null,
+    itemArgId: arme?.id ?? null,
+    itemId,
+    controlledTokens: (canvas?.tokens?.controlled ?? []).map(t => ({ name: t?.name, id: t?.id, actorId: t?.actor?.id ?? t?.document?.actorId ?? null })),
+    ownedActors: game.actors?.filter?.(a => a?.isOwner)?.map?.(a => ({ name: a.name, id: a.id, type: a.type })) ?? []
+  });
+
   if (!actor && actorId) actor = game.actors.get(actorId);
   if (!arme && itemId && actor) arme = actor.items.get(itemId);
 
@@ -424,19 +529,27 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
 
   const cible = add2eResolveAttackTokenActor(cibleToken);
   if (!cible) {
-    console.error("[ADD2E][ATTAQUE][TARGET][NO_ACTOR]", { cibleToken, document: cibleToken?.document });
+    console.error("[ADD2E][ATTAQUE][TARGET][NO_ACTOR]", { diagId, cibleToken, document: cibleToken?.document });
     return ui.notifications.warn("La cible sélectionnée n'a pas d'acteur utilisable.");
   }
 
   const invocationKey = add2eBuildAttackInvocationKey({ actor, arme, cibleToken });
-  if (!add2eEnterAttackInvocationGuard(invocationKey)) return false;
+  if (!add2eEnterAttackInvocationGuard(invocationKey, diagId)) return false;
 
   console.log("[ADD2E][ATTAQUE][TARGET][RESOLVED]", {
+    version: ADD2E_ATTACK_GM_CHAT_VERSION,
+    diagId,
     foundry: game?.version ?? game?.release?.version,
     token: cibleToken?.name ?? cibleToken?.document?.name,
     actor: cible?.name,
     actorType: cible?.type,
     actorId: cible?.id,
+    attacker: actor?.name,
+    attackerId: actor?.id,
+    weapon: arme?.name,
+    weaponId: arme?.id,
+    sourceToken: srcToken?.name ?? srcToken?.document?.name ?? null,
+    sourceTokenId: srcToken?.id ?? srcToken?.document?.id ?? null,
     tokenActorId: cibleToken?.actor?.id ?? null,
     documentActorId: cibleToken?.document?.actor?.id ?? null,
     tokenDocumentActorId: cibleToken?.document?.actorId ?? null,
@@ -493,6 +606,20 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
     classes: ["add2e", "add2e-attack-dialog"],
     defaultAction: "ok",
     onOk: async (dlgHtml) => {
+      console.log("[ADD2E][ATTAQUE][ROLL][DIALOG_OK]", {
+        version: ADD2E_ATTACK_GM_CHAT_VERSION,
+        diagId,
+        user: game.user?.name,
+        isGM: game.user?.isGM,
+        actor: actor?.name,
+        actorId: actor?.id,
+        weapon: arme?.name,
+        weaponId: arme?.id,
+        target: cible?.name,
+        targetId: cible?.id,
+        invocationKey
+      });
+
       const userBonus = Number(dlgHtml.find("#add2e-bonus-attaque").val()) || 0;
       const selectedPositionZone = String(dlgHtml.find("#add2e-position-zone").val() || "front");
       const activePositionInfo = add2eResolveSelectedPositionInfo(selectedPositionZone, backArcInfo);
@@ -527,7 +654,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
       if (combatProfile.degatsCarac) modCaracDegats = add2eGetAttackAbilityModifier(actor, combatProfile.degatsCarac, "degats");
 
       const { bonusToucheEffets, bonusDegatsEffets, bonusRacialVs, targetTags } = add2eAttackComputeActiveAttackModifiers({ actor, cible, combatProfile });
-      if (bonusDegatsEffets !== 0) console.log("[ADD2E][ATTAQUE][BONUS DEGATS VS CIBLE]", { acteur: actor.name, cible: cible?.name, targetTags: [...targetTags], bonusDegatsEffets });
+      if (bonusDegatsEffets !== 0) console.log("[ADD2E][ATTAQUE][BONUS DEGATS VS CIBLE]", { diagId, acteur: actor.name, cible: cible?.name, targetTags: [...targetTags], bonusDegatsEffets });
 
       const bonusAttaqueSournoise = useBackstab ? 4 : 0;
       const bonusPositionToucher = !useBackstab ? (Number(activePositionAttackAdjustment.hitBonus) || 0) : 0;
@@ -634,9 +761,30 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         ajustementCA
       });
 
-      await add2eRouteGmAttackChat({ actor, content: chatContent, avatar: chatImg });
+      console.log("[ADD2E][ATTAQUE][ROLL][BEFORE_GM_ROUTE]", {
+        version: ADD2E_ATTACK_GM_CHAT_VERSION,
+        diagId,
+        user: game.user?.name,
+        isGM: game.user?.isGM,
+        actor: actor?.name,
+        actorId: actor?.id,
+        weapon: arme?.name,
+        weaponId: arme?.id,
+        target: cible?.name,
+        targetId: cible?.id,
+        d20,
+        totalAuToucher,
+        degats,
+        chatContentHash: add2eAttackHash(chatContent),
+        chatContentLength: String(chatContent ?? "").length,
+        invocationKey
+      });
+
+      await add2eRouteGmAttackChat({ actor, content: chatContent, avatar: chatImg, diagId });
       await add2eConsumeOneUseWeaponAfterAttack(actor, arme);
       console.log("[ADD2E][ATTAQUE][CA_CONDITIONNELLE]", {
+        version: ADD2E_ATTACK_GM_CHAT_VERSION,
+        diagId,
         cible: cible?.name,
         arme: arme?.name,
         position: activePositionInfo?.label,
