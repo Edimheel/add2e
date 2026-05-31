@@ -4,6 +4,18 @@
 
 import { ADD2E_INITIATIVE_VERSION, TAG, initiativeState } from "./add2e-initiative-constants.mjs";
 
+const INACTIVE_STATUS_IDS = new Set([
+  "dead",
+  "death",
+  "defeated",
+  "unconscious",
+  "incapacitated",
+  "inactif",
+  "inactive",
+  "mort",
+  "inconscient"
+]);
+
 function isCombatStarted(combat = game.combat) {
   return Boolean(combat?.started && Number(combat?.round ?? 0) > 0);
 }
@@ -21,6 +33,164 @@ function activeCombatantId(combat = game.combat, turns = nativeTurns(combat)) {
   const index = Math.floor(raw);
   if (index < 0 || index >= turns.length) return null;
   return turns[index]?.id ?? null;
+}
+
+function getProperty(obj, path) {
+  try {
+    return globalThis.foundry?.utils?.getProperty
+      ? foundry.utils.getProperty(obj, path)
+      : path.split(".").reduce((o, k) => o?.[k], obj);
+  } catch (_err) {
+    return undefined;
+  }
+}
+
+function safeSetting(namespace, key) {
+  try {
+    return game.settings?.get?.(namespace, key);
+  } catch (_err) {
+    return undefined;
+  }
+}
+
+function asBoolean(value) {
+  return typeof value === "boolean" ? value : null;
+}
+
+function readBooleanFromObject(value, keys) {
+  if (!value || typeof value !== "object") return null;
+  for (const key of keys) {
+    const parsed = asBoolean(value[key]);
+    if (parsed !== null) return parsed;
+  }
+  return null;
+}
+
+function skipInactiveRotationEnabled() {
+  const objectKeys = ["skipDefeated", "skipDefeatedCombatants", "skipInactive", "skipInactiveCombatants"];
+
+  const trackerConfig = readBooleanFromObject(safeSetting("core", "combatTrackerConfig"), objectKeys);
+  if (trackerConfig !== null) return trackerConfig;
+
+  for (const key of objectKeys) {
+    const parsed = asBoolean(safeSetting("core", key));
+    if (parsed !== null) return parsed;
+  }
+
+  return false;
+}
+
+function truthyInactive(value) {
+  if (value === true) return true;
+  if (typeof value === "string") return ["true", "1", "yes", "oui", "dead", "mort", "defeated", "vaincu", "inactive", "inactif", "unconscious", "inconscient"].includes(value.trim().toLowerCase());
+  return false;
+}
+
+function collectionHasInactiveStatus(statuses) {
+  if (!statuses) return false;
+  for (const status of statuses) {
+    const id = String(status?.id ?? status ?? "").toLowerCase();
+    if (INACTIVE_STATUS_IDS.has(id)) return true;
+  }
+  return false;
+}
+
+function effectsHaveInactiveStatus(document) {
+  const effects = Array.from(document?.effects ?? []);
+  return effects.some(effect => {
+    if (effect?.disabled) return false;
+    if (collectionHasInactiveStatus(effect?.statuses)) return true;
+    const statusId = String(effect?.statuses?.first?.() ?? effect?.statusId ?? effect?.id ?? effect?.name ?? "").toLowerCase();
+    return INACTIVE_STATUS_IDS.has(statusId);
+  });
+}
+
+function hasInactiveFlagOrSystemValue(document) {
+  if (!document) return false;
+  for (const path of [
+    "defeated",
+    "isDefeated",
+    "active",
+    "flags.core.defeated",
+    "flags.add2e.defeated",
+    "flags.add2e.inactif",
+    "flags.add2e.inactive",
+    "flags.add2e.horsJeu",
+    "flags.add2e.outOfCombat",
+    "system.defeated",
+    "system.inactif",
+    "system.inactive",
+    "system.horsJeu",
+    "system.outOfCombat",
+    "system.etat.mort",
+    "system.etat.inconscient",
+    "system.status.mort",
+    "system.status.inconscient"
+  ]) {
+    const value = getProperty(document, path);
+    if (path === "active" && value === false) return true;
+    if (truthyInactive(value)) return true;
+  }
+  return false;
+}
+
+function hasNoRemainingHitPoints(actor) {
+  const hpCandidates = [
+    "system.pv.value",
+    "system.pv.actuel",
+    "system.pv.current",
+    "system.hp.value",
+    "system.hp.current",
+    "system.points_de_vie.actuel",
+    "system.pointsVie.actuel",
+    "system.pdv_actuel",
+    "system.pdv"
+  ];
+
+  for (const path of hpCandidates) {
+    const raw = getProperty(actor, path);
+    if (raw === undefined || raw === null || raw === "") continue;
+    const value = Number(raw);
+    if (Number.isFinite(value)) return value <= 0;
+  }
+  return false;
+}
+
+function isInactiveCombatant(combatant) {
+  if (!combatant) return false;
+  if (hasInactiveFlagOrSystemValue(combatant)) return true;
+  if (collectionHasInactiveStatus(combatant.statuses)) return true;
+  if (effectsHaveInactiveStatus(combatant)) return true;
+
+  const tokenDoc = combatant.token ?? null;
+  const actor = combatant.actor ?? tokenDoc?.actor ?? null;
+
+  if (hasInactiveFlagOrSystemValue(tokenDoc) || hasInactiveFlagOrSystemValue(actor)) return true;
+  if (collectionHasInactiveStatus(tokenDoc?.statuses) || collectionHasInactiveStatus(actor?.statuses)) return true;
+  if (effectsHaveInactiveStatus(tokenDoc) || effectsHaveInactiveStatus(actor)) return true;
+  if (hasNoRemainingHitPoints(actor)) return true;
+
+  return false;
+}
+
+function resolveNextActiveTurn(turns, current, direction) {
+  let next = current;
+  let roundDelta = 0;
+
+  for (let attempt = 0; attempt < turns.length; attempt += 1) {
+    next += direction;
+    if (next >= turns.length) {
+      next = 0;
+      roundDelta += 1;
+    } else if (next < 0) {
+      next = turns.length - 1;
+      roundDelta -= 1;
+    }
+
+    if (!isInactiveCombatant(turns[next])) return { index: next, roundDelta };
+  }
+
+  return { index: current, roundDelta: 0 };
 }
 
 export function initiativeValue(value) {
@@ -157,7 +327,11 @@ export async function advanceSortedTurn(combat = game.combat, step = 1) {
   let next = current + direction;
   let round = combatRound(combat);
 
-  if (next >= turns.length) {
+  if (skipInactiveRotationEnabled()) {
+    const resolved = resolveNextActiveTurn(turns, current, direction);
+    next = resolved.index;
+    round = Math.max(1, round + resolved.roundDelta);
+  } else if (next >= turns.length) {
     next = 0;
     round += 1;
   } else if (next < 0) {
