@@ -1,15 +1,20 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-valid-static-ids-v14
+// Version : 2026-05-31-vital-status-no-duplicate-status-v15
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-valid-static-ids-v14";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-no-duplicate-status-v15";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
   unconscious: { key: "unconscious", name: "Inconscient", icon: "icons/svg/daze.svg" },
   dead: { key: "dead", name: "Mort", icon: "icons/svg/skull.svg" }
+};
+
+const ADD2E_VITAL_STATUS_EFFECT_IDS = {
+  dead: "ADD2Edead0000000",
+  unconscious: "ADD2Eunconsc0000"
 };
 
 const ADD2E_VITAL_ICONS = new Set(Object.values(ADD2E_VITAL_STATUS).map(s => s.icon));
@@ -56,7 +61,7 @@ function add2eVitalRegisterStatusEffects() {
 
   const definitions = [
     {
-      _id: "ADD2Edead0000000",
+      _id: ADD2E_VITAL_STATUS_EFFECT_IDS.dead,
       id: "dead",
       name: "Mort",
       label: "Mort",
@@ -67,7 +72,7 @@ function add2eVitalRegisterStatusEffects() {
       flags: { core: { statusId: "dead" }, add2e: { vitalStatus: "dead", autoVitalStatus: true } }
     },
     {
-      _id: "ADD2Eunconsc0000",
+      _id: ADD2E_VITAL_STATUS_EFFECT_IDS.unconscious,
       id: "unconscious",
       name: "Inconscient",
       label: "Inconscient",
@@ -159,9 +164,37 @@ async function add2eVitalRemoveActorVitalEffects(actor) {
   return ids.length;
 }
 
+function add2eVitalFindActorStatusEffect(actor, statusId) {
+  const normalizedStatus = add2eVitalNorm(statusId);
+  const staticId = ADD2E_VITAL_STATUS_EFFECT_IDS[normalizedStatus] ?? null;
+
+  for (const effect of actor?.effects ?? []) {
+    const effectId = String(effect?.id ?? effect?._id ?? "");
+    if (staticId && effectId === staticId) return effect;
+    if (add2eVitalEffectKind(effect) === normalizedStatus) return effect;
+    if (add2eVitalStatusAliases(effect).includes(normalizedStatus)) return effect;
+  }
+
+  return null;
+}
+
 async function add2eVitalSetActorStatus(actor, statusId, active, overlay = false) {
   if (!actor || typeof actor.toggleStatusEffect !== "function") return false;
   add2eVitalRegisterStatusEffects();
+
+  const existing = add2eVitalFindActorStatusEffect(actor, statusId);
+  if (active && existing) {
+    console.log("[ADD2E][VITAL_STATUS][ACTOR_STATUS][SKIP_EXISTS]", {
+      actor: actor?.name,
+      statusId,
+      effectId: existing.id,
+      effectName: existing.name
+    });
+    return false;
+  }
+
+  if (!active && !existing) return false;
+
   try {
     await actor.toggleStatusEffect(statusId, { active, overlay });
     return true;
