@@ -602,7 +602,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   return await add2eAttackOpenDialogV2({
     title: "Bonus/Malus d’attaque",
     content: dialogContent,
-    width: 660,
+    width: 460,
     classes: ["add2e", "add2e-attack-dialog"],
     defaultAction: "ok",
     onOk: async (dlgHtml) => {
