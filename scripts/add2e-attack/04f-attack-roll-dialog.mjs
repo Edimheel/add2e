@@ -84,7 +84,7 @@ function add2eForceAttackDialogElementSize(element, width = ADD2E_ATTACK_DIALOG_
 
 function add2eUpdateRearSpecials(form) {
   const select = form?.querySelector?.("#add2e-position-zone");
-  if (!form || !select) return;
+  if (!form || !select) return false;
 
   const isRear = select.value === "rear";
   for (const block of form.querySelectorAll(".add2e-rear-specials")) {
@@ -96,19 +96,30 @@ function add2eUpdateRearSpecials(form) {
       input.checked = false;
     }
   }
+  return true;
 }
 
 function add2eCreateAttackDialogV2Class(DialogV2) {
   return class Add2eAttackDialogV2 extends DialogV2 {
     _onRender(context, options) {
       super._onRender?.(context, options);
+      this.add2eApplyAttackDialogState();
+    }
 
+    add2eFindAttackForm() {
+      const root = this.element ?? null;
+      return root?.querySelector?.("form.add2e-attack-form")
+        ?? root?.closest?.("dialog")?.querySelector?.("form.add2e-attack-form")
+        ?? null;
+    }
+
+    add2eApplyAttackDialogState() {
       this.setPosition?.({ width: ADD2E_ATTACK_DIALOG_WIDTH, height: "auto" });
       add2eForceAttackDialogElementSize(this.element, ADD2E_ATTACK_DIALOG_WIDTH);
 
-      const form = this.element?.querySelector?.("form.add2e-attack-form");
+      const form = this.add2eFindAttackForm();
       const select = form?.querySelector?.("#add2e-position-zone");
-      if (!form || !select) return;
+      if (!form || !select) return false;
 
       if (select.dataset.add2eRearOptionsBound !== "1") {
         select.dataset.add2eRearOptionsBound = "1";
@@ -116,7 +127,7 @@ function add2eCreateAttackDialogV2Class(DialogV2) {
         select.addEventListener("input", () => add2eUpdateRearSpecials(form));
       }
 
-      add2eUpdateRearSpecials(form);
+      return add2eUpdateRearSpecials(form);
     }
   };
 }
@@ -163,7 +174,11 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
       });
 
       dialog.addEventListener?.("close", () => finish(false), { once: true });
-      dialog.render({ force: true });
+      const rendered = dialog.render({ force: true });
+      Promise.resolve(rendered).then(() => dialog.add2eApplyAttackDialogState?.());
+      setTimeout(() => dialog.add2eApplyAttackDialogState?.(), 0);
+      setTimeout(() => dialog.add2eApplyAttackDialogState?.(), 50);
+      setTimeout(() => dialog.add2eApplyAttackDialogState?.(), 150);
     });
   }
 
