@@ -2,6 +2,8 @@
 // ADD2E — Dialogue d'attaque.
 // Compatible Foundry V13/V14/V15 : DialogV2 prioritaire, fallback Dialog conservé.
 
+const ADD2E_ATTACK_DIALOG_WIDTH = 480;
+
 function add2eAttackFormAdapter(form) {
   return {
     find(selector) {
@@ -60,101 +62,72 @@ function add2eAttackDialogClasses(classes) {
   return Array.from(new Set([...(classes ?? []), "add2e-attack-dialog-compact"]));
 }
 
-function add2eGetDialogRoot(dialog) {
-  const element = dialog?.element ?? null;
-  return element?.closest?.("dialog") ?? element?.closest?.(".application") ?? element;
-}
+function add2eForceAttackDialogElementSize(element, width = ADD2E_ATTACK_DIALOG_WIDTH) {
+  const roots = [
+    element,
+    element?.closest?.("dialog"),
+    element?.closest?.(".application"),
+    element?.closest?.(".window-app"),
+    element?.closest?.(".app"),
+    element?.closest?.(".dialog")
+  ].filter(Boolean);
 
-function add2eUpdateRearSpecialVisibility(rootOrForm) {
-  const container = rootOrForm?.matches?.("form.add2e-attack-form")
-    ? rootOrForm
-    : (rootOrForm?.querySelector?.("form.add2e-attack-form") ?? rootOrForm);
-  const select = container?.querySelector?.("#add2e-position-zone");
-  if (!select) return;
-
-  const rear = select.value === "rear";
-  const blocks = container.querySelectorAll?.(".add2e-rear-specials") ?? [];
-  for (const block of blocks) {
-    block.style.setProperty("display", rear ? "flex" : "none", "important");
-    block.style.setProperty("flex-direction", "column", "important");
-  }
-
-  if (!rear) {
-    container.querySelectorAll?.("#add2e-backstab,#add2e-assassinat-confirm")?.forEach(c => {
-      c.checked = false;
-    });
+  for (const root of new Set(roots)) {
+    root.style.setProperty("width", `${width}px`, "important");
+    root.style.setProperty("min-width", `${width}px`, "important");
+    root.style.setProperty("max-width", `${width}px`, "important");
+    root.style.setProperty("height", "auto", "important");
+    root.style.setProperty("min-height", "0", "important");
+    root.style.setProperty("max-height", "none", "important");
   }
 }
 
-window.add2eAttackToggleRearSpecials = function add2eAttackToggleRearSpecials(form) {
-  add2eUpdateRearSpecialVisibility(form);
-};
-
-function add2eAttachAttackDialogEvents(dialog) {
-  const root = add2eGetDialogRoot(dialog);
-  const form = root?.querySelector?.("form.add2e-attack-form");
+function add2eUpdateRearSpecials(form) {
   const select = form?.querySelector?.("#add2e-position-zone");
-  if (!form || !select || select.dataset.add2eRearToggleBound === "1") {
-    add2eUpdateRearSpecialVisibility(root);
-    return;
+  if (!form || !select) return;
+
+  const isRear = select.value === "rear";
+  for (const block of form.querySelectorAll(".add2e-rear-specials")) {
+    block.hidden = !isRear;
   }
 
-  select.dataset.add2eRearToggleBound = "1";
-  select.addEventListener("change", () => add2eUpdateRearSpecialVisibility(form));
-  select.addEventListener("input", () => add2eUpdateRearSpecialVisibility(form));
-  add2eUpdateRearSpecialVisibility(form);
+  if (!isRear) {
+    for (const input of form.querySelectorAll("#add2e-backstab,#add2e-assassinat-confirm")) {
+      input.checked = false;
+    }
+  }
 }
 
-function add2eForceAttackDialogSize(dialog, width = 480) {
-  try {
-    dialog?.setPosition?.({ width, height: "auto" });
+function add2eCreateAttackDialogV2Class(DialogV2) {
+  return class Add2eAttackDialogV2 extends DialogV2 {
+    _onRender(context, options) {
+      super._onRender?.(context, options);
 
-    const element = dialog?.element ?? null;
-    const roots = [
-      element,
-      element?.closest?.("dialog"),
-      element?.closest?.(".application"),
-      element?.closest?.(".window-app"),
-      element?.closest?.(".app"),
-      element?.closest?.(".dialog")
-    ].filter(Boolean);
+      this.setPosition?.({ width: ADD2E_ATTACK_DIALOG_WIDTH, height: "auto" });
+      add2eForceAttackDialogElementSize(this.element, ADD2E_ATTACK_DIALOG_WIDTH);
 
-    for (const root of new Set(roots)) {
-      root.style.setProperty("width", `${width}px`, "important");
-      root.style.setProperty("min-width", `${width}px`, "important");
-      root.style.setProperty("max-width", `${width}px`, "important");
-      root.style.setProperty("height", "auto", "important");
-      root.style.setProperty("min-height", "0", "important");
-      root.style.setProperty("max-height", "none", "important");
+      const form = this.element?.querySelector?.("form.add2e-attack-form");
+      const select = form?.querySelector?.("#add2e-position-zone");
+      if (!form || !select) return;
+
+      if (select.dataset.add2eRearOptionsBound !== "1") {
+        select.dataset.add2eRearOptionsBound = "1";
+        select.addEventListener("change", () => add2eUpdateRearSpecials(form));
+        select.addEventListener("input", () => add2eUpdateRearSpecials(form));
+      }
+
+      add2eUpdateRearSpecials(form);
     }
-
-    add2eAttachAttackDialogEvents(dialog);
-
-    const measured = add2eGetDialogRoot(dialog);
-    if (measured) {
-      const cs = getComputedStyle(measured);
-      console.log("[ADD2E][ATTAQUE][DIALOG_SIZE]", {
-        requested: width,
-        tag: measured.tagName,
-        classes: measured.className,
-        inlineWidth: measured.style.width,
-        inlineMinWidth: measured.style.minWidth,
-        computedWidth: cs.width,
-        computedMinWidth: cs.minWidth,
-        rectWidth: measured.getBoundingClientRect?.().width ?? null
-      });
-    }
-  } catch (err) {
-    console.warn("[ADD2E][ATTAQUE][DIALOG_SIZE][ERROR]", err);
-  }
+  };
 }
 
 export async function add2eAttackOpenDialogV2({ title, content, width, classes, defaultAction, onOk }) {
   const DialogV2 = foundry.applications?.api?.DialogV2;
-  const compactWidth = 480;
   const dialogClasses = add2eAttackDialogClasses(classes);
 
   if (DialogV2) {
+    const Add2eAttackDialogV2 = add2eCreateAttackDialogV2Class(DialogV2);
+
     return await new Promise((resolve) => {
       let settled = false;
       const finish = (value) => {
@@ -165,9 +138,10 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
         return value;
       };
 
-      const dialog = new DialogV2({
+      const dialog = new Add2eAttackDialogV2({
         window: { title },
         classes: dialogClasses,
+        position: { width: ADD2E_ATTACK_DIALOG_WIDTH, height: "auto" },
         content,
         buttons: [
           {
@@ -190,10 +164,6 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
 
       dialog.addEventListener?.("close", () => finish(false), { once: true });
       dialog.render({ force: true });
-      setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 0);
-      setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 50);
-      setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 150);
-      setTimeout(() => add2eForceAttackDialogSize(dialog, compactWidth), 300);
     });
   }
 
@@ -210,7 +180,7 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
       },
       default: defaultAction ?? "ok"
     }, {
-      width: compactWidth,
+      width: ADD2E_ATTACK_DIALOG_WIDTH,
       classes: dialogClasses
     }).render(true);
   });
@@ -243,7 +213,6 @@ export function add2eBuildAttackDialogContent({
   const allowedZones = new Set(["front", "flank", "rear-flank", "rear"]);
   const autoZone = allowedZones.has(String(backArcInfo?.zone ?? "")) ? String(backArcInfo.zone) : "front";
   const isRearSelected = autoZone === "rear";
-  const rearDisplay = isRearSelected ? "flex" : "none";
   const selected = (zone) => autoZone === zone ? " selected" : "";
 
   return `
@@ -341,12 +310,15 @@ export function add2eBuildAttackDialogContent({
             accent-color: var(--a2e-red);
           }
           .add2e-rear-specials {
-            display: none;
+            display: flex;
             flex-direction: column !important;
             gap: 2px;
             margin-top: 4px;
             min-width: 210px;
             overflow: visible !important;
+          }
+          .add2e-rear-specials[hidden] {
+            display: none !important;
           }
         </style>
 
@@ -383,14 +355,14 @@ export function add2eBuildAttackDialogContent({
 
             <div style="padding:4px 5px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;overflow:visible !important;">
               <label class="add2e-attack-label" for="add2e-position-zone" style="display:block;margin-bottom:2px;white-space:nowrap;">Position</label>
-              <select id="add2e-position-zone" class="add2e-attack-select" style="width:100% !important;" onchange="if(window.add2eAttackToggleRearSpecials) window.add2eAttackToggleRearSpecials(this.closest('form'))">
+              <select id="add2e-position-zone" class="add2e-attack-select" style="width:100% !important;">
                 <option value="front"${selected("front")}>Face</option>
                 <option value="flank"${selected("flank")}>Flanc</option>
                 <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
                 <option value="rear"${selected("rear")}>Dos</option>
               </select>
               ${hasRearSpecial ? `
-              <div class="add2e-rear-specials" style="display:${rearDisplay};flex-direction:column !important;">
+              <div class="add2e-rear-specials"${isRearSelected ? "" : " hidden"}>
                 ${showBackstabForClass ? `
                 <label class="add2e-inline-check" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}">
                   <input type="checkbox" id="add2e-backstab">
