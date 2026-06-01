@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-01T21:20:15.212Z",
+  "generatedAt": "2026-06-01T21:26:37.959Z",
   "sourceOfTruth": "Manuel des joueurs AD&D 2e pour toutes les règles ADD2E",
   "branch": "agent-audit-sorts",
   "statusLegend": {
@@ -45,7 +45,7 @@
       "foundrySpells": 11
     },
     "clerc-niveau-3": {
-      "status": "reference_manquante",
+      "status": "audit_genere_reference_presente",
       "rapport": "audit/rapports/clerc-niveau-3.md",
       "export": "audit/decoupage_fichier/clerc-niveau-3.json",
       "foundrySpells": 11

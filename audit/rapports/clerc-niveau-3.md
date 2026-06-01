@@ -1,38 +1,50 @@
 # Audit automatique — clerc-niveau-3
 
-Généré le : 2026-06-01T21:20:15.182Z
+Généré le : 2026-06-01T21:26:37.925Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/clerc-niveau-3.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-clerc-niveau-3.json`
 
 ## Résumé
 
 - Classe : `clerc`
 - Niveau : `3`
 - Sorts dans l’export : `11`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `12`
+- Sorts manquants : `2`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Désenvoûtement | 3 | OK | OK |
-| Dissipation de la Magie | 3 | OK | OK |
-| Glyphe de Garde | 3 | OK | OK |
-| Guérison de la Cécité | 3 | OK | OK |
-| Guérison des Maladies | 3 | OK | OK |
-| Localisation d’un Objet | 3 | OK | OK |
-| Lumière éternelle | 3 | OK | OK |
-| Manne | 3 | OK | OK |
-| Nécro animation | 3 | OK | OK |
-| Nécromancie | 3 | OK | OK |
-| Prière | 3 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+| Catalepsie | MANQUANT | — | — | — |
+| Désenvoûtement | OK | OK | OK | V, S |
+| Dissipation de la magie | OK | OK | OK | V, S |
+| Glyphe de garde | OK | OK | OK | Symbole sacré du clerc |
+| Guérison de la cécité | OK | OK | OK | V, S |
+| Guérison des maladies | OK | OK | OK | V, S |
+| Localisation d'objets | MANQUANT | — | — | — |
+| Lumière éternelle | OK | OK | OK | V, S |
+| Manne | OK | OK | OK | V, S |
+| Nécro-animation | OK | OK | OK | Symbole sacré du clerc |
+| Nécromancie | OK | OK | OK | Son symbole sacré |
+| Prière | OK | OK | OK | Son symbole religieux en argent ; Son chapelet de prière |
+
+## Sorts manquants
+
+- Catalepsie
+- Localisation d'objets
+
+## Sorts présents hors correspondance stricte
+
+- Localisation d’un Objet
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 
