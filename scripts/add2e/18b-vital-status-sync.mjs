@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v23-idempotent-status-toggles";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v24-combatant-first-dead-only";
 
 const LOCKS = new Set();
 const ADD2E_STATUS_IDS = {
@@ -299,14 +299,15 @@ function shouldPreserveManualInactive(actor) {
 
 async function syncCombatants(actor, inactive, status) {
   let changed = 0;
+  const defeated = status === "dead";
   for (const combatant of actorCombatants(actor)) {
     if (!combatant?.update) continue;
     const currentStatus = combatant.flags?.add2e?.vitalStatus ?? null;
     const wantedStatus = inactive ? status : null;
-    const same = combatant.defeated === inactive && combatant.flags?.add2e?.inactive === inactive && currentStatus === wantedStatus;
+    const same = combatant.defeated === defeated && combatant.flags?.add2e?.inactive === inactive && currentStatus === wantedStatus;
     if (same) continue;
     await combatant.update({
-      defeated: inactive,
+      defeated,
       "flags.add2e.inactive": inactive,
       "flags.add2e.inactiveReason": inactive ? wantedStatus : null,
       "flags.add2e.vitalStatus": wantedStatus
@@ -317,7 +318,7 @@ async function syncCombatants(actor, inactive, status) {
       combatant: combatant.id,
       tokenId: combatant.tokenId,
       inactive,
-      defeated: inactive,
+      defeated,
       vitalStatus: wantedStatus
     });
     changed += 1;
@@ -329,6 +330,8 @@ async function syncTokensAndCombat(actor, status, preserveInactive) {
   const tokens = actorTokens(actor);
   let tokenEffects = 0;
   const tokenResults = [];
+  const inactive = status !== null;
+  const combatants = preserveInactive ? 0 : await syncCombatants(actor, inactive, status);
 
   if (add2eVitalIsMonster(actor)) {
     if (!preserveInactive) {
@@ -344,7 +347,6 @@ async function syncTokensAndCombat(actor, status, preserveInactive) {
     if (result?.changed) tokenEffects += 1;
   }
 
-  const combatants = preserveInactive ? 0 : await syncCombatants(actor, status !== null, status);
   return {
     tokenEffects,
     combatants,
