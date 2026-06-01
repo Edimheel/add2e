@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v22-valid-document-status-ids";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v23-idempotent-status-toggles";
 
 const LOCKS = new Set();
 const ADD2E_STATUS_IDS = {
@@ -110,6 +110,7 @@ async function safeToggleActorStatus(actor, statusId, active, { overlay = false,
   if (!actor?.toggleStatusEffect) return { changed: false, action: "no-toggle-status-effect", statusId, active };
 
   const exists = hasRealStatusEffect(actor, statusId);
+  if (active && exists) return { changed: false, action: "skip-on-existing", statusId, active, exists };
   if (!active && !exists) return { changed: false, action: "skip-off-missing", statusId, active, exists };
 
   try {
