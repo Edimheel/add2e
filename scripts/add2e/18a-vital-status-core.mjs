@@ -35,7 +35,8 @@ export function add2eVitalNorm(value) {
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9:_-]+/g, "_")
     .replace(/^_|_$/g, "");
-}\n
+}
+
 export function add2eVitalNumber(value, fallback = NaN) {
   if (typeof value === "string") {
     const m = value.match(/-?\d+(?:[.,]\d+)?/);
