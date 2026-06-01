@@ -1,0 +1,1259 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "illusionniste",
+    "niveau": 3,
+    "key": "illusionniste-niveau-3",
+    "count": 8
+  },
+  "folders": [
+    {
+      "name": "Illusionniste",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "zbnGy5sLzX1VR4UP",
+      "description": "",
+      "sort": 700000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566746,
+        "modifiedTime": 1780340566746,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 3",
+      "type": "Item",
+      "folder": "zbnGy5sLzX1VR4UP",
+      "sorting": "a",
+      "_id": "7JO1AHO8a5UXecqZ",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566739,
+        "modifiedTime": 1780340566739,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Dissipation des illusions",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-dissipation-des-illusions.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, l’illusionniste peut annuler toute force fantasmagorique, renforcée ou non par un bruitage, lancée par un nonillusionniste. Il peut aussi dissiper tout sort d’illusion/fantasme lancé par un autre illusionniste, avec cette fois la même chance que pour une dissipation de la magie (voir p.46), c'est-à-dire une chance de base de 50 % ajustée de 2 % en moins ou 5 % en plus pour chaque niveau de différence inférieure ou supérieure de l’illusionniste qui lance la dissipation par rapport à l’illusionniste qui a créé l’illusion.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-dissipation-des-illusions.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-dissipation-des-illusions.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-dissipation-des-illusions.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, l’illusionniste peut annuler toute force fantasmagorique, renforcée ou non par un bruitage, lancée par un nonillusionniste. Il peut aussi dissiper tout sort d’illusion/fantasme lancé par un autre illusionniste, avec cette fois la même chance que pour une dissipation de la magie (voir p.46), c'est-à-dire une chance de base de 50 % ajustée de 2 % en moins ou 5 % en plus pour chaque niveau de différence inférieure ou supérieure de l’illusionniste qui lance la dissipation par rapport à l’illusionniste qui a créé l’illusion.",
+        "description_texte": "Avec ce sort, l’illusionniste peut annuler toute force fantasmagorique, renforcée ou non par un bruitage, lancée par un nonillusionniste. Il peut aussi dissiper tout sort d’illusion/fantasme lancé par un autre illusionniste, avec cette fois la même chance que pour une dissipation de la magie (voir p.46), c'est-à-dire une chance de base de 50 % ajustée de 2 % en moins ou 5 % en plus pour chaque niveau de différence inférieure ou supérieure de l’illusionniste qui lance la dissipation par rapport à l’illusionniste qui a créé l’illusion.",
+        "description_html": "<p>Avec ce sort, l’illusionniste peut annuler toute force fantasmagorique, renforcée ou non par un bruitage, lancée par un nonillusionniste. Il peut aussi dissiper tout sort d’illusion/fantasme lancé par un autre illusionniste, avec cette fois la même chance que pour une dissipation de la magie (voir p.46), c&#x27;est-à-dire une chance de base de 50 % ajustée de 2 % en moins ou 5 % en plus pour chaque niveau de différence inférieure ou supérieure de l’illusionniste qui lance la dissipation par rapport à l’illusionniste qui a créé l’illusion.</p>"
+      },
+      "effects": [
+        {
+          "name": "Dissipation des illusions",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:3",
+                "sort:dissipation_des_illusions",
+                "dissipation:illusion",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-dissipation-des-illusions.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fI48KezBPGMvWo8Y",
+          "_id": "1vkdwqKShyyjI5ky",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568721,
+            "modifiedTime": 1780340568721
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:23.460Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-dissipation-des-illusions.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 3",
+          "sourceFolderId": "0IQ5kUZyGQ8axOHQ",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "7JO1AHO8a5UXecqZ",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.fI48KezBPGMvWo8Y",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568721,
+        "modifiedTime": 1780340568721,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "OHO4xJXJxW5gygat",
+      "sort": 0
+    },
+    {
+      "name": "Écriture illusoire",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-ecriture-illusoire.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po). 96 SORTS D'ILLUSIONNISTE (NIVEAU 4) SORTS D'ILLUSIONNISTE (NIVEAU 3)",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js",
+        "composants_materiels": [
+          {
+            "slug": "encre_fabriquee_a_base_de_plomb_par_un_alchimiste",
+            "nom": "Encre fabriquée à base de plomb par un alchimiste",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste.",
+        "description_reelle": "Ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po). 96 SORTS D'ILLUSIONNISTE (NIVEAU 4) SORTS D'ILLUSIONNISTE (NIVEAU 3)",
+        "description_texte": "Ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po). 96 SORTS D'ILLUSIONNISTE (NIVEAU 4) SORTS D'ILLUSIONNISTE (NIVEAU 3)",
+        "description_html": "<p>Ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po). 96 SORTS D&#x27;ILLUSIONNISTE (NIVEAU 4) SORTS D&#x27;ILLUSIONNISTE (NIVEAU 3)</p>"
+      },
+      "effects": [
+        {
+          "name": "Écriture illusoire",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:3",
+                "sort:ecriture_illusoire",
+                "ecriture:illusoire",
+                "illusion:texte",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-ecriture-illusoire.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.G7zIo5KVOZQsaXvI",
+          "_id": "rTiI0VTEhOJeR9xQ",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567281,
+            "modifiedTime": 1780340567281
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:32.113Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 3",
+          "sourceFolderId": "0IQ5kUZyGQ8axOHQ",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "7JO1AHO8a5UXecqZ",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.G7zIo5KVOZQsaXvI",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567281,
+        "modifiedTime": 1780340567281,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "WweEfY9hLciMDbwM",
+      "sort": 0
+    },
+    {
+      "name": "Force spectrale",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-force-spectrale.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort crée une illusion dans laquelle les sons, les odeurs et même la température sont présents. Autrement, ce sort est similaire au sort de niveau 2 force fantasmagorique améliorée. Cette illusion persiste pendant 3 rounds après que l’illusionniste ait cessé de se concentrer.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-force-spectrale.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-force-spectrale.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-force-spectrale.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort crée une illusion dans laquelle les sons, les odeurs et même la température sont présents. Autrement, ce sort est similaire au sort de niveau 2 force fantasmagorique améliorée. Cette illusion persiste pendant 3 rounds après que l’illusionniste ait cessé de se concentrer.",
+        "description_texte": "Ce sort crée une illusion dans laquelle les sons, les odeurs et même la température sont présents. Autrement, ce sort est similaire au sort de niveau 2 force fantasmagorique améliorée. Cette illusion persiste pendant 3 rounds après que l’illusionniste ait cessé de se concentrer.",
+        "description_html": "<p>Ce sort crée une illusion dans laquelle les sons, les odeurs et même la température sont présents. Autrement, ce sort est similaire au sort de niveau 2 force fantasmagorique améliorée. Cette illusion persiste pendant 3 rounds après que l’illusionniste ait cessé de se concentrer.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Force spectrale",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:3",
+                "sort:force_spectrale",
+                "illusion:force_spectrale",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-force-spectrale.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.YabHbTozvRmKwhX3",
+          "_id": "77gmtKzdMW6eVm1b",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568090,
+            "modifiedTime": 1780340568090
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:58.530Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-force-spectrale.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 3",
+          "sourceFolderId": "0IQ5kUZyGQ8axOHQ",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "7JO1AHO8a5UXecqZ",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.YabHbTozvRmKwhX3",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568090,
+        "modifiedTime": 1780340568090,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "3xDP7GlFKFXuADfj",
+      "sort": 0
+    },
+    {
+      "name": "Invisibilité sur 3 m",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-invisibilite-sur-3-m.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien invisibilité sur 3 mètres (voir p.74). Voir aussi le sort de magicien de niveau 2 invisibilité.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-invisibilite-sur-3-m.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-invisibilite-sur-3-m.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-invisibilite-sur-3-m.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien invisibilité sur 3 mètres (voir p.74). Voir aussi le sort de magicien de niveau 2 invisibilité.",
+        "description_texte": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien invisibilité sur 3 mètres (voir p.74). Voir aussi le sort de magicien de niveau 2 invisibilité.",
+        "description_html": "<p>Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien invisibilité sur 3 mètres (voir p.74). Voir aussi le sort de magicien de niveau 2 invisibilité.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Invisibilité sur 3 m",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:3",
+                "sort:invisibilite_sur_3_m",
+                "invisibilite:zone",
+                "zone:3m",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-invisibilite-sur-3-m.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.D8Gh0clpxTD42Gf9",
+          "_id": "B2VZp3oudde55mah",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567233,
+            "modifiedTime": 1780340567233
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:29.104Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-invisibilite-sur-3-m.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 3",
+          "sourceFolderId": "0IQ5kUZyGQ8axOHQ",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "7JO1AHO8a5UXecqZ",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.D8Gh0clpxTD42Gf9",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567233,
+        "modifiedTime": 1780340567233,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "3iWgC8Mq0KHNLWHX",
+      "sort": 0
+    },
+    {
+      "name": "Non-détection",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-non-detection.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "En lançant ce sort, l’illusionniste se rend indétectable aux effets des sorts de divination, comme par exemple les sorts de clairaudience, clairvoyance, les sorts de détection et le sort ESP. Il est aussi protégé des détections par boule de cristal et médaillon d’ESP. La composante matérielle est une pincée de poudre de diamant.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-non-detection.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-non-detection.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-non-detection.js",
+        "composants_materiels": [
+          {
+            "slug": "pincee_de_poudre_de_diamant",
+            "nom": "Pincée de poudre de diamant",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est une pincée de poudre de diamant.",
+        "description_reelle": "En lançant ce sort, l’illusionniste se rend indétectable aux effets des sorts de divination, comme par exemple les sorts de clairaudience, clairvoyance, les sorts de détection et le sort ESP. Il est aussi protégé des détections par boule de cristal et médaillon d’ESP. La composante matérielle est une pincée de poudre de diamant.",
+        "description_texte": "En lançant ce sort, l’illusionniste se rend indétectable aux effets des sorts de divination, comme par exemple les sorts de clairaudience, clairvoyance, les sorts de détection et le sort ESP. Il est aussi protégé des détections par boule de cristal et médaillon d’ESP. La composante matérielle est une pincée de poudre de diamant.",
+        "description_html": "<p>En lançant ce sort, l’illusionniste se rend indétectable aux effets des sorts de divination, comme par exemple les sorts de clairaudience, clairvoyance, les sorts de détection et le sort ESP. Il est aussi protégé des détections par boule de cristal et médaillon d’ESP. La composante matérielle est une pincée de poudre de diamant.</p>"
+      },
+      "effects": [
+        {
+          "name": "Non-détection",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:3",
+                "sort:non_detection",
+                "non_detection",
+                "anti:divination",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-non-detection.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.dkI4ZW3uF9CQtzjx",
+          "_id": "gDIm138uca7c9X99",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568705,
+            "modifiedTime": 1780340568705
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:48.733Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-non-detection.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 3",
+          "sourceFolderId": "0IQ5kUZyGQ8axOHQ",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "7JO1AHO8a5UXecqZ",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.dkI4ZW3uF9CQtzjx",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568705,
+        "modifiedTime": 1780340568705,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "jMHf785AxLZXArOB",
+      "sort": 0
+    },
+    {
+      "name": "Paralysie musculaire",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-paralysie-musculaire.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Enchantement/Charme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Annule",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet à l’illusionniste de créer une paralysie musculaire illusoire chez les créatures dont les dés de vie n’excèdent pas le double du niveau du lanceur de sort. Si les créatures ratent leur jet de protection, elles sont paralysées et seul l’illusionniste peut mettre fin à cet état, ainsi que les sorts dissipation de la magie et dissipation des illusions.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-paralysie-musculaire.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-paralysie-musculaire.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Enchantement/Charme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-paralysie-musculaire.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort permet à l’illusionniste de créer une paralysie musculaire illusoire chez les créatures dont les dés de vie n’excèdent pas le double du niveau du lanceur de sort. Si les créatures ratent leur jet de protection, elles sont paralysées et seul l’illusionniste peut mettre fin à cet état, ainsi que les sorts dissipation de la magie et dissipation des illusions.",
+        "description_texte": "Ce sort permet à l’illusionniste de créer une paralysie musculaire illusoire chez les créatures dont les dés de vie n’excèdent pas le double du niveau du lanceur de sort. Si les créatures ratent leur jet de protection, elles sont paralysées et seul l’illusionniste peut mettre fin à cet état, ainsi que les sorts dissipation de la magie et dissipation des illusions.",
+        "description_html": "<p>Ce sort permet à l’illusionniste de créer une paralysie musculaire illusoire chez les créatures dont les dés de vie n’excèdent pas le double du niveau du lanceur de sort. Si les créatures ratent leur jet de protection, elles sont paralysées et seul l’illusionniste peut mettre fin à cet état, ainsi que les sorts dissipation de la magie et dissipation des illusions.</p>"
+      },
+      "effects": [
+        {
+          "name": "Paralysie musculaire",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:3",
+                "sort:paralysie_musculaire",
+                "etat:paralysie",
+                "paralysie:musculaire",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-paralysie-musculaire.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.juTkwfci0TuxkPHF",
+          "_id": "gwrawYEDMGFic3p3",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568811,
+            "modifiedTime": 1780340568811
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:59.762Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-paralysie-musculaire.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 3",
+          "sourceFolderId": "0IQ5kUZyGQ8axOHQ",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "7JO1AHO8a5UXecqZ",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.juTkwfci0TuxkPHF",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568811,
+        "modifiedTime": 1780340568811,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "Pp7IjtyLnkBvooZ8",
+      "sort": 0
+    },
+    {
+      "name": "Suggestion",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-suggestion.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Enchantement/Charme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Annule",
+        "composantes": "V, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien suggestion (voir p.76).",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-suggestion.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-suggestion.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Enchantement/Charme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-suggestion.js",
+        "composants_materiels": [
+          {
+            "slug": "langue_de_serpent_et_soit_un_peu_de_miel_soit_une_goutte_d_huile_douce",
+            "nom": "Langue de serpent et, soit un peu de miel, soit une goutte d’huile douce",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "langue de serpent et, soit un peu de miel, soit une goutte d’huile douce",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien suggestion (voir p.76).",
+        "description_texte": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien suggestion (voir p.76).",
+        "description_html": "<p>Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien suggestion (voir p.76).</p>",
+        "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Suggestion",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:3",
+                "sort:suggestion",
+                "suggestion",
+                "mental",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-suggestion.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.qUd80zT0GWVo4nIL",
+          "_id": "MD4zhdlteanF5JD6",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569376,
+            "modifiedTime": 1780340569376
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:40.758Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-suggestion.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 3",
+          "sourceFolderId": "0IQ5kUZyGQ8axOHQ",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "7JO1AHO8a5UXecqZ",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.qUd80zT0GWVo4nIL",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569376,
+        "modifiedTime": 1780340569376,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "CTNAYVpDwWldT0PT",
+      "sort": 0
+    },
+    {
+      "name": "Ténèbres éternelles",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-tenebres-eternelles.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-tenebres-eternelles.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-tenebres-eternelles.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-tenebres-eternelles.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.",
+        "description_texte": "Quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.",
+        "description_html": "<p>Quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Ténèbres éternelles",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:3",
+                "sort:tenebres_eternelles",
+                "tenebres:eternelles",
+                "permanent",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-tenebres-eternelles.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Vv2xoaZcLDWHJaiJ",
+          "_id": "LQgrXoQh5yBgoFDz",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568037,
+            "modifiedTime": 1780340568037
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:59.791Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-tenebres-eternelles.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 3",
+          "sourceFolderId": "0IQ5kUZyGQ8axOHQ",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "7JO1AHO8a5UXecqZ",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.Vv2xoaZcLDWHJaiJ",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568037,
+        "modifiedTime": 1780340568037,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "9dKrtDMJTTb8uQ69",
+      "sort": 0
+    }
+  ]
+}

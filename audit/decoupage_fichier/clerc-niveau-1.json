@@ -1,0 +1,2922 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "clerc",
+    "niveau": 1,
+    "key": "clerc-niveau-1",
+    "count": 10
+  },
+  "folders": [
+    {
+      "name": "Clerc",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "xnt5dJBZCkmFcXJf",
+      "description": "",
+      "sort": 500000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566745,
+        "modifiedTime": 1780340566745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 1",
+      "type": "Item",
+      "folder": "xnt5dJBZCkmFcXJf",
+      "sorting": "a",
+      "_id": "RV9v89HxrYvQpcPU",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566741,
+        "modifiedTime": 1780340566741,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Apaisement",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/apaisement.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "créature touchée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "créature"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "4",
+          "unite": "segments"
+        },
+        "description": "En touchant la créature concernée, le clerc lui insuffle du courage, augmentant ainsi pendant 1 tour son jet de protection de +4 contre les attaques magiques provoquant la peur. Si la créature est déjà sujette à un sort de peur après avoir raté son jet de protection, le sort permet un autre jet de protection avec un bonus de +1 pour chaque niveau du clerc, c'est-à-dire +2 pour un clerc de niveau 2, +3 pour un clerc de niveau 3, etc. Une « probabilité de toucher » doit être réussie pour toucher les créatures non consentantes. L’inverse du sort, épouvante, fait fuir la victime touchée le plus vite possible et le plus loin possible du clerc, et ce, pendant 1 round par niveau du clerc. Un sort d’épouvante peut être annulé par son inverse, et vice-versa.",
+        "onUse": "systems/add2e/scripts/sorts/apaisement.js",
+        "onuse": "systems/add2e/scripts/sorts/apaisement.js",
+        "portée": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/apaisement.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "En touchant la créature concernée, le clerc lui insuffle du courage, augmentant ainsi pendant 1 tour son jet de protection de +4 contre les attaques magiques provoquant la peur. Si la créature est déjà sujette à un sort de peur après avoir raté son jet de protection, le sort permet un autre jet de protection avec un bonus de +1 pour chaque niveau du clerc, c'est-à-dire +2 pour un clerc de niveau 2, +3 pour un clerc de niveau 3, etc. Une « probabilité de toucher » doit être réussie pour toucher les créatures non consentantes. L’inverse du sort, épouvante, fait fuir la victime touchée le plus vite possible et le plus loin possible du clerc, et ce, pendant 1 round par niveau du clerc. Un sort d’épouvante peut être annulé par son inverse, et vice-versa.",
+        "description_texte": "En touchant la créature concernée, le clerc lui insuffle du courage, augmentant ainsi pendant 1 tour son jet de protection de +4 contre les attaques magiques provoquant la peur. Si la créature est déjà sujette à un sort de peur après avoir raté son jet de protection, le sort permet un autre jet de protection avec un bonus de +1 pour chaque niveau du clerc, c'est-à-dire +2 pour un clerc de niveau 2, +3 pour un clerc de niveau 3, etc. Une « probabilité de toucher » doit être réussie pour toucher les créatures non consentantes. L’inverse du sort, épouvante, fait fuir la victime touchée le plus vite possible et le plus loin possible du clerc, et ce, pendant 1 round par niveau du clerc. Un sort d’épouvante peut être annulé par son inverse, et vice-versa.",
+        "description_html": "<p>En touchant la créature concernée, le clerc lui insuffle du courage, augmentant ainsi pendant 1 tour son jet de protection de +4 contre les attaques magiques provoquant la peur. Si la créature est déjà sujette à un sort de peur après avoir raté son jet de protection, le sort permet un autre jet de protection avec un bonus de +1 pour chaque niveau du clerc, c&#x27;est-à-dire +2 pour un clerc de niveau 2, +3 pour un clerc de niveau 3, etc. Une « probabilité de toucher » doit être réussie pour toucher les créatures non consentantes. L’inverse du sort, épouvante, fait fuir la victime touchée le plus vite possible et le plus loin possible du clerc, et ce, pendant 1 round par niveau du clerc. Un sort d’épouvante peut être annulé par son inverse, et vice-versa.</p>"
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "effects": [
+        {
+          "name": "Apaisement",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:apaisement",
+                "etat:apaisement",
+                "etat:apaise",
+                "bonus_save_vs:peur:4",
+                "bonus_js_peur:4",
+                "anti:peur",
+                "reversible:epouvante",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/apaisement.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.jr7Oj3YZQWxkignU",
+          "_id": "rfvH4WEWBNZ5ddh3",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568808,
+            "modifiedTime": 1780340568808
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Apaisement",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:apaisement",
+                "etat:apaisement",
+                "etat:apaise",
+                "bonus_save_vs:peur:4",
+                "bonus_js_peur:4",
+                "anti:peur",
+                "reversible:epouvante",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/apaisement.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.jr7Oj3YZQWxkignU",
+          "_id": "CUvST9ZfMlqHCpv8",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568808,
+            "modifiedTime": 1780340568808
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Apaisement",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:apaisement",
+                "etat:apaisement",
+                "etat:apaise",
+                "bonus_save_vs:peur:4",
+                "bonus_js_peur:4",
+                "anti:peur",
+                "reversible:epouvante",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/apaisement.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.jr7Oj3YZQWxkignU",
+          "_id": "JgYbMKRUToxh8Tzc",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568808,
+            "modifiedTime": 1780340568808
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/apaisement.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:26.493Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.889Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.jr7Oj3YZQWxkignU",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568808,
+        "modifiedTime": 1780340568808,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "XQgdghDowrDCCQ1b",
+      "sort": 0
+    },
+    {
+      "name": "Aquagenèse",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/creation-d-eau.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "1",
+          "unite": "pouce AD&D"
+        },
+        "duree": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "eau créée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "0",
+          "unite": "eau"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "En lançant ce sort, le clerc peut créer 15 litres d’eau par niveau qu’il a atteint ; soit 30 l au niveau 2, 45 l au niveau 3, etc. L’eau est claire et potable (elle ressemble à de l’eau de pluie). L’eau créée dure jusqu’à évaporation naturelle ou jusqu’à ce qu’elle soit utilisée. L’eau peut être créée dans un endroit qui pourra contenir jusqu’à 0,75 m³. On ne peut pas créer de l’eau à l’intérieur d’une chose vivante. L’inverse du sort, destruction d’eau, fait disparaitre l’eau sans aucune trace (comme de la vapeur), pour une même quantité par niveau du clerc. Le sort demande au moins une goutte d’eau ou une pincée de poussière comme composante matérielle : la goutte d’eau pour la création, la poussière pour la destruction.",
+        "onUse": "systems/add2e/scripts/sorts/creation-d-eau.js",
+        "onuse": "systems/add2e/scripts/sorts/creation-d-eau.js",
+        "portée": {
+          "valeur": "1",
+          "unite": "pouce AD&D"
+        },
+        "durée": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/creation-d-eau.js",
+        "composants_materiels": [
+          {
+            "slug": "goutte_d_eau_ou_une_pincee_de_poussiere",
+            "nom": "Goutte d’eau ou une pincée de poussière",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "En lançant ce sort, le clerc peut créer 15 litres d’eau par niveau qu’il a atteint ; soit 30 l au niveau 2, 45 l au niveau 3, etc. L’eau est claire et potable (elle ressemble à de l’eau de pluie). L’eau créée dure jusqu’à évaporation naturelle ou jusqu’à ce qu’elle soit utilisée. L’eau peut être créée dans un endroit qui pourra contenir jusqu’à 0,75 m³. On ne peut pas créer de l’eau à l’intérieur d’une chose vivante. L’inverse du sort, destruction d’eau, fait disparaitre l’eau sans aucune trace (comme de la vapeur), pour une même quantité par niveau du clerc. Le sort demande au moins une goutte d’eau ou une pincée de poussière comme composante matérielle : la goutte d’eau pour la création, la poussière pour la destruction.",
+        "description_texte": "En lançant ce sort, le clerc peut créer 15 litres d’eau par niveau qu’il a atteint ; soit 30 l au niveau 2, 45 l au niveau 3, etc. L’eau est claire et potable (elle ressemble à de l’eau de pluie). L’eau créée dure jusqu’à évaporation naturelle ou jusqu’à ce qu’elle soit utilisée. L’eau peut être créée dans un endroit qui pourra contenir jusqu’à 0,75 m³. On ne peut pas créer de l’eau à l’intérieur d’une chose vivante. L’inverse du sort, destruction d’eau, fait disparaitre l’eau sans aucune trace (comme de la vapeur), pour une même quantité par niveau du clerc. Le sort demande au moins une goutte d’eau ou une pincée de poussière comme composante matérielle : la goutte d’eau pour la création, la poussière pour la destruction.",
+        "description_html": "<p>En lançant ce sort, le clerc peut créer 15 litres d’eau par niveau qu’il a atteint ; soit 30 l au niveau 2, 45 l au niveau 3, etc. L’eau est claire et potable (elle ressemble à de l’eau de pluie). L’eau créée dure jusqu’à évaporation naturelle ou jusqu’à ce qu’elle soit utilisée. L’eau peut être créée dans un endroit qui pourra contenir jusqu’à 0,75 m³. On ne peut pas créer de l’eau à l’intérieur d’une chose vivante. L’inverse du sort, destruction d’eau, fait disparaitre l’eau sans aucune trace (comme de la vapeur), pour une même quantité par niveau du clerc. Le sort demande au moins une goutte d’eau ou une pincée de poussière comme composante matérielle : la goutte d’eau pour la création, la poussière pour la destruction.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "goutte d’eau ou une pincée de poussière",
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Création d’Eau",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:creation_d_eau",
+                "creation:eau",
+                "ressource:eau",
+                "objet:outre_eau",
+                "reversible:destruction_eau",
+                "sort:aquagenese",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/creation-d-eau.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.bFskl9kAmKHAWJDS",
+          "_id": "QU4yAlKJve7dLrQg",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568668,
+            "modifiedTime": 1780340568668
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Création d’Eau",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:creation_d_eau",
+                "creation:eau",
+                "ressource:eau",
+                "objet:outre_eau",
+                "reversible:destruction_eau",
+                "sort:aquagenese",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/creation-d-eau.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.bFskl9kAmKHAWJDS",
+          "_id": "ks1Uw9ADpd9RXVVO",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568668,
+            "modifiedTime": 1780340568668
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Création d’Eau",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:creation_d_eau",
+                "creation:eau",
+                "ressource:eau",
+                "objet:outre_eau",
+                "reversible:destruction_eau",
+                "sort:aquagenese",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/creation-d-eau.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.bFskl9kAmKHAWJDS",
+          "_id": "sKa0DpiN8ACmTZfV",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568668,
+            "modifiedTime": 1780340568668
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:28.409Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/creation-d-eau.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.889Z"
+        }
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.bFskl9kAmKHAWJDS",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568668,
+        "modifiedTime": 1780340568668,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "NxItV2LPH4Cbl5I2",
+      "sort": 0
+    },
+    {
+      "name": "Bénédiction",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/benediction.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": 6,
+          "unite": "pouce AD&D"
+        },
+        "duree": {
+          "valeur": "6 rounds",
+          "unite": "rounds"
+        },
+        "zone_effet": {
+          "valeur": "5\" x 5\"",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "alliés dans la zone"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "En lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs « probabilités de toucher » de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6\"), il affectera alors les créatures se trouvant dans une zone de 5\" x 5\". L’inverse du sort, malédiction, peut être lancé sur des ennemis ; ceux-ci voient donc baisser leur moral et leur « probabilité de toucher » de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.",
+        "onUse": "systems/add2e/scripts/sorts/benediction.js",
+        "onuse": "systems/add2e/scripts/sorts/benediction.js",
+        "portée": {
+          "valeur": 6,
+          "unite": "pouce AD&D"
+        },
+        "durée": {
+          "valeur": "6 rounds",
+          "unite": "rounds"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/benediction.js",
+        "composants_materiels": [
+          {
+            "slug": "eau_benite_ou_maudite_pour_l_inverse",
+            "nom": "Eau bénite, ou maudite pour l’inverse",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "l’eau bénite, ou maudite pour l’inverse",
+        "description_reelle": "En lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs « probabilités de toucher » de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6\"), il affectera alors les créatures se trouvant dans une zone de 5\" x 5\". L’inverse du sort, malédiction, peut être lancé sur des ennemis ; ceux-ci voient donc baisser leur moral et leur « probabilité de toucher » de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.",
+        "description_texte": "En lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs « probabilités de toucher » de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6\"), il affectera alors les créatures se trouvant dans une zone de 5\" x 5\". L’inverse du sort, malédiction, peut être lancé sur des ennemis ; ceux-ci voient donc baisser leur moral et leur « probabilité de toucher » de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.",
+        "description_html": "<p>En lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs « probabilités de toucher » de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6&quot;), il affectera alors les créatures se trouvant dans une zone de 5&quot; x 5&quot;. L’inverse du sort, malédiction, peut être lancé sur des ennemis ; ceux-ci voient donc baisser leur moral et leur « probabilité de toucher » de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "effects": [
+        {
+          "name": "Bénédiction",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:benediction",
+                "etat:benediction",
+                "bonus_attaque:1",
+                "bonus_moral:1",
+                "reversible:malediction",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/benediction.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.hXeq2FQKijwet7cB",
+          "_id": "bTIuv4OuyyIUiISc",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568782,
+            "modifiedTime": 1780340568782
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Bénédiction",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:benediction",
+                "etat:benediction",
+                "bonus_attaque:1",
+                "bonus_moral:1",
+                "reversible:malediction",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/benediction.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.hXeq2FQKijwet7cB",
+          "_id": "Iamplsh511QHiCnU",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568782,
+            "modifiedTime": 1780340568782
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Bénédiction",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:benediction",
+                "etat:benediction",
+                "bonus_attaque:1",
+                "bonus_moral:1",
+                "reversible:malediction",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/benediction.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.hXeq2FQKijwet7cB",
+          "_id": "tUrK5OV2kpa4lwmJ",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568782,
+            "modifiedTime": 1780340568782
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/benediction.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:38.192Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.hXeq2FQKijwet7cB",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568782,
+        "modifiedTime": 1780340568782,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "u1L6JpAXZ113qpVG",
+      "sort": 0
+    },
+    {
+      "name": "Détection du mal",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": 12,
+          "unite": "pouce AD&D"
+        },
+        "duree": {
+          "valeur": "1 tour + 1/2 tour/niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "1\" de large",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "direction"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "Ce sort permet de découvrir les émanations du mal, ou du bien pour le sort inverse, de toute créature ou tout objet. Un alignement mauvais ou un objet maudit irradiera une aura maléfique, mais pas un piège ou une vipère. La durée du sort est de 1 tour + ½ tour par niveau ; donc un clerc de niveau 1 pourra détecter le mal pendant 1 tour ½, un clerc de niveau 2 pendant 2 tours, etc. Le sort a une zone d’effet de 1\" de large et le clerc doit faire face à l’endroit, l’objet ou la créature qu’il examine. Seuls le degré de mal (faible, moyen, fort, extraordinaire) et sa nature générale (en attente, méchant, triomphant, etc.) sont révélés. Si le mal est extraordinaire, le clerc a 10 % de chance par niveau du clerc d’en déterminer la tendance (loyal, neutre ou chaotique). Pour lancer ce sort, le clerc a besoin de son symbole sacré, qu’il tient devant lui.",
+        "onUse": "systems/add2e/scripts/sorts/detection-du-mal.js",
+        "onuse": "systems/add2e/scripts/sorts/detection-du-mal.js",
+        "portée": {
+          "valeur": 12,
+          "unite": "pouce AD&D"
+        },
+        "durée": {
+          "valeur": "1 tour + 1/2 tour/niveau",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/detection-du-mal.js",
+        "composants_materiels": [
+          {
+            "slug": "son_symbole_sacre",
+            "nom": "Son symbole sacré",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort permet de découvrir les émanations du mal, ou du bien pour le sort inverse, de toute créature ou tout objet. Un alignement mauvais ou un objet maudit irradiera une aura maléfique, mais pas un piège ou une vipère. La durée du sort est de 1 tour + ½ tour par niveau ; donc un clerc de niveau 1 pourra détecter le mal pendant 1 tour ½, un clerc de niveau 2 pendant 2 tours, etc. Le sort a une zone d’effet de 1\" de large et le clerc doit faire face à l’endroit, l’objet ou la créature qu’il examine. Seuls le degré de mal (faible, moyen, fort, extraordinaire) et sa nature générale (en attente, méchant, triomphant, etc.) sont révélés. Si le mal est extraordinaire, le clerc a 10 % de chance par niveau du clerc d’en déterminer la tendance (loyal, neutre ou chaotique). Pour lancer ce sort, le clerc a besoin de son symbole sacré, qu’il tient devant lui.",
+        "description_texte": "Ce sort permet de découvrir les émanations du mal, ou du bien pour le sort inverse, de toute créature ou tout objet. Un alignement mauvais ou un objet maudit irradiera une aura maléfique, mais pas un piège ou une vipère. La durée du sort est de 1 tour + ½ tour par niveau ; donc un clerc de niveau 1 pourra détecter le mal pendant 1 tour ½, un clerc de niveau 2 pendant 2 tours, etc. Le sort a une zone d’effet de 1\" de large et le clerc doit faire face à l’endroit, l’objet ou la créature qu’il examine. Seuls le degré de mal (faible, moyen, fort, extraordinaire) et sa nature générale (en attente, méchant, triomphant, etc.) sont révélés. Si le mal est extraordinaire, le clerc a 10 % de chance par niveau du clerc d’en déterminer la tendance (loyal, neutre ou chaotique). Pour lancer ce sort, le clerc a besoin de son symbole sacré, qu’il tient devant lui.",
+        "description_html": "<p>Ce sort permet de découvrir les émanations du mal, ou du bien pour le sort inverse, de toute créature ou tout objet. Un alignement mauvais ou un objet maudit irradiera une aura maléfique, mais pas un piège ou une vipère. La durée du sort est de 1 tour + ½ tour par niveau ; donc un clerc de niveau 1 pourra détecter le mal pendant 1 tour ½, un clerc de niveau 2 pendant 2 tours, etc. Le sort a une zone d’effet de 1&quot; de large et le clerc doit faire face à l’endroit, l’objet ou la créature qu’il examine. Seuls le degré de mal (faible, moyen, fort, extraordinaire) et sa nature générale (en attente, méchant, triomphant, etc.) sont révélés. Si le mal est extraordinaire, le clerc a 10 % de chance par niveau du clerc d’en déterminer la tendance (loyal, neutre ou chaotique). Pour lancer ce sort, le clerc a besoin de son symbole sacré, qu’il tient devant lui.</p>",
+        "composants_materiels_source": "a besoin de son symbole sacré, qu’il tient devant lui",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Détection du mal",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:detection_du_mal",
+                "detection:mal",
+                "reversible:detection_du_bien",
+                "aura:alignement",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.OaYUA5a7ydfIz4P1",
+          "_id": "g0XCPcTyzySvCpX9",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567930,
+            "modifiedTime": 1780340567930
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection du mal",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:detection_du_mal",
+                "detection:mal",
+                "reversible:detection_du_bien",
+                "aura:alignement",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.OaYUA5a7ydfIz4P1",
+          "_id": "3xpHXOZ8lAJYoqr4",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567930,
+            "modifiedTime": 1780340567930
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection du mal",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:detection_du_mal",
+                "detection:mal",
+                "reversible:detection_du_bien",
+                "aura:alignement",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.OaYUA5a7ydfIz4P1",
+          "_id": "uud34vnCQLYT65cy",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567930,
+            "modifiedTime": 1780340567930
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:18.100Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/detection-du-mal.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.OaYUA5a7ydfIz4P1",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567930,
+        "modifiedTime": 1780340567930,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "yAqsU5sPfwAfnzKI",
+      "sort": 0
+    },
+    {
+      "name": "Injonction",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/injonction.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Enchantement/Charme",
+        "portee": {
+          "valeur": 1,
+          "unite": "pouce AD&D"
+        },
+        "duree": {
+          "valeur": "1 round",
+          "unite": "round"
+        },
+        "zone_effet": {
+          "valeur": "une créature",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "créature"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "segment"
+        },
+        "description": "Ce sort autorise le clerc à donner un ordre d’un seul mot. L’injonction doit être prononcée dans une langue que la créature peut comprendre. Cette dernière obéira du mieux qu’elle peut si l’ordre donné est clair et univoque. Par exemple : « suicide » sera considéré comme un nom et non comme un verbe et n’aura donc aucun effet. L’injonction « meurs » fera tomber la victime en catalepsie pour un round, mais elle se relèvera ensuite sans problème. Les injonctions typiques sont : arrête, reviens, fuis, donne, etc. Les morts-vivants ne sont pas affectés par ce sort. Les créatures ayant une intelligence de 13 ou plus, et les créatures ayant au moins 6 dés de vie (ou niveaux d’expérience), sont autorisées à lancer un jet de protection contre les sorts. (Les créatures avec 13 ou plus d’intelligence ET au moins 6 dés de vie n’ont PAS 2 jets de protection).",
+        "onUse": "systems/add2e/scripts/sorts/injonction.js",
+        "onuse": "systems/add2e/scripts/sorts/injonction.js",
+        "portée": {
+          "valeur": 1,
+          "unite": "pouce AD&D"
+        },
+        "durée": {
+          "valeur": "1 round",
+          "unite": "round"
+        },
+        "ecole": "Enchantement/Charme",
+        "on_use": "systems/add2e/scripts/sorts/injonction.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "Ce sort autorise le clerc à donner un ordre d’un seul mot. L’injonction doit être prononcée dans une langue que la créature peut comprendre. Cette dernière obéira du mieux qu’elle peut si l’ordre donné est clair et univoque. Par exemple : « suicide » sera considéré comme un nom et non comme un verbe et n’aura donc aucun effet. L’injonction « meurs » fera tomber la victime en catalepsie pour un round, mais elle se relèvera ensuite sans problème. Les injonctions typiques sont : arrête, reviens, fuis, donne, etc. Les morts-vivants ne sont pas affectés par ce sort. Les créatures ayant une intelligence de 13 ou plus, et les créatures ayant au moins 6 dés de vie (ou niveaux d’expérience), sont autorisées à lancer un jet de protection contre les sorts. (Les créatures avec 13 ou plus d’intelligence ET au moins 6 dés de vie n’ont PAS 2 jets de protection).",
+        "description_texte": "Ce sort autorise le clerc à donner un ordre d’un seul mot. L’injonction doit être prononcée dans une langue que la créature peut comprendre. Cette dernière obéira du mieux qu’elle peut si l’ordre donné est clair et univoque. Par exemple : « suicide » sera considéré comme un nom et non comme un verbe et n’aura donc aucun effet. L’injonction « meurs » fera tomber la victime en catalepsie pour un round, mais elle se relèvera ensuite sans problème. Les injonctions typiques sont : arrête, reviens, fuis, donne, etc. Les morts-vivants ne sont pas affectés par ce sort. Les créatures ayant une intelligence de 13 ou plus, et les créatures ayant au moins 6 dés de vie (ou niveaux d’expérience), sont autorisées à lancer un jet de protection contre les sorts. (Les créatures avec 13 ou plus d’intelligence ET au moins 6 dés de vie n’ont PAS 2 jets de protection).",
+        "description_html": "<p>Ce sort autorise le clerc à donner un ordre d’un seul mot. L’injonction doit être prononcée dans une langue que la créature peut comprendre. Cette dernière obéira du mieux qu’elle peut si l’ordre donné est clair et univoque. Par exemple : « suicide » sera considéré comme un nom et non comme un verbe et n’aura donc aucun effet. L’injonction « meurs » fera tomber la victime en catalepsie pour un round, mais elle se relèvera ensuite sans problème. Les injonctions typiques sont : arrête, reviens, fuis, donne, etc. Les morts-vivants ne sont pas affectés par ce sort. Les créatures ayant une intelligence de 13 ou plus, et les créatures ayant au moins 6 dés de vie (ou niveaux d’expérience), sont autorisées à lancer un jet de protection contre les sorts. (Les créatures avec 13 ou plus d’intelligence ET au moins 6 dés de vie n’ont PAS 2 jets de protection).</p>"
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "effects": [
+        {
+          "name": "Injonction",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:injonction",
+                "controle:ordre",
+                "etat:injonction",
+                "duree:1_round",
+                "cible:creature",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/injonction.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.tqopAcgn0Rqp5qlN",
+          "_id": "kb1L4h7rxtgSmehX",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569423,
+            "modifiedTime": 1780340569423
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Injonction",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:injonction",
+                "controle:ordre",
+                "etat:injonction",
+                "duree:1_round",
+                "cible:creature",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/injonction.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.tqopAcgn0Rqp5qlN",
+          "_id": "AvvvT6nIzE1L5G5G",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569423,
+            "modifiedTime": 1780340569423
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Injonction",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:injonction",
+                "controle:ordre",
+                "etat:injonction",
+                "duree:1_round",
+                "cible:creature",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/injonction.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.tqopAcgn0Rqp5qlN",
+          "_id": "U1Igmjp4x3h3776E",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569423,
+            "modifiedTime": 1780340569423
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/injonction.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:16.620Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.tqopAcgn0Rqp5qlN",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569423,
+        "modifiedTime": 1780340569423,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "3U2YJApOJHhpPi36",
+      "sort": 0
+    },
+    {
+      "name": "Protection contre le Mal",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "3 rounds/niveau",
+          "unite": "rounds"
+        },
+        "zone_effet": {
+          "valeur": "créature touchée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "créature"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "4",
+          "unite": "segments"
+        },
+        "description": "Quand ce sort est lancé, il agit comme si une armure magique protégeait le destinataire. La protection entoure la créature touchée à 30 cm de distance, la protégeant des contacts corporels des créatures enchantées ou invoquées (neutres, bonnes ou mauvaises) qui utilisent des attaques naturelles (griffes, morsure, etc.), tels que les chasseurs invisibles, démons, diables, diablotins, djinns, élémentaux, éfrits, esprit des eaux, maître des vents, quasits, salamandres, serviteurs aériens, sorcières des ténèbres et xorns. Le destinataire est également protégé contre les animaux et les monstres invoqués (neutres, bons ou mauvais). De plus, toute attaque tentée par des créatures mauvaises subit un malus de –2 à « la probabilité de toucher » la créature protégée, et tout jet de protection éventuel se fait à +2. Ce sort peut être inversé pour devenir alors une protection contre le bien (mais il continue quand même de garder à distance les créatures enchantées mauvaises). Pour lancer le sort, le clerc doit tracer un cercle de 90 cm de diamètre sur le sol avec de l’eau bénite pour le sort de protection contre le mal et avec du sang pour la protection contre le bien, ou alors en utilisant de l’encens allumé ou des vapeurs de fumier, selon qu’il veut se protéger du mal ou du bien.",
+        "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal.js",
+        "onuse": [
+          "systems/add2e/scripts/sorts/protection-contre-le-mal.js",
+          "systems/add2e/scripts/sorts/protection-contre-le-mal.js"
+        ],
+        "portée": {
+          "valeur": "",
+          "unite": ""
+        },
+        "durée": {
+          "valeur": "",
+          "unite": ""
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/protection-contre-le-mal.js",
+        "composants_materiels": [
+          {
+            "slug": "poudre_de_fer_et_d_argent_pour_tracer_le_cercle_de_protection",
+            "nom": "Poudre de fer et d’argent pour tracer le cercle de protection",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand ce sort est lancé, il agit comme si une armure magique protégeait le destinataire. La protection entoure la créature touchée à 30 cm de distance, la protégeant des contacts corporels des créatures enchantées ou invoquées (neutres, bonnes ou mauvaises) qui utilisent des attaques naturelles (griffes, morsure, etc.), tels que les chasseurs invisibles, démons, diables, diablotins, djinns, élémentaux, éfrits, esprit des eaux, maître des vents, quasits, salamandres, serviteurs aériens, sorcières des ténèbres et xorns. Le destinataire est également protégé contre les animaux et les monstres invoqués (neutres, bons ou mauvais). De plus, toute attaque tentée par des créatures mauvaises subit un malus de –2 à « la probabilité de toucher » la créature protégée, et tout jet de protection éventuel se fait à +2. Ce sort peut être inversé pour devenir alors une protection contre le bien (mais il continue quand même de garder à distance les créatures enchantées mauvaises). Pour lancer le sort, le clerc doit tracer un cercle de 90 cm de diamètre sur le sol avec de l’eau bénite pour le sort de protection contre le mal et avec du sang pour la protection contre le bien, ou alors en utilisant de l’encens allumé ou des vapeurs de fumier, selon qu’il veut se protéger du mal ou du bien.",
+        "description_texte": "Quand ce sort est lancé, il agit comme si une armure magique protégeait le destinataire. La protection entoure la créature touchée à 30 cm de distance, la protégeant des contacts corporels des créatures enchantées ou invoquées (neutres, bonnes ou mauvaises) qui utilisent des attaques naturelles (griffes, morsure, etc.), tels que les chasseurs invisibles, démons, diables, diablotins, djinns, élémentaux, éfrits, esprit des eaux, maître des vents, quasits, salamandres, serviteurs aériens, sorcières des ténèbres et xorns. Le destinataire est également protégé contre les animaux et les monstres invoqués (neutres, bons ou mauvais). De plus, toute attaque tentée par des créatures mauvaises subit un malus de –2 à « la probabilité de toucher » la créature protégée, et tout jet de protection éventuel se fait à +2. Ce sort peut être inversé pour devenir alors une protection contre le bien (mais il continue quand même de garder à distance les créatures enchantées mauvaises). Pour lancer le sort, le clerc doit tracer un cercle de 90 cm de diamètre sur le sol avec de l’eau bénite pour le sort de protection contre le mal et avec du sang pour la protection contre le bien, ou alors en utilisant de l’encens allumé ou des vapeurs de fumier, selon qu’il veut se protéger du mal ou du bien.",
+        "description_html": "<p>Quand ce sort est lancé, il agit comme si une armure magique protégeait le destinataire. La protection entoure la créature touchée à 30 cm de distance, la protégeant des contacts corporels des créatures enchantées ou invoquées (neutres, bonnes ou mauvaises) qui utilisent des attaques naturelles (griffes, morsure, etc.), tels que les chasseurs invisibles, démons, diables, diablotins, djinns, élémentaux, éfrits, esprit des eaux, maître des vents, quasits, salamandres, serviteurs aériens, sorcières des ténèbres et xorns. Le destinataire est également protégé contre les animaux et les monstres invoqués (neutres, bons ou mauvais). De plus, toute attaque tentée par des créatures mauvaises subit un malus de –2 à « la probabilité de toucher » la créature protégée, et tout jet de protection éventuel se fait à +2. Ce sort peut être inversé pour devenir alors une protection contre le bien (mais il continue quand même de garder à distance les créatures enchantées mauvaises). Pour lancer le sort, le clerc doit tracer un cercle de 90 cm de diamètre sur le sol avec de l’eau bénite pour le sort de protection contre le mal et avec du sang pour la protection contre le bien, ou alors en utilisant de l’encens allumé ou des vapeurs de fumier, selon qu’il veut se protéger du mal ou du bien.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "la poudre de fer et d’argent pour tracer le cercle de protection",
+        "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
+        "onUseCode": ""
+      },
+      "effects": [
+        {
+          "name": "Protection contre le Mal",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:protection_contre_le_mal",
+                "protection:mal",
+                "bonus_ca:2",
+                "bonus_save_vs:mal:2",
+                "barriere:creatures_invoquees",
+                "malus_toucher_ennemi:2",
+                "reversible:protection_contre_le_bien",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.65eSIGbc6usyDmNl",
+          "_id": "fbHrIwxBnI5R54gv",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567122,
+            "modifiedTime": 1780340567122
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Protection contre le Mal",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:protection_contre_le_mal",
+                "protection:mal",
+                "bonus_ca:2",
+                "bonus_save_vs:mal:2",
+                "barriere:creatures_invoquees",
+                "malus_toucher_ennemi:2",
+                "protection:bien",
+                "bonus_save_vs:bien:2",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.65eSIGbc6usyDmNl",
+          "_id": "ymKd5v2jWJoAlQCz",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567122,
+            "modifiedTime": 1780340567122
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Protection contre le Mal",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:protection_contre_le_mal",
+                "protection:mal",
+                "bonus_ca:2",
+                "bonus_save_vs:mal:2",
+                "barriere:creatures_invoquees",
+                "malus_toucher_ennemi:2",
+                "protection:bien",
+                "bonus_save_vs:bien:2",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.65eSIGbc6usyDmNl",
+          "_id": "r5hhdCDIC4qoQSxL",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567122,
+            "modifiedTime": 1780340567122
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Protection contre le Mal",
+          "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
+          "disabled": true,
+          "transfer": false,
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:protection_contre_le_mal",
+                "protection:mal",
+                "bonus_save_vs:mal:2",
+                "bonus_js:2",
+                "bonus_js_vs_mal:2",
+                "malus_toucher_ennemi:2",
+                "malus_attaque_creature_mauvaise:2",
+                "barriere:creatures_invoquees",
+                "barriere:creatures_enchantees",
+                "barriere:attaques_naturelles",
+                "reversible:protection_contre_le_bien",
+                "ecole:abjuration"
+              ],
+              "durationFormula": "3 * @caster.level",
+              "durationRoundsPerLevel": 3,
+              "rulesVersion": "2026-05-22-protection-contre-le-mal-v1"
+            }
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.65eSIGbc6usyDmNl",
+          "_id": "RcSPWhB1668xCaLF",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567122,
+            "modifiedTime": 1780340567122
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:45.446Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/protection-contre-le-mal.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "correctedBy": "2026-05-22-protection-contre-le-mal-v1",
+          "correctionSource": "world/game.items",
+          "expectedDuration": "3 rounds/niveau",
+          "expectedDurationFormula": "3 * niveauClerc",
+          "rulesTags": [
+            "classe:clerc",
+            "liste:clerc",
+            "niveau:1",
+            "sort:protection_contre_le_mal",
+            "ecole:abjuration",
+            "protection:mal",
+            "bonus_save_vs:mal:2",
+            "bonus_js:2",
+            "bonus_js_vs_mal:2",
+            "malus_toucher_ennemi:2",
+            "malus_attaque_creature_mauvaise:2",
+            "barriere:creatures_invoquees",
+            "barriere:creatures_enchantees",
+            "barriere:attaques_naturelles",
+            "reversible:protection_contre_le_bien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.65eSIGbc6usyDmNl",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567122,
+        "modifiedTime": 1780340567122,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "TqhVMP92bVsGe1Ze",
+      "sort": 0
+    },
+    {
+      "name": "Purification de la Nourriture et de la Boisson",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/purification-de-la-nourriture-et-de-la-boisson.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": "30 mètres",
+        "duree": "Permanent",
+        "zone_effet": {
+          "valeur": "27 dm³/niveau",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 0,
+          "unite": "nourriture ou boisson"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "Ce sort permet de purifier toute nourriture et toute eau polluée, moisie, pourrie, empoisonnée. L’inverse du sort, corruption de l’eau et des aliments, rend la nourriture impropre à la consommation et l’eau polluée et non potable ; l’inverse profane même l’eau bénite. L’eau maudite est altérée par une purification de l’eau.",
+        "onUse": "systems/add2e/scripts/sorts/purification-de-la-nourriture-et-de-la-boisson.js",
+        "onuse": "systems/add2e/scripts/sorts/purification-de-la-nourriture-et-de-la-boisson.js",
+        "tags": [
+          "classe:clerc",
+          "liste:clerc",
+          "niveau:1",
+          "sort:purification_nourriture_boisson",
+          "sort:purification_de_la_nourriture_et_de_la_boisson",
+          "ecole:alteration",
+          "purification:nourriture",
+          "purification:boisson",
+          "purification:eau",
+          "anti:poison",
+          "anti:souillure",
+          "anti:moisissure",
+          "anti:pourriture",
+          "reversible:corruption_de_la_nourriture_et_de_la_boisson",
+          "profane:eau_benite",
+          "altere:eau_maudite"
+        ],
+        "effectTags": [
+          "classe:clerc",
+          "liste:clerc",
+          "niveau:1",
+          "sort:purification_nourriture_boisson",
+          "sort:purification_de_la_nourriture_et_de_la_boisson",
+          "ecole:alteration",
+          "purification:nourriture",
+          "purification:boisson",
+          "purification:eau",
+          "anti:poison",
+          "anti:souillure",
+          "anti:moisissure",
+          "anti:pourriture",
+          "reversible:corruption_de_la_nourriture_et_de_la_boisson",
+          "profane:eau_benite",
+          "altere:eau_maudite"
+        ],
+        "portée": "30 mètres",
+        "durée": "Permanent",
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/purification-de-la-nourriture-et-de-la-boisson.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "Ce sort permet de purifier toute nourriture et toute eau polluée, moisie, pourrie, empoisonnée. L’inverse du sort, corruption de l’eau et des aliments, rend la nourriture impropre à la consommation et l’eau polluée et non potable ; l’inverse profane même l’eau bénite. L’eau maudite est altérée par une purification de l’eau.",
+        "description_texte": "Ce sort permet de purifier toute nourriture et toute eau polluée, moisie, pourrie, empoisonnée. L’inverse du sort, corruption de l’eau et des aliments, rend la nourriture impropre à la consommation et l’eau polluée et non potable ; l’inverse profane même l’eau bénite. L’eau maudite est altérée par une purification de l’eau.",
+        "description_html": "<p>Ce sort permet de purifier toute nourriture et toute eau polluée, moisie, pourrie, empoisonnée. L’inverse du sort, corruption de l’eau et des aliments, rend la nourriture impropre à la consommation et l’eau polluée et non potable ; l’inverse profane même l’eau bénite. L’eau maudite est altérée par une purification de l’eau.</p>"
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "effects": [
+        {
+          "name": "Purification de la Nourriture et de la Boisson",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:purification_nourriture_boisson",
+                "sort:purification_de_la_nourriture_et_de_la_boisson",
+                "purification:nourriture",
+                "purification:boisson",
+                "purification:eau",
+                "anti:poison",
+                "anti:souillure",
+                "anti:moisissure",
+                "anti:pourriture",
+                "reversible:corruption_de_la_nourriture_et_de_la_boisson",
+                "profane:eau_benite",
+                "altere:eau_maudite",
+                "ecole:alteration"
+              ],
+              "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
+              "spellTagsPatch": {
+                "createsCombatEffect": false,
+                "reversible": true,
+                "reverseSpell": "Corruption de la Nourriture et de la Boisson",
+                "purifiesFood": true,
+                "purifiesWater": true,
+                "purifiesPoison": true,
+                "purifiesSpoilage": true
+              }
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/purification-de-la-nourriture-et-de-la-boisson.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Ed78Mif7wfNyCSLo",
+          "_id": "SnYHImrpK3SzJmgr",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567257,
+            "modifiedTime": 1780340567257
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Purification de la Nourriture et de la Boisson",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:purification_nourriture_boisson",
+                "sort:purification_de_la_nourriture_et_de_la_boisson",
+                "purification:nourriture",
+                "purification:boisson",
+                "purification:eau",
+                "anti:poison",
+                "anti:souillure",
+                "anti:moisissure",
+                "anti:pourriture",
+                "reversible:corruption_de_la_nourriture_et_de_la_boisson",
+                "profane:eau_benite",
+                "altere:eau_maudite",
+                "ecole:alteration"
+              ],
+              "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
+              "spellTagsPatch": {
+                "createsCombatEffect": false,
+                "reversible": true,
+                "reverseSpell": "Corruption de la Nourriture et de la Boisson",
+                "purifiesFood": true,
+                "purifiesWater": true,
+                "purifiesPoison": true,
+                "purifiesSpoilage": true
+              }
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/purification-de-la-nourriture-et-de-la-boisson.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Ed78Mif7wfNyCSLo",
+          "_id": "CikhLXLK5B3LOtEw",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567257,
+            "modifiedTime": 1780340567257
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Purification de la Nourriture et de la Boisson",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:purification_nourriture_boisson",
+                "sort:purification_de_la_nourriture_et_de_la_boisson",
+                "purification:nourriture",
+                "purification:boisson",
+                "purification:eau",
+                "anti:poison",
+                "anti:souillure",
+                "anti:moisissure",
+                "anti:pourriture",
+                "reversible:corruption_de_la_nourriture_et_de_la_boisson",
+                "profane:eau_benite",
+                "altere:eau_maudite",
+                "ecole:alteration"
+              ],
+              "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
+              "spellTagsPatch": {
+                "createsCombatEffect": false,
+                "reversible": true,
+                "reverseSpell": "Corruption de la Nourriture et de la Boisson",
+                "purifiesFood": true,
+                "purifiesWater": true,
+                "purifiesPoison": true,
+                "purifiesSpoilage": true
+              }
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/purification-de-la-nourriture-et-de-la-boisson.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Ed78Mif7wfNyCSLo",
+          "_id": "aaOR6mQcyZlnLLGI",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567257,
+            "modifiedTime": 1780340567257
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/purification-de-la-nourriture-et-de-la-boisson.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:54.236Z",
+          "routedClass": "Clerc",
+          "tags": [
+            "classe:clerc",
+            "liste:clerc",
+            "niveau:1",
+            "sort:purification_nourriture_boisson",
+            "sort:purification_de_la_nourriture_et_de_la_boisson",
+            "ecole:alteration",
+            "purification:nourriture",
+            "purification:boisson",
+            "purification:eau",
+            "anti:poison",
+            "anti:souillure",
+            "anti:moisissure",
+            "anti:pourriture",
+            "reversible:corruption_de_la_nourriture_et_de_la_boisson",
+            "profane:eau_benite",
+            "altere:eau_maudite"
+          ],
+          "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
+          "spellTagsPatch": {
+            "createsCombatEffect": false,
+            "reversible": true,
+            "reverseSpell": "Corruption de la Nourriture et de la Boisson",
+            "purifiesFood": true,
+            "purifiesWater": true,
+            "purifiesPoison": true,
+            "purifiesSpoilage": true
+          }
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.Ed78Mif7wfNyCSLo",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567257,
+        "modifiedTime": 1780340567257,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "i1hJN7EdqPcLTVL1",
+      "sort": 0
+    },
+    {
+      "name": "Résistance au Froid",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/resistance-au-froid.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": "Toucher",
+        "duree": "1 tour/niveau",
+        "zone_effet": {
+          "valeur": "créature touchée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "créature touchée"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "Quand ce sort est lancé sur une créature par un clerc, son corps est préservé du froid. Le bénéficiaire peut résister ainsi à des températures de –18°C, même nu. Les froids les plus intenses, comme ceux créés par une épée de froid, une tempête de glace, un bâtonnet de givre ou un souffle de dragon blanc, autorisent un jet de protection à +3, avec seulement la moitié des dommages subis si ce test est raté, et le quart si le jet de protection est réussi. La résistance dure 1 tour par niveau d’expérience du clerc. Ce sort nécessite une pincée de souffre comme composante matérielle.",
+        "onUse": "systems/add2e/scripts/sorts/resistance-au-froid.js",
+        "onuse": "systems/add2e/scripts/sorts/resistance-au-froid.js",
+        "tags": [
+          "classe:clerc",
+          "liste:clerc",
+          "niveau:1",
+          "sort:resistance_au_froid",
+          "ecole:alteration",
+          "resistance:froid",
+          "etat:resistance_froid",
+          "bonus_js_vs:froid:3",
+          "bonus_save_vs:froid:3",
+          "degats_froid_si_save_rate:moitie",
+          "degats_froid_si_save_reussi:quart",
+          "temperature:froid_naturel:-18",
+          "duree:1_tour_par_niveau"
+        ],
+        "effectTags": [
+          "classe:clerc",
+          "liste:clerc",
+          "niveau:1",
+          "sort:resistance_au_froid",
+          "ecole:alteration",
+          "resistance:froid",
+          "etat:resistance_froid",
+          "bonus_js_vs:froid:3",
+          "bonus_save_vs:froid:3",
+          "degats_froid_si_save_rate:moitie",
+          "degats_froid_si_save_reussi:quart",
+          "temperature:froid_naturel:-18",
+          "duree:1_tour_par_niveau"
+        ],
+        "portée": "Toucher",
+        "durée": "1 tour/niveau",
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/resistance-au-froid.js",
+        "composants_materiels": [
+          {
+            "slug": "pincee_de_souffre_comme_composante_materielle",
+            "nom": "Pincée de souffre comme composante matérielle",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "pincée de souffre comme composante matérielle",
+        "description_reelle": "Quand ce sort est lancé sur une créature par un clerc, son corps est préservé du froid. Le bénéficiaire peut résister ainsi à des températures de –18°C, même nu. Les froids les plus intenses, comme ceux créés par une épée de froid, une tempête de glace, un bâtonnet de givre ou un souffle de dragon blanc, autorisent un jet de protection à +3, avec seulement la moitié des dommages subis si ce test est raté, et le quart si le jet de protection est réussi. La résistance dure 1 tour par niveau d’expérience du clerc. Ce sort nécessite une pincée de souffre comme composante matérielle.",
+        "description_texte": "Quand ce sort est lancé sur une créature par un clerc, son corps est préservé du froid. Le bénéficiaire peut résister ainsi à des températures de –18°C, même nu. Les froids les plus intenses, comme ceux créés par une épée de froid, une tempête de glace, un bâtonnet de givre ou un souffle de dragon blanc, autorisent un jet de protection à +3, avec seulement la moitié des dommages subis si ce test est raté, et le quart si le jet de protection est réussi. La résistance dure 1 tour par niveau d’expérience du clerc. Ce sort nécessite une pincée de souffre comme composante matérielle.",
+        "description_html": "<p>Quand ce sort est lancé sur une créature par un clerc, son corps est préservé du froid. Le bénéficiaire peut résister ainsi à des températures de –18°C, même nu. Les froids les plus intenses, comme ceux créés par une épée de froid, une tempête de glace, un bâtonnet de givre ou un souffle de dragon blanc, autorisent un jet de protection à +3, avec seulement la moitié des dommages subis si ce test est raté, et le quart si le jet de protection est réussi. La résistance dure 1 tour par niveau d’expérience du clerc. Ce sort nécessite une pincée de souffre comme composante matérielle.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Résistance au Froid",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:resistance_au_froid",
+                "resistance:froid",
+                "etat:resistance_froid",
+                "bonus_js_vs:froid:3",
+                "bonus_save_vs:froid:3",
+                "degats_froid_si_save_rate:moitie",
+                "degats_froid_si_save_reussi:quart",
+                "temperature:froid_naturel:-18",
+                "duree:1_tour_par_niveau",
+                "ecole:alteration"
+              ],
+              "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
+              "spellTagsPatch": {
+                "damageType": "froid",
+                "saveBonusVsCold": 3,
+                "coldDamageIfSaveFails": "half",
+                "coldDamageIfSaveSucceeds": "quarter",
+                "naturalColdProtectionCelsius": -18,
+                "durationFormula": "10 * niveauClerc"
+              }
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resistance-au-froid.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.sO2VZcThBrVX7Slg",
+          "_id": "fdE90JJXcyYZ78xU",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569405,
+            "modifiedTime": 1780340569405
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "generatedPatch": "missing-cleric-level-1-resistance-au-froid",
+          "spellPack": "clerc-niveau-1-correctif",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:11.990Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/resistance-au-froid.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "tags": [
+            "classe:clerc",
+            "liste:clerc",
+            "niveau:1",
+            "sort:resistance_au_froid",
+            "ecole:alteration",
+            "resistance:froid",
+            "etat:resistance_froid",
+            "bonus_js_vs:froid:3",
+            "bonus_save_vs:froid:3",
+            "degats_froid_si_save_rate:moitie",
+            "degats_froid_si_save_reussi:quart",
+            "temperature:froid_naturel:-18",
+            "duree:1_tour_par_niveau"
+          ],
+          "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
+          "spellTagsPatch": {
+            "damageType": "froid",
+            "saveBonusVsCold": 3,
+            "coldDamageIfSaveFails": "half",
+            "coldDamageIfSaveSucceeds": "quarter",
+            "naturalColdProtectionCelsius": -18,
+            "durationFormula": "10 * niveauClerc"
+          }
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.sO2VZcThBrVX7Slg",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569405,
+        "modifiedTime": 1780340569405,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "2eIiTt870xCg5cX2",
+      "sort": 0
+    },
+    {
+      "name": "Sanctuaire",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/sanctuaire.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "2 rounds + 1 round/niveau",
+          "unite": "rounds"
+        },
+        "zone_effet": {
+          "valeur": "une créature",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "créature"
+        },
+        "jet_sauvegarde": "Annule",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "4",
+          "unite": "segments"
+        },
+        "description": "Quand un clerc lance un sort sanctuaire, tout adversaire doit lancer un jet de protection contre les sorts. Si le jet de protection est raté, l’adversaire ignorera totalement le clerc et attaquera quelqu’un d’autre. Si le jet de protection est réussi, le clerc pourra être sujet aux attaques de cet adversaire. À noter que ce sort n’empêche pas les effets des sorts de zone (boule de feu, tempête de glace, etc.). Pendant la période de protection que donne ce sort, le clerc ne peut faire aucune action offensive, mais il peut utiliser des sorts non-violents, des sorts qui ne représentent pas une agression ; il peut par exemple guérir les blessures de quelqu’un ou lancer une bénédiction, un augure, un cantique, une lumière pour éclairer (pas sur un adversaire !), etc. Ce sort peut être lancé sur une créature autre que le clerc lui-même. Les composantes matérielles de ce sort sont le symbole sacré du clerc et un petit miroir en argent.",
+        "onUse": "systems/add2e/scripts/sorts/sanctuaire.js",
+        "onuse": "systems/add2e/scripts/sorts/sanctuaire.js",
+        "tags": [
+          "classe:clerc",
+          "liste:clerc",
+          "niveau:1",
+          "sort:sanctuaire",
+          "ecole:abjuration",
+          "etat:sanctuaire",
+          "defense:sanctuaire",
+          "condition:aucune_action_offensive",
+          "jet:sauvegarde_annule",
+          "protection:sanctuaire",
+          "attaque_contre_cible:jp_annule",
+          "jp:annule",
+          "jp_type:sorts",
+          "duree:2_plus_niveau_rounds",
+          "expire_si_cible_attaque"
+        ],
+        "effectTags": [
+          "classe:clerc",
+          "liste:clerc",
+          "niveau:1",
+          "sort:sanctuaire",
+          "ecole:abjuration",
+          "etat:sanctuaire",
+          "defense:sanctuaire",
+          "condition:aucune_action_offensive",
+          "jet:sauvegarde_annule",
+          "protection:sanctuaire",
+          "attaque_contre_cible:jp_annule",
+          "jp:annule",
+          "jp_type:sorts",
+          "duree:2_plus_niveau_rounds",
+          "expire_si_cible_attaque"
+        ],
+        "portée": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "durée": {
+          "valeur": "2 rounds + 1 round/niveau",
+          "unite": "rounds"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/sanctuaire.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre",
+            "nom": "Symbole sacré",
+            "quantite": 1,
+            "consomme": false
+          },
+          {
+            "slug": "petit_miroir_en_argent",
+            "nom": "Petit miroir en argent",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles de ce sort sont le symbole sacré du clerc et un petit miroir en argent.",
+        "description_reelle": "Quand un clerc lance un sort sanctuaire, tout adversaire doit lancer un jet de protection contre les sorts. Si le jet de protection est raté, l’adversaire ignorera totalement le clerc et attaquera quelqu’un d’autre. Si le jet de protection est réussi, le clerc pourra être sujet aux attaques de cet adversaire. À noter que ce sort n’empêche pas les effets des sorts de zone (boule de feu, tempête de glace, etc.). Pendant la période de protection que donne ce sort, le clerc ne peut faire aucune action offensive, mais il peut utiliser des sorts non-violents, des sorts qui ne représentent pas une agression ; il peut par exemple guérir les blessures de quelqu’un ou lancer une bénédiction, un augure, un cantique, une lumière pour éclairer (pas sur un adversaire !), etc. Ce sort peut être lancé sur une créature autre que le clerc lui-même. Les composantes matérielles de ce sort sont le symbole sacré du clerc et un petit miroir en argent.",
+        "description_texte": "Quand un clerc lance un sort sanctuaire, tout adversaire doit lancer un jet de protection contre les sorts. Si le jet de protection est raté, l’adversaire ignorera totalement le clerc et attaquera quelqu’un d’autre. Si le jet de protection est réussi, le clerc pourra être sujet aux attaques de cet adversaire. À noter que ce sort n’empêche pas les effets des sorts de zone (boule de feu, tempête de glace, etc.). Pendant la période de protection que donne ce sort, le clerc ne peut faire aucune action offensive, mais il peut utiliser des sorts non-violents, des sorts qui ne représentent pas une agression ; il peut par exemple guérir les blessures de quelqu’un ou lancer une bénédiction, un augure, un cantique, une lumière pour éclairer (pas sur un adversaire !), etc. Ce sort peut être lancé sur une créature autre que le clerc lui-même. Les composantes matérielles de ce sort sont le symbole sacré du clerc et un petit miroir en argent.",
+        "description_html": "<p>Quand un clerc lance un sort sanctuaire, tout adversaire doit lancer un jet de protection contre les sorts. Si le jet de protection est raté, l’adversaire ignorera totalement le clerc et attaquera quelqu’un d’autre. Si le jet de protection est réussi, le clerc pourra être sujet aux attaques de cet adversaire. À noter que ce sort n’empêche pas les effets des sorts de zone (boule de feu, tempête de glace, etc.). Pendant la période de protection que donne ce sort, le clerc ne peut faire aucune action offensive, mais il peut utiliser des sorts non-violents, des sorts qui ne représentent pas une agression ; il peut par exemple guérir les blessures de quelqu’un ou lancer une bénédiction, un augure, un cantique, une lumière pour éclairer (pas sur un adversaire !), etc. Ce sort peut être lancé sur une créature autre que le clerc lui-même. Les composantes matérielles de ce sort sont le symbole sacré du clerc et un petit miroir en argent.</p>"
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "effects": [
+        {
+          "name": "Sanctuaire",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:sanctuaire",
+                "etat:sanctuaire",
+                "defense:sanctuaire",
+                "condition:aucune_action_offensive",
+                "jet:sauvegarde_annule",
+                "protection:sanctuaire",
+                "attaque_contre_cible:jp_annule",
+                "jp:annule",
+                "jp_type:sorts",
+                "duree:2_plus_niveau_rounds",
+                "expire_si_cible_attaque",
+                "ecole:abjuration"
+              ],
+              "correctedBy": "2026-05-23-sanctuaire-tags-v1",
+              "durationFormula": "2 + @caster.level",
+              "durationRoundsBase": 2,
+              "durationRoundsPerLevel": 1
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/sanctuaire.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.3PMoVJJsCLUJb9w2",
+          "_id": "1iXnZWqf8LuuuIg7",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567093,
+            "modifiedTime": 1780340567093
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Sanctuaire",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:sanctuaire",
+                "etat:sanctuaire",
+                "defense:sanctuaire",
+                "condition:aucune_action_offensive",
+                "jet:sauvegarde_annule",
+                "protection:sanctuaire",
+                "attaque_contre_cible:jp_annule",
+                "jp:annule",
+                "jp_type:sorts",
+                "duree:2_plus_niveau_rounds",
+                "expire_si_cible_attaque",
+                "ecole:abjuration"
+              ],
+              "correctedBy": "2026-05-23-sanctuaire-tags-v1",
+              "durationFormula": "2 + @caster.level",
+              "durationRoundsBase": 2,
+              "durationRoundsPerLevel": 1
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/sanctuaire.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.3PMoVJJsCLUJb9w2",
+          "_id": "WJl52L5xNelNj6ov",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567093,
+            "modifiedTime": 1780340567093
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Sanctuaire",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:sanctuaire",
+                "etat:sanctuaire",
+                "defense:sanctuaire",
+                "condition:aucune_action_offensive",
+                "jet:sauvegarde_annule",
+                "protection:sanctuaire",
+                "attaque_contre_cible:jp_annule",
+                "jp:annule",
+                "jp_type:sorts",
+                "duree:2_plus_niveau_rounds",
+                "expire_si_cible_attaque",
+                "ecole:abjuration"
+              ],
+              "correctedBy": "2026-05-23-sanctuaire-tags-v1",
+              "durationFormula": "2 + @caster.level",
+              "durationRoundsBase": 2,
+              "durationRoundsPerLevel": 1
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/sanctuaire.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.3PMoVJJsCLUJb9w2",
+          "_id": "dmCe05WbcaegBkjX",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567093,
+            "modifiedTime": 1780340567093
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/sanctuaire.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:17.041Z",
+          "routedClass": "Clerc",
+          "tags": [
+            "classe:clerc",
+            "liste:clerc",
+            "niveau:1",
+            "sort:sanctuaire",
+            "ecole:abjuration",
+            "etat:sanctuaire",
+            "defense:sanctuaire",
+            "condition:aucune_action_offensive",
+            "jet:sauvegarde_annule",
+            "protection:sanctuaire",
+            "attaque_contre_cible:jp_annule",
+            "jp:annule",
+            "jp_type:sorts",
+            "duree:2_plus_niveau_rounds",
+            "expire_si_cible_attaque"
+          ],
+          "correctedBy": "2026-05-23-sanctuaire-tags-v1",
+          "expectedDuration": "2 rounds + 1 round/niveau",
+          "expectedDurationFormula": "2 + niveauClerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.3PMoVJJsCLUJb9w2",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567093,
+        "modifiedTime": 1780340567093,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "vKWHLf1xrjZNtMdr",
+      "sort": 0
+    },
+    {
+      "name": "Soins des Blessures Légères",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "créature touchée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "créature vivante"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "5",
+          "unite": "segments"
+        },
+        "description": "En posant ses mains sur une créature blessée, le clerc peut lui redonner de 1 à 8 points de vie perdus (1d8). Ce sort ne peut pas soigner les créatures sans enveloppe corporelle, ni les morts-vivants, ni les créatures uniquement touchées par des armes en fer, en argent ou ma44 giques. L’effet des soins mineurs est permanent tant que la personne guérie ne subit pas d’autres dommages. L’inverse de ce sort, blessures mineures, agit selon les mêmes principes mais cause de 1 à 8 points de dommages. Si une créature évite le contact des mains du clerc, celui-ci doit lancer une « probabilité de toucher » pour voir s’il a pu poser ses mains sur la victime pour infliger une blessure. SORTS DE NIVEAU 2",
+        "onUse": "systems/add2e/scripts/sorts/soins-des-blessures-legeres.js",
+        "onuse": "systems/add2e/scripts/sorts/soins-des-blessures-legeres.js",
+        "portée": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "durée": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/soins-des-blessures-legeres.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "En posant ses mains sur une créature blessée, le clerc peut lui redonner de 1 à 8 points de vie perdus (1d8). Ce sort ne peut pas soigner les créatures sans enveloppe corporelle, ni les morts-vivants, ni les créatures uniquement touchées par des armes en fer, en argent ou ma44 giques. L’effet des soins mineurs est permanent tant que la personne guérie ne subit pas d’autres dommages. L’inverse de ce sort, blessures mineures, agit selon les mêmes principes mais cause de 1 à 8 points de dommages. Si une créature évite le contact des mains du clerc, celui-ci doit lancer une « probabilité de toucher » pour voir s’il a pu poser ses mains sur la victime pour infliger une blessure. SORTS DE NIVEAU 2",
+        "description_texte": "En posant ses mains sur une créature blessée, le clerc peut lui redonner de 1 à 8 points de vie perdus (1d8). Ce sort ne peut pas soigner les créatures sans enveloppe corporelle, ni les morts-vivants, ni les créatures uniquement touchées par des armes en fer, en argent ou ma44 giques. L’effet des soins mineurs est permanent tant que la personne guérie ne subit pas d’autres dommages. L’inverse de ce sort, blessures mineures, agit selon les mêmes principes mais cause de 1 à 8 points de dommages. Si une créature évite le contact des mains du clerc, celui-ci doit lancer une « probabilité de toucher » pour voir s’il a pu poser ses mains sur la victime pour infliger une blessure. SORTS DE NIVEAU 2",
+        "description_html": "<p>En posant ses mains sur une créature blessée, le clerc peut lui redonner de 1 à 8 points de vie perdus (1d8). Ce sort ne peut pas soigner les créatures sans enveloppe corporelle, ni les morts-vivants, ni les créatures uniquement touchées par des armes en fer, en argent ou ma44 giques. L’effet des soins mineurs est permanent tant que la personne guérie ne subit pas d’autres dommages. L’inverse de ce sort, blessures mineures, agit selon les mêmes principes mais cause de 1 à 8 points de dommages. Si une créature évite le contact des mains du clerc, celui-ci doit lancer une « probabilité de toucher » pour voir s’il a pu poser ses mains sur la victime pour infliger une blessure. SORTS DE NIVEAU 2</p>"
+      },
+      "folder": "RV9v89HxrYvQpcPU",
+      "effects": [
+        {
+          "name": "Soins des Blessures Légères",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:soins_des_blessures_legeres",
+                "soin:1d8",
+                "reversible:blessures_legeres",
+                "degats_inverse:1d8",
+                "etat:soin",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ZtH0jCxBJupBfFdk",
+          "_id": "vYpzCR83jwLSSj2b",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568653,
+            "modifiedTime": 1780340568653
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Soins des Blessures Légères",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:soins_des_blessures_legeres",
+                "soin:1d8",
+                "reversible:blessures_legeres",
+                "degats_inverse:1d8",
+                "etat:soin",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ZtH0jCxBJupBfFdk",
+          "_id": "kLFkj48XuQl8qsYp",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568653,
+            "modifiedTime": 1780340568653
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Soins des Blessures Légères",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:soins_des_blessures_legeres",
+                "soin:1d8",
+                "reversible:blessures_legeres",
+                "degats_inverse:1d8",
+                "etat:soin",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ZtH0jCxBJupBfFdk",
+          "_id": "fKVw6m3kpOQNtxzI",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568653,
+            "modifiedTime": 1780340568653
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Soins des Blessures Légères",
+          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
+          "disabled": true,
+          "transfer": false,
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:1",
+                "sort:soins_des_blessures_legeres",
+                "soin:1d8",
+                "reversible:blessures_legeres",
+                "degats_inverse:1d8",
+                "etat:soin",
+                "ecole:necromancie"
+              ],
+              "rulesVersion": "2026-05-23-clean-soins-legeres-v1"
+            }
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ZtH0jCxBJupBfFdk",
+          "_id": "1gGsVH6SGWQLIVRY",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568653,
+            "modifiedTime": 1780340568653
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/soins-des-blessures-legeres.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:25.421Z",
+          "routedClass": "Clerc",
+          "correctedBy": "2026-05-23-clean-soins-legeres-v1",
+          "correctionSource": "world/game.items"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 1",
+          "sourceFolderId": "drnwQQ9thhmKNqbB",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.ZtH0jCxBJupBfFdk",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568653,
+        "modifiedTime": 1780340568653,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "41cYJx1D12of5dtp",
+      "sort": 0
+    }
+  ]
+}

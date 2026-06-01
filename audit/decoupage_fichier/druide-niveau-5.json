@@ -1,0 +1,1310 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "druide",
+    "niveau": 5,
+    "key": "druide-niveau-5",
+    "count": 8
+  },
+  "folders": [
+    {
+      "name": "Druide",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "Rll5qPz7yPmV4eUm",
+      "description": "",
+      "sort": 600000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566745,
+        "modifiedTime": 1780340566745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 5",
+      "type": "Item",
+      "folder": "Rll5qPz7yPmV4eUm",
+      "sorting": "a",
+      "_id": "2qvjyq2vOUvgASEL",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566737,
+        "modifiedTime": 1780340566737,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Bâtons à serpents",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-batons-a-serpents.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus et le fait que le druide doive utiliser du gui comme composante matérielle, ce sort est le même que le sort de niveau 4 de clerc bâtons à serpents (voir p.48). SORTS DE DRUIDE (NIVEAU 5)",
+        "onUse": "systems/add2e/scripts/sorts/druide-batons-a-serpents.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-batons-a-serpents.js",
+        "portée": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-batons-a-serpents.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Excepté ci-dessus et le fait que le druide doive utiliser du gui comme composante matérielle, ce sort est le même que le sort de niveau 4 de clerc bâtons à serpents (voir p.48). SORTS DE DRUIDE (NIVEAU 5)",
+        "description_texte": "Excepté ci-dessus et le fait que le druide doive utiliser du gui comme composante matérielle, ce sort est le même que le sort de niveau 4 de clerc bâtons à serpents (voir p.48). SORTS DE DRUIDE (NIVEAU 5)",
+        "description_html": "<p>Excepté ci-dessus et le fait que le druide doive utiliser du gui comme composante matérielle, ce sort est le même que le sort de niveau 4 de clerc bâtons à serpents (voir p.48). SORTS DE DRUIDE (NIVEAU 5)</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Bâtons à serpents",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:5",
+                "sort:batons_a_serpents",
+                "transmutation:batons_serpents",
+                "serpents",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-batons-a-serpents.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.gN4Tq8qXbzeN4pA0",
+          "_id": "sxyY55TqAv02vbR2",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568753,
+            "modifiedTime": 1780340568753
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:36.788Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-batons-a-serpents.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 5",
+          "sourceFolderId": "blrgA8rHCxai2U7H",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "2qvjyq2vOUvgASEL",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.gN4Tq8qXbzeN4pA0",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568753,
+        "modifiedTime": 1780340568753,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "tLb7xw1oUqTWIBSP",
+      "sort": 0
+    },
+    {
+      "name": "Bouclier anti-plantes",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-bouclier-anti-plantes.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort crée une barrière invisible qui maintient à l’écart les créatures et projectiles de matière végétale vivante. Ainsi, le druide (et les autres personnes à l’intérieur de l’hémisphère) est protégé des attaques des plantes et des créatures végétales comme les tertres errants ou les sylvaniens. Le sort dure pendant un tour par niveau d’expérience du druide.",
+        "onUse": "systems/add2e/scripts/sorts/druide-bouclier-anti-plantes.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-bouclier-anti-plantes.js",
+        "portée": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/druide-bouclier-anti-plantes.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort crée une barrière invisible qui maintient à l’écart les créatures et projectiles de matière végétale vivante. Ainsi, le druide (et les autres personnes à l’intérieur de l’hémisphère) est protégé des attaques des plantes et des créatures végétales comme les tertres errants ou les sylvaniens. Le sort dure pendant un tour par niveau d’expérience du druide.",
+        "description_texte": "Ce sort crée une barrière invisible qui maintient à l’écart les créatures et projectiles de matière végétale vivante. Ainsi, le druide (et les autres personnes à l’intérieur de l’hémisphère) est protégé des attaques des plantes et des créatures végétales comme les tertres errants ou les sylvaniens. Le sort dure pendant un tour par niveau d’expérience du druide.",
+        "description_html": "<p>Ce sort crée une barrière invisible qui maintient à l’écart les créatures et projectiles de matière végétale vivante. Ainsi, le druide (et les autres personnes à l’intérieur de l’hémisphère) est protégé des attaques des plantes et des créatures végétales comme les tertres errants ou les sylvaniens. Le sort dure pendant un tour par niveau d’expérience du druide.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Bouclier anti-plantes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:5",
+                "sort:bouclier_anti_plantes",
+                "bouclier:anti_plantes",
+                "protection:plantes",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-bouclier-anti-plantes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.DptL8XuJcnngTlBf",
+          "_id": "zXrnOFurPO2sE9XB",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567239,
+            "modifiedTime": 1780340567239
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:42.287Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-bouclier-anti-plantes.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 5",
+          "sourceFolderId": "blrgA8rHCxai2U7H",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "2qvjyq2vOUvgASEL",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.DptL8XuJcnngTlBf",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567239,
+        "modifiedTime": 1780340567239,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "nBIJOOTA44bGxVyL",
+      "sort": 0
+    },
+    {
+      "name": "Communion avec la nature",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-communion-avec-la-nature.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet au druide de ne faire qu’un avec la nature environnante ; il obtient alors le pouvoir de connaitre l’histoire de cette zone. Pour chaque niveau d’expérience, le druide peut connaître un fait à propos du sol, de la végétation, des minéraux, des cours d’eau, des gens habitant dans la zone, des animaux, etc. tout cela devant lui, à gauche ou à droite. Le sort n’est effectif qu’en extérieur et il agit sur un rayon de 800 m pour chaque niveau du druide. Niveau : 5 Composantes : V, S, M Portée : 8\" Temps d'incantation : 7 segments Durée : spéciale Jet de protection : aucun Zone d'effet : spéciale",
+        "onUse": "systems/add2e/scripts/sorts/druide-communion-avec-la-nature.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-communion-avec-la-nature.js",
+        "portée": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/druide-communion-avec-la-nature.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort permet au druide de ne faire qu’un avec la nature environnante ; il obtient alors le pouvoir de connaitre l’histoire de cette zone. Pour chaque niveau d’expérience, le druide peut connaître un fait à propos du sol, de la végétation, des minéraux, des cours d’eau, des gens habitant dans la zone, des animaux, etc. tout cela devant lui, à gauche ou à droite. Le sort n’est effectif qu’en extérieur et il agit sur un rayon de 800 m pour chaque niveau du druide. Niveau : 5 Composantes : V, S, M Portée : 8\" Temps d'incantation : 7 segments Durée : spéciale Jet de protection : aucun Zone d'effet : spéciale",
+        "description_texte": "Ce sort permet au druide de ne faire qu’un avec la nature environnante ; il obtient alors le pouvoir de connaitre l’histoire de cette zone. Pour chaque niveau d’expérience, le druide peut connaître un fait à propos du sol, de la végétation, des minéraux, des cours d’eau, des gens habitant dans la zone, des animaux, etc. tout cela devant lui, à gauche ou à droite. Le sort n’est effectif qu’en extérieur et il agit sur un rayon de 800 m pour chaque niveau du druide. Niveau : 5 Composantes : V, S, M Portée : 8\" Temps d'incantation : 7 segments Durée : spéciale Jet de protection : aucun Zone d'effet : spéciale",
+        "description_html": "<p>Ce sort permet au druide de ne faire qu’un avec la nature environnante ; il obtient alors le pouvoir de connaitre l’histoire de cette zone. Pour chaque niveau d’expérience, le druide peut connaître un fait à propos du sol, de la végétation, des minéraux, des cours d’eau, des gens habitant dans la zone, des animaux, etc. tout cela devant lui, à gauche ou à droite. Le sort n’est effectif qu’en extérieur et il agit sur un rayon de 800 m pour chaque niveau du druide. Niveau : 5 Composantes : V, S, M Portée : 8&quot; Temps d&#x27;incantation : 7 segments Durée : spéciale Jet de protection : aucun Zone d&#x27;effet : spéciale</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Communion avec la nature",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:5",
+                "sort:communion_avec_la_nature",
+                "communion:nature",
+                "divination:nature",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-communion-avec-la-nature.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.DtYl97h5EMAW1LDp",
+          "_id": "o8mv0lQbBfpzFu6b",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567241,
+            "modifiedTime": 1780340567241
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:56.958Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-communion-avec-la-nature.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 5",
+          "sourceFolderId": "blrgA8rHCxai2U7H",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "2qvjyq2vOUvgASEL",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.DtYl97h5EMAW1LDp",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567241,
+        "modifiedTime": 1780340567241,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "2mQgGKskOfdYgHLB",
+      "sort": 0
+    },
+    {
+      "name": "Contrôle des vents",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-controle-des-vents.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "0",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le druide peut changer la force du vent dans la zone d’effet. Pour chaque niveau d’expérience, il peut augmenter ou baisser la vitesse du vent de 5 km/h. Les vents supérieurs à 48 km/h gênent les petites créatures volantes (celle de la taille d’un aigle et moins) et limitent sérieusement le jet de projectiles. Les vents supérieurs à 72 km/h repoussent les créatures volantes de taille humaine. Ceux supérieurs à 96 km/h déroutent toutes les créatures volantes de leur vol, déracinent les petits arbres, renversent les constructions en bois, arrachent les toits, etc. Les vents supérieurs à 120 km/h ont la force d’un ouragan et dévastent tout, sauf les constructions en pierre les plus résistantes. Un vent supérieur à 48 km/h rend la navigation difficile. Un vent supérieur à 72 km/h provoque des dégâts mineurs aux petits navires ; supérieur à 96 km/h il met en danger tous les navires ; supérieur à 120 km/h, il fait sombrer tous les bateaux. Il y a un « œil » de 4\" de rayon autour du druide dans lequel le vent est calme. Un druide de niveau supérieur peut utiliser ce sort pour contrer les effets du même sort lancé par un druide de niveau inférieur (voir contrôle du climat p.52). Le sort garde son pouvoir pendant un tour par niveau du druide. Une fois que le sort est lancé, le vent augmente sa vitesse de 5 km/h par round, jusqu’à ce que la vitesse maximale soit atteinte. Quand la durée du sort est achevée, le vent faiblit à la même vitesse. Si le sort est utilisé en intérieur, l’œil se rétrécira selon les dimensions du local dans lequel souffle le vent : si la zone d’effet est de 48\" et que le local ne permet qu’un rayon de 46\", l’œil aura 2\" de rayon et tout espace de 44\" ou moins n’autorisera pas la présence de l’œil, exposant le lanceur du sort aux effets du vent. Ce sort ne peut pas être utilisé sous l’eau.",
+        "onUse": "systems/add2e/scripts/sorts/druide-controle-des-vents.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-controle-des-vents.js",
+        "portée": {
+          "valeur": "0",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-controle-des-vents.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, le druide peut changer la force du vent dans la zone d’effet. Pour chaque niveau d’expérience, il peut augmenter ou baisser la vitesse du vent de 5 km/h. Les vents supérieurs à 48 km/h gênent les petites créatures volantes (celle de la taille d’un aigle et moins) et limitent sérieusement le jet de projectiles. Les vents supérieurs à 72 km/h repoussent les créatures volantes de taille humaine. Ceux supérieurs à 96 km/h déroutent toutes les créatures volantes de leur vol, déracinent les petits arbres, renversent les constructions en bois, arrachent les toits, etc. Les vents supérieurs à 120 km/h ont la force d’un ouragan et dévastent tout, sauf les constructions en pierre les plus résistantes. Un vent supérieur à 48 km/h rend la navigation difficile. Un vent supérieur à 72 km/h provoque des dégâts mineurs aux petits navires ; supérieur à 96 km/h il met en danger tous les navires ; supérieur à 120 km/h, il fait sombrer tous les bateaux. Il y a un « œil » de 4\" de rayon autour du druide dans lequel le vent est calme. Un druide de niveau supérieur peut utiliser ce sort pour contrer les effets du même sort lancé par un druide de niveau inférieur (voir contrôle du climat p.52). Le sort garde son pouvoir pendant un tour par niveau du druide. Une fois que le sort est lancé, le vent augmente sa vitesse de 5 km/h par round, jusqu’à ce que la vitesse maximale soit atteinte. Quand la durée du sort est achevée, le vent faiblit à la même vitesse. Si le sort est utilisé en intérieur, l’œil se rétrécira selon les dimensions du local dans lequel souffle le vent : si la zone d’effet est de 48\" et que le local ne permet qu’un rayon de 46\", l’œil aura 2\" de rayon et tout espace de 44\" ou moins n’autorisera pas la présence de l’œil, exposant le lanceur du sort aux effets du vent. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_texte": "Avec ce sort, le druide peut changer la force du vent dans la zone d’effet. Pour chaque niveau d’expérience, il peut augmenter ou baisser la vitesse du vent de 5 km/h. Les vents supérieurs à 48 km/h gênent les petites créatures volantes (celle de la taille d’un aigle et moins) et limitent sérieusement le jet de projectiles. Les vents supérieurs à 72 km/h repoussent les créatures volantes de taille humaine. Ceux supérieurs à 96 km/h déroutent toutes les créatures volantes de leur vol, déracinent les petits arbres, renversent les constructions en bois, arrachent les toits, etc. Les vents supérieurs à 120 km/h ont la force d’un ouragan et dévastent tout, sauf les constructions en pierre les plus résistantes. Un vent supérieur à 48 km/h rend la navigation difficile. Un vent supérieur à 72 km/h provoque des dégâts mineurs aux petits navires ; supérieur à 96 km/h il met en danger tous les navires ; supérieur à 120 km/h, il fait sombrer tous les bateaux. Il y a un « œil » de 4\" de rayon autour du druide dans lequel le vent est calme. Un druide de niveau supérieur peut utiliser ce sort pour contrer les effets du même sort lancé par un druide de niveau inférieur (voir contrôle du climat p.52). Le sort garde son pouvoir pendant un tour par niveau du druide. Une fois que le sort est lancé, le vent augmente sa vitesse de 5 km/h par round, jusqu’à ce que la vitesse maximale soit atteinte. Quand la durée du sort est achevée, le vent faiblit à la même vitesse. Si le sort est utilisé en intérieur, l’œil se rétrécira selon les dimensions du local dans lequel souffle le vent : si la zone d’effet est de 48\" et que le local ne permet qu’un rayon de 46\", l’œil aura 2\" de rayon et tout espace de 44\" ou moins n’autorisera pas la présence de l’œil, exposant le lanceur du sort aux effets du vent. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_html": "<p>Avec ce sort, le druide peut changer la force du vent dans la zone d’effet. Pour chaque niveau d’expérience, il peut augmenter ou baisser la vitesse du vent de 5 km/h. Les vents supérieurs à 48 km/h gênent les petites créatures volantes (celle de la taille d’un aigle et moins) et limitent sérieusement le jet de projectiles. Les vents supérieurs à 72 km/h repoussent les créatures volantes de taille humaine. Ceux supérieurs à 96 km/h déroutent toutes les créatures volantes de leur vol, déracinent les petits arbres, renversent les constructions en bois, arrachent les toits, etc. Les vents supérieurs à 120 km/h ont la force d’un ouragan et dévastent tout, sauf les constructions en pierre les plus résistantes. Un vent supérieur à 48 km/h rend la navigation difficile. Un vent supérieur à 72 km/h provoque des dégâts mineurs aux petits navires ; supérieur à 96 km/h il met en danger tous les navires ; supérieur à 120 km/h, il fait sombrer tous les bateaux. Il y a un « œil » de 4&quot; de rayon autour du druide dans lequel le vent est calme. Un druide de niveau supérieur peut utiliser ce sort pour contrer les effets du même sort lancé par un druide de niveau inférieur (voir contrôle du climat p.52). Le sort garde son pouvoir pendant un tour par niveau du druide. Une fois que le sort est lancé, le vent augmente sa vitesse de 5 km/h par round, jusqu’à ce que la vitesse maximale soit atteinte. Quand la durée du sort est achevée, le vent faiblit à la même vitesse. Si le sort est utilisé en intérieur, l’œil se rétrécira selon les dimensions du local dans lequel souffle le vent : si la zone d’effet est de 48&quot; et que le local ne permet qu’un rayon de 46&quot;, l’œil aura 2&quot; de rayon et tout espace de 44&quot; ou moins n’autorisera pas la présence de l’œil, exposant le lanceur du sort aux effets du vent. Ce sort ne peut pas être utilisé sous l’eau.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Contrôle des vents",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:5",
+                "sort:controle_des_vents",
+                "controle:vents",
+                "air",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-controle-des-vents.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.XRp7NKduuwgPJBak",
+          "_id": "6kTkcRSPWaCmNM8T",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568061,
+            "modifiedTime": 1780340568061
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:04.382Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-controle-des-vents.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 5",
+          "sourceFolderId": "blrgA8rHCxai2U7H",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "2qvjyq2vOUvgASEL",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.XRp7NKduuwgPJBak",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568061,
+        "modifiedTime": 1780340568061,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "EtVots6HKBlcVdlr",
+      "sort": 0
+    },
+    {
+      "name": "Invocation animale II",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-invocation-animale-ii.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort a la même durée et les mêmes effets que le sort de niveau 4, invocation animale I, sauf que le druide peut invoquer jusqu’à 6 animaux de 8 dés de vie maximum chacun ou 12 animaux de 4 dés de vie maximum chacun. MUR DE FEU (Évocation) Explication/Description : ce sort crée un rideau de feu magique de couleur chatoyante, vert-jaune ou ambre pour les druides. Ce mur de feu inflige de 4 à 16 (4d4) points de dégâts plus 1 point de vie par niveau du druide, à toute créature passant à travers. Les créatures à moins de 1\" du mur subissent de 2 à 8 points de dégâts, celles à moins de 2\", 1 à 4 points. Les créatures très sensibles au feu subissent des dégâts additionnels et les morts-vivants subissent toujours le double des dégâts. Seule la face du mur opposée au druide provoque des dommages. Ce mur opaque dure tant que le druide se concentre pour le maintenir ou alors 1 round par niveau si le druide ne se concentre pas. Le mur créé fait 2\" de côté par niveau du druide ou alors forme un anneau d’un rayon de ½\" maximum par niveau du druide et dans les deux cas fait une hauteur de 2\". Le mur est immobile, mais l’anneau se déplace avec le druide. Si le druide se déplace, il lui impossible de maintenir sa concentration sur le mur de feu. Ce sort ne peut pas être utilisé sous l’eau.",
+        "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-ii.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-invocation-animale-ii.js",
+        "portée": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/druide-invocation-animale-ii.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort a la même durée et les mêmes effets que le sort de niveau 4, invocation animale I, sauf que le druide peut invoquer jusqu’à 6 animaux de 8 dés de vie maximum chacun ou 12 animaux de 4 dés de vie maximum chacun. MUR DE FEU (Évocation) Explication/Description : ce sort crée un rideau de feu magique de couleur chatoyante, vert-jaune ou ambre pour les druides. Ce mur de feu inflige de 4 à 16 (4d4) points de dégâts plus 1 point de vie par niveau du druide, à toute créature passant à travers. Les créatures à moins de 1\" du mur subissent de 2 à 8 points de dégâts, celles à moins de 2\", 1 à 4 points. Les créatures très sensibles au feu subissent des dégâts additionnels et les morts-vivants subissent toujours le double des dégâts. Seule la face du mur opposée au druide provoque des dommages. Ce mur opaque dure tant que le druide se concentre pour le maintenir ou alors 1 round par niveau si le druide ne se concentre pas. Le mur créé fait 2\" de côté par niveau du druide ou alors forme un anneau d’un rayon de ½\" maximum par niveau du druide et dans les deux cas fait une hauteur de 2\". Le mur est immobile, mais l’anneau se déplace avec le druide. Si le druide se déplace, il lui impossible de maintenir sa concentration sur le mur de feu. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_texte": "Ce sort a la même durée et les mêmes effets que le sort de niveau 4, invocation animale I, sauf que le druide peut invoquer jusqu’à 6 animaux de 8 dés de vie maximum chacun ou 12 animaux de 4 dés de vie maximum chacun. MUR DE FEU (Évocation) Explication/Description : ce sort crée un rideau de feu magique de couleur chatoyante, vert-jaune ou ambre pour les druides. Ce mur de feu inflige de 4 à 16 (4d4) points de dégâts plus 1 point de vie par niveau du druide, à toute créature passant à travers. Les créatures à moins de 1\" du mur subissent de 2 à 8 points de dégâts, celles à moins de 2\", 1 à 4 points. Les créatures très sensibles au feu subissent des dégâts additionnels et les morts-vivants subissent toujours le double des dégâts. Seule la face du mur opposée au druide provoque des dommages. Ce mur opaque dure tant que le druide se concentre pour le maintenir ou alors 1 round par niveau si le druide ne se concentre pas. Le mur créé fait 2\" de côté par niveau du druide ou alors forme un anneau d’un rayon de ½\" maximum par niveau du druide et dans les deux cas fait une hauteur de 2\". Le mur est immobile, mais l’anneau se déplace avec le druide. Si le druide se déplace, il lui impossible de maintenir sa concentration sur le mur de feu. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_html": "<p>Ce sort a la même durée et les mêmes effets que le sort de niveau 4, invocation animale I, sauf que le druide peut invoquer jusqu’à 6 animaux de 8 dés de vie maximum chacun ou 12 animaux de 4 dés de vie maximum chacun. MUR DE FEU (Évocation) Explication/Description : ce sort crée un rideau de feu magique de couleur chatoyante, vert-jaune ou ambre pour les druides. Ce mur de feu inflige de 4 à 16 (4d4) points de dégâts plus 1 point de vie par niveau du druide, à toute créature passant à travers. Les créatures à moins de 1&quot; du mur subissent de 2 à 8 points de dégâts, celles à moins de 2&quot;, 1 à 4 points. Les créatures très sensibles au feu subissent des dégâts additionnels et les morts-vivants subissent toujours le double des dégâts. Seule la face du mur opposée au druide provoque des dommages. Ce mur opaque dure tant que le druide se concentre pour le maintenir ou alors 1 round par niveau si le druide ne se concentre pas. Le mur créé fait 2&quot; de côté par niveau du druide ou alors forme un anneau d’un rayon de ½&quot; maximum par niveau du druide et dans les deux cas fait une hauteur de 2&quot;. Le mur est immobile, mais l’anneau se déplace avec le druide. Si le druide se déplace, il lui impossible de maintenir sa concentration sur le mur de feu. Ce sort ne peut pas être utilisé sous l’eau.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Invocation animale II",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:5",
+                "sort:invocation_animale_ii",
+                "invocation:animale_ii",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-invocation-animale-ii.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fGrmBZxVgHNN7lpy",
+          "_id": "ScQIU4uwMnUECdHp",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568719,
+            "modifiedTime": 1780340568719
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:30.462Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-invocation-animale-ii.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 5",
+          "sourceFolderId": "blrgA8rHCxai2U7H",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "2qvjyq2vOUvgASEL",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.fGrmBZxVgHNN7lpy",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568719,
+        "modifiedTime": 1780340568719,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "ev1iqqbluPZsooao",
+      "sort": 0
+    },
+    {
+      "name": "Mur de feu",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-mur-de-feu.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort diffère du sort de niveau 5 de druide mur de feu (voir p.61) par ce qui est indiqué ci-dessus et par ce qui suit : les flammes sont soit violettes, soit bleu-rouge ; les dégâts de base sont de 2 à 12 points (2d6) plus 1 point de dégât par niveau ; le rayon du mur de feu en forme d’anneau est de 1\" + ¼\"/niveau ; la composante matérielle est du phosphore. Ce sort ne peut pas être utilisé sous l’eau.",
+        "onUse": "systems/add2e/scripts/sorts/druide-mur-de-feu.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-mur-de-feu.js",
+        "portée": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/druide-mur-de-feu.js",
+        "composants_materiels": [
+          {
+            "slug": "phosphore",
+            "nom": "Phosphore",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "phosphore",
+        "description_reelle": "Ce sort diffère du sort de niveau 5 de druide mur de feu (voir p.61) par ce qui est indiqué ci-dessus et par ce qui suit : les flammes sont soit violettes, soit bleu-rouge ; les dégâts de base sont de 2 à 12 points (2d6) plus 1 point de dégât par niveau ; le rayon du mur de feu en forme d’anneau est de 1\" + ¼\"/niveau ; la composante matérielle est du phosphore. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_texte": "Ce sort diffère du sort de niveau 5 de druide mur de feu (voir p.61) par ce qui est indiqué ci-dessus et par ce qui suit : les flammes sont soit violettes, soit bleu-rouge ; les dégâts de base sont de 2 à 12 points (2d6) plus 1 point de dégât par niveau ; le rayon du mur de feu en forme d’anneau est de 1\" + ¼\"/niveau ; la composante matérielle est du phosphore. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_html": "<p>Ce sort diffère du sort de niveau 5 de druide mur de feu (voir p.61) par ce qui est indiqué ci-dessus et par ce qui suit : les flammes sont soit violettes, soit bleu-rouge ; les dégâts de base sont de 2 à 12 points (2d6) plus 1 point de dégât par niveau ; le rayon du mur de feu en forme d’anneau est de 1&quot; + ¼&quot;/niveau ; la composante matérielle est du phosphore. Ce sort ne peut pas être utilisé sous l’eau.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Mur de feu",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:5",
+                "sort:mur_de_feu",
+                "mur:feu",
+                "degat:feu",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-mur-de-feu.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kMWKdmJYtCGY37w7",
+          "_id": "AfYWkrA5jGvYmqEy",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568815,
+            "modifiedTime": 1780340568815
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:45.745Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-mur-de-feu.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 5",
+          "sourceFolderId": "blrgA8rHCxai2U7H",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "2qvjyq2vOUvgASEL",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.kMWKdmJYtCGY37w7",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568815,
+        "modifiedTime": 1780340568815,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "ibRsKWkteFkyQdDO",
+      "sort": 0
+    },
+    {
+      "name": "Passe-plantes",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-passe-plantes.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le druide peut entrer dans un arbre et se transporter à l’intérieur d’un autre arbre du même type qui se trouve environ dans la direction qu’il a choisie et à la distance suivante : Type d’arbre Distance de la zone d’effet Chêne 60\" Frêne 54\" If 48\" Orme 42\" Tilleul 36\" Caduc 30\" Conifère 24\" Autre 18\" L’arbre de départ et celui d’arrivée doivent être du même type, vivants et d’une circonférence au moins égale au druide. Si le druide entre dans un frêne et désire aller au nord aussi loin que possible (54\") mais que le seul frêne à la distance appropriée est au sud, le druide passera dans le frêne qui est au sud. Un passage dure un segment (6 secondes). Le druide peut, s’il le veut, rester dans l’arbre de réception, pendant un round par niveau au maximum. Autrement, il peut aussi en sortir immédiatement. S’il n’y a pas d’arbre désiré à la distance voulue, le druide reste simplement dans l’arbre de départ et en sort au bout d’un nombre de rounds donné par son niveau (ou moins s’il le veut) (voir p.60 le sort porte végétale pour les effets d’une agression sur un tel arbre). Ce sort ne peut pas être utilisé sous l’eau. SORTS DE DRUIDE (NIVEAU 5)",
+        "onUse": "systems/add2e/scripts/sorts/druide-passe-plantes.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-passe-plantes.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-passe-plantes.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, le druide peut entrer dans un arbre et se transporter à l’intérieur d’un autre arbre du même type qui se trouve environ dans la direction qu’il a choisie et à la distance suivante : Type d’arbre Distance de la zone d’effet Chêne 60\" Frêne 54\" If 48\" Orme 42\" Tilleul 36\" Caduc 30\" Conifère 24\" Autre 18\" L’arbre de départ et celui d’arrivée doivent être du même type, vivants et d’une circonférence au moins égale au druide. Si le druide entre dans un frêne et désire aller au nord aussi loin que possible (54\") mais que le seul frêne à la distance appropriée est au sud, le druide passera dans le frêne qui est au sud. Un passage dure un segment (6 secondes). Le druide peut, s’il le veut, rester dans l’arbre de réception, pendant un round par niveau au maximum. Autrement, il peut aussi en sortir immédiatement. S’il n’y a pas d’arbre désiré à la distance voulue, le druide reste simplement dans l’arbre de départ et en sort au bout d’un nombre de rounds donné par son niveau (ou moins s’il le veut) (voir p.60 le sort porte végétale pour les effets d’une agression sur un tel arbre). Ce sort ne peut pas être utilisé sous l’eau. SORTS DE DRUIDE (NIVEAU 5)",
+        "description_texte": "Avec ce sort, le druide peut entrer dans un arbre et se transporter à l’intérieur d’un autre arbre du même type qui se trouve environ dans la direction qu’il a choisie et à la distance suivante : Type d’arbre Distance de la zone d’effet Chêne 60\" Frêne 54\" If 48\" Orme 42\" Tilleul 36\" Caduc 30\" Conifère 24\" Autre 18\" L’arbre de départ et celui d’arrivée doivent être du même type, vivants et d’une circonférence au moins égale au druide. Si le druide entre dans un frêne et désire aller au nord aussi loin que possible (54\") mais que le seul frêne à la distance appropriée est au sud, le druide passera dans le frêne qui est au sud. Un passage dure un segment (6 secondes). Le druide peut, s’il le veut, rester dans l’arbre de réception, pendant un round par niveau au maximum. Autrement, il peut aussi en sortir immédiatement. S’il n’y a pas d’arbre désiré à la distance voulue, le druide reste simplement dans l’arbre de départ et en sort au bout d’un nombre de rounds donné par son niveau (ou moins s’il le veut) (voir p.60 le sort porte végétale pour les effets d’une agression sur un tel arbre). Ce sort ne peut pas être utilisé sous l’eau. SORTS DE DRUIDE (NIVEAU 5)",
+        "description_html": "<p>Avec ce sort, le druide peut entrer dans un arbre et se transporter à l’intérieur d’un autre arbre du même type qui se trouve environ dans la direction qu’il a choisie et à la distance suivante : Type d’arbre Distance de la zone d’effet Chêne 60&quot; Frêne 54&quot; If 48&quot; Orme 42&quot; Tilleul 36&quot; Caduc 30&quot; Conifère 24&quot; Autre 18&quot; L’arbre de départ et celui d’arrivée doivent être du même type, vivants et d’une circonférence au moins égale au druide. Si le druide entre dans un frêne et désire aller au nord aussi loin que possible (54&quot;) mais que le seul frêne à la distance appropriée est au sud, le druide passera dans le frêne qui est au sud. Un passage dure un segment (6 secondes). Le druide peut, s’il le veut, rester dans l’arbre de réception, pendant un round par niveau au maximum. Autrement, il peut aussi en sortir immédiatement. S’il n’y a pas d’arbre désiré à la distance voulue, le druide reste simplement dans l’arbre de départ et en sort au bout d’un nombre de rounds donné par son niveau (ou moins s’il le veut) (voir p.60 le sort porte végétale pour les effets d’une agression sur un tel arbre). Ce sort ne peut pas être utilisé sous l’eau. SORTS DE DRUIDE (NIVEAU 5)</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Passe-plantes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:5",
+                "sort:passe_plantes",
+                "deplacement:plantes",
+                "passage:vegetal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-passe-plantes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.imgiViMYhPmuAfNa",
+          "_id": "4ilKGm121DHCuXtp",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568790,
+            "modifiedTime": 1780340568790
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:00.903Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-passe-plantes.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 5",
+          "sourceFolderId": "blrgA8rHCxai2U7H",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "2qvjyq2vOUvgASEL",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.imgiViMYhPmuAfNa",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568790,
+        "modifiedTime": 1780340568790,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "x5iMO3BUv9Ze8igE",
+      "sort": 0
+    },
+    {
+      "name": "Transmutation de pierre en boue",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-transmutation-de-pierre-en-boue.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "16 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort transforme la pierre naturelle, de n’importe quel type, en un volume égal de boue. La profondeur de la boue ne doit jamais excéder la moitié de sa longueur et/ou de sa largeur. S’il est lancé sur un rocher par exemple, le rocher se transforme et boue et s’étale. Les créatures incapables de léviter, de voler ou de sortir de la boue s’y enfonceront (3 m par round) et étoufferont, sauf les créatures légères qui peuvent normalement évoluer sur une telle matière. La boue persiste à moins que le sort de dissipation de la magie ne soit lancé dessus ou que l’inverse du sort, transmutation de boue en pierre ne soit lancé et transforme la boue en pierre, mais sans lui redonner sa forme initiale. L'évaporation transformera la boue en poussière et il faudra de 1 à 6 jours pour l'évaporation de 27 m3 de boue. Le temps exact dépend de l'exposition au soleil, du vent et du drainage de l'humidité. L'inverse du sort, transmutation de boue en pierre, transforme la boue en pierre tendre (du grès ou un minéral similaire), ceci de façon permanente, à moins d'un autre changement magique. SORTS DE NIVEAU 6",
+        "onUse": "systems/add2e/scripts/sorts/druide-transmutation-de-pierre-en-boue.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-transmutation-de-pierre-en-boue.js",
+        "portée": {
+          "valeur": "16 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-transmutation-de-pierre-en-boue.js",
+        "composants_materiels": [
+          {
+            "slug": "eau_et_de_l_argile_eau_et_sable_pour_l_inverse",
+            "nom": "Eau et de l’argile (eau et sable pour l’inverse)",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort transforme la pierre naturelle, de n’importe quel type, en un volume égal de boue. La profondeur de la boue ne doit jamais excéder la moitié de sa longueur et/ou de sa largeur. S’il est lancé sur un rocher par exemple, le rocher se transforme et boue et s’étale. Les créatures incapables de léviter, de voler ou de sortir de la boue s’y enfonceront (3 m par round) et étoufferont, sauf les créatures légères qui peuvent normalement évoluer sur une telle matière. La boue persiste à moins que le sort de dissipation de la magie ne soit lancé dessus ou que l’inverse du sort, transmutation de boue en pierre ne soit lancé et transforme la boue en pierre, mais sans lui redonner sa forme initiale. L'évaporation transformera la boue en poussière et il faudra de 1 à 6 jours pour l'évaporation de 27 m3 de boue. Le temps exact dépend de l'exposition au soleil, du vent et du drainage de l'humidité. L'inverse du sort, transmutation de boue en pierre, transforme la boue en pierre tendre (du grès ou un minéral similaire), ceci de façon permanente, à moins d'un autre changement magique. SORTS DE NIVEAU 6",
+        "description_texte": "Ce sort transforme la pierre naturelle, de n’importe quel type, en un volume égal de boue. La profondeur de la boue ne doit jamais excéder la moitié de sa longueur et/ou de sa largeur. S’il est lancé sur un rocher par exemple, le rocher se transforme et boue et s’étale. Les créatures incapables de léviter, de voler ou de sortir de la boue s’y enfonceront (3 m par round) et étoufferont, sauf les créatures légères qui peuvent normalement évoluer sur une telle matière. La boue persiste à moins que le sort de dissipation de la magie ne soit lancé dessus ou que l’inverse du sort, transmutation de boue en pierre ne soit lancé et transforme la boue en pierre, mais sans lui redonner sa forme initiale. L'évaporation transformera la boue en poussière et il faudra de 1 à 6 jours pour l'évaporation de 27 m3 de boue. Le temps exact dépend de l'exposition au soleil, du vent et du drainage de l'humidité. L'inverse du sort, transmutation de boue en pierre, transforme la boue en pierre tendre (du grès ou un minéral similaire), ceci de façon permanente, à moins d'un autre changement magique. SORTS DE NIVEAU 6",
+        "description_html": "<p>Ce sort transforme la pierre naturelle, de n’importe quel type, en un volume égal de boue. La profondeur de la boue ne doit jamais excéder la moitié de sa longueur et/ou de sa largeur. S’il est lancé sur un rocher par exemple, le rocher se transforme et boue et s’étale. Les créatures incapables de léviter, de voler ou de sortir de la boue s’y enfonceront (3 m par round) et étoufferont, sauf les créatures légères qui peuvent normalement évoluer sur une telle matière. La boue persiste à moins que le sort de dissipation de la magie ne soit lancé dessus ou que l’inverse du sort, transmutation de boue en pierre ne soit lancé et transforme la boue en pierre, mais sans lui redonner sa forme initiale. L&#x27;évaporation transformera la boue en poussière et il faudra de 1 à 6 jours pour l&#x27;évaporation de 27 m3 de boue. Le temps exact dépend de l&#x27;exposition au soleil, du vent et du drainage de l&#x27;humidité. L&#x27;inverse du sort, transmutation de boue en pierre, transforme la boue en pierre tendre (du grès ou un minéral similaire), ceci de façon permanente, à moins d&#x27;un autre changement magique. SORTS DE NIVEAU 6</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "l’eau et de l’argile (eau et sable pour l’inverse)",
+        "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Transmutation de pierre en boue",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:5",
+                "sort:transmutation_de_pierre_en_boue",
+                "transmutation:pierre_boue",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-transmutation-de-pierre-en-boue.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.b9VpDHNG0SITznOc",
+          "_id": "IGjI4mvo3ZQfUgJ1",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568665,
+            "modifiedTime": 1780340568665
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:34:16.344Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-transmutation-de-pierre-en-boue.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 5",
+          "sourceFolderId": "blrgA8rHCxai2U7H",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "2qvjyq2vOUvgASEL",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.b9VpDHNG0SITznOc",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568665,
+        "modifiedTime": 1780340568665,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "UxlwIIKcYa8bf6AK",
+      "sort": 0
+    }
+  ]
+}

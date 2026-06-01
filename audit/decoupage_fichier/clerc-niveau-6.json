@@ -1,0 +1,2295 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "clerc",
+    "niveau": 6,
+    "key": "clerc-niveau-6",
+    "count": 9
+  },
+  "folders": [
+    {
+      "name": "Clerc",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "xnt5dJBZCkmFcXJf",
+      "description": "",
+      "sort": 500000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566745,
+        "modifiedTime": 1780340566745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 6",
+      "type": "Item",
+      "folder": "xnt5dJBZCkmFcXJf",
+      "sorting": "a",
+      "_id": "cdZpM0rhaQLLmUZj",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566742,
+        "modifiedTime": 1780340566742,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Animation des Objet",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/animation-d-un-objet.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort puissant permet au clerc d’animer des objets avec un semblant de vie. L’objet (ou les objets) animé attaque alors tous ceux ou tout ce que le clerc désigne. L’objet animé peut être fait de n’importe quelle matière : bois, métal, cuir, pierre, céramique, verre, etc. La vitesse de déplacement de l’objet dépend de ses moyens de propulsion et de son poids. Une grande table en bois est lourde, mais ses pieds peuvent lui donner de la vitesse ; un tapis peut simplement glisser et ramper ; une jarre peut rouler. Ainsi, un grand piédestal en pierre bougera très lentement, une statue en pierre un peu plus vite, en bois encore plus et un objet léger ira très vite (le piédestal 1\"/round ; la statue de pierre 4\"/round ; une statue de bois 8\"/round ; un objet léger en ivoire 12\"/round). Les mouvements glissants et rampants se font à une vitesse de 1\" à 2\" par round, alors que les objets qui peuvent rouler le font à la vitesse de 3\" à 6\" par round. Les dégâts causés par un objet animés dépendent de sa forme et de sa matière. Les objets légers et souples peuvent seulement gêner la vue, entraver les mouvements, lier, faire trébucher, étouffer, etc. Les objets légers et durs peuvent se laisser tomber ou frapper, causant de 1 à 2 points de dommage, ou alors gêner ou faire trébucher comme les objets légers et souples. Les objets durs de poids moyen peuvent écraser ou frapper pour des dégâts de 2 à 8 points de vie (2d4). Les grands objets lourds peuvent causer de 3 à 12, 4 à 16 ou même 5 à 20 points de dommage. Les dommages dépendent du type d’arme employé par l’objet et de ce qui est frappé. Une arme aiguisée et coupante est efficace contre le bois, le tissu, le cuir et les matières similaires ; les armes lourdes et contondantes sont efficaces contre le bois, la pierre et le métal. La fréquence des attaques des objets dépend de leur mode de locomotion, de leurs appendices et de leur mode d’attaque. Elle va de 1 attaque par round à 1 attaque tous les 5 rounds. La classe d’armure des objets animés dépend de la matière dont ils sont constitués et de leur vitesse. Le MD déterminera tous ces facteurs, ainsi que les dommages que peuvent supporter les objets animés avant d’être détruits. Le clerc peut animer 27 dm³ par niveau d’expérience ; ainsi, un clerc de niveau 14 pourra animer 378 dm³, c'est-à-dire une grande statue, deux petits tapis, trois chaises ou une douzaine de pots de taille moyenne.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js",
+        "portée": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort puissant permet au clerc d’animer des objets avec un semblant de vie. L’objet (ou les objets) animé attaque alors tous ceux ou tout ce que le clerc désigne. L’objet animé peut être fait de n’importe quelle matière : bois, métal, cuir, pierre, céramique, verre, etc. La vitesse de déplacement de l’objet dépend de ses moyens de propulsion et de son poids. Une grande table en bois est lourde, mais ses pieds peuvent lui donner de la vitesse ; un tapis peut simplement glisser et ramper ; une jarre peut rouler. Ainsi, un grand piédestal en pierre bougera très lentement, une statue en pierre un peu plus vite, en bois encore plus et un objet léger ira très vite (le piédestal 1\"/round ; la statue de pierre 4\"/round ; une statue de bois 8\"/round ; un objet léger en ivoire 12\"/round). Les mouvements glissants et rampants se font à une vitesse de 1\" à 2\" par round, alors que les objets qui peuvent rouler le font à la vitesse de 3\" à 6\" par round. Les dégâts causés par un objet animés dépendent de sa forme et de sa matière. Les objets légers et souples peuvent seulement gêner la vue, entraver les mouvements, lier, faire trébucher, étouffer, etc. Les objets légers et durs peuvent se laisser tomber ou frapper, causant de 1 à 2 points de dommage, ou alors gêner ou faire trébucher comme les objets légers et souples. Les objets durs de poids moyen peuvent écraser ou frapper pour des dégâts de 2 à 8 points de vie (2d4). Les grands objets lourds peuvent causer de 3 à 12, 4 à 16 ou même 5 à 20 points de dommage. Les dommages dépendent du type d’arme employé par l’objet et de ce qui est frappé. Une arme aiguisée et coupante est efficace contre le bois, le tissu, le cuir et les matières similaires ; les armes lourdes et contondantes sont efficaces contre le bois, la pierre et le métal. La fréquence des attaques des objets dépend de leur mode de locomotion, de leurs appendices et de leur mode d’attaque. Elle va de 1 attaque par round à 1 attaque tous les 5 rounds. La classe d’armure des objets animés dépend de la matière dont ils sont constitués et de leur vitesse. Le MD déterminera tous ces facteurs, ainsi que les dommages que peuvent supporter les objets animés avant d’être détruits. Le clerc peut animer 27 dm³ par niveau d’expérience ; ainsi, un clerc de niveau 14 pourra animer 378 dm³, c'est-à-dire une grande statue, deux petits tapis, trois chaises ou une douzaine de pots de taille moyenne.",
+        "description_texte": "Ce sort puissant permet au clerc d’animer des objets avec un semblant de vie. L’objet (ou les objets) animé attaque alors tous ceux ou tout ce que le clerc désigne. L’objet animé peut être fait de n’importe quelle matière : bois, métal, cuir, pierre, céramique, verre, etc. La vitesse de déplacement de l’objet dépend de ses moyens de propulsion et de son poids. Une grande table en bois est lourde, mais ses pieds peuvent lui donner de la vitesse ; un tapis peut simplement glisser et ramper ; une jarre peut rouler. Ainsi, un grand piédestal en pierre bougera très lentement, une statue en pierre un peu plus vite, en bois encore plus et un objet léger ira très vite (le piédestal 1\"/round ; la statue de pierre 4\"/round ; une statue de bois 8\"/round ; un objet léger en ivoire 12\"/round). Les mouvements glissants et rampants se font à une vitesse de 1\" à 2\" par round, alors que les objets qui peuvent rouler le font à la vitesse de 3\" à 6\" par round. Les dégâts causés par un objet animés dépendent de sa forme et de sa matière. Les objets légers et souples peuvent seulement gêner la vue, entraver les mouvements, lier, faire trébucher, étouffer, etc. Les objets légers et durs peuvent se laisser tomber ou frapper, causant de 1 à 2 points de dommage, ou alors gêner ou faire trébucher comme les objets légers et souples. Les objets durs de poids moyen peuvent écraser ou frapper pour des dégâts de 2 à 8 points de vie (2d4). Les grands objets lourds peuvent causer de 3 à 12, 4 à 16 ou même 5 à 20 points de dommage. Les dommages dépendent du type d’arme employé par l’objet et de ce qui est frappé. Une arme aiguisée et coupante est efficace contre le bois, le tissu, le cuir et les matières similaires ; les armes lourdes et contondantes sont efficaces contre le bois, la pierre et le métal. La fréquence des attaques des objets dépend de leur mode de locomotion, de leurs appendices et de leur mode d’attaque. Elle va de 1 attaque par round à 1 attaque tous les 5 rounds. La classe d’armure des objets animés dépend de la matière dont ils sont constitués et de leur vitesse. Le MD déterminera tous ces facteurs, ainsi que les dommages que peuvent supporter les objets animés avant d’être détruits. Le clerc peut animer 27 dm³ par niveau d’expérience ; ainsi, un clerc de niveau 14 pourra animer 378 dm³, c'est-à-dire une grande statue, deux petits tapis, trois chaises ou une douzaine de pots de taille moyenne.",
+        "description_html": "<p>Ce sort puissant permet au clerc d’animer des objets avec un semblant de vie. L’objet (ou les objets) animé attaque alors tous ceux ou tout ce que le clerc désigne. L’objet animé peut être fait de n’importe quelle matière : bois, métal, cuir, pierre, céramique, verre, etc. La vitesse de déplacement de l’objet dépend de ses moyens de propulsion et de son poids. Une grande table en bois est lourde, mais ses pieds peuvent lui donner de la vitesse ; un tapis peut simplement glisser et ramper ; une jarre peut rouler. Ainsi, un grand piédestal en pierre bougera très lentement, une statue en pierre un peu plus vite, en bois encore plus et un objet léger ira très vite (le piédestal 1&quot;/round ; la statue de pierre 4&quot;/round ; une statue de bois 8&quot;/round ; un objet léger en ivoire 12&quot;/round). Les mouvements glissants et rampants se font à une vitesse de 1&quot; à 2&quot; par round, alors que les objets qui peuvent rouler le font à la vitesse de 3&quot; à 6&quot; par round. Les dégâts causés par un objet animés dépendent de sa forme et de sa matière. Les objets légers et souples peuvent seulement gêner la vue, entraver les mouvements, lier, faire trébucher, étouffer, etc. Les objets légers et durs peuvent se laisser tomber ou frapper, causant de 1 à 2 points de dommage, ou alors gêner ou faire trébucher comme les objets légers et souples. Les objets durs de poids moyen peuvent écraser ou frapper pour des dégâts de 2 à 8 points de vie (2d4). Les grands objets lourds peuvent causer de 3 à 12, 4 à 16 ou même 5 à 20 points de dommage. Les dommages dépendent du type d’arme employé par l’objet et de ce qui est frappé. Une arme aiguisée et coupante est efficace contre le bois, le tissu, le cuir et les matières similaires ; les armes lourdes et contondantes sont efficaces contre le bois, la pierre et le métal. La fréquence des attaques des objets dépend de leur mode de locomotion, de leurs appendices et de leur mode d’attaque. Elle va de 1 attaque par round à 1 attaque tous les 5 rounds. La classe d’armure des objets animés dépend de la matière dont ils sont constitués et de leur vitesse. Le MD déterminera tous ces facteurs, ainsi que les dommages que peuvent supporter les objets animés avant d’être détruits. Le clerc peut animer 27 dm³ par niveau d’expérience ; ainsi, un clerc de niveau 14 pourra animer 378 dm³, c&#x27;est-à-dire une grande statue, deux petits tapis, trois chaises ou une douzaine de pots de taille moyenne.</p>"
+      },
+      "effects": [
+        {
+          "name": "Animation d’un Objet",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:animation_d_un_objet",
+                "animation:objet",
+                "objet:anime",
+                "sort:animation_des_objet",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/animation-d-un-objet.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Srap0MwWinLMoKEQ",
+          "_id": "tMGwPFuNaRU5gIfA",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568001,
+            "modifiedTime": 1780340568001
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Animation d’un Objet",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:animation_d_un_objet",
+                "animation:objet",
+                "objet:anime",
+                "sort:animation_des_objet",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/animation-d-un-objet.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Srap0MwWinLMoKEQ",
+          "_id": "bTjn8bG8k5cNOPWQ",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568001,
+            "modifiedTime": 1780340568001
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Animation d’un Objet",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:animation_d_un_objet",
+                "animation:objet",
+                "objet:anime",
+                "sort:animation_des_objet",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/animation-d-un-objet.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Srap0MwWinLMoKEQ",
+          "_id": "v4YvgUcZpKMHb4Z3",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568001,
+            "modifiedTime": 1780340568001
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:26.046Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 6",
+          "sourceFolderId": "JBqzyl3hjtT04Qcb",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.Srap0MwWinLMoKEQ",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568001,
+        "modifiedTime": 1780340568001,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "YhKHovBxDFPT3zjD",
+      "sort": 0
+    },
+    {
+      "name": "Barrière de Lames",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/barriere-de-lames.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "1/2",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Le clerc, en lançant ce sort, crée un mur de lames tournoyantes, aiguisées comme des lames de rasoir. Ce mouvement continuel extrêmement rapide se fait autour d’un axe immobile. Toute créature qui tente de passer au travers de la barrière subit des dommages allant de 8 à 64 points de vie (8d8). La barrière reste pendant 3 rounds par niveau du clerc. Cette barrière de lames peut couvrir une surface allant de 2.25 m² (1.5 m x 1.5 m) à 2\" carré, c’est à dire 36 m² (6 m x 6 m) en intérieur et 324 m² (18 m x 18 m) à l’extérieur",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js",
+        "portée": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Le clerc, en lançant ce sort, crée un mur de lames tournoyantes, aiguisées comme des lames de rasoir. Ce mouvement continuel extrêmement rapide se fait autour d’un axe immobile. Toute créature qui tente de passer au travers de la barrière subit des dommages allant de 8 à 64 points de vie (8d8). La barrière reste pendant 3 rounds par niveau du clerc. Cette barrière de lames peut couvrir une surface allant de 2.25 m² (1.5 m x 1.5 m) à 2\" carré, c’est à dire 36 m² (6 m x 6 m) en intérieur et 324 m² (18 m x 18 m) à l’extérieur",
+        "description_texte": "Le clerc, en lançant ce sort, crée un mur de lames tournoyantes, aiguisées comme des lames de rasoir. Ce mouvement continuel extrêmement rapide se fait autour d’un axe immobile. Toute créature qui tente de passer au travers de la barrière subit des dommages allant de 8 à 64 points de vie (8d8). La barrière reste pendant 3 rounds par niveau du clerc. Cette barrière de lames peut couvrir une surface allant de 2.25 m² (1.5 m x 1.5 m) à 2\" carré, c’est à dire 36 m² (6 m x 6 m) en intérieur et 324 m² (18 m x 18 m) à l’extérieur",
+        "description_html": "<p>Le clerc, en lançant ce sort, crée un mur de lames tournoyantes, aiguisées comme des lames de rasoir. Ce mouvement continuel extrêmement rapide se fait autour d’un axe immobile. Toute créature qui tente de passer au travers de la barrière subit des dommages allant de 8 à 64 points de vie (8d8). La barrière reste pendant 3 rounds par niveau du clerc. Cette barrière de lames peut couvrir une surface allant de 2.25 m² (1.5 m x 1.5 m) à 2&quot; carré, c’est à dire 36 m² (6 m x 6 m) en intérieur et 324 m² (18 m x 18 m) à l’extérieur</p>"
+      },
+      "effects": [
+        {
+          "name": "Barrière de Lames",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:barriere_de_lames",
+                "barriere:lames",
+                "degat:tranchant",
+                "zone",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/barriere-de-lames.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.AFNt2im4GlBesdpK",
+          "_id": "xWUh8hJPadroBNMk",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567187,
+            "modifiedTime": 1780340567187
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Barrière de Lames",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:barriere_de_lames",
+                "barriere:lames",
+                "degat:tranchant",
+                "zone",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/barriere-de-lames.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.AFNt2im4GlBesdpK",
+          "_id": "I7srOQ9DhhoVTRC3",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567187,
+            "modifiedTime": 1780340567187
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Barrière de Lames",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:barriere_de_lames",
+                "barriere:lames",
+                "degat:tranchant",
+                "zone",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/barriere-de-lames.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.AFNt2im4GlBesdpK",
+          "_id": "WiJgrsklAD64aHQD",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567187,
+            "modifiedTime": 1780340567187
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:36.105Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 6",
+          "sourceFolderId": "JBqzyl3hjtT04Qcb",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.AFNt2im4GlBesdpK",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567187,
+        "modifiedTime": 1780340567187,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "NfojDpSSWss8K7ox",
+      "sort": 0
+    },
+    {
+      "name": "Guérison",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/guerison.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort très puissant permet au clerc de guérir n’importe quelle maladie et les blessures qu’a pu subir quelqu’un (voir soins mineurs pour la liste des créatures pouvant être affectées). Il guérit les maladies sous toutes leurs formes. Il guérit aussi la cécité et redonne tous les points de vie perdus sauf 1d4. Il annule le sort de débilité mentale. Ce sort ne sera évidemment pas efficace contre des maladies ou des blessures ultérieures (il ne s’agit pas d’une immunité ou d’un vaccin). L’inverse du sort, traumatisme, inflige une maladie à la victime et lui fait perdre tous ses points de vie sauf 1d4. Pour traumatisme, le clerc doit réussir un jet pour toucher.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/guerison.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/guerison.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/guerison.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort très puissant permet au clerc de guérir n’importe quelle maladie et les blessures qu’a pu subir quelqu’un (voir soins mineurs pour la liste des créatures pouvant être affectées). Il guérit les maladies sous toutes leurs formes. Il guérit aussi la cécité et redonne tous les points de vie perdus sauf 1d4. Il annule le sort de débilité mentale. Ce sort ne sera évidemment pas efficace contre des maladies ou des blessures ultérieures (il ne s’agit pas d’une immunité ou d’un vaccin). L’inverse du sort, traumatisme, inflige une maladie à la victime et lui fait perdre tous ses points de vie sauf 1d4. Pour traumatisme, le clerc doit réussir un jet pour toucher.",
+        "description_texte": "Ce sort très puissant permet au clerc de guérir n’importe quelle maladie et les blessures qu’a pu subir quelqu’un (voir soins mineurs pour la liste des créatures pouvant être affectées). Il guérit les maladies sous toutes leurs formes. Il guérit aussi la cécité et redonne tous les points de vie perdus sauf 1d4. Il annule le sort de débilité mentale. Ce sort ne sera évidemment pas efficace contre des maladies ou des blessures ultérieures (il ne s’agit pas d’une immunité ou d’un vaccin). L’inverse du sort, traumatisme, inflige une maladie à la victime et lui fait perdre tous ses points de vie sauf 1d4. Pour traumatisme, le clerc doit réussir un jet pour toucher.",
+        "description_html": "<p>Ce sort très puissant permet au clerc de guérir n’importe quelle maladie et les blessures qu’a pu subir quelqu’un (voir soins mineurs pour la liste des créatures pouvant être affectées). Il guérit les maladies sous toutes leurs formes. Il guérit aussi la cécité et redonne tous les points de vie perdus sauf 1d4. Il annule le sort de débilité mentale. Ce sort ne sera évidemment pas efficace contre des maladies ou des blessures ultérieures (il ne s’agit pas d’une immunité ou d’un vaccin). L’inverse du sort, traumatisme, inflige une maladie à la victime et lui fait perdre tous ses points de vie sauf 1d4. Pour traumatisme, le clerc doit réussir un jet pour toucher.</p>"
+      },
+      "effects": [
+        {
+          "name": "Guérison",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:guerison",
+                "guerison",
+                "soin:majeur",
+                "retire:maladie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/guerison.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.HONShZuj6m704tYJ",
+          "_id": "VX38oPLIL1XmAxSo",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567294,
+            "modifiedTime": 1780340567294
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Guérison",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:guerison",
+                "guerison",
+                "soin:majeur",
+                "retire:maladie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/guerison.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.HONShZuj6m704tYJ",
+          "_id": "seA6pzfOh5oAT9dh",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567294,
+            "modifiedTime": 1780340567294
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Guérison",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:guerison",
+                "guerison",
+                "soin:majeur",
+                "retire:maladie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/guerison.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.HONShZuj6m704tYJ",
+          "_id": "O1e1oMMnrRLShUc9",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567294,
+            "modifiedTime": 1780340567294
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:03.668Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/guerison.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 6",
+          "sourceFolderId": "JBqzyl3hjtT04Qcb",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.HONShZuj6m704tYJ",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567294,
+        "modifiedTime": 1780340567294,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "oSfALhtUqR6esjsF",
+      "sort": 0
+    },
+    {
+      "name": "Langage des Monstres",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/langage-des-monstres.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand il est lancé, ce sort permet de parler avec tout type de créature ayant une forme quelconque de communication. La créature concernée comprendra l’intention du clerc dans ce qu’il dit. Le Maître de Donjon lancera un dé de réaction pour la créature concernée. Toutes les créatures du même type que celle que le clerc a choisi et qui se trouvent dans la portée du sort peuvent également comprendre le clerc. Le sort dure 1 round par niveau du clerc et tant que le sort est actif, la conversation peut durer, si le monstre le désire.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand il est lancé, ce sort permet de parler avec tout type de créature ayant une forme quelconque de communication. La créature concernée comprendra l’intention du clerc dans ce qu’il dit. Le Maître de Donjon lancera un dé de réaction pour la créature concernée. Toutes les créatures du même type que celle que le clerc a choisi et qui se trouvent dans la portée du sort peuvent également comprendre le clerc. Le sort dure 1 round par niveau du clerc et tant que le sort est actif, la conversation peut durer, si le monstre le désire.",
+        "description_texte": "Quand il est lancé, ce sort permet de parler avec tout type de créature ayant une forme quelconque de communication. La créature concernée comprendra l’intention du clerc dans ce qu’il dit. Le Maître de Donjon lancera un dé de réaction pour la créature concernée. Toutes les créatures du même type que celle que le clerc a choisi et qui se trouvent dans la portée du sort peuvent également comprendre le clerc. Le sort dure 1 round par niveau du clerc et tant que le sort est actif, la conversation peut durer, si le monstre le désire.",
+        "description_html": "<p>Quand il est lancé, ce sort permet de parler avec tout type de créature ayant une forme quelconque de communication. La créature concernée comprendra l’intention du clerc dans ce qu’il dit. Le Maître de Donjon lancera un dé de réaction pour la créature concernée. Toutes les créatures du même type que celle que le clerc a choisi et qui se trouvent dans la portée du sort peuvent également comprendre le clerc. Le sort dure 1 round par niveau du clerc et tant que le sort est actif, la conversation peut durer, si le monstre le désire.</p>"
+      },
+      "effects": [
+        {
+          "name": "Langage des Monstres",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:langage_des_monstres",
+                "langage:monstres",
+                "communication",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/langage-des-monstres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.9QWu5vVtbBJpv2vU",
+          "_id": "X3HS4iJ4qk5M2CbS",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567175,
+            "modifiedTime": 1780340567175
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Langage des Monstres",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:langage_des_monstres",
+                "langage:monstres",
+                "communication",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/langage-des-monstres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.9QWu5vVtbBJpv2vU",
+          "_id": "3AXNBZczAly85Z07",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567175,
+            "modifiedTime": 1780340567175
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Langage des Monstres",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:langage_des_monstres",
+                "langage:monstres",
+                "communication",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/langage-des-monstres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.9QWu5vVtbBJpv2vU",
+          "_id": "XGdBVWkHcEUFShy8",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567175,
+            "modifiedTime": 1780340567175
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:49.123Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 6",
+          "sourceFolderId": "JBqzyl3hjtT04Qcb",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.9QWu5vVtbBJpv2vU",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567175,
+        "modifiedTime": 1780340567175,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "E3sn9oDE2jRcng5n",
+      "sort": 0
+    },
+    {
+      "name": "Lithomancie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/pierres-parlantes.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 tour",
+          "unite": "texte"
+        },
+        "description": "Quand un clerc lance ce sort, il peut faire parler les pierres ; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js",
+        "composants_materiels": [
+          {
+            "slug": "goutte_de_mercure",
+            "nom": "Goutte de mercure",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Quand un clerc lance ce sort, il peut faire parler les pierres ; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.",
+        "description_texte": "Quand un clerc lance ce sort, il peut faire parler les pierres ; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.",
+        "description_html": "<p>Quand un clerc lance ce sort, il peut faire parler les pierres ; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.</p>"
+      },
+      "effects": [
+        {
+          "name": "Pierres Parlantes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:pierres_parlantes",
+                "communication:pierre",
+                "divination",
+                "sort:lithomancie",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/pierres-parlantes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.RaBvD7SFSq0wDiga",
+          "_id": "s196DnZqGkqNdI5v",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567977,
+            "modifiedTime": 1780340567977
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Pierres Parlantes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:pierres_parlantes",
+                "communication:pierre",
+                "divination",
+                "sort:lithomancie",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/pierres-parlantes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.RaBvD7SFSq0wDiga",
+          "_id": "FPMXew2xAHBTkR2K",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567977,
+            "modifiedTime": 1780340567977
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Pierres Parlantes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:pierres_parlantes",
+                "communication:pierre",
+                "divination",
+                "sort:lithomancie",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/pierres-parlantes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.RaBvD7SFSq0wDiga",
+          "_id": "cMwb6vOHzAgTG2T9",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567977,
+            "modifiedTime": 1780340567977
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:53.765Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 6",
+          "sourceFolderId": "JBqzyl3hjtT04Qcb",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.RaBvD7SFSq0wDiga",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567977,
+        "modifiedTime": 1780340567977,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "zZvMkZh0eT9iXbOV",
+      "sort": 0
+    },
+    {
+      "name": "Orientation",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/orientation.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Grâce à ce sort, le clerc est capable de trouver la route la plus courte et la plus directe pour l’emmener là où il le désire, que ce soit pour entrer ou sortir d’un endroit. Cet endroit peut être à l’extérieur ou sous terre ; ce peut même être un labyrinthe. Cette connaissance dure tant que le sort est actif, c'est-à-dire 1 tour par niveau du clerc. Ce sort permet au clerc et à ceux qui sont avec lui de sortir d’un sort de labyrinthe en un round. À noter qu’un lieu n’est pas un objet : le sort porte sur un endroit connu et identifié en tant que tel et non sur ce qu’il contient ou abrite. On peut ainsi trouver une forêt de frênes connue mais pas celle où habite le dragon vert ou qui contient tel trésor. La composante matérielle de ce sort est un jeu d’objets divinatoires de ceux appréciés par le clerc : en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées. L’inverse du sort, fausse route, fait que la créature touchée est incapable de trouver sa route pendant la durée du sort, bien qu’elle puisse être guidée.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/orientation.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/orientation.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/orientation.js",
+        "composants_materiels": [
+          {
+            "slug": "jeu_d_objets_divinatoires_de_ceux_apprecies_par_le_clerc_en_os",
+            "nom": "Jeu d’objets divinatoires de ceux appréciés par le clerc : en os",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle de ce sort est un jeu d’objets divinatoires de ceux appréciés par le clerc : en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées.",
+        "description_reelle": "Grâce à ce sort, le clerc est capable de trouver la route la plus courte et la plus directe pour l’emmener là où il le désire, que ce soit pour entrer ou sortir d’un endroit. Cet endroit peut être à l’extérieur ou sous terre ; ce peut même être un labyrinthe. Cette connaissance dure tant que le sort est actif, c'est-à-dire 1 tour par niveau du clerc. Ce sort permet au clerc et à ceux qui sont avec lui de sortir d’un sort de labyrinthe en un round. À noter qu’un lieu n’est pas un objet : le sort porte sur un endroit connu et identifié en tant que tel et non sur ce qu’il contient ou abrite. On peut ainsi trouver une forêt de frênes connue mais pas celle où habite le dragon vert ou qui contient tel trésor. La composante matérielle de ce sort est un jeu d’objets divinatoires de ceux appréciés par le clerc : en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées. L’inverse du sort, fausse route, fait que la créature touchée est incapable de trouver sa route pendant la durée du sort, bien qu’elle puisse être guidée.",
+        "description_texte": "Grâce à ce sort, le clerc est capable de trouver la route la plus courte et la plus directe pour l’emmener là où il le désire, que ce soit pour entrer ou sortir d’un endroit. Cet endroit peut être à l’extérieur ou sous terre ; ce peut même être un labyrinthe. Cette connaissance dure tant que le sort est actif, c'est-à-dire 1 tour par niveau du clerc. Ce sort permet au clerc et à ceux qui sont avec lui de sortir d’un sort de labyrinthe en un round. À noter qu’un lieu n’est pas un objet : le sort porte sur un endroit connu et identifié en tant que tel et non sur ce qu’il contient ou abrite. On peut ainsi trouver une forêt de frênes connue mais pas celle où habite le dragon vert ou qui contient tel trésor. La composante matérielle de ce sort est un jeu d’objets divinatoires de ceux appréciés par le clerc : en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées. L’inverse du sort, fausse route, fait que la créature touchée est incapable de trouver sa route pendant la durée du sort, bien qu’elle puisse être guidée.",
+        "description_html": "<p>Grâce à ce sort, le clerc est capable de trouver la route la plus courte et la plus directe pour l’emmener là où il le désire, que ce soit pour entrer ou sortir d’un endroit. Cet endroit peut être à l’extérieur ou sous terre ; ce peut même être un labyrinthe. Cette connaissance dure tant que le sort est actif, c&#x27;est-à-dire 1 tour par niveau du clerc. Ce sort permet au clerc et à ceux qui sont avec lui de sortir d’un sort de labyrinthe en un round. À noter qu’un lieu n’est pas un objet : le sort porte sur un endroit connu et identifié en tant que tel et non sur ce qu’il contient ou abrite. On peut ainsi trouver une forêt de frênes connue mais pas celle où habite le dragon vert ou qui contient tel trésor. La composante matérielle de ce sort est un jeu d’objets divinatoires de ceux appréciés par le clerc : en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées. L’inverse du sort, fausse route, fait que la créature touchée est incapable de trouver sa route pendant la durée du sort, bien qu’elle puisse être guidée.</p>"
+      },
+      "effects": [
+        {
+          "name": "Orientation",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:orientation",
+                "orientation",
+                "chemin",
+                "divination",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/orientation.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.EJLWsBTZyjEhWJkC",
+          "_id": "MIEMnNMHqiNr04ha",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567251,
+            "modifiedTime": 1780340567251
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Orientation",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:orientation",
+                "orientation",
+                "chemin",
+                "divination",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/orientation.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.EJLWsBTZyjEhWJkC",
+          "_id": "Bvzywi0JzgOe7qG6",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567251,
+            "modifiedTime": 1780340567251
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Orientation",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:orientation",
+                "orientation",
+                "chemin",
+                "divination",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/orientation.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.EJLWsBTZyjEhWJkC",
+          "_id": "oTiYp2IYEdbrHwiV",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567251,
+            "modifiedTime": 1780340567251
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:56.539Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/orientation.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 6",
+          "sourceFolderId": "JBqzyl3hjtT04Qcb",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.EJLWsBTZyjEhWJkC",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567251,
+        "modifiedTime": 1780340567251,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "lTY0W2UcSICDXAIu",
+      "sort": 0
+    },
+    {
+      "name": "Rappel",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/mot-de-rappel.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V",
+        "temps_incantation": {
+          "valeur": "1 segment",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet au clerc de revenir instantanément à son sanctuaire dès que le mot est prononcé. Le sanctuaire doit être précisé à l’avance par le clerc. Il peut être à n’importe quelle distance, mais l’endroit doit être connu, que ce soit sous terre ou sur terre. Le transport par rappel est absolument sûr. En plus de lui-même, le clerc peut transporter un poids de 250 po par niveau qu’il a atteint. Ainsi, un clerc de niveau 15 pourra transporter en plus 3.750 po (187 kg). Ce surplus peut être de l’équipement, un trésor ou de la matière vivante comme une autre personne.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js",
+        "portée": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort permet au clerc de revenir instantanément à son sanctuaire dès que le mot est prononcé. Le sanctuaire doit être précisé à l’avance par le clerc. Il peut être à n’importe quelle distance, mais l’endroit doit être connu, que ce soit sous terre ou sur terre. Le transport par rappel est absolument sûr. En plus de lui-même, le clerc peut transporter un poids de 250 po par niveau qu’il a atteint. Ainsi, un clerc de niveau 15 pourra transporter en plus 3.750 po (187 kg). Ce surplus peut être de l’équipement, un trésor ou de la matière vivante comme une autre personne.",
+        "description_texte": "Ce sort permet au clerc de revenir instantanément à son sanctuaire dès que le mot est prononcé. Le sanctuaire doit être précisé à l’avance par le clerc. Il peut être à n’importe quelle distance, mais l’endroit doit être connu, que ce soit sous terre ou sur terre. Le transport par rappel est absolument sûr. En plus de lui-même, le clerc peut transporter un poids de 250 po par niveau qu’il a atteint. Ainsi, un clerc de niveau 15 pourra transporter en plus 3.750 po (187 kg). Ce surplus peut être de l’équipement, un trésor ou de la matière vivante comme une autre personne.",
+        "description_html": "<p>Ce sort permet au clerc de revenir instantanément à son sanctuaire dès que le mot est prononcé. Le sanctuaire doit être précisé à l’avance par le clerc. Il peut être à n’importe quelle distance, mais l’endroit doit être connu, que ce soit sous terre ou sur terre. Le transport par rappel est absolument sûr. En plus de lui-même, le clerc peut transporter un poids de 250 po par niveau qu’il a atteint. Ainsi, un clerc de niveau 15 pourra transporter en plus 3.750 po (187 kg). Ce surplus peut être de l’équipement, un trésor ou de la matière vivante comme une autre personne.</p>"
+      },
+      "effects": [
+        {
+          "name": "Mot de Rappel",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:mot_de_rappel",
+                "teleportation:rappel",
+                "sanctuaire",
+                "sort:rappel",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/mot-de-rappel.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.9vLgSRMDIN5I1hVr",
+          "_id": "WKVRB98qbOTQjZBa",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567179,
+            "modifiedTime": 1780340567179
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Mot de Rappel",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:mot_de_rappel",
+                "teleportation:rappel",
+                "sanctuaire",
+                "sort:rappel",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/mot-de-rappel.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.9vLgSRMDIN5I1hVr",
+          "_id": "Gk0qoE2J3bkbsS5t",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567179,
+            "modifiedTime": 1780340567179
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Mot de Rappel",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:mot_de_rappel",
+                "teleportation:rappel",
+                "sanctuaire",
+                "sort:rappel",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/mot-de-rappel.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.9vLgSRMDIN5I1hVr",
+          "_id": "23HWMO4vlKirOcml",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567179,
+            "modifiedTime": 1780340567179
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:59.380Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 6",
+          "sourceFolderId": "JBqzyl3hjtT04Qcb",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.9vLgSRMDIN5I1hVr",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567179,
+        "modifiedTime": 1780340567179,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "ojEuPap5qVulUg4p",
+      "sort": 0
+    },
+    {
+      "name": "Séparation des Eaux",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/separation-des-eaux.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "2 pouces par niveau",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "En lançant ce sort, le clerc peut détourner une quantité d’eau ou tout autre liquide, qui formera ainsi une dépression. La longueur et la profondeur de la dépression dépendent du niveau du clerc ; le clerc peut créer une dépression de 90 cm de profondeur, 30 cm de large sur 2\" de long par niveau qu’il a atteint. Ainsi, un clerc de niveau 12 créera un passage de 10,8 mètres de profondeur, 3,60 mètres de large sur 24\" de long (72 m ou 216 m) pendant toute la durée du sort, à moins que le clerc lui-même ne choisisse d’y mettre fin (voir p.46 dissipation de la magie). Utilisé sous l’eau, ce sort permet de créer un tunnel de 3 mètres de diamètre maximum. La composante matérielle de ce sort est le symbole sacré du clerc.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js",
+        "portée": {
+          "valeur": "2 pouces par niveau",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre",
+            "nom": "Symbole sacré",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "En lançant ce sort, le clerc peut détourner une quantité d’eau ou tout autre liquide, qui formera ainsi une dépression. La longueur et la profondeur de la dépression dépendent du niveau du clerc ; le clerc peut créer une dépression de 90 cm de profondeur, 30 cm de large sur 2\" de long par niveau qu’il a atteint. Ainsi, un clerc de niveau 12 créera un passage de 10,8 mètres de profondeur, 3,60 mètres de large sur 24\" de long (72 m ou 216 m) pendant toute la durée du sort, à moins que le clerc lui-même ne choisisse d’y mettre fin (voir p.46 dissipation de la magie). Utilisé sous l’eau, ce sort permet de créer un tunnel de 3 mètres de diamètre maximum. La composante matérielle de ce sort est le symbole sacré du clerc.",
+        "description_texte": "En lançant ce sort, le clerc peut détourner une quantité d’eau ou tout autre liquide, qui formera ainsi une dépression. La longueur et la profondeur de la dépression dépendent du niveau du clerc ; le clerc peut créer une dépression de 90 cm de profondeur, 30 cm de large sur 2\" de long par niveau qu’il a atteint. Ainsi, un clerc de niveau 12 créera un passage de 10,8 mètres de profondeur, 3,60 mètres de large sur 24\" de long (72 m ou 216 m) pendant toute la durée du sort, à moins que le clerc lui-même ne choisisse d’y mettre fin (voir p.46 dissipation de la magie). Utilisé sous l’eau, ce sort permet de créer un tunnel de 3 mètres de diamètre maximum. La composante matérielle de ce sort est le symbole sacré du clerc.",
+        "description_html": "<p>En lançant ce sort, le clerc peut détourner une quantité d’eau ou tout autre liquide, qui formera ainsi une dépression. La longueur et la profondeur de la dépression dépendent du niveau du clerc ; le clerc peut créer une dépression de 90 cm de profondeur, 30 cm de large sur 2&quot; de long par niveau qu’il a atteint. Ainsi, un clerc de niveau 12 créera un passage de 10,8 mètres de profondeur, 3,60 mètres de large sur 24&quot; de long (72 m ou 216 m) pendant toute la durée du sort, à moins que le clerc lui-même ne choisisse d’y mettre fin (voir p.46 dissipation de la magie). Utilisé sous l’eau, ce sort permet de créer un tunnel de 3 mètres de diamètre maximum. La composante matérielle de ce sort est le symbole sacré du clerc.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "La composante matérielle de ce sort est le symbole sacré du clerc.",
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Séparation des Eaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:separation_des_eaux",
+                "eau:separation",
+                "terrain:eau",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/separation-des-eaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Ca9jb1xkqV5du0d0",
+          "_id": "PLZw39u9EVOi9qCI",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567220,
+            "modifiedTime": 1780340567220
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Séparation des Eaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:separation_des_eaux",
+                "eau:separation",
+                "terrain:eau",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/separation-des-eaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Ca9jb1xkqV5du0d0",
+          "_id": "DVNdGA1Q9XchB5CT",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567220,
+            "modifiedTime": 1780340567220
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Séparation des Eaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:separation_des_eaux",
+                "eau:separation",
+                "terrain:eau",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/separation-des-eaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Ca9jb1xkqV5du0d0",
+          "_id": "dzE28X8CJX2a0rJX",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567220,
+            "modifiedTime": 1780340567220
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:22.070Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 6",
+          "sourceFolderId": "JBqzyl3hjtT04Qcb",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.Ca9jb1xkqV5du0d0",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567220,
+        "modifiedTime": 1780340567220,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "Ao2pXwVBoC7v1AcZ",
+      "sort": 0
+    },
+    {
+      "name": "Serviteur Aérien",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/serviteur-aerien.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "1 pouce",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort invoque un serviteur aérien invisible (voir Règles AVANCÉES de DONJONS & DRAGONS, MANUEL DES MONSTRES), qui réalisera ce qu’a demandé le clerc dans son incantation. La créature ne combat pas mais obéit au clerc qui lui a demandé de retrouver et ramener l’objet ou la créature qu’il lui décrit. Bien sûr, l’objet ou la créature doit avoir une enveloppe physique pour pouvoir être ramené au clerc. Le clerc devra avoir toujours en tête les conséquences que pourraient avoir le fait d’empêcher un serviteur aérien d’accomplir sa tâche. Le sort et ses effets durent au maximum 1 jour par niveau du clerc. Le serviteur aérien retourne sur son plan quand le sort expire, quand la quête est achevée, quand le clerc meure ou annule sa requête. Le clerc doit se protéger avec une protection contre le mal ou alors se placer à l’intérieur d’un cercle magique, d’un triangle thaumaturgique ou d’un pentagramme quand il invoque un serviteur aérien ; son symbole religieux peut aussi le protéger. Le risque encouru est que la créature invoquée tue le clerc qui a lancé le sort et retourne ensuite sur son plan d’existence. Un serviteur aérien attaque toujours par surprise quand il est en mission et obtient l’avantage de 4 rounds de combats pour lui, à moins que la créature recherchée ne soit capable de détecter l’invisibilité. Si c'est le cas, 1d6 est lancé : 1 = 1 round, 2 = 2 rounds, 3 = 3 rounds, 4 = 4 rounds, 5 et 6 indiquent que la créature n’est pas du tout surprise et que donc le serviteur aérien ne bénéficie pas de rounds de combat pour lui. À chaque round, le serviteur doit lancer un jet pour toucher et quand une de ces tentatives réussit, cela signifie que le serviteur aérien a agrippé sa victime ou attrapé l’objet qu’il recherche et qu’il doit ramener au clerc. Si c’est une créature qu’il doit ramener, la force du serviteur est comparée à celle de la créature visée. Si cette créature n’a pas de caractéristique de force, il faut alors comparer le nombre obtenu en lançant les DV de la créature et ceux du serviteur aérien. Le total le plus élevé indique lequel a la plus grande force. SORTS DE NIVEAU 7",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js",
+        "portée": {
+          "valeur": "1 pouce",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort invoque un serviteur aérien invisible (voir Règles AVANCÉES de DONJONS & DRAGONS, MANUEL DES MONSTRES), qui réalisera ce qu’a demandé le clerc dans son incantation. La créature ne combat pas mais obéit au clerc qui lui a demandé de retrouver et ramener l’objet ou la créature qu’il lui décrit. Bien sûr, l’objet ou la créature doit avoir une enveloppe physique pour pouvoir être ramené au clerc. Le clerc devra avoir toujours en tête les conséquences que pourraient avoir le fait d’empêcher un serviteur aérien d’accomplir sa tâche. Le sort et ses effets durent au maximum 1 jour par niveau du clerc. Le serviteur aérien retourne sur son plan quand le sort expire, quand la quête est achevée, quand le clerc meure ou annule sa requête. Le clerc doit se protéger avec une protection contre le mal ou alors se placer à l’intérieur d’un cercle magique, d’un triangle thaumaturgique ou d’un pentagramme quand il invoque un serviteur aérien ; son symbole religieux peut aussi le protéger. Le risque encouru est que la créature invoquée tue le clerc qui a lancé le sort et retourne ensuite sur son plan d’existence. Un serviteur aérien attaque toujours par surprise quand il est en mission et obtient l’avantage de 4 rounds de combats pour lui, à moins que la créature recherchée ne soit capable de détecter l’invisibilité. Si c'est le cas, 1d6 est lancé : 1 = 1 round, 2 = 2 rounds, 3 = 3 rounds, 4 = 4 rounds, 5 et 6 indiquent que la créature n’est pas du tout surprise et que donc le serviteur aérien ne bénéficie pas de rounds de combat pour lui. À chaque round, le serviteur doit lancer un jet pour toucher et quand une de ces tentatives réussit, cela signifie que le serviteur aérien a agrippé sa victime ou attrapé l’objet qu’il recherche et qu’il doit ramener au clerc. Si c’est une créature qu’il doit ramener, la force du serviteur est comparée à celle de la créature visée. Si cette créature n’a pas de caractéristique de force, il faut alors comparer le nombre obtenu en lançant les DV de la créature et ceux du serviteur aérien. Le total le plus élevé indique lequel a la plus grande force. SORTS DE NIVEAU 7",
+        "description_texte": "Ce sort invoque un serviteur aérien invisible (voir Règles AVANCÉES de DONJONS & DRAGONS, MANUEL DES MONSTRES), qui réalisera ce qu’a demandé le clerc dans son incantation. La créature ne combat pas mais obéit au clerc qui lui a demandé de retrouver et ramener l’objet ou la créature qu’il lui décrit. Bien sûr, l’objet ou la créature doit avoir une enveloppe physique pour pouvoir être ramené au clerc. Le clerc devra avoir toujours en tête les conséquences que pourraient avoir le fait d’empêcher un serviteur aérien d’accomplir sa tâche. Le sort et ses effets durent au maximum 1 jour par niveau du clerc. Le serviteur aérien retourne sur son plan quand le sort expire, quand la quête est achevée, quand le clerc meure ou annule sa requête. Le clerc doit se protéger avec une protection contre le mal ou alors se placer à l’intérieur d’un cercle magique, d’un triangle thaumaturgique ou d’un pentagramme quand il invoque un serviteur aérien ; son symbole religieux peut aussi le protéger. Le risque encouru est que la créature invoquée tue le clerc qui a lancé le sort et retourne ensuite sur son plan d’existence. Un serviteur aérien attaque toujours par surprise quand il est en mission et obtient l’avantage de 4 rounds de combats pour lui, à moins que la créature recherchée ne soit capable de détecter l’invisibilité. Si c'est le cas, 1d6 est lancé : 1 = 1 round, 2 = 2 rounds, 3 = 3 rounds, 4 = 4 rounds, 5 et 6 indiquent que la créature n’est pas du tout surprise et que donc le serviteur aérien ne bénéficie pas de rounds de combat pour lui. À chaque round, le serviteur doit lancer un jet pour toucher et quand une de ces tentatives réussit, cela signifie que le serviteur aérien a agrippé sa victime ou attrapé l’objet qu’il recherche et qu’il doit ramener au clerc. Si c’est une créature qu’il doit ramener, la force du serviteur est comparée à celle de la créature visée. Si cette créature n’a pas de caractéristique de force, il faut alors comparer le nombre obtenu en lançant les DV de la créature et ceux du serviteur aérien. Le total le plus élevé indique lequel a la plus grande force. SORTS DE NIVEAU 7",
+        "description_html": "<p>Ce sort invoque un serviteur aérien invisible (voir Règles AVANCÉES de DONJONS &amp; DRAGONS, MANUEL DES MONSTRES), qui réalisera ce qu’a demandé le clerc dans son incantation. La créature ne combat pas mais obéit au clerc qui lui a demandé de retrouver et ramener l’objet ou la créature qu’il lui décrit. Bien sûr, l’objet ou la créature doit avoir une enveloppe physique pour pouvoir être ramené au clerc. Le clerc devra avoir toujours en tête les conséquences que pourraient avoir le fait d’empêcher un serviteur aérien d’accomplir sa tâche. Le sort et ses effets durent au maximum 1 jour par niveau du clerc. Le serviteur aérien retourne sur son plan quand le sort expire, quand la quête est achevée, quand le clerc meure ou annule sa requête. Le clerc doit se protéger avec une protection contre le mal ou alors se placer à l’intérieur d’un cercle magique, d’un triangle thaumaturgique ou d’un pentagramme quand il invoque un serviteur aérien ; son symbole religieux peut aussi le protéger. Le risque encouru est que la créature invoquée tue le clerc qui a lancé le sort et retourne ensuite sur son plan d’existence. Un serviteur aérien attaque toujours par surprise quand il est en mission et obtient l’avantage de 4 rounds de combats pour lui, à moins que la créature recherchée ne soit capable de détecter l’invisibilité. Si c&#x27;est le cas, 1d6 est lancé : 1 = 1 round, 2 = 2 rounds, 3 = 3 rounds, 4 = 4 rounds, 5 et 6 indiquent que la créature n’est pas du tout surprise et que donc le serviteur aérien ne bénéficie pas de rounds de combat pour lui. À chaque round, le serviteur doit lancer un jet pour toucher et quand une de ces tentatives réussit, cela signifie que le serviteur aérien a agrippé sa victime ou attrapé l’objet qu’il recherche et qu’il doit ramener au clerc. Si c’est une créature qu’il doit ramener, la force du serviteur est comparée à celle de la créature visée. Si cette créature n’a pas de caractéristique de force, il faut alors comparer le nombre obtenu en lançant les DV de la créature et ceux du serviteur aérien. Le total le plus élevé indique lequel a la plus grande force. SORTS DE NIVEAU 7</p>"
+      },
+      "effects": [
+        {
+          "name": "Serviteur Aérien",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:serviteur_aerien",
+                "invocation:serviteur_aerien",
+                "element:air",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/serviteur-aerien.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.FJsv0AtJyNIBduxu",
+          "_id": "zPlJQA12gkyxdMhi",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567271,
+            "modifiedTime": 1780340567271
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Serviteur Aérien",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:serviteur_aerien",
+                "invocation:serviteur_aerien",
+                "element:air",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/serviteur-aerien.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.FJsv0AtJyNIBduxu",
+          "_id": "GyleV90HP7XMjfwU",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567271,
+            "modifiedTime": 1780340567271
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Serviteur Aérien",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:6",
+                "sort:serviteur_aerien",
+                "invocation:serviteur_aerien",
+                "element:air",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/serviteur-aerien.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.FJsv0AtJyNIBduxu",
+          "_id": "XJZhWhoErlXWWGg9",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567271,
+            "modifiedTime": 1780340567271
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:23.294Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 6",
+          "sourceFolderId": "JBqzyl3hjtT04Qcb",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.FJsv0AtJyNIBduxu",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567271,
+        "modifiedTime": 1780340567271,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "vq8X8DO5iO7LIWJx",
+      "sort": 0
+    }
+  ]
+}

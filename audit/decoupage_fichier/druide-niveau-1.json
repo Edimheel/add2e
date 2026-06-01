@@ -1,0 +1,1901 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "druide",
+    "niveau": 1,
+    "key": "druide-niveau-1",
+    "count": 12
+  },
+  "folders": [
+    {
+      "name": "Druide",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "Rll5qPz7yPmV4eUm",
+      "description": "",
+      "sort": 600000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566745,
+        "modifiedTime": 1780340566745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 1",
+      "type": "Item",
+      "folder": "Rll5qPz7yPmV4eUm",
+      "sorting": "a",
+      "_id": "HphwDvyib0uKtVIa",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566740,
+        "modifiedTime": 1780340566740,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Amitié animale",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-amitie-animale.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le druide est capable de convaincre tout animal qui a au moins une intelligence « animale » (mais pas plus d’une semi-intelligence) qu’il est disposé à être son ami. Si l’animal rate son jet de protection contre les sorts dès que le druide commence son incantation, il attend tranquillement que celui-ci ait fini. Ensuite, il suivra le druide ; il est capable d’apprendre 3 « ordres » par point d’intelligence qu’il possède (ces ordres sont ceux que l’on peut apprendre à un chien ou à un autre animal familier du même type, c'est-à-dire qu’ils ne doivent pas être compliqués). L’apprentissage d’un tel ordre doit être achevé en une semaine, l’ensemble des ordres devant être appris en moins de 3 mois après avoir trouvé l’animal. Pendant la période d’apprentissage, l’animal ne blessera pas le druide, mais s’il est laissé seul pendant plus de 3 jours, il reviendra à la vie sauvage et se comportera en conséquence. Le druide peut lancer ce sort pour attirer jusqu’à 2 dés de vie maximum par niveau d’expérience qu’il possède. Cela veut donc dire que le druide ne peut attirer plus de 2 fois son niveau en dés de vie d’animaux. Seuls les animaux d’alignement neutre peuvent être attirés, amadoués et entraînés. Ce sort ne fonctionne que si le druide désire vraiment devenir l’ami de l’animal. Si ses motifs sont autres, l’animal le sent toujours. Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.",
+        "onUse": "systems/add2e/scripts/sorts/druide-amitie-animale.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-amitie-animale.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/druide-amitie-animale.js",
+        "composants_materiels": [
+          {
+            "slug": "gui",
+            "nom": "Gui",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Avec ce sort, le druide est capable de convaincre tout animal qui a au moins une intelligence « animale » (mais pas plus d’une semi-intelligence) qu’il est disposé à être son ami. Si l’animal rate son jet de protection contre les sorts dès que le druide commence son incantation, il attend tranquillement que celui-ci ait fini. Ensuite, il suivra le druide ; il est capable d’apprendre 3 « ordres » par point d’intelligence qu’il possède (ces ordres sont ceux que l’on peut apprendre à un chien ou à un autre animal familier du même type, c'est-à-dire qu’ils ne doivent pas être compliqués). L’apprentissage d’un tel ordre doit être achevé en une semaine, l’ensemble des ordres devant être appris en moins de 3 mois après avoir trouvé l’animal. Pendant la période d’apprentissage, l’animal ne blessera pas le druide, mais s’il est laissé seul pendant plus de 3 jours, il reviendra à la vie sauvage et se comportera en conséquence. Le druide peut lancer ce sort pour attirer jusqu’à 2 dés de vie maximum par niveau d’expérience qu’il possède. Cela veut donc dire que le druide ne peut attirer plus de 2 fois son niveau en dés de vie d’animaux. Seuls les animaux d’alignement neutre peuvent être attirés, amadoués et entraînés. Ce sort ne fonctionne que si le druide désire vraiment devenir l’ami de l’animal. Si ses motifs sont autres, l’animal le sent toujours. Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.",
+        "description_texte": "Avec ce sort, le druide est capable de convaincre tout animal qui a au moins une intelligence « animale » (mais pas plus d’une semi-intelligence) qu’il est disposé à être son ami. Si l’animal rate son jet de protection contre les sorts dès que le druide commence son incantation, il attend tranquillement que celui-ci ait fini. Ensuite, il suivra le druide ; il est capable d’apprendre 3 « ordres » par point d’intelligence qu’il possède (ces ordres sont ceux que l’on peut apprendre à un chien ou à un autre animal familier du même type, c'est-à-dire qu’ils ne doivent pas être compliqués). L’apprentissage d’un tel ordre doit être achevé en une semaine, l’ensemble des ordres devant être appris en moins de 3 mois après avoir trouvé l’animal. Pendant la période d’apprentissage, l’animal ne blessera pas le druide, mais s’il est laissé seul pendant plus de 3 jours, il reviendra à la vie sauvage et se comportera en conséquence. Le druide peut lancer ce sort pour attirer jusqu’à 2 dés de vie maximum par niveau d’expérience qu’il possède. Cela veut donc dire que le druide ne peut attirer plus de 2 fois son niveau en dés de vie d’animaux. Seuls les animaux d’alignement neutre peuvent être attirés, amadoués et entraînés. Ce sort ne fonctionne que si le druide désire vraiment devenir l’ami de l’animal. Si ses motifs sont autres, l’animal le sent toujours. Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.",
+        "description_html": "<p>Avec ce sort, le druide est capable de convaincre tout animal qui a au moins une intelligence « animale » (mais pas plus d’une semi-intelligence) qu’il est disposé à être son ami. Si l’animal rate son jet de protection contre les sorts dès que le druide commence son incantation, il attend tranquillement que celui-ci ait fini. Ensuite, il suivra le druide ; il est capable d’apprendre 3 « ordres » par point d’intelligence qu’il possède (ces ordres sont ceux que l’on peut apprendre à un chien ou à un autre animal familier du même type, c&#x27;est-à-dire qu’ils ne doivent pas être compliqués). L’apprentissage d’un tel ordre doit être achevé en une semaine, l’ensemble des ordres devant être appris en moins de 3 mois après avoir trouvé l’animal. Pendant la période d’apprentissage, l’animal ne blessera pas le druide, mais s’il est laissé seul pendant plus de 3 jours, il reviendra à la vie sauvage et se comportera en conséquence. Le druide peut lancer ce sort pour attirer jusqu’à 2 dés de vie maximum par niveau d’expérience qu’il possède. Cela veut donc dire que le druide ne peut attirer plus de 2 fois son niveau en dés de vie d’animaux. Seuls les animaux d’alignement neutre peuvent être attirés, amadoués et entraînés. Ce sort ne fonctionne que si le druide désire vraiment devenir l’ami de l’animal. Si ses motifs sont autres, l’animal le sent toujours. Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.</p>"
+      },
+      "effects": [
+        {
+          "name": "Amitié animale",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:amitie_animale",
+                "charme:animal",
+                "relation:animal",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-amitie-animale.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.PJR6XUiqkrGQklzA",
+          "_id": "ufayHuifguzXE4bH",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567950,
+            "modifiedTime": 1780340567950
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:25.627Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-amitie-animale.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.895Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.PJR6XUiqkrGQklzA",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567950,
+        "modifiedTime": 1780340567950,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "ilgf9I5cZPQitFJy",
+      "sort": 0
+    },
+    {
+      "name": "Aura féérique",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-aura-feerique.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Illusion/Enchantement",
+        "portee": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand le druide lance ce sort, il surligne la silhouette d’un objet ou d’une créature avec une lueur pâle et brillante. L’entourage complet dépend du nombre de mètres linéaires, 3,60 mètres par niveau (environ un homme de 1,80 m ou 2 kobolds de 90 cm). Si le druide est assez puissant, plusieurs objets ou créatures peuvent être surlignés, mais le druide ne peut passer à une autre cible que lorsqu’il a complètement surligné la précédente. Les créatures silhouettées (y compris celles qui sont invisibles) sont visibles à 8\" dans l’obscurité et à 4\" si l’observateur est proche d’une source lumineuse brillante. Les créatures surlignées sont plus facile à atteindre, ainsi leurs adversaires obtiennent un bonus de +2 sur leurs probabilités de toucher. Une aura féérique peut être bleue, verte ou violette selon le mot employé par le druide en lançant ce sort. Une aura féérique n’est pas dangereuse pour la créature ainsi entourée.",
+        "onUse": "systems/add2e/scripts/sorts/druide-aura-feerique.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-aura-feerique.js",
+        "portée": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Enchantement",
+        "on_use": "systems/add2e/scripts/sorts/druide-aura-feerique.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand le druide lance ce sort, il surligne la silhouette d’un objet ou d’une créature avec une lueur pâle et brillante. L’entourage complet dépend du nombre de mètres linéaires, 3,60 mètres par niveau (environ un homme de 1,80 m ou 2 kobolds de 90 cm). Si le druide est assez puissant, plusieurs objets ou créatures peuvent être surlignés, mais le druide ne peut passer à une autre cible que lorsqu’il a complètement surligné la précédente. Les créatures silhouettées (y compris celles qui sont invisibles) sont visibles à 8\" dans l’obscurité et à 4\" si l’observateur est proche d’une source lumineuse brillante. Les créatures surlignées sont plus facile à atteindre, ainsi leurs adversaires obtiennent un bonus de +2 sur leurs probabilités de toucher. Une aura féérique peut être bleue, verte ou violette selon le mot employé par le druide en lançant ce sort. Une aura féérique n’est pas dangereuse pour la créature ainsi entourée.",
+        "description_texte": "Quand le druide lance ce sort, il surligne la silhouette d’un objet ou d’une créature avec une lueur pâle et brillante. L’entourage complet dépend du nombre de mètres linéaires, 3,60 mètres par niveau (environ un homme de 1,80 m ou 2 kobolds de 90 cm). Si le druide est assez puissant, plusieurs objets ou créatures peuvent être surlignés, mais le druide ne peut passer à une autre cible que lorsqu’il a complètement surligné la précédente. Les créatures silhouettées (y compris celles qui sont invisibles) sont visibles à 8\" dans l’obscurité et à 4\" si l’observateur est proche d’une source lumineuse brillante. Les créatures surlignées sont plus facile à atteindre, ainsi leurs adversaires obtiennent un bonus de +2 sur leurs probabilités de toucher. Une aura féérique peut être bleue, verte ou violette selon le mot employé par le druide en lançant ce sort. Une aura féérique n’est pas dangereuse pour la créature ainsi entourée.",
+        "description_html": "<p>Quand le druide lance ce sort, il surligne la silhouette d’un objet ou d’une créature avec une lueur pâle et brillante. L’entourage complet dépend du nombre de mètres linéaires, 3,60 mètres par niveau (environ un homme de 1,80 m ou 2 kobolds de 90 cm). Si le druide est assez puissant, plusieurs objets ou créatures peuvent être surlignés, mais le druide ne peut passer à une autre cible que lorsqu’il a complètement surligné la précédente. Les créatures silhouettées (y compris celles qui sont invisibles) sont visibles à 8&quot; dans l’obscurité et à 4&quot; si l’observateur est proche d’une source lumineuse brillante. Les créatures surlignées sont plus facile à atteindre, ainsi leurs adversaires obtiennent un bonus de +2 sur leurs probabilités de toucher. Une aura féérique peut être bleue, verte ou violette selon le mot employé par le druide en lançant ce sort. Une aura féérique n’est pas dangereuse pour la créature ainsi entourée.</p>"
+      },
+      "effects": [
+        {
+          "name": "Aura féérique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:aura_feerique",
+                "lumiere:faerique",
+                "revele:invisible",
+                "bonus:cible_visible",
+                "ecole:illusion_enchantement"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-aura-feerique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.xjGv6aLV0WWNBYdy",
+          "_id": "rbaOqP9rhAQYUpJ5",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569474,
+            "modifiedTime": 1780340569474
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:34.434Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-aura-feerique.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.895Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.xjGv6aLV0WWNBYdy",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569474,
+        "modifiedTime": 1780340569474,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "FPCcOTwEZM4FB4AG",
+      "sort": 0
+    },
+    {
+      "name": "Détection de la magie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-detection-de-la-magie.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc détection de la magie (voir p.43), sauf que le druide peut détecter si la magie est très faible, faible, moyenne, forte ou très forte.",
+        "onUse": "systems/add2e/scripts/sorts/druide-detection-de-la-magie.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-detection-de-la-magie.js",
+        "portée": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/druide-detection-de-la-magie.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "composants_materiels_source": "gui druidique",
+        "description_reelle": "Excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc détection de la magie (voir p.43), sauf que le druide peut détecter si la magie est très faible, faible, moyenne, forte ou très forte.",
+        "description_texte": "Excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc détection de la magie (voir p.43), sauf que le druide peut détecter si la magie est très faible, faible, moyenne, forte ou très forte.",
+        "description_html": "<p>Excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc détection de la magie (voir p.43), sauf que le druide peut détecter si la magie est très faible, faible, moyenne, forte ou très forte.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "effects": [
+        {
+          "name": "Détection de la magie",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:detection_de_la_magie",
+                "detection:magie",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-detection-de-la-magie.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.6i2E9JcogMHA0w1t",
+          "_id": "cCsDMFNzBe1ftG7V",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567138,
+            "modifiedTime": 1780340567138
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-detection-de-la-magie.js",
+          "spellListsResolved": [
+            "Druide"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:15.229Z",
+          "routedClass": "Druide",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.895Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.6i2E9JcogMHA0w1t",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567138,
+        "modifiedTime": 1780340567138,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "7rYWVSj9qG6J4CgE",
+      "sort": 0
+    },
+    {
+      "name": "Détection des pièges sylvestres",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-detection-des-pieges-sylvestres.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "0",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "En lançant ce sort, le druide est capable de détecter les collets ou les fosses dans la zone d’effet indiquée et donc de les éviter. Sous terre, seules les fosses seront détectées, pas les autres formes de pièges. En extérieur, le sort détecte toutes les sortes de pièges : les collets, les pièges à projectiles, les fosses, etc. Le sort dure 4 rounds par niveau du druide, c.-à-d. 4 round au 1er niveau, 8 rounds au 2e niveau, 12 rounds au 3e niveau, etc.",
+        "onUse": "systems/add2e/scripts/sorts/druide-detection-des-pieges-sylvestres.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-detection-des-pieges-sylvestres.js",
+        "portée": {
+          "valeur": "0",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/druide-detection-des-pieges-sylvestres.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "En lançant ce sort, le druide est capable de détecter les collets ou les fosses dans la zone d’effet indiquée et donc de les éviter. Sous terre, seules les fosses seront détectées, pas les autres formes de pièges. En extérieur, le sort détecte toutes les sortes de pièges : les collets, les pièges à projectiles, les fosses, etc. Le sort dure 4 rounds par niveau du druide, c.-à-d. 4 round au 1er niveau, 8 rounds au 2e niveau, 12 rounds au 3e niveau, etc.",
+        "description_texte": "En lançant ce sort, le druide est capable de détecter les collets ou les fosses dans la zone d’effet indiquée et donc de les éviter. Sous terre, seules les fosses seront détectées, pas les autres formes de pièges. En extérieur, le sort détecte toutes les sortes de pièges : les collets, les pièges à projectiles, les fosses, etc. Le sort dure 4 rounds par niveau du druide, c.-à-d. 4 round au 1er niveau, 8 rounds au 2e niveau, 12 rounds au 3e niveau, etc.",
+        "description_html": "<p>En lançant ce sort, le druide est capable de détecter les collets ou les fosses dans la zone d’effet indiquée et donc de les éviter. Sous terre, seules les fosses seront détectées, pas les autres formes de pièges. En extérieur, le sort détecte toutes les sortes de pièges : les collets, les pièges à projectiles, les fosses, etc. Le sort dure 4 rounds par niveau du druide, c.-à-d. 4 round au 1er niveau, 8 rounds au 2e niveau, 12 rounds au 3e niveau, etc.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Détection des pièges sylvestres",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:detection_des_pieges_sylvestres",
+                "detection:pieges_sylvestres",
+                "detection:collets",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-detection-des-pieges-sylvestres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.nIBtqmkofMwrRT33",
+          "_id": "vguusAFPGpcIb74O",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568867,
+            "modifiedTime": 1780340568867
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:16.867Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-detection-des-pieges-sylvestres.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.895Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.nIBtqmkofMwrRT33",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568867,
+        "modifiedTime": 1780340568867,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "gb1VJgkDBmpxHRqW",
+      "sort": 0
+    },
+    {
+      "name": "Enchevêtrement",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-enchevetrement.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le druide provoque une croissance importante et ultra-rapide des plantes dans la zone d’effet, afin d'enchevêtrer les créatures qui s’y trouvent. L’herbe, les mauvaises herbes, les buissons et même les arbres se développent, s’entremêlent et s’enroulent autour des créatures, les immobilisant ainsi pour la durée du sort. Si une créature réussit son jet de protection, elle est ralentie à 50 % pendant la durée du sort.",
+        "onUse": "systems/add2e/scripts/sorts/druide-enchevetrement.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-enchevetrement.js",
+        "portée": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-enchevetrement.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, le druide provoque une croissance importante et ultra-rapide des plantes dans la zone d’effet, afin d'enchevêtrer les créatures qui s’y trouvent. L’herbe, les mauvaises herbes, les buissons et même les arbres se développent, s’entremêlent et s’enroulent autour des créatures, les immobilisant ainsi pour la durée du sort. Si une créature réussit son jet de protection, elle est ralentie à 50 % pendant la durée du sort.",
+        "description_texte": "Avec ce sort, le druide provoque une croissance importante et ultra-rapide des plantes dans la zone d’effet, afin d'enchevêtrer les créatures qui s’y trouvent. L’herbe, les mauvaises herbes, les buissons et même les arbres se développent, s’entremêlent et s’enroulent autour des créatures, les immobilisant ainsi pour la durée du sort. Si une créature réussit son jet de protection, elle est ralentie à 50 % pendant la durée du sort.",
+        "description_html": "<p>Avec ce sort, le druide provoque une croissance importante et ultra-rapide des plantes dans la zone d’effet, afin d&#x27;enchevêtrer les créatures qui s’y trouvent. L’herbe, les mauvaises herbes, les buissons et même les arbres se développent, s’entremêlent et s’enroulent autour des créatures, les immobilisant ainsi pour la durée du sort. Si une créature réussit son jet de protection, elle est ralentie à 50 % pendant la durée du sort.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Enchevêtrement",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:enchevetrement",
+                "terrain:enchevetrement",
+                "etat:entrave",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-enchevetrement.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fcpFSFQLL8ttakNR",
+          "_id": "O0nU2qHfa5lP7hkb",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568738,
+            "modifiedTime": 1780340568738
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:36.154Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-enchevetrement.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.895Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.fcpFSFQLL8ttakNR",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568738,
+        "modifiedTime": 1780340568738,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "gchPPB6o9UcwOWO4",
+      "sort": 0
+    },
+    {
+      "name": "Invisibilité aux animaux",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-invisibilite-aux-animaux.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, la créature touchée devient totalement indétectable aux yeux des animaux normaux ayant une intelligence inférieure à 6. Les animaux normaux incluent les variétés géantes, mais excluent ceux possédant des habilités ou pouvoirs magiques. La créature affectée par ce sort est capable de marcher parmi les animaux ou de passer entre eux comme s’il n’existait pas. Par exemple, il peut se tenir à côté de lions affamés ou d’un tyrannosaure rex sans qu’il soit remarqué. Par contre, un palefroi de la nuit, un molosse satanique ou un loup des glaces remarquera certainement la créature. La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.",
+        "onUse": "systems/add2e/scripts/sorts/druide-invisibilite-aux-animaux.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-invisibilite-aux-animaux.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-invisibilite-aux-animaux.js",
+        "composants_materiels": [
+          {
+            "slug": "houx_avec_lequel_le_druide_doit_se_frotter",
+            "nom": "Houx avec lequel le druide doit se frotter",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.",
+        "description_reelle": "Quand ce sort est lancé, la créature touchée devient totalement indétectable aux yeux des animaux normaux ayant une intelligence inférieure à 6. Les animaux normaux incluent les variétés géantes, mais excluent ceux possédant des habilités ou pouvoirs magiques. La créature affectée par ce sort est capable de marcher parmi les animaux ou de passer entre eux comme s’il n’existait pas. Par exemple, il peut se tenir à côté de lions affamés ou d’un tyrannosaure rex sans qu’il soit remarqué. Par contre, un palefroi de la nuit, un molosse satanique ou un loup des glaces remarquera certainement la créature. La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.",
+        "description_texte": "Quand ce sort est lancé, la créature touchée devient totalement indétectable aux yeux des animaux normaux ayant une intelligence inférieure à 6. Les animaux normaux incluent les variétés géantes, mais excluent ceux possédant des habilités ou pouvoirs magiques. La créature affectée par ce sort est capable de marcher parmi les animaux ou de passer entre eux comme s’il n’existait pas. Par exemple, il peut se tenir à côté de lions affamés ou d’un tyrannosaure rex sans qu’il soit remarqué. Par contre, un palefroi de la nuit, un molosse satanique ou un loup des glaces remarquera certainement la créature. La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.",
+        "description_html": "<p>Quand ce sort est lancé, la créature touchée devient totalement indétectable aux yeux des animaux normaux ayant une intelligence inférieure à 6. Les animaux normaux incluent les variétés géantes, mais excluent ceux possédant des habilités ou pouvoirs magiques. La créature affectée par ce sort est capable de marcher parmi les animaux ou de passer entre eux comme s’il n’existait pas. Par exemple, il peut se tenir à côté de lions affamés ou d’un tyrannosaure rex sans qu’il soit remarqué. Par contre, un palefroi de la nuit, un molosse satanique ou un loup des glaces remarquera certainement la créature. La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.</p>"
+      },
+      "effects": [
+        {
+          "name": "Invisibilité aux animaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:invisibilite_aux_animaux",
+                "invisibilite:animaux",
+                "protection:animaux",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-invisibilite-aux-animaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.bbeVy79hAe6pOkyS",
+          "_id": "A7yYG7tR4T8JxprN",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568676,
+            "modifiedTime": 1780340568676
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:26.910Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-invisibilite-aux-animaux.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.896Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.bbeVy79hAe6pOkyS",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568676,
+        "modifiedTime": 1780340568676,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "wGAk7UDQiD8culJ2",
+      "sort": 0
+    },
+    {
+      "name": "Langage animal",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-langage-animal.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 2 de clerc langage animal (voir p.45).",
+        "onUse": "systems/add2e/scripts/sorts/druide-langage-animal.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-langage-animal.js",
+        "portée": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/druide-langage-animal.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Excepté ci-dessus, ce sort est le même que le sort de niveau 2 de clerc langage animal (voir p.45).",
+        "description_texte": "Excepté ci-dessus, ce sort est le même que le sort de niveau 2 de clerc langage animal (voir p.45).",
+        "description_html": "<p>Excepté ci-dessus, ce sort est le même que le sort de niveau 2 de clerc langage animal (voir p.45).</p>"
+      },
+      "effects": [
+        {
+          "name": "Langage animal",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:langage_animal",
+                "langage:animaux",
+                "communication:animal",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-langage-animal.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.K49KoU5558n0YNV6",
+          "_id": "aiRhAYUjmzonOpKO",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567870,
+            "modifiedTime": 1780340567870
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:47.803Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-langage-animal.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.896Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.K49KoU5558n0YNV6",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567870,
+        "modifiedTime": 1780340567870,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "jtVmvY0cNNKzc8sw",
+      "sort": 0
+    },
+    {
+      "name": "Localisation des animaux",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-localisation-des-animaux.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "10 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S,M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le druide peut déterminer la direction et la distance où se trouvent les animaux recherchés présents dans la zone d’effet ; le druide peut rechercher n’importe quel animal, mais il doit se concentrer sur le type d’animal qu’il recherche. Il fait face à une direction, pense à l’animal concerné et sait ainsi si cet animal se trouve dans la zone d’effet. Le druide ne peut examiner qu’une seule direction par round, c.-à-d. seulement 2\" de large. Le sort dure 1 round par niveau du druide et la portée est de 2\" de long par niveau d’expérience du druide.",
+        "onUse": "systems/add2e/scripts/sorts/druide-localisation-des-animaux.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-localisation-des-animaux.js",
+        "portée": {
+          "valeur": "10 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/druide-localisation-des-animaux.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, le druide peut déterminer la direction et la distance où se trouvent les animaux recherchés présents dans la zone d’effet ; le druide peut rechercher n’importe quel animal, mais il doit se concentrer sur le type d’animal qu’il recherche. Il fait face à une direction, pense à l’animal concerné et sait ainsi si cet animal se trouve dans la zone d’effet. Le druide ne peut examiner qu’une seule direction par round, c.-à-d. seulement 2\" de large. Le sort dure 1 round par niveau du druide et la portée est de 2\" de long par niveau d’expérience du druide.",
+        "description_texte": "Avec ce sort, le druide peut déterminer la direction et la distance où se trouvent les animaux recherchés présents dans la zone d’effet ; le druide peut rechercher n’importe quel animal, mais il doit se concentrer sur le type d’animal qu’il recherche. Il fait face à une direction, pense à l’animal concerné et sait ainsi si cet animal se trouve dans la zone d’effet. Le druide ne peut examiner qu’une seule direction par round, c.-à-d. seulement 2\" de large. Le sort dure 1 round par niveau du druide et la portée est de 2\" de long par niveau d’expérience du druide.",
+        "description_html": "<p>Avec ce sort, le druide peut déterminer la direction et la distance où se trouvent les animaux recherchés présents dans la zone d’effet ; le druide peut rechercher n’importe quel animal, mais il doit se concentrer sur le type d’animal qu’il recherche. Il fait face à une direction, pense à l’animal concerné et sait ainsi si cet animal se trouve dans la zone d’effet. Le druide ne peut examiner qu’une seule direction par round, c.-à-d. seulement 2&quot; de large. Le sort dure 1 round par niveau du druide et la portée est de 2&quot; de long par niveau d’expérience du druide.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Localisation des animaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:localisation_des_animaux",
+                "localisation:animaux",
+                "detection:animal",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-localisation-des-animaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.KS0P2V5fio3ild09",
+          "_id": "fgahnOzIWwj1Lun8",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567874,
+            "modifiedTime": 1780340567874
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:57.109Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-localisation-des-animaux.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.896Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.KS0P2V5fio3ild09",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567874,
+        "modifiedTime": 1780340567874,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "AzUlTx8pPfOqZS2Q",
+      "sort": 0
+    },
+    {
+      "name": "Passage sans trace",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-passage-sans-trace.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, le destinataire peut marcher sur n’importe quel type de terrain (boue, neige, poussière, etc.) en ne laissant ni trace, ni odeur. Ainsi, le pistage d’une créature sous l’effet de ce sort est impossible. Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère. Note : la zone sur laquelle le destinataire du sort marche irradie une aura de magie, pendant 6 à 36 tours (6d6) après le passage de cette créature.",
+        "onUse": "systems/add2e/scripts/sorts/druide-passage-sans-trace.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-passage-sans-trace.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-passage-sans-trace.js",
+        "composants_materiels": [
+          {
+            "slug": "feuille_de_gui",
+            "nom": "Feuille de gui (",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère.",
+        "description_reelle": "Quand ce sort est lancé, le destinataire peut marcher sur n’importe quel type de terrain (boue, neige, poussière, etc.) en ne laissant ni trace, ni odeur. Ainsi, le pistage d’une créature sous l’effet de ce sort est impossible. Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère. Note : la zone sur laquelle le destinataire du sort marche irradie une aura de magie, pendant 6 à 36 tours (6d6) après le passage de cette créature.",
+        "description_texte": "Quand ce sort est lancé, le destinataire peut marcher sur n’importe quel type de terrain (boue, neige, poussière, etc.) en ne laissant ni trace, ni odeur. Ainsi, le pistage d’une créature sous l’effet de ce sort est impossible. Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère. Note : la zone sur laquelle le destinataire du sort marche irradie une aura de magie, pendant 6 à 36 tours (6d6) après le passage de cette créature.",
+        "description_html": "<p>Quand ce sort est lancé, le destinataire peut marcher sur n’importe quel type de terrain (boue, neige, poussière, etc.) en ne laissant ni trace, ni odeur. Ainsi, le pistage d’une créature sous l’effet de ce sort est impossible. Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère. Note : la zone sur laquelle le destinataire du sort marche irradie une aura de magie, pendant 6 à 36 tours (6d6) après le passage de cette créature.</p>"
+      },
+      "effects": [
+        {
+          "name": "Passage sans trace",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:passage_sans_trace",
+                "deplacement:sans_trace",
+                "discretion:nature",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-passage-sans-trace.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.OtzO3tm1hUq26YnQ",
+          "_id": "dBbxhxcYJoKdCI5f",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567940,
+            "modifiedTime": 1780340567940
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:00.495Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-passage-sans-trace.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.896Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.OtzO3tm1hUq26YnQ",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567940,
+        "modifiedTime": 1780340567940,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "ny1kTEpQBJdwExzN",
+      "sort": 0
+    },
+    {
+      "name": "Prévision du temps",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-prevision-du-temps.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, le druide est sûr à 100 % du temps qu’il fera (ciel, température, précipitations) dans une zone de 23 km² centrée sur le druide. Pour chaque niveau du druide, le temps peut être prédit 2 heures à l’avance, donc 4 heures à l’avance pour un druide niveau 2, etc. Ce sort ne peut pas être utilisé sous l’eau.",
+        "onUse": "systems/add2e/scripts/sorts/druide-prevision-du-temps.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-prevision-du-temps.js",
+        "portée": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/druide-prevision-du-temps.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand ce sort est lancé, le druide est sûr à 100 % du temps qu’il fera (ciel, température, précipitations) dans une zone de 23 km² centrée sur le druide. Pour chaque niveau du druide, le temps peut être prédit 2 heures à l’avance, donc 4 heures à l’avance pour un druide niveau 2, etc. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_texte": "Quand ce sort est lancé, le druide est sûr à 100 % du temps qu’il fera (ciel, température, précipitations) dans une zone de 23 km² centrée sur le druide. Pour chaque niveau du druide, le temps peut être prédit 2 heures à l’avance, donc 4 heures à l’avance pour un druide niveau 2, etc. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_html": "<p>Quand ce sort est lancé, le druide est sûr à 100 % du temps qu’il fera (ciel, température, précipitations) dans une zone de 23 km² centrée sur le druide. Pour chaque niveau du druide, le temps peut être prédit 2 heures à l’avance, donc 4 heures à l’avance pour un druide niveau 2, etc. Ce sort ne peut pas être utilisé sous l’eau.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Prévision du temps",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:prevision_du_temps",
+                "prevision:temps",
+                "meteo",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-prevision-du-temps.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ut4tUVbbvEphMTee",
+          "_id": "ePO8uvwGDyMGGfjt",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569443,
+            "modifiedTime": 1780340569443
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:36.158Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-prevision-du-temps.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.896Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.ut4tUVbbvEphMTee",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569443,
+        "modifiedTime": 1780340569443,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "evIx4b26WpJLeXyT",
+      "sort": 0
+    },
+    {
+      "name": "Purification de l'eau",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-purification-de-l-eau.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, de l’eau sale, contaminée, polluée est rendue claire, pure et potable. Le druide peut ainsi purifier 27 dm3 par niveau. L’inverse du sort, corruption de l’eau, fonctionne de la même manière, mais avec les effets inverses. De l’eau bénite/maudite peut être polluée.",
+        "onUse": "systems/add2e/scripts/sorts/druide-purification-de-l-eau.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-purification-de-l-eau.js",
+        "portée": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-purification-de-l-eau.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, de l’eau sale, contaminée, polluée est rendue claire, pure et potable. Le druide peut ainsi purifier 27 dm3 par niveau. L’inverse du sort, corruption de l’eau, fonctionne de la même manière, mais avec les effets inverses. De l’eau bénite/maudite peut être polluée.",
+        "description_texte": "Avec ce sort, de l’eau sale, contaminée, polluée est rendue claire, pure et potable. Le druide peut ainsi purifier 27 dm3 par niveau. L’inverse du sort, corruption de l’eau, fonctionne de la même manière, mais avec les effets inverses. De l’eau bénite/maudite peut être polluée.",
+        "description_html": "<p>Avec ce sort, de l’eau sale, contaminée, polluée est rendue claire, pure et potable. Le druide peut ainsi purifier 27 dm3 par niveau. L’inverse du sort, corruption de l’eau, fonctionne de la même manière, mais avec les effets inverses. De l’eau bénite/maudite peut être polluée.</p>"
+      },
+      "effects": [
+        {
+          "name": "Purification de l'eau",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:purification_de_l_eau",
+                "purification:eau",
+                "eau:potable",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-purification-de-l-eau.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.M5CFjfD7cq8S93yX",
+          "_id": "F1df5xbv7B800sqj",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567897,
+            "modifiedTime": 1780340567897
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:52.935Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-purification-de-l-eau.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.896Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.M5CFjfD7cq8S93yX",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567897,
+        "modifiedTime": 1780340567897,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "qWQgy9OIassdDWDQ",
+      "sort": 0
+    },
+    {
+      "name": "Shillelagh",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-shillelagh.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet au druide de transformer sa massue en chêne en une arme magique +1 au toucher, infligeant de 2 à 8 points de dégâts (2d4) sur les ennemis de taille humaine maximum et de 2 à 5 (2d4+1) sur les opposants de plus grande taille. Le druide doit bien sûr savoir manier la massue. Les composantes matérielles de ce sort sont une massue en chêne, du gui et une feuille de trèfle. SORTS DE NIVEAU 2",
+        "onUse": "systems/add2e/scripts/sorts/druide-shillelagh.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-shillelagh.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-shillelagh.js",
+        "composants_materiels": [
+          {
+            "slug": "gui",
+            "nom": "Gui",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "feuille_de_trefle",
+            "nom": "Feuille de trèfle",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles de ce sort sont une massue en chêne, du gui et une feuille de trèfle.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Ce sort permet au druide de transformer sa massue en chêne en une arme magique +1 au toucher, infligeant de 2 à 8 points de dégâts (2d4) sur les ennemis de taille humaine maximum et de 2 à 5 (2d4+1) sur les opposants de plus grande taille. Le druide doit bien sûr savoir manier la massue. Les composantes matérielles de ce sort sont une massue en chêne, du gui et une feuille de trèfle. SORTS DE NIVEAU 2",
+        "description_texte": "Ce sort permet au druide de transformer sa massue en chêne en une arme magique +1 au toucher, infligeant de 2 à 8 points de dégâts (2d4) sur les ennemis de taille humaine maximum et de 2 à 5 (2d4+1) sur les opposants de plus grande taille. Le druide doit bien sûr savoir manier la massue. Les composantes matérielles de ce sort sont une massue en chêne, du gui et une feuille de trèfle. SORTS DE NIVEAU 2",
+        "description_html": "<p>Ce sort permet au druide de transformer sa massue en chêne en une arme magique +1 au toucher, infligeant de 2 à 8 points de dégâts (2d4) sur les ennemis de taille humaine maximum et de 2 à 5 (2d4+1) sur les opposants de plus grande taille. Le druide doit bien sûr savoir manier la massue. Les composantes matérielles de ce sort sont une massue en chêne, du gui et une feuille de trèfle. SORTS DE NIVEAU 2</p>"
+      },
+      "effects": [
+        {
+          "name": "Shillelagh",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:1",
+                "sort:shillelagh",
+                "arme:shillelagh",
+                "gourdin:magique",
+                "bonus:arme",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-shillelagh.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.LrFmC0ukMvAULCaW",
+          "_id": "iw6czPyArAC4fBjJ",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567892,
+            "modifiedTime": 1780340567892
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:24.515Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-shillelagh.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 1",
+          "sourceFolderId": "ql3GGDT0ZHNji7Rm",
+          "exportedAt": "2026-05-22T09:57:29.896Z"
+        }
+      },
+      "folder": "HphwDvyib0uKtVIa",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.LrFmC0ukMvAULCaW",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567892,
+        "modifiedTime": 1780340567892,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "XbRgfyOQelhZ1LvY",
+      "sort": 0
+    }
+  ]
+}

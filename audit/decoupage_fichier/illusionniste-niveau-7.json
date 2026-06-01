@@ -1,0 +1,809 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "illusionniste",
+    "niveau": 7,
+    "key": "illusionniste-niveau-7",
+    "count": 5
+  },
+  "folders": [
+    {
+      "name": "Illusionniste",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "zbnGy5sLzX1VR4UP",
+      "description": "",
+      "sort": 700000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566746,
+        "modifiedTime": 1780340566746,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 7",
+      "type": "Item",
+      "folder": "zbnGy5sLzX1VR4UP",
+      "sorting": "a",
+      "_id": "JNbBcfJ0JnmyPxeA",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566740,
+        "modifiedTime": 1780340566740,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Altération de la réalité",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-alteration-de-la-realite.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "spéciales",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est similaire au sort de niveau 7 de magicien souhait mineur (voir p.89). Pour qu’il soit efficace, l’illusionniste doit décrire l’action du changement en lançant une force fantasmagorique et en le verbalisant dans les grandes lignes, avant que le sort n’entre en action. L’incantation de ce sort fait vieillir le lanceur du sort de 3 ans.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-alteration-de-la-realite.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-alteration-de-la-realite.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-alteration-de-la-realite.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est similaire au sort de niveau 7 de magicien souhait mineur (voir p.89). Pour qu’il soit efficace, l’illusionniste doit décrire l’action du changement en lançant une force fantasmagorique et en le verbalisant dans les grandes lignes, avant que le sort n’entre en action. L’incantation de ce sort fait vieillir le lanceur du sort de 3 ans.",
+        "description_texte": "Ce sort est similaire au sort de niveau 7 de magicien souhait mineur (voir p.89). Pour qu’il soit efficace, l’illusionniste doit décrire l’action du changement en lançant une force fantasmagorique et en le verbalisant dans les grandes lignes, avant que le sort n’entre en action. L’incantation de ce sort fait vieillir le lanceur du sort de 3 ans.",
+        "description_html": "<p>Ce sort est similaire au sort de niveau 7 de magicien souhait mineur (voir p.89). Pour qu’il soit efficace, l’illusionniste doit décrire l’action du changement en lançant une force fantasmagorique et en le verbalisant dans les grandes lignes, avant que le sort n’entre en action. L’incantation de ce sort fait vieillir le lanceur du sort de 3 ans.</p>"
+      },
+      "effects": [
+        {
+          "name": "Altération de la réalité",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:7",
+                "sort:alteration_de_la_realite",
+                "alteration:realite",
+                "souhait:mineur",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-alteration-de-la-realite.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.vbRSJxYF3i7dzqgF",
+          "_id": "CbzKFUqZPAm5FU5U",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569453,
+            "modifiedTime": 1780340569453
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:25.038Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-alteration-de-la-realite.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 7",
+          "sourceFolderId": "cdW1LT8gWlPp1P7T",
+          "exportedAt": "2026-05-22T09:57:29.900Z"
+        }
+      },
+      "folder": "JNbBcfJ0JnmyPxeA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.vbRSJxYF3i7dzqgF",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569453,
+        "modifiedTime": 1780340569453,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "WLWi5ajizykNFffK",
+      "sort": 0
+    },
+    {
+      "name": "Jet prismatique",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-jet-prismatique.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand il lance ce sort, l’illusionniste fait jaillir de sa main 7 rayons de couleur (cf. sphère prismatique p.94). Toute créature dans la zone d’effet sera touchée par un rayon ou plus. Pour déterminer quel rayon touche la créature concernée, lancer 1d8 : d8 Couleur Effets 1 Rouge inflige 10 points de dégâts 2 Orange inflige 20 points de dégâts 3 Jaune inflige 40 points de dégâts 4 Vert jet de protection contre le poison ou mort 5 Bleu jet de protection contre pétrification ou transformation en pierre 6 Indigo jet de protection contre les baguettes ou folie 7 Violet jet de protection contre les sorts ou envoyé sur un autre plan 8 2 rayons touchent : relancez le dé 2 fois en ignorant le 8 s’il ressort",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-jet-prismatique.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-jet-prismatique.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-jet-prismatique.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand il lance ce sort, l’illusionniste fait jaillir de sa main 7 rayons de couleur (cf. sphère prismatique p.94). Toute créature dans la zone d’effet sera touchée par un rayon ou plus. Pour déterminer quel rayon touche la créature concernée, lancer 1d8 : d8 Couleur Effets 1 Rouge inflige 10 points de dégâts 2 Orange inflige 20 points de dégâts 3 Jaune inflige 40 points de dégâts 4 Vert jet de protection contre le poison ou mort 5 Bleu jet de protection contre pétrification ou transformation en pierre 6 Indigo jet de protection contre les baguettes ou folie 7 Violet jet de protection contre les sorts ou envoyé sur un autre plan 8 2 rayons touchent : relancez le dé 2 fois en ignorant le 8 s’il ressort",
+        "description_texte": "Quand il lance ce sort, l’illusionniste fait jaillir de sa main 7 rayons de couleur (cf. sphère prismatique p.94). Toute créature dans la zone d’effet sera touchée par un rayon ou plus. Pour déterminer quel rayon touche la créature concernée, lancer 1d8 : d8 Couleur Effets 1 Rouge inflige 10 points de dégâts 2 Orange inflige 20 points de dégâts 3 Jaune inflige 40 points de dégâts 4 Vert jet de protection contre le poison ou mort 5 Bleu jet de protection contre pétrification ou transformation en pierre 6 Indigo jet de protection contre les baguettes ou folie 7 Violet jet de protection contre les sorts ou envoyé sur un autre plan 8 2 rayons touchent : relancez le dé 2 fois en ignorant le 8 s’il ressort",
+        "description_html": "<p>Quand il lance ce sort, l’illusionniste fait jaillir de sa main 7 rayons de couleur (cf. sphère prismatique p.94). Toute créature dans la zone d’effet sera touchée par un rayon ou plus. Pour déterminer quel rayon touche la créature concernée, lancer 1d8 : d8 Couleur Effets 1 Rouge inflige 10 points de dégâts 2 Orange inflige 20 points de dégâts 3 Jaune inflige 40 points de dégâts 4 Vert jet de protection contre le poison ou mort 5 Bleu jet de protection contre pétrification ou transformation en pierre 6 Indigo jet de protection contre les baguettes ou folie 7 Violet jet de protection contre les sorts ou envoyé sur un autre plan 8 2 rayons touchent : relancez le dé 2 fois en ignorant le 8 s’il ressort</p>"
+      },
+      "effects": [
+        {
+          "name": "Jet prismatique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:7",
+                "sort:jet_prismatique",
+                "jet:prismatique",
+                "prismatique",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-jet-prismatique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.hsHgEIxYP8uM1ux2",
+          "_id": "ncM0ld4PZw9Tr5GX",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568785,
+            "modifiedTime": 1780340568785
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:47.281Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-jet-prismatique.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 7",
+          "sourceFolderId": "cdW1LT8gWlPp1P7T",
+          "exportedAt": "2026-05-22T09:57:29.900Z"
+        }
+      },
+      "folder": "JNbBcfJ0JnmyPxeA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.hsHgEIxYP8uM1ux2",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568785,
+        "modifiedTime": 1780340568785,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "qEqxbIe6jPNTHEgC",
+      "sort": 0
+    },
+    {
+      "name": "Mur prismatique",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-mur-prismatique.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est similaire au sort de niveau 9 de magicien sphère prismatique (voir p.94). La différence tient dans le fait qu’il crée un mur de couleurs scintillantes. Les dimensions maximales sont : 1,20 m de large par niveau d’expérience du lanceur de sort et 60 cm de haut par niveau.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-mur-prismatique.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-mur-prismatique.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-mur-prismatique.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est similaire au sort de niveau 9 de magicien sphère prismatique (voir p.94). La différence tient dans le fait qu’il crée un mur de couleurs scintillantes. Les dimensions maximales sont : 1,20 m de large par niveau d’expérience du lanceur de sort et 60 cm de haut par niveau.",
+        "description_texte": "Ce sort est similaire au sort de niveau 9 de magicien sphère prismatique (voir p.94). La différence tient dans le fait qu’il crée un mur de couleurs scintillantes. Les dimensions maximales sont : 1,20 m de large par niveau d’expérience du lanceur de sort et 60 cm de haut par niveau.",
+        "description_html": "<p>Ce sort est similaire au sort de niveau 9 de magicien sphère prismatique (voir p.94). La différence tient dans le fait qu’il crée un mur de couleurs scintillantes. Les dimensions maximales sont : 1,20 m de large par niveau d’expérience du lanceur de sort et 60 cm de haut par niveau.</p>"
+      },
+      "effects": [
+        {
+          "name": "Mur prismatique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:7",
+                "sort:mur_prismatique",
+                "mur:prismatique",
+                "barriere",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-mur-prismatique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.6LxbMBy2j3WVRdGD",
+          "_id": "ifTLXHPEkxu6PUoy",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567132,
+            "modifiedTime": 1780340567132
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:46.945Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-mur-prismatique.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 7",
+          "sourceFolderId": "cdW1LT8gWlPp1P7T",
+          "exportedAt": "2026-05-22T09:57:29.900Z"
+        }
+      },
+      "folder": "JNbBcfJ0JnmyPxeA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.6LxbMBy2j3WVRdGD",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567132,
+        "modifiedTime": 1780340567132,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "ULLJUpLwbeQMLzAt",
+      "sort": 0
+    },
+    {
+      "name": "Sorts de niveau 1 de magicien",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-sorts-de-niveau-1-de-magicien.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Sorts de niveau 1 de magicien donne accès ou simule un ensemble de sorts selon la règle de l’illusionniste. Le choix précis du sort reproduit, sa résolution et ses limites sont validés par le MD.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-sorts-de-niveau-1-de-magicien.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-sorts-de-niveau-1-de-magicien.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-sorts-de-niveau-1-de-magicien.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_reelle": "Sorts de niveau 1 de magicien donne accès ou simule un ensemble de sorts selon la règle de l’illusionniste. Le choix précis du sort reproduit, sa résolution et ses limites sont validés par le MD.",
+        "description_texte": "Sorts de niveau 1 de magicien donne accès ou simule un ensemble de sorts selon la règle de l’illusionniste. Le choix précis du sort reproduit, sa résolution et ses limites sont validés par le MD.",
+        "description_html": "<p>Sorts de niveau 1 de magicien donne accès ou simule un ensemble de sorts selon la règle de l’illusionniste. Le choix précis du sort reproduit, sa résolution et ses limites sont validés par le MD.</p>",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Sorts de niveau 1 de magicien",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:7",
+                "sort:sorts_de_niveau_1_de_magicien",
+                "acces:sort_magicien_niveau_1",
+                "illusionniste:magicien_niveau_1",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-sorts-de-niveau-1-de-magicien.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.EC2P2uKycv31GQkZ",
+          "_id": "8JAbrMNYTeSPMI8h",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567248,
+            "modifiedTime": 1780340567248
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:37.385Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-sorts-de-niveau-1-de-magicien.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 7",
+          "sourceFolderId": "cdW1LT8gWlPp1P7T",
+          "exportedAt": "2026-05-22T09:57:29.900Z"
+        }
+      },
+      "folder": "JNbBcfJ0JnmyPxeA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.EC2P2uKycv31GQkZ",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567248,
+        "modifiedTime": 1780340567248,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "yxZAGhZDEaT0e6Am",
+      "sort": 0
+    },
+    {
+      "name": "Vision",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-vision.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante ; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés ; un objet extrêmement précieux ajoutera +2 au tirage ; enfin, un objet sans prix, quasiment unique, ajoutera +3. SORTS DE NIVEAU 1 DE MAGICIEN Niveau : 7 Composantes : * Portée : * Temps d'incantation : * Durée : * Jet de protection : * Zone d'effet : * * fonction du sort approprié Explication/Description : l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7. LANCER LES SORTS Vous trouverez dans les chapitres suivants tous les renseignements concernant les lancers de sort, aussi bien en intérieur qu'en extérieur. Chaque personnage lanceur de sorts ne peut apprendre, pour un niveau donné, qu'un certain nombre de sorts (des moyens magiques peuvent faire augmenter ce nombre). Une fois lancé, un sort est totalement rayé de la mémoire, oublié ; mais il est possible que le personnage se rappelle encore d'autres sorts de même type : le personnage peut avoir mémorisé plusieurs fois le même sort, dans la limite du nombre de sorts autorisé par niveau. II est possible de lancer la plupart des sorts en un seul round bien que certains sorts — en particulier ceux de hauts niveaux — demandent plus de temps. Le fait de lancer des sorts demande certaines actions bien précises et si ces actions sont interrompues, il n'est pas possible de lancer le sort mais celui-ci est quand même effacé de la mémoire du personnage. Exemple : un magicien, au moment de lancer une boule de feu, est frappé d'une flèche alors qu'il n'en est qu'à la moitié du temps d'incantation du sort. Un silence magique, ou le fait de bâillonner le personnage, empêche de prononcer les composantes verbales (V). Une immobilisation magique empêche de lancer des sorts. Le fait de maîtriser un personnage l'empêche de lancer des sorts à composantes somatiques (S), car les gestes du lanceur de sorts doivent 101 L'AVENTURE être effectués avec précision. Mis à part ces restrictions, il est certain que les sorts sont des moyens d'attaque et de défense tout à fait valables, à condition que le personnage n'hésite pas : il doit savoir au début du round quel sort il va lancer. À mesure qu'il lance ses sorts, le personnage les raye de la liste de ceux qu'il a mémorisés. Il en va de même pour les composantes matérielles. Les sorts sur parchemins : On lance les sorts sur parchemins de la même façon que les autres sorts (mémorisés). Une fois lu et déclenché, l'écriture s'efface du parchemin car leurs propriétés et les énergies magiques sont contenues dans les caractères, runes, signes et autres mots écrits pour le sort en question, Étant écrits, les sorts sur parchemin ne nécessitent ni composantes matérielles ni somatiques. Le temps nécessaire pour lancer (lire) un sort sur parchemin est le même que pour le sort mémorisé. Ceci dans le cas où le parchemin est à portée de main et prêt à être lu. En général, les parchemins sont utilisés comme si un personnage de 12e niveau lançait le sort. Ceci peut entrainer des modifications de portée, de durée et de zone d'effet du sort ainsi que sur la puissance de certains sorts (projectile magique, boule de feu, foudre, etc.) Votre Maître de Donjon vous donnera d'autres informations concernant les parchemins le moment venu. L'AVENTURE Lorsque vous partirez en aventure, vous, et probablement plusieurs autres personnages, irez explorer un labyrinthe souterrain (un donjon) ou une région (en extérieur donc). Votre Maître de Donjon aura préparé une carte des lieux que vous visiterez ; cette carte contiendra toutes les informations nécessaires. Il vous donnera certains renseignements avant le départ de l'aventure — vous aurez peut-être à questionner la population ou bien vous entendrez des rumeurs ou des légendes — afin que votre groupe puisse s'équiper du mieux possible pour l'expédition, engager éventuellement des hommes d'armes, acheter des chevaux ou quoi que ce soit qui vous semble utile ou qui puisse vous aider à réussir votre aventure aussi bien en extérieur qu'en donjon. Bien entendu, le fait de s'aventurer dans une cité ou dans une ville peut être aussi très intéressant, plein d'enseignements et dangereux, et il est aussi possible de faire des aventures dans ce troisième espace : la cité ou la ville. Ces trois types d'aventures ont chacun des éléments en commun et des différences, chacun d'entre eux sera décrit dans les chapitres suivants. Votre MD dispose de toutes les informations possibles et nécessaires pour vous faire jouer dans chacun de ces endroits. Expéditions en donjons : Les aventures en labyrinthes souterrains sont les plus répandues. Le groupe s'équipe et entre dans les souterrains d'un château, d'un temple ou quoi que ce soit d'autre. Le groupe aura intérêt à s'équiper de sources de lumière, de perches pour sonder le terrain, de cordes, de pitons, etc. De plus, aucun des membres du groupe ne connaissant le parcours du donjon, il faudra faire une carte au fur et à mesure de la progression. Ainsi, vous pourrez trouver sans problème le chemin du retour. Comme votre groupe explorera et dressera sa carte, sa progression sera assez lente et il sera bon de prévoir une avantgarde et une arrière-garde musclées. Dans le donjon, vous trouverez des pièces — vides ou habitées —, des trappes pour engloutir les téméraires, des pièges pour attraper les imprudents, des monstres prêts à dévorer n'importe qui. En contrepartie, les récompenses seront grandes : de l'or, des gemmes et des objets magiques. Ces récompenses vous permettront de vous préparer encore mieux pour d'autres expéditions, de devenir plus habile dans votre profession, plus puissant. Pour cela, il suffit d'entrer et de ressortir après avoir tué les gardiens des trésors et empoché le magot... Explorations en extérieur : Les aventures dans des pays inconnus ou déserts sont extrêmement périlleuses car on y rencontre souvent des bandes d'hommes très nombreux, voire pire. C'est le domaine des monstres et des étendues sans fin et sans piste. Ces expéditions sont donc habituellement entreprises par des personnages de hauts niveaux, mais même des personnages débutants peuvent s'y aventurer pour une durée limitée ; votre Maître de Donjon pourra vous suggérer d'entreprendre une exploration — peut-être pour trouver une ruine, site du donjon, ou bien pour rechercher un clan de nains allié, etc. II est nécessaire d'avoir des chevaux ainsi que des rations, des armes de jet et tout le matériel nécessaire pour faire une carte. Dans les régions inconnues, la progression sera lente car votre groupe devra explorer, chercher des ennemis à défaire et des lieux tels que des temples, des donjons, etc. Si l’expédition dure plusieurs jours, le groupe devra peut-être chasser pour assurer sa subsistance à moins qu'il ne trouve un lieu habité — un village ou un hameau — dans lequel il lui arrivera peut-être d'autres types d'aventures. DÉPLACEMENTS L'AVENTURE Aventures citadines : Les cités, les villes et même les gros villages offrent un cadre parfait pour toute une série d'affaires et d'incidents toujours intéressant et rapportant souvent des informations tout en étant assez dangereux. Pour devenir un joueur actif dans une campagne, il faut aussi se mêler à la population, se choisir une habitation, acheter des vivres et de l'équipement, chercher des renseignements. Ces mêmes activités dans une ville étrangère demandent du doigté et de l'astuce. II faut faire attention à ce que l’on dit et fait. Des questions sur le rang d'un personnage, sa profession, son dieu ou son alignement sont à éviter et le fait de parler en langue d'alignement est tout à fait déplacé. On aura affaire à des mendiants, des bandits, des ivrognes, des marchands avares et roublards, des informateurs, des officiels ou des gardes qui poseront des questions auxquelles il vaudra mieux répondre. Les tavernes sont pleines de personnages utiles mais elles regorgent aussi d'adversaires rusés et dangereux. Et ne parlons pas des ruelles sombres la nuit... Et que trouve-t-on dans les ruines d'une ancienne cité ? Le pain et le vin des joueurs des Règles AVANCÉES de DONJONS & DRAGONS. La préparation de ces types d'aventures est très importante. Voici les données de base nécessaires pour vous préparer à une longue carrière. ENCOMBREMENT L'équipement que vous avez choisi d'emporter est à la fois lourd et volumineux. II est bon de s'équiper au maximum mais sans prendre trop de choses. Votre personnage ne pourra se déplacer normalement que s'il ne dépasse pas certaines limites d'encombrement. (Notez bien que le volume d'un objet peut être aussi encombrant que son poids : 10 kilos de plumes prennent une place considérable). Afin de pouvoir se servir de son équipement, le personnage doit avoir chaque objet à portée de la main, c'est là encore une considération à prendre en compte. Enfin le but des aventuriers étant de ramener des trésors, il est bon de prévoir des sacs et de la place pour pouvoir porter tout cet or. Le tableau ci-dessous vous donne une approximation du poids porté et de l’encombrement du personnage selon ses déplacements. Encombrement Déplacement Réaction et initiative Équipement normal — environ 18 kg et encombrement faible 12\" — le personnage peut courir vite",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-vision.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-vision.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-vision.js",
+        "composants_materiels": [
+          {
+            "slug": "sacrifice_de_quelque_chose_ayant_de_la_valeur_pour_le_lanceur_de_sort",
+            "nom": "Sacrifice de quelque chose ayant de la valeur pour le lanceur de sort",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué.",
+        "description_reelle": "Quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante ; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés ; un objet extrêmement précieux ajoutera +2 au tirage ; enfin, un objet sans prix, quasiment unique, ajoutera +3. SORTS DE NIVEAU 1 DE MAGICIEN Niveau : 7 Composantes : * Portée : * Temps d'incantation : * Durée : * Jet de protection : * Zone d'effet : * * fonction du sort approprié Explication/Description : l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7. LANCER LES SORTS Vous trouverez dans les chapitres suivants tous les renseignements concernant les lancers de sort, aussi bien en intérieur qu'en extérieur. Chaque personnage lanceur de sorts ne peut apprendre, pour un niveau donné, qu'un certain nombre de sorts (des moyens magiques peuvent faire augmenter ce nombre). Une fois lancé, un sort est totalement rayé de la mémoire, oublié ; mais il est possible que le personnage se rappelle encore d'autres sorts de même type : le personnage peut avoir mémorisé plusieurs fois le même sort, dans la limite du nombre de sorts autorisé par niveau. II est possible de lancer la plupart des sorts en un seul round bien que certains sorts — en particulier ceux de hauts niveaux — demandent plus de temps. Le fait de lancer des sorts demande certaines actions bien précises et si ces actions sont interrompues, il n'est pas possible de lancer le sort mais celui-ci est quand même effacé de la mémoire du personnage. Exemple : un magicien, au moment de lancer une boule de feu, est frappé d'une flèche alors qu'il n'en est qu'à la moitié du temps d'incantation du sort. Un silence magique, ou le fait de bâillonner le personnage, empêche de prononcer les composantes verbales (V). Une immobilisation magique empêche de lancer des sorts. Le fait de maîtriser un personnage l'empêche de lancer des sorts à composantes somatiques (S), car les gestes du lanceur de sorts doivent 101 L'AVENTURE être effectués avec précision. Mis à part ces restrictions, il est certain que les sorts sont des moyens d'attaque et de défense tout à fait valables, à condition que le personnage n'hésite pas : il doit savoir au début du round quel sort il va lancer. À mesure qu'il lance ses sorts, le personnage les raye de la liste de ceux qu'il a mémorisés. Il en va de même pour les composantes matérielles. Les sorts sur parchemins : On lance les sorts sur parchemins de la même façon que les autres sorts (mémorisés). Une fois lu et déclenché, l'écriture s'efface du parchemin car leurs propriétés et les énergies magiques sont contenues dans les caractères, runes, signes et autres mots écrits pour le sort en question, Étant écrits, les sorts sur parchemin ne nécessitent ni composantes matérielles ni somatiques. Le temps nécessaire pour lancer (lire) un sort sur parchemin est le même que pour le sort mémorisé. Ceci dans le cas où le parchemin est à portée de main et prêt à être lu. En général, les parchemins sont utilisés comme si un personnage de 12e niveau lançait le sort. Ceci peut entrainer des modifications de portée, de durée et de zone d'effet du sort ainsi que sur la puissance de certains sorts (projectile magique, boule de feu, foudre, etc.) Votre Maître de Donjon vous donnera d'autres informations concernant les parchemins le moment venu. L'AVENTURE Lorsque vous partirez en aventure, vous, et probablement plusieurs autres personnages, irez explorer un labyrinthe souterrain (un donjon) ou une région (en extérieur donc). Votre Maître de Donjon aura préparé une carte des lieux que vous visiterez ; cette carte contiendra toutes les informations nécessaires. Il vous donnera certains renseignements avant le départ de l'aventure — vous aurez peut-être à questionner la population ou bien vous entendrez des rumeurs ou des légendes — afin que votre groupe puisse s'équiper du mieux possible pour l'expédition, engager éventuellement des hommes d'armes, acheter des chevaux ou quoi que ce soit qui vous semble utile ou qui puisse vous aider à réussir votre aventure aussi bien en extérieur qu'en donjon. Bien entendu, le fait de s'aventurer dans une cité ou dans une ville peut être aussi très intéressant, plein d'enseignements et dangereux, et il est aussi possible de faire des aventures dans ce troisième espace : la cité ou la ville. Ces trois types d'aventures ont chacun des éléments en commun et des différences, chacun d'entre eux sera décrit dans les chapitres suivants. Votre MD dispose de toutes les informations possibles et nécessaires pour vous faire jouer dans chacun de ces endroits. Expéditions en donjons : Les aventures en labyrinthes souterrains sont les plus répandues. Le groupe s'équipe et entre dans les souterrains d'un château, d'un temple ou quoi que ce soit d'autre. Le groupe aura intérêt à s'équiper de sources de lumière, de perches pour sonder le terrain, de cordes, de pitons, etc. De plus, aucun des membres du groupe ne connaissant le parcours du donjon, il faudra faire une carte au fur et à mesure de la progression. Ainsi, vous pourrez trouver sans problème le chemin du retour. Comme votre groupe explorera et dressera sa carte, sa progression sera assez lente et il sera bon de prévoir une avantgarde et une arrière-garde musclées. Dans le donjon, vous trouverez des pièces — vides ou habitées —, des trappes pour engloutir les téméraires, des pièges pour attraper les imprudents, des monstres prêts à dévorer n'importe qui. En contrepartie, les récompenses seront grandes : de l'or, des gemmes et des objets magiques. Ces récompenses vous permettront de vous préparer encore mieux pour d'autres expéditions, de devenir plus habile dans votre profession, plus puissant. Pour cela, il suffit d'entrer et de ressortir après avoir tué les gardiens des trésors et empoché le magot... Explorations en extérieur : Les aventures dans des pays inconnus ou déserts sont extrêmement périlleuses car on y rencontre souvent des bandes d'hommes très nombreux, voire pire. C'est le domaine des monstres et des étendues sans fin et sans piste. Ces expéditions sont donc habituellement entreprises par des personnages de hauts niveaux, mais même des personnages débutants peuvent s'y aventurer pour une durée limitée ; votre Maître de Donjon pourra vous suggérer d'entreprendre une exploration — peut-être pour trouver une ruine, site du donjon, ou bien pour rechercher un clan de nains allié, etc. II est nécessaire d'avoir des chevaux ainsi que des rations, des armes de jet et tout le matériel nécessaire pour faire une carte. Dans les régions inconnues, la progression sera lente car votre groupe devra explorer, chercher des ennemis à défaire et des lieux tels que des temples, des donjons, etc. Si l’expédition dure plusieurs jours, le groupe devra peut-être chasser pour assurer sa subsistance à moins qu'il ne trouve un lieu habité — un village ou un hameau — dans lequel il lui arrivera peut-être d'autres types d'aventures. DÉPLACEMENTS L'AVENTURE Aventures citadines : Les cités, les villes et même les gros villages offrent un cadre parfait pour toute une série d'affaires et d'incidents toujours intéressant et rapportant souvent des informations tout en étant assez dangereux. Pour devenir un joueur actif dans une campagne, il faut aussi se mêler à la population, se choisir une habitation, acheter des vivres et de l'équipement, chercher des renseignements. Ces mêmes activités dans une ville étrangère demandent du doigté et de l'astuce. II faut faire attention à ce que l’on dit et fait. Des questions sur le rang d'un personnage, sa profession, son dieu ou son alignement sont à éviter et le fait de parler en langue d'alignement est tout à fait déplacé. On aura affaire à des mendiants, des bandits, des ivrognes, des marchands avares et roublards, des informateurs, des officiels ou des gardes qui poseront des questions auxquelles il vaudra mieux répondre. Les tavernes sont pleines de personnages utiles mais elles regorgent aussi d'adversaires rusés et dangereux. Et ne parlons pas des ruelles sombres la nuit... Et que trouve-t-on dans les ruines d'une ancienne cité ? Le pain et le vin des joueurs des Règles AVANCÉES de DONJONS & DRAGONS. La préparation de ces types d'aventures est très importante. Voici les données de base nécessaires pour vous préparer à une longue carrière. ENCOMBREMENT L'équipement que vous avez choisi d'emporter est à la fois lourd et volumineux. II est bon de s'équiper au maximum mais sans prendre trop de choses. Votre personnage ne pourra se déplacer normalement que s'il ne dépasse pas certaines limites d'encombrement. (Notez bien que le volume d'un objet peut être aussi encombrant que son poids : 10 kilos de plumes prennent une place considérable). Afin de pouvoir se servir de son équipement, le personnage doit avoir chaque objet à portée de la main, c'est là encore une considération à prendre en compte. Enfin le but des aventuriers étant de ramener des trésors, il est bon de prévoir des sacs et de la place pour pouvoir porter tout cet or. Le tableau ci-dessous vous donne une approximation du poids porté et de l’encombrement du personnage selon ses déplacements. Encombrement Déplacement Réaction et initiative Équipement normal — environ 18 kg et encombrement faible 12\" — le personnage peut courir vite",
+        "description_texte": "Quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante ; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés ; un objet extrêmement précieux ajoutera +2 au tirage ; enfin, un objet sans prix, quasiment unique, ajoutera +3. SORTS DE NIVEAU 1 DE MAGICIEN Niveau : 7 Composantes : * Portée : * Temps d'incantation : * Durée : * Jet de protection : * Zone d'effet : * * fonction du sort approprié Explication/Description : l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7. LANCER LES SORTS Vous trouverez dans les chapitres suivants tous les renseignements concernant les lancers de sort, aussi bien en intérieur qu'en extérieur. Chaque personnage lanceur de sorts ne peut apprendre, pour un niveau donné, qu'un certain nombre de sorts (des moyens magiques peuvent faire augmenter ce nombre). Une fois lancé, un sort est totalement rayé de la mémoire, oublié ; mais il est possible que le personnage se rappelle encore d'autres sorts de même type : le personnage peut avoir mémorisé plusieurs fois le même sort, dans la limite du nombre de sorts autorisé par niveau. II est possible de lancer la plupart des sorts en un seul round bien que certains sorts — en particulier ceux de hauts niveaux — demandent plus de temps. Le fait de lancer des sorts demande certaines actions bien précises et si ces actions sont interrompues, il n'est pas possible de lancer le sort mais celui-ci est quand même effacé de la mémoire du personnage. Exemple : un magicien, au moment de lancer une boule de feu, est frappé d'une flèche alors qu'il n'en est qu'à la moitié du temps d'incantation du sort. Un silence magique, ou le fait de bâillonner le personnage, empêche de prononcer les composantes verbales (V). Une immobilisation magique empêche de lancer des sorts. Le fait de maîtriser un personnage l'empêche de lancer des sorts à composantes somatiques (S), car les gestes du lanceur de sorts doivent 101 L'AVENTURE être effectués avec précision. Mis à part ces restrictions, il est certain que les sorts sont des moyens d'attaque et de défense tout à fait valables, à condition que le personnage n'hésite pas : il doit savoir au début du round quel sort il va lancer. À mesure qu'il lance ses sorts, le personnage les raye de la liste de ceux qu'il a mémorisés. Il en va de même pour les composantes matérielles. Les sorts sur parchemins : On lance les sorts sur parchemins de la même façon que les autres sorts (mémorisés). Une fois lu et déclenché, l'écriture s'efface du parchemin car leurs propriétés et les énergies magiques sont contenues dans les caractères, runes, signes et autres mots écrits pour le sort en question, Étant écrits, les sorts sur parchemin ne nécessitent ni composantes matérielles ni somatiques. Le temps nécessaire pour lancer (lire) un sort sur parchemin est le même que pour le sort mémorisé. Ceci dans le cas où le parchemin est à portée de main et prêt à être lu. En général, les parchemins sont utilisés comme si un personnage de 12e niveau lançait le sort. Ceci peut entrainer des modifications de portée, de durée et de zone d'effet du sort ainsi que sur la puissance de certains sorts (projectile magique, boule de feu, foudre, etc.) Votre Maître de Donjon vous donnera d'autres informations concernant les parchemins le moment venu. L'AVENTURE Lorsque vous partirez en aventure, vous, et probablement plusieurs autres personnages, irez explorer un labyrinthe souterrain (un donjon) ou une région (en extérieur donc). Votre Maître de Donjon aura préparé une carte des lieux que vous visiterez ; cette carte contiendra toutes les informations nécessaires. Il vous donnera certains renseignements avant le départ de l'aventure — vous aurez peut-être à questionner la population ou bien vous entendrez des rumeurs ou des légendes — afin que votre groupe puisse s'équiper du mieux possible pour l'expédition, engager éventuellement des hommes d'armes, acheter des chevaux ou quoi que ce soit qui vous semble utile ou qui puisse vous aider à réussir votre aventure aussi bien en extérieur qu'en donjon. Bien entendu, le fait de s'aventurer dans une cité ou dans une ville peut être aussi très intéressant, plein d'enseignements et dangereux, et il est aussi possible de faire des aventures dans ce troisième espace : la cité ou la ville. Ces trois types d'aventures ont chacun des éléments en commun et des différences, chacun d'entre eux sera décrit dans les chapitres suivants. Votre MD dispose de toutes les informations possibles et nécessaires pour vous faire jouer dans chacun de ces endroits. Expéditions en donjons : Les aventures en labyrinthes souterrains sont les plus répandues. Le groupe s'équipe et entre dans les souterrains d'un château, d'un temple ou quoi que ce soit d'autre. Le groupe aura intérêt à s'équiper de sources de lumière, de perches pour sonder le terrain, de cordes, de pitons, etc. De plus, aucun des membres du groupe ne connaissant le parcours du donjon, il faudra faire une carte au fur et à mesure de la progression. Ainsi, vous pourrez trouver sans problème le chemin du retour. Comme votre groupe explorera et dressera sa carte, sa progression sera assez lente et il sera bon de prévoir une avantgarde et une arrière-garde musclées. Dans le donjon, vous trouverez des pièces — vides ou habitées —, des trappes pour engloutir les téméraires, des pièges pour attraper les imprudents, des monstres prêts à dévorer n'importe qui. En contrepartie, les récompenses seront grandes : de l'or, des gemmes et des objets magiques. Ces récompenses vous permettront de vous préparer encore mieux pour d'autres expéditions, de devenir plus habile dans votre profession, plus puissant. Pour cela, il suffit d'entrer et de ressortir après avoir tué les gardiens des trésors et empoché le magot... Explorations en extérieur : Les aventures dans des pays inconnus ou déserts sont extrêmement périlleuses car on y rencontre souvent des bandes d'hommes très nombreux, voire pire. C'est le domaine des monstres et des étendues sans fin et sans piste. Ces expéditions sont donc habituellement entreprises par des personnages de hauts niveaux, mais même des personnages débutants peuvent s'y aventurer pour une durée limitée ; votre Maître de Donjon pourra vous suggérer d'entreprendre une exploration — peut-être pour trouver une ruine, site du donjon, ou bien pour rechercher un clan de nains allié, etc. II est nécessaire d'avoir des chevaux ainsi que des rations, des armes de jet et tout le matériel nécessaire pour faire une carte. Dans les régions inconnues, la progression sera lente car votre groupe devra explorer, chercher des ennemis à défaire et des lieux tels que des temples, des donjons, etc. Si l’expédition dure plusieurs jours, le groupe devra peut-être chasser pour assurer sa subsistance à moins qu'il ne trouve un lieu habité — un village ou un hameau — dans lequel il lui arrivera peut-être d'autres types d'aventures. DÉPLACEMENTS L'AVENTURE Aventures citadines : Les cités, les villes et même les gros villages offrent un cadre parfait pour toute une série d'affaires et d'incidents toujours intéressant et rapportant souvent des informations tout en étant assez dangereux. Pour devenir un joueur actif dans une campagne, il faut aussi se mêler à la population, se choisir une habitation, acheter des vivres et de l'équipement, chercher des renseignements. Ces mêmes activités dans une ville étrangère demandent du doigté et de l'astuce. II faut faire attention à ce que l’on dit et fait. Des questions sur le rang d'un personnage, sa profession, son dieu ou son alignement sont à éviter et le fait de parler en langue d'alignement est tout à fait déplacé. On aura affaire à des mendiants, des bandits, des ivrognes, des marchands avares et roublards, des informateurs, des officiels ou des gardes qui poseront des questions auxquelles il vaudra mieux répondre. Les tavernes sont pleines de personnages utiles mais elles regorgent aussi d'adversaires rusés et dangereux. Et ne parlons pas des ruelles sombres la nuit... Et que trouve-t-on dans les ruines d'une ancienne cité ? Le pain et le vin des joueurs des Règles AVANCÉES de DONJONS & DRAGONS. La préparation de ces types d'aventures est très importante. Voici les données de base nécessaires pour vous préparer à une longue carrière. ENCOMBREMENT L'équipement que vous avez choisi d'emporter est à la fois lourd et volumineux. II est bon de s'équiper au maximum mais sans prendre trop de choses. Votre personnage ne pourra se déplacer normalement que s'il ne dépasse pas certaines limites d'encombrement. (Notez bien que le volume d'un objet peut être aussi encombrant que son poids : 10 kilos de plumes prennent une place considérable). Afin de pouvoir se servir de son équipement, le personnage doit avoir chaque objet à portée de la main, c'est là encore une considération à prendre en compte. Enfin le but des aventuriers étant de ramener des trésors, il est bon de prévoir des sacs et de la place pour pouvoir porter tout cet or. Le tableau ci-dessous vous donne une approximation du poids porté et de l’encombrement du personnage selon ses déplacements. Encombrement Déplacement Réaction et initiative Équipement normal — environ 18 kg et encombrement faible 12\" — le personnage peut courir vite",
+        "description_html": "<p>Quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante ; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés ; un objet extrêmement précieux ajoutera +2 au tirage ; enfin, un objet sans prix, quasiment unique, ajoutera +3. SORTS DE NIVEAU 1 DE MAGICIEN Niveau : 7 Composantes : * Portée : * Temps d&#x27;incantation : * Durée : * Jet de protection : * Zone d&#x27;effet : * * fonction du sort approprié Explication/Description : l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7. LANCER LES SORTS Vous trouverez dans les chapitres suivants tous les renseignements concernant les lancers de sort, aussi bien en intérieur qu&#x27;en extérieur. Chaque personnage lanceur de sorts ne peut apprendre, pour un niveau donné, qu&#x27;un certain nombre de sorts (des moyens magiques peuvent faire augmenter ce nombre). Une fois lancé, un sort est totalement rayé de la mémoire, oublié ; mais il est possible que le personnage se rappelle encore d&#x27;autres sorts de même type : le personnage peut avoir mémorisé plusieurs fois le même sort, dans la limite du nombre de sorts autorisé par niveau. II est possible de lancer la plupart des sorts en un seul round bien que certains sorts — en particulier ceux de hauts niveaux — demandent plus de temps. Le fait de lancer des sorts demande certaines actions bien précises et si ces actions sont interrompues, il n&#x27;est pas possible de lancer le sort mais celui-ci est quand même effacé de la mémoire du personnage. Exemple : un magicien, au moment de lancer une boule de feu, est frappé d&#x27;une flèche alors qu&#x27;il n&#x27;en est qu&#x27;à la moitié du temps d&#x27;incantation du sort. Un silence magique, ou le fait de bâillonner le personnage, empêche de prononcer les composantes verbales (V). Une immobilisation magique empêche de lancer des sorts. Le fait de maîtriser un personnage l&#x27;empêche de lancer des sorts à composantes somatiques (S), car les gestes du lanceur de sorts doivent 101 L&#x27;AVENTURE être effectués avec précision. Mis à part ces restrictions, il est certain que les sorts sont des moyens d&#x27;attaque et de défense tout à fait valables, à condition que le personnage n&#x27;hésite pas : il doit savoir au début du round quel sort il va lancer. À mesure qu&#x27;il lance ses sorts, le personnage les raye de la liste de ceux qu&#x27;il a mémorisés. Il en va de même pour les composantes matérielles. Les sorts sur parchemins : On lance les sorts sur parchemins de la même façon que les autres sorts (mémorisés). Une fois lu et déclenché, l&#x27;écriture s&#x27;efface du parchemin car leurs propriétés et les énergies magiques sont contenues dans les caractères, runes, signes et autres mots écrits pour le sort en question, Étant écrits, les sorts sur parchemin ne nécessitent ni composantes matérielles ni somatiques. Le temps nécessaire pour lancer (lire) un sort sur parchemin est le même que pour le sort mémorisé. Ceci dans le cas où le parchemin est à portée de main et prêt à être lu. En général, les parchemins sont utilisés comme si un personnage de 12e niveau lançait le sort. Ceci peut entrainer des modifications de portée, de durée et de zone d&#x27;effet du sort ainsi que sur la puissance de certains sorts (projectile magique, boule de feu, foudre, etc.) Votre Maître de Donjon vous donnera d&#x27;autres informations concernant les parchemins le moment venu. L&#x27;AVENTURE Lorsque vous partirez en aventure, vous, et probablement plusieurs autres personnages, irez explorer un labyrinthe souterrain (un donjon) ou une région (en extérieur donc). Votre Maître de Donjon aura préparé une carte des lieux que vous visiterez ; cette carte contiendra toutes les informations nécessaires. Il vous donnera certains renseignements avant le départ de l&#x27;aventure — vous aurez peut-être à questionner la population ou bien vous entendrez des rumeurs ou des légendes — afin que votre groupe puisse s&#x27;équiper du mieux possible pour l&#x27;expédition, engager éventuellement des hommes d&#x27;armes, acheter des chevaux ou quoi que ce soit qui vous semble utile ou qui puisse vous aider à réussir votre aventure aussi bien en extérieur qu&#x27;en donjon. Bien entendu, le fait de s&#x27;aventurer dans une cité ou dans une ville peut être aussi très intéressant, plein d&#x27;enseignements et dangereux, et il est aussi possible de faire des aventures dans ce troisième espace : la cité ou la ville. Ces trois types d&#x27;aventures ont chacun des éléments en commun et des différences, chacun d&#x27;entre eux sera décrit dans les chapitres suivants. Votre MD dispose de toutes les informations possibles et nécessaires pour vous faire jouer dans chacun de ces endroits. Expéditions en donjons : Les aventures en labyrinthes souterrains sont les plus répandues. Le groupe s&#x27;équipe et entre dans les souterrains d&#x27;un château, d&#x27;un temple ou quoi que ce soit d&#x27;autre. Le groupe aura intérêt à s&#x27;équiper de sources de lumière, de perches pour sonder le terrain, de cordes, de pitons, etc. De plus, aucun des membres du groupe ne connaissant le parcours du donjon, il faudra faire une carte au fur et à mesure de la progression. Ainsi, vous pourrez trouver sans problème le chemin du retour. Comme votre groupe explorera et dressera sa carte, sa progression sera assez lente et il sera bon de prévoir une avantgarde et une arrière-garde musclées. Dans le donjon, vous trouverez des pièces — vides ou habitées —, des trappes pour engloutir les téméraires, des pièges pour attraper les imprudents, des monstres prêts à dévorer n&#x27;importe qui. En contrepartie, les récompenses seront grandes : de l&#x27;or, des gemmes et des objets magiques. Ces récompenses vous permettront de vous préparer encore mieux pour d&#x27;autres expéditions, de devenir plus habile dans votre profession, plus puissant. Pour cela, il suffit d&#x27;entrer et de ressortir après avoir tué les gardiens des trésors et empoché le magot... Explorations en extérieur : Les aventures dans des pays inconnus ou déserts sont extrêmement périlleuses car on y rencontre souvent des bandes d&#x27;hommes très nombreux, voire pire. C&#x27;est le domaine des monstres et des étendues sans fin et sans piste. Ces expéditions sont donc habituellement entreprises par des personnages de hauts niveaux, mais même des personnages débutants peuvent s&#x27;y aventurer pour une durée limitée ; votre Maître de Donjon pourra vous suggérer d&#x27;entreprendre une exploration — peut-être pour trouver une ruine, site du donjon, ou bien pour rechercher un clan de nains allié, etc. II est nécessaire d&#x27;avoir des chevaux ainsi que des rations, des armes de jet et tout le matériel nécessaire pour faire une carte. Dans les régions inconnues, la progression sera lente car votre groupe devra explorer, chercher des ennemis à défaire et des lieux tels que des temples, des donjons, etc. Si l’expédition dure plusieurs jours, le groupe devra peut-être chasser pour assurer sa subsistance à moins qu&#x27;il ne trouve un lieu habité — un village ou un hameau — dans lequel il lui arrivera peut-être d&#x27;autres types d&#x27;aventures. DÉPLACEMENTS L&#x27;AVENTURE Aventures citadines : Les cités, les villes et même les gros villages offrent un cadre parfait pour toute une série d&#x27;affaires et d&#x27;incidents toujours intéressant et rapportant souvent des informations tout en étant assez dangereux. Pour devenir un joueur actif dans une campagne, il faut aussi se mêler à la population, se choisir une habitation, acheter des vivres et de l&#x27;équipement, chercher des renseignements. Ces mêmes activités dans une ville étrangère demandent du doigté et de l&#x27;astuce. II faut faire attention à ce que l’on dit et fait. Des questions sur le rang d&#x27;un personnage, sa profession, son dieu ou son alignement sont à éviter et le fait de parler en langue d&#x27;alignement est tout à fait déplacé. On aura affaire à des mendiants, des bandits, des ivrognes, des marchands avares et roublards, des informateurs, des officiels ou des gardes qui poseront des questions auxquelles il vaudra mieux répondre. Les tavernes sont pleines de personnages utiles mais elles regorgent aussi d&#x27;adversaires rusés et dangereux. Et ne parlons pas des ruelles sombres la nuit... Et que trouve-t-on dans les ruines d&#x27;une ancienne cité ? Le pain et le vin des joueurs des Règles AVANCÉES de DONJONS &amp; DRAGONS. La préparation de ces types d&#x27;aventures est très importante. Voici les données de base nécessaires pour vous préparer à une longue carrière. ENCOMBREMENT L&#x27;équipement que vous avez choisi d&#x27;emporter est à la fois lourd et volumineux. II est bon de s&#x27;équiper au maximum mais sans prendre trop de choses. Votre personnage ne pourra se déplacer normalement que s&#x27;il ne dépasse pas certaines limites d&#x27;encombrement. (Notez bien que le volume d&#x27;un objet peut être aussi encombrant que son poids : 10 kilos de plumes prennent une place considérable). Afin de pouvoir se servir de son équipement, le personnage doit avoir chaque objet à portée de la main, c&#x27;est là encore une considération à prendre en compte. Enfin le but des aventuriers étant de ramener des trésors, il est bon de prévoir des sacs et de la place pour pouvoir porter tout cet or. Le tableau ci-dessous vous donne une approximation du poids porté et de l’encombrement du personnage selon ses déplacements. Encombrement Déplacement Réaction et initiative Équipement normal — environ 18 kg et encombrement faible 12&quot; — le personnage peut courir vite</p>"
+      },
+      "effects": [
+        {
+          "name": "Vision",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:7",
+                "sort:vision",
+                "vision",
+                "divination",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-vision.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.cMjaK1zyxvGmRcMY",
+          "_id": "VBGqXejwq5nRymhx",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568684,
+            "modifiedTime": 1780340568684
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:34:29.145Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-vision.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 7",
+          "sourceFolderId": "cdW1LT8gWlPp1P7T",
+          "exportedAt": "2026-05-22T09:57:29.900Z"
+        }
+      },
+      "folder": "JNbBcfJ0JnmyPxeA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.cMjaK1zyxvGmRcMY",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568684,
+        "modifiedTime": 1780340568684,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "1FDkJAlbuzYtOUON",
+      "sort": 0
+    }
+  ]
+}

@@ -1,0 +1,2866 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "clerc",
+    "niveau": 3,
+    "key": "clerc-niveau-3",
+    "count": 11
+  },
+  "folders": [
+    {
+      "name": "Clerc",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "xnt5dJBZCkmFcXJf",
+      "description": "",
+      "sort": 500000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566745,
+        "modifiedTime": 1780340566745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 3",
+      "type": "Item",
+      "folder": "xnt5dJBZCkmFcXJf",
+      "sorting": "a",
+      "_id": "nVwHVJGLpzDmmNFR",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566744,
+        "modifiedTime": 1780340566744,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Désenvoûtement",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/delivrance-de-la-malediction.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "0",
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "créature ou objet touché",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "1",
+          "unite": "créature ou objet"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "6",
+          "unite": "segments"
+        },
+        "description": "En lançant ce sort, un clerc est normalement capable de lever une malédiction, qu’elle soit sur un objet, sur une personne ou sous la forme d’une présence indésirable et mauvaise. Ce sort n’affecte pas les armes, les armures ou les boucliers maudits par exemple ; néanmoins, ce sort permet à une personne portant un tel objet maudit de s’en débarrasser. L’inverse de ce sort, envoûtement, n’est pas permanent ; il dure pendant 1 tour par niveau du clerc qui lance le sort. Lancé sur une personne, le sort d’envoûtement aura l’un des effets suivants, déterminé par un jet de pourcentage : (1-50) amener une de ses caractéristiques (tirée au hasard par le MD) à 3 ; (51-75) altérer sa probabilité de toucher et ses jets de protection avec un malus de –4 ; (76–100) de lui faire lâcher 1 fois sur 2 par tour ce qu’elle tient dans les mains (ou rien si la personne n’a rien dans les mains). Un clerc peut inventer son propre envoûtement, mais il devra être similaire à ceux cités ci-dessus. Dans ce cas, il est préférable de consulter le MD. La victime d’un envoûtement doit être touchée par le clerc. Si elle l’est, elle a droit à un jet de protection qui, s’il est réussi, annulera les effets de cette malédiction.",
+        "onUse": "systems/add2e/scripts/sorts/delivrance-de-la-malediction.js",
+        "onuse": "systems/add2e/scripts/sorts/delivrance-de-la-malediction.js",
+        "portée": {
+          "valeur": "0",
+          "unite": "toucher"
+        },
+        "durée": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/delivrance-de-la-malediction.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "En lançant ce sort, un clerc est normalement capable de lever une malédiction, qu’elle soit sur un objet, sur une personne ou sous la forme d’une présence indésirable et mauvaise. Ce sort n’affecte pas les armes, les armures ou les boucliers maudits par exemple ; néanmoins, ce sort permet à une personne portant un tel objet maudit de s’en débarrasser. L’inverse de ce sort, envoûtement, n’est pas permanent ; il dure pendant 1 tour par niveau du clerc qui lance le sort. Lancé sur une personne, le sort d’envoûtement aura l’un des effets suivants, déterminé par un jet de pourcentage : (1-50) amener une de ses caractéristiques (tirée au hasard par le MD) à 3 ; (51-75) altérer sa probabilité de toucher et ses jets de protection avec un malus de –4 ; (76–100) de lui faire lâcher 1 fois sur 2 par tour ce qu’elle tient dans les mains (ou rien si la personne n’a rien dans les mains). Un clerc peut inventer son propre envoûtement, mais il devra être similaire à ceux cités ci-dessus. Dans ce cas, il est préférable de consulter le MD. La victime d’un envoûtement doit être touchée par le clerc. Si elle l’est, elle a droit à un jet de protection qui, s’il est réussi, annulera les effets de cette malédiction.",
+        "description_texte": "En lançant ce sort, un clerc est normalement capable de lever une malédiction, qu’elle soit sur un objet, sur une personne ou sous la forme d’une présence indésirable et mauvaise. Ce sort n’affecte pas les armes, les armures ou les boucliers maudits par exemple ; néanmoins, ce sort permet à une personne portant un tel objet maudit de s’en débarrasser. L’inverse de ce sort, envoûtement, n’est pas permanent ; il dure pendant 1 tour par niveau du clerc qui lance le sort. Lancé sur une personne, le sort d’envoûtement aura l’un des effets suivants, déterminé par un jet de pourcentage : (1-50) amener une de ses caractéristiques (tirée au hasard par le MD) à 3 ; (51-75) altérer sa probabilité de toucher et ses jets de protection avec un malus de –4 ; (76–100) de lui faire lâcher 1 fois sur 2 par tour ce qu’elle tient dans les mains (ou rien si la personne n’a rien dans les mains). Un clerc peut inventer son propre envoûtement, mais il devra être similaire à ceux cités ci-dessus. Dans ce cas, il est préférable de consulter le MD. La victime d’un envoûtement doit être touchée par le clerc. Si elle l’est, elle a droit à un jet de protection qui, s’il est réussi, annulera les effets de cette malédiction.",
+        "description_html": "<p>En lançant ce sort, un clerc est normalement capable de lever une malédiction, qu’elle soit sur un objet, sur une personne ou sous la forme d’une présence indésirable et mauvaise. Ce sort n’affecte pas les armes, les armures ou les boucliers maudits par exemple ; néanmoins, ce sort permet à une personne portant un tel objet maudit de s’en débarrasser. L’inverse de ce sort, envoûtement, n’est pas permanent ; il dure pendant 1 tour par niveau du clerc qui lance le sort. Lancé sur une personne, le sort d’envoûtement aura l’un des effets suivants, déterminé par un jet de pourcentage : (1-50) amener une de ses caractéristiques (tirée au hasard par le MD) à 3 ; (51-75) altérer sa probabilité de toucher et ses jets de protection avec un malus de –4 ; (76–100) de lui faire lâcher 1 fois sur 2 par tour ce qu’elle tient dans les mains (ou rien si la personne n’a rien dans les mains). Un clerc peut inventer son propre envoûtement, mais il devra être similaire à ceux cités ci-dessus. Dans ce cas, il est préférable de consulter le MD. La victime d’un envoûtement doit être touchée par le clerc. Si elle l’est, elle a droit à un jet de protection qui, s’il est réussi, annulera les effets de cette malédiction.</p>"
+      },
+      "effects": [
+        {
+          "name": "Délivrance de la Malédiction",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:delivrance_de_la_malediction",
+                "retire:malediction",
+                "reversible:malediction",
+                "abjuration",
+                "sort:desenvoutement",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/delivrance-de-la-malediction.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.67U7NyUB59xZWPuK",
+          "_id": "6QQtPDBueWodYesg",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567127,
+            "modifiedTime": 1780340567127
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Délivrance de la Malédiction",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:delivrance_de_la_malediction",
+                "retire:malediction",
+                "reversible:malediction",
+                "abjuration",
+                "sort:desenvoutement",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/delivrance-de-la-malediction.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.67U7NyUB59xZWPuK",
+          "_id": "rDgu3ZagfTBdSM6L",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567127,
+            "modifiedTime": 1780340567127
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Délivrance de la Malédiction",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:delivrance_de_la_malediction",
+                "retire:malediction",
+                "reversible:malediction",
+                "abjuration",
+                "sort:desenvoutement",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/delivrance-de-la-malediction.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.67U7NyUB59xZWPuK",
+          "_id": "mUus1wsekXBjJAGG",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567127,
+            "modifiedTime": 1780340567127
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:14.004Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/delivrance-de-la-malediction.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.67U7NyUB59xZWPuK",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567127,
+        "modifiedTime": 1780340567127,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "D4M1z3FJEUq8qUZN",
+      "sort": 0
+    },
+    {
+      "name": "Dissipation de la Magie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/dissipation-de-la-magie.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": 6,
+          "unite": "pouces"
+        },
+        "duree": {
+          "valeur": "permanente si réussi",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "cube ou cible magique",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "effet magique",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "6",
+          "unite": "segments"
+        },
+        "description": "Quand un clerc lance ce sort, il neutralise ou annule les magies suivantes : il détruit les potions magiques (elles sont considérées comme étant de niveau 12) ; il annule les effets des sorts lancés sur des personnes ou des objets ; il contre le lancement de sorts lancés dans la zone d’effet. Par contre, il ne peut dissiper la magie contenue dans les parchemins, les anneaux magiques, les bâtons, baguettes et bâtonnets, les armes magiques, les objets magiques divers, les armures magiques et les boucliers magiques. Lancé sur un objet magique de ce type — et seulement sur cet objet, pas ailleurs ni sur quelque chose d’autre en même temps — le sort se contente d’annuler les pouvoirs de cet objet pour le round qui suit (cet objet aura droit à un jet de protection s'il est porté par quelqu'un).. Les chances de base de réussir une dissipation de la magie sont de 50 %. Pour chaque niveau d’expérience supérieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, les chances de base augmentent de 5 %. Pour chaque niveau inférieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, la chance est réduite de 2 %.Ce sort peut être très efficace contre les créatures charmées ou séduites. C’est automatique pour annuler la magie lancée par le clerc lui-même.",
+        "onUse": "systems/add2e/scripts/sorts/dissipation-de-la-magie.js",
+        "onuse": "systems/add2e/scripts/sorts/dissipation-de-la-magie.js",
+        "portée": {
+          "valeur": 6,
+          "unite": "pouces"
+        },
+        "durée": {
+          "valeur": "permanente si réussi",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/dissipation-de-la-magie.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand un clerc lance ce sort, il neutralise ou annule les magies suivantes : il détruit les potions magiques (elles sont considérées comme étant de niveau 12) ; il annule les effets des sorts lancés sur des personnes ou des objets ; il contre le lancement de sorts lancés dans la zone d’effet. Par contre, il ne peut dissiper la magie contenue dans les parchemins, les anneaux magiques, les bâtons, baguettes et bâtonnets, les armes magiques, les objets magiques divers, les armures magiques et les boucliers magiques. Lancé sur un objet magique de ce type — et seulement sur cet objet, pas ailleurs ni sur quelque chose d’autre en même temps — le sort se contente d’annuler les pouvoirs de cet objet pour le round qui suit (cet objet aura droit à un jet de protection s'il est porté par quelqu'un).. Les chances de base de réussir une dissipation de la magie sont de 50 %. Pour chaque niveau d’expérience supérieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, les chances de base augmentent de 5 %. Pour chaque niveau inférieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, la chance est réduite de 2 %.Ce sort peut être très efficace contre les créatures charmées ou séduites. C’est automatique pour annuler la magie lancée par le clerc lui-même.",
+        "description_texte": "Quand un clerc lance ce sort, il neutralise ou annule les magies suivantes : il détruit les potions magiques (elles sont considérées comme étant de niveau 12) ; il annule les effets des sorts lancés sur des personnes ou des objets ; il contre le lancement de sorts lancés dans la zone d’effet. Par contre, il ne peut dissiper la magie contenue dans les parchemins, les anneaux magiques, les bâtons, baguettes et bâtonnets, les armes magiques, les objets magiques divers, les armures magiques et les boucliers magiques. Lancé sur un objet magique de ce type — et seulement sur cet objet, pas ailleurs ni sur quelque chose d’autre en même temps — le sort se contente d’annuler les pouvoirs de cet objet pour le round qui suit (cet objet aura droit à un jet de protection s'il est porté par quelqu'un).. Les chances de base de réussir une dissipation de la magie sont de 50 %. Pour chaque niveau d’expérience supérieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, les chances de base augmentent de 5 %. Pour chaque niveau inférieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, la chance est réduite de 2 %.Ce sort peut être très efficace contre les créatures charmées ou séduites. C’est automatique pour annuler la magie lancée par le clerc lui-même.",
+        "description_html": "<p>Quand un clerc lance ce sort, il neutralise ou annule les magies suivantes : il détruit les potions magiques (elles sont considérées comme étant de niveau 12) ; il annule les effets des sorts lancés sur des personnes ou des objets ; il contre le lancement de sorts lancés dans la zone d’effet. Par contre, il ne peut dissiper la magie contenue dans les parchemins, les anneaux magiques, les bâtons, baguettes et bâtonnets, les armes magiques, les objets magiques divers, les armures magiques et les boucliers magiques. Lancé sur un objet magique de ce type — et seulement sur cet objet, pas ailleurs ni sur quelque chose d’autre en même temps — le sort se contente d’annuler les pouvoirs de cet objet pour le round qui suit (cet objet aura droit à un jet de protection s&#x27;il est porté par quelqu&#x27;un).. Les chances de base de réussir une dissipation de la magie sont de 50 %. Pour chaque niveau d’expérience supérieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, les chances de base augmentent de 5 %. Pour chaque niveau inférieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, la chance est réduite de 2 %.Ce sort peut être très efficace contre les créatures charmées ou séduites. C’est automatique pour annuler la magie lancée par le clerc lui-même.</p>"
+      },
+      "effects": [
+        {
+          "name": "Dissipation de la Magie",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:dissipation_de_la_magie",
+                "dissipation:magie",
+                "abjuration",
+                "anti_magie",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/dissipation-de-la-magie.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.YycV2Z8DYscQjwZ7",
+          "_id": "7C1Nvbho1xZdsXC4",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568097,
+            "modifiedTime": 1780340568097
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Dissipation de la Magie",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:dissipation_de_la_magie",
+                "dissipation:magie",
+                "abjuration",
+                "anti_magie",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/dissipation-de-la-magie.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.YycV2Z8DYscQjwZ7",
+          "_id": "Y3TI5A6NCI3SkCrN",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568097,
+            "modifiedTime": 1780340568097
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Dissipation de la Magie",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:dissipation_de_la_magie",
+                "dissipation:magie",
+                "abjuration",
+                "anti_magie",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/dissipation-de-la-magie.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.YycV2Z8DYscQjwZ7",
+          "_id": "VhCaOI8jGAEbKI6y",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568097,
+            "modifiedTime": 1780340568097
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:21.499Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/dissipation-de-la-magie.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.YycV2Z8DYscQjwZ7",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568097,
+        "modifiedTime": 1780340568097,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "XEcAG3l135UrSgp1",
+      "sort": 0
+    },
+    {
+      "name": "Glyphe de Garde",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/glyphe-de-garde.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Abjuration/Évocation",
+        "portee": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "jusqu’à déclenchement",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "surface ou ouverture protégée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "glyphe",
+          "unite": "piège magique"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Un glyphe de garde est une inscription puissante tracée magiquement pour se garder des créatures hostiles, pour les empêcher de passer, d’entrer quelque part ou d’ouvrir quelque chose. Il peut être utilisé pour garder un petit pont, le pas d’une porte, un coffre, etc. Quand le sort est lancé, le clerc trace des lignes légèrement brillantes devant le lieu ou l’objet à protéger. Quand l’incantation est terminée, la marque devient invisible, mais toute créature touchant la zone gardée sans prononcer le nom du glyphe sera victime de la magie placée dans ce glyphe, magie qu’aura lui-même instaurée le clerc selon les pouvoirs qu’il possède. Un jet de protection réduit les effets de moitié ou les annule selon la magie placée dans le glyphe. Pour chaque portion de 30 cm x 30 cm de la zone à protéger, un segment est nécessaire pour tracer le glyphe, plus un segment initial pour préparer la zone. Une surface maximale de 1,5 x 1,5 mètre par niveau du clerc peut être protégée. Le clerc doit encenser l’endroit à protéger et, si cette zone excède 4,5 m², il doit également la saupoudrer avec la poudre d’un diamant d’une valeur d’au moins 2.000 po. Les glyphes les plus courants infligent une décharge électrique ou infligent des dégâts par le feu, causant la perte de 2 points de vie par niveau du clerc, ou rendent aveugles, paralysent ou même drainent un niveau d’énergie si le clerc est assez puissant.",
+        "onUse": "systems/add2e/scripts/sorts/glyphe-de-garde.js",
+        "onuse": "systems/add2e/scripts/sorts/glyphe-de-garde.js",
+        "portée": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "durée": {
+          "valeur": "jusqu’à déclenchement",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration/Évocation",
+        "on_use": "systems/add2e/scripts/sorts/glyphe-de-garde.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre_du_clerc",
+            "nom": "Symbole sacré du clerc",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Un glyphe de garde est une inscription puissante tracée magiquement pour se garder des créatures hostiles, pour les empêcher de passer, d’entrer quelque part ou d’ouvrir quelque chose. Il peut être utilisé pour garder un petit pont, le pas d’une porte, un coffre, etc. Quand le sort est lancé, le clerc trace des lignes légèrement brillantes devant le lieu ou l’objet à protéger. Quand l’incantation est terminée, la marque devient invisible, mais toute créature touchant la zone gardée sans prononcer le nom du glyphe sera victime de la magie placée dans ce glyphe, magie qu’aura lui-même instaurée le clerc selon les pouvoirs qu’il possède. Un jet de protection réduit les effets de moitié ou les annule selon la magie placée dans le glyphe. Pour chaque portion de 30 cm x 30 cm de la zone à protéger, un segment est nécessaire pour tracer le glyphe, plus un segment initial pour préparer la zone. Une surface maximale de 1,5 x 1,5 mètre par niveau du clerc peut être protégée. Le clerc doit encenser l’endroit à protéger et, si cette zone excède 4,5 m², il doit également la saupoudrer avec la poudre d’un diamant d’une valeur d’au moins 2.000 po. Les glyphes les plus courants infligent une décharge électrique ou infligent des dégâts par le feu, causant la perte de 2 points de vie par niveau du clerc, ou rendent aveugles, paralysent ou même drainent un niveau d’énergie si le clerc est assez puissant.",
+        "description_texte": "Un glyphe de garde est une inscription puissante tracée magiquement pour se garder des créatures hostiles, pour les empêcher de passer, d’entrer quelque part ou d’ouvrir quelque chose. Il peut être utilisé pour garder un petit pont, le pas d’une porte, un coffre, etc. Quand le sort est lancé, le clerc trace des lignes légèrement brillantes devant le lieu ou l’objet à protéger. Quand l’incantation est terminée, la marque devient invisible, mais toute créature touchant la zone gardée sans prononcer le nom du glyphe sera victime de la magie placée dans ce glyphe, magie qu’aura lui-même instaurée le clerc selon les pouvoirs qu’il possède. Un jet de protection réduit les effets de moitié ou les annule selon la magie placée dans le glyphe. Pour chaque portion de 30 cm x 30 cm de la zone à protéger, un segment est nécessaire pour tracer le glyphe, plus un segment initial pour préparer la zone. Une surface maximale de 1,5 x 1,5 mètre par niveau du clerc peut être protégée. Le clerc doit encenser l’endroit à protéger et, si cette zone excède 4,5 m², il doit également la saupoudrer avec la poudre d’un diamant d’une valeur d’au moins 2.000 po. Les glyphes les plus courants infligent une décharge électrique ou infligent des dégâts par le feu, causant la perte de 2 points de vie par niveau du clerc, ou rendent aveugles, paralysent ou même drainent un niveau d’énergie si le clerc est assez puissant.",
+        "description_html": "<p>Un glyphe de garde est une inscription puissante tracée magiquement pour se garder des créatures hostiles, pour les empêcher de passer, d’entrer quelque part ou d’ouvrir quelque chose. Il peut être utilisé pour garder un petit pont, le pas d’une porte, un coffre, etc. Quand le sort est lancé, le clerc trace des lignes légèrement brillantes devant le lieu ou l’objet à protéger. Quand l’incantation est terminée, la marque devient invisible, mais toute créature touchant la zone gardée sans prononcer le nom du glyphe sera victime de la magie placée dans ce glyphe, magie qu’aura lui-même instaurée le clerc selon les pouvoirs qu’il possède. Un jet de protection réduit les effets de moitié ou les annule selon la magie placée dans le glyphe. Pour chaque portion de 30 cm x 30 cm de la zone à protéger, un segment est nécessaire pour tracer le glyphe, plus un segment initial pour préparer la zone. Une surface maximale de 1,5 x 1,5 mètre par niveau du clerc peut être protégée. Le clerc doit encenser l’endroit à protéger et, si cette zone excède 4,5 m², il doit également la saupoudrer avec la poudre d’un diamant d’une valeur d’au moins 2.000 po. Les glyphes les plus courants infligent une décharge électrique ou infligent des dégâts par le feu, causant la perte de 2 points de vie par niveau du clerc, ou rendent aveugles, paralysent ou même drainent un niveau d’énergie si le clerc est assez puissant.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "symbole sacré du clerc",
+        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément"
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "effects": [
+        {
+          "name": "Glyphe de Garde",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:glyphe_de_garde",
+                "glyphe:garde",
+                "piege:magique",
+                "abjuration",
+                "ecole:abjuration_evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/glyphe-de-garde.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.KiLcDE6UDXSsWL0r",
+          "_id": "6Voqw323ehaCvzo6",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567879,
+            "modifiedTime": 1780340567879
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Glyphe de Garde",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:glyphe_de_garde",
+                "glyphe:garde",
+                "piege:magique",
+                "abjuration",
+                "ecole:abjuration_evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/glyphe-de-garde.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.KiLcDE6UDXSsWL0r",
+          "_id": "I1WyQ5s8YtVikPIh",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567879,
+            "modifiedTime": 1780340567879
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Glyphe de Garde",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:glyphe_de_garde",
+                "glyphe:garde",
+                "piege:magique",
+                "abjuration",
+                "ecole:abjuration_evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/glyphe-de-garde.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.KiLcDE6UDXSsWL0r",
+          "_id": "dbV2EWXpMwbr9dHq",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567879,
+            "modifiedTime": 1780340567879
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/glyphe-de-garde.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:01.151Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.KiLcDE6UDXSsWL0r",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567879,
+        "modifiedTime": 1780340567879,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "upRGuCu26UmMcTaN",
+      "sort": 0
+    },
+    {
+      "name": "Guérison de la Cécité",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/guerison-de-la-cecite-ou-de-la-surdite.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "0",
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "créature touchée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "1",
+          "unite": "créature"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "En touchant la créature aveugle, le clerc peut lui rendre la vue. Il peut guérir pratiquement toutes les formes de cécité. Le sort ne régénère cependant pas les organes détruits à la suite de blessures ou de maladies. L’inverse du sort, cécité, rend une victime aveugle, mais le clerc doit alors réussir un jet pour toucher et la victime a le droit à un jet de protection qui, s’il est réussit, annule les effets du sort.",
+        "onUse": "systems/add2e/scripts/sorts/guerison-de-la-cecite-ou-de-la-surdite.js",
+        "onuse": "systems/add2e/scripts/sorts/guerison-de-la-cecite-ou-de-la-surdite.js",
+        "portée": {
+          "valeur": "0",
+          "unite": "toucher"
+        },
+        "durée": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/guerison-de-la-cecite-ou-de-la-surdite.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "En touchant la créature aveugle, le clerc peut lui rendre la vue. Il peut guérir pratiquement toutes les formes de cécité. Le sort ne régénère cependant pas les organes détruits à la suite de blessures ou de maladies. L’inverse du sort, cécité, rend une victime aveugle, mais le clerc doit alors réussir un jet pour toucher et la victime a le droit à un jet de protection qui, s’il est réussit, annule les effets du sort.",
+        "description_texte": "En touchant la créature aveugle, le clerc peut lui rendre la vue. Il peut guérir pratiquement toutes les formes de cécité. Le sort ne régénère cependant pas les organes détruits à la suite de blessures ou de maladies. L’inverse du sort, cécité, rend une victime aveugle, mais le clerc doit alors réussir un jet pour toucher et la victime a le droit à un jet de protection qui, s’il est réussit, annule les effets du sort.",
+        "description_html": "<p>En touchant la créature aveugle, le clerc peut lui rendre la vue. Il peut guérir pratiquement toutes les formes de cécité. Le sort ne régénère cependant pas les organes détruits à la suite de blessures ou de maladies. L’inverse du sort, cécité, rend une victime aveugle, mais le clerc doit alors réussir un jet pour toucher et la victime a le droit à un jet de protection qui, s’il est réussit, annule les effets du sort.</p>"
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "effects": [
+        {
+          "name": "Guérison de la Cécité ou de la Surdité",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:guerison_de_la_cecite_ou_de_la_surdite",
+                "retire:cecite",
+                "retire:surdite",
+                "soin:etat",
+                "sort:guerison_de_la_cecite",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/guerison-de-la-cecite-ou-de-la-surdite.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.UHDwD9iDarIKAlrB",
+          "_id": "UJu1z9YoegM4JnBE",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568022,
+            "modifiedTime": 1780340568022
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Guérison de la Cécité ou de la Surdité",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:guerison_de_la_cecite_ou_de_la_surdite",
+                "retire:cecite",
+                "retire:surdite",
+                "soin:etat",
+                "sort:guerison_de_la_cecite",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/guerison-de-la-cecite-ou-de-la-surdite.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.UHDwD9iDarIKAlrB",
+          "_id": "1cj5lG1Bk1y6RLza",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568022,
+            "modifiedTime": 1780340568022
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Guérison de la Cécité ou de la Surdité",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:guerison_de_la_cecite_ou_de_la_surdite",
+                "retire:cecite",
+                "retire:surdite",
+                "soin:etat",
+                "sort:guerison_de_la_cecite",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/guerison-de-la-cecite-ou-de-la-surdite.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.UHDwD9iDarIKAlrB",
+          "_id": "uxpgFPCyyk2fMOFg",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568022,
+            "modifiedTime": 1780340568022
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/guerison-de-la-cecite-ou-de-la-surdite.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:05.160Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.UHDwD9iDarIKAlrB",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568022,
+        "modifiedTime": 1780340568022,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "WS0WlZcSPXN3BzVj",
+      "sort": 0
+    },
+    {
+      "name": "Guérison des Maladies",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/guerison-des-maladies.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "créature touchée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "créature malade"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "Avec ce sort, le clerc peut guérir pratiquement toutes les maladies, dont les maladies bactériennes, virales ou parasitaires, en posant la main sur la créature malade. La maladie disparaît ensuite rapidement, le malade retrouvant un état normal dans une période allant de 1 tour à une semaine (cela dépend de la gravité de la maladie et de son stade d’avancement au moment de la guérison). L’inverse du sort, contamination, provoque une maladie chez la créature touchée ; mais pour infliger cette maladie, le clerc réussir un jet pour toucher la créature ; la victime a alors le droit à un jet de protection, qui, s’il est réussi, annule les effets du sort. Si le jet de protection est raté, la maladie commencera à affecter la victime dans un délai de 1 à 6 tours, ce qui lui causera la perte d’1 point de vie par tour et 1 point de force par heure, jusqu’à ce qu’elle n’ait plus que 10 % de ses points vie originels et 10 % de sa force ; arrivé à ce stade, la victime malade est faible et virtuellement impuissante.",
+        "onUse": "systems/add2e/scripts/sorts/guerison-des-maladies.js",
+        "onuse": "systems/add2e/scripts/sorts/guerison-des-maladies.js",
+        "portée": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "durée": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/guerison-des-maladies.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, le clerc peut guérir pratiquement toutes les maladies, dont les maladies bactériennes, virales ou parasitaires, en posant la main sur la créature malade. La maladie disparaît ensuite rapidement, le malade retrouvant un état normal dans une période allant de 1 tour à une semaine (cela dépend de la gravité de la maladie et de son stade d’avancement au moment de la guérison). L’inverse du sort, contamination, provoque une maladie chez la créature touchée ; mais pour infliger cette maladie, le clerc réussir un jet pour toucher la créature ; la victime a alors le droit à un jet de protection, qui, s’il est réussi, annule les effets du sort. Si le jet de protection est raté, la maladie commencera à affecter la victime dans un délai de 1 à 6 tours, ce qui lui causera la perte d’1 point de vie par tour et 1 point de force par heure, jusqu’à ce qu’elle n’ait plus que 10 % de ses points vie originels et 10 % de sa force ; arrivé à ce stade, la victime malade est faible et virtuellement impuissante.",
+        "description_texte": "Avec ce sort, le clerc peut guérir pratiquement toutes les maladies, dont les maladies bactériennes, virales ou parasitaires, en posant la main sur la créature malade. La maladie disparaît ensuite rapidement, le malade retrouvant un état normal dans une période allant de 1 tour à une semaine (cela dépend de la gravité de la maladie et de son stade d’avancement au moment de la guérison). L’inverse du sort, contamination, provoque une maladie chez la créature touchée ; mais pour infliger cette maladie, le clerc réussir un jet pour toucher la créature ; la victime a alors le droit à un jet de protection, qui, s’il est réussi, annule les effets du sort. Si le jet de protection est raté, la maladie commencera à affecter la victime dans un délai de 1 à 6 tours, ce qui lui causera la perte d’1 point de vie par tour et 1 point de force par heure, jusqu’à ce qu’elle n’ait plus que 10 % de ses points vie originels et 10 % de sa force ; arrivé à ce stade, la victime malade est faible et virtuellement impuissante.",
+        "description_html": "<p>Avec ce sort, le clerc peut guérir pratiquement toutes les maladies, dont les maladies bactériennes, virales ou parasitaires, en posant la main sur la créature malade. La maladie disparaît ensuite rapidement, le malade retrouvant un état normal dans une période allant de 1 tour à une semaine (cela dépend de la gravité de la maladie et de son stade d’avancement au moment de la guérison). L’inverse du sort, contamination, provoque une maladie chez la créature touchée ; mais pour infliger cette maladie, le clerc réussir un jet pour toucher la créature ; la victime a alors le droit à un jet de protection, qui, s’il est réussi, annule les effets du sort. Si le jet de protection est raté, la maladie commencera à affecter la victime dans un délai de 1 à 6 tours, ce qui lui causera la perte d’1 point de vie par tour et 1 point de force par heure, jusqu’à ce qu’elle n’ait plus que 10 % de ses points vie originels et 10 % de sa force ; arrivé à ce stade, la victime malade est faible et virtuellement impuissante.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Guérison des Maladies",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:guerison_des_maladies",
+                "retire:maladie",
+                "soin:maladie",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/guerison-des-maladies.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.pmcP5ELew7Jdywb4",
+          "_id": "xEiAdSt0ALyBhxM6",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569370,
+            "modifiedTime": 1780340569370
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Guérison des Maladies",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:guerison_des_maladies",
+                "retire:maladie",
+                "soin:maladie",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/guerison-des-maladies.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.pmcP5ELew7Jdywb4",
+          "_id": "6vfMa1hoQEXdETb6",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569370,
+            "modifiedTime": 1780340569370
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Guérison des Maladies",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:guerison_des_maladies",
+                "retire:maladie",
+                "soin:maladie",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/guerison-des-maladies.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.pmcP5ELew7Jdywb4",
+          "_id": "soT6QqWbwJRfsBmt",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569370,
+            "modifiedTime": 1780340569370
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:07.359Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/guerison-des-maladies.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.pmcP5ELew7Jdywb4",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569370,
+        "modifiedTime": 1780340569370,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "YCzH60fklmXZm4NG",
+      "sort": 0
+    },
+    {
+      "name": "Localisation d’un Objet",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/localisation-d-un-objet.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": 6,
+          "unite": "pouces + 1 pouce par niveau"
+        },
+        "duree": {
+          "valeur": "1 round par niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "direction de recherche",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "objet connu ou décrit",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "tour"
+        },
+        "description": "Ce sort aide à localiser un objet connu ou familier. Le clerc lance le sort, tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet à découvrir, tant que cet objet se trouve dans la portée du sort. Ce sort demande une pierre aimantée comme composante matérielle. On peut localiser des objets tels que : un bijou, un outil, une arme ou même une échelle ou un escalier. L’inverse de ce sort, dissimulation d'objets, permet au clerc de protéger un objet d’une telle détection, d’une localisation par boule de cristal ou par des moyens similaires. Aucune application du sort ne fonctionne sur un être vivant.",
+        "onUse": "systems/add2e/scripts/sorts/localisation-d-un-objet.js",
+        "onuse": "systems/add2e/scripts/sorts/localisation-d-un-objet.js",
+        "portée": {
+          "valeur": 6,
+          "unite": "pouces + 1 pouce par niveau"
+        },
+        "durée": {
+          "valeur": "1 round par niveau",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/localisation-d-un-objet.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre_du_clerc",
+            "nom": "Symbole sacré du clerc",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort aide à localiser un objet connu ou familier. Le clerc lance le sort, tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet à découvrir, tant que cet objet se trouve dans la portée du sort. Ce sort demande une pierre aimantée comme composante matérielle. On peut localiser des objets tels que : un bijou, un outil, une arme ou même une échelle ou un escalier. L’inverse de ce sort, dissimulation d'objets, permet au clerc de protéger un objet d’une telle détection, d’une localisation par boule de cristal ou par des moyens similaires. Aucune application du sort ne fonctionne sur un être vivant.",
+        "description_texte": "Ce sort aide à localiser un objet connu ou familier. Le clerc lance le sort, tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet à découvrir, tant que cet objet se trouve dans la portée du sort. Ce sort demande une pierre aimantée comme composante matérielle. On peut localiser des objets tels que : un bijou, un outil, une arme ou même une échelle ou un escalier. L’inverse de ce sort, dissimulation d'objets, permet au clerc de protéger un objet d’une telle détection, d’une localisation par boule de cristal ou par des moyens similaires. Aucune application du sort ne fonctionne sur un être vivant.",
+        "description_html": "<p>Ce sort aide à localiser un objet connu ou familier. Le clerc lance le sort, tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet à découvrir, tant que cet objet se trouve dans la portée du sort. Ce sort demande une pierre aimantée comme composante matérielle. On peut localiser des objets tels que : un bijou, un outil, une arme ou même une échelle ou un escalier. L’inverse de ce sort, dissimulation d&#x27;objets, permet au clerc de protéger un objet d’une telle détection, d’une localisation par boule de cristal ou par des moyens similaires. Aucune application du sort ne fonctionne sur un être vivant.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "symbole sacré du clerc",
+        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément"
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "effects": [
+        {
+          "name": "Localisation d’un Objet",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:localisation_d_un_objet",
+                "detection:objet",
+                "divination",
+                "localisation",
+                "sort:localisation_dun_objet",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/localisation-d-un-objet.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kqBAX4JoZbnTLR2f",
+          "_id": "0DtXKVsOmsYJn4xR",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568825,
+            "modifiedTime": 1780340568825
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Localisation d’un Objet",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:localisation_d_un_objet",
+                "detection:objet",
+                "divination",
+                "localisation",
+                "sort:localisation_dun_objet",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/localisation-d-un-objet.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kqBAX4JoZbnTLR2f",
+          "_id": "A1GN1sHUANX7STew",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568825,
+            "modifiedTime": 1780340568825
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Localisation d’un Objet",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:localisation_d_un_objet",
+                "detection:objet",
+                "divination",
+                "localisation",
+                "sort:localisation_dun_objet",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/localisation-d-un-objet.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kqBAX4JoZbnTLR2f",
+          "_id": "1IZhTPj2ZQUQ5ggz",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568825,
+            "modifiedTime": 1780340568825
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/localisation-d-un-objet.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:56.385Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.kqBAX4JoZbnTLR2f",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568825,
+        "modifiedTime": 1780340568825,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "JYPI9EQRzXnTBajE",
+      "sort": 0
+    },
+    {
+      "name": "Lumière éternelle",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/lumiere-continuelle.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "12",
+          "unite": "pouces"
+        },
+        "duree": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "rayon lumineux",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "objet, point ou créature",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "6",
+          "unite": "segments"
+        },
+        "description": "Ce sort est similaire au sort lumière excepté qu’il dure jusqu’à ce qu’il soit annulé par les sorts ténèbres éternelles ou dissipation de la magie. La lumière créée est très vive (pratiquement comme en plein jour). Le sort peut être lancé sur un objet, dans les airs ou sur une créature. Dans ce dernier cas, la lumière se crée et affecte l’espace à 30 cm derrière la créature si la victime a réussi son jet de protection. Ce sort aveuglera si le jet de protection est raté. L’inverse du sort, ténèbres éternelles, crée une obscurité totale.",
+        "onUse": "systems/add2e/scripts/sorts/lumiere-continuelle.js",
+        "onuse": "systems/add2e/scripts/sorts/lumiere-continuelle.js",
+        "portée": {
+          "valeur": "12",
+          "unite": "pouces"
+        },
+        "durée": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/lumiere-continuelle.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est similaire au sort lumière excepté qu’il dure jusqu’à ce qu’il soit annulé par les sorts ténèbres éternelles ou dissipation de la magie. La lumière créée est très vive (pratiquement comme en plein jour). Le sort peut être lancé sur un objet, dans les airs ou sur une créature. Dans ce dernier cas, la lumière se crée et affecte l’espace à 30 cm derrière la créature si la victime a réussi son jet de protection. Ce sort aveuglera si le jet de protection est raté. L’inverse du sort, ténèbres éternelles, crée une obscurité totale.",
+        "description_texte": "Ce sort est similaire au sort lumière excepté qu’il dure jusqu’à ce qu’il soit annulé par les sorts ténèbres éternelles ou dissipation de la magie. La lumière créée est très vive (pratiquement comme en plein jour). Le sort peut être lancé sur un objet, dans les airs ou sur une créature. Dans ce dernier cas, la lumière se crée et affecte l’espace à 30 cm derrière la créature si la victime a réussi son jet de protection. Ce sort aveuglera si le jet de protection est raté. L’inverse du sort, ténèbres éternelles, crée une obscurité totale.",
+        "description_html": "<p>Ce sort est similaire au sort lumière excepté qu’il dure jusqu’à ce qu’il soit annulé par les sorts ténèbres éternelles ou dissipation de la magie. La lumière créée est très vive (pratiquement comme en plein jour). Le sort peut être lancé sur un objet, dans les airs ou sur une créature. Dans ce dernier cas, la lumière se crée et affecte l’espace à 30 cm derrière la créature si la victime a réussi son jet de protection. Ce sort aveuglera si le jet de protection est raté. L’inverse du sort, ténèbres éternelles, crée une obscurité totale.</p>"
+      },
+      "effects": [
+        {
+          "name": "Lumière Continuelle",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:lumiere_continuelle",
+                "lumiere:continuelle",
+                "permanent",
+                "reversible:tenebres_continuelles",
+                "sort:lumiere_eternelle",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/lumiere-continuelle.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.voHDZ5FEsYM0XFT7",
+          "_id": "SQ60HMbVaVUzLO2M",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569455,
+            "modifiedTime": 1780340569455
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Lumière Continuelle",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:lumiere_continuelle",
+                "lumiere:continuelle",
+                "permanent",
+                "reversible:tenebres_continuelles",
+                "sort:lumiere_eternelle",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/lumiere-continuelle.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.voHDZ5FEsYM0XFT7",
+          "_id": "PHKQZqlw1HGTHBIx",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569455,
+            "modifiedTime": 1780340569455
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Lumière Continuelle",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:lumiere_continuelle",
+                "lumiere:continuelle",
+                "permanent",
+                "reversible:tenebres_continuelles",
+                "sort:lumiere_eternelle",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/lumiere-continuelle.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.voHDZ5FEsYM0XFT7",
+          "_id": "r0NcdgW7LwRVjjst",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569455,
+            "modifiedTime": 1780340569455
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:05.217Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/lumiere-continuelle.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.voHDZ5FEsYM0XFT7",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569455,
+        "modifiedTime": 1780340569455,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "MOvZkfwTwOmPaoo6",
+      "sort": 0
+    },
+    {
+      "name": "Manne",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/creation-de-nourriture-et-d-eau.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "1",
+          "unite": "pouce"
+        },
+        "duree": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "nourriture et eau créées",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "rationnement",
+          "unite": "créatures"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "tour"
+        },
+        "description": "Quand ce sort est lancé, le clerc fait apparaître de l’eau et de la nourriture. Les aliments créés sont très nourrissants et pour chacun de ses niveaux, le clerc peut créer de quoi rassasier 3 créatures de taille humaine ou une créature de la taille d’un cheval, et ce pour une journée entière. Pour chaque niveau que le clerc a atteint, il peur créer 27 dm³ de nourriture et/ou d’eau, c.-à-d. 54 dm³ au niveau 2, 81 dm³ au niveau 3, 108 dm³ au niveau 4, etc. ; ou alors, le clerc peut créer nourriture et eau en quantités égales : 27 dm³ d'aliments et 27 dm³ d'eau au niveau 2, etc.",
+        "onUse": "systems/add2e/scripts/sorts/creation-de-nourriture-et-d-eau.js",
+        "onuse": "systems/add2e/scripts/sorts/creation-de-nourriture-et-d-eau.js",
+        "portée": {
+          "valeur": "1",
+          "unite": "pouce"
+        },
+        "durée": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/creation-de-nourriture-et-d-eau.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "Quand ce sort est lancé, le clerc fait apparaître de l’eau et de la nourriture. Les aliments créés sont très nourrissants et pour chacun de ses niveaux, le clerc peut créer de quoi rassasier 3 créatures de taille humaine ou une créature de la taille d’un cheval, et ce pour une journée entière. Pour chaque niveau que le clerc a atteint, il peur créer 27 dm³ de nourriture et/ou d’eau, c.-à-d. 54 dm³ au niveau 2, 81 dm³ au niveau 3, 108 dm³ au niveau 4, etc. ; ou alors, le clerc peut créer nourriture et eau en quantités égales : 27 dm³ d'aliments et 27 dm³ d'eau au niveau 2, etc.",
+        "description_texte": "Quand ce sort est lancé, le clerc fait apparaître de l’eau et de la nourriture. Les aliments créés sont très nourrissants et pour chacun de ses niveaux, le clerc peut créer de quoi rassasier 3 créatures de taille humaine ou une créature de la taille d’un cheval, et ce pour une journée entière. Pour chaque niveau que le clerc a atteint, il peur créer 27 dm³ de nourriture et/ou d’eau, c.-à-d. 54 dm³ au niveau 2, 81 dm³ au niveau 3, 108 dm³ au niveau 4, etc. ; ou alors, le clerc peut créer nourriture et eau en quantités égales : 27 dm³ d'aliments et 27 dm³ d'eau au niveau 2, etc.",
+        "description_html": "<p>Quand ce sort est lancé, le clerc fait apparaître de l’eau et de la nourriture. Les aliments créés sont très nourrissants et pour chacun de ses niveaux, le clerc peut créer de quoi rassasier 3 créatures de taille humaine ou une créature de la taille d’un cheval, et ce pour une journée entière. Pour chaque niveau que le clerc a atteint, il peur créer 27 dm³ de nourriture et/ou d’eau, c.-à-d. 54 dm³ au niveau 2, 81 dm³ au niveau 3, 108 dm³ au niveau 4, etc. ; ou alors, le clerc peut créer nourriture et eau en quantités égales : 27 dm³ d&#x27;aliments et 27 dm³ d&#x27;eau au niveau 2, etc.</p>"
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "effects": [
+        {
+          "name": "Création de Nourriture et d’Eau",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:creation_de_nourriture_et_d_eau",
+                "creation:nourriture",
+                "creation:eau",
+                "ration",
+                "sort:manne",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/creation-de-nourriture-et-d-eau.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.I1tDxHJDmgqAxVtR",
+          "_id": "ZzegJOo5znZW9UEO",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567305,
+            "modifiedTime": 1780340567305
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Création de Nourriture et d’Eau",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:creation_de_nourriture_et_d_eau",
+                "creation:nourriture",
+                "creation:eau",
+                "ration",
+                "sort:manne",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/creation-de-nourriture-et-d-eau.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.I1tDxHJDmgqAxVtR",
+          "_id": "Rt1wNF1F29QLfY5n",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567305,
+            "modifiedTime": 1780340567305
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Création de Nourriture et d’Eau",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:creation_de_nourriture_et_d_eau",
+                "creation:nourriture",
+                "creation:eau",
+                "ration",
+                "sort:manne",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/creation-de-nourriture-et-d-eau.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.I1tDxHJDmgqAxVtR",
+          "_id": "ATK6rK9V4d5FVKMf",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567305,
+            "modifiedTime": 1780340567305
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/creation-de-nourriture-et-d-eau.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:17.720Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.I1tDxHJDmgqAxVtR",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567305,
+        "modifiedTime": 1780340567305,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "mKVH2qdZQt1lTD7R",
+      "sort": 0
+    },
+    {
+      "name": "Nécro animation",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/animation-des-morts.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "1",
+          "unite": "pouce"
+        },
+        "duree": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "restes corporels disponibles",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "cadavres ou ossements",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "À partir des os et des corps d’humains morts, ce sort crée les plus faibles des morts-vivants : des squelettes et des zombies. Le sort anime ces « restes » qui obéissent alors au clerc qui a lancé le sort. Les morts-vivants suivront le clerc ou défendront une place qu’il aura désignée (ou alors attaqueront une créature spécifique). Le sort animera les morts-vivants jusqu’à ce qu’ils soient détruits ou jusqu’à ce que la magie soit dissipée (voir le sort dissipation de la magie p.46). Le clerc peut animer un squelette ou un zombie pour chaque niveau d’expérience qu’il a atteint. Ainsi, un clerc de niveau 2 peut animer 2 de ces morts-vivants, un clerc de niveau 3 peut en animer 3, etc. L’acte d’animer des morts n’est pas bon en soi et doit être utilisé avec précaution par des clercs d’alignement bon. Comme composantes matérielles, ce sort demande une goutte de sang, un morceau de chair humaine et une pincée d’os en poudre ou une écharde d’os.",
+        "onUse": "systems/add2e/scripts/sorts/animation-des-morts.js",
+        "onuse": "systems/add2e/scripts/sorts/animation-des-morts.js",
+        "portée": {
+          "valeur": "1",
+          "unite": "pouce"
+        },
+        "durée": {
+          "valeur": "permanente",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/animation-des-morts.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre_du_clerc",
+            "nom": "Symbole sacré du clerc",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "À partir des os et des corps d’humains morts, ce sort crée les plus faibles des morts-vivants : des squelettes et des zombies. Le sort anime ces « restes » qui obéissent alors au clerc qui a lancé le sort. Les morts-vivants suivront le clerc ou défendront une place qu’il aura désignée (ou alors attaqueront une créature spécifique). Le sort animera les morts-vivants jusqu’à ce qu’ils soient détruits ou jusqu’à ce que la magie soit dissipée (voir le sort dissipation de la magie p.46). Le clerc peut animer un squelette ou un zombie pour chaque niveau d’expérience qu’il a atteint. Ainsi, un clerc de niveau 2 peut animer 2 de ces morts-vivants, un clerc de niveau 3 peut en animer 3, etc. L’acte d’animer des morts n’est pas bon en soi et doit être utilisé avec précaution par des clercs d’alignement bon. Comme composantes matérielles, ce sort demande une goutte de sang, un morceau de chair humaine et une pincée d’os en poudre ou une écharde d’os.",
+        "description_texte": "À partir des os et des corps d’humains morts, ce sort crée les plus faibles des morts-vivants : des squelettes et des zombies. Le sort anime ces « restes » qui obéissent alors au clerc qui a lancé le sort. Les morts-vivants suivront le clerc ou défendront une place qu’il aura désignée (ou alors attaqueront une créature spécifique). Le sort animera les morts-vivants jusqu’à ce qu’ils soient détruits ou jusqu’à ce que la magie soit dissipée (voir le sort dissipation de la magie p.46). Le clerc peut animer un squelette ou un zombie pour chaque niveau d’expérience qu’il a atteint. Ainsi, un clerc de niveau 2 peut animer 2 de ces morts-vivants, un clerc de niveau 3 peut en animer 3, etc. L’acte d’animer des morts n’est pas bon en soi et doit être utilisé avec précaution par des clercs d’alignement bon. Comme composantes matérielles, ce sort demande une goutte de sang, un morceau de chair humaine et une pincée d’os en poudre ou une écharde d’os.",
+        "description_html": "<p>À partir des os et des corps d’humains morts, ce sort crée les plus faibles des morts-vivants : des squelettes et des zombies. Le sort anime ces « restes » qui obéissent alors au clerc qui a lancé le sort. Les morts-vivants suivront le clerc ou défendront une place qu’il aura désignée (ou alors attaqueront une créature spécifique). Le sort animera les morts-vivants jusqu’à ce qu’ils soient détruits ou jusqu’à ce que la magie soit dissipée (voir le sort dissipation de la magie p.46). Le clerc peut animer un squelette ou un zombie pour chaque niveau d’expérience qu’il a atteint. Ainsi, un clerc de niveau 2 peut animer 2 de ces morts-vivants, un clerc de niveau 3 peut en animer 3, etc. L’acte d’animer des morts n’est pas bon en soi et doit être utilisé avec précaution par des clercs d’alignement bon. Comme composantes matérielles, ce sort demande une goutte de sang, un morceau de chair humaine et une pincée d’os en poudre ou une écharde d’os.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "symbole sacré du clerc",
+        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément"
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "effects": [
+        {
+          "name": "Animation des Morts",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:animation_des_morts",
+                "necromancie",
+                "creation:mort_vivant",
+                "controle:mort_vivant",
+                "permanent",
+                "sort:necro_animation",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/animation-des-morts.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.SJzFcVgixP0EpjfY",
+          "_id": "0FLGHStiBI4S5hkg",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567987,
+            "modifiedTime": 1780340567987
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Animation des Morts",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:animation_des_morts",
+                "necromancie",
+                "creation:mort_vivant",
+                "controle:mort_vivant",
+                "permanent",
+                "sort:necro_animation",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/animation-des-morts.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.SJzFcVgixP0EpjfY",
+          "_id": "cdh9kHvTQoAMdXH1",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567987,
+            "modifiedTime": 1780340567987
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Animation des Morts",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:animation_des_morts",
+                "necromancie",
+                "creation:mort_vivant",
+                "controle:mort_vivant",
+                "permanent",
+                "sort:necro_animation",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/animation-des-morts.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.SJzFcVgixP0EpjfY",
+          "_id": "2fqtuP5Q5sYFTKUG",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567987,
+            "modifiedTime": 1780340567987
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/animation-des-morts.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:47.731Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.892Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.SJzFcVgixP0EpjfY",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567987,
+        "modifiedTime": 1780340567987,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "J03xF2w0p1eUArSJ",
+      "sort": 0
+    },
+    {
+      "name": "Nécromancie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/communication-avec-les-morts.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "1",
+          "unite": "pouce"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "une créature morte",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "cadavre ou restes",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "tour"
+        },
+        "description": "En lançant ce sort, le clerc peut poser plusieurs questions à une créature morte depuis une période de temps précise et recevoir des réponses en fonction des connaissances de la créature morte. Le clerc doit être capable de converser dans la langue de la créature morte. Le temps depuis lequel la créature est morte est un facteur à prendre en compte car seuls les clercs les plus puissants peuvent parler avec des créatures décédées depuis longtemps. De la même manière, le nombre de questions et la durée du sort dépendent aussi du niveau du clerc. Ce dernier a besoin de son symbole sacré ; il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés. Niveau d'expérience Temps maximum écoulé depuis la mort Durée du sort Nombre de questions 6e et moins 1 semaine 1 round 2 7e-8e 1 mois 3 rounds 3 9e-12e 1 année 1 tour 4 13e-15e 10 ans 2 tours 5 16e-20e 100 ans 3 tours 6 21e et plus 1.000 ans 6 tours 7",
+        "onUse": "systems/add2e/scripts/sorts/communication-avec-les-morts.js",
+        "onuse": "systems/add2e/scripts/sorts/communication-avec-les-morts.js",
+        "portée": {
+          "valeur": "1",
+          "unite": "pouce"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/communication-avec-les-morts.js",
+        "composants_materiels": [
+          {
+            "slug": "son_symbole_sacre",
+            "nom": "Son symbole sacré",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "a besoin de son symbole sacré | il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "En lançant ce sort, le clerc peut poser plusieurs questions à une créature morte depuis une période de temps précise et recevoir des réponses en fonction des connaissances de la créature morte. Le clerc doit être capable de converser dans la langue de la créature morte. Le temps depuis lequel la créature est morte est un facteur à prendre en compte car seuls les clercs les plus puissants peuvent parler avec des créatures décédées depuis longtemps. De la même manière, le nombre de questions et la durée du sort dépendent aussi du niveau du clerc. Ce dernier a besoin de son symbole sacré ; il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés. Niveau d'expérience Temps maximum écoulé depuis la mort Durée du sort Nombre de questions 6e et moins 1 semaine 1 round 2 7e-8e 1 mois 3 rounds 3 9e-12e 1 année 1 tour 4 13e-15e 10 ans 2 tours 5 16e-20e 100 ans 3 tours 6 21e et plus 1.000 ans 6 tours 7",
+        "description_texte": "En lançant ce sort, le clerc peut poser plusieurs questions à une créature morte depuis une période de temps précise et recevoir des réponses en fonction des connaissances de la créature morte. Le clerc doit être capable de converser dans la langue de la créature morte. Le temps depuis lequel la créature est morte est un facteur à prendre en compte car seuls les clercs les plus puissants peuvent parler avec des créatures décédées depuis longtemps. De la même manière, le nombre de questions et la durée du sort dépendent aussi du niveau du clerc. Ce dernier a besoin de son symbole sacré ; il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés. Niveau d'expérience Temps maximum écoulé depuis la mort Durée du sort Nombre de questions 6e et moins 1 semaine 1 round 2 7e-8e 1 mois 3 rounds 3 9e-12e 1 année 1 tour 4 13e-15e 10 ans 2 tours 5 16e-20e 100 ans 3 tours 6 21e et plus 1.000 ans 6 tours 7",
+        "description_html": "<p>En lançant ce sort, le clerc peut poser plusieurs questions à une créature morte depuis une période de temps précise et recevoir des réponses en fonction des connaissances de la créature morte. Le clerc doit être capable de converser dans la langue de la créature morte. Le temps depuis lequel la créature est morte est un facteur à prendre en compte car seuls les clercs les plus puissants peuvent parler avec des créatures décédées depuis longtemps. De la même manière, le nombre de questions et la durée du sort dépendent aussi du niveau du clerc. Ce dernier a besoin de son symbole sacré ; il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés. Niveau d&#x27;expérience Temps maximum écoulé depuis la mort Durée du sort Nombre de questions 6e et moins 1 semaine 1 round 2 7e-8e 1 mois 3 rounds 3 9e-12e 1 année 1 tour 4 13e-15e 10 ans 2 tours 5 16e-20e 100 ans 3 tours 6 21e et plus 1.000 ans 6 tours 7</p>"
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "effects": [
+        {
+          "name": "Communication avec les Morts",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:communication_avec_les_morts",
+                "communication:morts",
+                "question:cadavre",
+                "necromancie",
+                "sort:necromancie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/communication-avec-les-morts.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.h86HjtdJTHtMXzgX",
+          "_id": "9eFgCB5F7h50gw1w",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568768,
+            "modifiedTime": 1780340568768
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Communication avec les Morts",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:communication_avec_les_morts",
+                "communication:morts",
+                "question:cadavre",
+                "necromancie",
+                "sort:necromancie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/communication-avec-les-morts.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.h86HjtdJTHtMXzgX",
+          "_id": "cnebElZELgS1Pzkf",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568768,
+            "modifiedTime": 1780340568768
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Communication avec les Morts",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:communication_avec_les_morts",
+                "communication:morts",
+                "question:cadavre",
+                "necromancie",
+                "sort:necromancie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/communication-avec-les-morts.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.h86HjtdJTHtMXzgX",
+          "_id": "TG27230k72qCBCfC",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568768,
+            "modifiedTime": 1780340568768
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/communication-avec-les-morts.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:48.012Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.892Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.h86HjtdJTHtMXzgX",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568768,
+        "modifiedTime": 1780340568768,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "Q2bKJDwPnQ49figr",
+      "sort": 0
+    },
+    {
+      "name": "Prière",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/priere.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": 0,
+          "unite": "personnel"
+        },
+        "duree": {
+          "valeur": "1 round par niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": 6,
+          "unite": "pouces de rayon"
+        },
+        "cible": {
+          "valeur": "zone",
+          "unite": "alliés et ennemis"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "6",
+          "unite": "segments"
+        },
+        "description": "Ce sort a les mêmes effets que le sort cantique en ce qui concerne le bonus de +1 pour les amis et –1 pour les ennemis pour les probabilités de toucher, la détermination des dommages et les jets de protection. Cependant, le clerc peut entreprendre autre chose une fois que la prière est terminée (c'est-à-dire l’incantation). Le clerc a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation. SORTS DE NIVEAU 4",
+        "onUse": "systems/add2e/scripts/sorts/priere.js",
+        "onuse": "systems/add2e/scripts/sorts/priere.js",
+        "portée": {
+          "valeur": 0,
+          "unite": "personnel"
+        },
+        "durée": {
+          "valeur": "1 round par niveau",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/priere.js",
+        "composants_materiels": [
+          {
+            "slug": "son_symbole_religieux_en_argent",
+            "nom": "Son symbole religieux en argent",
+            "quantite": 1,
+            "consomme": false
+          },
+          {
+            "slug": "son_chapelet_de_priere",
+            "nom": "Son chapelet de prière",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation",
+        "description_reelle": "Ce sort a les mêmes effets que le sort cantique en ce qui concerne le bonus de +1 pour les amis et –1 pour les ennemis pour les probabilités de toucher, la détermination des dommages et les jets de protection. Cependant, le clerc peut entreprendre autre chose une fois que la prière est terminée (c'est-à-dire l’incantation). Le clerc a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation. SORTS DE NIVEAU 4",
+        "description_texte": "Ce sort a les mêmes effets que le sort cantique en ce qui concerne le bonus de +1 pour les amis et –1 pour les ennemis pour les probabilités de toucher, la détermination des dommages et les jets de protection. Cependant, le clerc peut entreprendre autre chose une fois que la prière est terminée (c'est-à-dire l’incantation). Le clerc a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation. SORTS DE NIVEAU 4",
+        "description_html": "<p>Ce sort a les mêmes effets que le sort cantique en ce qui concerne le bonus de +1 pour les amis et –1 pour les ennemis pour les probabilités de toucher, la détermination des dommages et les jets de protection. Cependant, le clerc peut entreprendre autre chose une fois que la prière est terminée (c&#x27;est-à-dire l’incantation). Le clerc a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation. SORTS DE NIVEAU 4</p>"
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "effects": [
+        {
+          "name": "Prière",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:priere",
+                "bonus:allies:1",
+                "malus:ennemis:1",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:sauvegarde:1",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/priere.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ZfYo8qfE5WYoD67Y",
+          "_id": "bw9a0scXXcR9guMe",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568639,
+            "modifiedTime": 1780340568639
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Prière",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:priere",
+                "bonus:allies:1",
+                "malus:ennemis:1",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:sauvegarde:1",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/priere.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ZfYo8qfE5WYoD67Y",
+          "_id": "XarCwOU8YjUlAJ6r",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568639,
+            "modifiedTime": 1780340568639
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Prière",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:3",
+                "sort:priere",
+                "bonus:allies:1",
+                "malus:ennemis:1",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:sauvegarde:1",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/priere.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ZfYo8qfE5WYoD67Y",
+          "_id": "jQBfB9vdzXqeGuQE",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568639,
+            "modifiedTime": 1780340568639
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/priere.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:41.204Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 3",
+          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
+          "exportedAt": "2026-05-22T09:57:29.892Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.ZfYo8qfE5WYoD67Y",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568639,
+        "modifiedTime": 1780340568639,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "OY8n4w7N4Vw06Gz0",
+      "sort": 0
+    }
+  ]
+}

@@ -1,0 +1,1112 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "illusionniste",
+    "niveau": 5,
+    "key": "illusionniste-niveau-5",
+    "count": 7
+  },
+  "folders": [
+    {
+      "name": "Illusionniste",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "zbnGy5sLzX1VR4UP",
+      "description": "",
+      "sort": 700000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566746,
+        "modifiedTime": 1780340566746,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 5",
+      "type": "Item",
+      "folder": "zbnGy5sLzX1VR4UP",
+      "sorting": "a",
+      "_id": "eXMw5pryS1NThkbt",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566742,
+        "modifiedTime": 1780340566742,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Chaos",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-chaos.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Enchantement/Charme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Annule",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-chaos.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-chaos.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Enchantement/Charme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-chaos.js",
+        "composants_materiels": [
+          {
+            "slug": "petite_tige_de_fer",
+            "nom": "Petite tige de fer",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
+        "description_texte": "Ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
+        "description_html": "<p>Ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.</p>"
+      },
+      "effects": [
+        {
+          "name": "Chaos",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:5",
+                "sort:chaos",
+                "etat:chaos",
+                "mental",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-chaos.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.xXSssvTvwXcHywW2",
+          "_id": "buAUYcc0MYOt3hTW",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569470,
+            "modifiedTime": 1780340569470
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:52.291Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-chaos.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 5",
+          "sourceFolderId": "kS61KkGEQtbxofmr",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "eXMw5pryS1NThkbt",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.xXSssvTvwXcHywW2",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569470,
+        "modifiedTime": 1780340569470,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "h3w9xJRIMFBZSPQK",
+      "sort": 0
+    },
+    {
+      "name": "Création majeure",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-creation-majeure.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est comparable au sort création mineure (voir p.97), mais il permet de créer des objets minéraux. Le sort peut aussi servir à créer des objets végétaux, mais leur durée d’existence est alors de 12 tours/niveau.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-creation-majeure.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-creation-majeure.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-creation-majeure.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est comparable au sort création mineure (voir p.97), mais il permet de créer des objets minéraux. Le sort peut aussi servir à créer des objets végétaux, mais leur durée d’existence est alors de 12 tours/niveau.",
+        "description_texte": "Ce sort est comparable au sort création mineure (voir p.97), mais il permet de créer des objets minéraux. Le sort peut aussi servir à créer des objets végétaux, mais leur durée d’existence est alors de 12 tours/niveau.",
+        "description_html": "<p>Ce sort est comparable au sort création mineure (voir p.97), mais il permet de créer des objets minéraux. Le sort peut aussi servir à créer des objets végétaux, mais leur durée d’existence est alors de 12 tours/niveau.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Création majeure",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:5",
+                "sort:creation_majeure",
+                "creation:majeure",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-creation-majeure.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.GNxWatizGcfCF5B6",
+          "_id": "IEinN5gIgn9j8s9g",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567284,
+            "modifiedTime": 1780340567284
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:08.961Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-creation-majeure.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 5",
+          "sourceFolderId": "kS61KkGEQtbxofmr",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "eXMw5pryS1NThkbt",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.GNxWatizGcfCF5B6",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567284,
+        "modifiedTime": 1780340567284,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "bfKkGhHAvYuzbb4B",
+      "sort": 0
+    },
+    {
+      "name": "Holographie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-holographie.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 6 de magicien holographie (voir p.84).",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-holographie.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-holographie.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-holographie.js",
+        "composants_materiels": [
+          {
+            "slug": "petite_replique_poupee_du_magicien",
+            "nom": "Petite réplique (poupée) du magicien",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "petite réplique (poupée) du magicien",
+        "description_reelle": "Excepté ci-dessus, ce sort est le même que le sort de niveau 6 de magicien holographie (voir p.84).",
+        "description_texte": "Excepté ci-dessus, ce sort est le même que le sort de niveau 6 de magicien holographie (voir p.84).",
+        "description_html": "<p>Excepté ci-dessus, ce sort est le même que le sort de niveau 6 de magicien holographie (voir p.84).</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Holographie",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:5",
+                "sort:holographie",
+                "illusion:holographie",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-holographie.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.W9KIZsLqrhOMYC52",
+          "_id": "OiktJHpPkZRfISON",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568040,
+            "modifiedTime": 1780340568040
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:11.784Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-holographie.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 5",
+          "sourceFolderId": "kS61KkGEQtbxofmr",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "eXMw5pryS1NThkbt",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.W9KIZsLqrhOMYC52",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568040,
+        "modifiedTime": 1780340568040,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "FrUiFMdhrdEVVoGU",
+      "sort": 0
+    },
+    {
+      "name": "Invocation des ombres",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-invocation-des-ombres.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, l’illusionniste invoque et fait venir une ombre (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Ombre) pour chaque tranche de 3 niveaux qu'il possède. Ces monstres sont sous son contrôle et attaqueront ses ennemis sur simple demande. Les ombres restent jusqu’à la fin du sort à moins qu’elles ne soient tuées ou repoussées (vade-retro). La composante matérielle est un morceau de quartz fumé.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-invocation-des-ombres.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-invocation-des-ombres.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-invocation-des-ombres.js",
+        "composants_materiels": [
+          {
+            "slug": "morceau_de_quartz_fume",
+            "nom": "Morceau de quartz fumé",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est un morceau de quartz fumé.",
+        "description_reelle": "Quand ce sort est lancé, l’illusionniste invoque et fait venir une ombre (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Ombre) pour chaque tranche de 3 niveaux qu'il possède. Ces monstres sont sous son contrôle et attaqueront ses ennemis sur simple demande. Les ombres restent jusqu’à la fin du sort à moins qu’elles ne soient tuées ou repoussées (vade-retro). La composante matérielle est un morceau de quartz fumé.",
+        "description_texte": "Quand ce sort est lancé, l’illusionniste invoque et fait venir une ombre (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Ombre) pour chaque tranche de 3 niveaux qu'il possède. Ces monstres sont sous son contrôle et attaqueront ses ennemis sur simple demande. Les ombres restent jusqu’à la fin du sort à moins qu’elles ne soient tuées ou repoussées (vade-retro). La composante matérielle est un morceau de quartz fumé.",
+        "description_html": "<p>Quand ce sort est lancé, l’illusionniste invoque et fait venir une ombre (cf. Règles AVANCÉES DE DONJONS &amp; DRAGONS, MANUEL DES MONSTRES, Ombre) pour chaque tranche de 3 niveaux qu&#x27;il possède. Ces monstres sont sous son contrôle et attaqueront ses ennemis sur simple demande. Les ombres restent jusqu’à la fin du sort à moins qu’elles ne soient tuées ou repoussées (vade-retro). La composante matérielle est un morceau de quartz fumé.</p>"
+      },
+      "effects": [
+        {
+          "name": "Invocation des ombres",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:5",
+                "sort:invocation_des_ombres",
+                "invocation:ombres",
+                "ombres",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-invocation-des-ombres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.sJilxGy5BwOfe8nz",
+          "_id": "Z7zuEY4TbvoE7wwp",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569403,
+            "modifiedTime": 1780340569403
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:46.630Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-invocation-des-ombres.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 5",
+          "sourceFolderId": "kS61KkGEQtbxofmr",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "eXMw5pryS1NThkbt",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.sJilxGy5BwOfe8nz",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569403,
+        "modifiedTime": 1780340569403,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "PBTAq8GBzCXTrX17",
+      "sort": 0
+    },
+    {
+      "name": "Magie des ombres",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-magie-des-ombres.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet à l’illusionniste de lancer un sort quasiréel de magicien. Cela peut-être : projectile magique, boule de feu, foudre, cône de froid. Ces sorts auront un effet identique à celui des originaux sur les créatures qui ratent leur jet de protection. S’il est réussi, la magie des ombres n’infligera qu’un point de dégât par niveau de l’illusionniste.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-magie-des-ombres.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-magie-des-ombres.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-magie-des-ombres.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort permet à l’illusionniste de lancer un sort quasiréel de magicien. Cela peut-être : projectile magique, boule de feu, foudre, cône de froid. Ces sorts auront un effet identique à celui des originaux sur les créatures qui ratent leur jet de protection. S’il est réussi, la magie des ombres n’infligera qu’un point de dégât par niveau de l’illusionniste.",
+        "description_texte": "Ce sort permet à l’illusionniste de lancer un sort quasiréel de magicien. Cela peut-être : projectile magique, boule de feu, foudre, cône de froid. Ces sorts auront un effet identique à celui des originaux sur les créatures qui ratent leur jet de protection. S’il est réussi, la magie des ombres n’infligera qu’un point de dégât par niveau de l’illusionniste.",
+        "description_html": "<p>Ce sort permet à l’illusionniste de lancer un sort quasiréel de magicien. Cela peut-être : projectile magique, boule de feu, foudre, cône de froid. Ces sorts auront un effet identique à celui des originaux sur les créatures qui ratent leur jet de protection. S’il est réussi, la magie des ombres n’infligera qu’un point de dégât par niveau de l’illusionniste.</p>"
+      },
+      "effects": [
+        {
+          "name": "Magie des ombres",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:5",
+                "sort:magie_des_ombres",
+                "magie:ombres",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-magie-des-ombres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.IpfgS89njbvQqxX1",
+          "_id": "1oCIQhWz6x5022M6",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567847,
+            "modifiedTime": 1780340567847
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:06.187Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-magie-des-ombres.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 5",
+          "sourceFolderId": "kS61KkGEQtbxofmr",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "eXMw5pryS1NThkbt",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.IpfgS89njbvQqxX1",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567847,
+        "modifiedTime": 1780340567847,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "QGnxlhJpGGXH7fpw",
+      "sort": 0
+    },
+    {
+      "name": "Monstres demi-ombre",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-monstres-demi-ombre.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est similaire au sort de niveau 4 d’illusionniste monstres des ombres, mais les monstres créés ont 40 % des points de vie normaux. Pour les adversaires ayant réussi leur jet de protection, ils ont une classe d’armure de 8 et infligent 40 % de leurs dégâts normaux.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-monstres-demi-ombre.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-monstres-demi-ombre.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-monstres-demi-ombre.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est similaire au sort de niveau 4 d’illusionniste monstres des ombres, mais les monstres créés ont 40 % des points de vie normaux. Pour les adversaires ayant réussi leur jet de protection, ils ont une classe d’armure de 8 et infligent 40 % de leurs dégâts normaux.",
+        "description_texte": "Ce sort est similaire au sort de niveau 4 d’illusionniste monstres des ombres, mais les monstres créés ont 40 % des points de vie normaux. Pour les adversaires ayant réussi leur jet de protection, ils ont une classe d’armure de 8 et infligent 40 % de leurs dégâts normaux.",
+        "description_html": "<p>Ce sort est similaire au sort de niveau 4 d’illusionniste monstres des ombres, mais les monstres créés ont 40 % des points de vie normaux. Pour les adversaires ayant réussi leur jet de protection, ils ont une classe d’armure de 8 et infligent 40 % de leurs dégâts normaux.</p>"
+      },
+      "effects": [
+        {
+          "name": "Monstres demi-ombre",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:5",
+                "sort:monstres_demi_ombre",
+                "monstres:demi_ombre",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-monstres-demi-ombre.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.JFG02OkaeuU4o2WK",
+          "_id": "zUmnQAUcKFbjyjzn",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567856,
+            "modifiedTime": 1780340567856
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:30.136Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-monstres-demi-ombre.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 5",
+          "sourceFolderId": "kS61KkGEQtbxofmr",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "eXMw5pryS1NThkbt",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.JFG02OkaeuU4o2WK",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567856,
+        "modifiedTime": 1780340567856,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "zRjgdAjHkaeS13gL",
+      "sort": 0
+    },
+    {
+      "name": "Porte des ombres",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-porte-des-ombres.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, l’illusionniste crée l’illusion d’une porte. Cette illusion permet aussi de faire croire qu’il ouvre cette porte, en franchit le seuil et la referme derrière lui, disparaissant de la vue, alors qu’en fait, il est simplement devenu invisible et s’est ensuite poussé de côté. L’invisibilité n’est active que pour la durée du sort. Les créatures qui voient ceci et qui ouvrent et franchissent la « porte » croiront entrer dans une pièce vide de 3 m x 3 m. Seuls un sort de vision réelle, une gemme de vision ou un autre moyen similaire permettent de découvrir l’illusionniste. SORTS DE NIVEAU 6",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-porte-des-ombres.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-porte-des-ombres.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-porte-des-ombres.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, l’illusionniste crée l’illusion d’une porte. Cette illusion permet aussi de faire croire qu’il ouvre cette porte, en franchit le seuil et la referme derrière lui, disparaissant de la vue, alors qu’en fait, il est simplement devenu invisible et s’est ensuite poussé de côté. L’invisibilité n’est active que pour la durée du sort. Les créatures qui voient ceci et qui ouvrent et franchissent la « porte » croiront entrer dans une pièce vide de 3 m x 3 m. Seuls un sort de vision réelle, une gemme de vision ou un autre moyen similaire permettent de découvrir l’illusionniste. SORTS DE NIVEAU 6",
+        "description_texte": "Avec ce sort, l’illusionniste crée l’illusion d’une porte. Cette illusion permet aussi de faire croire qu’il ouvre cette porte, en franchit le seuil et la referme derrière lui, disparaissant de la vue, alors qu’en fait, il est simplement devenu invisible et s’est ensuite poussé de côté. L’invisibilité n’est active que pour la durée du sort. Les créatures qui voient ceci et qui ouvrent et franchissent la « porte » croiront entrer dans une pièce vide de 3 m x 3 m. Seuls un sort de vision réelle, une gemme de vision ou un autre moyen similaire permettent de découvrir l’illusionniste. SORTS DE NIVEAU 6",
+        "description_html": "<p>Avec ce sort, l’illusionniste crée l’illusion d’une porte. Cette illusion permet aussi de faire croire qu’il ouvre cette porte, en franchit le seuil et la referme derrière lui, disparaissant de la vue, alors qu’en fait, il est simplement devenu invisible et s’est ensuite poussé de côté. L’invisibilité n’est active que pour la durée du sort. Les créatures qui voient ceci et qui ouvrent et franchissent la « porte » croiront entrer dans une pièce vide de 3 m x 3 m. Seuls un sort de vision réelle, une gemme de vision ou un autre moyen similaire permettent de découvrir l’illusionniste. SORTS DE NIVEAU 6</p>"
+      },
+      "effects": [
+        {
+          "name": "Porte des ombres",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:5",
+                "sort:porte_des_ombres",
+                "porte:ombres",
+                "deplacement:ombre",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-porte-des-ombres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.IGq8TTEIi395HnlI",
+          "_id": "cxu6gak3Av0rhoeb",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567309,
+            "modifiedTime": 1780340567309
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:30.594Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-porte-des-ombres.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 5",
+          "sourceFolderId": "kS61KkGEQtbxofmr",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "eXMw5pryS1NThkbt",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.IGq8TTEIi395HnlI",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567309,
+        "modifiedTime": 1780340567309,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "wDl7Rbi8fLQo907c",
+      "sort": 0
+    }
+  ]
+}

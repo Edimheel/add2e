@@ -1,0 +1,230 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "sourceExport": {
+    "exportVersion": "2026-05-26-export-item-folder-v2-direct-download",
+    "exportedAt": "2026-06-01T19:03:08.889Z",
+    "world": "test-clerc",
+    "system": "add2e",
+    "rootFolder": {
+      "id": "XnEirDAQ59Ik1Ohg",
+      "name": "Sorts"
+    }
+  },
+  "spellArrayKey": "items",
+  "totalSourceEntries": 356,
+  "totalSpells": 356,
+  "totalGroups": 30,
+  "groups": [
+    {
+      "classe": "clerc",
+      "niveau": 1,
+      "key": "clerc-niveau-1",
+      "file": "clerc-niveau-1.json",
+      "count": 10
+    },
+    {
+      "classe": "clerc",
+      "niveau": 2,
+      "key": "clerc-niveau-2",
+      "file": "clerc-niveau-2.json",
+      "count": 11
+    },
+    {
+      "classe": "clerc",
+      "niveau": 3,
+      "key": "clerc-niveau-3",
+      "file": "clerc-niveau-3.json",
+      "count": 11
+    },
+    {
+      "classe": "clerc",
+      "niveau": 4,
+      "key": "clerc-niveau-4",
+      "file": "clerc-niveau-4.json",
+      "count": 8
+    },
+    {
+      "classe": "clerc",
+      "niveau": 5,
+      "key": "clerc-niveau-5",
+      "file": "clerc-niveau-5.json",
+      "count": 9
+    },
+    {
+      "classe": "clerc",
+      "niveau": 6,
+      "key": "clerc-niveau-6",
+      "file": "clerc-niveau-6.json",
+      "count": 9
+    },
+    {
+      "classe": "clerc",
+      "niveau": 7,
+      "key": "clerc-niveau-7",
+      "file": "clerc-niveau-7.json",
+      "count": 10
+    },
+    {
+      "classe": "druide",
+      "niveau": 1,
+      "key": "druide-niveau-1",
+      "file": "druide-niveau-1.json",
+      "count": 12
+    },
+    {
+      "classe": "druide",
+      "niveau": 2,
+      "key": "druide-niveau-2",
+      "file": "druide-niveau-2.json",
+      "count": 10
+    },
+    {
+      "classe": "druide",
+      "niveau": 3,
+      "key": "druide-niveau-3",
+      "file": "druide-niveau-3.json",
+      "count": 9
+    },
+    {
+      "classe": "druide",
+      "niveau": 4,
+      "key": "druide-niveau-4",
+      "file": "druide-niveau-4.json",
+      "count": 10
+    },
+    {
+      "classe": "druide",
+      "niveau": 5,
+      "key": "druide-niveau-5",
+      "file": "druide-niveau-5.json",
+      "count": 8
+    },
+    {
+      "classe": "druide",
+      "niveau": 6,
+      "key": "druide-niveau-6",
+      "file": "druide-niveau-6.json",
+      "count": 9
+    },
+    {
+      "classe": "druide",
+      "niveau": 7,
+      "key": "druide-niveau-7",
+      "file": "druide-niveau-7.json",
+      "count": 8
+    },
+    {
+      "classe": "illusionniste",
+      "niveau": 1,
+      "key": "illusionniste-niveau-1",
+      "file": "illusionniste-niveau-1.json",
+      "count": 11
+    },
+    {
+      "classe": "illusionniste",
+      "niveau": 2,
+      "key": "illusionniste-niveau-2",
+      "file": "illusionniste-niveau-2.json",
+      "count": 10
+    },
+    {
+      "classe": "illusionniste",
+      "niveau": 3,
+      "key": "illusionniste-niveau-3",
+      "file": "illusionniste-niveau-3.json",
+      "count": 8
+    },
+    {
+      "classe": "illusionniste",
+      "niveau": 4,
+      "key": "illusionniste-niveau-4",
+      "file": "illusionniste-niveau-4.json",
+      "count": 7
+    },
+    {
+      "classe": "illusionniste",
+      "niveau": 5,
+      "key": "illusionniste-niveau-5",
+      "file": "illusionniste-niveau-5.json",
+      "count": 7
+    },
+    {
+      "classe": "illusionniste",
+      "niveau": 6,
+      "key": "illusionniste-niveau-6",
+      "file": "illusionniste-niveau-6.json",
+      "count": 8
+    },
+    {
+      "classe": "illusionniste",
+      "niveau": 7,
+      "key": "illusionniste-niveau-7",
+      "file": "illusionniste-niveau-7.json",
+      "count": 5
+    },
+    {
+      "classe": "magicien",
+      "niveau": 1,
+      "key": "magicien-niveau-1",
+      "file": "magicien-niveau-1.json",
+      "count": 26
+    },
+    {
+      "classe": "magicien",
+      "niveau": 2,
+      "key": "magicien-niveau-2",
+      "file": "magicien-niveau-2.json",
+      "count": 18
+    },
+    {
+      "classe": "magicien",
+      "niveau": 3,
+      "key": "magicien-niveau-3",
+      "file": "magicien-niveau-3.json",
+      "count": 18
+    },
+    {
+      "classe": "magicien",
+      "niveau": 4,
+      "key": "magicien-niveau-4",
+      "file": "magicien-niveau-4.json",
+      "count": 21
+    },
+    {
+      "classe": "magicien",
+      "niveau": 5,
+      "key": "magicien-niveau-5",
+      "file": "magicien-niveau-5.json",
+      "count": 22
+    },
+    {
+      "classe": "magicien",
+      "niveau": 6,
+      "key": "magicien-niveau-6",
+      "file": "magicien-niveau-6.json",
+      "count": 19
+    },
+    {
+      "classe": "magicien",
+      "niveau": 7,
+      "key": "magicien-niveau-7",
+      "file": "magicien-niveau-7.json",
+      "count": 16
+    },
+    {
+      "classe": "magicien",
+      "niveau": 8,
+      "key": "magicien-niveau-8",
+      "file": "magicien-niveau-8.json",
+      "count": 15
+    },
+    {
+      "classe": "magicien",
+      "niveau": 9,
+      "key": "magicien-niveau-9",
+      "file": "magicien-niveau-9.json",
+      "count": 11
+    }
+  ]
+}

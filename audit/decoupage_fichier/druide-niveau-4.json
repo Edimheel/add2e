@@ -1,0 +1,1622 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "druide",
+    "niveau": 4,
+    "key": "druide-niveau-4",
+    "count": 10
+  },
+  "folders": [
+    {
+      "name": "Druide",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "Rll5qPz7yPmV4eUm",
+      "description": "",
+      "sort": 600000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566745,
+        "modifiedTime": 1780340566745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 4",
+      "type": "Item",
+      "folder": "Rll5qPz7yPmV4eUm",
+      "sorting": "a",
+      "_id": "9solxAv5JcMQWwRA",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566739,
+        "modifiedTime": 1780340566739,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Contrôle de la température sur 3 m",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-controle-de-la-temperature-sur-3-m.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, la température de la zone entourant le druide peut être élevée ou abaissée de 5°C par niveau du druide. Ainsi, un druide de niveau 10 pourra augmenter ou baisser la température de 1°C à 50°C. Ce sort dure 4 tours plus 1 tour par niveau du druide, c.-à-d. que lancé par un druide de niveau 10, il dure 14 tours.",
+        "onUse": "systems/add2e/scripts/sorts/druide-controle-de-la-temperature-sur-3-m.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-controle-de-la-temperature-sur-3-m.js",
+        "portée": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-controle-de-la-temperature-sur-3-m.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand ce sort est lancé, la température de la zone entourant le druide peut être élevée ou abaissée de 5°C par niveau du druide. Ainsi, un druide de niveau 10 pourra augmenter ou baisser la température de 1°C à 50°C. Ce sort dure 4 tours plus 1 tour par niveau du druide, c.-à-d. que lancé par un druide de niveau 10, il dure 14 tours.",
+        "description_texte": "Quand ce sort est lancé, la température de la zone entourant le druide peut être élevée ou abaissée de 5°C par niveau du druide. Ainsi, un druide de niveau 10 pourra augmenter ou baisser la température de 1°C à 50°C. Ce sort dure 4 tours plus 1 tour par niveau du druide, c.-à-d. que lancé par un druide de niveau 10, il dure 14 tours.",
+        "description_html": "<p>Quand ce sort est lancé, la température de la zone entourant le druide peut être élevée ou abaissée de 5°C par niveau du druide. Ainsi, un druide de niveau 10 pourra augmenter ou baisser la température de 1°C à 50°C. Ce sort dure 4 tours plus 1 tour par niveau du druide, c.-à-d. que lancé par un druide de niveau 10, il dure 14 tours.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Contrôle de la température sur 3 m",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:controle_de_la_temperature_sur_3_m",
+                "controle:temperature",
+                "zone:3m",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-controle-de-la-temperature-sur-3-m.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.qvbKaLt2UD13Gekq",
+          "_id": "GsBLf7P4UDluik3q",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569378,
+            "modifiedTime": 1780340569378
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:03.517Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-controle-de-la-temperature-sur-3-m.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.qvbKaLt2UD13Gekq",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569378,
+        "modifiedTime": 1780340569378,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "HVNQPx5qWs1cNFRT",
+      "sort": 0
+    },
+    {
+      "name": "Dissipation de magie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-dissipation-de-magie.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "6 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc dissipation de la magie (voir p.46).",
+        "onUse": "systems/add2e/scripts/sorts/druide-dissipation-de-magie.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-dissipation-de-magie.js",
+        "portée": {
+          "valeur": "6 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/druide-dissipation-de-magie.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc dissipation de la magie (voir p.46).",
+        "description_texte": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc dissipation de la magie (voir p.46).",
+        "description_html": "<p>Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc dissipation de la magie (voir p.46).</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Dissipation de magie",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:dissipation_de_magie",
+                "dissipation:magie",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-dissipation-de-magie.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.VaLZToX13eNlIYoM",
+          "_id": "h5S5ZLnfvqSWOVTR",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568035,
+            "modifiedTime": 1780340568035
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:22.560Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-dissipation-de-magie.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.VaLZToX13eNlIYoM",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568035,
+        "modifiedTime": 1780340568035,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "uRwyTvdauqDCIgbO",
+      "sort": 0
+    },
+    {
+      "name": "Embrasement",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-embrasement.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "4 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "1/2",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Au moyen de ce sort, le druide crée un feu d’environ 3,60 m de côté, c'est-à-dire à peu près 13 m2. Ce feu ne dure qu’un round, mais il inflige de 1 à 4 points de dégâts aux créatures se trouvant dans la zone d’effet ; de plus, les matériaux comme les vêtements, l’huile, le papier, le parchemin, le bois et d’une façon générale les matières inflammables prendront feu. L’inverse du sort, extinction, éteint n’importe quel feu normal (charbon, huile, cire, bois, etc.) dans la zone d’effet. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée.",
+        "onUse": "systems/add2e/scripts/sorts/druide-embrasement.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-embrasement.js",
+        "portée": {
+          "valeur": "4 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-embrasement.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Au moyen de ce sort, le druide crée un feu d’environ 3,60 m de côté, c'est-à-dire à peu près 13 m2. Ce feu ne dure qu’un round, mais il inflige de 1 à 4 points de dégâts aux créatures se trouvant dans la zone d’effet ; de plus, les matériaux comme les vêtements, l’huile, le papier, le parchemin, le bois et d’une façon générale les matières inflammables prendront feu. L’inverse du sort, extinction, éteint n’importe quel feu normal (charbon, huile, cire, bois, etc.) dans la zone d’effet. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée.",
+        "description_texte": "Au moyen de ce sort, le druide crée un feu d’environ 3,60 m de côté, c'est-à-dire à peu près 13 m2. Ce feu ne dure qu’un round, mais il inflige de 1 à 4 points de dégâts aux créatures se trouvant dans la zone d’effet ; de plus, les matériaux comme les vêtements, l’huile, le papier, le parchemin, le bois et d’une façon générale les matières inflammables prendront feu. L’inverse du sort, extinction, éteint n’importe quel feu normal (charbon, huile, cire, bois, etc.) dans la zone d’effet. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée.",
+        "description_html": "<p>Au moyen de ce sort, le druide crée un feu d’environ 3,60 m de côté, c&#x27;est-à-dire à peu près 13 m2. Ce feu ne dure qu’un round, mais il inflige de 1 à 4 points de dégâts aux créatures se trouvant dans la zone d’effet ; de plus, les matériaux comme les vêtements, l’huile, le papier, le parchemin, le bois et d’une façon générale les matières inflammables prendront feu. L’inverse du sort, extinction, éteint n’importe quel feu normal (charbon, huile, cire, bois, etc.) dans la zone d’effet. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Embrasement",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:embrasement",
+                "embrasement",
+                "degat:feu",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-embrasement.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.UHInOrxaRKMTO0IM",
+          "_id": "8fWHdJrH00H8b7aM",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568026,
+            "modifiedTime": 1780340568026
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:33.972Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-embrasement.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.UHInOrxaRKMTO0IM",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568026,
+        "modifiedTime": 1780340568026,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "OMmnUrjpCVcCASNR",
+      "sort": 0
+    },
+    {
+      "name": "Forêt hallucinatoire",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-foret-hallucinatoire.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Illusion/Enchantement",
+        "portee": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "En lançant ce sort, le druide fait apparaître une forêt hallucinatoire. Cette forêt illusoire semble tout à fait naturelle et est indiscernable d’une forêt normale. D’autres druides, ainsi que les créatures comme les centaures, dryades, dragons verts, nymphes, satyres ou sylvaniens verront la forêt comme ce qu’elle est vraiment : une illusion. Toutes les autres créatures seront sujettes à l’illusion ; les mouvements et ordres de marche seront affectés en conséquence. Cette forêt persiste jusqu’à ce qu’un sort de dissipation de la magie soit lancé dessus ou alors que l’inverse de ce sort soit lancé. La forme de la zone d’effet est soit carrée soit rectangulaire, avec une profondeur d’au moins 4\" dans tous les cas ; le druide peut créer la zone là où il désire et il n’est pas obligé de lui donner sa taille maximale. La lisière de la forêt apparaîtra à 8\" du druide maximum, selon sa volonté.",
+        "onUse": "systems/add2e/scripts/sorts/druide-foret-hallucinatoire.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-foret-hallucinatoire.js",
+        "portée": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Enchantement",
+        "on_use": "systems/add2e/scripts/sorts/druide-foret-hallucinatoire.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "En lançant ce sort, le druide fait apparaître une forêt hallucinatoire. Cette forêt illusoire semble tout à fait naturelle et est indiscernable d’une forêt normale. D’autres druides, ainsi que les créatures comme les centaures, dryades, dragons verts, nymphes, satyres ou sylvaniens verront la forêt comme ce qu’elle est vraiment : une illusion. Toutes les autres créatures seront sujettes à l’illusion ; les mouvements et ordres de marche seront affectés en conséquence. Cette forêt persiste jusqu’à ce qu’un sort de dissipation de la magie soit lancé dessus ou alors que l’inverse de ce sort soit lancé. La forme de la zone d’effet est soit carrée soit rectangulaire, avec une profondeur d’au moins 4\" dans tous les cas ; le druide peut créer la zone là où il désire et il n’est pas obligé de lui donner sa taille maximale. La lisière de la forêt apparaîtra à 8\" du druide maximum, selon sa volonté.",
+        "description_texte": "En lançant ce sort, le druide fait apparaître une forêt hallucinatoire. Cette forêt illusoire semble tout à fait naturelle et est indiscernable d’une forêt normale. D’autres druides, ainsi que les créatures comme les centaures, dryades, dragons verts, nymphes, satyres ou sylvaniens verront la forêt comme ce qu’elle est vraiment : une illusion. Toutes les autres créatures seront sujettes à l’illusion ; les mouvements et ordres de marche seront affectés en conséquence. Cette forêt persiste jusqu’à ce qu’un sort de dissipation de la magie soit lancé dessus ou alors que l’inverse de ce sort soit lancé. La forme de la zone d’effet est soit carrée soit rectangulaire, avec une profondeur d’au moins 4\" dans tous les cas ; le druide peut créer la zone là où il désire et il n’est pas obligé de lui donner sa taille maximale. La lisière de la forêt apparaîtra à 8\" du druide maximum, selon sa volonté.",
+        "description_html": "<p>En lançant ce sort, le druide fait apparaître une forêt hallucinatoire. Cette forêt illusoire semble tout à fait naturelle et est indiscernable d’une forêt normale. D’autres druides, ainsi que les créatures comme les centaures, dryades, dragons verts, nymphes, satyres ou sylvaniens verront la forêt comme ce qu’elle est vraiment : une illusion. Toutes les autres créatures seront sujettes à l’illusion ; les mouvements et ordres de marche seront affectés en conséquence. Cette forêt persiste jusqu’à ce qu’un sort de dissipation de la magie soit lancé dessus ou alors que l’inverse de ce sort soit lancé. La forme de la zone d’effet est soit carrée soit rectangulaire, avec une profondeur d’au moins 4&quot; dans tous les cas ; le druide peut créer la zone là où il désire et il n’est pas obligé de lui donner sa taille maximale. La lisière de la forêt apparaîtra à 8&quot; du druide maximum, selon sa volonté.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Forêt hallucinatoire",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:foret_hallucinatoire",
+                "illusion:foret",
+                "terrain:hallucinatoire",
+                "ecole:illusion_enchantement"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-foret-hallucinatoire.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.1DlVgVLB0xsxFuUI",
+          "_id": "4g5MEJJ808kFsY82",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567058,
+            "modifiedTime": 1780340567058
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:58.802Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-foret-hallucinatoire.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.1DlVgVLB0xsxFuUI",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567058,
+        "modifiedTime": 1780340567058,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "jOxhcQtvs1oUOpak",
+      "sort": 0
+    },
+    {
+      "name": "Invocation animale I",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-invocation-animale-i.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le druide peut invoquer jusqu’à 8 animaux du type qu’il désire et annonce au moment de l’invocation, à condition que le type d’animal soit dans la portée du sort. Ces animaux ne peuvent pas avoir plus de 4 dés de vie chacun. Ils aideront le druide par les moyens qu’ils possèdent, restant jusqu’à la fin d’un combat, jusqu’à ce qu’une mission spécifique soit accomplie, jusqu’à ce que le druide soit en sécurité ou jusqu’à ce qu’il les renvoie. En cas d’échec parce que le type d’animal invoqué par le druide ne se trouve pas dans la portée du sort, le druide peut refaire une tentative avec un autre type d’animal. Au total, le druide a droit à 3 tentatives. Par exemple, le druide invoque des chiens sauvages, mais il n’y en a pas, puis il appelle des faucons, sans succès, enfin, il tente de faire venir des chevaux sauvages. Que sa dernière tentative soit réussie ou non, il n’a plus droit à un nouvel essai. Le MD déterminera les probabilités de présence de l’animal invoqué par le druide. Hormis les animaux de classe géante, les monstres et les animaux fantastiques ne peuvent pas être invoqués, donc pas de chimère, de dragons, de gorgones ou de manticores, etc. Ce sort ne peut pas être utilisé sous l’eau.",
+        "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-i.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-invocation-animale-i.js",
+        "portée": {
+          "valeur": "3 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/druide-invocation-animale-i.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, le druide peut invoquer jusqu’à 8 animaux du type qu’il désire et annonce au moment de l’invocation, à condition que le type d’animal soit dans la portée du sort. Ces animaux ne peuvent pas avoir plus de 4 dés de vie chacun. Ils aideront le druide par les moyens qu’ils possèdent, restant jusqu’à la fin d’un combat, jusqu’à ce qu’une mission spécifique soit accomplie, jusqu’à ce que le druide soit en sécurité ou jusqu’à ce qu’il les renvoie. En cas d’échec parce que le type d’animal invoqué par le druide ne se trouve pas dans la portée du sort, le druide peut refaire une tentative avec un autre type d’animal. Au total, le druide a droit à 3 tentatives. Par exemple, le druide invoque des chiens sauvages, mais il n’y en a pas, puis il appelle des faucons, sans succès, enfin, il tente de faire venir des chevaux sauvages. Que sa dernière tentative soit réussie ou non, il n’a plus droit à un nouvel essai. Le MD déterminera les probabilités de présence de l’animal invoqué par le druide. Hormis les animaux de classe géante, les monstres et les animaux fantastiques ne peuvent pas être invoqués, donc pas de chimère, de dragons, de gorgones ou de manticores, etc. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_texte": "Avec ce sort, le druide peut invoquer jusqu’à 8 animaux du type qu’il désire et annonce au moment de l’invocation, à condition que le type d’animal soit dans la portée du sort. Ces animaux ne peuvent pas avoir plus de 4 dés de vie chacun. Ils aideront le druide par les moyens qu’ils possèdent, restant jusqu’à la fin d’un combat, jusqu’à ce qu’une mission spécifique soit accomplie, jusqu’à ce que le druide soit en sécurité ou jusqu’à ce qu’il les renvoie. En cas d’échec parce que le type d’animal invoqué par le druide ne se trouve pas dans la portée du sort, le druide peut refaire une tentative avec un autre type d’animal. Au total, le druide a droit à 3 tentatives. Par exemple, le druide invoque des chiens sauvages, mais il n’y en a pas, puis il appelle des faucons, sans succès, enfin, il tente de faire venir des chevaux sauvages. Que sa dernière tentative soit réussie ou non, il n’a plus droit à un nouvel essai. Le MD déterminera les probabilités de présence de l’animal invoqué par le druide. Hormis les animaux de classe géante, les monstres et les animaux fantastiques ne peuvent pas être invoqués, donc pas de chimère, de dragons, de gorgones ou de manticores, etc. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_html": "<p>Avec ce sort, le druide peut invoquer jusqu’à 8 animaux du type qu’il désire et annonce au moment de l’invocation, à condition que le type d’animal soit dans la portée du sort. Ces animaux ne peuvent pas avoir plus de 4 dés de vie chacun. Ils aideront le druide par les moyens qu’ils possèdent, restant jusqu’à la fin d’un combat, jusqu’à ce qu’une mission spécifique soit accomplie, jusqu’à ce que le druide soit en sécurité ou jusqu’à ce qu’il les renvoie. En cas d’échec parce que le type d’animal invoqué par le druide ne se trouve pas dans la portée du sort, le druide peut refaire une tentative avec un autre type d’animal. Au total, le druide a droit à 3 tentatives. Par exemple, le druide invoque des chiens sauvages, mais il n’y en a pas, puis il appelle des faucons, sans succès, enfin, il tente de faire venir des chevaux sauvages. Que sa dernière tentative soit réussie ou non, il n’a plus droit à un nouvel essai. Le MD déterminera les probabilités de présence de l’animal invoqué par le druide. Hormis les animaux de classe géante, les monstres et les animaux fantastiques ne peuvent pas être invoqués, donc pas de chimère, de dragons, de gorgones ou de manticores, etc. Ce sort ne peut pas être utilisé sous l’eau.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Invocation animale I",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:invocation_animale_i",
+                "invocation:animale_i",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-invocation-animale-i.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.JmgtP26aYShTJ8tj",
+          "_id": "rwRWL4UPYvU6A32d",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567862,
+            "modifiedTime": 1780340567862
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:30.025Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-invocation-animale-i.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.JmgtP26aYShTJ8tj",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567862,
+        "modifiedTime": 1780340567862,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "bQVB6rizjkXdUET0",
+      "sort": 0
+    },
+    {
+      "name": "Invocation des créatures sylvestres",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-invocation-des-creatures-sylvestres.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "10 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le druide est capable d’invoquer certaines créatures sylvestres. Naturellement, ce sort ne fonctionne qu’en extérieur, mais pas uniquement dans des zones forestières. Le druide commence l’incantation et la continue sans interruption jusqu’à ce qu’une créature apparaisse ou que deux tours se soient écoulés (la verbalisation et les gestes sont faciles et ne sont donc pas fatiguant pour le lanceur du sort). Un seul type des créatures ci-dessous peut être invoqué : les créatures viendront seulement si elles sont dans la portée du sort : 1-4 centaures 2-8 lutins 1-4 dryades 1-8 pixies 1-6 esprits follets 1-4 satyres 1 licorne 1 sylvanien (Le MD consultera sa carte de la région ou déterminera la probabilité de présence des types de créatures citées dans les limites de la portée du sort au moment où il est lancé). Les (ou la) créatures appelées ont droit à un jet de protection pour échapper à l’invocation, mais avec un malus de –4. Toute créature sylvestre invoquée sera favorablement disposée envers le druide et apportera toute l’aide qu’elle peut. Cependant, si le lanceur de sort ou un de ses compagnons est d’alignement mauvais, les créatures invoquées ont droit à un autre jet de protection, mais cette fois avec un bonus de +4, ceci quand elles arrivent à moins de 1\" de la personne mauvaise. Si le jet de protection est réussi, les créatures chercheront immédiatement à s’enfuir. Dans tous les cas, si le druide demande aux créatures de combattre pour lui, elles lanceront un dé de pourcentage de réaction à la loyauté basée sur le charisme du druide et sur les rapports que le druide a eu avec ces créatures. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont une pomme de pin et 8 baies de houx.",
+        "onUse": "systems/add2e/scripts/sorts/druide-invocation-des-creatures-sylvestres.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-invocation-des-creatures-sylvestres.js",
+        "portée": {
+          "valeur": "10 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/druide-invocation-des-creatures-sylvestres.js",
+        "composants_materiels": [
+          {
+            "slug": "8_baies_de_houx",
+            "nom": "8 baies de houx",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont une pomme de pin et 8 baies de houx.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Avec ce sort, le druide est capable d’invoquer certaines créatures sylvestres. Naturellement, ce sort ne fonctionne qu’en extérieur, mais pas uniquement dans des zones forestières. Le druide commence l’incantation et la continue sans interruption jusqu’à ce qu’une créature apparaisse ou que deux tours se soient écoulés (la verbalisation et les gestes sont faciles et ne sont donc pas fatiguant pour le lanceur du sort). Un seul type des créatures ci-dessous peut être invoqué : les créatures viendront seulement si elles sont dans la portée du sort : 1-4 centaures 2-8 lutins 1-4 dryades 1-8 pixies 1-6 esprits follets 1-4 satyres 1 licorne 1 sylvanien (Le MD consultera sa carte de la région ou déterminera la probabilité de présence des types de créatures citées dans les limites de la portée du sort au moment où il est lancé). Les (ou la) créatures appelées ont droit à un jet de protection pour échapper à l’invocation, mais avec un malus de –4. Toute créature sylvestre invoquée sera favorablement disposée envers le druide et apportera toute l’aide qu’elle peut. Cependant, si le lanceur de sort ou un de ses compagnons est d’alignement mauvais, les créatures invoquées ont droit à un autre jet de protection, mais cette fois avec un bonus de +4, ceci quand elles arrivent à moins de 1\" de la personne mauvaise. Si le jet de protection est réussi, les créatures chercheront immédiatement à s’enfuir. Dans tous les cas, si le druide demande aux créatures de combattre pour lui, elles lanceront un dé de pourcentage de réaction à la loyauté basée sur le charisme du druide et sur les rapports que le druide a eu avec ces créatures. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont une pomme de pin et 8 baies de houx.",
+        "description_texte": "Avec ce sort, le druide est capable d’invoquer certaines créatures sylvestres. Naturellement, ce sort ne fonctionne qu’en extérieur, mais pas uniquement dans des zones forestières. Le druide commence l’incantation et la continue sans interruption jusqu’à ce qu’une créature apparaisse ou que deux tours se soient écoulés (la verbalisation et les gestes sont faciles et ne sont donc pas fatiguant pour le lanceur du sort). Un seul type des créatures ci-dessous peut être invoqué : les créatures viendront seulement si elles sont dans la portée du sort : 1-4 centaures 2-8 lutins 1-4 dryades 1-8 pixies 1-6 esprits follets 1-4 satyres 1 licorne 1 sylvanien (Le MD consultera sa carte de la région ou déterminera la probabilité de présence des types de créatures citées dans les limites de la portée du sort au moment où il est lancé). Les (ou la) créatures appelées ont droit à un jet de protection pour échapper à l’invocation, mais avec un malus de –4. Toute créature sylvestre invoquée sera favorablement disposée envers le druide et apportera toute l’aide qu’elle peut. Cependant, si le lanceur de sort ou un de ses compagnons est d’alignement mauvais, les créatures invoquées ont droit à un autre jet de protection, mais cette fois avec un bonus de +4, ceci quand elles arrivent à moins de 1\" de la personne mauvaise. Si le jet de protection est réussi, les créatures chercheront immédiatement à s’enfuir. Dans tous les cas, si le druide demande aux créatures de combattre pour lui, elles lanceront un dé de pourcentage de réaction à la loyauté basée sur le charisme du druide et sur les rapports que le druide a eu avec ces créatures. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont une pomme de pin et 8 baies de houx.",
+        "description_html": "<p>Avec ce sort, le druide est capable d’invoquer certaines créatures sylvestres. Naturellement, ce sort ne fonctionne qu’en extérieur, mais pas uniquement dans des zones forestières. Le druide commence l’incantation et la continue sans interruption jusqu’à ce qu’une créature apparaisse ou que deux tours se soient écoulés (la verbalisation et les gestes sont faciles et ne sont donc pas fatiguant pour le lanceur du sort). Un seul type des créatures ci-dessous peut être invoqué : les créatures viendront seulement si elles sont dans la portée du sort : 1-4 centaures 2-8 lutins 1-4 dryades 1-8 pixies 1-6 esprits follets 1-4 satyres 1 licorne 1 sylvanien (Le MD consultera sa carte de la région ou déterminera la probabilité de présence des types de créatures citées dans les limites de la portée du sort au moment où il est lancé). Les (ou la) créatures appelées ont droit à un jet de protection pour échapper à l’invocation, mais avec un malus de –4. Toute créature sylvestre invoquée sera favorablement disposée envers le druide et apportera toute l’aide qu’elle peut. Cependant, si le lanceur de sort ou un de ses compagnons est d’alignement mauvais, les créatures invoquées ont droit à un autre jet de protection, mais cette fois avec un bonus de +4, ceci quand elles arrivent à moins de 1&quot; de la personne mauvaise. Si le jet de protection est réussi, les créatures chercheront immédiatement à s’enfuir. Dans tous les cas, si le druide demande aux créatures de combattre pour lui, elles lanceront un dé de pourcentage de réaction à la loyauté basée sur le charisme du druide et sur les rapports que le druide a eu avec ces créatures. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont une pomme de pin et 8 baies de houx.</p>"
+      },
+      "effects": [
+        {
+          "name": "Invocation des créatures sylvestres",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:invocation_des_creatures_sylvestres",
+                "appel:creatures_sylvestres",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-invocation-des-creatures-sylvestres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.uPlbbDjacWlLMx20",
+          "_id": "3tuC8sk5qL1Y4Qb0",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569434,
+            "modifiedTime": 1780340569434
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:46.420Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-invocation-des-creatures-sylvestres.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.uPlbbDjacWlLMx20",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569434,
+        "modifiedTime": 1780340569434,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "TF3ui2XtaRyUwwRG",
+      "sort": 0
+    },
+    {
+      "name": "Paralysie végétale",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-paralysie-vegetale.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Annule",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort affecte les végétaux de la façon suivante : 1) il stoppe les plantes qui se déplacent 2) il empêche les végétaux de s’emmêler, de pousser, de se développer ou de se rapprocher 3) il empêche les matières végétales de faire du bruit et de bouger à cause d’autre chose que le vent Ce sort s’applique à toute forme de végétaux, y compris les plantes parasites et les champignons, et aussi ceux magiquement animés et ceux qui ont reçu un pouvoir magique. Ce sort affecte aussi les monstres comme les limons verts, les moisissures, les tertres errants, les criards, les sylvaniens, etc. Ce sort affecte de 1 à 4 plantes ou de 4 à 16 m² de terrain d’herbe ou de moisissures. Si une seule plante (ou 4 m² de terrain) est choisie comme cible par le druide, le jet de protection de la plante est lancé avec un malus de –4 ; si 2 plantes (ou 8 m²) sont visées, les jets de protection sont à –2 ; si 3 plantes (ou 12 m²) sont visées, le jet de protection est à –1 ; et si le maximum de 4 plantes (ou 16 m²) est choisi par le druide, le jet de protection est normal.",
+        "onUse": "systems/add2e/scripts/sorts/druide-paralysie-vegetale.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-paralysie-vegetale.js",
+        "portée": {
+          "valeur": "8 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-paralysie-vegetale.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort affecte les végétaux de la façon suivante : 1) il stoppe les plantes qui se déplacent 2) il empêche les végétaux de s’emmêler, de pousser, de se développer ou de se rapprocher 3) il empêche les matières végétales de faire du bruit et de bouger à cause d’autre chose que le vent Ce sort s’applique à toute forme de végétaux, y compris les plantes parasites et les champignons, et aussi ceux magiquement animés et ceux qui ont reçu un pouvoir magique. Ce sort affecte aussi les monstres comme les limons verts, les moisissures, les tertres errants, les criards, les sylvaniens, etc. Ce sort affecte de 1 à 4 plantes ou de 4 à 16 m² de terrain d’herbe ou de moisissures. Si une seule plante (ou 4 m² de terrain) est choisie comme cible par le druide, le jet de protection de la plante est lancé avec un malus de –4 ; si 2 plantes (ou 8 m²) sont visées, les jets de protection sont à –2 ; si 3 plantes (ou 12 m²) sont visées, le jet de protection est à –1 ; et si le maximum de 4 plantes (ou 16 m²) est choisi par le druide, le jet de protection est normal.",
+        "description_texte": "Ce sort affecte les végétaux de la façon suivante : 1) il stoppe les plantes qui se déplacent 2) il empêche les végétaux de s’emmêler, de pousser, de se développer ou de se rapprocher 3) il empêche les matières végétales de faire du bruit et de bouger à cause d’autre chose que le vent Ce sort s’applique à toute forme de végétaux, y compris les plantes parasites et les champignons, et aussi ceux magiquement animés et ceux qui ont reçu un pouvoir magique. Ce sort affecte aussi les monstres comme les limons verts, les moisissures, les tertres errants, les criards, les sylvaniens, etc. Ce sort affecte de 1 à 4 plantes ou de 4 à 16 m² de terrain d’herbe ou de moisissures. Si une seule plante (ou 4 m² de terrain) est choisie comme cible par le druide, le jet de protection de la plante est lancé avec un malus de –4 ; si 2 plantes (ou 8 m²) sont visées, les jets de protection sont à –2 ; si 3 plantes (ou 12 m²) sont visées, le jet de protection est à –1 ; et si le maximum de 4 plantes (ou 16 m²) est choisi par le druide, le jet de protection est normal.",
+        "description_html": "<p>Ce sort affecte les végétaux de la façon suivante : 1) il stoppe les plantes qui se déplacent 2) il empêche les végétaux de s’emmêler, de pousser, de se développer ou de se rapprocher 3) il empêche les matières végétales de faire du bruit et de bouger à cause d’autre chose que le vent Ce sort s’applique à toute forme de végétaux, y compris les plantes parasites et les champignons, et aussi ceux magiquement animés et ceux qui ont reçu un pouvoir magique. Ce sort affecte aussi les monstres comme les limons verts, les moisissures, les tertres errants, les criards, les sylvaniens, etc. Ce sort affecte de 1 à 4 plantes ou de 4 à 16 m² de terrain d’herbe ou de moisissures. Si une seule plante (ou 4 m² de terrain) est choisie comme cible par le druide, le jet de protection de la plante est lancé avec un malus de –4 ; si 2 plantes (ou 8 m²) sont visées, les jets de protection sont à –2 ; si 3 plantes (ou 12 m²) sont visées, le jet de protection est à –1 ; et si le maximum de 4 plantes (ou 16 m²) est choisi par le druide, le jet de protection est normal.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Paralysie végétale",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:paralysie_vegetale",
+                "etat:paralysie",
+                "creature:vegetale",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-paralysie-vegetale.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.m8CwGYDK5jI8ny8o",
+          "_id": "fAk2N30KHXQ0TbX5",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568851,
+            "modifiedTime": 1780340568851
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:00.035Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-paralysie-vegetale.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.m8CwGYDK5jI8ny8o",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568851,
+        "modifiedTime": 1780340568851,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "n0ScQmYB3qGB7V3g",
+      "sort": 0
+    },
+    {
+      "name": "Porte végétale",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-porte-vegetale.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort crée un passage, une porte magique à travers les arbres, les sous-bois, les fourrés ou toute autre végétation similaire, y compris celle de nature magique. Ce passage est ouvert uniquement pour le druide qui lance ce sort, pour les druides de niveau supérieur ou pour des dryades. Cette porte permet au druide d’entrer dans un tronc d’arbre et d’y rester jusqu’à la fin du sort. Si l’arbre est coupé ou brûlé, le druide doit quitter cet arbre avant qu’il ne tombe ou soit consumé ou alors il sera aussi tué. La durée du sort est de 1 tour par niveau du lanceur de sort. Si le druide choisit de rester dans un chêne, le sort dure 9 fois plus longtemps ; si l’arbre choisi est un frêne, il dure 3 fois plus longtemps. Le passage créé par le druide fait au maximum 1,20 m de large, 2,40 m de haut sur une longueur de 3,60 m/ niveau du druide.",
+        "onUse": "systems/add2e/scripts/sorts/druide-porte-vegetale.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-porte-vegetale.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/druide-porte-vegetale.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort crée un passage, une porte magique à travers les arbres, les sous-bois, les fourrés ou toute autre végétation similaire, y compris celle de nature magique. Ce passage est ouvert uniquement pour le druide qui lance ce sort, pour les druides de niveau supérieur ou pour des dryades. Cette porte permet au druide d’entrer dans un tronc d’arbre et d’y rester jusqu’à la fin du sort. Si l’arbre est coupé ou brûlé, le druide doit quitter cet arbre avant qu’il ne tombe ou soit consumé ou alors il sera aussi tué. La durée du sort est de 1 tour par niveau du lanceur de sort. Si le druide choisit de rester dans un chêne, le sort dure 9 fois plus longtemps ; si l’arbre choisi est un frêne, il dure 3 fois plus longtemps. Le passage créé par le druide fait au maximum 1,20 m de large, 2,40 m de haut sur une longueur de 3,60 m/ niveau du druide.",
+        "description_texte": "Ce sort crée un passage, une porte magique à travers les arbres, les sous-bois, les fourrés ou toute autre végétation similaire, y compris celle de nature magique. Ce passage est ouvert uniquement pour le druide qui lance ce sort, pour les druides de niveau supérieur ou pour des dryades. Cette porte permet au druide d’entrer dans un tronc d’arbre et d’y rester jusqu’à la fin du sort. Si l’arbre est coupé ou brûlé, le druide doit quitter cet arbre avant qu’il ne tombe ou soit consumé ou alors il sera aussi tué. La durée du sort est de 1 tour par niveau du lanceur de sort. Si le druide choisit de rester dans un chêne, le sort dure 9 fois plus longtemps ; si l’arbre choisi est un frêne, il dure 3 fois plus longtemps. Le passage créé par le druide fait au maximum 1,20 m de large, 2,40 m de haut sur une longueur de 3,60 m/ niveau du druide.",
+        "description_html": "<p>Ce sort crée un passage, une porte magique à travers les arbres, les sous-bois, les fourrés ou toute autre végétation similaire, y compris celle de nature magique. Ce passage est ouvert uniquement pour le druide qui lance ce sort, pour les druides de niveau supérieur ou pour des dryades. Cette porte permet au druide d’entrer dans un tronc d’arbre et d’y rester jusqu’à la fin du sort. Si l’arbre est coupé ou brûlé, le druide doit quitter cet arbre avant qu’il ne tombe ou soit consumé ou alors il sera aussi tué. La durée du sort est de 1 tour par niveau du lanceur de sort. Si le druide choisit de rester dans un chêne, le sort dure 9 fois plus longtemps ; si l’arbre choisi est un frêne, il dure 3 fois plus longtemps. Le passage créé par le druide fait au maximum 1,20 m de large, 2,40 m de haut sur une longueur de 3,60 m/ niveau du druide.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Porte végétale",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:porte_vegetale",
+                "passage:vegetal",
+                "deplacement:plantes",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-porte-vegetale.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.YL6DxPvrxobH7RI2",
+          "_id": "DDi03ATiesmd5DRr",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568077,
+            "modifiedTime": 1780340568077
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:33.045Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-porte-vegetale.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.YL6DxPvrxobH7RI2",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568077,
+        "modifiedTime": 1780340568077,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "VzcxE29VIVIX7Agf",
+      "sort": 0
+    },
+    {
+      "name": "Protection contre la foudre",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-protection-contre-la-foudre.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort est exactement le même que le sort de niveau 3, protection contre le feu, sauf qu’il s’applique à l’électricité et à la foudre.",
+        "onUse": "systems/add2e/scripts/sorts/druide-protection-contre-la-foudre.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-protection-contre-la-foudre.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/druide-protection-contre-la-foudre.js",
+        "composants_materiels": [
+          {
+            "slug": "gui_druidique",
+            "nom": "Gui druidique",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est exactement le même que le sort de niveau 3, protection contre le feu, sauf qu’il s’applique à l’électricité et à la foudre.",
+        "description_texte": "Ce sort est exactement le même que le sort de niveau 3, protection contre le feu, sauf qu’il s’applique à l’électricité et à la foudre.",
+        "description_html": "<p>Ce sort est exactement le même que le sort de niveau 3, protection contre le feu, sauf qu’il s’applique à l’électricité et à la foudre.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "gui druidique",
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+      },
+      "effects": [
+        {
+          "name": "Protection contre la foudre",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:protection_contre_la_foudre",
+                "protection:foudre",
+                "resistance:electricite",
+                "absorption:foudre",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-protection-contre-la-foudre.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.OBhk2n0Dbpn1698p",
+          "_id": "9ySvdK78aoc2pAHQ",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567921,
+            "modifiedTime": 1780340567921
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:44.065Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-protection-contre-la-foudre.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.OBhk2n0Dbpn1698p",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567921,
+        "modifiedTime": 1780340567921,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "MgZcW1UgY4vOIats",
+      "sort": 0
+    },
+    {
+      "name": "Répulsion des insectes",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/druide-repulsion-des-insectes.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, le druide crée une barrière invisible qui fait que tout insecte normal ne peut s’approcher à moins de 3 m du lanceur de sort. Les insectes avec 2 dés de vie ou plus, s’ils réussissent leur jet de protection contre les sorts, peuvent tout de même passer, mais ils subiront alors de 1 à 6 points de dégâts. Ce sort n’a aucun pouvoir sur les arachnides, les myriapodes et autres créatures similaires ; il affecte seulement les vrais insectes. Les composantes matérielles sont du gui et l’un des éléments suivants : plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.",
+        "onUse": "systems/add2e/scripts/sorts/druide-repulsion-des-insectes.js",
+        "onuse": "systems/add2e/scripts/sorts/druide-repulsion-des-insectes.js",
+        "portée": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/druide-repulsion-des-insectes.js",
+        "composants_materiels": [
+          {
+            "slug": "gui",
+            "nom": "Gui",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "7_feuilles_de_navet_ecrasees",
+            "nom": "7 feuilles de navet écrasées",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont du gui et l’un des éléments suivants : plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Quand ce sort est lancé, le druide crée une barrière invisible qui fait que tout insecte normal ne peut s’approcher à moins de 3 m du lanceur de sort. Les insectes avec 2 dés de vie ou plus, s’ils réussissent leur jet de protection contre les sorts, peuvent tout de même passer, mais ils subiront alors de 1 à 6 points de dégâts. Ce sort n’a aucun pouvoir sur les arachnides, les myriapodes et autres créatures similaires ; il affecte seulement les vrais insectes. Les composantes matérielles sont du gui et l’un des éléments suivants : plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.",
+        "description_texte": "Quand ce sort est lancé, le druide crée une barrière invisible qui fait que tout insecte normal ne peut s’approcher à moins de 3 m du lanceur de sort. Les insectes avec 2 dés de vie ou plus, s’ils réussissent leur jet de protection contre les sorts, peuvent tout de même passer, mais ils subiront alors de 1 à 6 points de dégâts. Ce sort n’a aucun pouvoir sur les arachnides, les myriapodes et autres créatures similaires ; il affecte seulement les vrais insectes. Les composantes matérielles sont du gui et l’un des éléments suivants : plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.",
+        "description_html": "<p>Quand ce sort est lancé, le druide crée une barrière invisible qui fait que tout insecte normal ne peut s’approcher à moins de 3 m du lanceur de sort. Les insectes avec 2 dés de vie ou plus, s’ils réussissent leur jet de protection contre les sorts, peuvent tout de même passer, mais ils subiront alors de 1 à 6 points de dégâts. Ce sort n’a aucun pouvoir sur les arachnides, les myriapodes et autres créatures similaires ; il affecte seulement les vrais insectes. Les composantes matérielles sont du gui et l’un des éléments suivants : plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.</p>"
+      },
+      "effects": [
+        {
+          "name": "Répulsion des insectes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:druide",
+                "liste:druide",
+                "niveau:4",
+                "sort:repulsion_des_insectes",
+                "repulsion:insectes",
+                "zone:protection",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/druide-repulsion-des-insectes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.esWEkUvMBWCqSg1u",
+          "_id": "lZznG1xBrpHAU5Ni",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568716,
+            "modifiedTime": 1780340568716
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "druide-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:09.522Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/druide-repulsion-des-insectes.js",
+          "routedClass": "Druide",
+          "spellListsResolved": [
+            "Druide"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Druide / Niveau 4",
+          "sourceFolderId": "LfEAx23pvnf5ChDk",
+          "exportedAt": "2026-05-22T09:57:29.897Z"
+        }
+      },
+      "folder": "9solxAv5JcMQWwRA",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.esWEkUvMBWCqSg1u",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568716,
+        "modifiedTime": 1780340568716,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "R8kqIcaXdLu1nUFh",
+      "sort": 0
+    }
+  ]
+}

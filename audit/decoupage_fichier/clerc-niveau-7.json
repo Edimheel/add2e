@@ -1,0 +1,2588 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "clerc",
+    "niveau": 7,
+    "key": "clerc-niveau-7",
+    "count": 10
+  },
+  "folders": [
+    {
+      "name": "Clerc",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "xnt5dJBZCkmFcXJf",
+      "description": "",
+      "sort": 500000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566745,
+        "modifiedTime": 1780340566745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 7",
+      "type": "Item",
+      "folder": "xnt5dJBZCkmFcXJf",
+      "sorting": "a",
+      "_id": "6Rzv4BEmmsytROwN",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566738,
+        "modifiedTime": 1780340566738,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Asile",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/asile.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Asile ouvre une voie de déplacement magique ou permet un passage extraordinaire. La destination, les limites de transport, les risques et les conditions exactes dépendent du sort, du plan ou du terrain concerné. Le MD valide toujours les points d’arrivée et les obstacles surnaturels.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/asile.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/asile.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/asile.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre_du_clerc",
+            "nom": "Symbole sacré du clerc",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "Asile ouvre une voie de déplacement magique ou permet un passage extraordinaire. La destination, les limites de transport, les risques et les conditions exactes dépendent du sort, du plan ou du terrain concerné. Le MD valide toujours les points d’arrivée et les obstacles surnaturels.",
+        "description_texte": "Asile ouvre une voie de déplacement magique ou permet un passage extraordinaire. La destination, les limites de transport, les risques et les conditions exactes dépendent du sort, du plan ou du terrain concerné. Le MD valide toujours les points d’arrivée et les obstacles surnaturels.",
+        "description_html": "<p>Asile ouvre une voie de déplacement magique ou permet un passage extraordinaire. La destination, les limites de transport, les risques et les conditions exactes dépendent du sort, du plan ou du terrain concerné. Le MD valide toujours les points d’arrivée et les obstacles surnaturels.</p>",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "symbole sacré du clerc",
+        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément"
+      },
+      "effects": [
+        {
+          "name": "Asile",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:asile",
+                "asile",
+                "sanctuaire",
+                "transport",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/asile.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.1Dhj5gEGp22wR3C7",
+          "_id": "9aH39suCiq7DZLLA",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567054,
+            "modifiedTime": 1780340567054
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Asile",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:asile",
+                "asile",
+                "sanctuaire",
+                "transport",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/asile.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.1Dhj5gEGp22wR3C7",
+          "_id": "R80nDKtzSFfsWtQm",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567054,
+            "modifiedTime": 1780340567054
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Asile",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:asile",
+                "asile",
+                "sanctuaire",
+                "transport",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/asile.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.1Dhj5gEGp22wR3C7",
+          "_id": "0qifJ5v01K7mysYR",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567054,
+            "modifiedTime": 1780340567054
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:32.044Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/asile.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.1Dhj5gEGp22wR3C7",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567054,
+        "modifiedTime": 1780340567054,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "MjfD1BtI6Zbmcbkn",
+      "sort": 0
+    },
+    {
+      "name": "Contrôle du Climat",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 tour",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet au clerc de changer le climat d’une zone dans laquelle il se trouve. Le temps d’incantation est de 1 tour mais il faut 1 à 4 tours pour que les effets du changement se fassent sentir. Ce sort affectera le climat pendant 4 à 48 heures (4d12) dans une zone de 10 à 40 km² (1d4). Ce sort ne permet pas de changer la température de façon importante. Les possibilités de changement de climat dépendent des conditions climatiques précédant le lancement du sort : TEMPS CLAIR TEMPS TRÈS CHAUD CALME Très clair Chaleur Calme plat Nuages clairsemés Canicule Brise très légère PARTIELLEMENT NUAGEUX TEMPS CHAUD VENT LÉGER Clair Forte chaleur Calme Nuageux Douceur Vent fort Brouillard/pluie légère/ TEMPS DOUX VENT FORT Grêle faible Chaleur Vent léger Givre/neige légère Fraicheur Vent très fort NUAGEUX TEMPS FRAIS VENT TRÈS FORT Partiellement nuageux Douceur Vent fort Nuages importants Très froid Tempête Brouillard épais TEMPÊTE Grosse pluie/ Vent très fort Grêle importante Ouragan — Neige abondante/ Typhon Givre épais Les 3 aspects du temps (ciel/précipitation, température et vent) peuvent être changés mais seulement d’une catégorie vers le haut ou le bas. Par exemple, un ciel clair, une température chaude, avec un vent léger pourront devenir un ciel partiellement nuageux, une température élevée et un calme plat. En aucun cas on ne pourra avoir de contradiction — un brouillard épais avec un vent très fort. Le clerc peut aussi contrôler le sens du vent. Plusieurs sorts de contrôle peuvent être lancés à la suite, mais pas en même temps. Évidemment, ce sort ne peut fonctionner que là où il y a des conditions climatiques appropriées. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles de ce sort sont le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/controle-du-climat.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/controle-du-climat.js",
+        "portée": {
+          "valeur": "personnel",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/controle-du-climat.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre",
+            "nom": "Symbole sacré",
+            "quantite": 1,
+            "consomme": false
+          },
+          {
+            "slug": "son_chapelet_de_priere",
+            "nom": "Son chapelet de prière",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort permet au clerc de changer le climat d’une zone dans laquelle il se trouve. Le temps d’incantation est de 1 tour mais il faut 1 à 4 tours pour que les effets du changement se fassent sentir. Ce sort affectera le climat pendant 4 à 48 heures (4d12) dans une zone de 10 à 40 km² (1d4). Ce sort ne permet pas de changer la température de façon importante. Les possibilités de changement de climat dépendent des conditions climatiques précédant le lancement du sort : TEMPS CLAIR TEMPS TRÈS CHAUD CALME Très clair Chaleur Calme plat Nuages clairsemés Canicule Brise très légère PARTIELLEMENT NUAGEUX TEMPS CHAUD VENT LÉGER Clair Forte chaleur Calme Nuageux Douceur Vent fort Brouillard/pluie légère/ TEMPS DOUX VENT FORT Grêle faible Chaleur Vent léger Givre/neige légère Fraicheur Vent très fort NUAGEUX TEMPS FRAIS VENT TRÈS FORT Partiellement nuageux Douceur Vent fort Nuages importants Très froid Tempête Brouillard épais TEMPÊTE Grosse pluie/ Vent très fort Grêle importante Ouragan — Neige abondante/ Typhon Givre épais Les 3 aspects du temps (ciel/précipitation, température et vent) peuvent être changés mais seulement d’une catégorie vers le haut ou le bas. Par exemple, un ciel clair, une température chaude, avec un vent léger pourront devenir un ciel partiellement nuageux, une température élevée et un calme plat. En aucun cas on ne pourra avoir de contradiction — un brouillard épais avec un vent très fort. Le clerc peut aussi contrôler le sens du vent. Plusieurs sorts de contrôle peuvent être lancés à la suite, mais pas en même temps. Évidemment, ce sort ne peut fonctionner que là où il y a des conditions climatiques appropriées. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles de ce sort sont le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire.",
+        "description_texte": "Ce sort permet au clerc de changer le climat d’une zone dans laquelle il se trouve. Le temps d’incantation est de 1 tour mais il faut 1 à 4 tours pour que les effets du changement se fassent sentir. Ce sort affectera le climat pendant 4 à 48 heures (4d12) dans une zone de 10 à 40 km² (1d4). Ce sort ne permet pas de changer la température de façon importante. Les possibilités de changement de climat dépendent des conditions climatiques précédant le lancement du sort : TEMPS CLAIR TEMPS TRÈS CHAUD CALME Très clair Chaleur Calme plat Nuages clairsemés Canicule Brise très légère PARTIELLEMENT NUAGEUX TEMPS CHAUD VENT LÉGER Clair Forte chaleur Calme Nuageux Douceur Vent fort Brouillard/pluie légère/ TEMPS DOUX VENT FORT Grêle faible Chaleur Vent léger Givre/neige légère Fraicheur Vent très fort NUAGEUX TEMPS FRAIS VENT TRÈS FORT Partiellement nuageux Douceur Vent fort Nuages importants Très froid Tempête Brouillard épais TEMPÊTE Grosse pluie/ Vent très fort Grêle importante Ouragan — Neige abondante/ Typhon Givre épais Les 3 aspects du temps (ciel/précipitation, température et vent) peuvent être changés mais seulement d’une catégorie vers le haut ou le bas. Par exemple, un ciel clair, une température chaude, avec un vent léger pourront devenir un ciel partiellement nuageux, une température élevée et un calme plat. En aucun cas on ne pourra avoir de contradiction — un brouillard épais avec un vent très fort. Le clerc peut aussi contrôler le sens du vent. Plusieurs sorts de contrôle peuvent être lancés à la suite, mais pas en même temps. Évidemment, ce sort ne peut fonctionner que là où il y a des conditions climatiques appropriées. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles de ce sort sont le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire.",
+        "description_html": "<p>Ce sort permet au clerc de changer le climat d’une zone dans laquelle il se trouve. Le temps d’incantation est de 1 tour mais il faut 1 à 4 tours pour que les effets du changement se fassent sentir. Ce sort affectera le climat pendant 4 à 48 heures (4d12) dans une zone de 10 à 40 km² (1d4). Ce sort ne permet pas de changer la température de façon importante. Les possibilités de changement de climat dépendent des conditions climatiques précédant le lancement du sort : TEMPS CLAIR TEMPS TRÈS CHAUD CALME Très clair Chaleur Calme plat Nuages clairsemés Canicule Brise très légère PARTIELLEMENT NUAGEUX TEMPS CHAUD VENT LÉGER Clair Forte chaleur Calme Nuageux Douceur Vent fort Brouillard/pluie légère/ TEMPS DOUX VENT FORT Grêle faible Chaleur Vent léger Givre/neige légère Fraicheur Vent très fort NUAGEUX TEMPS FRAIS VENT TRÈS FORT Partiellement nuageux Douceur Vent fort Nuages importants Très froid Tempête Brouillard épais TEMPÊTE Grosse pluie/ Vent très fort Grêle importante Ouragan — Neige abondante/ Typhon Givre épais Les 3 aspects du temps (ciel/précipitation, température et vent) peuvent être changés mais seulement d’une catégorie vers le haut ou le bas. Par exemple, un ciel clair, une température chaude, avec un vent léger pourront devenir un ciel partiellement nuageux, une température élevée et un calme plat. En aucun cas on ne pourra avoir de contradiction — un brouillard épais avec un vent très fort. Le clerc peut aussi contrôler le sens du vent. Plusieurs sorts de contrôle peuvent être lancés à la suite, mais pas en même temps. Évidemment, ce sort ne peut fonctionner que là où il y a des conditions climatiques appropriées. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles de ce sort sont le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "Les composantes matérielles de ce sort sont le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire.",
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Contrôle du Climat",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:controle_du_climat",
+                "controle:climat",
+                "meteo",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.JDOxSCJz58AOogFa",
+          "_id": "08e18oZSZ3enRjWQ",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567852,
+            "modifiedTime": 1780340567852
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Contrôle du Climat",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:controle_du_climat",
+                "controle:climat",
+                "meteo",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.JDOxSCJz58AOogFa",
+          "_id": "jzPGNacER3q1K9G9",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567852,
+            "modifiedTime": 1780340567852
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Contrôle du Climat",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:controle_du_climat",
+                "controle:climat",
+                "meteo",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.JDOxSCJz58AOogFa",
+          "_id": "zZFRc4o3mj6VLdd2",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567852,
+            "modifiedTime": 1780340567852
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:06.626Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/controle-du-climat.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.JDOxSCJz58AOogFa",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567852,
+        "modifiedTime": 1780340567852,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "PSUPfcabfhbrxWG1",
+      "sort": 0
+    },
+    {
+      "name": "Marche des Vent",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/marche-sur-le-vent.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6\"/tour et 60\"/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite. PAROLE SACRÉE/MAUDITE (Conjuration/Appel) Niveau : 7 Composantes : V Portée : 0 Temps d'incantation : 1 segment Durée : spéciale Jet de protection : aucun Zone d'effet : 3\" de rayon Explication/Description : la prononciation d’une parole sacrée (ou d’une parole maudite) a un pouvoir énorme. Elle éloigne les créatures mauvaises (ou bonnes) en les forçant à retourner sur leur plan d’existence, à condition que le lanceur du sort soit originaire du plan où il lance le sort. Les créatures ainsi chassées ne peuvent revenir avant une journée. Ce sort affecte aussi les autres créatures dont l’alignement diffère de celui du clerc, comme suit : Effets Dés de vie ou niveau de la créature Généraux Mouvement Probabilités de toucher Sorts Moins de 4 Mort — — — 4 à 7+ Paralysie (1d4 tours) — — — 8 à 11+ Ralentie (2d4 rounds) –50% –4 — 12 ou plus Surdité (1d4 rounds) –25% –2 50 % d’échec Les créatures affectées doivent se trouver dans la zone d’effet (6\" de diamètre) dont le centre est le clerc lui-même.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js",
+        "composants_materiels": [
+          {
+            "slug": "feu_et_de_l_eau_benite_maudite",
+            "nom": "Feu et de l’eau bénite/maudite",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "feu et de l’eau bénite/maudite",
+        "description_reelle": "Ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6\"/tour et 60\"/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite. PAROLE SACRÉE/MAUDITE (Conjuration/Appel) Niveau : 7 Composantes : V Portée : 0 Temps d'incantation : 1 segment Durée : spéciale Jet de protection : aucun Zone d'effet : 3\" de rayon Explication/Description : la prononciation d’une parole sacrée (ou d’une parole maudite) a un pouvoir énorme. Elle éloigne les créatures mauvaises (ou bonnes) en les forçant à retourner sur leur plan d’existence, à condition que le lanceur du sort soit originaire du plan où il lance le sort. Les créatures ainsi chassées ne peuvent revenir avant une journée. Ce sort affecte aussi les autres créatures dont l’alignement diffère de celui du clerc, comme suit : Effets Dés de vie ou niveau de la créature Généraux Mouvement Probabilités de toucher Sorts Moins de 4 Mort — — — 4 à 7+ Paralysie (1d4 tours) — — — 8 à 11+ Ralentie (2d4 rounds) –50% –4 — 12 ou plus Surdité (1d4 rounds) –25% –2 50 % d’échec Les créatures affectées doivent se trouver dans la zone d’effet (6\" de diamètre) dont le centre est le clerc lui-même.",
+        "description_texte": "Ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6\"/tour et 60\"/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite. PAROLE SACRÉE/MAUDITE (Conjuration/Appel) Niveau : 7 Composantes : V Portée : 0 Temps d'incantation : 1 segment Durée : spéciale Jet de protection : aucun Zone d'effet : 3\" de rayon Explication/Description : la prononciation d’une parole sacrée (ou d’une parole maudite) a un pouvoir énorme. Elle éloigne les créatures mauvaises (ou bonnes) en les forçant à retourner sur leur plan d’existence, à condition que le lanceur du sort soit originaire du plan où il lance le sort. Les créatures ainsi chassées ne peuvent revenir avant une journée. Ce sort affecte aussi les autres créatures dont l’alignement diffère de celui du clerc, comme suit : Effets Dés de vie ou niveau de la créature Généraux Mouvement Probabilités de toucher Sorts Moins de 4 Mort — — — 4 à 7+ Paralysie (1d4 tours) — — — 8 à 11+ Ralentie (2d4 rounds) –50% –4 — 12 ou plus Surdité (1d4 rounds) –25% –2 50 % d’échec Les créatures affectées doivent se trouver dans la zone d’effet (6\" de diamètre) dont le centre est le clerc lui-même.",
+        "description_html": "<p>Ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6&quot;/tour et 60&quot;/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite. PAROLE SACRÉE/MAUDITE (Conjuration/Appel) Niveau : 7 Composantes : V Portée : 0 Temps d&#x27;incantation : 1 segment Durée : spéciale Jet de protection : aucun Zone d&#x27;effet : 3&quot; de rayon Explication/Description : la prononciation d’une parole sacrée (ou d’une parole maudite) a un pouvoir énorme. Elle éloigne les créatures mauvaises (ou bonnes) en les forçant à retourner sur leur plan d’existence, à condition que le lanceur du sort soit originaire du plan où il lance le sort. Les créatures ainsi chassées ne peuvent revenir avant une journée. Ce sort affecte aussi les autres créatures dont l’alignement diffère de celui du clerc, comme suit : Effets Dés de vie ou niveau de la créature Généraux Mouvement Probabilités de toucher Sorts Moins de 4 Mort — — — 4 à 7+ Paralysie (1d4 tours) — — — 8 à 11+ Ralentie (2d4 rounds) –50% –4 — 12 ou plus Surdité (1d4 rounds) –25% –2 50 % d’échec Les créatures affectées doivent se trouver dans la zone d’effet (6&quot; de diamètre) dont le centre est le clerc lui-même.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Marche sur le Vent",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:marche_sur_le_vent",
+                "deplacement:vent",
+                "forme:gazeuse",
+                "sort:marche_des_vent",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/marche-sur-le-vent.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.8EIhCAdqmm0m7N6q",
+          "_id": "Yn5YdwHofkVw08Pg",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567155,
+            "modifiedTime": 1780340567155
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Marche sur le Vent",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:marche_sur_le_vent",
+                "deplacement:vent",
+                "forme:gazeuse",
+                "sort:marche_des_vent",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/marche-sur-le-vent.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.8EIhCAdqmm0m7N6q",
+          "_id": "Zza0AOeqFKjA42BH",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567155,
+            "modifiedTime": 1780340567155
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Marche sur le Vent",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:marche_sur_le_vent",
+                "deplacement:vent",
+                "forme:gazeuse",
+                "sort:marche_des_vent",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/marche-sur-le-vent.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.8EIhCAdqmm0m7N6q",
+          "_id": "63YlDHV82bgZ4kd2",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567155,
+            "modifiedTime": 1780340567155
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:20.541Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.8EIhCAdqmm0m7N6q",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567155,
+        "modifiedTime": 1780340567155,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "0vew4Dsadk48WK8X",
+      "sort": 0
+    },
+    {
+      "name": "Parole Sacrée",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/parole-sacree.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "0",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Parole Sacrée impose, retire ou transforme un état important. Le script crée un effet actif ou retire les effets correspondants lorsque c’est possible ; les cas ambigus restent à valider par le MD selon la source de l’état, la cible et les protections existantes.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/parole-sacree.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/parole-sacree.js",
+        "portée": {
+          "valeur": "0",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/parole-sacree.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre_du_clerc",
+            "nom": "Symbole sacré du clerc",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "Parole Sacrée impose, retire ou transforme un état important. Le script crée un effet actif ou retire les effets correspondants lorsque c’est possible ; les cas ambigus restent à valider par le MD selon la source de l’état, la cible et les protections existantes.",
+        "description_texte": "Parole Sacrée impose, retire ou transforme un état important. Le script crée un effet actif ou retire les effets correspondants lorsque c’est possible ; les cas ambigus restent à valider par le MD selon la source de l’état, la cible et les protections existantes.",
+        "description_html": "<p>Parole Sacrée impose, retire ou transforme un état important. Le script crée un effet actif ou retire les effets correspondants lorsque c’est possible ; les cas ambigus restent à valider par le MD selon la source de l’état, la cible et les protections existantes.</p>",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "symbole sacré du clerc",
+        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément"
+      },
+      "effects": [
+        {
+          "name": "Parole Sacrée",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:parole_sacree",
+                "parole:sacree",
+                "alignement:mal",
+                "zone",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/parole-sacree.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.OGMsZH0HpepZ3WMp",
+          "_id": "lDQJMIdd2cvEb4yz",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567924,
+            "modifiedTime": 1780340567924
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Parole Sacrée",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:parole_sacree",
+                "parole:sacree",
+                "alignement:mal",
+                "zone",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/parole-sacree.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.OGMsZH0HpepZ3WMp",
+          "_id": "t9Nx4NopjT5EEomC",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567924,
+            "modifiedTime": 1780340567924
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Parole Sacrée",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:parole_sacree",
+                "parole:sacree",
+                "alignement:mal",
+                "zone",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/parole-sacree.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.OGMsZH0HpepZ3WMp",
+          "_id": "Alua2ayepZjmBd0a",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567924,
+            "modifiedTime": 1780340567924
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:00.263Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/parole-sacree.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.OGMsZH0HpepZ3WMp",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567924,
+        "modifiedTime": 1780340567924,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "faa1xkvCpaxj8mzy",
+      "sort": 0
+    },
+    {
+      "name": "Régénération",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/regeneration.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, les membres (doigts, orteils, pieds, mains, bras, jambes, queues ou même les têtes d’une créature multicéphale), les os et les organes se reforment. Le temps que prend la régénération est d’un round si le(s) membre(s) amputé(s) sont présents et en contact avec le corps, de 2 à 8 tours dans les autres cas. L’inverse du sort, flétrissement, fait que l’organe touché se flétrit et devient inutilisable en un round, se séparant ensuite du corps en 2 à 8 tours, tombant en poussière. Comme d’habitude, le clerc doit toucher sa victime. Les composantes matérielles de ce sort sont un objet de prière et de l’eau bénite/maudite.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/regeneration.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/regeneration.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/regeneration.js",
+        "composants_materiels": [
+          {
+            "slug": "objet_de_priere_et_de_l_eau_benite_maudite",
+            "nom": "Objet de prière et de l’eau bénite/maudite",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "objet de prière et de l’eau bénite/maudite",
+        "description_reelle": "Quand ce sort est lancé, les membres (doigts, orteils, pieds, mains, bras, jambes, queues ou même les têtes d’une créature multicéphale), les os et les organes se reforment. Le temps que prend la régénération est d’un round si le(s) membre(s) amputé(s) sont présents et en contact avec le corps, de 2 à 8 tours dans les autres cas. L’inverse du sort, flétrissement, fait que l’organe touché se flétrit et devient inutilisable en un round, se séparant ensuite du corps en 2 à 8 tours, tombant en poussière. Comme d’habitude, le clerc doit toucher sa victime. Les composantes matérielles de ce sort sont un objet de prière et de l’eau bénite/maudite.",
+        "description_texte": "Quand ce sort est lancé, les membres (doigts, orteils, pieds, mains, bras, jambes, queues ou même les têtes d’une créature multicéphale), les os et les organes se reforment. Le temps que prend la régénération est d’un round si le(s) membre(s) amputé(s) sont présents et en contact avec le corps, de 2 à 8 tours dans les autres cas. L’inverse du sort, flétrissement, fait que l’organe touché se flétrit et devient inutilisable en un round, se séparant ensuite du corps en 2 à 8 tours, tombant en poussière. Comme d’habitude, le clerc doit toucher sa victime. Les composantes matérielles de ce sort sont un objet de prière et de l’eau bénite/maudite.",
+        "description_html": "<p>Quand ce sort est lancé, les membres (doigts, orteils, pieds, mains, bras, jambes, queues ou même les têtes d’une créature multicéphale), les os et les organes se reforment. Le temps que prend la régénération est d’un round si le(s) membre(s) amputé(s) sont présents et en contact avec le corps, de 2 à 8 tours dans les autres cas. L’inverse du sort, flétrissement, fait que l’organe touché se flétrit et devient inutilisable en un round, se séparant ensuite du corps en 2 à 8 tours, tombant en poussière. Comme d’habitude, le clerc doit toucher sa victime. Les composantes matérielles de ce sort sont un objet de prière et de l’eau bénite/maudite.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Régénération",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:regeneration",
+                "regeneration",
+                "soin:membre",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/regeneration.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.yTkY9pDCsy4hlE6z",
+          "_id": "zjsQh4pP3U5cGJGK",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569487,
+            "modifiedTime": 1780340569487
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Régénération",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:regeneration",
+                "regeneration",
+                "soin:membre",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/regeneration.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.yTkY9pDCsy4hlE6z",
+          "_id": "f2ZLWUHlxR1HjobV",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569487,
+            "modifiedTime": 1780340569487
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Régénération",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:regeneration",
+                "regeneration",
+                "soin:membre",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/regeneration.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.yTkY9pDCsy4hlE6z",
+          "_id": "zFFsSb0vU67AIlTi",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569487,
+            "modifiedTime": 1780340569487
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:01.386Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/regeneration.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.yTkY9pDCsy4hlE6z",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569487,
+        "modifiedTime": 1780340569487,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "wTY2BA9kkcAc3IJu",
+      "sort": 0
+    },
+    {
+      "name": "Restauration",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/restauration.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand le sort est lancé, le niveau d’énergie de vie de la créature touchée est augmenté de 1. Cela implique bien sûr que la créature ait auparavant perdu un niveau d’énergie à cause d’un monstre ou d’une force. Ainsi, si un personnage de niveau 10 a été touché par un nécrophage et est descendu au niveau 9, le sort de restauration peut le ramener au nombre de points d’expérience nécessaire pour atteindre le niveau 10 et lui redonner un dé de vie additionnel, ainsi que les capacités de ce niveau. Le sort n’est efficace que s’il est lancé dans la limite de 1 jour par niveau du clerc après que le niveau ait été perdu. Le sort de restauration redonne l’intelligence aux créatures affectées par une débilité mentale (voir p.62). Le sort de restauration guérit absolument toutes les maladies mentales. L’inverse du sort, perte d’énergie, retire un niveau d’énergie à la victime (voir les morts-vivants tels que les spectres, les vampires ou nécrophages). Il faut que le clerc touche sa victime pour lui ôter un niveau. L’incantation de ces sorts vieillit le clerc de 2 ans.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/restauration.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/restauration.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/restauration.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand le sort est lancé, le niveau d’énergie de vie de la créature touchée est augmenté de 1. Cela implique bien sûr que la créature ait auparavant perdu un niveau d’énergie à cause d’un monstre ou d’une force. Ainsi, si un personnage de niveau 10 a été touché par un nécrophage et est descendu au niveau 9, le sort de restauration peut le ramener au nombre de points d’expérience nécessaire pour atteindre le niveau 10 et lui redonner un dé de vie additionnel, ainsi que les capacités de ce niveau. Le sort n’est efficace que s’il est lancé dans la limite de 1 jour par niveau du clerc après que le niveau ait été perdu. Le sort de restauration redonne l’intelligence aux créatures affectées par une débilité mentale (voir p.62). Le sort de restauration guérit absolument toutes les maladies mentales. L’inverse du sort, perte d’énergie, retire un niveau d’énergie à la victime (voir les morts-vivants tels que les spectres, les vampires ou nécrophages). Il faut que le clerc touche sa victime pour lui ôter un niveau. L’incantation de ces sorts vieillit le clerc de 2 ans.",
+        "description_texte": "Quand le sort est lancé, le niveau d’énergie de vie de la créature touchée est augmenté de 1. Cela implique bien sûr que la créature ait auparavant perdu un niveau d’énergie à cause d’un monstre ou d’une force. Ainsi, si un personnage de niveau 10 a été touché par un nécrophage et est descendu au niveau 9, le sort de restauration peut le ramener au nombre de points d’expérience nécessaire pour atteindre le niveau 10 et lui redonner un dé de vie additionnel, ainsi que les capacités de ce niveau. Le sort n’est efficace que s’il est lancé dans la limite de 1 jour par niveau du clerc après que le niveau ait été perdu. Le sort de restauration redonne l’intelligence aux créatures affectées par une débilité mentale (voir p.62). Le sort de restauration guérit absolument toutes les maladies mentales. L’inverse du sort, perte d’énergie, retire un niveau d’énergie à la victime (voir les morts-vivants tels que les spectres, les vampires ou nécrophages). Il faut que le clerc touche sa victime pour lui ôter un niveau. L’incantation de ces sorts vieillit le clerc de 2 ans.",
+        "description_html": "<p>Quand le sort est lancé, le niveau d’énergie de vie de la créature touchée est augmenté de 1. Cela implique bien sûr que la créature ait auparavant perdu un niveau d’énergie à cause d’un monstre ou d’une force. Ainsi, si un personnage de niveau 10 a été touché par un nécrophage et est descendu au niveau 9, le sort de restauration peut le ramener au nombre de points d’expérience nécessaire pour atteindre le niveau 10 et lui redonner un dé de vie additionnel, ainsi que les capacités de ce niveau. Le sort n’est efficace que s’il est lancé dans la limite de 1 jour par niveau du clerc après que le niveau ait été perdu. Le sort de restauration redonne l’intelligence aux créatures affectées par une débilité mentale (voir p.62). Le sort de restauration guérit absolument toutes les maladies mentales. L’inverse du sort, perte d’énergie, retire un niveau d’énergie à la victime (voir les morts-vivants tels que les spectres, les vampires ou nécrophages). Il faut que le clerc touche sa victime pour lui ôter un niveau. L’incantation de ces sorts vieillit le clerc de 2 ans.</p>"
+      },
+      "effects": [
+        {
+          "name": "Restauration",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:restauration",
+                "restauration",
+                "retire:drain_energie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/restauration.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.RgnY6WwljbNJDo54",
+          "_id": "j9xrKPM1kjOTcES1",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567981,
+            "modifiedTime": 1780340567981
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Restauration",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:restauration",
+                "restauration",
+                "retire:drain_energie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/restauration.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.RgnY6WwljbNJDo54",
+          "_id": "EbqIIUBAbEgdeQxa",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567981,
+            "modifiedTime": 1780340567981
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Restauration",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:restauration",
+                "restauration",
+                "retire:drain_energie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/restauration.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.RgnY6WwljbNJDo54",
+          "_id": "a5dhIstBjgJoyKCK",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567981,
+            "modifiedTime": 1780340567981
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:13.584Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/restauration.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.894Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.RgnY6WwljbNJDo54",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567981,
+        "modifiedTime": 1780340567981,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "KV9j89SM2tko3iDL",
+      "sort": 0
+    },
+    {
+      "name": "Résurrection",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/resurrection.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le clerc peut redonner vie et force à une personne morte. La créature peut être morte depuis 10 années par niveau du clerc : donc un clerc de niveau 19 peut ressusciter une créature décédée il y a 190 ans. Voir le sort rappel à la vie pour les limitations quant aux personnes pouvant être ressuscitées. L’inverse du sort, anéantissement, fait que la victime touchée par le clerc meurt immédiatement et tombe en poussière. Les composantes matérielles sont le symbole sacré du clerc et de l’eau bénite/ maudite. Le fait de lancer ce sort oblige le clerc à se reposer un nombre de jour égal aux niveaux ou dés de vie de la créature ressuscitée ou anéantie. Ce repos doit se faire au lit et doit être total. L’incantation de ces sorts vieillit le clerc de 3 ans.",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/resurrection.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/resurrection.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/resurrection.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre",
+            "nom": "Symbole sacré",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont le symbole sacré du clerc et de l’eau bénite/ maudite.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Avec ce sort, le clerc peut redonner vie et force à une personne morte. La créature peut être morte depuis 10 années par niveau du clerc : donc un clerc de niveau 19 peut ressusciter une créature décédée il y a 190 ans. Voir le sort rappel à la vie pour les limitations quant aux personnes pouvant être ressuscitées. L’inverse du sort, anéantissement, fait que la victime touchée par le clerc meurt immédiatement et tombe en poussière. Les composantes matérielles sont le symbole sacré du clerc et de l’eau bénite/ maudite. Le fait de lancer ce sort oblige le clerc à se reposer un nombre de jour égal aux niveaux ou dés de vie de la créature ressuscitée ou anéantie. Ce repos doit se faire au lit et doit être total. L’incantation de ces sorts vieillit le clerc de 3 ans.",
+        "description_texte": "Avec ce sort, le clerc peut redonner vie et force à une personne morte. La créature peut être morte depuis 10 années par niveau du clerc : donc un clerc de niveau 19 peut ressusciter une créature décédée il y a 190 ans. Voir le sort rappel à la vie pour les limitations quant aux personnes pouvant être ressuscitées. L’inverse du sort, anéantissement, fait que la victime touchée par le clerc meurt immédiatement et tombe en poussière. Les composantes matérielles sont le symbole sacré du clerc et de l’eau bénite/ maudite. Le fait de lancer ce sort oblige le clerc à se reposer un nombre de jour égal aux niveaux ou dés de vie de la créature ressuscitée ou anéantie. Ce repos doit se faire au lit et doit être total. L’incantation de ces sorts vieillit le clerc de 3 ans.",
+        "description_html": "<p>Avec ce sort, le clerc peut redonner vie et force à une personne morte. La créature peut être morte depuis 10 années par niveau du clerc : donc un clerc de niveau 19 peut ressusciter une créature décédée il y a 190 ans. Voir le sort rappel à la vie pour les limitations quant aux personnes pouvant être ressuscitées. L’inverse du sort, anéantissement, fait que la victime touchée par le clerc meurt immédiatement et tombe en poussière. Les composantes matérielles sont le symbole sacré du clerc et de l’eau bénite/ maudite. Le fait de lancer ce sort oblige le clerc à se reposer un nombre de jour égal aux niveaux ou dés de vie de la créature ressuscitée ou anéantie. Ce repos doit se faire au lit et doit être total. L’incantation de ces sorts vieillit le clerc de 3 ans.</p>"
+      },
+      "effects": [
+        {
+          "name": "Résurrection",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:resurrection",
+                "resurrection",
+                "retour:vie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resurrection.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.2jajcujtf3p7SfTb",
+          "_id": "VnBPKJqdePKBLV3F",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567081,
+            "modifiedTime": 1780340567081
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Résurrection",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:resurrection",
+                "resurrection",
+                "retour:vie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resurrection.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.2jajcujtf3p7SfTb",
+          "_id": "p4UQGivhuSb5rp80",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567081,
+            "modifiedTime": 1780340567081
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Résurrection",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:resurrection",
+                "resurrection",
+                "retour:vie",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resurrection.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.2jajcujtf3p7SfTb",
+          "_id": "NrPKtynQABPb9hhO",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567081,
+            "modifiedTime": 1780340567081
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:13.800Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/resurrection.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.895Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.2jajcujtf3p7SfTb",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567081,
+        "modifiedTime": 1780340567081,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "x3fOxKCADgNdvfyU",
+      "sort": 0
+    },
+    {
+      "name": "Sort Astral",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le clerc peut projeter son corps astral dans le plan astral, quittant ainsi son enveloppe physique et ses possessions matérielles, en les laissant sur le plan matériel primaire (le plan sur lequel se trouvent l’univers entier et tous ses univers parallèles). Seuls certains objets magiques ayant une existence multi-plans peuvent être emportés dans le plan astral. Comme le plan astral touche les premiers niveaux des plans extérieurs, le clerc peut voyager astralement comme il le désire vers n’importe lequel de ces plans extérieurs. Le clerc quitte alors le plan astral et forme un corps sur le plan d’existence qu’il a choisi. Il est aussi possible de voyager astralement sur le plan matériel primaire avec ce sort, mais un second corps ne peut pas se former sur ce plan. En règle générale, une personne projetée astralement ne peut être vue que par des créatures qui se trouvent sur le plan astral. À tout moment, le corps astral est connecté au corps matériel par un cordon d’argent ; si ce cordon est cassé, la personne meurt astralement et matériellement, mais généralement, seule une force psychique (le vent psychique) peut rompre ce cordon. Quand un second corps est formé le cordon reste invisiblement attaché à ce second corps. Si le second corps ou le corps astral est tué, le cordon retourne tout simplement au corps matériel resté sur le plan matériel primaire, le corps matériel sortant alors de son état d’animation suspendue. Bien que pouvant agir sur le plan astral, les personnes projetées ne peuvent pas affecter les créatures non-astrales. Le sort dure jusqu’à ce que le clerc y mette fin ou jusqu’à ce qu’il soit annulé par un autre moyen (dissipation de la magie ou destruction du corps matériel du clerc sur le plan matériel primaire, ce qui tue le clerc). Le clerc peut emmener avec lui jusqu’à 5 personnes, ces 5 personnes devant être reliées à lui en formant un cercle. Ces compagnons de voyage sont dépendants du clerc et peuvent se retrouver en rade si quelque chose arrive au clerc. Le voyage peut être lent ou rapide, selon le désir du clerc. Le clerc décide de sa destination finale. (Voir APPENDICE IV, LES PLANS D’EXISTENCE CONNUS pour plus d’informations sur le plan astral et la projection astrale).",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/sort-astral.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/sort-astral.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/sort-astral.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, le clerc peut projeter son corps astral dans le plan astral, quittant ainsi son enveloppe physique et ses possessions matérielles, en les laissant sur le plan matériel primaire (le plan sur lequel se trouvent l’univers entier et tous ses univers parallèles). Seuls certains objets magiques ayant une existence multi-plans peuvent être emportés dans le plan astral. Comme le plan astral touche les premiers niveaux des plans extérieurs, le clerc peut voyager astralement comme il le désire vers n’importe lequel de ces plans extérieurs. Le clerc quitte alors le plan astral et forme un corps sur le plan d’existence qu’il a choisi. Il est aussi possible de voyager astralement sur le plan matériel primaire avec ce sort, mais un second corps ne peut pas se former sur ce plan. En règle générale, une personne projetée astralement ne peut être vue que par des créatures qui se trouvent sur le plan astral. À tout moment, le corps astral est connecté au corps matériel par un cordon d’argent ; si ce cordon est cassé, la personne meurt astralement et matériellement, mais généralement, seule une force psychique (le vent psychique) peut rompre ce cordon. Quand un second corps est formé le cordon reste invisiblement attaché à ce second corps. Si le second corps ou le corps astral est tué, le cordon retourne tout simplement au corps matériel resté sur le plan matériel primaire, le corps matériel sortant alors de son état d’animation suspendue. Bien que pouvant agir sur le plan astral, les personnes projetées ne peuvent pas affecter les créatures non-astrales. Le sort dure jusqu’à ce que le clerc y mette fin ou jusqu’à ce qu’il soit annulé par un autre moyen (dissipation de la magie ou destruction du corps matériel du clerc sur le plan matériel primaire, ce qui tue le clerc). Le clerc peut emmener avec lui jusqu’à 5 personnes, ces 5 personnes devant être reliées à lui en formant un cercle. Ces compagnons de voyage sont dépendants du clerc et peuvent se retrouver en rade si quelque chose arrive au clerc. Le voyage peut être lent ou rapide, selon le désir du clerc. Le clerc décide de sa destination finale. (Voir APPENDICE IV, LES PLANS D’EXISTENCE CONNUS pour plus d’informations sur le plan astral et la projection astrale).",
+        "description_texte": "Avec ce sort, le clerc peut projeter son corps astral dans le plan astral, quittant ainsi son enveloppe physique et ses possessions matérielles, en les laissant sur le plan matériel primaire (le plan sur lequel se trouvent l’univers entier et tous ses univers parallèles). Seuls certains objets magiques ayant une existence multi-plans peuvent être emportés dans le plan astral. Comme le plan astral touche les premiers niveaux des plans extérieurs, le clerc peut voyager astralement comme il le désire vers n’importe lequel de ces plans extérieurs. Le clerc quitte alors le plan astral et forme un corps sur le plan d’existence qu’il a choisi. Il est aussi possible de voyager astralement sur le plan matériel primaire avec ce sort, mais un second corps ne peut pas se former sur ce plan. En règle générale, une personne projetée astralement ne peut être vue que par des créatures qui se trouvent sur le plan astral. À tout moment, le corps astral est connecté au corps matériel par un cordon d’argent ; si ce cordon est cassé, la personne meurt astralement et matériellement, mais généralement, seule une force psychique (le vent psychique) peut rompre ce cordon. Quand un second corps est formé le cordon reste invisiblement attaché à ce second corps. Si le second corps ou le corps astral est tué, le cordon retourne tout simplement au corps matériel resté sur le plan matériel primaire, le corps matériel sortant alors de son état d’animation suspendue. Bien que pouvant agir sur le plan astral, les personnes projetées ne peuvent pas affecter les créatures non-astrales. Le sort dure jusqu’à ce que le clerc y mette fin ou jusqu’à ce qu’il soit annulé par un autre moyen (dissipation de la magie ou destruction du corps matériel du clerc sur le plan matériel primaire, ce qui tue le clerc). Le clerc peut emmener avec lui jusqu’à 5 personnes, ces 5 personnes devant être reliées à lui en formant un cercle. Ces compagnons de voyage sont dépendants du clerc et peuvent se retrouver en rade si quelque chose arrive au clerc. Le voyage peut être lent ou rapide, selon le désir du clerc. Le clerc décide de sa destination finale. (Voir APPENDICE IV, LES PLANS D’EXISTENCE CONNUS pour plus d’informations sur le plan astral et la projection astrale).",
+        "description_html": "<p>Avec ce sort, le clerc peut projeter son corps astral dans le plan astral, quittant ainsi son enveloppe physique et ses possessions matérielles, en les laissant sur le plan matériel primaire (le plan sur lequel se trouvent l’univers entier et tous ses univers parallèles). Seuls certains objets magiques ayant une existence multi-plans peuvent être emportés dans le plan astral. Comme le plan astral touche les premiers niveaux des plans extérieurs, le clerc peut voyager astralement comme il le désire vers n’importe lequel de ces plans extérieurs. Le clerc quitte alors le plan astral et forme un corps sur le plan d’existence qu’il a choisi. Il est aussi possible de voyager astralement sur le plan matériel primaire avec ce sort, mais un second corps ne peut pas se former sur ce plan. En règle générale, une personne projetée astralement ne peut être vue que par des créatures qui se trouvent sur le plan astral. À tout moment, le corps astral est connecté au corps matériel par un cordon d’argent ; si ce cordon est cassé, la personne meurt astralement et matériellement, mais généralement, seule une force psychique (le vent psychique) peut rompre ce cordon. Quand un second corps est formé le cordon reste invisiblement attaché à ce second corps. Si le second corps ou le corps astral est tué, le cordon retourne tout simplement au corps matériel resté sur le plan matériel primaire, le corps matériel sortant alors de son état d’animation suspendue. Bien que pouvant agir sur le plan astral, les personnes projetées ne peuvent pas affecter les créatures non-astrales. Le sort dure jusqu’à ce que le clerc y mette fin ou jusqu’à ce qu’il soit annulé par un autre moyen (dissipation de la magie ou destruction du corps matériel du clerc sur le plan matériel primaire, ce qui tue le clerc). Le clerc peut emmener avec lui jusqu’à 5 personnes, ces 5 personnes devant être reliées à lui en formant un cercle. Ces compagnons de voyage sont dépendants du clerc et peuvent se retrouver en rade si quelque chose arrive au clerc. Le voyage peut être lent ou rapide, selon le désir du clerc. Le clerc décide de sa destination finale. (Voir APPENDICE IV, LES PLANS D’EXISTENCE CONNUS pour plus d’informations sur le plan astral et la projection astrale).</p>"
+      },
+      "effects": [
+        {
+          "name": "Sort Astral",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:sort_astral",
+                "voyage:astral",
+                "plans",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.mfP9nCr28dQsL5k0",
+          "_id": "ksxBAEgnmxZnFPTi",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568855,
+            "modifiedTime": 1780340568855
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Sort Astral",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:sort_astral",
+                "voyage:astral",
+                "plans",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.mfP9nCr28dQsL5k0",
+          "_id": "wYhuNAZWNpsJUakC",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568855,
+            "modifiedTime": 1780340568855
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Sort Astral",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:sort_astral",
+                "voyage:astral",
+                "plans",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.mfP9nCr28dQsL5k0",
+          "_id": "J3FtTYSswg7aWPU6",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568855,
+            "modifiedTime": 1780340568855
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:36.878Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/sort-astral.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.895Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.mfP9nCr28dQsL5k0",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568855,
+        "modifiedTime": 1780340568855,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "4Aaby7ywbSbUbzLG",
+      "sort": 0
+    },
+    {
+      "name": "Symbole",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/symbole.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Le clerc qui lance ce sort dessine un symbole dans les airs ou sur n’importe quelle surface de son choix. Le symbole brille pendant 1 tour par niveau du clerc. Le symbole utilisé par le clerc peut être choisi au moment d’incanter le sort, parmi ces trois possibilités : Désespoir Toutes les créatures qui le voient sont affectées et tombent dans un désespoir et un pessimisme profonds, à moins qu’elles ne réussissent leur jet de protection contre les sorts. Les créatures qui le ratent se soumettront à toutes les demandes d’un adversaire : sortir, se rendre, etc. Le désespoir dure pendant 3d4 tours Souffrance Toutes les créatures qui ratent leur jet de protection sont affectées et ressentent des douleurs vives, qui provoquent une perte de 2 points sur leur score de dextérité et un malus de -4 sur leurs jets pour toucher, ceci pendant 2d10 tours. Persuasion Les créatures qui voient ce symbole deviennent du même alignement que le clerc et se montrent amicales à son égard pendant 1 à 20 tours (1d20) sauf bien sûr si leur jet de protection est réussi. Les composantes matérielles de ce sort sont du mercure et du phosphore (voir p.92 le sort de magicien de niveau 8 symbole).",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/symbole.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/symbole.js",
+        "portée": {
+          "valeur": "toucher",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/symbole.js",
+        "composants_materiels": [
+          {
+            "slug": "mercure",
+            "nom": "Mercure",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles de ce sort sont du mercure et du phosphore (voir p.",
+        "description_reelle": "Le clerc qui lance ce sort dessine un symbole dans les airs ou sur n’importe quelle surface de son choix. Le symbole brille pendant 1 tour par niveau du clerc. Le symbole utilisé par le clerc peut être choisi au moment d’incanter le sort, parmi ces trois possibilités : Désespoir Toutes les créatures qui le voient sont affectées et tombent dans un désespoir et un pessimisme profonds, à moins qu’elles ne réussissent leur jet de protection contre les sorts. Les créatures qui le ratent se soumettront à toutes les demandes d’un adversaire : sortir, se rendre, etc. Le désespoir dure pendant 3d4 tours Souffrance Toutes les créatures qui ratent leur jet de protection sont affectées et ressentent des douleurs vives, qui provoquent une perte de 2 points sur leur score de dextérité et un malus de -4 sur leurs jets pour toucher, ceci pendant 2d10 tours. Persuasion Les créatures qui voient ce symbole deviennent du même alignement que le clerc et se montrent amicales à son égard pendant 1 à 20 tours (1d20) sauf bien sûr si leur jet de protection est réussi. Les composantes matérielles de ce sort sont du mercure et du phosphore (voir p.92 le sort de magicien de niveau 8 symbole).",
+        "description_texte": "Le clerc qui lance ce sort dessine un symbole dans les airs ou sur n’importe quelle surface de son choix. Le symbole brille pendant 1 tour par niveau du clerc. Le symbole utilisé par le clerc peut être choisi au moment d’incanter le sort, parmi ces trois possibilités : Désespoir Toutes les créatures qui le voient sont affectées et tombent dans un désespoir et un pessimisme profonds, à moins qu’elles ne réussissent leur jet de protection contre les sorts. Les créatures qui le ratent se soumettront à toutes les demandes d’un adversaire : sortir, se rendre, etc. Le désespoir dure pendant 3d4 tours Souffrance Toutes les créatures qui ratent leur jet de protection sont affectées et ressentent des douleurs vives, qui provoquent une perte de 2 points sur leur score de dextérité et un malus de -4 sur leurs jets pour toucher, ceci pendant 2d10 tours. Persuasion Les créatures qui voient ce symbole deviennent du même alignement que le clerc et se montrent amicales à son égard pendant 1 à 20 tours (1d20) sauf bien sûr si leur jet de protection est réussi. Les composantes matérielles de ce sort sont du mercure et du phosphore (voir p.92 le sort de magicien de niveau 8 symbole).",
+        "description_html": "<p>Le clerc qui lance ce sort dessine un symbole dans les airs ou sur n’importe quelle surface de son choix. Le symbole brille pendant 1 tour par niveau du clerc. Le symbole utilisé par le clerc peut être choisi au moment d’incanter le sort, parmi ces trois possibilités : Désespoir Toutes les créatures qui le voient sont affectées et tombent dans un désespoir et un pessimisme profonds, à moins qu’elles ne réussissent leur jet de protection contre les sorts. Les créatures qui le ratent se soumettront à toutes les demandes d’un adversaire : sortir, se rendre, etc. Le désespoir dure pendant 3d4 tours Souffrance Toutes les créatures qui ratent leur jet de protection sont affectées et ressentent des douleurs vives, qui provoquent une perte de 2 points sur leur score de dextérité et un malus de -4 sur leurs jets pour toucher, ceci pendant 2d10 tours. Persuasion Les créatures qui voient ce symbole deviennent du même alignement que le clerc et se montrent amicales à son égard pendant 1 à 20 tours (1d20) sauf bien sûr si leur jet de protection est réussi. Les composantes matérielles de ce sort sont du mercure et du phosphore (voir p.92 le sort de magicien de niveau 8 symbole).</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Symbole",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:symbole",
+                "symbole",
+                "glyphe",
+                "piege:magique",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/symbole.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.gke9i8Ni0ESj0ObV",
+          "_id": "Wn4xLDNNXLV5e5xM",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568760,
+            "modifiedTime": 1780340568760
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Symbole",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:symbole",
+                "symbole",
+                "glyphe",
+                "piege:magique",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/symbole.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.gke9i8Ni0ESj0ObV",
+          "_id": "ruxl9sPq6nU6L8Ev",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568760,
+            "modifiedTime": 1780340568760
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Symbole",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:symbole",
+                "symbole",
+                "glyphe",
+                "piege:magique",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/symbole.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.gke9i8Ni0ESj0ObV",
+          "_id": "2VFdNdqsCLhAwTHr",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568760,
+            "modifiedTime": 1780340568760
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:52.106Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/symbole.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.895Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.gke9i8Ni0ESj0ObV",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568760,
+        "modifiedTime": 1780340568760,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "edocrNiNW6x6TWX1",
+      "sort": 0
+    },
+    {
+      "name": "Tremblement de Terre",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/tremblement-de-terre.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "12 pouces",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1 round",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, un tremblement de terre localisé de forte intensité secoue le sol. Ce tremblement affecte tous les types de terrains. La secousse se termine au bout d’un round. La végétation, les constructions et les créatures y vivant sont touchées par ce sort. La zone d’effet est circulaire et d’un diamètre de ½\" par niveau du clerc ; donc un clerc de niveau 20 affectera une zone circulaire de 10\" de diamètre. Les effets sont les suivants : TERRAIN Grottes/souterrains Le plafond s’effondre Falaises La paroi s’effondre provoquant un glissement de terrain Sol Des crevasses se forment, les créatures y tombent et peuvent être tuées comme suit en fonction de leur catégorie de taille ; P : 1 sur 4 ; M : 1 sur 6 ; G : 1 sur 8 Marais L’eau s’écoule hors des dépressions avec formation de boue sur les terrains alentours Tunnels S’écroulent Sous l’eau Provoque des ondes de choc qui étourdissent pendant 5-20 rounds ceux qui ratent leur jet de protection contre la mort magique VÉGÉTATION Petite taille Pas d’effet Arbres 1 sur 3 est déraciné et s’abat sur le sol CONSTRUCTIONS Toute structure Subissent de 5 à 60 (5d12) points de dégât structurels ; celles qui subissent leurs dommages maximum tombent en ruine. Les constructions bâties très solidement dont les fondations atteignent le roc ne subissent que la moitié des dégâts. CRÉATURES Voir ci-dessus à TERRAIN Les composantes matérielles pour ce sort sont une pincée de poussière, un petit caillou et une motte de terre. LES SORTS DE DRUIDE Notes concernant les sorts de druide (clerc): Le symbole religieux des druides est le gui. Un autre symbole de moindre importance est le houx. Quelques pouvoirs magiques se trouvent dans les feuilles de chêne. Tous les sorts comportant une composante matérielle impliquent l'utilisation de gui, gui qui doit être cueilli par le druide de la manière décrite ci-dessous. Le gui secondaire, le houx et les feuilles de chêne réduisent l'efficacité des sorts comme suit : Symbole Portée du sort Durée du sort Zone d'effet Gui majeur 100 % 100 % 100 % Gui secondaire 100 % 75 %* 100 % Gui emprunté 75 %* 50 %** 100 % Houx 75 %* 50 %** 75 %* Feuilles de chêne 50 %** 50 %** 50 %** * ou +1 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable ** ou +2 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable Le gui majeur : c’est le gui qui est cueilli par le druide lui-même, la veille du solstice d’été. Il doit localiser son gui et le couper avec une serpe d’or ou d’argent et il doit le recueillir dans une coupe avant qu’il ne touche terre. Le gui secondaire : ce gui est cueilli par le druide mais sans respecter le rituel ; soit il n’est pas cueilli la veille du solstice d’été, soit le druide ne le prélève pas de la bonne manière (en le cueillant directement avec la main, par exemple) Le gui emprunté : il s’agit de gui mais qui n’a pas été cueilli par le druide en personne. Le houx et les feuilles de chêne : ils doivent être cueillis par le druide luimême, mais la manière et le moment importent peu. SORTS DE NIVEAU 1",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/tremblement-de-terre.js",
+        "onuse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/tremblement-de-terre.js",
+        "portée": {
+          "valeur": "12 pouces",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/tremblement-de-terre.js",
+        "composants_materiels": [
+          {
+            "slug": "pincee_de_poussiere",
+            "nom": "Pincée de poussière",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles pour ce sort sont une pincée de poussière, un petit caillou et une motte de terre.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Quand ce sort est lancé, un tremblement de terre localisé de forte intensité secoue le sol. Ce tremblement affecte tous les types de terrains. La secousse se termine au bout d’un round. La végétation, les constructions et les créatures y vivant sont touchées par ce sort. La zone d’effet est circulaire et d’un diamètre de ½\" par niveau du clerc ; donc un clerc de niveau 20 affectera une zone circulaire de 10\" de diamètre. Les effets sont les suivants : TERRAIN Grottes/souterrains Le plafond s’effondre Falaises La paroi s’effondre provoquant un glissement de terrain Sol Des crevasses se forment, les créatures y tombent et peuvent être tuées comme suit en fonction de leur catégorie de taille ; P : 1 sur 4 ; M : 1 sur 6 ; G : 1 sur 8 Marais L’eau s’écoule hors des dépressions avec formation de boue sur les terrains alentours Tunnels S’écroulent Sous l’eau Provoque des ondes de choc qui étourdissent pendant 5-20 rounds ceux qui ratent leur jet de protection contre la mort magique VÉGÉTATION Petite taille Pas d’effet Arbres 1 sur 3 est déraciné et s’abat sur le sol CONSTRUCTIONS Toute structure Subissent de 5 à 60 (5d12) points de dégât structurels ; celles qui subissent leurs dommages maximum tombent en ruine. Les constructions bâties très solidement dont les fondations atteignent le roc ne subissent que la moitié des dégâts. CRÉATURES Voir ci-dessus à TERRAIN Les composantes matérielles pour ce sort sont une pincée de poussière, un petit caillou et une motte de terre. LES SORTS DE DRUIDE Notes concernant les sorts de druide (clerc): Le symbole religieux des druides est le gui. Un autre symbole de moindre importance est le houx. Quelques pouvoirs magiques se trouvent dans les feuilles de chêne. Tous les sorts comportant une composante matérielle impliquent l'utilisation de gui, gui qui doit être cueilli par le druide de la manière décrite ci-dessous. Le gui secondaire, le houx et les feuilles de chêne réduisent l'efficacité des sorts comme suit : Symbole Portée du sort Durée du sort Zone d'effet Gui majeur 100 % 100 % 100 % Gui secondaire 100 % 75 %* 100 % Gui emprunté 75 %* 50 %** 100 % Houx 75 %* 50 %** 75 %* Feuilles de chêne 50 %** 50 %** 50 %** * ou +1 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable ** ou +2 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable Le gui majeur : c’est le gui qui est cueilli par le druide lui-même, la veille du solstice d’été. Il doit localiser son gui et le couper avec une serpe d’or ou d’argent et il doit le recueillir dans une coupe avant qu’il ne touche terre. Le gui secondaire : ce gui est cueilli par le druide mais sans respecter le rituel ; soit il n’est pas cueilli la veille du solstice d’été, soit le druide ne le prélève pas de la bonne manière (en le cueillant directement avec la main, par exemple) Le gui emprunté : il s’agit de gui mais qui n’a pas été cueilli par le druide en personne. Le houx et les feuilles de chêne : ils doivent être cueillis par le druide luimême, mais la manière et le moment importent peu. SORTS DE NIVEAU 1",
+        "description_texte": "Quand ce sort est lancé, un tremblement de terre localisé de forte intensité secoue le sol. Ce tremblement affecte tous les types de terrains. La secousse se termine au bout d’un round. La végétation, les constructions et les créatures y vivant sont touchées par ce sort. La zone d’effet est circulaire et d’un diamètre de ½\" par niveau du clerc ; donc un clerc de niveau 20 affectera une zone circulaire de 10\" de diamètre. Les effets sont les suivants : TERRAIN Grottes/souterrains Le plafond s’effondre Falaises La paroi s’effondre provoquant un glissement de terrain Sol Des crevasses se forment, les créatures y tombent et peuvent être tuées comme suit en fonction de leur catégorie de taille ; P : 1 sur 4 ; M : 1 sur 6 ; G : 1 sur 8 Marais L’eau s’écoule hors des dépressions avec formation de boue sur les terrains alentours Tunnels S’écroulent Sous l’eau Provoque des ondes de choc qui étourdissent pendant 5-20 rounds ceux qui ratent leur jet de protection contre la mort magique VÉGÉTATION Petite taille Pas d’effet Arbres 1 sur 3 est déraciné et s’abat sur le sol CONSTRUCTIONS Toute structure Subissent de 5 à 60 (5d12) points de dégât structurels ; celles qui subissent leurs dommages maximum tombent en ruine. Les constructions bâties très solidement dont les fondations atteignent le roc ne subissent que la moitié des dégâts. CRÉATURES Voir ci-dessus à TERRAIN Les composantes matérielles pour ce sort sont une pincée de poussière, un petit caillou et une motte de terre. LES SORTS DE DRUIDE Notes concernant les sorts de druide (clerc): Le symbole religieux des druides est le gui. Un autre symbole de moindre importance est le houx. Quelques pouvoirs magiques se trouvent dans les feuilles de chêne. Tous les sorts comportant une composante matérielle impliquent l'utilisation de gui, gui qui doit être cueilli par le druide de la manière décrite ci-dessous. Le gui secondaire, le houx et les feuilles de chêne réduisent l'efficacité des sorts comme suit : Symbole Portée du sort Durée du sort Zone d'effet Gui majeur 100 % 100 % 100 % Gui secondaire 100 % 75 %* 100 % Gui emprunté 75 %* 50 %** 100 % Houx 75 %* 50 %** 75 %* Feuilles de chêne 50 %** 50 %** 50 %** * ou +1 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable ** ou +2 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable Le gui majeur : c’est le gui qui est cueilli par le druide lui-même, la veille du solstice d’été. Il doit localiser son gui et le couper avec une serpe d’or ou d’argent et il doit le recueillir dans une coupe avant qu’il ne touche terre. Le gui secondaire : ce gui est cueilli par le druide mais sans respecter le rituel ; soit il n’est pas cueilli la veille du solstice d’été, soit le druide ne le prélève pas de la bonne manière (en le cueillant directement avec la main, par exemple) Le gui emprunté : il s’agit de gui mais qui n’a pas été cueilli par le druide en personne. Le houx et les feuilles de chêne : ils doivent être cueillis par le druide luimême, mais la manière et le moment importent peu. SORTS DE NIVEAU 1",
+        "description_html": "<p>Quand ce sort est lancé, un tremblement de terre localisé de forte intensité secoue le sol. Ce tremblement affecte tous les types de terrains. La secousse se termine au bout d’un round. La végétation, les constructions et les créatures y vivant sont touchées par ce sort. La zone d’effet est circulaire et d’un diamètre de ½&quot; par niveau du clerc ; donc un clerc de niveau 20 affectera une zone circulaire de 10&quot; de diamètre. Les effets sont les suivants : TERRAIN Grottes/souterrains Le plafond s’effondre Falaises La paroi s’effondre provoquant un glissement de terrain Sol Des crevasses se forment, les créatures y tombent et peuvent être tuées comme suit en fonction de leur catégorie de taille ; P : 1 sur 4 ; M : 1 sur 6 ; G : 1 sur 8 Marais L’eau s’écoule hors des dépressions avec formation de boue sur les terrains alentours Tunnels S’écroulent Sous l’eau Provoque des ondes de choc qui étourdissent pendant 5-20 rounds ceux qui ratent leur jet de protection contre la mort magique VÉGÉTATION Petite taille Pas d’effet Arbres 1 sur 3 est déraciné et s’abat sur le sol CONSTRUCTIONS Toute structure Subissent de 5 à 60 (5d12) points de dégât structurels ; celles qui subissent leurs dommages maximum tombent en ruine. Les constructions bâties très solidement dont les fondations atteignent le roc ne subissent que la moitié des dégâts. CRÉATURES Voir ci-dessus à TERRAIN Les composantes matérielles pour ce sort sont une pincée de poussière, un petit caillou et une motte de terre. LES SORTS DE DRUIDE Notes concernant les sorts de druide (clerc): Le symbole religieux des druides est le gui. Un autre symbole de moindre importance est le houx. Quelques pouvoirs magiques se trouvent dans les feuilles de chêne. Tous les sorts comportant une composante matérielle impliquent l&#x27;utilisation de gui, gui qui doit être cueilli par le druide de la manière décrite ci-dessous. Le gui secondaire, le houx et les feuilles de chêne réduisent l&#x27;efficacité des sorts comme suit : Symbole Portée du sort Durée du sort Zone d&#x27;effet Gui majeur 100 % 100 % 100 % Gui secondaire 100 % 75 %* 100 % Gui emprunté 75 %* 50 %** 100 % Houx 75 %* 50 %** 75 %* Feuilles de chêne 50 %** 50 %** 50 %** * ou +1 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable ** ou +2 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable Le gui majeur : c’est le gui qui est cueilli par le druide lui-même, la veille du solstice d’été. Il doit localiser son gui et le couper avec une serpe d’or ou d’argent et il doit le recueillir dans une coupe avant qu’il ne touche terre. Le gui secondaire : ce gui est cueilli par le druide mais sans respecter le rituel ; soit il n’est pas cueilli la veille du solstice d’été, soit le druide ne le prélève pas de la bonne manière (en le cueillant directement avec la main, par exemple) Le gui emprunté : il s’agit de gui mais qui n’a pas été cueilli par le druide en personne. Le houx et les feuilles de chêne : ils doivent être cueillis par le druide luimême, mais la manière et le moment importent peu. SORTS DE NIVEAU 1</p>"
+      },
+      "effects": [
+        {
+          "name": "Tremblement de Terre",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:tremblement_de_terre",
+                "terrain:tremblement",
+                "degat:structure",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/tremblement-de-terre.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.cSS5pgUZEGXJplus",
+          "_id": "L5UWUEC7QSBKlRHA",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568689,
+            "modifiedTime": 1780340568689
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Tremblement de Terre",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:tremblement_de_terre",
+                "terrain:tremblement",
+                "degat:structure",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/tremblement-de-terre.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.cSS5pgUZEGXJplus",
+          "_id": "13VG5LLziu0QlkO9",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568689,
+            "modifiedTime": 1780340568689
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Tremblement de Terre",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:7",
+                "sort:tremblement_de_terre",
+                "terrain:tremblement",
+                "degat:structure",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/tremblement-de-terre.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.cSS5pgUZEGXJplus",
+          "_id": "91kdW3xI8QUA3k4O",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568689,
+            "modifiedTime": 1780340568689
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "clerc-niveaux-5-6-7",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:34:19.228Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/tremblement-de-terre.js",
+          "routedClass": "Clerc",
+          "spellListsResolved": [
+            "Clerc"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 7",
+          "sourceFolderId": "3xb3zcASVeC5FKry",
+          "exportedAt": "2026-05-22T09:57:29.895Z"
+        }
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.cSS5pgUZEGXJplus",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568689,
+        "modifiedTime": 1780340568689,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "ruWwPBZl56IRcqt2",
+      "sort": 0
+    }
+  ]
+}

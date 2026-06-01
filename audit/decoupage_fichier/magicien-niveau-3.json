@@ -1,0 +1,2789 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "magicien",
+    "niveau": 3,
+    "key": "magicien-niveau-3",
+    "count": 18
+  },
+  "folders": [
+    {
+      "name": "Magicien",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "UNadGYy33KgFskLj",
+      "description": "",
+      "sort": 800000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566746,
+        "modifiedTime": 1780340566746,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 3",
+      "type": "Item",
+      "folder": "UNadGYy33KgFskLj",
+      "sorting": "a",
+      "_id": "xpGAo6lr0QFlFGv1",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566745,
+        "modifiedTime": 1780340566745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Boule de feu",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-boule-de-feu.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Une boule de feu est une explosion de flammes qui éclate avec un grondement sourd et délivre des dégâts proportionnels au niveau du magicien : 1d6 pour chaque niveau. Les exceptions suivantes sont à prendre en compte : un bâtonnet délivre des boules de feu à 6d6 de dégâts, un bâton à 8d6 et les sorts sur parchemin peuvent délivrer des dégâts allant de 5d6 à 10d6 (d6+4). L’explosion d’une boule de feu ne provoque pas une pression énorme et, de ce fait, elle prend la forme de l’endroit dans lequel elle a lieu, occupant ainsi un volume équivalent à son volume sphérique normal (le volume d’une boule de feu est environ de 905 m3). En plus des dégâts qu’elle cause, une boule de feu enflamme tous les matériaux inflammables dans la zone de l’explosion et la chaleur dégagée peut faire fondre les métaux tendres (or, cuivre, argent, etc.). Un jet de protection doit être tiré pour chaque objet dans la zone d’effet pour savoir s’il a été affecté par le feu. Les objets portés par une créature qui a réussi son jet de protection sont considérés comme n’ayant subi aucun dommage. Le magicien pointe son doigt et annonce la portée (distance et hauteur) à laquelle la boule de feu doit exploser. Un éclair jaillit du doigt pointé et se transforme en boule de feu, à moins qu’il n’y ait impact sur un obstacle matériel avant la distance annoncée par le magicien. Les créatures qui ratent leur jet de protection subissent les dégâts entiers, tandis que celles qui le réussissent les voient diminués de moitié. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une petite boule composée de fiente de chauve-souris et de souffre.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-boule-de-feu.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-boule-de-feu.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/magicien-boule-de-feu.js",
+        "composants_materiels": [
+          {
+            "slug": "petite_boule_composee_de_fiente_de_chauve_souris",
+            "nom": "Petite boule composée de fiente de chauve-souris",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle de ce sort est une petite boule composée de fiente de chauve-souris et de souffre.",
+        "description_reelle": "Une boule de feu est une explosion de flammes qui éclate avec un grondement sourd et délivre des dégâts proportionnels au niveau du magicien : 1d6 pour chaque niveau. Les exceptions suivantes sont à prendre en compte : un bâtonnet délivre des boules de feu à 6d6 de dégâts, un bâton à 8d6 et les sorts sur parchemin peuvent délivrer des dégâts allant de 5d6 à 10d6 (d6+4). L’explosion d’une boule de feu ne provoque pas une pression énorme et, de ce fait, elle prend la forme de l’endroit dans lequel elle a lieu, occupant ainsi un volume équivalent à son volume sphérique normal (le volume d’une boule de feu est environ de 905 m3). En plus des dégâts qu’elle cause, une boule de feu enflamme tous les matériaux inflammables dans la zone de l’explosion et la chaleur dégagée peut faire fondre les métaux tendres (or, cuivre, argent, etc.). Un jet de protection doit être tiré pour chaque objet dans la zone d’effet pour savoir s’il a été affecté par le feu. Les objets portés par une créature qui a réussi son jet de protection sont considérés comme n’ayant subi aucun dommage. Le magicien pointe son doigt et annonce la portée (distance et hauteur) à laquelle la boule de feu doit exploser. Un éclair jaillit du doigt pointé et se transforme en boule de feu, à moins qu’il n’y ait impact sur un obstacle matériel avant la distance annoncée par le magicien. Les créatures qui ratent leur jet de protection subissent les dégâts entiers, tandis que celles qui le réussissent les voient diminués de moitié. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une petite boule composée de fiente de chauve-souris et de souffre.",
+        "description_texte": "Une boule de feu est une explosion de flammes qui éclate avec un grondement sourd et délivre des dégâts proportionnels au niveau du magicien : 1d6 pour chaque niveau. Les exceptions suivantes sont à prendre en compte : un bâtonnet délivre des boules de feu à 6d6 de dégâts, un bâton à 8d6 et les sorts sur parchemin peuvent délivrer des dégâts allant de 5d6 à 10d6 (d6+4). L’explosion d’une boule de feu ne provoque pas une pression énorme et, de ce fait, elle prend la forme de l’endroit dans lequel elle a lieu, occupant ainsi un volume équivalent à son volume sphérique normal (le volume d’une boule de feu est environ de 905 m3). En plus des dégâts qu’elle cause, une boule de feu enflamme tous les matériaux inflammables dans la zone de l’explosion et la chaleur dégagée peut faire fondre les métaux tendres (or, cuivre, argent, etc.). Un jet de protection doit être tiré pour chaque objet dans la zone d’effet pour savoir s’il a été affecté par le feu. Les objets portés par une créature qui a réussi son jet de protection sont considérés comme n’ayant subi aucun dommage. Le magicien pointe son doigt et annonce la portée (distance et hauteur) à laquelle la boule de feu doit exploser. Un éclair jaillit du doigt pointé et se transforme en boule de feu, à moins qu’il n’y ait impact sur un obstacle matériel avant la distance annoncée par le magicien. Les créatures qui ratent leur jet de protection subissent les dégâts entiers, tandis que celles qui le réussissent les voient diminués de moitié. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une petite boule composée de fiente de chauve-souris et de souffre.",
+        "description_html": "<p>Une boule de feu est une explosion de flammes qui éclate avec un grondement sourd et délivre des dégâts proportionnels au niveau du magicien : 1d6 pour chaque niveau. Les exceptions suivantes sont à prendre en compte : un bâtonnet délivre des boules de feu à 6d6 de dégâts, un bâton à 8d6 et les sorts sur parchemin peuvent délivrer des dégâts allant de 5d6 à 10d6 (d6+4). L’explosion d’une boule de feu ne provoque pas une pression énorme et, de ce fait, elle prend la forme de l’endroit dans lequel elle a lieu, occupant ainsi un volume équivalent à son volume sphérique normal (le volume d’une boule de feu est environ de 905 m3). En plus des dégâts qu’elle cause, une boule de feu enflamme tous les matériaux inflammables dans la zone de l’explosion et la chaleur dégagée peut faire fondre les métaux tendres (or, cuivre, argent, etc.). Un jet de protection doit être tiré pour chaque objet dans la zone d’effet pour savoir s’il a été affecté par le feu. Les objets portés par une créature qui a réussi son jet de protection sont considérés comme n’ayant subi aucun dommage. Le magicien pointe son doigt et annonce la portée (distance et hauteur) à laquelle la boule de feu doit exploser. Un éclair jaillit du doigt pointé et se transforme en boule de feu, à moins qu’il n’y ait impact sur un obstacle matériel avant la distance annoncée par le magicien. Les créatures qui ratent leur jet de protection subissent les dégâts entiers, tandis que celles qui le réussissent les voient diminués de moitié. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une petite boule composée de fiente de chauve-souris et de souffre.</p>"
+      },
+      "effects": [
+        {
+          "name": "Boule de feu",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:boule_de_feu",
+                "type:damage",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-boule-de-feu.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.MvoRg9g1dJNRl6dI",
+          "_id": "4AazRwU8p7oW2BAf",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567903,
+            "modifiedTime": 1780340567903
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:43.534Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-boule-de-feu.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.MvoRg9g1dJNRl6dI",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567903,
+        "modifiedTime": 1780340567903,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "OdjZbZ6yCK8f7Cej",
+      "sort": 0
+    },
+    {
+      "name": "Chaumière de Léomund",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-chaumiere-de-leomund.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand le magicien lance ce sort, il crée une sphère de force opaque autour de lui, la moitié de cette sphère se trouvant en dessous du sol et l’autre au-dessus de la surface où se trouve le lanceur du sort. Le champ de force fait que la température intérieure se maintient à 21°C quand la température extérieure va de –18°C à 41°C. Un froid en dessous de –18°C abaisse la température intérieure de 1°C par baisse de 2°C à l’extérieur ; une chaleur supérieure à 41°C augmente la température interne selon le même ratio. La chaumière peut résister à un vent de 80 km/h mais un vent plus fort détruira le champ de force. Le magicien peut éclairer sur commande l’intérieur de l’hémisphère dans laquelle il se trouve ; il peut l’éteindre de la même manière. Si cette demi-sphère est opaque pour ceux qui sont à l’extérieur, elle est en revanche transparente pour ceux qui sont à l’intérieur. En aucun cas la chaumière de Léomund ne protège des projectiles, des armes et des sorts, etc. Elle peut contenir jusqu’à 6 autres créatures de taille humaine, en plus du magicien, qui peuvent y entrer et en sortir librement, mais si ce dernier sort de la chaumière, elle disparaît. La composante matérielle est une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-chaumiere-de-leomund.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-chaumiere-de-leomund.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-chaumiere-de-leomund.js",
+        "composants_materiels": [
+          {
+            "slug": "petite_perle_de_cristal_qui_se_brisera_a_la_fin_du_sort_ou_si_la_chaumiere_est_d",
+            "nom": "Petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
+        "description_reelle": "Quand le magicien lance ce sort, il crée une sphère de force opaque autour de lui, la moitié de cette sphère se trouvant en dessous du sol et l’autre au-dessus de la surface où se trouve le lanceur du sort. Le champ de force fait que la température intérieure se maintient à 21°C quand la température extérieure va de –18°C à 41°C. Un froid en dessous de –18°C abaisse la température intérieure de 1°C par baisse de 2°C à l’extérieur ; une chaleur supérieure à 41°C augmente la température interne selon le même ratio. La chaumière peut résister à un vent de 80 km/h mais un vent plus fort détruira le champ de force. Le magicien peut éclairer sur commande l’intérieur de l’hémisphère dans laquelle il se trouve ; il peut l’éteindre de la même manière. Si cette demi-sphère est opaque pour ceux qui sont à l’extérieur, elle est en revanche transparente pour ceux qui sont à l’intérieur. En aucun cas la chaumière de Léomund ne protège des projectiles, des armes et des sorts, etc. Elle peut contenir jusqu’à 6 autres créatures de taille humaine, en plus du magicien, qui peuvent y entrer et en sortir librement, mais si ce dernier sort de la chaumière, elle disparaît. La composante matérielle est une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite.",
+        "description_texte": "Quand le magicien lance ce sort, il crée une sphère de force opaque autour de lui, la moitié de cette sphère se trouvant en dessous du sol et l’autre au-dessus de la surface où se trouve le lanceur du sort. Le champ de force fait que la température intérieure se maintient à 21°C quand la température extérieure va de –18°C à 41°C. Un froid en dessous de –18°C abaisse la température intérieure de 1°C par baisse de 2°C à l’extérieur ; une chaleur supérieure à 41°C augmente la température interne selon le même ratio. La chaumière peut résister à un vent de 80 km/h mais un vent plus fort détruira le champ de force. Le magicien peut éclairer sur commande l’intérieur de l’hémisphère dans laquelle il se trouve ; il peut l’éteindre de la même manière. Si cette demi-sphère est opaque pour ceux qui sont à l’extérieur, elle est en revanche transparente pour ceux qui sont à l’intérieur. En aucun cas la chaumière de Léomund ne protège des projectiles, des armes et des sorts, etc. Elle peut contenir jusqu’à 6 autres créatures de taille humaine, en plus du magicien, qui peuvent y entrer et en sortir librement, mais si ce dernier sort de la chaumière, elle disparaît. La composante matérielle est une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite.",
+        "description_html": "<p>Quand le magicien lance ce sort, il crée une sphère de force opaque autour de lui, la moitié de cette sphère se trouvant en dessous du sol et l’autre au-dessus de la surface où se trouve le lanceur du sort. Le champ de force fait que la température intérieure se maintient à 21°C quand la température extérieure va de –18°C à 41°C. Un froid en dessous de –18°C abaisse la température intérieure de 1°C par baisse de 2°C à l’extérieur ; une chaleur supérieure à 41°C augmente la température interne selon le même ratio. La chaumière peut résister à un vent de 80 km/h mais un vent plus fort détruira le champ de force. Le magicien peut éclairer sur commande l’intérieur de l’hémisphère dans laquelle il se trouve ; il peut l’éteindre de la même manière. Si cette demi-sphère est opaque pour ceux qui sont à l’extérieur, elle est en revanche transparente pour ceux qui sont à l’intérieur. En aucun cas la chaumière de Léomund ne protège des projectiles, des armes et des sorts, etc. Elle peut contenir jusqu’à 6 autres créatures de taille humaine, en plus du magicien, qui peuvent y entrer et en sortir librement, mais si ce dernier sort de la chaumière, elle disparaît. La composante matérielle est une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Chaumière de Léomund",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:chaumiere_de_leomund",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-chaumiere-de-leomund.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.6mzKlRzPgD5vI99B",
+          "_id": "A9dcxUeGYokrCJgl",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567140,
+            "modifiedTime": 1780340567140
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:53.633Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-chaumiere-de-leomund.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.6mzKlRzPgD5vI99B",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567140,
+        "modifiedTime": 1780340567140,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "eQP2mvNXNEHDkl0Y",
+      "sort": 0
+    },
+    {
+      "name": "Clairaudience",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-clairaudience.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Le sort de clairaudience permet au magicien de se concentrer sur un endroit et d’entendre dans son esprit tous les sons de cet endroit, dans une zone d’effet de 6\" de rayon, centrée sur l’endroit qu’il examine. La distance n’est pas un problème, mais l’endroit doit être connu, c'est-à-dire un endroit familier au lanceur de sort ou évident (tel que derrière une porte, à un angle de couloir, dans le taillis d’un bois, etc.). Seuls les sons normalement audibles par le magicien peuvent être entendus. Une paroi de métal ou une protection magique empêche l’écoute. Ce sort ne fonctionne que sur le plan d’existence sur lequel se trouve le lanceur du sort au moment où il le lance. La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-clairaudience.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-clairaudience.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/magicien-clairaudience.js",
+        "composants_materiels": [
+          {
+            "slug": "petite_corne_d_argent_d_une_valeur_minimale_de_100_po",
+            "nom": "Petite corne d’argent d’une valeur minimale de 100 po",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
+        "description_reelle": "Le sort de clairaudience permet au magicien de se concentrer sur un endroit et d’entendre dans son esprit tous les sons de cet endroit, dans une zone d’effet de 6\" de rayon, centrée sur l’endroit qu’il examine. La distance n’est pas un problème, mais l’endroit doit être connu, c'est-à-dire un endroit familier au lanceur de sort ou évident (tel que derrière une porte, à un angle de couloir, dans le taillis d’un bois, etc.). Seuls les sons normalement audibles par le magicien peuvent être entendus. Une paroi de métal ou une protection magique empêche l’écoute. Ce sort ne fonctionne que sur le plan d’existence sur lequel se trouve le lanceur du sort au moment où il le lance. La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
+        "description_texte": "Le sort de clairaudience permet au magicien de se concentrer sur un endroit et d’entendre dans son esprit tous les sons de cet endroit, dans une zone d’effet de 6\" de rayon, centrée sur l’endroit qu’il examine. La distance n’est pas un problème, mais l’endroit doit être connu, c'est-à-dire un endroit familier au lanceur de sort ou évident (tel que derrière une porte, à un angle de couloir, dans le taillis d’un bois, etc.). Seuls les sons normalement audibles par le magicien peuvent être entendus. Une paroi de métal ou une protection magique empêche l’écoute. Ce sort ne fonctionne que sur le plan d’existence sur lequel se trouve le lanceur du sort au moment où il le lance. La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
+        "description_html": "<p>Le sort de clairaudience permet au magicien de se concentrer sur un endroit et d’entendre dans son esprit tous les sons de cet endroit, dans une zone d’effet de 6&quot; de rayon, centrée sur l’endroit qu’il examine. La distance n’est pas un problème, mais l’endroit doit être connu, c&#x27;est-à-dire un endroit familier au lanceur de sort ou évident (tel que derrière une porte, à un angle de couloir, dans le taillis d’un bois, etc.). Seuls les sons normalement audibles par le magicien peuvent être entendus. Une paroi de métal ou une protection magique empêche l’écoute. Ce sort ne fonctionne que sur le plan d’existence sur lequel se trouve le lanceur du sort au moment où il le lance. La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.</p>"
+      },
+      "effects": [
+        {
+          "name": "Clairaudience",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:clairaudience",
+                "type:detection",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-clairaudience.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.8QRUK7vG2bmFU3J3",
+          "_id": "HGm4ZIeD7QMMXLOz",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567165,
+            "modifiedTime": 1780340567165
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:54.340Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-clairaudience.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.8QRUK7vG2bmFU3J3",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567165,
+        "modifiedTime": 1780340567165,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "bs5Yev27GKosckIi",
+      "sort": 0
+    },
+    {
+      "name": "Clairvoyance",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-clairvoyance.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Similaire au sort de clairaudience, le sort de clairvoyance permet au magicien de voir dans son esprit ce qui est à portée de vue dans l’endroit choisi. La distance n’est pas un problème, mais l’endroit doit être connu : familier ou évident. De plus, la lumière est un facteur important, que le magicien possède ou non l’infravision ou l’ultravision. Si le lieu choisi n’est pas éclairé, la zone d’effet sera de 1\" de rayon autour du centre de cette zone ; dans les autres cas la vue est celle de la vision normale. Les parois de métal et des protections magiques empêchent une clairvoyance. Le sort ne fonctionne que sur le plan où se trouve le magicien quand il le lance. La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-clairvoyance.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-clairvoyance.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/magicien-clairvoyance.js",
+        "composants_materiels": [
+          {
+            "slug": "pincee_de_poudre_faite_a_partir_de_la_glande_pineale_d_un_humain",
+            "nom": "Pincée de poudre faite à partir de la glande pinéale d’un humain",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.",
+        "description_reelle": "Similaire au sort de clairaudience, le sort de clairvoyance permet au magicien de voir dans son esprit ce qui est à portée de vue dans l’endroit choisi. La distance n’est pas un problème, mais l’endroit doit être connu : familier ou évident. De plus, la lumière est un facteur important, que le magicien possède ou non l’infravision ou l’ultravision. Si le lieu choisi n’est pas éclairé, la zone d’effet sera de 1\" de rayon autour du centre de cette zone ; dans les autres cas la vue est celle de la vision normale. Les parois de métal et des protections magiques empêchent une clairvoyance. Le sort ne fonctionne que sur le plan où se trouve le magicien quand il le lance. La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.",
+        "description_texte": "Similaire au sort de clairaudience, le sort de clairvoyance permet au magicien de voir dans son esprit ce qui est à portée de vue dans l’endroit choisi. La distance n’est pas un problème, mais l’endroit doit être connu : familier ou évident. De plus, la lumière est un facteur important, que le magicien possède ou non l’infravision ou l’ultravision. Si le lieu choisi n’est pas éclairé, la zone d’effet sera de 1\" de rayon autour du centre de cette zone ; dans les autres cas la vue est celle de la vision normale. Les parois de métal et des protections magiques empêchent une clairvoyance. Le sort ne fonctionne que sur le plan où se trouve le magicien quand il le lance. La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.",
+        "description_html": "<p>Similaire au sort de clairaudience, le sort de clairvoyance permet au magicien de voir dans son esprit ce qui est à portée de vue dans l’endroit choisi. La distance n’est pas un problème, mais l’endroit doit être connu : familier ou évident. De plus, la lumière est un facteur important, que le magicien possède ou non l’infravision ou l’ultravision. Si le lieu choisi n’est pas éclairé, la zone d’effet sera de 1&quot; de rayon autour du centre de cette zone ; dans les autres cas la vue est celle de la vision normale. Les parois de métal et des protections magiques empêchent une clairvoyance. Le sort ne fonctionne que sur le plan où se trouve le magicien quand il le lance. La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.</p>"
+      },
+      "effects": [
+        {
+          "name": "Clairvoyance",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:clairvoyance",
+                "type:detection",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-clairvoyance.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.LOzD6Dgyi6dB7rhQ",
+          "_id": "NBuOjIFDVfBUAbEN",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567882,
+            "modifiedTime": 1780340567882
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:54.613Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-clairvoyance.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.LOzD6Dgyi6dB7rhQ",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567882,
+        "modifiedTime": 1780340567882,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "PeKgX0v88L8WqgdP",
+      "sort": 0
+    },
+    {
+      "name": "Flèche de feu",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-fleche-de-feu.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Une fois que le magicien a lancé ce sort, il peut toucher à chaque segment une flèche ou un carreau qui devient alors magique, bien qu’il n’ait aucun bonus pour toucher les adversaires. Chaque projectile touché doit être envoyé moins d’un round plus tard car après cette période les flammes le consument entièrement et la magie est perdue. Ces projectiles enflammés auront une chance normale d’enflammer ce qu'ils touchent et toute créature sujette à des dégâts supplémentaires dus au feu subira 1 point de dégât en plus pour chaque flèche de feu la touchant. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes sont une goutte d’huile et un petit morceau de silex.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-fleche-de-feu.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-fleche-de-feu.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/magicien-fleche-de-feu.js",
+        "composants_materiels": [
+          {
+            "slug": "poudre_de_feu_ou_composant_pyrotechnique_du_projectile_selon_la_version_du_sort",
+            "nom": "Poudre de feu ou composant pyrotechnique du projectile selon la version du sort",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Une fois que le magicien a lancé ce sort, il peut toucher à chaque segment une flèche ou un carreau qui devient alors magique, bien qu’il n’ait aucun bonus pour toucher les adversaires. Chaque projectile touché doit être envoyé moins d’un round plus tard car après cette période les flammes le consument entièrement et la magie est perdue. Ces projectiles enflammés auront une chance normale d’enflammer ce qu'ils touchent et toute créature sujette à des dégâts supplémentaires dus au feu subira 1 point de dégât en plus pour chaque flèche de feu la touchant. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes sont une goutte d’huile et un petit morceau de silex.",
+        "description_texte": "Une fois que le magicien a lancé ce sort, il peut toucher à chaque segment une flèche ou un carreau qui devient alors magique, bien qu’il n’ait aucun bonus pour toucher les adversaires. Chaque projectile touché doit être envoyé moins d’un round plus tard car après cette période les flammes le consument entièrement et la magie est perdue. Ces projectiles enflammés auront une chance normale d’enflammer ce qu'ils touchent et toute créature sujette à des dégâts supplémentaires dus au feu subira 1 point de dégât en plus pour chaque flèche de feu la touchant. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes sont une goutte d’huile et un petit morceau de silex.",
+        "description_html": "<p>Une fois que le magicien a lancé ce sort, il peut toucher à chaque segment une flèche ou un carreau qui devient alors magique, bien qu’il n’ait aucun bonus pour toucher les adversaires. Chaque projectile touché doit être envoyé moins d’un round plus tard car après cette période les flammes le consument entièrement et la magie est perdue. Ces projectiles enflammés auront une chance normale d’enflammer ce qu&#x27;ils touchent et toute créature sujette à des dégâts supplémentaires dus au feu subira 1 point de dégât en plus pour chaque flèche de feu la touchant. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes sont une goutte d’huile et un petit morceau de silex.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "poudre de feu ou composant pyrotechnique du projectile selon la version du sort",
+        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée"
+      },
+      "effects": [
+        {
+          "name": "Flèche de feu",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:fleche_de_feu",
+                "type:damage",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-fleche-de-feu.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.QCw0oFia8LeGh3WQ",
+          "_id": "3Ccap0HVFEb61MCo",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567964,
+            "modifiedTime": 1780340567964
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:53.943Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-fleche-de-feu.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.QCw0oFia8LeGh3WQ",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567964,
+        "modifiedTime": 1780340567964,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "cdoLylDIdTX30880",
+      "sort": 0
+    },
+    {
+      "name": "Foudre",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-foudre.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "En lançant ce sort, le magicien libère une puissante décharge électrique qui cause les dégâts suivants : 1d6 par niveau du magicien à toutes les créatures qui se trouvent dans la zone d’effet ou la moitié des dégâts si elles réussissent leur jet de protection. La portée de la foudre correspond à l’endroit où la décharge se crée, c'est-à-dire si la décharge est évoquée à 6\", la foudre partira de ce point et s’étendra vers l’avant. Un sort de foudre enflammera les matériaux inflammables, cassera les portes en bois, éclatera de la pierre jusqu’à 30 cm d’épaisseur et fera fondre les métaux à faible température de fusion (plomb, or, cuivre, argent, bronze). Des jets de protection doivent être lancés pour les objets ayant subit le plein impact de la décharge (cf. boule de feu). La zone d’effet de la foudre est déterminée par le magicien, comme la distance. La décharge peut être un éclair bifide de 1\" de large sur 4\" de long ou un éclair simple de ½\" de large sur 8\" de long. Si un magicien de niveau 12 lance ce sort au maximum de sa portée, la décharge sera évoquée à 16\" et s’étendra vers l’avant jusqu’à une distance totale de 20\" pour un éclair bifide ou de 24\" dans le cas d’un éclair simple. Si la longueur maximale de la décharge n’est pas possible à cause de l’interposition d’un obstacle non-conducteur (tel un mur de pierre), la foudre rebondira et reviendra vers son créateur, la longueur étant normale du début à la fin. À noter quand même que l’obstacle subira des dégâts de la décharge. Exemple : une foudre de 8\" de long est lancée à une portée de 4\", mais l’espace libre dans la direction désirée n’est que de 3,5\" ; l’éclair sera donc évoqué à une distance maximale de 3,5\" et rebondira de toute sa longueur de 8\" vers le lanceur du sort. Si la foudre touche un obstacle qui est brisé par la force de l’impact, la foudre continuera au-delà. Dans un milieu aquatique, la zone d’effet de ce sort est identique à celle d’une boule de feu. Au lieu de prendre la forme d’un éclair, la décharge électrique prend celle d’un globe de 2\" de rayon, centré au point d’impact théorique de l’éclair. Toutes les créatures se trouvant à l’intérieur de la zone d’effet subissent l’intégralité des dégâts (la moitié en cas de réussite du jet de protection). Les composantes matérielles sont un peu de fourrure et une baguette de verre, de cristal ou d’ambre.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-foudre.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-foudre.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/magicien-foudre.js",
+        "composants_materiels": [
+          {
+            "slug": "morceau_de_fourrure_et_une_baguette_de_verre",
+            "nom": "Morceau de fourrure et une baguette de verre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "ambre_ou_de_cristal",
+            "nom": "Ambre ou de cristal",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "un morceau de fourrure et une baguette de verre, d’ambre ou de cristal",
+        "description_reelle": "En lançant ce sort, le magicien libère une puissante décharge électrique qui cause les dégâts suivants : 1d6 par niveau du magicien à toutes les créatures qui se trouvent dans la zone d’effet ou la moitié des dégâts si elles réussissent leur jet de protection. La portée de la foudre correspond à l’endroit où la décharge se crée, c'est-à-dire si la décharge est évoquée à 6\", la foudre partira de ce point et s’étendra vers l’avant. Un sort de foudre enflammera les matériaux inflammables, cassera les portes en bois, éclatera de la pierre jusqu’à 30 cm d’épaisseur et fera fondre les métaux à faible température de fusion (plomb, or, cuivre, argent, bronze). Des jets de protection doivent être lancés pour les objets ayant subit le plein impact de la décharge (cf. boule de feu). La zone d’effet de la foudre est déterminée par le magicien, comme la distance. La décharge peut être un éclair bifide de 1\" de large sur 4\" de long ou un éclair simple de ½\" de large sur 8\" de long. Si un magicien de niveau 12 lance ce sort au maximum de sa portée, la décharge sera évoquée à 16\" et s’étendra vers l’avant jusqu’à une distance totale de 20\" pour un éclair bifide ou de 24\" dans le cas d’un éclair simple. Si la longueur maximale de la décharge n’est pas possible à cause de l’interposition d’un obstacle non-conducteur (tel un mur de pierre), la foudre rebondira et reviendra vers son créateur, la longueur étant normale du début à la fin. À noter quand même que l’obstacle subira des dégâts de la décharge. Exemple : une foudre de 8\" de long est lancée à une portée de 4\", mais l’espace libre dans la direction désirée n’est que de 3,5\" ; l’éclair sera donc évoqué à une distance maximale de 3,5\" et rebondira de toute sa longueur de 8\" vers le lanceur du sort. Si la foudre touche un obstacle qui est brisé par la force de l’impact, la foudre continuera au-delà. Dans un milieu aquatique, la zone d’effet de ce sort est identique à celle d’une boule de feu. Au lieu de prendre la forme d’un éclair, la décharge électrique prend celle d’un globe de 2\" de rayon, centré au point d’impact théorique de l’éclair. Toutes les créatures se trouvant à l’intérieur de la zone d’effet subissent l’intégralité des dégâts (la moitié en cas de réussite du jet de protection). Les composantes matérielles sont un peu de fourrure et une baguette de verre, de cristal ou d’ambre.",
+        "description_texte": "En lançant ce sort, le magicien libère une puissante décharge électrique qui cause les dégâts suivants : 1d6 par niveau du magicien à toutes les créatures qui se trouvent dans la zone d’effet ou la moitié des dégâts si elles réussissent leur jet de protection. La portée de la foudre correspond à l’endroit où la décharge se crée, c'est-à-dire si la décharge est évoquée à 6\", la foudre partira de ce point et s’étendra vers l’avant. Un sort de foudre enflammera les matériaux inflammables, cassera les portes en bois, éclatera de la pierre jusqu’à 30 cm d’épaisseur et fera fondre les métaux à faible température de fusion (plomb, or, cuivre, argent, bronze). Des jets de protection doivent être lancés pour les objets ayant subit le plein impact de la décharge (cf. boule de feu). La zone d’effet de la foudre est déterminée par le magicien, comme la distance. La décharge peut être un éclair bifide de 1\" de large sur 4\" de long ou un éclair simple de ½\" de large sur 8\" de long. Si un magicien de niveau 12 lance ce sort au maximum de sa portée, la décharge sera évoquée à 16\" et s’étendra vers l’avant jusqu’à une distance totale de 20\" pour un éclair bifide ou de 24\" dans le cas d’un éclair simple. Si la longueur maximale de la décharge n’est pas possible à cause de l’interposition d’un obstacle non-conducteur (tel un mur de pierre), la foudre rebondira et reviendra vers son créateur, la longueur étant normale du début à la fin. À noter quand même que l’obstacle subira des dégâts de la décharge. Exemple : une foudre de 8\" de long est lancée à une portée de 4\", mais l’espace libre dans la direction désirée n’est que de 3,5\" ; l’éclair sera donc évoqué à une distance maximale de 3,5\" et rebondira de toute sa longueur de 8\" vers le lanceur du sort. Si la foudre touche un obstacle qui est brisé par la force de l’impact, la foudre continuera au-delà. Dans un milieu aquatique, la zone d’effet de ce sort est identique à celle d’une boule de feu. Au lieu de prendre la forme d’un éclair, la décharge électrique prend celle d’un globe de 2\" de rayon, centré au point d’impact théorique de l’éclair. Toutes les créatures se trouvant à l’intérieur de la zone d’effet subissent l’intégralité des dégâts (la moitié en cas de réussite du jet de protection). Les composantes matérielles sont un peu de fourrure et une baguette de verre, de cristal ou d’ambre.",
+        "description_html": "<p>En lançant ce sort, le magicien libère une puissante décharge électrique qui cause les dégâts suivants : 1d6 par niveau du magicien à toutes les créatures qui se trouvent dans la zone d’effet ou la moitié des dégâts si elles réussissent leur jet de protection. La portée de la foudre correspond à l’endroit où la décharge se crée, c&#x27;est-à-dire si la décharge est évoquée à 6&quot;, la foudre partira de ce point et s’étendra vers l’avant. Un sort de foudre enflammera les matériaux inflammables, cassera les portes en bois, éclatera de la pierre jusqu’à 30 cm d’épaisseur et fera fondre les métaux à faible température de fusion (plomb, or, cuivre, argent, bronze). Des jets de protection doivent être lancés pour les objets ayant subit le plein impact de la décharge (cf. boule de feu). La zone d’effet de la foudre est déterminée par le magicien, comme la distance. La décharge peut être un éclair bifide de 1&quot; de large sur 4&quot; de long ou un éclair simple de ½&quot; de large sur 8&quot; de long. Si un magicien de niveau 12 lance ce sort au maximum de sa portée, la décharge sera évoquée à 16&quot; et s’étendra vers l’avant jusqu’à une distance totale de 20&quot; pour un éclair bifide ou de 24&quot; dans le cas d’un éclair simple. Si la longueur maximale de la décharge n’est pas possible à cause de l’interposition d’un obstacle non-conducteur (tel un mur de pierre), la foudre rebondira et reviendra vers son créateur, la longueur étant normale du début à la fin. À noter quand même que l’obstacle subira des dégâts de la décharge. Exemple : une foudre de 8&quot; de long est lancée à une portée de 4&quot;, mais l’espace libre dans la direction désirée n’est que de 3,5&quot; ; l’éclair sera donc évoqué à une distance maximale de 3,5&quot; et rebondira de toute sa longueur de 8&quot; vers le lanceur du sort. Si la foudre touche un obstacle qui est brisé par la force de l’impact, la foudre continuera au-delà. Dans un milieu aquatique, la zone d’effet de ce sort est identique à celle d’une boule de feu. Au lieu de prendre la forme d’un éclair, la décharge électrique prend celle d’un globe de 2&quot; de rayon, centré au point d’impact théorique de l’éclair. Toutes les créatures se trouvant à l’intérieur de la zone d’effet subissent l’intégralité des dégâts (la moitié en cas de réussite du jet de protection). Les composantes matérielles sont un peu de fourrure et une baguette de verre, de cristal ou d’ambre.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée"
+      },
+      "effects": [
+        {
+          "name": "Foudre",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:foudre",
+                "type:damage",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-foudre.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.VUzgpzZ0GgJzc96H",
+          "_id": "8nKyr46JgFbj0McS",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568030,
+            "modifiedTime": 1780340568030
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:59.075Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-foudre.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.VUzgpzZ0GgJzc96H",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568030,
+        "modifiedTime": 1780340568030,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "mURPcJOWStwfHLSD",
+      "sort": 0
+    },
+    {
+      "name": "Infravision",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-infravision.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6\". De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des « ombres » comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. Niveau : 3 Composantes : V, S Portée : 0 Temps d'incantation : 1 segment Durée : 1 round/niveau Jet de protection : aucun Zone d'effet : personnelle Explication/Description : grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8 : 1 = devant à droite ; 2 = à droite ; 3 = derrière à droite ; 4 = derrière ; 5 = derrière à gauche ; 6 = à gauche ; 7 = devant à gauche ; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c'est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C'est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-infravision.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-infravision.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/magicien-infravision.js",
+        "composants_materiels": [
+          {
+            "slug": "pincee_de_poudre_de_carotte_sechee",
+            "nom": "Pincée de poudre de carotte séchée",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "agate",
+            "nom": "Agate",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate.",
+        "description_reelle": "Avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6\". De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des « ombres » comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. Niveau : 3 Composantes : V, S Portée : 0 Temps d'incantation : 1 segment Durée : 1 round/niveau Jet de protection : aucun Zone d'effet : personnelle Explication/Description : grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8 : 1 = devant à droite ; 2 = à droite ; 3 = derrière à droite ; 4 = derrière ; 5 = derrière à gauche ; 6 = à gauche ; 7 = devant à gauche ; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c'est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C'est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.",
+        "description_texte": "Avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6\". De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des « ombres » comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. Niveau : 3 Composantes : V, S Portée : 0 Temps d'incantation : 1 segment Durée : 1 round/niveau Jet de protection : aucun Zone d'effet : personnelle Explication/Description : grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8 : 1 = devant à droite ; 2 = à droite ; 3 = derrière à droite ; 4 = derrière ; 5 = derrière à gauche ; 6 = à gauche ; 7 = devant à gauche ; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c'est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C'est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.",
+        "description_html": "<p>Avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6&quot;. De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des « ombres » comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. Niveau : 3 Composantes : V, S Portée : 0 Temps d&#x27;incantation : 1 segment Durée : 1 round/niveau Jet de protection : aucun Zone d&#x27;effet : personnelle Explication/Description : grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8 : 1 = devant à droite ; 2 = à droite ; 3 = derrière à droite ; 4 = derrière ; 5 = derrière à gauche ; 6 = à gauche ; 7 = devant à gauche ; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c&#x27;est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C&#x27;est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.</p>"
+      },
+      "effects": [
+        {
+          "name": "Infravision",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:infravision",
+                "type:utility",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-infravision.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.2vm1N0o1O6Ertr72",
+          "_id": "cGNmr5EcwqhAfYgV",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567088,
+            "modifiedTime": 1780340567088
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:15.636Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-infravision.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.2vm1N0o1O6Ertr72",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567088,
+        "modifiedTime": 1780340567088,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "TVQDVtYjgIIl4Qwp",
+      "sort": 0
+    },
+    {
+      "name": "Intermittence",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-intermittence.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Intermittence produit un effet utilitaire de magicien. Le script conserve la structure ADD2E, affiche un message de chat et crée un suivi si nécessaire.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-intermittence.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-intermittence.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-intermittence.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_reelle": "Intermittence produit un effet utilitaire de magicien. Le script conserve la structure ADD2E, affiche un message de chat et crée un suivi si nécessaire.",
+        "description_texte": "Intermittence produit un effet utilitaire de magicien. Le script conserve la structure ADD2E, affiche un message de chat et crée un suivi si nécessaire.",
+        "description_html": "<p>Intermittence produit un effet utilitaire de magicien. Le script conserve la structure ADD2E, affiche un message de chat et crée un suivi si nécessaire.</p>",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Intermittence",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:intermittence",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-intermittence.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.HOksqJf2kD0Jgc1J",
+          "_id": "JF7tli20Anm2TSeP",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567298,
+            "modifiedTime": 1780340567298
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:18.218Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-intermittence.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.HOksqJf2kD0Jgc1J",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567298,
+        "modifiedTime": 1780340567298,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "U6jlnGdUZAhfesYx",
+      "sort": 0
+    },
+    {
+      "name": "Invocation de monstres I",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstres-i.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Dans une période de 1 à 4 rounds (faisant partie de la durée du sort) le magicien provoque l’apparition de 2 à 8 monstres de niveau 1 (tirés au hasard par le Maître de Donjon, mais dont le nombre peut être aléatoirement défini ou décidé par le MD, en fonction de la puissance du monstre tiré au hasard). Ces monstres apparaissent dans la portée du sort, là où le magicien le désire ; ils attaqueront alors les ennemis du lanceur du sort du mieux qu’ils pourront, jusqu’à ce que le magicien ordonne l’arrêt du combat, que la durée du sort expire ou qu’ils soient tués. S’il n’y a aucun ennemi, les monstres peuvent rendre des services au magicien, si la communication est possible et s’ils en sont physiquement capables. Les composantes matérielles de sort sont un petit sac et une petite bougie (pas nécessairement allumée). SORTS DE MAGICIEN (NIVEAU 3)",
+        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstres-i.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstres-i.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/magicien-invocation-de-monstres-i.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles de sort sont un petit sac et une petite bougie (pas nécessairement allumée).",
+        "description_reelle": "Dans une période de 1 à 4 rounds (faisant partie de la durée du sort) le magicien provoque l’apparition de 2 à 8 monstres de niveau 1 (tirés au hasard par le Maître de Donjon, mais dont le nombre peut être aléatoirement défini ou décidé par le MD, en fonction de la puissance du monstre tiré au hasard). Ces monstres apparaissent dans la portée du sort, là où le magicien le désire ; ils attaqueront alors les ennemis du lanceur du sort du mieux qu’ils pourront, jusqu’à ce que le magicien ordonne l’arrêt du combat, que la durée du sort expire ou qu’ils soient tués. S’il n’y a aucun ennemi, les monstres peuvent rendre des services au magicien, si la communication est possible et s’ils en sont physiquement capables. Les composantes matérielles de sort sont un petit sac et une petite bougie (pas nécessairement allumée). SORTS DE MAGICIEN (NIVEAU 3)",
+        "description_texte": "Dans une période de 1 à 4 rounds (faisant partie de la durée du sort) le magicien provoque l’apparition de 2 à 8 monstres de niveau 1 (tirés au hasard par le Maître de Donjon, mais dont le nombre peut être aléatoirement défini ou décidé par le MD, en fonction de la puissance du monstre tiré au hasard). Ces monstres apparaissent dans la portée du sort, là où le magicien le désire ; ils attaqueront alors les ennemis du lanceur du sort du mieux qu’ils pourront, jusqu’à ce que le magicien ordonne l’arrêt du combat, que la durée du sort expire ou qu’ils soient tués. S’il n’y a aucun ennemi, les monstres peuvent rendre des services au magicien, si la communication est possible et s’ils en sont physiquement capables. Les composantes matérielles de sort sont un petit sac et une petite bougie (pas nécessairement allumée). SORTS DE MAGICIEN (NIVEAU 3)",
+        "description_html": "<p>Dans une période de 1 à 4 rounds (faisant partie de la durée du sort) le magicien provoque l’apparition de 2 à 8 monstres de niveau 1 (tirés au hasard par le Maître de Donjon, mais dont le nombre peut être aléatoirement défini ou décidé par le MD, en fonction de la puissance du monstre tiré au hasard). Ces monstres apparaissent dans la portée du sort, là où le magicien le désire ; ils attaqueront alors les ennemis du lanceur du sort du mieux qu’ils pourront, jusqu’à ce que le magicien ordonne l’arrêt du combat, que la durée du sort expire ou qu’ils soient tués. S’il n’y a aucun ennemi, les monstres peuvent rendre des services au magicien, si la communication est possible et s’ils en sont physiquement capables. Les composantes matérielles de sort sont un petit sac et une petite bougie (pas nécessairement allumée). SORTS DE MAGICIEN (NIVEAU 3)</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Invocation de monstres I",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:invocation_de_monstres_i",
+                "type:summon",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstres-i.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.nYUFUU85qfm4TS8d",
+          "_id": "yfVC1LrNDzgBgCig",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568871,
+            "modifiedTime": 1780340568871
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:45.659Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstres-i.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.nYUFUU85qfm4TS8d",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568871,
+        "modifiedTime": 1780340568871,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "azzcDv1FWb4UfqXk",
+      "sort": 0
+    },
+    {
+      "name": "Langues",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-langues.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 4 de clerc langues (voir p.49). La composante matérielle est une petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-langues.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-langues.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-langues.js",
+        "composants_materiels": [
+          {
+            "slug": "petite_statuette_d_argile_representant_une_ziggourat_qui_se_brise_quand_l_incant",
+            "nom": "Petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Excepté ci-dessus, ce sort est le même que le sort de niveau 4 de clerc langues (voir p.49). La composante matérielle est une petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée.",
+        "description_texte": "Excepté ci-dessus, ce sort est le même que le sort de niveau 4 de clerc langues (voir p.49). La composante matérielle est une petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée.",
+        "description_html": "<p>Excepté ci-dessus, ce sort est le même que le sort de niveau 4 de clerc langues (voir p.49). La composante matérielle est une petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée.</p>",
+        "composants_materiels_source": "petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "effects": [
+        {
+          "name": "Langues",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:langues",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-langues.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.u8uUTnMsxpUw9Yg4",
+          "_id": "o0D3k8UFFRsW7ROW",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569426,
+            "modifiedTime": 1780340569426
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-langues.js",
+          "spellListsResolved": [
+            "Magicien"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:51.854Z",
+          "routedClass": "Magicien",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.u8uUTnMsxpUw9Yg4",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569426,
+        "modifiedTime": 1780340569426,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "m10Pwr1wzT3BZTGP",
+      "sort": 0
+    },
+    {
+      "name": "Paralysie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-paralysie.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Similaire au sort de niveau 2 de clerc paralysie (voir p.46), ce sort immobilise les personnes se trouvant dans la portée, désignées par le magicien. Si 3 ou 4 personnes sont visées, leur jet de protection est normal. Si 2 personnes sont visées, le jet de protection est à –1. Si une seule personne est visée, son jet de protection est à –3. Une négation partielle de ce sort, comme peut le faire un anneau de retour de sorts, fait que l’immobilisation agit comme le ferait un sort de ralentissement, à moins, bien sûr, que le jet de protection soit réussi. Les créatures pouvant être affectées par le sort sont : demi-elfes, demi-orques, dryades, elfes, esprits follet, génie des eaux, gnolls, gnomes, gobelins, hobgobelins, hommes-lézards, humains, kobolds, lutins, nains, orques, petites-gens, pixies et troglodytes.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-paralysie.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-paralysie.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-paralysie.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Similaire au sort de niveau 2 de clerc paralysie (voir p.46), ce sort immobilise les personnes se trouvant dans la portée, désignées par le magicien. Si 3 ou 4 personnes sont visées, leur jet de protection est normal. Si 2 personnes sont visées, le jet de protection est à –1. Si une seule personne est visée, son jet de protection est à –3. Une négation partielle de ce sort, comme peut le faire un anneau de retour de sorts, fait que l’immobilisation agit comme le ferait un sort de ralentissement, à moins, bien sûr, que le jet de protection soit réussi. Les créatures pouvant être affectées par le sort sont : demi-elfes, demi-orques, dryades, elfes, esprits follet, génie des eaux, gnolls, gnomes, gobelins, hobgobelins, hommes-lézards, humains, kobolds, lutins, nains, orques, petites-gens, pixies et troglodytes.",
+        "description_texte": "Similaire au sort de niveau 2 de clerc paralysie (voir p.46), ce sort immobilise les personnes se trouvant dans la portée, désignées par le magicien. Si 3 ou 4 personnes sont visées, leur jet de protection est normal. Si 2 personnes sont visées, le jet de protection est à –1. Si une seule personne est visée, son jet de protection est à –3. Une négation partielle de ce sort, comme peut le faire un anneau de retour de sorts, fait que l’immobilisation agit comme le ferait un sort de ralentissement, à moins, bien sûr, que le jet de protection soit réussi. Les créatures pouvant être affectées par le sort sont : demi-elfes, demi-orques, dryades, elfes, esprits follet, génie des eaux, gnolls, gnomes, gobelins, hobgobelins, hommes-lézards, humains, kobolds, lutins, nains, orques, petites-gens, pixies et troglodytes.",
+        "description_html": "<p>Similaire au sort de niveau 2 de clerc paralysie (voir p.46), ce sort immobilise les personnes se trouvant dans la portée, désignées par le magicien. Si 3 ou 4 personnes sont visées, leur jet de protection est normal. Si 2 personnes sont visées, le jet de protection est à –1. Si une seule personne est visée, son jet de protection est à –3. Une négation partielle de ce sort, comme peut le faire un anneau de retour de sorts, fait que l’immobilisation agit comme le ferait un sort de ralentissement, à moins, bien sûr, que le jet de protection soit réussi. Les créatures pouvant être affectées par le sort sont : demi-elfes, demi-orques, dryades, elfes, esprits follet, génie des eaux, gnolls, gnomes, gobelins, hobgobelins, hommes-lézards, humains, kobolds, lutins, nains, orques, petites-gens, pixies et troglodytes.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "symbole sacré du clerc",
+        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément"
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "effects": [
+        {
+          "name": "Paralysie",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:paralysie",
+                "type:condition",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-paralysie.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.FDr3V3abjQGISpAL",
+          "_id": "lGIj8BUJIBdHfPbq",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567268,
+            "modifiedTime": 1780340567268
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-paralysie.js",
+          "spellListsResolved": [
+            "Magicien"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:59.239Z",
+          "routedClass": "Magicien",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.FDr3V3abjQGISpAL",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567268,
+        "modifiedTime": 1780340567268,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "Uer3SMWo8VGodjcf",
+      "sort": 0
+    },
+    {
+      "name": "Protection contre le mal sur 3 m",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-protection-contre-le-mal-sur-3-m.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est le même que le sort de niveau 1 protection contre le mal, sauf en ce qui concerne la zone d’effet. Voir p.44 le sort de niveau 1 de clerc protection contre le mal pour plus d’informations.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-protection-contre-le-mal-sur-3-m.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-protection-contre-le-mal-sur-3-m.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/magicien-protection-contre-le-mal-sur-3-m.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est le même que le sort de niveau 1 protection contre le mal, sauf en ce qui concerne la zone d’effet. Voir p.44 le sort de niveau 1 de clerc protection contre le mal pour plus d’informations.",
+        "description_texte": "Ce sort est le même que le sort de niveau 1 protection contre le mal, sauf en ce qui concerne la zone d’effet. Voir p.44 le sort de niveau 1 de clerc protection contre le mal pour plus d’informations.",
+        "description_html": "<p>Ce sort est le même que le sort de niveau 1 protection contre le mal, sauf en ce qui concerne la zone d’effet. Voir p.44 le sort de niveau 1 de clerc protection contre le mal pour plus d’informations.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Protection contre le mal sur 3 m",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:protection_contre_le_mal_sur_3_m",
+                "type:protection",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-protection-contre-le-mal-sur-3-m.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.JPKOCjc0xx9HG6eB",
+          "_id": "5Mhv6CIb0d9HVJBe",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567860,
+            "modifiedTime": 1780340567860
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:46.802Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-protection-contre-le-mal-sur-3-m.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.JPKOCjc0xx9HG6eB",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567860,
+        "modifiedTime": 1780340567860,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "RK3Dwq9cpDrc4JKy",
+      "sort": 0
+    },
+    {
+      "name": "Protection contre les projectiles normaux",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-protection-contre-les-projectiles-normaux.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort confère à la personne touchée une invulnérabilité totale aux projectiles lancés et décochés tels que flèches, haches, carreaux, javelots, petites pierres, lances de fantassin, etc. De plus, il réduit les dommages de 1 point par dé de dégâts que peuvent causer les gros projectiles et les projectiles magiques : projectiles de baliste, rochers de catapultes, flèches magiques, carreaux magiques, javelots magiques, etc. Cependant, ce sort ne donne aucune protection contre les attaques magiques telles que boules de feu, foudre ou projectile magique. La composante matérielle est un morceau de carapace de tortue.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-protection-contre-les-projectiles-normaux.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-protection-contre-les-projectiles-normaux.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/magicien-protection-contre-les-projectiles-normaux.js",
+        "composants_materiels": [
+          {
+            "slug": "morceau_de_carapace_de_tortue",
+            "nom": "Morceau de carapace de tortue",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est un morceau de carapace de tortue.",
+        "description_reelle": "Ce sort confère à la personne touchée une invulnérabilité totale aux projectiles lancés et décochés tels que flèches, haches, carreaux, javelots, petites pierres, lances de fantassin, etc. De plus, il réduit les dommages de 1 point par dé de dégâts que peuvent causer les gros projectiles et les projectiles magiques : projectiles de baliste, rochers de catapultes, flèches magiques, carreaux magiques, javelots magiques, etc. Cependant, ce sort ne donne aucune protection contre les attaques magiques telles que boules de feu, foudre ou projectile magique. La composante matérielle est un morceau de carapace de tortue.",
+        "description_texte": "Ce sort confère à la personne touchée une invulnérabilité totale aux projectiles lancés et décochés tels que flèches, haches, carreaux, javelots, petites pierres, lances de fantassin, etc. De plus, il réduit les dommages de 1 point par dé de dégâts que peuvent causer les gros projectiles et les projectiles magiques : projectiles de baliste, rochers de catapultes, flèches magiques, carreaux magiques, javelots magiques, etc. Cependant, ce sort ne donne aucune protection contre les attaques magiques telles que boules de feu, foudre ou projectile magique. La composante matérielle est un morceau de carapace de tortue.",
+        "description_html": "<p>Ce sort confère à la personne touchée une invulnérabilité totale aux projectiles lancés et décochés tels que flèches, haches, carreaux, javelots, petites pierres, lances de fantassin, etc. De plus, il réduit les dommages de 1 point par dé de dégâts que peuvent causer les gros projectiles et les projectiles magiques : projectiles de baliste, rochers de catapultes, flèches magiques, carreaux magiques, javelots magiques, etc. Cependant, ce sort ne donne aucune protection contre les attaques magiques telles que boules de feu, foudre ou projectile magique. La composante matérielle est un morceau de carapace de tortue.</p>"
+      },
+      "effects": [
+        {
+          "name": "Protection contre les projectiles normaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:protection_contre_les_projectiles_normaux",
+                "type:protection",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-protection-contre-les-projectiles-normaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.TMqVnp3dfEm6HlIo",
+          "_id": "d0TpAUkgTrfjxttp",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568007,
+            "modifiedTime": 1780340568007
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:47.852Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-protection-contre-les-projectiles-normaux.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.TMqVnp3dfEm6HlIo",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568007,
+        "modifiedTime": 1780340568007,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "2xS2zLfqcMi0wyu7",
+      "sort": 0
+    },
+    {
+      "name": "Rafale de vent",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-rafale-de-vent.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, un fort courant d’air provient du magicien et se déplace dans la direction à laquelle il fait face. La force de cette rafale de vent est suffisante pour éteindre les bougies, les torches et les flammes non protégées. Les flammes protégées, comme celles des lanternes, vacillent et ont 5 % de chance par niveau du magicien de s’éteindre. La rafale de vent peut aussi éparpiller de grands feux sur 30 cm à 1,80 mètres dans la direction de son mouvement. Elle repoussera les petites créatures volantes sur 1\" à 6\" ; celles de taille humaine qui tenteront de voler contre le vent n’y arriveront pas et seront maintenues immobiles pendant un round tandis que celles de grande taille seront ralenties à 50% pendant un round. Une rafale de vent renverse les objets légers. Sa largeur est de 1\" sur 1\" de long par niveau du magicien ; un magicien de niveau 8 créera une rafale de 1\" de large sur 8\" de long. Ce sort peut être particulièrement utile contre un nuage puant, nuage létal ou obscurcissement. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est une graine de légume.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-rafale-de-vent.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-rafale-de-vent.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-rafale-de-vent.js",
+        "composants_materiels": [
+          {
+            "slug": "graine_de_legume",
+            "nom": "Graine de légume",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est une graine de légume.",
+        "description_reelle": "Quand ce sort est lancé, un fort courant d’air provient du magicien et se déplace dans la direction à laquelle il fait face. La force de cette rafale de vent est suffisante pour éteindre les bougies, les torches et les flammes non protégées. Les flammes protégées, comme celles des lanternes, vacillent et ont 5 % de chance par niveau du magicien de s’éteindre. La rafale de vent peut aussi éparpiller de grands feux sur 30 cm à 1,80 mètres dans la direction de son mouvement. Elle repoussera les petites créatures volantes sur 1\" à 6\" ; celles de taille humaine qui tenteront de voler contre le vent n’y arriveront pas et seront maintenues immobiles pendant un round tandis que celles de grande taille seront ralenties à 50% pendant un round. Une rafale de vent renverse les objets légers. Sa largeur est de 1\" sur 1\" de long par niveau du magicien ; un magicien de niveau 8 créera une rafale de 1\" de large sur 8\" de long. Ce sort peut être particulièrement utile contre un nuage puant, nuage létal ou obscurcissement. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est une graine de légume.",
+        "description_texte": "Quand ce sort est lancé, un fort courant d’air provient du magicien et se déplace dans la direction à laquelle il fait face. La force de cette rafale de vent est suffisante pour éteindre les bougies, les torches et les flammes non protégées. Les flammes protégées, comme celles des lanternes, vacillent et ont 5 % de chance par niveau du magicien de s’éteindre. La rafale de vent peut aussi éparpiller de grands feux sur 30 cm à 1,80 mètres dans la direction de son mouvement. Elle repoussera les petites créatures volantes sur 1\" à 6\" ; celles de taille humaine qui tenteront de voler contre le vent n’y arriveront pas et seront maintenues immobiles pendant un round tandis que celles de grande taille seront ralenties à 50% pendant un round. Une rafale de vent renverse les objets légers. Sa largeur est de 1\" sur 1\" de long par niveau du magicien ; un magicien de niveau 8 créera une rafale de 1\" de large sur 8\" de long. Ce sort peut être particulièrement utile contre un nuage puant, nuage létal ou obscurcissement. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est une graine de légume.",
+        "description_html": "<p>Quand ce sort est lancé, un fort courant d’air provient du magicien et se déplace dans la direction à laquelle il fait face. La force de cette rafale de vent est suffisante pour éteindre les bougies, les torches et les flammes non protégées. Les flammes protégées, comme celles des lanternes, vacillent et ont 5 % de chance par niveau du magicien de s’éteindre. La rafale de vent peut aussi éparpiller de grands feux sur 30 cm à 1,80 mètres dans la direction de son mouvement. Elle repoussera les petites créatures volantes sur 1&quot; à 6&quot; ; celles de taille humaine qui tenteront de voler contre le vent n’y arriveront pas et seront maintenues immobiles pendant un round tandis que celles de grande taille seront ralenties à 50% pendant un round. Une rafale de vent renverse les objets légers. Sa largeur est de 1&quot; sur 1&quot; de long par niveau du magicien ; un magicien de niveau 8 créera une rafale de 1&quot; de large sur 8&quot; de long. Ce sort peut être particulièrement utile contre un nuage puant, nuage létal ou obscurcissement. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est une graine de légume.</p>"
+      },
+      "effects": [
+        {
+          "name": "Rafale de vent",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:rafale_de_vent",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-rafale-de-vent.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.G0LM50UOL1DxlADR",
+          "_id": "j8yqFIFct7jenWGr",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567279,
+            "modifiedTime": 1780340567279
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:58.694Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-rafale-de-vent.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.G0LM50UOL1DxlADR",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567279,
+        "modifiedTime": 1780340567279,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "4Fefn3TPB5BiMRw8",
+      "sort": 0
+    },
+    {
+      "name": "Ralentissement",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-ralentissement.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort fait que les créatures affectées se déplacent deux fois moins vite et attaquent deux fois moins que la normale. Ce sort annule les effets d’un sort de rapidité (voir p.75). Les effets de ce sort sont cumulatifs. Ralentissement peut affecter des créatures déjà ralenties, ou annuler les effets d’une rapidité magique. Le magicien peut ralentir autant de créatures qu’il possède de niveaux, tant que ces créatures se trouvent dans la zone d’effet de 4\" x 4\" au moment de l’incantation. S’il y a plusieurs créatures dans la zone d’effet, les plus proches du lanceur de sort seront affectées en premier. La composante matérielle est une goutte de mélasse.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-ralentissement.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-ralentissement.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-ralentissement.js",
+        "composants_materiels": [
+          {
+            "slug": "goutte_de_melasse",
+            "nom": "Goutte de mélasse",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est une goutte de mélasse.",
+        "description_reelle": "Ce sort fait que les créatures affectées se déplacent deux fois moins vite et attaquent deux fois moins que la normale. Ce sort annule les effets d’un sort de rapidité (voir p.75). Les effets de ce sort sont cumulatifs. Ralentissement peut affecter des créatures déjà ralenties, ou annuler les effets d’une rapidité magique. Le magicien peut ralentir autant de créatures qu’il possède de niveaux, tant que ces créatures se trouvent dans la zone d’effet de 4\" x 4\" au moment de l’incantation. S’il y a plusieurs créatures dans la zone d’effet, les plus proches du lanceur de sort seront affectées en premier. La composante matérielle est une goutte de mélasse.",
+        "description_texte": "Ce sort fait que les créatures affectées se déplacent deux fois moins vite et attaquent deux fois moins que la normale. Ce sort annule les effets d’un sort de rapidité (voir p.75). Les effets de ce sort sont cumulatifs. Ralentissement peut affecter des créatures déjà ralenties, ou annuler les effets d’une rapidité magique. Le magicien peut ralentir autant de créatures qu’il possède de niveaux, tant que ces créatures se trouvent dans la zone d’effet de 4\" x 4\" au moment de l’incantation. S’il y a plusieurs créatures dans la zone d’effet, les plus proches du lanceur de sort seront affectées en premier. La composante matérielle est une goutte de mélasse.",
+        "description_html": "<p>Ce sort fait que les créatures affectées se déplacent deux fois moins vite et attaquent deux fois moins que la normale. Ce sort annule les effets d’un sort de rapidité (voir p.75). Les effets de ce sort sont cumulatifs. Ralentissement peut affecter des créatures déjà ralenties, ou annuler les effets d’une rapidité magique. Le magicien peut ralentir autant de créatures qu’il possède de niveaux, tant que ces créatures se trouvent dans la zone d’effet de 4&quot; x 4&quot; au moment de l’incantation. S’il y a plusieurs créatures dans la zone d’effet, les plus proches du lanceur de sort seront affectées en premier. La composante matérielle est une goutte de mélasse.</p>"
+      },
+      "effects": [
+        {
+          "name": "Ralentissement",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:ralentissement",
+                "type:condition",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-ralentissement.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ZO28AmvWHt6TkbxI",
+          "_id": "hiorWklhn5rS8Fy2",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568103,
+            "modifiedTime": 1780340568103
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:58.913Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-ralentissement.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.ZO28AmvWHt6TkbxI",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568103,
+        "modifiedTime": 1780340568103,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "bKU3hWAg9dK3XNJ2",
+      "sort": 0
+    },
+    {
+      "name": "Rapidité",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-rapidite.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, les créatures affectées voient la vitesse de leurs mouvements et leur nombre d’attaques multipliés par 2. Donc, une créature se déplaçant à 6\" et attaquant 1 fois par round aura une vitesse de déplacement de 12\" et pourra attaquer 2 fois dans le même round. Par contre, le temps d’incantation des sorts n’est pas accéléré. Le nombre de créatures affectées est égal au niveau du magicien, du moment qu’elles se trouvent dans la zone d’effet au moment où le sort est lancé. Un magicien de niveau 5 pourra affecter 5 créatures. S’il y a plusieurs créatures dans la zone d’effet, les plus proches du lanceur de sort seront affectées en premier. Ce sort annule les effets du sort ralentissement. À noter que ce sort accélère le métabolisme et donc vieillit les créatures affectées de 1 an. La composante matérielle est un fragment de racine de réglisse.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-rapidite.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-rapidite.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-rapidite.js",
+        "composants_materiels": [
+          {
+            "slug": "fragment_de_racine_de_reglisse",
+            "nom": "Fragment de racine de réglisse",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est un fragment de racine de réglisse.",
+        "description_reelle": "Quand ce sort est lancé, les créatures affectées voient la vitesse de leurs mouvements et leur nombre d’attaques multipliés par 2. Donc, une créature se déplaçant à 6\" et attaquant 1 fois par round aura une vitesse de déplacement de 12\" et pourra attaquer 2 fois dans le même round. Par contre, le temps d’incantation des sorts n’est pas accéléré. Le nombre de créatures affectées est égal au niveau du magicien, du moment qu’elles se trouvent dans la zone d’effet au moment où le sort est lancé. Un magicien de niveau 5 pourra affecter 5 créatures. S’il y a plusieurs créatures dans la zone d’effet, les plus proches du lanceur de sort seront affectées en premier. Ce sort annule les effets du sort ralentissement. À noter que ce sort accélère le métabolisme et donc vieillit les créatures affectées de 1 an. La composante matérielle est un fragment de racine de réglisse.",
+        "description_texte": "Quand ce sort est lancé, les créatures affectées voient la vitesse de leurs mouvements et leur nombre d’attaques multipliés par 2. Donc, une créature se déplaçant à 6\" et attaquant 1 fois par round aura une vitesse de déplacement de 12\" et pourra attaquer 2 fois dans le même round. Par contre, le temps d’incantation des sorts n’est pas accéléré. Le nombre de créatures affectées est égal au niveau du magicien, du moment qu’elles se trouvent dans la zone d’effet au moment où le sort est lancé. Un magicien de niveau 5 pourra affecter 5 créatures. S’il y a plusieurs créatures dans la zone d’effet, les plus proches du lanceur de sort seront affectées en premier. Ce sort annule les effets du sort ralentissement. À noter que ce sort accélère le métabolisme et donc vieillit les créatures affectées de 1 an. La composante matérielle est un fragment de racine de réglisse.",
+        "description_html": "<p>Quand ce sort est lancé, les créatures affectées voient la vitesse de leurs mouvements et leur nombre d’attaques multipliés par 2. Donc, une créature se déplaçant à 6&quot; et attaquant 1 fois par round aura une vitesse de déplacement de 12&quot; et pourra attaquer 2 fois dans le même round. Par contre, le temps d’incantation des sorts n’est pas accéléré. Le nombre de créatures affectées est égal au niveau du magicien, du moment qu’elles se trouvent dans la zone d’effet au moment où le sort est lancé. Un magicien de niveau 5 pourra affecter 5 créatures. S’il y a plusieurs créatures dans la zone d’effet, les plus proches du lanceur de sort seront affectées en premier. Ce sort annule les effets du sort ralentissement. À noter que ce sort accélère le métabolisme et donc vieillit les créatures affectées de 1 an. La composante matérielle est un fragment de racine de réglisse.</p>"
+      },
+      "effects": [
+        {
+          "name": "Rapidité",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:rapidite",
+                "type:condition",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-rapidite.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.hTIR0DYk7HWyRqry",
+          "_id": "uJynYSDGe8c7l68E",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568777,
+            "modifiedTime": 1780340568777
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:59.143Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-rapidite.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.hTIR0DYk7HWyRqry",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568777,
+        "modifiedTime": 1780340568777,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "Ua8x9g7HihK7cXGY",
+      "sort": 0
+    },
+    {
+      "name": "Runes explosives",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-runes-explosives.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "En traçant les runes mystiques sur un livre, une carte, un parchemin ou sur toute autre surface d’écriture, le magicien empêche la lecture par des créatures non-autorisées. Les runes explosives sont difficiles à détecter : 5 % de chances si le lecteur est voleur, et 5 % par niveau s'il est magicien. Quand elles sont lues, les runes explosent et délivrent les dégâts suivants : de 12 à 30 points (6d4+6). Il n’y a pas de jet de protection pour le lecteur, mais les créatures qui se trouvent dans la zone d’effet (1\" de rayon) ont droit à un jet de protection qui, s’il est réussi, divise les dégâts par 2. Le magicien qui a lancé le sort, et les autres magiciens qu’il a prévenus, peuvent lire l’objet piégé, sans aucun risque. Le magicien peut annuler ce sort quand il le désire. Les runes peuvent être enlevées par une dissipation de la magie et les runes explosives restent actives jusqu’à déclenchement. L’objet sur lequel a été lancé le sort sera détruit par l’explosion, à moins qu’il ne soit insensible aux feux magiques. SORTS DE MAGICIEN (NIVEAU 3)",
+        "onUse": "systems/add2e/scripts/sorts/magicien-runes-explosives.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-runes-explosives.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-runes-explosives.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "En traçant les runes mystiques sur un livre, une carte, un parchemin ou sur toute autre surface d’écriture, le magicien empêche la lecture par des créatures non-autorisées. Les runes explosives sont difficiles à détecter : 5 % de chances si le lecteur est voleur, et 5 % par niveau s'il est magicien. Quand elles sont lues, les runes explosent et délivrent les dégâts suivants : de 12 à 30 points (6d4+6). Il n’y a pas de jet de protection pour le lecteur, mais les créatures qui se trouvent dans la zone d’effet (1\" de rayon) ont droit à un jet de protection qui, s’il est réussi, divise les dégâts par 2. Le magicien qui a lancé le sort, et les autres magiciens qu’il a prévenus, peuvent lire l’objet piégé, sans aucun risque. Le magicien peut annuler ce sort quand il le désire. Les runes peuvent être enlevées par une dissipation de la magie et les runes explosives restent actives jusqu’à déclenchement. L’objet sur lequel a été lancé le sort sera détruit par l’explosion, à moins qu’il ne soit insensible aux feux magiques. SORTS DE MAGICIEN (NIVEAU 3)",
+        "description_texte": "En traçant les runes mystiques sur un livre, une carte, un parchemin ou sur toute autre surface d’écriture, le magicien empêche la lecture par des créatures non-autorisées. Les runes explosives sont difficiles à détecter : 5 % de chances si le lecteur est voleur, et 5 % par niveau s'il est magicien. Quand elles sont lues, les runes explosent et délivrent les dégâts suivants : de 12 à 30 points (6d4+6). Il n’y a pas de jet de protection pour le lecteur, mais les créatures qui se trouvent dans la zone d’effet (1\" de rayon) ont droit à un jet de protection qui, s’il est réussi, divise les dégâts par 2. Le magicien qui a lancé le sort, et les autres magiciens qu’il a prévenus, peuvent lire l’objet piégé, sans aucun risque. Le magicien peut annuler ce sort quand il le désire. Les runes peuvent être enlevées par une dissipation de la magie et les runes explosives restent actives jusqu’à déclenchement. L’objet sur lequel a été lancé le sort sera détruit par l’explosion, à moins qu’il ne soit insensible aux feux magiques. SORTS DE MAGICIEN (NIVEAU 3)",
+        "description_html": "<p>En traçant les runes mystiques sur un livre, une carte, un parchemin ou sur toute autre surface d’écriture, le magicien empêche la lecture par des créatures non-autorisées. Les runes explosives sont difficiles à détecter : 5 % de chances si le lecteur est voleur, et 5 % par niveau s&#x27;il est magicien. Quand elles sont lues, les runes explosent et délivrent les dégâts suivants : de 12 à 30 points (6d4+6). Il n’y a pas de jet de protection pour le lecteur, mais les créatures qui se trouvent dans la zone d’effet (1&quot; de rayon) ont droit à un jet de protection qui, s’il est réussi, divise les dégâts par 2. Le magicien qui a lancé le sort, et les autres magiciens qu’il a prévenus, peuvent lire l’objet piégé, sans aucun risque. Le magicien peut annuler ce sort quand il le désire. Les runes peuvent être enlevées par une dissipation de la magie et les runes explosives restent actives jusqu’à déclenchement. L’objet sur lequel a été lancé le sort sera détruit par l’explosion, à moins qu’il ne soit insensible aux feux magiques. SORTS DE MAGICIEN (NIVEAU 3)</p>"
+      },
+      "effects": [
+        {
+          "name": "Runes explosives",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:runes_explosives",
+                "type:damage",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-runes-explosives.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fYpQL2uQkLBXeL5H",
+          "_id": "cDrMGjOwUF2T1RvT",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568736,
+            "modifiedTime": 1780340568736
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:14.813Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-runes-explosives.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.fYpQL2uQkLBXeL5H",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568736,
+        "modifiedTime": 1780340568736,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "s4srAEb0LL48XW0c",
+      "sort": 0
+    },
+    {
+      "name": "Vol",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-vol.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet au magicien de donner le pouvoir de voler. La créature affectée peut se déplacer verticalement et/ou horizontalement, à une vitesse de 12\" (la moitié en montant, le double en descendant). La durée exacte du sort n’est pas connue du magicien, car il y a une variation de 1 à 6 tours, tirée secrètement par le MD. Utilisé sous l’eau, le sort de vol permet de se déplacer à n’importe quelle profondeur, même en cas d’encombrement ou de poids empêchant normalement de flotter. La vitesse maximale sous l’eau est de 9\". La composante matérielle est une plume d’aile d’oiseau. SORTS DE NIVEAU 4",
+        "onUse": "systems/add2e/scripts/sorts/magicien-vol.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-vol.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-vol.js",
+        "composants_materiels": [
+          {
+            "slug": "plume_d_aile_d_oiseau",
+            "nom": "Plume d’aile d’oiseau",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est une plume d’aile d’oiseau.",
+        "description_reelle": "Ce sort permet au magicien de donner le pouvoir de voler. La créature affectée peut se déplacer verticalement et/ou horizontalement, à une vitesse de 12\" (la moitié en montant, le double en descendant). La durée exacte du sort n’est pas connue du magicien, car il y a une variation de 1 à 6 tours, tirée secrètement par le MD. Utilisé sous l’eau, le sort de vol permet de se déplacer à n’importe quelle profondeur, même en cas d’encombrement ou de poids empêchant normalement de flotter. La vitesse maximale sous l’eau est de 9\". La composante matérielle est une plume d’aile d’oiseau. SORTS DE NIVEAU 4",
+        "description_texte": "Ce sort permet au magicien de donner le pouvoir de voler. La créature affectée peut se déplacer verticalement et/ou horizontalement, à une vitesse de 12\" (la moitié en montant, le double en descendant). La durée exacte du sort n’est pas connue du magicien, car il y a une variation de 1 à 6 tours, tirée secrètement par le MD. Utilisé sous l’eau, le sort de vol permet de se déplacer à n’importe quelle profondeur, même en cas d’encombrement ou de poids empêchant normalement de flotter. La vitesse maximale sous l’eau est de 9\". La composante matérielle est une plume d’aile d’oiseau. SORTS DE NIVEAU 4",
+        "description_html": "<p>Ce sort permet au magicien de donner le pouvoir de voler. La créature affectée peut se déplacer verticalement et/ou horizontalement, à une vitesse de 12&quot; (la moitié en montant, le double en descendant). La durée exacte du sort n’est pas connue du magicien, car il y a une variation de 1 à 6 tours, tirée secrètement par le MD. Utilisé sous l’eau, le sort de vol permet de se déplacer à n’importe quelle profondeur, même en cas d’encombrement ou de poids empêchant normalement de flotter. La vitesse maximale sous l’eau est de 9&quot;. La composante matérielle est une plume d’aile d’oiseau. SORTS DE NIVEAU 4</p>"
+      },
+      "effects": [
+        {
+          "name": "Vol",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:3",
+                "sort:vol",
+                "type:movement",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-vol.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.a8yk4ddGKns7kcZH",
+          "_id": "Mk0oNBSPsU4BSLc6",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568659,
+            "modifiedTime": 1780340568659
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:34:35.899Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-vol.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 3",
+          "sourceFolderId": "73eQ0NsC7Hd7Tb2u",
+          "exportedAt": "2026-05-22T09:57:29.902Z"
+        }
+      },
+      "folder": "xpGAo6lr0QFlFGv1",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.a8yk4ddGKns7kcZH",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568659,
+        "modifiedTime": 1780340568659,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "L0KzlhAHlY5WnALd",
+      "sort": 0
+    }
+  ]
+}

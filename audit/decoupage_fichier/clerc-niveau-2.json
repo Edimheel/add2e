@@ -1,0 +1,4499 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "clerc",
+    "niveau": 2,
+    "key": "clerc-niveau-2",
+    "count": 11
+  },
+  "folders": [
+    {
+      "name": "Clerc",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "xnt5dJBZCkmFcXJf",
+      "description": "",
+      "sort": 500000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566745,
+        "modifiedTime": 1780340566745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 2",
+      "type": "Item",
+      "folder": "xnt5dJBZCkmFcXJf",
+      "sorting": "a",
+      "_id": "KoHiALDxso8oenFP",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566741,
+        "modifiedTime": 1780340566741,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Augure",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/augure.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": 0,
+          "unite": "personnel"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "action envisagée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "question",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "2",
+          "unite": "rounds"
+        },
+        "description": "Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.",
+        "onUse": "systems/add2e/scripts/sorts/augure.js",
+        "onuse": "systems/add2e/scripts/sorts/augure.js",
+        "portée": {
+          "valeur": 0,
+          "unite": "personnel"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/augure.js",
+        "composants_materiels": [
+          {
+            "slug": "jeu_de_baguettes_serties_de_gemmes",
+            "nom": "Jeu de baguettes serties de gemmes",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "os_de_dragon",
+            "nom": "Os de dragon",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.",
+        "description_texte": "Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.",
+        "description_html": "<p>Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.</p>"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Augure",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:augure",
+                "divination:augure",
+                "information:md",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/augure.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.lkufca1XNcaz7TbR",
+          "_id": "sD4sVWK2w2HrN4yf",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568838,
+            "modifiedTime": 1780340568838
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Augure",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:augure",
+                "divination:augure",
+                "information:md",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/augure.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.lkufca1XNcaz7TbR",
+          "_id": "omV2R2L9ylE2k7RU",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568838,
+            "modifiedTime": 1780340568838
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Augure",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:augure",
+                "divination:augure",
+                "information:md",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/augure.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.lkufca1XNcaz7TbR",
+          "_id": "i6ZpigrWrwKC7kZw",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568838,
+            "modifiedTime": 1780340568838
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Augure",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:augure",
+                "divination:augure",
+                "information:md",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/augure.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.lkufca1XNcaz7TbR",
+          "_id": "8HQ0ss4WnLScMSTk",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568838,
+            "modifiedTime": 1780340568838
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Augure",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:augure",
+                "divination:augure",
+                "information:md",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/augure.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.lkufca1XNcaz7TbR",
+          "_id": "qC6TIsCIDjGHaNmZ",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568838,
+            "modifiedTime": 1780340568838
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Augure",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:augure",
+                "divination:augure",
+                "information:md",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/augure.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.lkufca1XNcaz7TbR",
+          "_id": "QIXw6T5gKCJRaQTb",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568838,
+            "modifiedTime": 1780340568838
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/augure.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:33.316Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.lkufca1XNcaz7TbR",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568838,
+        "modifiedTime": 1780340568838,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "Rs2UXeoGOPw95lTa",
+      "sort": 0
+    },
+    {
+      "name": "Cantique",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/cantique.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": 0,
+          "unite": "personnel"
+        },
+        "duree": {
+          "valeur": "le temps du chant",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": 3,
+          "unite": "pouces de rayon"
+        },
+        "cible": {
+          "valeur": "zone",
+          "unite": "alliés/ennemis"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "tour"
+        },
+        "description": "En lançant ce sort, c'est-à-dire en chantant, le clerc provoque un regain d’énergie pour ses amis et lui-même, tandis qu’il amoindrit la force de ses ennemis. Une fois que les incantations du sort sont achevées, les attaques, les dommages et les jets de protection des amis du clerc obtiennent un bonus de +1, alors que ceux de ces ennemis subissent un malus de –1. Ce bonus/malus continue tant que le clerc chante et qu’il reste immobile. Une interruption provoquée par une attaque réussie contre le clerc, un sort de silence ou même le fait de bousculer le clerc fait que le sort est annulé.",
+        "onUse": "systems/add2e/scripts/sorts/cantique.js",
+        "onuse": "systems/add2e/scripts/sorts/cantique.js",
+        "portée": {
+          "valeur": 0,
+          "unite": "personnel"
+        },
+        "durée": {
+          "valeur": "le temps du chant",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/cantique.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "En lançant ce sort, c'est-à-dire en chantant, le clerc provoque un regain d’énergie pour ses amis et lui-même, tandis qu’il amoindrit la force de ses ennemis. Une fois que les incantations du sort sont achevées, les attaques, les dommages et les jets de protection des amis du clerc obtiennent un bonus de +1, alors que ceux de ces ennemis subissent un malus de –1. Ce bonus/malus continue tant que le clerc chante et qu’il reste immobile. Une interruption provoquée par une attaque réussie contre le clerc, un sort de silence ou même le fait de bousculer le clerc fait que le sort est annulé.",
+        "description_texte": "En lançant ce sort, c'est-à-dire en chantant, le clerc provoque un regain d’énergie pour ses amis et lui-même, tandis qu’il amoindrit la force de ses ennemis. Une fois que les incantations du sort sont achevées, les attaques, les dommages et les jets de protection des amis du clerc obtiennent un bonus de +1, alors que ceux de ces ennemis subissent un malus de –1. Ce bonus/malus continue tant que le clerc chante et qu’il reste immobile. Une interruption provoquée par une attaque réussie contre le clerc, un sort de silence ou même le fait de bousculer le clerc fait que le sort est annulé.",
+        "description_html": "<p>En lançant ce sort, c&#x27;est-à-dire en chantant, le clerc provoque un regain d’énergie pour ses amis et lui-même, tandis qu’il amoindrit la force de ses ennemis. Une fois que les incantations du sort sont achevées, les attaques, les dommages et les jets de protection des amis du clerc obtiennent un bonus de +1, alors que ceux de ces ennemis subissent un malus de –1. Ce bonus/malus continue tant que le clerc chante et qu’il reste immobile. Une interruption provoquée par une attaque réussie contre le clerc, un sort de silence ou même le fait de bousculer le clerc fait que le sort est annulé.</p>"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Cantique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:cantique",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:sauvegarde:1",
+                "malus:ennemis:1",
+                "concentration",
+                "etat:cantique",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/cantique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kmQkCqLvmcZtXUOt",
+          "_id": "YUH9BiKrHeHAKnJ1",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568819,
+            "modifiedTime": 1780340568819
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Cantique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:cantique",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:sauvegarde:1",
+                "malus:ennemis:1",
+                "concentration",
+                "etat:cantique",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/cantique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kmQkCqLvmcZtXUOt",
+          "_id": "Xd8S8nkARnjJlU8b",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568819,
+            "modifiedTime": 1780340568819
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Cantique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:cantique",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:sauvegarde:1",
+                "malus:ennemis:1",
+                "concentration",
+                "etat:cantique",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/cantique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kmQkCqLvmcZtXUOt",
+          "_id": "cIYJ0yz9leLZXm3k",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568819,
+            "modifiedTime": 1780340568819
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Cantique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:cantique",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:sauvegarde:1",
+                "malus:ennemis:1",
+                "concentration",
+                "etat:cantique",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/cantique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kmQkCqLvmcZtXUOt",
+          "_id": "O0ngkCp36ejszoAC",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568819,
+            "modifiedTime": 1780340568819
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Cantique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:cantique",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:sauvegarde:1",
+                "malus:ennemis:1",
+                "concentration",
+                "etat:cantique",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/cantique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kmQkCqLvmcZtXUOt",
+          "_id": "sjBlTKbW1U9cpvxf",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568819,
+            "modifiedTime": 1780340568819
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Cantique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:cantique",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:sauvegarde:1",
+                "malus:ennemis:1",
+                "concentration",
+                "etat:cantique",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/cantique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.kmQkCqLvmcZtXUOt",
+          "_id": "l6tjBuk7tWG7ZXZa",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568819,
+            "modifiedTime": 1780340568819
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/cantique.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:48.187Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.kmQkCqLvmcZtXUOt",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568819,
+        "modifiedTime": 1780340568819,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "wdtkfJYwuk9dsqR1",
+      "sort": 0
+    },
+    {
+      "name": "Charme-Serpents",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/charme-serpents.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Enchantement/Charme",
+        "portee": {
+          "valeur": "3",
+          "unite": "pouces"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "serpents selon PV",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "serpents",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "5",
+          "unite": "segments"
+        },
+        "description": "Lancer ce sort crée une force hypnotique qui calme un ou plusieurs serpents ; ceux-ci se dressent alors et se contentent d’osciller doucement et lentement. Si les serpents sont charmés en état de torpeur, la durée du sort est de 3 à 6 tours (1d4+2) ; si les serpents sont éveillés mais ni agressifs ni affamés, le charme durera de 1 à 3 tours ; si les serpents sont agressifs et/ou affamés, le sort durera de 5 à 8 rounds (1d4+4). Un clerc peut charmer des serpents dont le nombre total de points de vie est inférieur ou égal au sien. En moyenne, un clerc de niveau 1 peut charmer des serpents dont le total de points de vie est d’environ 4 ou 5 points de vie ; un clerc de niveau 2, 9 points de vie environ ; un clerc de niveau 3, 13 ou 14 points de vie environ. Les points de vie peuvent représenter un ou plusieurs serpents, mais le total des points de vie ne peut excéder ceux du clerc qui lance le sort. Toujours en respectant la règle précédente, le sort peut fonctionner contre n’importe quel ophidien ou assimilé (naga, couatl, etc.), mais résistance à la magie et jets de protection sont à prendre en considération.",
+        "onUse": "systems/add2e/scripts/sorts/charme-serpents.js",
+        "onuse": "systems/add2e/scripts/sorts/charme-serpents.js",
+        "portée": {
+          "valeur": "3",
+          "unite": "pouces"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Enchantement/Charme",
+        "on_use": "systems/add2e/scripts/sorts/charme-serpents.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "Lancer ce sort crée une force hypnotique qui calme un ou plusieurs serpents ; ceux-ci se dressent alors et se contentent d’osciller doucement et lentement. Si les serpents sont charmés en état de torpeur, la durée du sort est de 3 à 6 tours (1d4+2) ; si les serpents sont éveillés mais ni agressifs ni affamés, le charme durera de 1 à 3 tours ; si les serpents sont agressifs et/ou affamés, le sort durera de 5 à 8 rounds (1d4+4). Un clerc peut charmer des serpents dont le nombre total de points de vie est inférieur ou égal au sien. En moyenne, un clerc de niveau 1 peut charmer des serpents dont le total de points de vie est d’environ 4 ou 5 points de vie ; un clerc de niveau 2, 9 points de vie environ ; un clerc de niveau 3, 13 ou 14 points de vie environ. Les points de vie peuvent représenter un ou plusieurs serpents, mais le total des points de vie ne peut excéder ceux du clerc qui lance le sort. Toujours en respectant la règle précédente, le sort peut fonctionner contre n’importe quel ophidien ou assimilé (naga, couatl, etc.), mais résistance à la magie et jets de protection sont à prendre en considération.",
+        "description_texte": "Lancer ce sort crée une force hypnotique qui calme un ou plusieurs serpents ; ceux-ci se dressent alors et se contentent d’osciller doucement et lentement. Si les serpents sont charmés en état de torpeur, la durée du sort est de 3 à 6 tours (1d4+2) ; si les serpents sont éveillés mais ni agressifs ni affamés, le charme durera de 1 à 3 tours ; si les serpents sont agressifs et/ou affamés, le sort durera de 5 à 8 rounds (1d4+4). Un clerc peut charmer des serpents dont le nombre total de points de vie est inférieur ou égal au sien. En moyenne, un clerc de niveau 1 peut charmer des serpents dont le total de points de vie est d’environ 4 ou 5 points de vie ; un clerc de niveau 2, 9 points de vie environ ; un clerc de niveau 3, 13 ou 14 points de vie environ. Les points de vie peuvent représenter un ou plusieurs serpents, mais le total des points de vie ne peut excéder ceux du clerc qui lance le sort. Toujours en respectant la règle précédente, le sort peut fonctionner contre n’importe quel ophidien ou assimilé (naga, couatl, etc.), mais résistance à la magie et jets de protection sont à prendre en considération.",
+        "description_html": "<p>Lancer ce sort crée une force hypnotique qui calme un ou plusieurs serpents ; ceux-ci se dressent alors et se contentent d’osciller doucement et lentement. Si les serpents sont charmés en état de torpeur, la durée du sort est de 3 à 6 tours (1d4+2) ; si les serpents sont éveillés mais ni agressifs ni affamés, le charme durera de 1 à 3 tours ; si les serpents sont agressifs et/ou affamés, le sort durera de 5 à 8 rounds (1d4+4). Un clerc peut charmer des serpents dont le nombre total de points de vie est inférieur ou égal au sien. En moyenne, un clerc de niveau 1 peut charmer des serpents dont le total de points de vie est d’environ 4 ou 5 points de vie ; un clerc de niveau 2, 9 points de vie environ ; un clerc de niveau 3, 13 ou 14 points de vie environ. Les points de vie peuvent représenter un ou plusieurs serpents, mais le total des points de vie ne peut excéder ceux du clerc qui lance le sort. Toujours en respectant la règle précédente, le sort peut fonctionner contre n’importe quel ophidien ou assimilé (naga, couatl, etc.), mais résistance à la magie et jets de protection sont à prendre en considération.</p>"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Charme-Serpents",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:charme_serpents",
+                "charme:serpents",
+                "creature:serpent",
+                "etat:charme_serpent",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/charme-serpents.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.IYVYx9KkhMZCXf8Q",
+          "_id": "CHiIWDOFtsIJKt0w",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567320,
+            "modifiedTime": 1780340567320
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Charme-Serpents",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:charme_serpents",
+                "charme:serpents",
+                "creature:serpent",
+                "etat:charme_serpent",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/charme-serpents.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.IYVYx9KkhMZCXf8Q",
+          "_id": "uZA3JJXH20ty6nAT",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567320,
+            "modifiedTime": 1780340567320
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Charme-Serpents",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:charme_serpents",
+                "charme:serpents",
+                "creature:serpent",
+                "etat:charme_serpent",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/charme-serpents.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.IYVYx9KkhMZCXf8Q",
+          "_id": "ZTNdyx7shyktMODr",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567320,
+            "modifiedTime": 1780340567320
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Charme-Serpents",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:charme_serpents",
+                "charme:serpents",
+                "creature:serpent",
+                "etat:charme_serpent",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/charme-serpents.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.IYVYx9KkhMZCXf8Q",
+          "_id": "Cz8Ff6VbBQhQPaMt",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567320,
+            "modifiedTime": 1780340567320
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Charme-Serpents",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:charme_serpents",
+                "charme:serpents",
+                "creature:serpent",
+                "etat:charme_serpent",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/charme-serpents.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.IYVYx9KkhMZCXf8Q",
+          "_id": "b3hWoqJvccpnmKD1",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567320,
+            "modifiedTime": 1780340567320
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Charme-Serpents",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:charme_serpents",
+                "charme:serpents",
+                "creature:serpent",
+                "etat:charme_serpent",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/charme-serpents.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.IYVYx9KkhMZCXf8Q",
+          "_id": "jDGRZJ55WJpAxd47",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567320,
+            "modifiedTime": 1780340567320
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/charme-serpents.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:53.311Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.IYVYx9KkhMZCXf8Q",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567320,
+        "modifiedTime": 1780340567320,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "tp59YPoHeXjNe6Ym",
+      "sort": 0
+    },
+    {
+      "name": "Détection des Charmes",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/detection-des-charmes.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": 3,
+          "unite": "pouces"
+        },
+        "duree": {
+          "valeur": "1",
+          "unite": "tour"
+        },
+        "zone_effet": {
+          "valeur": "une créature",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "jusqu’à 10",
+          "unite": "créatures"
+        },
+        "jet_sauvegarde": "Annule",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "Quand il est lancé par un clerc, ce sort détermine si une personne ou un monstre est oui ou non sous l’influence d’un charme. Jusqu’à 10 créatures peuvent être examinées avant que le sort ne soit plus effectif. L’inverse du sort, dissimulation des charmes, protège d’une telle détection, mais une seule créature peut alors être protégée.",
+        "onUse": "systems/add2e/scripts/sorts/detection-des-charmes.js",
+        "onuse": "systems/add2e/scripts/sorts/detection-des-charmes.js",
+        "portée": {
+          "valeur": 3,
+          "unite": "pouces"
+        },
+        "durée": {
+          "valeur": "1",
+          "unite": "tour"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/detection-des-charmes.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "Quand il est lancé par un clerc, ce sort détermine si une personne ou un monstre est oui ou non sous l’influence d’un charme. Jusqu’à 10 créatures peuvent être examinées avant que le sort ne soit plus effectif. L’inverse du sort, dissimulation des charmes, protège d’une telle détection, mais une seule créature peut alors être protégée.",
+        "description_texte": "Quand il est lancé par un clerc, ce sort détermine si une personne ou un monstre est oui ou non sous l’influence d’un charme. Jusqu’à 10 créatures peuvent être examinées avant que le sort ne soit plus effectif. L’inverse du sort, dissimulation des charmes, protège d’une telle détection, mais une seule créature peut alors être protégée.",
+        "description_html": "<p>Quand il est lancé par un clerc, ce sort détermine si une personne ou un monstre est oui ou non sous l’influence d’un charme. Jusqu’à 10 créatures peuvent être examinées avant que le sort ne soit plus effectif. L’inverse du sort, dissimulation des charmes, protège d’une telle détection, mais une seule créature peut alors être protégée.</p>"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Détection des Charmes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_charmes",
+                "detection:charme",
+                "reversible:dissimulation_charmes",
+                "jet_sauvegarde:annule",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-charmes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.jiQRKYqntIW39Q6C",
+          "_id": "CxVaAaCAQawOCtxc",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568800,
+            "modifiedTime": 1780340568800
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Charmes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_charmes",
+                "detection:charme",
+                "reversible:dissimulation_charmes",
+                "jet_sauvegarde:annule",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-charmes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.jiQRKYqntIW39Q6C",
+          "_id": "151CoIUEkTY9S8Nh",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568800,
+            "modifiedTime": 1780340568800
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Charmes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_charmes",
+                "detection:charme",
+                "reversible:dissimulation_charmes",
+                "jet_sauvegarde:annule",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-charmes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.jiQRKYqntIW39Q6C",
+          "_id": "2RIxxeYmGX52hRLz",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568800,
+            "modifiedTime": 1780340568800
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Charmes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_charmes",
+                "detection:charme",
+                "reversible:dissimulation_charmes",
+                "jet_sauvegarde:annule",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-charmes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.jiQRKYqntIW39Q6C",
+          "_id": "MeOqlFWvXK1ZZjEy",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568800,
+            "modifiedTime": 1780340568800
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Charmes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_charmes",
+                "detection:charme",
+                "reversible:dissimulation_charmes",
+                "jet_sauvegarde:annule",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-charmes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.jiQRKYqntIW39Q6C",
+          "_id": "f5yWZsvXDrn5MDZ7",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568800,
+            "modifiedTime": 1780340568800
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Charmes",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_charmes",
+                "detection:charme",
+                "reversible:dissimulation_charmes",
+                "jet_sauvegarde:annule",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-charmes.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.jiQRKYqntIW39Q6C",
+          "_id": "lhEsvQVeHPIOHQfc",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568800,
+            "modifiedTime": 1780340568800
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/detection-des-charmes.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:15.349Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.jiQRKYqntIW39Q6C",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568800,
+        "modifiedTime": 1780340568800,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "QIQwPiiJp7G4g4g7",
+      "sort": 0
+    },
+    {
+      "name": "Détection des Pièges",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/detection-des-pieges.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": 3,
+          "unite": "pouces"
+        },
+        "duree": {
+          "valeur": "3",
+          "unite": "tours"
+        },
+        "zone_effet": {
+          "valeur": 1,
+          "unite": "pouce de large"
+        },
+        "cible": {
+          "valeur": "direction",
+          "unite": "détection"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "5",
+          "unite": "segments"
+        },
+        "description": "Quand un clerc lance ce sort, tous les pièges — normalement ou magiquement cachés — de nature mécanique ou magique lui apparaissent. Ce sort est directionnel et le lanceur de sort doit faire face à la direction désirée afin de déterminer si un piège se trouve dans cette direction. Le sort donne au clerc 10 % de chance par niveau de détecter le type de magie en jeu (divination, altération, etc.) dans le cas d’un piège magique ou caché par magie.",
+        "onUse": "systems/add2e/scripts/sorts/detection-des-pieges.js",
+        "onuse": "systems/add2e/scripts/sorts/detection-des-pieges.js",
+        "portée": {
+          "valeur": 3,
+          "unite": "pouces"
+        },
+        "durée": {
+          "valeur": "3",
+          "unite": "tours"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/detection-des-pieges.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "Quand un clerc lance ce sort, tous les pièges — normalement ou magiquement cachés — de nature mécanique ou magique lui apparaissent. Ce sort est directionnel et le lanceur de sort doit faire face à la direction désirée afin de déterminer si un piège se trouve dans cette direction. Le sort donne au clerc 10 % de chance par niveau de détecter le type de magie en jeu (divination, altération, etc.) dans le cas d’un piège magique ou caché par magie.",
+        "description_texte": "Quand un clerc lance ce sort, tous les pièges — normalement ou magiquement cachés — de nature mécanique ou magique lui apparaissent. Ce sort est directionnel et le lanceur de sort doit faire face à la direction désirée afin de déterminer si un piège se trouve dans cette direction. Le sort donne au clerc 10 % de chance par niveau de détecter le type de magie en jeu (divination, altération, etc.) dans le cas d’un piège magique ou caché par magie.",
+        "description_html": "<p>Quand un clerc lance ce sort, tous les pièges — normalement ou magiquement cachés — de nature mécanique ou magique lui apparaissent. Ce sort est directionnel et le lanceur de sort doit faire face à la direction désirée afin de déterminer si un piège se trouve dans cette direction. Le sort donne au clerc 10 % de chance par niveau de détecter le type de magie en jeu (divination, altération, etc.) dans le cas d’un piège magique ou caché par magie.</p>"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Détection des Pièges",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_pieges",
+                "detection:pieges",
+                "detection:magie_piege",
+                "etat:detection_pieges",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-pieges.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.CNw1qtjTAV4vLiam",
+          "_id": "jy9SIrsUhwY91l6P",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567213,
+            "modifiedTime": 1780340567213
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Pièges",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_pieges",
+                "detection:pieges",
+                "detection:magie_piege",
+                "etat:detection_pieges",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-pieges.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.CNw1qtjTAV4vLiam",
+          "_id": "fR0vRQDIdUTZsFLb",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567213,
+            "modifiedTime": 1780340567213
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Pièges",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_pieges",
+                "detection:pieges",
+                "detection:magie_piege",
+                "etat:detection_pieges",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-pieges.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.CNw1qtjTAV4vLiam",
+          "_id": "OUuqNXzYZ3KQc0DV",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567213,
+            "modifiedTime": 1780340567213
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Pièges",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_pieges",
+                "detection:pieges",
+                "detection:magie_piege",
+                "etat:detection_pieges",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-pieges.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.CNw1qtjTAV4vLiam",
+          "_id": "eeqCJCQTypXPtrtu",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567213,
+            "modifiedTime": 1780340567213
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Pièges",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_pieges",
+                "detection:pieges",
+                "detection:magie_piege",
+                "etat:detection_pieges",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-pieges.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.CNw1qtjTAV4vLiam",
+          "_id": "dopYd65FbHyfGemn",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567213,
+            "modifiedTime": 1780340567213
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Détection des Pièges",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:detection_des_pieges",
+                "detection:pieges",
+                "detection:magie_piege",
+                "etat:detection_pieges",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/detection-des-pieges.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.CNw1qtjTAV4vLiam",
+          "_id": "uZffdPK8Ojy1BCfj",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567213,
+            "modifiedTime": 1780340567213
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/detection-des-pieges.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:15.932Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.890Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.CNw1qtjTAV4vLiam",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567213,
+        "modifiedTime": 1780340567213,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "Wy1dn4BiE0hw8Llu",
+      "sort": 0
+    },
+    {
+      "name": "Langage des Animaux",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/langage-des-animaux.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": 0,
+          "unite": "personnel"
+        },
+        "duree": {
+          "valeur": "2 rounds par niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": 3,
+          "unite": "pouces de rayon"
+        },
+        "cible": {
+          "valeur": "animal",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "5",
+          "unite": "segments"
+        },
+        "description": "En employant ce sort, le clerc obtient le pouvoir de parler à tout animal à sang chaud ou froid, du moment que cet animal possède un esprit (il est par exemple impossible de parler à une amibe). Le clerc est donc capable de poser des questions, de recevoir des réponses et de les comprendre et, d’une manière générale, d’être en bons termes avec l’animal. Même si le penchant de l’animal est opposé à l’alignement du clerc (mauvais/bon, bon/ mauvais), il ne l’attaquera pas pendant la durée du sort, de même que les autres animaux de la même famille qui l’accompagnent. Si l’animal est neutre ou de même moralité que le clerc (bon/bon, mauvais/mauvais), il est possible que l’animal et ses semblables accordent leurs faveurs et même rendent service au clerc. Cette éventualité sera déterminée par le MD, qui consultera une table de réaction basée sur le charisme et prenant en compte le comportement du clerc envers l’animal. Le sort ne transforme pas obligatoirement l’animal en un ami loyal et volontaire du clerc. Ce sort ne permet pas de parler aux monstres, mais aux animaux traditionnels tels que chats, chiens, éléphants, ours, singes, etc.",
+        "onUse": "systems/add2e/scripts/sorts/langage-des-animaux.js",
+        "onuse": "systems/add2e/scripts/sorts/langage-des-animaux.js",
+        "portée": {
+          "valeur": 0,
+          "unite": "personnel"
+        },
+        "durée": {
+          "valeur": "2 rounds par niveau",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/langage-des-animaux.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "En employant ce sort, le clerc obtient le pouvoir de parler à tout animal à sang chaud ou froid, du moment que cet animal possède un esprit (il est par exemple impossible de parler à une amibe). Le clerc est donc capable de poser des questions, de recevoir des réponses et de les comprendre et, d’une manière générale, d’être en bons termes avec l’animal. Même si le penchant de l’animal est opposé à l’alignement du clerc (mauvais/bon, bon/ mauvais), il ne l’attaquera pas pendant la durée du sort, de même que les autres animaux de la même famille qui l’accompagnent. Si l’animal est neutre ou de même moralité que le clerc (bon/bon, mauvais/mauvais), il est possible que l’animal et ses semblables accordent leurs faveurs et même rendent service au clerc. Cette éventualité sera déterminée par le MD, qui consultera une table de réaction basée sur le charisme et prenant en compte le comportement du clerc envers l’animal. Le sort ne transforme pas obligatoirement l’animal en un ami loyal et volontaire du clerc. Ce sort ne permet pas de parler aux monstres, mais aux animaux traditionnels tels que chats, chiens, éléphants, ours, singes, etc.",
+        "description_texte": "En employant ce sort, le clerc obtient le pouvoir de parler à tout animal à sang chaud ou froid, du moment que cet animal possède un esprit (il est par exemple impossible de parler à une amibe). Le clerc est donc capable de poser des questions, de recevoir des réponses et de les comprendre et, d’une manière générale, d’être en bons termes avec l’animal. Même si le penchant de l’animal est opposé à l’alignement du clerc (mauvais/bon, bon/ mauvais), il ne l’attaquera pas pendant la durée du sort, de même que les autres animaux de la même famille qui l’accompagnent. Si l’animal est neutre ou de même moralité que le clerc (bon/bon, mauvais/mauvais), il est possible que l’animal et ses semblables accordent leurs faveurs et même rendent service au clerc. Cette éventualité sera déterminée par le MD, qui consultera une table de réaction basée sur le charisme et prenant en compte le comportement du clerc envers l’animal. Le sort ne transforme pas obligatoirement l’animal en un ami loyal et volontaire du clerc. Ce sort ne permet pas de parler aux monstres, mais aux animaux traditionnels tels que chats, chiens, éléphants, ours, singes, etc.",
+        "description_html": "<p>En employant ce sort, le clerc obtient le pouvoir de parler à tout animal à sang chaud ou froid, du moment que cet animal possède un esprit (il est par exemple impossible de parler à une amibe). Le clerc est donc capable de poser des questions, de recevoir des réponses et de les comprendre et, d’une manière générale, d’être en bons termes avec l’animal. Même si le penchant de l’animal est opposé à l’alignement du clerc (mauvais/bon, bon/ mauvais), il ne l’attaquera pas pendant la durée du sort, de même que les autres animaux de la même famille qui l’accompagnent. Si l’animal est neutre ou de même moralité que le clerc (bon/bon, mauvais/mauvais), il est possible que l’animal et ses semblables accordent leurs faveurs et même rendent service au clerc. Cette éventualité sera déterminée par le MD, qui consultera une table de réaction basée sur le charisme et prenant en compte le comportement du clerc envers l’animal. Le sort ne transforme pas obligatoirement l’animal en un ami loyal et volontaire du clerc. Ce sort ne permet pas de parler aux monstres, mais aux animaux traditionnels tels que chats, chiens, éléphants, ours, singes, etc.</p>"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Langage des Animaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:langage_des_animaux",
+                "langage:animaux",
+                "communication:animal",
+                "etat:langage_animal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/langage-des-animaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.XMLYjnOt82K6m65g",
+          "_id": "1Ci3f9HHryswpqU1",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568055,
+            "modifiedTime": 1780340568055
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Langage des Animaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:langage_des_animaux",
+                "langage:animaux",
+                "communication:animal",
+                "etat:langage_animal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/langage-des-animaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.XMLYjnOt82K6m65g",
+          "_id": "G9pbVgOkOCDvOl6U",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568055,
+            "modifiedTime": 1780340568055
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Langage des Animaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:langage_des_animaux",
+                "langage:animaux",
+                "communication:animal",
+                "etat:langage_animal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/langage-des-animaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.XMLYjnOt82K6m65g",
+          "_id": "wERH1i8gnlxaZayr",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568055,
+            "modifiedTime": 1780340568055
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Langage des Animaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:langage_des_animaux",
+                "langage:animaux",
+                "communication:animal",
+                "etat:langage_animal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/langage-des-animaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.XMLYjnOt82K6m65g",
+          "_id": "ROSvEESWh8A6vG8Q",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568055,
+            "modifiedTime": 1780340568055
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Langage des Animaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:langage_des_animaux",
+                "langage:animaux",
+                "communication:animal",
+                "etat:langage_animal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/langage-des-animaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.XMLYjnOt82K6m65g",
+          "_id": "zjpTCXtBwVHMO7n9",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568055,
+            "modifiedTime": 1780340568055
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Langage des Animaux",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:langage_des_animaux",
+                "langage:animaux",
+                "communication:animal",
+                "etat:langage_animal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/langage-des-animaux.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.XMLYjnOt82K6m65g",
+          "_id": "viY6RCjK1WC3JrEd",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568055,
+            "modifiedTime": 1780340568055
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/langage-des-animaux.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:48.309Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.XMLYjnOt82K6m65g",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568055,
+        "modifiedTime": 1780340568055,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "vhPECKdSgNgk4KaP",
+      "sort": 0
+    },
+    {
+      "name": "Marteau Spirituel",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/marteau-spirituel.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Invocation",
+        "portee": {
+          "valeur": 3,
+          "unite": "pouces"
+        },
+        "duree": {
+          "valeur": "1 round par niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "un ennemi",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "ennemi"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "5",
+          "unite": "segments"
+        },
+        "description": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé. SORTS DE CLERC (NIVEAU 2)",
+        "onUse": "systems/add2e/scripts/sorts/marteau-spirituel.js",
+        "onuse": "systems/add2e/scripts/sorts/marteau-spirituel.js",
+        "portée": {
+          "valeur": 3,
+          "unite": "pouces"
+        },
+        "durée": {
+          "valeur": "1 round par niveau",
+          "unite": "texte"
+        },
+        "ecole": "Invocation",
+        "on_use": "systems/add2e/scripts/sorts/marteau-spirituel.js",
+        "composants_materiels": [
+          {
+            "slug": "marteau_de_guerre_normal_que_le_clerc_doit_lancer_sur_son_ennemi_en_recitant_une",
+            "nom": "Marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu",
+        "description_reelle": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé. SORTS DE CLERC (NIVEAU 2)",
+        "description_texte": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé. SORTS DE CLERC (NIVEAU 2)",
+        "description_html": "<p>En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé. SORTS DE CLERC (NIVEAU 2)</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Marteau Spirituel",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:marteau_spirituel",
+                "arme:marteau_spirituel",
+                "degat:force",
+                "attaque:magique",
+                "concentration",
+                "ecole:invocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/marteau-spirituel.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.pclbSTukRFa39rM3",
+          "_id": "JHGkPKvKLO2JmuSn",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568900,
+            "modifiedTime": 1780340568900
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Marteau Spirituel",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:marteau_spirituel",
+                "arme:marteau_spirituel",
+                "degat:force",
+                "attaque:magique",
+                "concentration",
+                "ecole:invocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/marteau-spirituel.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.pclbSTukRFa39rM3",
+          "_id": "JGbgOsggH4arlp1T",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568900,
+            "modifiedTime": 1780340568900
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Marteau Spirituel",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:marteau_spirituel",
+                "arme:marteau_spirituel",
+                "degat:force",
+                "attaque:magique",
+                "concentration",
+                "ecole:invocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/marteau-spirituel.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.pclbSTukRFa39rM3",
+          "_id": "rZ2HNp16k8gKXaS7",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568900,
+            "modifiedTime": 1780340568900
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Marteau Spirituel",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:marteau_spirituel",
+                "arme:marteau_spirituel",
+                "degat:force",
+                "attaque:magique",
+                "concentration",
+                "ecole:invocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/marteau-spirituel.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.pclbSTukRFa39rM3",
+          "_id": "TaWJT7sLdPQFmeQa",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568900,
+            "modifiedTime": 1780340568900
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Marteau Spirituel",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:marteau_spirituel",
+                "arme:marteau_spirituel",
+                "degat:force",
+                "attaque:magique",
+                "concentration",
+                "ecole:invocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/marteau-spirituel.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.pclbSTukRFa39rM3",
+          "_id": "IJXsygzGtfezvKoa",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568900,
+            "modifiedTime": 1780340568900
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Marteau Spirituel",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:marteau_spirituel",
+                "arme:marteau_spirituel",
+                "degat:force",
+                "attaque:magique",
+                "concentration",
+                "ecole:invocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/marteau-spirituel.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.pclbSTukRFa39rM3",
+          "_id": "6tUmjgIrf5ia0VDb",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568900,
+            "modifiedTime": 1780340568900
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/marteau-spirituel.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:23.126Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.pclbSTukRFa39rM3",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568900,
+        "modifiedTime": 1780340568900,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "6izVz4iVr2hKNNRQ",
+      "sort": 0
+    },
+    {
+      "name": "Perception des Alignements",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/connaissance-des-alignements.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "1",
+          "unite": "pouce"
+        },
+        "duree": {
+          "valeur": "1",
+          "unite": "tour"
+        },
+        "zone_effet": {
+          "valeur": "une créature par round",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "créature",
+          "unite": "détection"
+        },
+        "jet_sauvegarde": "Annule",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "round"
+        },
+        "description": "Ce sort permet au clerc de connaître exactement l’alignement d’une personne : humaine, semi-humaine ou non-humaine. Jusqu’à 10 personnes peuvent ainsi être examinées. L’inverse de ce sort, confusion de l’alignement, cache totalement l’alignement d’une personne pendant 1 tour et si un nouveau sort de perception de l’alignement est lancé ensuite sur cette personne, dans la limite de la durée, il sera inefficace. L’inverse peut cacher l’alignement d’une personne pendant un tour, 2 personnes pendant 5 rounds, etc. Certains objets magiques annulent le pouvoir de ce sort.",
+        "onUse": "systems/add2e/scripts/sorts/connaissance-des-alignements.js",
+        "onuse": "systems/add2e/scripts/sorts/connaissance-des-alignements.js",
+        "portée": {
+          "valeur": "1",
+          "unite": "pouce"
+        },
+        "durée": {
+          "valeur": "1",
+          "unite": "tour"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/connaissance-des-alignements.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "Ce sort permet au clerc de connaître exactement l’alignement d’une personne : humaine, semi-humaine ou non-humaine. Jusqu’à 10 personnes peuvent ainsi être examinées. L’inverse de ce sort, confusion de l’alignement, cache totalement l’alignement d’une personne pendant 1 tour et si un nouveau sort de perception de l’alignement est lancé ensuite sur cette personne, dans la limite de la durée, il sera inefficace. L’inverse peut cacher l’alignement d’une personne pendant un tour, 2 personnes pendant 5 rounds, etc. Certains objets magiques annulent le pouvoir de ce sort.",
+        "description_texte": "Ce sort permet au clerc de connaître exactement l’alignement d’une personne : humaine, semi-humaine ou non-humaine. Jusqu’à 10 personnes peuvent ainsi être examinées. L’inverse de ce sort, confusion de l’alignement, cache totalement l’alignement d’une personne pendant 1 tour et si un nouveau sort de perception de l’alignement est lancé ensuite sur cette personne, dans la limite de la durée, il sera inefficace. L’inverse peut cacher l’alignement d’une personne pendant un tour, 2 personnes pendant 5 rounds, etc. Certains objets magiques annulent le pouvoir de ce sort.",
+        "description_html": "<p>Ce sort permet au clerc de connaître exactement l’alignement d’une personne : humaine, semi-humaine ou non-humaine. Jusqu’à 10 personnes peuvent ainsi être examinées. L’inverse de ce sort, confusion de l’alignement, cache totalement l’alignement d’une personne pendant 1 tour et si un nouveau sort de perception de l’alignement est lancé ensuite sur cette personne, dans la limite de la durée, il sera inefficace. L’inverse peut cacher l’alignement d’une personne pendant un tour, 2 personnes pendant 5 rounds, etc. Certains objets magiques annulent le pouvoir de ce sort.</p>"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Connaissance des Alignements",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:connaissance_des_alignements",
+                "detection:alignement",
+                "jet_sauvegarde:annule",
+                "reversible:dissimulation_alignement",
+                "sort:perception_des_alignements",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/connaissance-des-alignements.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fKWrmDi4yXH3I3Nk",
+          "_id": "rD22L8Yqsyc8A3vH",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568725,
+            "modifiedTime": 1780340568725
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Connaissance des Alignements",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:connaissance_des_alignements",
+                "detection:alignement",
+                "jet_sauvegarde:annule",
+                "reversible:dissimulation_alignement",
+                "sort:perception_des_alignements",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/connaissance-des-alignements.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fKWrmDi4yXH3I3Nk",
+          "_id": "zxAFWtYoULls7Rb2",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568725,
+            "modifiedTime": 1780340568725
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Connaissance des Alignements",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:connaissance_des_alignements",
+                "detection:alignement",
+                "jet_sauvegarde:annule",
+                "reversible:dissimulation_alignement",
+                "sort:perception_des_alignements",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/connaissance-des-alignements.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fKWrmDi4yXH3I3Nk",
+          "_id": "mzqcZGnK3sFKEDlj",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568725,
+            "modifiedTime": 1780340568725
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Connaissance des Alignements",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:connaissance_des_alignements",
+                "detection:alignement",
+                "jet_sauvegarde:annule",
+                "reversible:dissimulation_alignement",
+                "sort:perception_des_alignements",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/connaissance-des-alignements.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fKWrmDi4yXH3I3Nk",
+          "_id": "4uk9XUTuQoNF0icU",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568725,
+            "modifiedTime": 1780340568725
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Connaissance des Alignements",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:connaissance_des_alignements",
+                "detection:alignement",
+                "jet_sauvegarde:annule",
+                "reversible:dissimulation_alignement",
+                "sort:perception_des_alignements",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/connaissance-des-alignements.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fKWrmDi4yXH3I3Nk",
+          "_id": "KXyUCDVVeYK2gpLZ",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568725,
+            "modifiedTime": 1780340568725
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Connaissance des Alignements",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:connaissance_des_alignements",
+                "detection:alignement",
+                "jet_sauvegarde:annule",
+                "reversible:dissimulation_alignement",
+                "sort:perception_des_alignements",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/connaissance-des-alignements.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fKWrmDi4yXH3I3Nk",
+          "_id": "RP7ELFE0FlZDqKUn",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568725,
+            "modifiedTime": 1780340568725
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/connaissance-des-alignements.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:08.026Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.fKWrmDi4yXH3I3Nk",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568725,
+        "modifiedTime": 1780340568725,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "hZHuARHUGpOY5PvR",
+      "sort": 0
+    },
+    {
+      "name": "Résistance au Feu/Résistance au Froid",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/resistance-au-feu-resistance-au-froid.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "1 tour par niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "créature touchée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": 1,
+          "unite": "créature"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "5",
+          "unite": "segments"
+        },
+        "description": "Quand ce sort est lancé, la personne touchée est capable de résister à des chaleurs importantes : brûlures ou canicule. Elle peut même supporter des chaleurs très importantes, tels que des feux magiques brûlants, des incendies, des braises incandescentes, de l’huile bouillante en grande quantité, des épées langues de feu, des tempêtes de feu, des boules de feu, des nuées de météores ou le souffle de dragons rouges. Cependant, la personne en question subira quand même des dommages, mais moindres que si elle ne bénéficiait pas du sort. Avec un jet de protection réussi, la victime ne subira que le quart des dégâts ; si le jet de protection est raté, elle subira la moitié des dégâts. De plus, le jet de protection obtient un bonus de +3. La résistance dure 1 tour pour chaque niveau d’expérience atteint par le clerc qui lance le sort. Le lanceur du sort a besoin d’une goutte de mercure comme composante matérielle.",
+        "onUse": "systems/add2e/scripts/sorts/resistance-au-feu-resistance-au-froid.js",
+        "onuse": "systems/add2e/scripts/sorts/resistance-au-feu-resistance-au-froid.js",
+        "portée": {
+          "valeur": 0,
+          "unite": "toucher"
+        },
+        "durée": {
+          "valeur": "1 tour par niveau",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/resistance-au-feu-resistance-au-froid.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre_du_clerc",
+            "nom": "Symbole sacré du clerc",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand ce sort est lancé, la personne touchée est capable de résister à des chaleurs importantes : brûlures ou canicule. Elle peut même supporter des chaleurs très importantes, tels que des feux magiques brûlants, des incendies, des braises incandescentes, de l’huile bouillante en grande quantité, des épées langues de feu, des tempêtes de feu, des boules de feu, des nuées de météores ou le souffle de dragons rouges. Cependant, la personne en question subira quand même des dommages, mais moindres que si elle ne bénéficiait pas du sort. Avec un jet de protection réussi, la victime ne subira que le quart des dégâts ; si le jet de protection est raté, elle subira la moitié des dégâts. De plus, le jet de protection obtient un bonus de +3. La résistance dure 1 tour pour chaque niveau d’expérience atteint par le clerc qui lance le sort. Le lanceur du sort a besoin d’une goutte de mercure comme composante matérielle.",
+        "description_texte": "Quand ce sort est lancé, la personne touchée est capable de résister à des chaleurs importantes : brûlures ou canicule. Elle peut même supporter des chaleurs très importantes, tels que des feux magiques brûlants, des incendies, des braises incandescentes, de l’huile bouillante en grande quantité, des épées langues de feu, des tempêtes de feu, des boules de feu, des nuées de météores ou le souffle de dragons rouges. Cependant, la personne en question subira quand même des dommages, mais moindres que si elle ne bénéficiait pas du sort. Avec un jet de protection réussi, la victime ne subira que le quart des dégâts ; si le jet de protection est raté, elle subira la moitié des dégâts. De plus, le jet de protection obtient un bonus de +3. La résistance dure 1 tour pour chaque niveau d’expérience atteint par le clerc qui lance le sort. Le lanceur du sort a besoin d’une goutte de mercure comme composante matérielle.",
+        "description_html": "<p>Quand ce sort est lancé, la personne touchée est capable de résister à des chaleurs importantes : brûlures ou canicule. Elle peut même supporter des chaleurs très importantes, tels que des feux magiques brûlants, des incendies, des braises incandescentes, de l’huile bouillante en grande quantité, des épées langues de feu, des tempêtes de feu, des boules de feu, des nuées de météores ou le souffle de dragons rouges. Cependant, la personne en question subira quand même des dommages, mais moindres que si elle ne bénéficiait pas du sort. Avec un jet de protection réussi, la victime ne subira que le quart des dégâts ; si le jet de protection est raté, elle subira la moitié des dégâts. De plus, le jet de protection obtient un bonus de +3. La résistance dure 1 tour pour chaque niveau d’expérience atteint par le clerc qui lance le sort. Le lanceur du sort a besoin d’une goutte de mercure comme composante matérielle.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_source": "symbole sacré du clerc",
+        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Résistance au Feu/Résistance au Froid",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:resistance_au_feu_resistance_au_froid",
+                "resistance:feu",
+                "resistance:froid",
+                "bonus:sauvegarde:element",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resistance-au-feu-resistance-au-froid.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.NiTpHgPmToRwa0P5",
+          "_id": "EFcPYNt03YSsjTAY",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567912,
+            "modifiedTime": 1780340567912
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Résistance au Feu/Résistance au Froid",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:resistance_au_feu_resistance_au_froid",
+                "resistance:feu",
+                "resistance:froid",
+                "bonus:sauvegarde:element",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resistance-au-feu-resistance-au-froid.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.NiTpHgPmToRwa0P5",
+          "_id": "CnwvelAgNBK3mIIs",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567912,
+            "modifiedTime": 1780340567912
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Résistance au Feu/Résistance au Froid",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:resistance_au_feu_resistance_au_froid",
+                "resistance:feu",
+                "resistance:froid",
+                "bonus:sauvegarde:element",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resistance-au-feu-resistance-au-froid.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.NiTpHgPmToRwa0P5",
+          "_id": "TiAUGzko8XMsKXTK",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567912,
+            "modifiedTime": 1780340567912
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Résistance au Feu/Résistance au Froid",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:resistance_au_feu_resistance_au_froid",
+                "resistance:feu",
+                "resistance:froid",
+                "bonus:sauvegarde:element",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resistance-au-feu-resistance-au-froid.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.NiTpHgPmToRwa0P5",
+          "_id": "0Cjm61oKtSysl0xP",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567912,
+            "modifiedTime": 1780340567912
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Résistance au Feu/Résistance au Froid",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:resistance_au_feu_resistance_au_froid",
+                "resistance:feu",
+                "resistance:froid",
+                "bonus:sauvegarde:element",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resistance-au-feu-resistance-au-froid.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.NiTpHgPmToRwa0P5",
+          "_id": "saeMtLBEeD5m2JmY",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567912,
+            "modifiedTime": 1780340567912
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Résistance au Feu/Résistance au Froid",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:resistance_au_feu_resistance_au_froid",
+                "resistance:feu",
+                "resistance:froid",
+                "bonus:sauvegarde:element",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/resistance-au-feu-resistance-au-froid.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.NiTpHgPmToRwa0P5",
+          "_id": "Unp5F5LJ934VxiPU",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567912,
+            "modifiedTime": 1780340567912
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/resistance-au-feu-resistance-au-froid.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:11.370Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.NiTpHgPmToRwa0P5",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567912,
+        "modifiedTime": 1780340567912,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "7zHxP5ZI6iLBpdla",
+      "sort": 0
+    },
+    {
+      "name": "Retardement du Poison",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/ralentissement-du-poison.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "0",
+          "unite": "toucher"
+        },
+        "duree": {
+          "valeur": "1 heure par niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "créature touchée",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "1",
+          "unite": "créature empoisonnée"
+        },
+        "jet_sauvegarde": "Aucun",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "1",
+          "unite": "segment"
+        },
+        "description": "Quand ce sort est lancé sur une personne empoisonnée, il ralentit très sensiblement les effets du poison. Il peut même redonner la vie à un individu mort par empoisonnement s’il est lancé sur la victime dans un laps de temps inférieur ou égal à 1 tour par niveau du clerc ; par exemple, un clerc de niveau 10 pourra temporairement sauver une personne empoisonnée et morte depuis un maximum de 10 tours. Si ce sort ne neutralise pas le poison, il empêche toutefois de subir des dégâts importants. La victime, cependant, perdra 1 point de vie par tour, sans pourtant ne jamais descendre au dessous de 1 point de vie. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
+        "onUse": "systems/add2e/scripts/sorts/ralentissement-du-poison.js",
+        "onuse": "systems/add2e/scripts/sorts/ralentissement-du-poison.js",
+        "portée": {
+          "valeur": "0",
+          "unite": "toucher"
+        },
+        "durée": {
+          "valeur": "1 heure par niveau",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/ralentissement-du-poison.js",
+        "composants_materiels": [
+          {
+            "slug": "symbole_sacre",
+            "nom": "Symbole sacré",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Quand ce sort est lancé sur une personne empoisonnée, il ralentit très sensiblement les effets du poison. Il peut même redonner la vie à un individu mort par empoisonnement s’il est lancé sur la victime dans un laps de temps inférieur ou égal à 1 tour par niveau du clerc ; par exemple, un clerc de niveau 10 pourra temporairement sauver une personne empoisonnée et morte depuis un maximum de 10 tours. Si ce sort ne neutralise pas le poison, il empêche toutefois de subir des dégâts importants. La victime, cependant, perdra 1 point de vie par tour, sans pourtant ne jamais descendre au dessous de 1 point de vie. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
+        "description_texte": "Quand ce sort est lancé sur une personne empoisonnée, il ralentit très sensiblement les effets du poison. Il peut même redonner la vie à un individu mort par empoisonnement s’il est lancé sur la victime dans un laps de temps inférieur ou égal à 1 tour par niveau du clerc ; par exemple, un clerc de niveau 10 pourra temporairement sauver une personne empoisonnée et morte depuis un maximum de 10 tours. Si ce sort ne neutralise pas le poison, il empêche toutefois de subir des dégâts importants. La victime, cependant, perdra 1 point de vie par tour, sans pourtant ne jamais descendre au dessous de 1 point de vie. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
+        "description_html": "<p>Quand ce sort est lancé sur une personne empoisonnée, il ralentit très sensiblement les effets du poison. Il peut même redonner la vie à un individu mort par empoisonnement s’il est lancé sur la victime dans un laps de temps inférieur ou égal à 1 tour par niveau du clerc ; par exemple, un clerc de niveau 10 pourra temporairement sauver une personne empoisonnée et morte depuis un maximum de 10 tours. Si ce sort ne neutralise pas le poison, il empêche toutefois de subir des dégâts importants. La victime, cependant, perdra 1 point de vie par tour, sans pourtant ne jamais descendre au dessous de 1 point de vie. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.</p>"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Ralentissement du Poison",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:ralentissement_du_poison",
+                "poison:ralenti",
+                "protection:poison",
+                "etat:ralentissement_poison",
+                "sort:retardement_du_poison",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/ralentissement-du-poison.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.rvvNKAepu2fyWODt",
+          "_id": "xWUlTQYAFVOU1Jvh",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569394,
+            "modifiedTime": 1780340569394
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Ralentissement du Poison",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:ralentissement_du_poison",
+                "poison:ralenti",
+                "protection:poison",
+                "etat:ralentissement_poison",
+                "sort:retardement_du_poison",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/ralentissement-du-poison.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.rvvNKAepu2fyWODt",
+          "_id": "CVTzXr9vkPcTcAjh",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569394,
+            "modifiedTime": 1780340569394
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Ralentissement du Poison",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:ralentissement_du_poison",
+                "poison:ralenti",
+                "protection:poison",
+                "etat:ralentissement_poison",
+                "sort:retardement_du_poison",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/ralentissement-du-poison.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.rvvNKAepu2fyWODt",
+          "_id": "nsLHLQ4ymljrBNqh",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569394,
+            "modifiedTime": 1780340569394
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Ralentissement du Poison",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:ralentissement_du_poison",
+                "poison:ralenti",
+                "protection:poison",
+                "etat:ralentissement_poison",
+                "sort:retardement_du_poison",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/ralentissement-du-poison.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.rvvNKAepu2fyWODt",
+          "_id": "IEYiTblMxskd1NXT",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569394,
+            "modifiedTime": 1780340569394
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Ralentissement du Poison",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:ralentissement_du_poison",
+                "poison:ralenti",
+                "protection:poison",
+                "etat:ralentissement_poison",
+                "sort:retardement_du_poison",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/ralentissement-du-poison.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.rvvNKAepu2fyWODt",
+          "_id": "35MS9y9Q4OadMQae",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569394,
+            "modifiedTime": 1780340569394
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Ralentissement du Poison",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:ralentissement_du_poison",
+                "poison:ralenti",
+                "protection:poison",
+                "etat:ralentissement_poison",
+                "sort:retardement_du_poison",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/ralentissement-du-poison.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.rvvNKAepu2fyWODt",
+          "_id": "iBNbZ8TsuCKTq4lb",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569394,
+            "modifiedTime": 1780340569394
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/ralentissement-du-poison.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:13.999Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.rvvNKAepu2fyWODt",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569394,
+        "modifiedTime": 1780340569394,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "Z6nSdRcOjfcEapru",
+      "sort": 0
+    },
+    {
+      "name": "Silence (Rayon de 15 pieds)",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/silence-rayon-de-15-pieds.webp",
+      "system": {
+        "niveau": 2,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": 12,
+          "unite": "pouces"
+        },
+        "duree": {
+          "valeur": "2 rounds par niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": 15,
+          "unite": "pieds de rayon"
+        },
+        "cible": {
+          "valeur": "zone ou créature",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "5",
+          "unite": "segments"
+        },
+        "description": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc. SORTS DE NIVEAU 3",
+        "onUse": "systems/add2e/scripts/sorts/silence-rayon-de-15-pieds.js",
+        "onuse": "systems/add2e/scripts/sorts/silence-rayon-de-15-pieds.js",
+        "portée": {
+          "valeur": 12,
+          "unite": "pouces"
+        },
+        "durée": {
+          "valeur": "2 rounds par niveau",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/silence-rayon-de-15-pieds.js",
+        "composants_materiels": [],
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_a_renseigner": false,
+        "description_reelle": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc. SORTS DE NIVEAU 3",
+        "description_texte": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc. SORTS DE NIVEAU 3",
+        "description_html": "<p>En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c&#x27;est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc. SORTS DE NIVEAU 3</p>"
+      },
+      "folder": "KoHiALDxso8oenFP",
+      "effects": [
+        {
+          "name": "Silence (Rayon de 15 pieds)",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:silence_rayon_de_15_pieds",
+                "etat:silence",
+                "zone:silence",
+                "anti_sort:verbal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/silence-rayon-de-15-pieds.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.wJq9gEBdgFM9VJkr",
+          "_id": "ugzCbbDhkPIvJx0G",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569460,
+            "modifiedTime": 1780340569460
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Silence (Rayon de 15 pieds)",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:silence_rayon_de_15_pieds",
+                "etat:silence",
+                "zone:silence",
+                "anti_sort:verbal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/silence-rayon-de-15-pieds.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.wJq9gEBdgFM9VJkr",
+          "_id": "6PYxxVhXbpN0vMkw",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569460,
+            "modifiedTime": 1780340569460
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Silence (Rayon de 15 pieds)",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:silence_rayon_de_15_pieds",
+                "etat:silence",
+                "zone:silence",
+                "anti_sort:verbal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/silence-rayon-de-15-pieds.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.wJq9gEBdgFM9VJkr",
+          "_id": "npPEI4o4WOw4SjwU",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569460,
+            "modifiedTime": 1780340569460
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Silence (Rayon de 15 pieds)",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:silence_rayon_de_15_pieds",
+                "etat:silence",
+                "zone:silence",
+                "anti_sort:verbal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/silence-rayon-de-15-pieds.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.wJq9gEBdgFM9VJkr",
+          "_id": "wcAADDQYseQ7C7Sp",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569460,
+            "modifiedTime": 1780340569460
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Silence (Rayon de 15 pieds)",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:silence_rayon_de_15_pieds",
+                "etat:silence",
+                "zone:silence",
+                "anti_sort:verbal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/silence-rayon-de-15-pieds.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.wJq9gEBdgFM9VJkr",
+          "_id": "hfQV6WCMdhulGxLF",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569460,
+            "modifiedTime": 1780340569460
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        },
+        {
+          "name": "Silence (Rayon de 15 pieds)",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:clerc",
+                "liste:clerc",
+                "niveau:2",
+                "sort:silence_rayon_de_15_pieds",
+                "etat:silence",
+                "zone:silence",
+                "anti_sort:verbal",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/silence-rayon-de-15-pieds.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.wJq9gEBdgFM9VJkr",
+          "_id": "5OhJVVEcmbIDM6eM",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569460,
+            "modifiedTime": 1780340569460
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+          "dispatchSource": "export game.items",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/silence-rayon-de-15-pieds.js",
+          "spellListsResolved": [
+            "Clerc"
+          ],
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:24.770Z",
+          "routedClass": "Clerc"
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Clerc / Niveau 2",
+          "sourceFolderId": "nQhoXbsR3EsdgMB1",
+          "exportedAt": "2026-05-22T09:57:29.891Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.wJq9gEBdgFM9VJkr",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569460,
+        "modifiedTime": 1780340569460,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "NYOXmMomYixpF5pS",
+      "sort": 0
+    }
+  ]
+}

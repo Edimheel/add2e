@@ -1,0 +1,1092 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "illusionniste",
+    "niveau": 4,
+    "key": "illusionniste-niveau-4",
+    "count": 7
+  },
+  "folders": [
+    {
+      "name": "Illusionniste",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "zbnGy5sLzX1VR4UP",
+      "description": "",
+      "sort": 700000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566746,
+        "modifiedTime": 1780340566746,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 4",
+      "type": "Item",
+      "folder": "zbnGy5sLzX1VR4UP",
+      "sorting": "a",
+      "_id": "FkK6AEGxk13vUAUK",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566740,
+        "modifiedTime": 1780340566740,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Création mineure",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-creation-mineure.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet à l’illusionniste de créer un objet non-vivant, de nature végétale : corde, bois, etc. Le volume maximum est de 27 dm³ par niveau du lanceur de sort. (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Djinn). Le lanceur de sort doit posséder un tout petit morceau de la même matière que l’objet à créer.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-creation-mineure.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-creation-mineure.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-creation-mineure.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort permet à l’illusionniste de créer un objet non-vivant, de nature végétale : corde, bois, etc. Le volume maximum est de 27 dm³ par niveau du lanceur de sort. (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Djinn). Le lanceur de sort doit posséder un tout petit morceau de la même matière que l’objet à créer.",
+        "description_texte": "Ce sort permet à l’illusionniste de créer un objet non-vivant, de nature végétale : corde, bois, etc. Le volume maximum est de 27 dm³ par niveau du lanceur de sort. (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Djinn). Le lanceur de sort doit posséder un tout petit morceau de la même matière que l’objet à créer.",
+        "description_html": "<p>Ce sort permet à l’illusionniste de créer un objet non-vivant, de nature végétale : corde, bois, etc. Le volume maximum est de 27 dm³ par niveau du lanceur de sort. (cf. Règles AVANCÉES DE DONJONS &amp; DRAGONS, MANUEL DES MONSTRES, Djinn). Le lanceur de sort doit posséder un tout petit morceau de la même matière que l’objet à créer.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Création mineure",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:4",
+                "sort:creation_mineure",
+                "creation:mineure",
+                "matiere:vegetale",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-creation-mineure.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.dG1pQjvxS4hnZ4kA",
+          "_id": "0n7JvF6LL5hwDXpF",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568701,
+            "modifiedTime": 1780340568701
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:09.816Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-creation-mineure.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 4",
+          "sourceFolderId": "DvXJsdnAIty5gih4",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "FkK6AEGxk13vUAUK",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.dG1pQjvxS4hnZ4kA",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568701,
+        "modifiedTime": 1780340568701,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "XdIvmjAtSNZAr6OD",
+      "sort": 0
+    },
+    {
+      "name": "Dissipation de l’épuisement",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-dissipation-de-l-epuisement.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Avec ce sort, l’illusionniste peut restaurer 50 % des points de vie perdus à toutes les personnes qu’il touche (humain, demi-humains et humanoïde) pendant le round de lancement du sort, avec un maximum de 4 personnes. Le sortilège fait croire à la personne affectée qu’elle se sent bien et en forme ; elle ressent un regain de vigueur. Mais quand la durée du sort expire, les points de vie reviennent au niveau précédant le lancement du sort. D’autre part, une dissipation de l’épuisement permet à la personne affectée de bouger 2 fois plus vite pendant un round par tour (cf. le sort rapidité). 97 SORTS D'ILLUSIONNISTE (NIVEAU 4) SORTS D'ILLUSIONNISTE (NIVEAU 4)",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-dissipation-de-l-epuisement.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-dissipation-de-l-epuisement.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-dissipation-de-l-epuisement.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Avec ce sort, l’illusionniste peut restaurer 50 % des points de vie perdus à toutes les personnes qu’il touche (humain, demi-humains et humanoïde) pendant le round de lancement du sort, avec un maximum de 4 personnes. Le sortilège fait croire à la personne affectée qu’elle se sent bien et en forme ; elle ressent un regain de vigueur. Mais quand la durée du sort expire, les points de vie reviennent au niveau précédant le lancement du sort. D’autre part, une dissipation de l’épuisement permet à la personne affectée de bouger 2 fois plus vite pendant un round par tour (cf. le sort rapidité). 97 SORTS D'ILLUSIONNISTE (NIVEAU 4) SORTS D'ILLUSIONNISTE (NIVEAU 4)",
+        "description_texte": "Avec ce sort, l’illusionniste peut restaurer 50 % des points de vie perdus à toutes les personnes qu’il touche (humain, demi-humains et humanoïde) pendant le round de lancement du sort, avec un maximum de 4 personnes. Le sortilège fait croire à la personne affectée qu’elle se sent bien et en forme ; elle ressent un regain de vigueur. Mais quand la durée du sort expire, les points de vie reviennent au niveau précédant le lancement du sort. D’autre part, une dissipation de l’épuisement permet à la personne affectée de bouger 2 fois plus vite pendant un round par tour (cf. le sort rapidité). 97 SORTS D'ILLUSIONNISTE (NIVEAU 4) SORTS D'ILLUSIONNISTE (NIVEAU 4)",
+        "description_html": "<p>Avec ce sort, l’illusionniste peut restaurer 50 % des points de vie perdus à toutes les personnes qu’il touche (humain, demi-humains et humanoïde) pendant le round de lancement du sort, avec un maximum de 4 personnes. Le sortilège fait croire à la personne affectée qu’elle se sent bien et en forme ; elle ressent un regain de vigueur. Mais quand la durée du sort expire, les points de vie reviennent au niveau précédant le lancement du sort. D’autre part, une dissipation de l’épuisement permet à la personne affectée de bouger 2 fois plus vite pendant un round par tour (cf. le sort rapidité). 97 SORTS D&#x27;ILLUSIONNISTE (NIVEAU 4) SORTS D&#x27;ILLUSIONNISTE (NIVEAU 4)</p>"
+      },
+      "effects": [
+        {
+          "name": "Dissipation de l’épuisement",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:4",
+                "sort:dissipation_de_l_epuisement",
+                "retire:epuisement",
+                "fatigue",
+                "sort:dissipation_de_lepuisement",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-dissipation-de-l-epuisement.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.AyAsuydsynCGaeil",
+          "_id": "M8bIXQAACzarzH3y",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567200,
+            "modifiedTime": 1780340567200
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:20.351Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-dissipation-de-l-epuisement.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 4",
+          "sourceFolderId": "DvXJsdnAIty5gih4",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "FkK6AEGxk13vUAUK",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.AyAsuydsynCGaeil",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567200,
+        "modifiedTime": 1780340567200,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "wJIL6DTErJknVsvM",
+      "sort": 0
+    },
+    {
+      "name": "Émotion",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-emotion.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Enchantement/Charme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Annule",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, l’illusionniste peut faire naître, au choix, une des ces 4 émotions : 1. Effroi Les effets sont identiques à ceux du sort du même nom. Mais ce n’est pas une illusion et le jet de protection se fait à –2. Cette émotion annule ou est annulée par l’émotion rage. 2. Haine La haine augmente le moral des destinataires. Les tirages des jets de protection, de toucher et de dégâts obtiennent un bonus de +2. Cette émotion annule ou est annulée par désespoir. 3. Désespoir Les effets sont les mêmes que ceux du symbole désespoir (voir p.92). Cette émotion annule ou est annulée par haine. 4. Rage La rage rend la victime berserk. Les tirages de toucher se font à +1, les dégâts à +3 et les points de vie augmentent temporairement de 5 points. Le destinataire du sort combat sans bouclier et sans se préoccuper de sa propre vie. Cette émotion annule ou est annulée par effroi. Les effets du sort persistent tant que l’illusionniste se concentre sur l’émotion choisie.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-emotion.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-emotion.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Enchantement/Charme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-emotion.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand ce sort est lancé, l’illusionniste peut faire naître, au choix, une des ces 4 émotions : 1. Effroi Les effets sont identiques à ceux du sort du même nom. Mais ce n’est pas une illusion et le jet de protection se fait à –2. Cette émotion annule ou est annulée par l’émotion rage. 2. Haine La haine augmente le moral des destinataires. Les tirages des jets de protection, de toucher et de dégâts obtiennent un bonus de +2. Cette émotion annule ou est annulée par désespoir. 3. Désespoir Les effets sont les mêmes que ceux du symbole désespoir (voir p.92). Cette émotion annule ou est annulée par haine. 4. Rage La rage rend la victime berserk. Les tirages de toucher se font à +1, les dégâts à +3 et les points de vie augmentent temporairement de 5 points. Le destinataire du sort combat sans bouclier et sans se préoccuper de sa propre vie. Cette émotion annule ou est annulée par effroi. Les effets du sort persistent tant que l’illusionniste se concentre sur l’émotion choisie.",
+        "description_texte": "Quand ce sort est lancé, l’illusionniste peut faire naître, au choix, une des ces 4 émotions : 1. Effroi Les effets sont identiques à ceux du sort du même nom. Mais ce n’est pas une illusion et le jet de protection se fait à –2. Cette émotion annule ou est annulée par l’émotion rage. 2. Haine La haine augmente le moral des destinataires. Les tirages des jets de protection, de toucher et de dégâts obtiennent un bonus de +2. Cette émotion annule ou est annulée par désespoir. 3. Désespoir Les effets sont les mêmes que ceux du symbole désespoir (voir p.92). Cette émotion annule ou est annulée par haine. 4. Rage La rage rend la victime berserk. Les tirages de toucher se font à +1, les dégâts à +3 et les points de vie augmentent temporairement de 5 points. Le destinataire du sort combat sans bouclier et sans se préoccuper de sa propre vie. Cette émotion annule ou est annulée par effroi. Les effets du sort persistent tant que l’illusionniste se concentre sur l’émotion choisie.",
+        "description_html": "<p>Quand ce sort est lancé, l’illusionniste peut faire naître, au choix, une des ces 4 émotions : 1. Effroi Les effets sont identiques à ceux du sort du même nom. Mais ce n’est pas une illusion et le jet de protection se fait à –2. Cette émotion annule ou est annulée par l’émotion rage. 2. Haine La haine augmente le moral des destinataires. Les tirages des jets de protection, de toucher et de dégâts obtiennent un bonus de +2. Cette émotion annule ou est annulée par désespoir. 3. Désespoir Les effets sont les mêmes que ceux du symbole désespoir (voir p.92). Cette émotion annule ou est annulée par haine. 4. Rage La rage rend la victime berserk. Les tirages de toucher se font à +1, les dégâts à +3 et les points de vie augmentent temporairement de 5 points. Le destinataire du sort combat sans bouclier et sans se préoccuper de sa propre vie. Cette émotion annule ou est annulée par effroi. Les effets du sort persistent tant que l’illusionniste se concentre sur l’émotion choisie.</p>"
+      },
+      "effects": [
+        {
+          "name": "Émotion",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:4",
+                "sort:emotion",
+                "emotion",
+                "mental",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-emotion.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.nsgzcoWkRJs9pn0a",
+          "_id": "kLxoCgEpMi03lFf8",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568875,
+            "modifiedTime": 1780340568875
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:34.693Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-emotion.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 4",
+          "sourceFolderId": "DvXJsdnAIty5gih4",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "FkK6AEGxk13vUAUK",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.nsgzcoWkRJs9pn0a",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568875,
+        "modifiedTime": 1780340568875,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "lJQ17k2WBz4PPxLG",
+      "sort": 0
+    },
+    {
+      "name": "Invisibilité améliorée",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-invisibilite-amelioree.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est similaire au sort d’invisibilité, mais le bénéficiaire peut attaquer, que ce soit par projectile, en mêlée ou en lançant des sorts tout en restant invisible. Dans ces cas, il y a cependant parfois une légère distorsion de la lumière, des signes révélateurs qu’un adversaire observateur peut remarquer ; il peut alors attaquer la créature invisible, mais avec un malus de –4 au toucher. D’autre part, les jets de protection de la créature se font à +4, le cas échéant. Les créatures hautement intelligentes avec 10 dés de vie ou plus, 10 niveaux d’expérience ou plus, ou l’équivalent, ont une chance de détecter automatiquement ce qui est invisible, mais l’invisibilité améliorée est plus efficace et les chances de détections sont baissées de 2 catégories par rapport à l’invisibilité normale.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-invisibilite-amelioree.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-invisibilite-amelioree.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-invisibilite-amelioree.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est similaire au sort d’invisibilité, mais le bénéficiaire peut attaquer, que ce soit par projectile, en mêlée ou en lançant des sorts tout en restant invisible. Dans ces cas, il y a cependant parfois une légère distorsion de la lumière, des signes révélateurs qu’un adversaire observateur peut remarquer ; il peut alors attaquer la créature invisible, mais avec un malus de –4 au toucher. D’autre part, les jets de protection de la créature se font à +4, le cas échéant. Les créatures hautement intelligentes avec 10 dés de vie ou plus, 10 niveaux d’expérience ou plus, ou l’équivalent, ont une chance de détecter automatiquement ce qui est invisible, mais l’invisibilité améliorée est plus efficace et les chances de détections sont baissées de 2 catégories par rapport à l’invisibilité normale.",
+        "description_texte": "Ce sort est similaire au sort d’invisibilité, mais le bénéficiaire peut attaquer, que ce soit par projectile, en mêlée ou en lançant des sorts tout en restant invisible. Dans ces cas, il y a cependant parfois une légère distorsion de la lumière, des signes révélateurs qu’un adversaire observateur peut remarquer ; il peut alors attaquer la créature invisible, mais avec un malus de –4 au toucher. D’autre part, les jets de protection de la créature se font à +4, le cas échéant. Les créatures hautement intelligentes avec 10 dés de vie ou plus, 10 niveaux d’expérience ou plus, ou l’équivalent, ont une chance de détecter automatiquement ce qui est invisible, mais l’invisibilité améliorée est plus efficace et les chances de détections sont baissées de 2 catégories par rapport à l’invisibilité normale.",
+        "description_html": "<p>Ce sort est similaire au sort d’invisibilité, mais le bénéficiaire peut attaquer, que ce soit par projectile, en mêlée ou en lançant des sorts tout en restant invisible. Dans ces cas, il y a cependant parfois une légère distorsion de la lumière, des signes révélateurs qu’un adversaire observateur peut remarquer ; il peut alors attaquer la créature invisible, mais avec un malus de –4 au toucher. D’autre part, les jets de protection de la créature se font à +4, le cas échéant. Les créatures hautement intelligentes avec 10 dés de vie ou plus, 10 niveaux d’expérience ou plus, ou l’équivalent, ont une chance de détecter automatiquement ce qui est invisible, mais l’invisibilité améliorée est plus efficace et les chances de détections sont baissées de 2 catégories par rapport à l’invisibilité normale.</p>"
+      },
+      "effects": [
+        {
+          "name": "Invisibilité améliorée",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:4",
+                "sort:invisibilite_amelioree",
+                "etat:invisible",
+                "invisibilite:amelioree",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-invisibilite-amelioree.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.CsXOuCoIsLXZ8c8L",
+          "_id": "9u7RYKdBIv4OGsrE",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567227,
+            "modifiedTime": 1780340567227
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:25.566Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-invisibilite-amelioree.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 4",
+          "sourceFolderId": "DvXJsdnAIty5gih4",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "FkK6AEGxk13vUAUK",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.CsXOuCoIsLXZ8c8L",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567227,
+        "modifiedTime": 1780340567227,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "OneHXc9zQXYEFo8z",
+      "sort": 0
+    },
+    {
+      "name": "Monstres des ombres",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-monstres-des-ombres.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet à l’illusionniste de créer des fantasmes semi-réels de monstre(s). Le total des dés de vie du monstre (ou des monstres) créé(s) ne peut pas dépasser le niveau du lanceur de sort : c'est-à-dire qu’un illusionniste de niveau 10 pourra créer une créature de 10 DV (dans les circonstances normales), 2 avec 5 DV chacune, etc. Toutes les créatures créées par un même sort doivent être de la même sorte, c'est-à-dire que des hobgobelins ou que des orques ou que des spectres, etc. Les monstres créés ne possèdent que 20 % des points de vie qu’ils ont normalement. Pour calculer cela, déterminez le nombre de points de vie en lançant les dés correspondant au monstre, puis multipliez par 0,20 (ou divisez par 5); tout résultat inférieur à 0,4 est ramenée au chiffre inférieur - dans le cas de créatures ayant un dé de vie ou moins et dont le résultat est 0, cela signifie que la création est ratée - et les scores de 0,4 ou plus sont ajustés au chiffre supérieur. Si les créatures qui voient les monstres créés ratent leur jet de protection et donc croient à leur existence, les monstres des ombres ont leur classe d’armure normale et infligent leurs dégâts normaux. Pour les créatures qui réussissent ce jet de protection, les monstres ont une classe d’armure de 10 et n’infligent que 20 % de leurs dégâts normaux (morsures, griffes, armes, etc.), avec la même règle d’arrondi que pour les points vie.",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-monstres-des-ombres.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-monstres-des-ombres.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-monstres-des-ombres.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort permet à l’illusionniste de créer des fantasmes semi-réels de monstre(s). Le total des dés de vie du monstre (ou des monstres) créé(s) ne peut pas dépasser le niveau du lanceur de sort : c'est-à-dire qu’un illusionniste de niveau 10 pourra créer une créature de 10 DV (dans les circonstances normales), 2 avec 5 DV chacune, etc. Toutes les créatures créées par un même sort doivent être de la même sorte, c'est-à-dire que des hobgobelins ou que des orques ou que des spectres, etc. Les monstres créés ne possèdent que 20 % des points de vie qu’ils ont normalement. Pour calculer cela, déterminez le nombre de points de vie en lançant les dés correspondant au monstre, puis multipliez par 0,20 (ou divisez par 5); tout résultat inférieur à 0,4 est ramenée au chiffre inférieur - dans le cas de créatures ayant un dé de vie ou moins et dont le résultat est 0, cela signifie que la création est ratée - et les scores de 0,4 ou plus sont ajustés au chiffre supérieur. Si les créatures qui voient les monstres créés ratent leur jet de protection et donc croient à leur existence, les monstres des ombres ont leur classe d’armure normale et infligent leurs dégâts normaux. Pour les créatures qui réussissent ce jet de protection, les monstres ont une classe d’armure de 10 et n’infligent que 20 % de leurs dégâts normaux (morsures, griffes, armes, etc.), avec la même règle d’arrondi que pour les points vie.",
+        "description_texte": "Ce sort permet à l’illusionniste de créer des fantasmes semi-réels de monstre(s). Le total des dés de vie du monstre (ou des monstres) créé(s) ne peut pas dépasser le niveau du lanceur de sort : c'est-à-dire qu’un illusionniste de niveau 10 pourra créer une créature de 10 DV (dans les circonstances normales), 2 avec 5 DV chacune, etc. Toutes les créatures créées par un même sort doivent être de la même sorte, c'est-à-dire que des hobgobelins ou que des orques ou que des spectres, etc. Les monstres créés ne possèdent que 20 % des points de vie qu’ils ont normalement. Pour calculer cela, déterminez le nombre de points de vie en lançant les dés correspondant au monstre, puis multipliez par 0,20 (ou divisez par 5); tout résultat inférieur à 0,4 est ramenée au chiffre inférieur - dans le cas de créatures ayant un dé de vie ou moins et dont le résultat est 0, cela signifie que la création est ratée - et les scores de 0,4 ou plus sont ajustés au chiffre supérieur. Si les créatures qui voient les monstres créés ratent leur jet de protection et donc croient à leur existence, les monstres des ombres ont leur classe d’armure normale et infligent leurs dégâts normaux. Pour les créatures qui réussissent ce jet de protection, les monstres ont une classe d’armure de 10 et n’infligent que 20 % de leurs dégâts normaux (morsures, griffes, armes, etc.), avec la même règle d’arrondi que pour les points vie.",
+        "description_html": "<p>Ce sort permet à l’illusionniste de créer des fantasmes semi-réels de monstre(s). Le total des dés de vie du monstre (ou des monstres) créé(s) ne peut pas dépasser le niveau du lanceur de sort : c&#x27;est-à-dire qu’un illusionniste de niveau 10 pourra créer une créature de 10 DV (dans les circonstances normales), 2 avec 5 DV chacune, etc. Toutes les créatures créées par un même sort doivent être de la même sorte, c&#x27;est-à-dire que des hobgobelins ou que des orques ou que des spectres, etc. Les monstres créés ne possèdent que 20 % des points de vie qu’ils ont normalement. Pour calculer cela, déterminez le nombre de points de vie en lançant les dés correspondant au monstre, puis multipliez par 0,20 (ou divisez par 5); tout résultat inférieur à 0,4 est ramenée au chiffre inférieur - dans le cas de créatures ayant un dé de vie ou moins et dont le résultat est 0, cela signifie que la création est ratée - et les scores de 0,4 ou plus sont ajustés au chiffre supérieur. Si les créatures qui voient les monstres créés ratent leur jet de protection et donc croient à leur existence, les monstres des ombres ont leur classe d’armure normale et infligent leurs dégâts normaux. Pour les créatures qui réussissent ce jet de protection, les monstres ont une classe d’armure de 10 et n’infligent que 20 % de leurs dégâts normaux (morsures, griffes, armes, etc.), avec la même règle d’arrondi que pour les points vie.</p>"
+      },
+      "effects": [
+        {
+          "name": "Monstres des ombres",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:4",
+                "sort:monstres_des_ombres",
+                "ombres",
+                "monstres:ombres",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-monstres-des-ombres.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.s7GDDRLRFQPyzMge",
+          "_id": "YTBW2HeNc1UO8OZo",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569401,
+            "modifiedTime": 1780340569401
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:30.634Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-monstres-des-ombres.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 4",
+          "sourceFolderId": "DvXJsdnAIty5gih4",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "FkK6AEGxk13vUAUK",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.s7GDDRLRFQPyzMge",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569401,
+        "modifiedTime": 1780340569401,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "rAnIttzWwgXNUpNM",
+      "sort": 0
+    },
+    {
+      "name": "Phytomorphose",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-phytomorphose.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien phytomorphose (voir p.78).",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-phytomorphose.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-phytomorphose.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-phytomorphose.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est une poignée de morceaux d'écorce.",
+        "description_reelle": "Excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien phytomorphose (voir p.78).",
+        "description_texte": "Excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien phytomorphose (voir p.78).",
+        "description_html": "<p>Excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien phytomorphose (voir p.78).</p>"
+      },
+      "effects": [
+        {
+          "name": "Phytomorphose",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:4",
+                "sort:phytomorphose",
+                "metamorphose:plante",
+                "phytomorphose",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-phytomorphose.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.8LYZ2A2vT8NMtywO",
+          "_id": "NpghJuHPpRgs1I8O",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567161,
+            "modifiedTime": 1780340567161
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:12.870Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-phytomorphose.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 4",
+          "sourceFolderId": "DvXJsdnAIty5gih4",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "FkK6AEGxk13vUAUK",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.8LYZ2A2vT8NMtywO",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567161,
+        "modifiedTime": 1780340567161,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "BEdKOeb8qiHSn7cb",
+      "sort": 0
+    },
+    {
+      "name": "Tueur fantasmagorique",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-tueur-fantasmagorique.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Au moyen de ce sort, l’illusionniste crée l’illusion de la chose la plus effrayante imaginable, simplement en matérialisant les peurs subconscientes de la créature affectée — la plus horrible bête. Seuls l’illusionniste et la victime peuvent voir le tueur fantasmagorique. Si la bête créée touche sa victime, celle-ci meurt de terreur. La bête est invulnérable à toutes les formes d’attaques, peut traverser n’importe quel obstacle, puisqu’elle n’existe que dans l’esprit de sa victime. Elle attaque comme un monstre à 4 DV. La seule défense contre cette illusion est de ne pas y croire. Cette tentative ne peut être faite qu’une seule fois. Il faut sinon assommer ou tuer l’illusionniste pour faire disparaitre la créature illusoire. Si la victime sombre dans l’inconscience d’une manière ou d’une autre, le sort ne peut pas lui faire de mal. Le jet de protection n’est pas habituel et ne se fait pas avec un d20 : la victime doit effectuer un tirage de 3d6 inférieur ou égal à son intelligence pour réussir à ne pas croire à l’illusion. Ce tirage est modifié selon les éléments suivants : Condition Modification* Surprise complète +2 Surprise +1 Victime déjà attaquée par ce sort –1 par attaque précédente Victime illusionniste –2 Victime portant un heaume de télépathie –3, avec la possibilité de retourner la création contre son créateur si le jet de protection est réussi. * À noter que la résistance à la magie et les bonus dus à la sagesse entrent en ligne de compte (bonus à soustraire au résultat du tirage des 3d6), la résistance à la magie étant testée en premier lieu. Si la victime est un nain, un gnome, etc., les bonus dus à la constitution s’appliquent (bonus à soustraire au résultat du tirage des 3d6). Si la victime réussit son jet de protection sous l’intelligence et porte un heaume de télépathie, la bête peut se retourner contre l’illusionniste et ce dernier doit alors réussir à son tour le même type de jet de protection sous son intelligence, sous peine d’être victime des attaques de sa propre illusion et de ses effets (mortels…). 98 SORTS D'ILLUSIONNISTE (NIVEAU 6) SORTS D'ILLUSIONNISTE (NIVEAU 5) SORTS DE NIVEAU 5",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-tueur-fantasmagorique.js",
+        "onuse": "systems/add2e/scripts/sorts/illusionniste-tueur-fantasmagorique.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/illusionniste-tueur-fantasmagorique.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Au moyen de ce sort, l’illusionniste crée l’illusion de la chose la plus effrayante imaginable, simplement en matérialisant les peurs subconscientes de la créature affectée — la plus horrible bête. Seuls l’illusionniste et la victime peuvent voir le tueur fantasmagorique. Si la bête créée touche sa victime, celle-ci meurt de terreur. La bête est invulnérable à toutes les formes d’attaques, peut traverser n’importe quel obstacle, puisqu’elle n’existe que dans l’esprit de sa victime. Elle attaque comme un monstre à 4 DV. La seule défense contre cette illusion est de ne pas y croire. Cette tentative ne peut être faite qu’une seule fois. Il faut sinon assommer ou tuer l’illusionniste pour faire disparaitre la créature illusoire. Si la victime sombre dans l’inconscience d’une manière ou d’une autre, le sort ne peut pas lui faire de mal. Le jet de protection n’est pas habituel et ne se fait pas avec un d20 : la victime doit effectuer un tirage de 3d6 inférieur ou égal à son intelligence pour réussir à ne pas croire à l’illusion. Ce tirage est modifié selon les éléments suivants : Condition Modification* Surprise complète +2 Surprise +1 Victime déjà attaquée par ce sort –1 par attaque précédente Victime illusionniste –2 Victime portant un heaume de télépathie –3, avec la possibilité de retourner la création contre son créateur si le jet de protection est réussi. * À noter que la résistance à la magie et les bonus dus à la sagesse entrent en ligne de compte (bonus à soustraire au résultat du tirage des 3d6), la résistance à la magie étant testée en premier lieu. Si la victime est un nain, un gnome, etc., les bonus dus à la constitution s’appliquent (bonus à soustraire au résultat du tirage des 3d6). Si la victime réussit son jet de protection sous l’intelligence et porte un heaume de télépathie, la bête peut se retourner contre l’illusionniste et ce dernier doit alors réussir à son tour le même type de jet de protection sous son intelligence, sous peine d’être victime des attaques de sa propre illusion et de ses effets (mortels…). 98 SORTS D'ILLUSIONNISTE (NIVEAU 6) SORTS D'ILLUSIONNISTE (NIVEAU 5) SORTS DE NIVEAU 5",
+        "description_texte": "Au moyen de ce sort, l’illusionniste crée l’illusion de la chose la plus effrayante imaginable, simplement en matérialisant les peurs subconscientes de la créature affectée — la plus horrible bête. Seuls l’illusionniste et la victime peuvent voir le tueur fantasmagorique. Si la bête créée touche sa victime, celle-ci meurt de terreur. La bête est invulnérable à toutes les formes d’attaques, peut traverser n’importe quel obstacle, puisqu’elle n’existe que dans l’esprit de sa victime. Elle attaque comme un monstre à 4 DV. La seule défense contre cette illusion est de ne pas y croire. Cette tentative ne peut être faite qu’une seule fois. Il faut sinon assommer ou tuer l’illusionniste pour faire disparaitre la créature illusoire. Si la victime sombre dans l’inconscience d’une manière ou d’une autre, le sort ne peut pas lui faire de mal. Le jet de protection n’est pas habituel et ne se fait pas avec un d20 : la victime doit effectuer un tirage de 3d6 inférieur ou égal à son intelligence pour réussir à ne pas croire à l’illusion. Ce tirage est modifié selon les éléments suivants : Condition Modification* Surprise complète +2 Surprise +1 Victime déjà attaquée par ce sort –1 par attaque précédente Victime illusionniste –2 Victime portant un heaume de télépathie –3, avec la possibilité de retourner la création contre son créateur si le jet de protection est réussi. * À noter que la résistance à la magie et les bonus dus à la sagesse entrent en ligne de compte (bonus à soustraire au résultat du tirage des 3d6), la résistance à la magie étant testée en premier lieu. Si la victime est un nain, un gnome, etc., les bonus dus à la constitution s’appliquent (bonus à soustraire au résultat du tirage des 3d6). Si la victime réussit son jet de protection sous l’intelligence et porte un heaume de télépathie, la bête peut se retourner contre l’illusionniste et ce dernier doit alors réussir à son tour le même type de jet de protection sous son intelligence, sous peine d’être victime des attaques de sa propre illusion et de ses effets (mortels…). 98 SORTS D'ILLUSIONNISTE (NIVEAU 6) SORTS D'ILLUSIONNISTE (NIVEAU 5) SORTS DE NIVEAU 5",
+        "description_html": "<p>Au moyen de ce sort, l’illusionniste crée l’illusion de la chose la plus effrayante imaginable, simplement en matérialisant les peurs subconscientes de la créature affectée — la plus horrible bête. Seuls l’illusionniste et la victime peuvent voir le tueur fantasmagorique. Si la bête créée touche sa victime, celle-ci meurt de terreur. La bête est invulnérable à toutes les formes d’attaques, peut traverser n’importe quel obstacle, puisqu’elle n’existe que dans l’esprit de sa victime. Elle attaque comme un monstre à 4 DV. La seule défense contre cette illusion est de ne pas y croire. Cette tentative ne peut être faite qu’une seule fois. Il faut sinon assommer ou tuer l’illusionniste pour faire disparaitre la créature illusoire. Si la victime sombre dans l’inconscience d’une manière ou d’une autre, le sort ne peut pas lui faire de mal. Le jet de protection n’est pas habituel et ne se fait pas avec un d20 : la victime doit effectuer un tirage de 3d6 inférieur ou égal à son intelligence pour réussir à ne pas croire à l’illusion. Ce tirage est modifié selon les éléments suivants : Condition Modification* Surprise complète +2 Surprise +1 Victime déjà attaquée par ce sort –1 par attaque précédente Victime illusionniste –2 Victime portant un heaume de télépathie –3, avec la possibilité de retourner la création contre son créateur si le jet de protection est réussi. * À noter que la résistance à la magie et les bonus dus à la sagesse entrent en ligne de compte (bonus à soustraire au résultat du tirage des 3d6), la résistance à la magie étant testée en premier lieu. Si la victime est un nain, un gnome, etc., les bonus dus à la constitution s’appliquent (bonus à soustraire au résultat du tirage des 3d6). Si la victime réussit son jet de protection sous l’intelligence et porte un heaume de télépathie, la bête peut se retourner contre l’illusionniste et ce dernier doit alors réussir à son tour le même type de jet de protection sous son intelligence, sous peine d’être victime des attaques de sa propre illusion et de ses effets (mortels…). 98 SORTS D&#x27;ILLUSIONNISTE (NIVEAU 6) SORTS D&#x27;ILLUSIONNISTE (NIVEAU 5) SORTS DE NIVEAU 5</p>"
+      },
+      "effects": [
+        {
+          "name": "Tueur fantasmagorique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:illusionniste",
+                "liste:illusionniste",
+                "niveau:4",
+                "sort:tueur_fantasmagorique",
+                "tueur:fantasmagorique",
+                "peur",
+                "mort",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-tueur-fantasmagorique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.eO8VCUsZ22PUO6er",
+          "_id": "3VFDgYTNQU9HGRhT",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568712,
+            "modifiedTime": 1780340568712
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:34:20.119Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-tueur-fantasmagorique.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Illusionniste / Niveau 4",
+          "sourceFolderId": "DvXJsdnAIty5gih4",
+          "exportedAt": "2026-05-22T09:57:29.899Z"
+        }
+      },
+      "folder": "FkK6AEGxk13vUAUK",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.eO8VCUsZ22PUO6er",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568712,
+        "modifiedTime": 1780340568712,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "83Cg1HWiPXCrqS0c",
+      "sort": 0
+    }
+  ]
+}

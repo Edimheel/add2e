@@ -1,0 +1,2939 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "magicien",
+    "niveau": 6,
+    "key": "magicien-niveau-6",
+    "count": 19
+  },
+  "folders": [
+    {
+      "name": "Magicien",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "UNadGYy33KgFskLj",
+      "description": "",
+      "sort": 800000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566746,
+        "modifiedTime": 1780340566746,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 6",
+      "type": "Item",
+      "folder": "UNadGYy33KgFskLj",
+      "sorting": "a",
+      "_id": "3ncQM5L1dORmBNy8",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566737,
+        "modifiedTime": 1780340566737,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Bulle anti-magique",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-bulle-anti-magique.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort crée une barrière invisible qui entoure le magicien et qui se déplace avec lui. Cette barrière est totalement insensible à toutes les formes de magie (même les attaques par souffle, par regard ou par la voix). Elle empêche les sorts ou leurs effets de pénétrer à l’intérieur ainsi que le fonctionnement de tout objet magique ou sort à l’intérieur. Elle interdit l’entrée des créatures charmées ou conjurées. Cependant, des créatures normales (comme un troll normal par opposition à un troll conjuré, par exemple) pourront passer à travers cette bulle, ainsi que les projectiles normaux. Une épée magique ne pourra plus compter sur sa magie et agira comme une épée normale. À noter que les créatures qui se trouvent sur leur propre plan sont des créatures normales : par exemple, ce sort lancé sur le plan élémentaire du feu n’interdira pas l’accès aux créatures de ce plan.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-bulle-anti-magique.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-bulle-anti-magique.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/magicien-bulle-anti-magique.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort crée une barrière invisible qui entoure le magicien et qui se déplace avec lui. Cette barrière est totalement insensible à toutes les formes de magie (même les attaques par souffle, par regard ou par la voix). Elle empêche les sorts ou leurs effets de pénétrer à l’intérieur ainsi que le fonctionnement de tout objet magique ou sort à l’intérieur. Elle interdit l’entrée des créatures charmées ou conjurées. Cependant, des créatures normales (comme un troll normal par opposition à un troll conjuré, par exemple) pourront passer à travers cette bulle, ainsi que les projectiles normaux. Une épée magique ne pourra plus compter sur sa magie et agira comme une épée normale. À noter que les créatures qui se trouvent sur leur propre plan sont des créatures normales : par exemple, ce sort lancé sur le plan élémentaire du feu n’interdira pas l’accès aux créatures de ce plan.",
+        "description_texte": "Ce sort crée une barrière invisible qui entoure le magicien et qui se déplace avec lui. Cette barrière est totalement insensible à toutes les formes de magie (même les attaques par souffle, par regard ou par la voix). Elle empêche les sorts ou leurs effets de pénétrer à l’intérieur ainsi que le fonctionnement de tout objet magique ou sort à l’intérieur. Elle interdit l’entrée des créatures charmées ou conjurées. Cependant, des créatures normales (comme un troll normal par opposition à un troll conjuré, par exemple) pourront passer à travers cette bulle, ainsi que les projectiles normaux. Une épée magique ne pourra plus compter sur sa magie et agira comme une épée normale. À noter que les créatures qui se trouvent sur leur propre plan sont des créatures normales : par exemple, ce sort lancé sur le plan élémentaire du feu n’interdira pas l’accès aux créatures de ce plan.",
+        "description_html": "<p>Ce sort crée une barrière invisible qui entoure le magicien et qui se déplace avec lui. Cette barrière est totalement insensible à toutes les formes de magie (même les attaques par souffle, par regard ou par la voix). Elle empêche les sorts ou leurs effets de pénétrer à l’intérieur ainsi que le fonctionnement de tout objet magique ou sort à l’intérieur. Elle interdit l’entrée des créatures charmées ou conjurées. Cependant, des créatures normales (comme un troll normal par opposition à un troll conjuré, par exemple) pourront passer à travers cette bulle, ainsi que les projectiles normaux. Une épée magique ne pourra plus compter sur sa magie et agira comme une épée normale. À noter que les créatures qui se trouvent sur leur propre plan sont des créatures normales : par exemple, ce sort lancé sur le plan élémentaire du feu n’interdira pas l’accès aux créatures de ce plan.</p>"
+      },
+      "effects": [
+        {
+          "name": "Bulle anti-magique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:bulle_anti_magique",
+                "type:protection",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-bulle-anti-magique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.in30lbm7AWguRrm2",
+          "_id": "SoYtk7jvX7LofiO5",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568792,
+            "modifiedTime": 1780340568792
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:46.964Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-bulle-anti-magique.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.in30lbm7AWguRrm2",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568792,
+        "modifiedTime": 1780340568792,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "5WMtm7xIvHpRxLhr",
+      "sort": 0
+    },
+    {
+      "name": "Chasseur invisible",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-chasseur-invisible.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet de conjurer un chasseur invisible, originaire du plan élémentaire de l’air. Ce monstre à 8 dés de vie obéira au magicien et le servira. Cependant, la créature est obligée de le servir et ne le fait pas de son plein gré. Ainsi, le chasseur invisible s’offensera de missions prolongées ou de tâches compliquées et il essayera de détourner de leur but les instructions reçues. (Pour les détails complets, voir Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, chasseur invisible). La créature conjurée suivra les instructions, même à des milliers de kilomètres de distance. Les composantes matérielles sont de l’encens à faire brûler et un bout de corne taillé en forme de croissant.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-chasseur-invisible.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-chasseur-invisible.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/magicien-chasseur-invisible.js",
+        "composants_materiels": [
+          {
+            "slug": "bout_de_corne_taille_en_forme_de_croissant",
+            "nom": "Bout de corne taillé en forme de croissant",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont de l’encens à faire brûler et un bout de corne taillé en forme de croissant.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Ce sort permet de conjurer un chasseur invisible, originaire du plan élémentaire de l’air. Ce monstre à 8 dés de vie obéira au magicien et le servira. Cependant, la créature est obligée de le servir et ne le fait pas de son plein gré. Ainsi, le chasseur invisible s’offensera de missions prolongées ou de tâches compliquées et il essayera de détourner de leur but les instructions reçues. (Pour les détails complets, voir Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, chasseur invisible). La créature conjurée suivra les instructions, même à des milliers de kilomètres de distance. Les composantes matérielles sont de l’encens à faire brûler et un bout de corne taillé en forme de croissant.",
+        "description_texte": "Ce sort permet de conjurer un chasseur invisible, originaire du plan élémentaire de l’air. Ce monstre à 8 dés de vie obéira au magicien et le servira. Cependant, la créature est obligée de le servir et ne le fait pas de son plein gré. Ainsi, le chasseur invisible s’offensera de missions prolongées ou de tâches compliquées et il essayera de détourner de leur but les instructions reçues. (Pour les détails complets, voir Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, chasseur invisible). La créature conjurée suivra les instructions, même à des milliers de kilomètres de distance. Les composantes matérielles sont de l’encens à faire brûler et un bout de corne taillé en forme de croissant.",
+        "description_html": "<p>Ce sort permet de conjurer un chasseur invisible, originaire du plan élémentaire de l’air. Ce monstre à 8 dés de vie obéira au magicien et le servira. Cependant, la créature est obligée de le servir et ne le fait pas de son plein gré. Ainsi, le chasseur invisible s’offensera de missions prolongées ou de tâches compliquées et il essayera de détourner de leur but les instructions reçues. (Pour les détails complets, voir Règles AVANCÉES DE DONJONS &amp; DRAGONS, MANUEL DES MONSTRES, chasseur invisible). La créature conjurée suivra les instructions, même à des milliers de kilomètres de distance. Les composantes matérielles sont de l’encens à faire brûler et un bout de corne taillé en forme de croissant.</p>"
+      },
+      "effects": [
+        {
+          "name": "Chasseur invisible",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:chasseur_invisible",
+                "type:utility",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-chasseur-invisible.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.JNN7d4ciQSAsWY37",
+          "_id": "sKFXqlgex527FlMQ",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567858,
+            "modifiedTime": 1780340567858
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:53.481Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-chasseur-invisible.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.JNN7d4ciQSAsWY37",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567858,
+        "modifiedTime": 1780340567858,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "9nvajLF9dtYWr6aM",
+      "sort": 0
+    },
+    {
+      "name": "Désintégration",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-desintegration.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort provoque la disparition de la matière. Il affecte même la matière (ou l'énergie) de nature magique telle qu’une main de force de Bigby, mais pas un globe d’invulnérabilité, ni une bulle anti-magique. La désintégration est instantanée et ses effets sont permanents. Tout être vivant peut être affecté, même les morts-vivants, et le magicien peut désintégrer jusqu’à 27 m³ de matière non-vivante. Les créatures et les objets magiques qui ont droit à un jet de protection et qui le réussissent ne sont pas affectés par ce sort. Une seule créature ou un seul objet peut être affecté par ce sort. Les composantes matérielles sont une pierre aimantée et une pincée de poussière.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-desintegration.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-desintegration.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/magicien-desintegration.js",
+        "composants_materiels": [
+          {
+            "slug": "pincee_de_poussiere",
+            "nom": "Pincée de poussière",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont une pierre aimantée et une pincée de poussière.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Ce sort provoque la disparition de la matière. Il affecte même la matière (ou l'énergie) de nature magique telle qu’une main de force de Bigby, mais pas un globe d’invulnérabilité, ni une bulle anti-magique. La désintégration est instantanée et ses effets sont permanents. Tout être vivant peut être affecté, même les morts-vivants, et le magicien peut désintégrer jusqu’à 27 m³ de matière non-vivante. Les créatures et les objets magiques qui ont droit à un jet de protection et qui le réussissent ne sont pas affectés par ce sort. Une seule créature ou un seul objet peut être affecté par ce sort. Les composantes matérielles sont une pierre aimantée et une pincée de poussière.",
+        "description_texte": "Ce sort provoque la disparition de la matière. Il affecte même la matière (ou l'énergie) de nature magique telle qu’une main de force de Bigby, mais pas un globe d’invulnérabilité, ni une bulle anti-magique. La désintégration est instantanée et ses effets sont permanents. Tout être vivant peut être affecté, même les morts-vivants, et le magicien peut désintégrer jusqu’à 27 m³ de matière non-vivante. Les créatures et les objets magiques qui ont droit à un jet de protection et qui le réussissent ne sont pas affectés par ce sort. Une seule créature ou un seul objet peut être affecté par ce sort. Les composantes matérielles sont une pierre aimantée et une pincée de poussière.",
+        "description_html": "<p>Ce sort provoque la disparition de la matière. Il affecte même la matière (ou l&#x27;énergie) de nature magique telle qu’une main de force de Bigby, mais pas un globe d’invulnérabilité, ni une bulle anti-magique. La désintégration est instantanée et ses effets sont permanents. Tout être vivant peut être affecté, même les morts-vivants, et le magicien peut désintégrer jusqu’à 27 m³ de matière non-vivante. Les créatures et les objets magiques qui ont droit à un jet de protection et qui le réussissent ne sont pas affectés par ce sort. Une seule créature ou un seul objet peut être affecté par ce sort. Les composantes matérielles sont une pierre aimantée et une pincée de poussière.</p>"
+      },
+      "effects": [
+        {
+          "name": "Désintégration",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:desintegration",
+                "type:damage",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-desintegration.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.8N35b10WCHhnO1D6",
+          "_id": "r4oLlU9fRjs7gVXf",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567163,
+            "modifiedTime": 1780340567163
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:14.279Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-desintegration.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.8N35b10WCHhnO1D6",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567163,
+        "modifiedTime": 1780340567163,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "EnOSTDnyj7jFMgr0",
+      "sort": 0
+    },
+    {
+      "name": "Enchantement",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-enchantement.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort doit être employé par un magicien désirant créer un objet magique. L’enchantement prépare l’objet à recevoir la magie que l’on veut lui conférer. L’objet doit remplir les conditions suivantes : 1) Il doit être dans un état impeccable 2) Il doit être de très belle facture, fabriqué avec les meilleurs matériaux et avec la plus grande précision possible 3) Sa valeur marchande doit refléter la 2e condition et dans tous les cas, le matériau de fabrication doit valoir au moins 100 po. Considérant la 3e condition, il est impossible de l’appliquer sur des objets, comme les cordes, les objets en cuir, les vêtements, la poterie, qui ne sont pas brodés, incrustés de bijoux, ciselés et/ou gravés. Cependant, si un tel travail et/ou matériau peut être ajouté sans altérer la fonction de l’objet, l’enchantement est possible. Le magicien doit toucher l’objet avec la main. Ce contact doit être constant pendant le temps d’incantation qui est de 16 heures + 8 à 64 heures (comme le magicien ne peut travailleur plus de 8 heures par jour et qu’il n’est pas possible d’accélérer le temps d’incantation, même par un sort de rapidité ou un moyen similaire, cela signifie que le temps à consacrer est en fait de 2 jours + 1 à 8 jours). Tout le travail de préparation ne doit jamais être interrompu et pendant les périodes de repos, l’objet ne doit jamais être à plus de 30 cm du magicien, sinon le sort est annulé et devra être relancé. (Pendant les périodes de repos, le magicien ne doit entreprendre aucune autre opération magique. Il doit se reposer et rester seul). À la fin du sort, le magicien saura que l’objet est prêt pour l’opération finale. Il prononce alors l’ultime incantation ; si l’objet réussit un jet de protection contre les sorts (qui est exactement le même que celui du magicien, en tenant compte de ses bonus avec toutefois un maximum de +3), le sort est achevé. Un résultat de 1 sur 1d20 sera toujours considéré comme un échec, malgré les ajustements éventuels. Une fois que le sort est achevé et que le jet de protection est réussi, le magicien peut commencer à placer sur l’objet le pouvoir qu’il désire lui conférer ; il doit placer ce sort dans une période de 24 heures après l’enchantement, sinon le sort de préparation est annulé et l’objet doit être à nouveau enchanté. Chaque sort lancé successivement sur un objet enchanté demande 4 heures + 4-8 heures par niveau de magie du sort. De nouveau, durant l'incantation le magicien doit toucher l'objet et pendant les périodes de repos, il doit rester à 30 cm maximum de lui. Cette procédure est la même pour chaque nouveau sort lancé sur l'objet ; chaque nouveau pouvoir magique doit être lancé dans une période de 24 heures par rapport au pouvoir magique précédent, même si le lancement d'un sort précédent a raté. Aucune magie placée sur, ou dans, un objet n'est permanente, sauf si un sort de permanence est utilisé ; cela risque de provoquer la perte d'un point de constitution chez le magicien lançant le sort. Il faut préciser également que s'il est possible de dire que le sort de base d'enchantement est réussi, il n'est pas possible d'affirmer que les autres sorts lancés prennent effet, car chaque autre sort entraîne un jet de protection, dans les mêmes conditions que le premier. Les objets à charge (baguettes, bâtonnets, bâtons, javelots de foudre, anneau de souhaits majeurs, etc.) ne peuvent avoir des pouvoirs permanents. Les parchemins et autres objets magiques ne pourront jamais être utilisés pour un enchantement ou pour affecter un objet ainsi enchanté. Les composantes matérielles varient selon les pouvoirs lancés sur l'objet et selon l'objet lui-même ; ex : une cape de déplacement pourra nécessiter la peau d'une ou plusieurs bêtes éclipsantes ; une épée tueuse de dragon pourra nécessiter le sang et une autre partie du corps du dragon approprié, un anneau d'étoiles filantes pourra nécessiter des fragments de météorites et la corne d'un ki-rin. C'est le MD qui décide des composantes appropriées.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-enchantement.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-enchantement.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-enchantement.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort doit être employé par un magicien désirant créer un objet magique. L’enchantement prépare l’objet à recevoir la magie que l’on veut lui conférer. L’objet doit remplir les conditions suivantes : 1) Il doit être dans un état impeccable 2) Il doit être de très belle facture, fabriqué avec les meilleurs matériaux et avec la plus grande précision possible 3) Sa valeur marchande doit refléter la 2e condition et dans tous les cas, le matériau de fabrication doit valoir au moins 100 po. Considérant la 3e condition, il est impossible de l’appliquer sur des objets, comme les cordes, les objets en cuir, les vêtements, la poterie, qui ne sont pas brodés, incrustés de bijoux, ciselés et/ou gravés. Cependant, si un tel travail et/ou matériau peut être ajouté sans altérer la fonction de l’objet, l’enchantement est possible. Le magicien doit toucher l’objet avec la main. Ce contact doit être constant pendant le temps d’incantation qui est de 16 heures + 8 à 64 heures (comme le magicien ne peut travailleur plus de 8 heures par jour et qu’il n’est pas possible d’accélérer le temps d’incantation, même par un sort de rapidité ou un moyen similaire, cela signifie que le temps à consacrer est en fait de 2 jours + 1 à 8 jours). Tout le travail de préparation ne doit jamais être interrompu et pendant les périodes de repos, l’objet ne doit jamais être à plus de 30 cm du magicien, sinon le sort est annulé et devra être relancé. (Pendant les périodes de repos, le magicien ne doit entreprendre aucune autre opération magique. Il doit se reposer et rester seul). À la fin du sort, le magicien saura que l’objet est prêt pour l’opération finale. Il prononce alors l’ultime incantation ; si l’objet réussit un jet de protection contre les sorts (qui est exactement le même que celui du magicien, en tenant compte de ses bonus avec toutefois un maximum de +3), le sort est achevé. Un résultat de 1 sur 1d20 sera toujours considéré comme un échec, malgré les ajustements éventuels. Une fois que le sort est achevé et que le jet de protection est réussi, le magicien peut commencer à placer sur l’objet le pouvoir qu’il désire lui conférer ; il doit placer ce sort dans une période de 24 heures après l’enchantement, sinon le sort de préparation est annulé et l’objet doit être à nouveau enchanté. Chaque sort lancé successivement sur un objet enchanté demande 4 heures + 4-8 heures par niveau de magie du sort. De nouveau, durant l'incantation le magicien doit toucher l'objet et pendant les périodes de repos, il doit rester à 30 cm maximum de lui. Cette procédure est la même pour chaque nouveau sort lancé sur l'objet ; chaque nouveau pouvoir magique doit être lancé dans une période de 24 heures par rapport au pouvoir magique précédent, même si le lancement d'un sort précédent a raté. Aucune magie placée sur, ou dans, un objet n'est permanente, sauf si un sort de permanence est utilisé ; cela risque de provoquer la perte d'un point de constitution chez le magicien lançant le sort. Il faut préciser également que s'il est possible de dire que le sort de base d'enchantement est réussi, il n'est pas possible d'affirmer que les autres sorts lancés prennent effet, car chaque autre sort entraîne un jet de protection, dans les mêmes conditions que le premier. Les objets à charge (baguettes, bâtonnets, bâtons, javelots de foudre, anneau de souhaits majeurs, etc.) ne peuvent avoir des pouvoirs permanents. Les parchemins et autres objets magiques ne pourront jamais être utilisés pour un enchantement ou pour affecter un objet ainsi enchanté. Les composantes matérielles varient selon les pouvoirs lancés sur l'objet et selon l'objet lui-même ; ex : une cape de déplacement pourra nécessiter la peau d'une ou plusieurs bêtes éclipsantes ; une épée tueuse de dragon pourra nécessiter le sang et une autre partie du corps du dragon approprié, un anneau d'étoiles filantes pourra nécessiter des fragments de météorites et la corne d'un ki-rin. C'est le MD qui décide des composantes appropriées.",
+        "description_texte": "Ce sort doit être employé par un magicien désirant créer un objet magique. L’enchantement prépare l’objet à recevoir la magie que l’on veut lui conférer. L’objet doit remplir les conditions suivantes : 1) Il doit être dans un état impeccable 2) Il doit être de très belle facture, fabriqué avec les meilleurs matériaux et avec la plus grande précision possible 3) Sa valeur marchande doit refléter la 2e condition et dans tous les cas, le matériau de fabrication doit valoir au moins 100 po. Considérant la 3e condition, il est impossible de l’appliquer sur des objets, comme les cordes, les objets en cuir, les vêtements, la poterie, qui ne sont pas brodés, incrustés de bijoux, ciselés et/ou gravés. Cependant, si un tel travail et/ou matériau peut être ajouté sans altérer la fonction de l’objet, l’enchantement est possible. Le magicien doit toucher l’objet avec la main. Ce contact doit être constant pendant le temps d’incantation qui est de 16 heures + 8 à 64 heures (comme le magicien ne peut travailleur plus de 8 heures par jour et qu’il n’est pas possible d’accélérer le temps d’incantation, même par un sort de rapidité ou un moyen similaire, cela signifie que le temps à consacrer est en fait de 2 jours + 1 à 8 jours). Tout le travail de préparation ne doit jamais être interrompu et pendant les périodes de repos, l’objet ne doit jamais être à plus de 30 cm du magicien, sinon le sort est annulé et devra être relancé. (Pendant les périodes de repos, le magicien ne doit entreprendre aucune autre opération magique. Il doit se reposer et rester seul). À la fin du sort, le magicien saura que l’objet est prêt pour l’opération finale. Il prononce alors l’ultime incantation ; si l’objet réussit un jet de protection contre les sorts (qui est exactement le même que celui du magicien, en tenant compte de ses bonus avec toutefois un maximum de +3), le sort est achevé. Un résultat de 1 sur 1d20 sera toujours considéré comme un échec, malgré les ajustements éventuels. Une fois que le sort est achevé et que le jet de protection est réussi, le magicien peut commencer à placer sur l’objet le pouvoir qu’il désire lui conférer ; il doit placer ce sort dans une période de 24 heures après l’enchantement, sinon le sort de préparation est annulé et l’objet doit être à nouveau enchanté. Chaque sort lancé successivement sur un objet enchanté demande 4 heures + 4-8 heures par niveau de magie du sort. De nouveau, durant l'incantation le magicien doit toucher l'objet et pendant les périodes de repos, il doit rester à 30 cm maximum de lui. Cette procédure est la même pour chaque nouveau sort lancé sur l'objet ; chaque nouveau pouvoir magique doit être lancé dans une période de 24 heures par rapport au pouvoir magique précédent, même si le lancement d'un sort précédent a raté. Aucune magie placée sur, ou dans, un objet n'est permanente, sauf si un sort de permanence est utilisé ; cela risque de provoquer la perte d'un point de constitution chez le magicien lançant le sort. Il faut préciser également que s'il est possible de dire que le sort de base d'enchantement est réussi, il n'est pas possible d'affirmer que les autres sorts lancés prennent effet, car chaque autre sort entraîne un jet de protection, dans les mêmes conditions que le premier. Les objets à charge (baguettes, bâtonnets, bâtons, javelots de foudre, anneau de souhaits majeurs, etc.) ne peuvent avoir des pouvoirs permanents. Les parchemins et autres objets magiques ne pourront jamais être utilisés pour un enchantement ou pour affecter un objet ainsi enchanté. Les composantes matérielles varient selon les pouvoirs lancés sur l'objet et selon l'objet lui-même ; ex : une cape de déplacement pourra nécessiter la peau d'une ou plusieurs bêtes éclipsantes ; une épée tueuse de dragon pourra nécessiter le sang et une autre partie du corps du dragon approprié, un anneau d'étoiles filantes pourra nécessiter des fragments de météorites et la corne d'un ki-rin. C'est le MD qui décide des composantes appropriées.",
+        "description_html": "<p>Ce sort doit être employé par un magicien désirant créer un objet magique. L’enchantement prépare l’objet à recevoir la magie que l’on veut lui conférer. L’objet doit remplir les conditions suivantes : 1) Il doit être dans un état impeccable 2) Il doit être de très belle facture, fabriqué avec les meilleurs matériaux et avec la plus grande précision possible 3) Sa valeur marchande doit refléter la 2e condition et dans tous les cas, le matériau de fabrication doit valoir au moins 100 po. Considérant la 3e condition, il est impossible de l’appliquer sur des objets, comme les cordes, les objets en cuir, les vêtements, la poterie, qui ne sont pas brodés, incrustés de bijoux, ciselés et/ou gravés. Cependant, si un tel travail et/ou matériau peut être ajouté sans altérer la fonction de l’objet, l’enchantement est possible. Le magicien doit toucher l’objet avec la main. Ce contact doit être constant pendant le temps d’incantation qui est de 16 heures + 8 à 64 heures (comme le magicien ne peut travailleur plus de 8 heures par jour et qu’il n’est pas possible d’accélérer le temps d’incantation, même par un sort de rapidité ou un moyen similaire, cela signifie que le temps à consacrer est en fait de 2 jours + 1 à 8 jours). Tout le travail de préparation ne doit jamais être interrompu et pendant les périodes de repos, l’objet ne doit jamais être à plus de 30 cm du magicien, sinon le sort est annulé et devra être relancé. (Pendant les périodes de repos, le magicien ne doit entreprendre aucune autre opération magique. Il doit se reposer et rester seul). À la fin du sort, le magicien saura que l’objet est prêt pour l’opération finale. Il prononce alors l’ultime incantation ; si l’objet réussit un jet de protection contre les sorts (qui est exactement le même que celui du magicien, en tenant compte de ses bonus avec toutefois un maximum de +3), le sort est achevé. Un résultat de 1 sur 1d20 sera toujours considéré comme un échec, malgré les ajustements éventuels. Une fois que le sort est achevé et que le jet de protection est réussi, le magicien peut commencer à placer sur l’objet le pouvoir qu’il désire lui conférer ; il doit placer ce sort dans une période de 24 heures après l’enchantement, sinon le sort de préparation est annulé et l’objet doit être à nouveau enchanté. Chaque sort lancé successivement sur un objet enchanté demande 4 heures + 4-8 heures par niveau de magie du sort. De nouveau, durant l&#x27;incantation le magicien doit toucher l&#x27;objet et pendant les périodes de repos, il doit rester à 30 cm maximum de lui. Cette procédure est la même pour chaque nouveau sort lancé sur l&#x27;objet ; chaque nouveau pouvoir magique doit être lancé dans une période de 24 heures par rapport au pouvoir magique précédent, même si le lancement d&#x27;un sort précédent a raté. Aucune magie placée sur, ou dans, un objet n&#x27;est permanente, sauf si un sort de permanence est utilisé ; cela risque de provoquer la perte d&#x27;un point de constitution chez le magicien lançant le sort. Il faut préciser également que s&#x27;il est possible de dire que le sort de base d&#x27;enchantement est réussi, il n&#x27;est pas possible d&#x27;affirmer que les autres sorts lancés prennent effet, car chaque autre sort entraîne un jet de protection, dans les mêmes conditions que le premier. Les objets à charge (baguettes, bâtonnets, bâtons, javelots de foudre, anneau de souhaits majeurs, etc.) ne peuvent avoir des pouvoirs permanents. Les parchemins et autres objets magiques ne pourront jamais être utilisés pour un enchantement ou pour affecter un objet ainsi enchanté. Les composantes matérielles varient selon les pouvoirs lancés sur l&#x27;objet et selon l&#x27;objet lui-même ; ex : une cape de déplacement pourra nécessiter la peau d&#x27;une ou plusieurs bêtes éclipsantes ; une épée tueuse de dragon pourra nécessiter le sang et une autre partie du corps du dragon approprié, un anneau d&#x27;étoiles filantes pourra nécessiter des fragments de météorites et la corne d&#x27;un ki-rin. C&#x27;est le MD qui décide des composantes appropriées.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Enchantement",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:enchantement",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-enchantement.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.crntdArlMqnWb2Sl",
+          "_id": "JVhekOvvG3DKzyY9",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568695,
+            "modifiedTime": 1780340568695
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:35.375Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-enchantement.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.crntdArlMqnWb2Sl",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568695,
+        "modifiedTime": 1780340568695,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "87ete731gVApgoPg",
+      "sort": 0
+    },
+    {
+      "name": "Extension III",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-extension-iii.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est le même que le sort de niveau 4 extension I sauf qu’il augmente la durée des sorts de niveau 1 à 3 de 100 % et celle des sorts de niveau 4 et 5 de 50 %.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-extension-iii.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-extension-iii.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-extension-iii.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est le même que le sort de niveau 4 extension I sauf qu’il augmente la durée des sorts de niveau 1 à 3 de 100 % et celle des sorts de niveau 4 et 5 de 50 %.",
+        "description_texte": "Ce sort est le même que le sort de niveau 4 extension I sauf qu’il augmente la durée des sorts de niveau 1 à 3 de 100 % et celle des sorts de niveau 4 et 5 de 50 %.",
+        "description_html": "<p>Ce sort est le même que le sort de niveau 4 extension I sauf qu’il augmente la durée des sorts de niveau 1 à 3 de 100 % et celle des sorts de niveau 4 et 5 de 50 %.</p>"
+      },
+      "effects": [
+        {
+          "name": "Extension III",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:extension_iii",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-extension-iii.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.cHJ8mPw8fclN7q6j",
+          "_id": "aFYb1XaFUysBNzTj",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568682,
+            "modifiedTime": 1780340568682
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:46.265Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-extension-iii.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.cHJ8mPw8fclN7q6j",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568682,
+        "modifiedTime": 1780340568682,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "CJf7e3HhnfDKa8yU",
+      "sort": 0
+    },
+    {
+      "name": "Glissement de terrain",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-glissement-de-terrain.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, il fait se déplacer des éléments comme la terre, l’argile, le sable et autres matériaux similaires. Ainsi, le magicien peut aplanir des dunes, briser les digues, déplacer les buttes, etc. La zone affectée joue sur le temps d’incantation : pour chaque portion de 150 m² de surface, l’incantation dure 1 tour. La limitation pratique de la zone d’effet de ce sort est de 3.600 m² pour 4 heures d’incantation, sans tenir compte de la conjuration de l’élémentaire. S’il y a transformation du terrain (par opposition à simplement faire s’écrouler des buttes en terre ou des talus), l’invocation d’un élémentaire de terre est indispensable pour aider à faire le travail. Toute incantation et/ou invocation devra être terminée avant que les effets ne se manifestent. En aucun cas le magicien n’est capable de déplacer ou de faire s’écrouler des rochers. Les composantes matérielles sont un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-glissement-de-terrain.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-glissement-de-terrain.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-glissement-de-terrain.js",
+        "composants_materiels": [
+          {
+            "slug": "melange_de_terre_argile",
+            "nom": "Mélange de terre (argile",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "sable_dans_un_petit_sac",
+            "nom": "Sable) dans un petit sac",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "lame_en_fer",
+            "nom": "Lame en fer",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Quand ce sort est lancé, il fait se déplacer des éléments comme la terre, l’argile, le sable et autres matériaux similaires. Ainsi, le magicien peut aplanir des dunes, briser les digues, déplacer les buttes, etc. La zone affectée joue sur le temps d’incantation : pour chaque portion de 150 m² de surface, l’incantation dure 1 tour. La limitation pratique de la zone d’effet de ce sort est de 3.600 m² pour 4 heures d’incantation, sans tenir compte de la conjuration de l’élémentaire. S’il y a transformation du terrain (par opposition à simplement faire s’écrouler des buttes en terre ou des talus), l’invocation d’un élémentaire de terre est indispensable pour aider à faire le travail. Toute incantation et/ou invocation devra être terminée avant que les effets ne se manifestent. En aucun cas le magicien n’est capable de déplacer ou de faire s’écrouler des rochers. Les composantes matérielles sont un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer.",
+        "description_texte": "Quand ce sort est lancé, il fait se déplacer des éléments comme la terre, l’argile, le sable et autres matériaux similaires. Ainsi, le magicien peut aplanir des dunes, briser les digues, déplacer les buttes, etc. La zone affectée joue sur le temps d’incantation : pour chaque portion de 150 m² de surface, l’incantation dure 1 tour. La limitation pratique de la zone d’effet de ce sort est de 3.600 m² pour 4 heures d’incantation, sans tenir compte de la conjuration de l’élémentaire. S’il y a transformation du terrain (par opposition à simplement faire s’écrouler des buttes en terre ou des talus), l’invocation d’un élémentaire de terre est indispensable pour aider à faire le travail. Toute incantation et/ou invocation devra être terminée avant que les effets ne se manifestent. En aucun cas le magicien n’est capable de déplacer ou de faire s’écrouler des rochers. Les composantes matérielles sont un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer.",
+        "description_html": "<p>Quand ce sort est lancé, il fait se déplacer des éléments comme la terre, l’argile, le sable et autres matériaux similaires. Ainsi, le magicien peut aplanir des dunes, briser les digues, déplacer les buttes, etc. La zone affectée joue sur le temps d’incantation : pour chaque portion de 150 m² de surface, l’incantation dure 1 tour. La limitation pratique de la zone d’effet de ce sort est de 3.600 m² pour 4 heures d’incantation, sans tenir compte de la conjuration de l’élémentaire. S’il y a transformation du terrain (par opposition à simplement faire s’écrouler des buttes en terre ou des talus), l’invocation d’un élémentaire de terre est indispensable pour aider à faire le travail. Toute incantation et/ou invocation devra être terminée avant que les effets ne se manifestent. En aucun cas le magicien n’est capable de déplacer ou de faire s’écrouler des rochers. Les composantes matérielles sont un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer.</p>"
+      },
+      "effects": [
+        {
+          "name": "Glissement de terrain",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:glissement_de_terrain",
+                "type:terrain",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-glissement-de-terrain.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.hPDhzBfoKqoLHcxO",
+          "_id": "nbwlv33vC4CG2wG1",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568775,
+            "modifiedTime": 1780340568775
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:59.612Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-glissement-de-terrain.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.hPDhzBfoKqoLHcxO",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568775,
+        "modifiedTime": 1780340568775,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "HpN7G6ucRp5lTSTw",
+      "sort": 0
+    },
+    {
+      "name": "Globe d’invulnérabilité",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-globe-d-invulnerabilite.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est le même que le sort de niveau 4 globe mineur d’invulnérabilité (voir p.78), sauf en ce qui concerne le temps d’incantation et le fait qu’il protège des sorts de niveau 1 à 4. Le magicien, quant à lui, peut toujours lancer des sorts dans et au travers de la sphère.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-globe-d-invulnerabilite.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-globe-d-invulnerabilite.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/magicien-globe-d-invulnerabilite.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est le même que le sort de niveau 4 globe mineur d’invulnérabilité (voir p.78), sauf en ce qui concerne le temps d’incantation et le fait qu’il protège des sorts de niveau 1 à 4. Le magicien, quant à lui, peut toujours lancer des sorts dans et au travers de la sphère.",
+        "description_texte": "Ce sort est le même que le sort de niveau 4 globe mineur d’invulnérabilité (voir p.78), sauf en ce qui concerne le temps d’incantation et le fait qu’il protège des sorts de niveau 1 à 4. Le magicien, quant à lui, peut toujours lancer des sorts dans et au travers de la sphère.",
+        "description_html": "<p>Ce sort est le même que le sort de niveau 4 globe mineur d’invulnérabilité (voir p.78), sauf en ce qui concerne le temps d’incantation et le fait qu’il protège des sorts de niveau 1 à 4. Le magicien, quant à lui, peut toujours lancer des sorts dans et au travers de la sphère.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Globe d’invulnérabilité",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:globe_d_invulnerabilite",
+                "type:protection",
+                "sort:globe_dinvulnerabilite",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-globe-d-invulnerabilite.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.XDg8oiYmDy4yiBgA",
+          "_id": "mD9xtFrHXze3KNau",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568051,
+            "modifiedTime": 1780340568051
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:59.872Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-globe-d-invulnerabilite.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.XDg8oiYmDy4yiBgA",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568051,
+        "modifiedTime": 1780340568051,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "6I5bM9qnrycTKvFM",
+      "sort": 0
+    },
+    {
+      "name": "Incantation mortelle",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-incantation-mortelle.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Une incantation mortelle tue instantanément les créatures dans la zone d’effet. Le nombre des victimes dépend de leurs dés de vie : Dés de vie des victimes Nombre maximum affecté Moins de 2 4-80 (4d20) de 2 à 4 3-30 (3d10) de 4+1 à 6+3 2-8 (2d4) de 6+4 à 8+3 1-4 (1d4) Si le groupe pris dans la zone d’effet est composé de créatures ayant des nombres différents de dés de vie, utilisez la table de conversion ci-dessous puis procédez comme indiqué ensuite. Correspond à des créatures avec des dés de vie de : Dés de vie des créatures Moins de 2 2 à 4 4+1 à 6+3 6+4 à 8+3 de 6+4 à 8+3 10 5 2 — de 4+1 à 6+3 8 3 — 1/2 de 2 à 4 4 — 1/8 1/20 Premièrement, lancez les dés pour savoir combien de créatures avec moins de 2 dés de vie sont affectées, éliminez les ; puis utilisez la table de conversion pour éliminer tous les monstres avec de 2 à 4 dés de vie, etc. Si le chiffre restant n’est pas suffisant pour éliminer les créatures de niveau plus élevé, celles-ci restent en vie. Ce système peut être inversé en l’appliquant d’abord aux créatures les plus puissantes : exemple, les 4d20 sont lancés et donnent un résultat de 53. Sur ces 53, 20 sont utilisés pour éliminer une créature de 6+4 à 8+3 dés de vie (20 x 1/20 = 1) ; 16 sont utilisés pour tuer 2 créatures de 4+1 à 6+3 dés de vie (16 x 1/8 = 2) ; 12 sont utilisés pour éliminer 3 créatures de 2 à 4 dés de vie (3 x 4 = 12) ; 5 restent pour éliminer 5 créatures de moins de 2 dés de vie (5 x 1 = 5) ; donc 20 + 16 + 12 + 5 = 53. Les créatures de moins d’un dé de vie ne comptent que pour ½ créature de moins de 2 dés de vie. Si de telles créatures sont concernées par le sort, il faut les comptabiliser de cette manière, bien que le nombre total affecté ne puisse dépasser les 80 quoiqu’il arrive. Une incantation mortelle n’affecte pas les lycanthropes, les morts-vivants et les créatures qui ne sont pas du plan matériel primaire. La composante matérielle est une perle noire écrasée d’une valeur minimale de 1.000 po.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-incantation-mortelle.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-incantation-mortelle.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/magicien-incantation-mortelle.js",
+        "composants_materiels": [
+          {
+            "slug": "perle_noire_ecrasee_d_une_valeur_minimale_de_1",
+            "nom": "Perle noire écrasée d’une valeur minimale de 1",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est une perle noire écrasée d’une valeur minimale de 1.",
+        "description_reelle": "Une incantation mortelle tue instantanément les créatures dans la zone d’effet. Le nombre des victimes dépend de leurs dés de vie : Dés de vie des victimes Nombre maximum affecté Moins de 2 4-80 (4d20) de 2 à 4 3-30 (3d10) de 4+1 à 6+3 2-8 (2d4) de 6+4 à 8+3 1-4 (1d4) Si le groupe pris dans la zone d’effet est composé de créatures ayant des nombres différents de dés de vie, utilisez la table de conversion ci-dessous puis procédez comme indiqué ensuite. Correspond à des créatures avec des dés de vie de : Dés de vie des créatures Moins de 2 2 à 4 4+1 à 6+3 6+4 à 8+3 de 6+4 à 8+3 10 5 2 — de 4+1 à 6+3 8 3 — 1/2 de 2 à 4 4 — 1/8 1/20 Premièrement, lancez les dés pour savoir combien de créatures avec moins de 2 dés de vie sont affectées, éliminez les ; puis utilisez la table de conversion pour éliminer tous les monstres avec de 2 à 4 dés de vie, etc. Si le chiffre restant n’est pas suffisant pour éliminer les créatures de niveau plus élevé, celles-ci restent en vie. Ce système peut être inversé en l’appliquant d’abord aux créatures les plus puissantes : exemple, les 4d20 sont lancés et donnent un résultat de 53. Sur ces 53, 20 sont utilisés pour éliminer une créature de 6+4 à 8+3 dés de vie (20 x 1/20 = 1) ; 16 sont utilisés pour tuer 2 créatures de 4+1 à 6+3 dés de vie (16 x 1/8 = 2) ; 12 sont utilisés pour éliminer 3 créatures de 2 à 4 dés de vie (3 x 4 = 12) ; 5 restent pour éliminer 5 créatures de moins de 2 dés de vie (5 x 1 = 5) ; donc 20 + 16 + 12 + 5 = 53. Les créatures de moins d’un dé de vie ne comptent que pour ½ créature de moins de 2 dés de vie. Si de telles créatures sont concernées par le sort, il faut les comptabiliser de cette manière, bien que le nombre total affecté ne puisse dépasser les 80 quoiqu’il arrive. Une incantation mortelle n’affecte pas les lycanthropes, les morts-vivants et les créatures qui ne sont pas du plan matériel primaire. La composante matérielle est une perle noire écrasée d’une valeur minimale de 1.000 po.",
+        "description_texte": "Une incantation mortelle tue instantanément les créatures dans la zone d’effet. Le nombre des victimes dépend de leurs dés de vie : Dés de vie des victimes Nombre maximum affecté Moins de 2 4-80 (4d20) de 2 à 4 3-30 (3d10) de 4+1 à 6+3 2-8 (2d4) de 6+4 à 8+3 1-4 (1d4) Si le groupe pris dans la zone d’effet est composé de créatures ayant des nombres différents de dés de vie, utilisez la table de conversion ci-dessous puis procédez comme indiqué ensuite. Correspond à des créatures avec des dés de vie de : Dés de vie des créatures Moins de 2 2 à 4 4+1 à 6+3 6+4 à 8+3 de 6+4 à 8+3 10 5 2 — de 4+1 à 6+3 8 3 — 1/2 de 2 à 4 4 — 1/8 1/20 Premièrement, lancez les dés pour savoir combien de créatures avec moins de 2 dés de vie sont affectées, éliminez les ; puis utilisez la table de conversion pour éliminer tous les monstres avec de 2 à 4 dés de vie, etc. Si le chiffre restant n’est pas suffisant pour éliminer les créatures de niveau plus élevé, celles-ci restent en vie. Ce système peut être inversé en l’appliquant d’abord aux créatures les plus puissantes : exemple, les 4d20 sont lancés et donnent un résultat de 53. Sur ces 53, 20 sont utilisés pour éliminer une créature de 6+4 à 8+3 dés de vie (20 x 1/20 = 1) ; 16 sont utilisés pour tuer 2 créatures de 4+1 à 6+3 dés de vie (16 x 1/8 = 2) ; 12 sont utilisés pour éliminer 3 créatures de 2 à 4 dés de vie (3 x 4 = 12) ; 5 restent pour éliminer 5 créatures de moins de 2 dés de vie (5 x 1 = 5) ; donc 20 + 16 + 12 + 5 = 53. Les créatures de moins d’un dé de vie ne comptent que pour ½ créature de moins de 2 dés de vie. Si de telles créatures sont concernées par le sort, il faut les comptabiliser de cette manière, bien que le nombre total affecté ne puisse dépasser les 80 quoiqu’il arrive. Une incantation mortelle n’affecte pas les lycanthropes, les morts-vivants et les créatures qui ne sont pas du plan matériel primaire. La composante matérielle est une perle noire écrasée d’une valeur minimale de 1.000 po.",
+        "description_html": "<p>Une incantation mortelle tue instantanément les créatures dans la zone d’effet. Le nombre des victimes dépend de leurs dés de vie : Dés de vie des victimes Nombre maximum affecté Moins de 2 4-80 (4d20) de 2 à 4 3-30 (3d10) de 4+1 à 6+3 2-8 (2d4) de 6+4 à 8+3 1-4 (1d4) Si le groupe pris dans la zone d’effet est composé de créatures ayant des nombres différents de dés de vie, utilisez la table de conversion ci-dessous puis procédez comme indiqué ensuite. Correspond à des créatures avec des dés de vie de : Dés de vie des créatures Moins de 2 2 à 4 4+1 à 6+3 6+4 à 8+3 de 6+4 à 8+3 10 5 2 — de 4+1 à 6+3 8 3 — 1/2 de 2 à 4 4 — 1/8 1/20 Premièrement, lancez les dés pour savoir combien de créatures avec moins de 2 dés de vie sont affectées, éliminez les ; puis utilisez la table de conversion pour éliminer tous les monstres avec de 2 à 4 dés de vie, etc. Si le chiffre restant n’est pas suffisant pour éliminer les créatures de niveau plus élevé, celles-ci restent en vie. Ce système peut être inversé en l’appliquant d’abord aux créatures les plus puissantes : exemple, les 4d20 sont lancés et donnent un résultat de 53. Sur ces 53, 20 sont utilisés pour éliminer une créature de 6+4 à 8+3 dés de vie (20 x 1/20 = 1) ; 16 sont utilisés pour tuer 2 créatures de 4+1 à 6+3 dés de vie (16 x 1/8 = 2) ; 12 sont utilisés pour éliminer 3 créatures de 2 à 4 dés de vie (3 x 4 = 12) ; 5 restent pour éliminer 5 créatures de moins de 2 dés de vie (5 x 1 = 5) ; donc 20 + 16 + 12 + 5 = 53. Les créatures de moins d’un dé de vie ne comptent que pour ½ créature de moins de 2 dés de vie. Si de telles créatures sont concernées par le sort, il faut les comptabiliser de cette manière, bien que le nombre total affecté ne puisse dépasser les 80 quoiqu’il arrive. Une incantation mortelle n’affecte pas les lycanthropes, les morts-vivants et les créatures qui ne sont pas du plan matériel primaire. La composante matérielle est une perle noire écrasée d’une valeur minimale de 1.000 po.</p>"
+      },
+      "effects": [
+        {
+          "name": "Incantation mortelle",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:incantation_mortelle",
+                "type:damage",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-incantation-mortelle.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.3XcsxVhmvsfmjUz7",
+          "_id": "0nbJEHv1xCxlqZXv",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567098,
+            "modifiedTime": 1780340567098
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:15.383Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-incantation-mortelle.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.3XcsxVhmvsfmjUz7",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567098,
+        "modifiedTime": 1780340567098,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "wCbNKb1p4IKuYZyQ",
+      "sort": 0
+    },
+    {
+      "name": "Invocation de monstre IV",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-iv.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort invoque 1 à 3 monstres de niveau 4, qui apparaissent dans un délai de 1 à 3 rounds. Voir invocation de monstre I pour plus de détails. SORTS DE MAGICIEN (NIVEAU 6)",
+        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-iv.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-iv.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-iv.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort invoque 1 à 3 monstres de niveau 4, qui apparaissent dans un délai de 1 à 3 rounds. Voir invocation de monstre I pour plus de détails. SORTS DE MAGICIEN (NIVEAU 6)",
+        "description_texte": "Ce sort invoque 1 à 3 monstres de niveau 4, qui apparaissent dans un délai de 1 à 3 rounds. Voir invocation de monstre I pour plus de détails. SORTS DE MAGICIEN (NIVEAU 6)",
+        "description_html": "<p>Ce sort invoque 1 à 3 monstres de niveau 4, qui apparaissent dans un délai de 1 à 3 rounds. Voir invocation de monstre I pour plus de détails. SORTS DE MAGICIEN (NIVEAU 6)</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Invocation de monstre IV",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:invocation_de_monstre_iv",
+                "type:summon",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-iv.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.YfEKoVe6Z2vVVhKo",
+          "_id": "8Lfbr5mruVBcSPgA",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568093,
+            "modifiedTime": 1780340568093
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:42.951Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-iv.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.YfEKoVe6Z2vVVhKo",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568093,
+        "modifiedTime": 1780340568093,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "RIc3gsPapbFEJrRO",
+      "sort": 0
+    },
+    {
+      "name": "Main de force de Bigby",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-main-de-force-de-bigby.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est une version plus puissante du sort main d’interposition de Bigby (voir p.81). La main créée exerce une force en plus de s’interposer ; cette force est suffisante pour repousser une créature loin du magicien. La main de force de Bigby peut repousser un poids maximum de 250 kg ; elle peut ralentir à la vitesse de 1\" une créature de 251 à 1.000 kg ; elle ralentit à 50 % des créatures de 1.001kg à 4.000 kg. La main peut subir autant de dégâts que le nombre de points de vie du magicien (il faut des armes magiques pour la toucher et sa CA est la même que celle du magicien). La composante matérielle est un gant.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-main-de-force-de-bigby.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-main-de-force-de-bigby.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/magicien-main-de-force-de-bigby.js",
+        "composants_materiels": [
+          {
+            "slug": "gant",
+            "nom": "Gant",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle est un gant.",
+        "description_reelle": "Ce sort est une version plus puissante du sort main d’interposition de Bigby (voir p.81). La main créée exerce une force en plus de s’interposer ; cette force est suffisante pour repousser une créature loin du magicien. La main de force de Bigby peut repousser un poids maximum de 250 kg ; elle peut ralentir à la vitesse de 1\" une créature de 251 à 1.000 kg ; elle ralentit à 50 % des créatures de 1.001kg à 4.000 kg. La main peut subir autant de dégâts que le nombre de points de vie du magicien (il faut des armes magiques pour la toucher et sa CA est la même que celle du magicien). La composante matérielle est un gant.",
+        "description_texte": "Ce sort est une version plus puissante du sort main d’interposition de Bigby (voir p.81). La main créée exerce une force en plus de s’interposer ; cette force est suffisante pour repousser une créature loin du magicien. La main de force de Bigby peut repousser un poids maximum de 250 kg ; elle peut ralentir à la vitesse de 1\" une créature de 251 à 1.000 kg ; elle ralentit à 50 % des créatures de 1.001kg à 4.000 kg. La main peut subir autant de dégâts que le nombre de points de vie du magicien (il faut des armes magiques pour la toucher et sa CA est la même que celle du magicien). La composante matérielle est un gant.",
+        "description_html": "<p>Ce sort est une version plus puissante du sort main d’interposition de Bigby (voir p.81). La main créée exerce une force en plus de s’interposer ; cette force est suffisante pour repousser une créature loin du magicien. La main de force de Bigby peut repousser un poids maximum de 250 kg ; elle peut ralentir à la vitesse de 1&quot; une créature de 251 à 1.000 kg ; elle ralentit à 50 % des créatures de 1.001kg à 4.000 kg. La main peut subir autant de dégâts que le nombre de points de vie du magicien (il faut des armes magiques pour la toucher et sa CA est la même que celle du magicien). La composante matérielle est un gant.</p>"
+      },
+      "effects": [
+        {
+          "name": "Main de force de Bigby",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:main_de_force_de_bigby",
+                "type:condition",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-main-de-force-de-bigby.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.QFTlHU6beb5II3k7",
+          "_id": "DqN7PlSy8eSsHBTR",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567966,
+            "modifiedTime": 1780340567966
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:06.697Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-main-de-force-de-bigby.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.QFTlHU6beb5II3k7",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567966,
+        "modifiedTime": 1780340567966,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "dD4Y9LGSZhXi7HBK",
+      "sort": 0
+    },
+    {
+      "name": "Mythomancie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-mythomancie.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Illusion/Fantasme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est utilisé pour obtenir des informations sur une personne, un endroit ou un objet, lequel ou laquelle doit être connu. Si la personne ou l’objet est auprès du magicien, ou si ce dernier se trouve à l’endroit concerné, la probabilité de résultat est importante et le temps d’incantation n’est que de 1 à 4 tours. Si le magicien ne connait que des informations détaillées, le temps d’incantation est de 1 à 10 jours. Et si les seules sources d’information sont des rumeurs, le temps d’incantation est de 2 à 12 semaines. Pendant le temps d’incantation, le magicien ne peut rien entreprendre d’autre que les actions de tous les jours : manger, dormir, etc. À la fin du temps d’incantation, la divination révélera si des informations légendaires sont disponibles. Elle révélera souvent l’endroit où ces informations pourront être trouvées : par un nom de lieu, sous forme de vers, d’énigme. Parfois, lorsque la personne, l'endroit ou l'objet est proche du magicien, une certaine information le concernant sera révélée, mais ce sera toujours sous une forme énigmatique (vers, devinette, anagramme, message chiffré, etc.). Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle ; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.). Naturellement, une mythomancie ne donnera des informations que si la personne, le lieu ou l’objet est légendaire ou très connu.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-mythomancie.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-mythomancie.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Illusion/Fantasme",
+        "on_use": "systems/add2e/scripts/sorts/magicien-mythomancie.js",
+        "composants_materiels": [
+          {
+            "slug": "morceaux_d_ivoire",
+            "nom": "Morceaux d’ivoire",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "parchemin",
+            "nom": "Parchemin",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle ; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Ce sort est utilisé pour obtenir des informations sur une personne, un endroit ou un objet, lequel ou laquelle doit être connu. Si la personne ou l’objet est auprès du magicien, ou si ce dernier se trouve à l’endroit concerné, la probabilité de résultat est importante et le temps d’incantation n’est que de 1 à 4 tours. Si le magicien ne connait que des informations détaillées, le temps d’incantation est de 1 à 10 jours. Et si les seules sources d’information sont des rumeurs, le temps d’incantation est de 2 à 12 semaines. Pendant le temps d’incantation, le magicien ne peut rien entreprendre d’autre que les actions de tous les jours : manger, dormir, etc. À la fin du temps d’incantation, la divination révélera si des informations légendaires sont disponibles. Elle révélera souvent l’endroit où ces informations pourront être trouvées : par un nom de lieu, sous forme de vers, d’énigme. Parfois, lorsque la personne, l'endroit ou l'objet est proche du magicien, une certaine information le concernant sera révélée, mais ce sera toujours sous une forme énigmatique (vers, devinette, anagramme, message chiffré, etc.). Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle ; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.). Naturellement, une mythomancie ne donnera des informations que si la personne, le lieu ou l’objet est légendaire ou très connu.",
+        "description_texte": "Ce sort est utilisé pour obtenir des informations sur une personne, un endroit ou un objet, lequel ou laquelle doit être connu. Si la personne ou l’objet est auprès du magicien, ou si ce dernier se trouve à l’endroit concerné, la probabilité de résultat est importante et le temps d’incantation n’est que de 1 à 4 tours. Si le magicien ne connait que des informations détaillées, le temps d’incantation est de 1 à 10 jours. Et si les seules sources d’information sont des rumeurs, le temps d’incantation est de 2 à 12 semaines. Pendant le temps d’incantation, le magicien ne peut rien entreprendre d’autre que les actions de tous les jours : manger, dormir, etc. À la fin du temps d’incantation, la divination révélera si des informations légendaires sont disponibles. Elle révélera souvent l’endroit où ces informations pourront être trouvées : par un nom de lieu, sous forme de vers, d’énigme. Parfois, lorsque la personne, l'endroit ou l'objet est proche du magicien, une certaine information le concernant sera révélée, mais ce sera toujours sous une forme énigmatique (vers, devinette, anagramme, message chiffré, etc.). Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle ; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.). Naturellement, une mythomancie ne donnera des informations que si la personne, le lieu ou l’objet est légendaire ou très connu.",
+        "description_html": "<p>Ce sort est utilisé pour obtenir des informations sur une personne, un endroit ou un objet, lequel ou laquelle doit être connu. Si la personne ou l’objet est auprès du magicien, ou si ce dernier se trouve à l’endroit concerné, la probabilité de résultat est importante et le temps d’incantation n’est que de 1 à 4 tours. Si le magicien ne connait que des informations détaillées, le temps d’incantation est de 1 à 10 jours. Et si les seules sources d’information sont des rumeurs, le temps d’incantation est de 2 à 12 semaines. Pendant le temps d’incantation, le magicien ne peut rien entreprendre d’autre que les actions de tous les jours : manger, dormir, etc. À la fin du temps d’incantation, la divination révélera si des informations légendaires sont disponibles. Elle révélera souvent l’endroit où ces informations pourront être trouvées : par un nom de lieu, sous forme de vers, d’énigme. Parfois, lorsque la personne, l&#x27;endroit ou l&#x27;objet est proche du magicien, une certaine information le concernant sera révélée, mais ce sera toujours sous une forme énigmatique (vers, devinette, anagramme, message chiffré, etc.). Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle ; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.). Naturellement, une mythomancie ne donnera des informations que si la personne, le lieu ou l’objet est légendaire ou très connu.</p>"
+      },
+      "effects": [
+        {
+          "name": "Mythomancie",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:mythomancie",
+                "type:utility",
+                "ecole:illusion_fantasme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-mythomancie.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.xgpfgSZ2fLlNP6Gb",
+          "_id": "9oWrJ8yYm0duRFc8",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569472,
+            "modifiedTime": 1780340569472
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:47.388Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-mythomancie.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.xgpfgSZ2fLlNP6Gb",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569472,
+        "modifiedTime": 1780340569472,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "EZOEGGOSPq7gZysz",
+      "sort": 0
+    },
+    {
+      "name": "Punition spirituelle",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-punition-spirituelle.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est une protection/punition très forte vis à vis des créatures puissantes des plans inférieurs (Abysses, Hadès, Enfers, etc.) ; mais pour le lancer, le magicien doit connaître le nom de l’être concerné. Avant de lancer l’incantation de ce sort, le magicien doit préparer une feuille de vélin enluminée, écrite avec une encre faite de poudre de rubis et de sang de démon de type I, II ou III mort. Les bords de cette feuille devront être recouverts d’une pellicule d’or. Le magicien ne peut préparer et avoir en sa possession qu’une seule feuille de vélin enluminée à la fois. Il doit préparer personnellement cette feuille, y compris en écrivant le nom de la créature (le tout demande 8 à 32 heures ; la valeur du vélin, des plumes à écrire et de l’or est de 1.000 po environ ; la poudre de rubis, quant à elle, doit valoir au minimum 5.000 po et ceci pour chaque feuille préparée). Si le démon, diable ou tout autre être puissant d’un plan extérieur inférieur est présent, sous quelque forme que ce soit (sauf par la possession du corps d’une autre créature), le magicien peut commencer l’incantation. Dès qu’il commence la lecture du document, la créature nommée sera clouée sur place, sauf si elle réussit son jet de résistance à la magie (ajusté selon le niveau du magicien) et même si ce jet de résistance est réussi, le monstre se sentira très mal à l’aise et il a 90 % de chance de faire retraite vers son propre plan (ou sur un autre), s’il n’a pas été maintenu magiquement à l’endroit où il se trouve. En effet, il ne peut pas attaquer le magicien pendant que celui-ci lance le sort. Si le jet de résistance est raté, il se passe la chose suivante : la première partie de l’incantation dure un round pendant lequel le malaise de l’être nommé devient de plus en plus grand. Pendant le 2e round de l’incantation, l’être nommé ressent de vives douleurs et perd 1 point de vie par dé de vie qu’il possède ; à la fin de ce 2e round, la créature est blessée, moralement et physiquement. Pendant les 3e et les 4e rounds de l’incantation, la créature perd 50 % de ses points de vie, souffre horriblement et à la fin du 4e round se retrouve confinée en un endroit de son propre plan — elle y restera à souffrir pendant un nombre d’années égal au niveau du magicien qui a préparé le document. De toute évidence, une créature ainsi traitée deviendra l’ennemi juré du magicien responsable ; c’est pour cela que ce dernier peut répugner à finir l’incantation en préférant utiliser ce sort comme menace pour essayer de soumettre cet être. Chaque round de lecture a 25 % de chances cumulatives d’obliger la créature concernée à se soumettre, sans contrepartie.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-punition-spirituelle.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-punition-spirituelle.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-punition-spirituelle.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est une protection/punition très forte vis à vis des créatures puissantes des plans inférieurs (Abysses, Hadès, Enfers, etc.) ; mais pour le lancer, le magicien doit connaître le nom de l’être concerné. Avant de lancer l’incantation de ce sort, le magicien doit préparer une feuille de vélin enluminée, écrite avec une encre faite de poudre de rubis et de sang de démon de type I, II ou III mort. Les bords de cette feuille devront être recouverts d’une pellicule d’or. Le magicien ne peut préparer et avoir en sa possession qu’une seule feuille de vélin enluminée à la fois. Il doit préparer personnellement cette feuille, y compris en écrivant le nom de la créature (le tout demande 8 à 32 heures ; la valeur du vélin, des plumes à écrire et de l’or est de 1.000 po environ ; la poudre de rubis, quant à elle, doit valoir au minimum 5.000 po et ceci pour chaque feuille préparée). Si le démon, diable ou tout autre être puissant d’un plan extérieur inférieur est présent, sous quelque forme que ce soit (sauf par la possession du corps d’une autre créature), le magicien peut commencer l’incantation. Dès qu’il commence la lecture du document, la créature nommée sera clouée sur place, sauf si elle réussit son jet de résistance à la magie (ajusté selon le niveau du magicien) et même si ce jet de résistance est réussi, le monstre se sentira très mal à l’aise et il a 90 % de chance de faire retraite vers son propre plan (ou sur un autre), s’il n’a pas été maintenu magiquement à l’endroit où il se trouve. En effet, il ne peut pas attaquer le magicien pendant que celui-ci lance le sort. Si le jet de résistance est raté, il se passe la chose suivante : la première partie de l’incantation dure un round pendant lequel le malaise de l’être nommé devient de plus en plus grand. Pendant le 2e round de l’incantation, l’être nommé ressent de vives douleurs et perd 1 point de vie par dé de vie qu’il possède ; à la fin de ce 2e round, la créature est blessée, moralement et physiquement. Pendant les 3e et les 4e rounds de l’incantation, la créature perd 50 % de ses points de vie, souffre horriblement et à la fin du 4e round se retrouve confinée en un endroit de son propre plan — elle y restera à souffrir pendant un nombre d’années égal au niveau du magicien qui a préparé le document. De toute évidence, une créature ainsi traitée deviendra l’ennemi juré du magicien responsable ; c’est pour cela que ce dernier peut répugner à finir l’incantation en préférant utiliser ce sort comme menace pour essayer de soumettre cet être. Chaque round de lecture a 25 % de chances cumulatives d’obliger la créature concernée à se soumettre, sans contrepartie.",
+        "description_texte": "Ce sort est une protection/punition très forte vis à vis des créatures puissantes des plans inférieurs (Abysses, Hadès, Enfers, etc.) ; mais pour le lancer, le magicien doit connaître le nom de l’être concerné. Avant de lancer l’incantation de ce sort, le magicien doit préparer une feuille de vélin enluminée, écrite avec une encre faite de poudre de rubis et de sang de démon de type I, II ou III mort. Les bords de cette feuille devront être recouverts d’une pellicule d’or. Le magicien ne peut préparer et avoir en sa possession qu’une seule feuille de vélin enluminée à la fois. Il doit préparer personnellement cette feuille, y compris en écrivant le nom de la créature (le tout demande 8 à 32 heures ; la valeur du vélin, des plumes à écrire et de l’or est de 1.000 po environ ; la poudre de rubis, quant à elle, doit valoir au minimum 5.000 po et ceci pour chaque feuille préparée). Si le démon, diable ou tout autre être puissant d’un plan extérieur inférieur est présent, sous quelque forme que ce soit (sauf par la possession du corps d’une autre créature), le magicien peut commencer l’incantation. Dès qu’il commence la lecture du document, la créature nommée sera clouée sur place, sauf si elle réussit son jet de résistance à la magie (ajusté selon le niveau du magicien) et même si ce jet de résistance est réussi, le monstre se sentira très mal à l’aise et il a 90 % de chance de faire retraite vers son propre plan (ou sur un autre), s’il n’a pas été maintenu magiquement à l’endroit où il se trouve. En effet, il ne peut pas attaquer le magicien pendant que celui-ci lance le sort. Si le jet de résistance est raté, il se passe la chose suivante : la première partie de l’incantation dure un round pendant lequel le malaise de l’être nommé devient de plus en plus grand. Pendant le 2e round de l’incantation, l’être nommé ressent de vives douleurs et perd 1 point de vie par dé de vie qu’il possède ; à la fin de ce 2e round, la créature est blessée, moralement et physiquement. Pendant les 3e et les 4e rounds de l’incantation, la créature perd 50 % de ses points de vie, souffre horriblement et à la fin du 4e round se retrouve confinée en un endroit de son propre plan — elle y restera à souffrir pendant un nombre d’années égal au niveau du magicien qui a préparé le document. De toute évidence, une créature ainsi traitée deviendra l’ennemi juré du magicien responsable ; c’est pour cela que ce dernier peut répugner à finir l’incantation en préférant utiliser ce sort comme menace pour essayer de soumettre cet être. Chaque round de lecture a 25 % de chances cumulatives d’obliger la créature concernée à se soumettre, sans contrepartie.",
+        "description_html": "<p>Ce sort est une protection/punition très forte vis à vis des créatures puissantes des plans inférieurs (Abysses, Hadès, Enfers, etc.) ; mais pour le lancer, le magicien doit connaître le nom de l’être concerné. Avant de lancer l’incantation de ce sort, le magicien doit préparer une feuille de vélin enluminée, écrite avec une encre faite de poudre de rubis et de sang de démon de type I, II ou III mort. Les bords de cette feuille devront être recouverts d’une pellicule d’or. Le magicien ne peut préparer et avoir en sa possession qu’une seule feuille de vélin enluminée à la fois. Il doit préparer personnellement cette feuille, y compris en écrivant le nom de la créature (le tout demande 8 à 32 heures ; la valeur du vélin, des plumes à écrire et de l’or est de 1.000 po environ ; la poudre de rubis, quant à elle, doit valoir au minimum 5.000 po et ceci pour chaque feuille préparée). Si le démon, diable ou tout autre être puissant d’un plan extérieur inférieur est présent, sous quelque forme que ce soit (sauf par la possession du corps d’une autre créature), le magicien peut commencer l’incantation. Dès qu’il commence la lecture du document, la créature nommée sera clouée sur place, sauf si elle réussit son jet de résistance à la magie (ajusté selon le niveau du magicien) et même si ce jet de résistance est réussi, le monstre se sentira très mal à l’aise et il a 90 % de chance de faire retraite vers son propre plan (ou sur un autre), s’il n’a pas été maintenu magiquement à l’endroit où il se trouve. En effet, il ne peut pas attaquer le magicien pendant que celui-ci lance le sort. Si le jet de résistance est raté, il se passe la chose suivante : la première partie de l’incantation dure un round pendant lequel le malaise de l’être nommé devient de plus en plus grand. Pendant le 2e round de l’incantation, l’être nommé ressent de vives douleurs et perd 1 point de vie par dé de vie qu’il possède ; à la fin de ce 2e round, la créature est blessée, moralement et physiquement. Pendant les 3e et les 4e rounds de l’incantation, la créature perd 50 % de ses points de vie, souffre horriblement et à la fin du 4e round se retrouve confinée en un endroit de son propre plan — elle y restera à souffrir pendant un nombre d’années égal au niveau du magicien qui a préparé le document. De toute évidence, une créature ainsi traitée deviendra l’ennemi juré du magicien responsable ; c’est pour cela que ce dernier peut répugner à finir l’incantation en préférant utiliser ce sort comme menace pour essayer de soumettre cet être. Chaque round de lecture a 25 % de chances cumulatives d’obliger la créature concernée à se soumettre, sans contrepartie.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Punition spirituelle",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:punition_spirituelle",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-punition-spirituelle.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.uH3bgupNrz2WzPpU",
+          "_id": "HT31owX4ouRy2gYM",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569430,
+            "modifiedTime": 1780340569430
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:51.551Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-punition-spirituelle.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.uH3bgupNrz2WzPpU",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569430,
+        "modifiedTime": 1780340569430,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "BB3iG4AMGXwqim5l",
+      "sort": 0
+    },
+    {
+      "name": "Quête magique",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-quete-magique.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Enchantement/Charme",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Une quête magique est en fait un ordre que lance le magicien, généralement sur un humain ou un humanoïde, afin que ce dernier lui rende un service ou s’abstienne de commettre certaines actions. La créature doit être intelligente, consciente et être sous sa propre volonté. Une quête magique ne peut pas contraindre une personne à se tuer, ni à accomplir des actions potentiellement dangereuses, voire mortelles ; mis à part ça, le magicien peut en fait ordonner pratiquement n’importe quoi. La personne affectée essaie d’accomplir sa quête jusqu’à ce qu’elle y arrive. Un échec fait que la créature tombe malade et meurt dans une période de 1 à 4 semaines. Si la personne dévie ou déforme les instructions du magicien, elle perd de 1 à 4 points de force par semaine, jusqu’à ce qu’elle cesse cette déviation. Une quête magique peut être annulée par un sort de souhait majeur, mais pas par une dissipation de la magie, ni par un désenvoûtement. Le Maître de Donjon donnera les détails supplémentaires concernant une quête magique, car sa formulation et son accomplissement sont délicats ; une quête magique mal formulée est annulée immédiatement (voir souhait majeur p.93).",
+        "onUse": "systems/add2e/scripts/sorts/magicien-quete-magique.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-quete-magique.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Enchantement/Charme",
+        "on_use": "systems/add2e/scripts/sorts/magicien-quete-magique.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Une quête magique est en fait un ordre que lance le magicien, généralement sur un humain ou un humanoïde, afin que ce dernier lui rende un service ou s’abstienne de commettre certaines actions. La créature doit être intelligente, consciente et être sous sa propre volonté. Une quête magique ne peut pas contraindre une personne à se tuer, ni à accomplir des actions potentiellement dangereuses, voire mortelles ; mis à part ça, le magicien peut en fait ordonner pratiquement n’importe quoi. La personne affectée essaie d’accomplir sa quête jusqu’à ce qu’elle y arrive. Un échec fait que la créature tombe malade et meurt dans une période de 1 à 4 semaines. Si la personne dévie ou déforme les instructions du magicien, elle perd de 1 à 4 points de force par semaine, jusqu’à ce qu’elle cesse cette déviation. Une quête magique peut être annulée par un sort de souhait majeur, mais pas par une dissipation de la magie, ni par un désenvoûtement. Le Maître de Donjon donnera les détails supplémentaires concernant une quête magique, car sa formulation et son accomplissement sont délicats ; une quête magique mal formulée est annulée immédiatement (voir souhait majeur p.93).",
+        "description_texte": "Une quête magique est en fait un ordre que lance le magicien, généralement sur un humain ou un humanoïde, afin que ce dernier lui rende un service ou s’abstienne de commettre certaines actions. La créature doit être intelligente, consciente et être sous sa propre volonté. Une quête magique ne peut pas contraindre une personne à se tuer, ni à accomplir des actions potentiellement dangereuses, voire mortelles ; mis à part ça, le magicien peut en fait ordonner pratiquement n’importe quoi. La personne affectée essaie d’accomplir sa quête jusqu’à ce qu’elle y arrive. Un échec fait que la créature tombe malade et meurt dans une période de 1 à 4 semaines. Si la personne dévie ou déforme les instructions du magicien, elle perd de 1 à 4 points de force par semaine, jusqu’à ce qu’elle cesse cette déviation. Une quête magique peut être annulée par un sort de souhait majeur, mais pas par une dissipation de la magie, ni par un désenvoûtement. Le Maître de Donjon donnera les détails supplémentaires concernant une quête magique, car sa formulation et son accomplissement sont délicats ; une quête magique mal formulée est annulée immédiatement (voir souhait majeur p.93).",
+        "description_html": "<p>Une quête magique est en fait un ordre que lance le magicien, généralement sur un humain ou un humanoïde, afin que ce dernier lui rende un service ou s’abstienne de commettre certaines actions. La créature doit être intelligente, consciente et être sous sa propre volonté. Une quête magique ne peut pas contraindre une personne à se tuer, ni à accomplir des actions potentiellement dangereuses, voire mortelles ; mis à part ça, le magicien peut en fait ordonner pratiquement n’importe quoi. La personne affectée essaie d’accomplir sa quête jusqu’à ce qu’elle y arrive. Un échec fait que la créature tombe malade et meurt dans une période de 1 à 4 semaines. Si la personne dévie ou déforme les instructions du magicien, elle perd de 1 à 4 points de force par semaine, jusqu’à ce qu’elle cesse cette déviation. Une quête magique peut être annulée par un sort de souhait majeur, mais pas par une dissipation de la magie, ni par un désenvoûtement. Le Maître de Donjon donnera les détails supplémentaires concernant une quête magique, car sa formulation et son accomplissement sont délicats ; une quête magique mal formulée est annulée immédiatement (voir souhait majeur p.93).</p>"
+      },
+      "effects": [
+        {
+          "name": "Quête magique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:quete_magique",
+                "type:utility",
+                "ecole:enchantement_charme"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-quete-magique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.1M9x40hZM7SpYumN",
+          "_id": "wzPYLHIGZ2qxNXZd",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567061,
+            "modifiedTime": 1780340567061
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:32:57.659Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-quete-magique.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.1M9x40hZM7SpYumN",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567061,
+        "modifiedTime": 1780340567061,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "pw5HMMNe9CTXYfHL",
+      "sort": 0
+    },
+    {
+      "name": "Répulsion",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-repulsion.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé, le magicien fait que les créatures qui se trouvent dans la zone d’effet s’éloignent de lui. La fuite de ces créatures se fait à la vitesse de 3\" par round ou à la même vitesse qu’elles avaient quand elles se dirigeaient vers le magicien. Les créatures repoussées continuent à s’éloigner pendant la durée d’un mouvement complet, même si elles sortent de la portée du sort. Les composantes matérielles sont une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-repulsion.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-repulsion.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-repulsion.js",
+        "composants_materiels": [
+          {
+            "slug": "paire_de_petites_barres_de_fer_magnetisees",
+            "nom": "Paire de petites barres de fer magnétisées",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Quand ce sort est lancé, le magicien fait que les créatures qui se trouvent dans la zone d’effet s’éloignent de lui. La fuite de ces créatures se fait à la vitesse de 3\" par round ou à la même vitesse qu’elles avaient quand elles se dirigeaient vers le magicien. Les créatures repoussées continuent à s’éloigner pendant la durée d’un mouvement complet, même si elles sortent de la portée du sort. Les composantes matérielles sont une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène.",
+        "description_texte": "Quand ce sort est lancé, le magicien fait que les créatures qui se trouvent dans la zone d’effet s’éloignent de lui. La fuite de ces créatures se fait à la vitesse de 3\" par round ou à la même vitesse qu’elles avaient quand elles se dirigeaient vers le magicien. Les créatures repoussées continuent à s’éloigner pendant la durée d’un mouvement complet, même si elles sortent de la portée du sort. Les composantes matérielles sont une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène.",
+        "description_html": "<p>Quand ce sort est lancé, le magicien fait que les créatures qui se trouvent dans la zone d’effet s’éloignent de lui. La fuite de ces créatures se fait à la vitesse de 3&quot; par round ou à la même vitesse qu’elles avaient quand elles se dirigeaient vers le magicien. Les créatures repoussées continuent à s’éloigner pendant la durée d’un mouvement complet, même si elles sortent de la portée du sort. Les composantes matérielles sont une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène.</p>"
+      },
+      "effects": [
+        {
+          "name": "Répulsion",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:repulsion",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-repulsion.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.3RoOvo18H9osHICP",
+          "_id": "0O2ERmzGDhbkg2so",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567096,
+            "modifiedTime": 1780340567096
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:08.313Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-repulsion.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.3RoOvo18H9osHICP",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567096,
+        "modifiedTime": 1780340567096,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "a6nrRQq6KcoLOCNY",
+      "sort": 0
+    },
+    {
+      "name": "Sphère glaciale d’Otiluke",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-sphere-glaciale-d-otiluke.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort aux pouvoirs puissants, offre plusieurs possibilités au magicien. Il peut créer un globe de matière d’une température de 0 absolu, température qui se diffuse au contact de l’eau ou d’un liquide principalement composé d’eau : le liquide gèle alors sur une épaisseur de 0,15 m et sur une surface de 9 m² par niveau du lanceur de sort. La glace reste pendant 1 round par niveau. Le magicien peut aussi faire jaillir de sa main un très fin rayon de froid, sur une distance de 1\" par niveau : ce rayon inflige 4 points de dégâts par niveau du lanceur de sort à la créature touchée, mais si elle réussit son jet de protection contre les sorts, elle ne subit aucun dégât (le rayon est si étroit qu’un jet de protection indique qu’il a manqué sa cible). Mais le rayon va jusqu’au bout de la distance autorisée et tout ce qu’il rencontre doit réussir un jet de protection (s’il y a lieu) ou subir des dégâts. Enfin, le magicien peut créer un petit globe de la taille d’une bille de fronde, fraiche au toucher mais pas dangereuse. Cette boule peut être lancée. Elle se brisera au contact en infligeant 4d6 points de dégâts aux créatures se trouvant dans un rayon de 3 m (la moitié si un jet de protection est réussi). Si la boule n’est pas lancée, à la main ou à la fronde, dans un délai de 1 round par niveau du magicien, elle explosera et infligera les dégâts prévus. Cette période de temps peut être utilisée pour se défaire de poursuivants, bien que cela puisse être dangereux pour le magicien et les gens qui l’accompagnent. La portée de cette bille est de 4\" si elle est lancée à la main ou identique à celle d’une fronde sinon. Les composantes matérielles dépendent du choix de l’utilisation du sort. Pour la première application, il faut une fine feuille de cristal de 6 cm² ; pour la deuxième, il faut un saphir blanc d’une valeur minimale de 1.000 po ; pour la troisième, le magicien a besoin d’un diamant de 1.000 po minimum. Toutes les composantes sont consommées et inutilisables après le lancement du sort. Si ce sort est utilisé sous l’eau, il est extrêmement dangereux dans sa première version. Le globe de matière au zéro absolu congèle instantanément l’eau qui entoure le magicien en un bloc de glace d’un volume de 1,3 m³ par niveau et pour une durée de 1 round par niveau. Si les secours ne sont pas immédiats, le magicien meurt asphyxié. Le bloc, bien entendu, flotte jusqu’à la surface dès sa formation.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-sphere-glaciale-d-otiluke.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-sphere-glaciale-d-otiluke.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-sphere-glaciale-d-otiluke.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort aux pouvoirs puissants, offre plusieurs possibilités au magicien. Il peut créer un globe de matière d’une température de 0 absolu, température qui se diffuse au contact de l’eau ou d’un liquide principalement composé d’eau : le liquide gèle alors sur une épaisseur de 0,15 m et sur une surface de 9 m² par niveau du lanceur de sort. La glace reste pendant 1 round par niveau. Le magicien peut aussi faire jaillir de sa main un très fin rayon de froid, sur une distance de 1\" par niveau : ce rayon inflige 4 points de dégâts par niveau du lanceur de sort à la créature touchée, mais si elle réussit son jet de protection contre les sorts, elle ne subit aucun dégât (le rayon est si étroit qu’un jet de protection indique qu’il a manqué sa cible). Mais le rayon va jusqu’au bout de la distance autorisée et tout ce qu’il rencontre doit réussir un jet de protection (s’il y a lieu) ou subir des dégâts. Enfin, le magicien peut créer un petit globe de la taille d’une bille de fronde, fraiche au toucher mais pas dangereuse. Cette boule peut être lancée. Elle se brisera au contact en infligeant 4d6 points de dégâts aux créatures se trouvant dans un rayon de 3 m (la moitié si un jet de protection est réussi). Si la boule n’est pas lancée, à la main ou à la fronde, dans un délai de 1 round par niveau du magicien, elle explosera et infligera les dégâts prévus. Cette période de temps peut être utilisée pour se défaire de poursuivants, bien que cela puisse être dangereux pour le magicien et les gens qui l’accompagnent. La portée de cette bille est de 4\" si elle est lancée à la main ou identique à celle d’une fronde sinon. Les composantes matérielles dépendent du choix de l’utilisation du sort. Pour la première application, il faut une fine feuille de cristal de 6 cm² ; pour la deuxième, il faut un saphir blanc d’une valeur minimale de 1.000 po ; pour la troisième, le magicien a besoin d’un diamant de 1.000 po minimum. Toutes les composantes sont consommées et inutilisables après le lancement du sort. Si ce sort est utilisé sous l’eau, il est extrêmement dangereux dans sa première version. Le globe de matière au zéro absolu congèle instantanément l’eau qui entoure le magicien en un bloc de glace d’un volume de 1,3 m³ par niveau et pour une durée de 1 round par niveau. Si les secours ne sont pas immédiats, le magicien meurt asphyxié. Le bloc, bien entendu, flotte jusqu’à la surface dès sa formation.",
+        "description_texte": "Ce sort aux pouvoirs puissants, offre plusieurs possibilités au magicien. Il peut créer un globe de matière d’une température de 0 absolu, température qui se diffuse au contact de l’eau ou d’un liquide principalement composé d’eau : le liquide gèle alors sur une épaisseur de 0,15 m et sur une surface de 9 m² par niveau du lanceur de sort. La glace reste pendant 1 round par niveau. Le magicien peut aussi faire jaillir de sa main un très fin rayon de froid, sur une distance de 1\" par niveau : ce rayon inflige 4 points de dégâts par niveau du lanceur de sort à la créature touchée, mais si elle réussit son jet de protection contre les sorts, elle ne subit aucun dégât (le rayon est si étroit qu’un jet de protection indique qu’il a manqué sa cible). Mais le rayon va jusqu’au bout de la distance autorisée et tout ce qu’il rencontre doit réussir un jet de protection (s’il y a lieu) ou subir des dégâts. Enfin, le magicien peut créer un petit globe de la taille d’une bille de fronde, fraiche au toucher mais pas dangereuse. Cette boule peut être lancée. Elle se brisera au contact en infligeant 4d6 points de dégâts aux créatures se trouvant dans un rayon de 3 m (la moitié si un jet de protection est réussi). Si la boule n’est pas lancée, à la main ou à la fronde, dans un délai de 1 round par niveau du magicien, elle explosera et infligera les dégâts prévus. Cette période de temps peut être utilisée pour se défaire de poursuivants, bien que cela puisse être dangereux pour le magicien et les gens qui l’accompagnent. La portée de cette bille est de 4\" si elle est lancée à la main ou identique à celle d’une fronde sinon. Les composantes matérielles dépendent du choix de l’utilisation du sort. Pour la première application, il faut une fine feuille de cristal de 6 cm² ; pour la deuxième, il faut un saphir blanc d’une valeur minimale de 1.000 po ; pour la troisième, le magicien a besoin d’un diamant de 1.000 po minimum. Toutes les composantes sont consommées et inutilisables après le lancement du sort. Si ce sort est utilisé sous l’eau, il est extrêmement dangereux dans sa première version. Le globe de matière au zéro absolu congèle instantanément l’eau qui entoure le magicien en un bloc de glace d’un volume de 1,3 m³ par niveau et pour une durée de 1 round par niveau. Si les secours ne sont pas immédiats, le magicien meurt asphyxié. Le bloc, bien entendu, flotte jusqu’à la surface dès sa formation.",
+        "description_html": "<p>Ce sort aux pouvoirs puissants, offre plusieurs possibilités au magicien. Il peut créer un globe de matière d’une température de 0 absolu, température qui se diffuse au contact de l’eau ou d’un liquide principalement composé d’eau : le liquide gèle alors sur une épaisseur de 0,15 m et sur une surface de 9 m² par niveau du lanceur de sort. La glace reste pendant 1 round par niveau. Le magicien peut aussi faire jaillir de sa main un très fin rayon de froid, sur une distance de 1&quot; par niveau : ce rayon inflige 4 points de dégâts par niveau du lanceur de sort à la créature touchée, mais si elle réussit son jet de protection contre les sorts, elle ne subit aucun dégât (le rayon est si étroit qu’un jet de protection indique qu’il a manqué sa cible). Mais le rayon va jusqu’au bout de la distance autorisée et tout ce qu’il rencontre doit réussir un jet de protection (s’il y a lieu) ou subir des dégâts. Enfin, le magicien peut créer un petit globe de la taille d’une bille de fronde, fraiche au toucher mais pas dangereuse. Cette boule peut être lancée. Elle se brisera au contact en infligeant 4d6 points de dégâts aux créatures se trouvant dans un rayon de 3 m (la moitié si un jet de protection est réussi). Si la boule n’est pas lancée, à la main ou à la fronde, dans un délai de 1 round par niveau du magicien, elle explosera et infligera les dégâts prévus. Cette période de temps peut être utilisée pour se défaire de poursuivants, bien que cela puisse être dangereux pour le magicien et les gens qui l’accompagnent. La portée de cette bille est de 4&quot; si elle est lancée à la main ou identique à celle d’une fronde sinon. Les composantes matérielles dépendent du choix de l’utilisation du sort. Pour la première application, il faut une fine feuille de cristal de 6 cm² ; pour la deuxième, il faut un saphir blanc d’une valeur minimale de 1.000 po ; pour la troisième, le magicien a besoin d’un diamant de 1.000 po minimum. Toutes les composantes sont consommées et inutilisables après le lancement du sort. Si ce sort est utilisé sous l’eau, il est extrêmement dangereux dans sa première version. Le globe de matière au zéro absolu congèle instantanément l’eau qui entoure le magicien en un bloc de glace d’un volume de 1,3 m³ par niveau et pour une durée de 1 round par niveau. Si les secours ne sont pas immédiats, le magicien meurt asphyxié. Le bloc, bien entendu, flotte jusqu’à la surface dès sa formation.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Sphère glaciale d’Otiluke",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:sphere_glaciale_d_otiluke",
+                "type:damage",
+                "sort:sphere_glaciale_dotiluke",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-sphere-glaciale-d-otiluke.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.4UmDuJZbxeyM6aZn",
+          "_id": "PYp7REmBuWfcSdnq",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567105,
+            "modifiedTime": 1780340567105
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:38.386Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-sphere-glaciale-d-otiluke.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.4UmDuJZbxeyM6aZn",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567105,
+        "modifiedTime": 1780340567105,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "3VZ2hwpNHAeU7JRp",
+      "sort": 0
+    },
+    {
+      "name": "Transformation de Tenser",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-transformation-de-tenser.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Pour les personnes qui ne sont pas au courant du pouvoir de ce sort, ce qu’elles voient est stupéfiant. En effet, le magicien se transforme de façon saisissante. Sa taille et sa forme augmentent dans des proportions énormes. Il devient alors une véritable machine de combat, un guerrier berserk (enragé) ! Les points de vie du magicien sont doublés et les dégâts qu’il subit sont d’abord ôtés de ces points supplémentaires. Donc, s’il ne subit pas plus de points de dégâts que le nombre de ses points de vie normaux, il n’en subit en fait aucun ; par contre, chaque point subit au-delà des points virtuels compte double. La classe d’armure obtient un bonus de 4 (une CA 10 devient une CA 6, une CA 9 devient 5, etc.). Toutes les attaques sont faites sur la table des guerriers, au même niveau que le magicien (c'est-àdire que le magicien utilise la table normalement réservée aux guerriers). Bien que le magicien ne puisse utiliser qu’une dague, les attaques qu’il porte ont un bonus de +2 sur les dégâts qu’elles infligent et il peut attaquer 2 fois par round. Le sort ne peut être interrompu volontairement ; il dure jusqu’à la fin de sa durée ou alors jusqu’à ce que tous les ennemis du magicien soient morts, que le magicien soit tué lui-même ou que le sort soit magiquement dissipé. La composante matérielle est une potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-transformation-de-tenser.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-transformation-de-tenser.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-transformation-de-tenser.js",
+        "composants_materiels": [
+          {
+            "slug": "potion_d_heroisme_ou_de_super_heroisme_que_le_magicien_doit_boire_pendant_qu_il_",
+            "nom": "Potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort",
+        "description_reelle": "Pour les personnes qui ne sont pas au courant du pouvoir de ce sort, ce qu’elles voient est stupéfiant. En effet, le magicien se transforme de façon saisissante. Sa taille et sa forme augmentent dans des proportions énormes. Il devient alors une véritable machine de combat, un guerrier berserk (enragé) ! Les points de vie du magicien sont doublés et les dégâts qu’il subit sont d’abord ôtés de ces points supplémentaires. Donc, s’il ne subit pas plus de points de dégâts que le nombre de ses points de vie normaux, il n’en subit en fait aucun ; par contre, chaque point subit au-delà des points virtuels compte double. La classe d’armure obtient un bonus de 4 (une CA 10 devient une CA 6, une CA 9 devient 5, etc.). Toutes les attaques sont faites sur la table des guerriers, au même niveau que le magicien (c'est-àdire que le magicien utilise la table normalement réservée aux guerriers). Bien que le magicien ne puisse utiliser qu’une dague, les attaques qu’il porte ont un bonus de +2 sur les dégâts qu’elles infligent et il peut attaquer 2 fois par round. Le sort ne peut être interrompu volontairement ; il dure jusqu’à la fin de sa durée ou alors jusqu’à ce que tous les ennemis du magicien soient morts, que le magicien soit tué lui-même ou que le sort soit magiquement dissipé. La composante matérielle est une potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort.",
+        "description_texte": "Pour les personnes qui ne sont pas au courant du pouvoir de ce sort, ce qu’elles voient est stupéfiant. En effet, le magicien se transforme de façon saisissante. Sa taille et sa forme augmentent dans des proportions énormes. Il devient alors une véritable machine de combat, un guerrier berserk (enragé) ! Les points de vie du magicien sont doublés et les dégâts qu’il subit sont d’abord ôtés de ces points supplémentaires. Donc, s’il ne subit pas plus de points de dégâts que le nombre de ses points de vie normaux, il n’en subit en fait aucun ; par contre, chaque point subit au-delà des points virtuels compte double. La classe d’armure obtient un bonus de 4 (une CA 10 devient une CA 6, une CA 9 devient 5, etc.). Toutes les attaques sont faites sur la table des guerriers, au même niveau que le magicien (c'est-àdire que le magicien utilise la table normalement réservée aux guerriers). Bien que le magicien ne puisse utiliser qu’une dague, les attaques qu’il porte ont un bonus de +2 sur les dégâts qu’elles infligent et il peut attaquer 2 fois par round. Le sort ne peut être interrompu volontairement ; il dure jusqu’à la fin de sa durée ou alors jusqu’à ce que tous les ennemis du magicien soient morts, que le magicien soit tué lui-même ou que le sort soit magiquement dissipé. La composante matérielle est une potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort.",
+        "description_html": "<p>Pour les personnes qui ne sont pas au courant du pouvoir de ce sort, ce qu’elles voient est stupéfiant. En effet, le magicien se transforme de façon saisissante. Sa taille et sa forme augmentent dans des proportions énormes. Il devient alors une véritable machine de combat, un guerrier berserk (enragé) ! Les points de vie du magicien sont doublés et les dégâts qu’il subit sont d’abord ôtés de ces points supplémentaires. Donc, s’il ne subit pas plus de points de dégâts que le nombre de ses points de vie normaux, il n’en subit en fait aucun ; par contre, chaque point subit au-delà des points virtuels compte double. La classe d’armure obtient un bonus de 4 (une CA 10 devient une CA 6, une CA 9 devient 5, etc.). Toutes les attaques sont faites sur la table des guerriers, au même niveau que le magicien (c&#x27;est-àdire que le magicien utilise la table normalement réservée aux guerriers). Bien que le magicien ne puisse utiliser qu’une dague, les attaques qu’il porte ont un bonus de +2 sur les dégâts qu’elles infligent et il peut attaquer 2 fois par round. Le sort ne peut être interrompu volontairement ; il dure jusqu’à la fin de sa durée ou alors jusqu’à ce que tous les ennemis du magicien soient morts, que le magicien soit tué lui-même ou que le sort soit magiquement dissipé. La composante matérielle est une potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Transformation de Tenser",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:transformation_de_tenser",
+                "type:condition",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-transformation-de-tenser.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.SGc0xhmGAddI4rG1",
+          "_id": "kkT4aGcNaZ8WT1sW",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567984,
+            "modifiedTime": 1780340567984
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:34:10.208Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-transformation-de-tenser.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.SGc0xhmGAddI4rG1",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567984,
+        "modifiedTime": 1780340567984,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "zbAIGNpgVHnYqTSo",
+      "sort": 0
+    },
+    {
+      "name": "Transmutation de pierre en chair",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-transmutation-de-pierre-en-chair.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort transforme tout type de pierre en chair (si l’objet de pierre était auparavant vivant, il revient à la vie, quelle que soit sa taille, avec son matériel, bien qu’il lui faille lancer un dé de pourcentage pour tester sa résistance aux traumatismes). De la pierre ordinaire est transformable en chair, avec un volume maximum de 0.25 m³ par niveau du magicien. En lançant le sort sur un bloc de pierre, le magicien peut choisir d’affecter une zone d’effet cylindrique de diamètre compris entre 30 et 90 cm ; un passage peut ainsi être fait. L’inverse transforme n’importe quelle chair en pierre, avec les mêmes modalités que le sort non-inversé. Le sort inversé autorise la créature à lancer un jet de protection. Les composantes matérielles sont une pincée de terre et une goutte de sang ; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-transmutation-de-pierre-en-chair.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-transmutation-de-pierre-en-chair.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/magicien-transmutation-de-pierre-en-chair.js",
+        "composants_materiels": [
+          {
+            "slug": "goutte_de_sang",
+            "nom": "Goutte de sang",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "chaux",
+            "nom": "Chaux",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont une pincée de terre et une goutte de sang ; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Ce sort transforme tout type de pierre en chair (si l’objet de pierre était auparavant vivant, il revient à la vie, quelle que soit sa taille, avec son matériel, bien qu’il lui faille lancer un dé de pourcentage pour tester sa résistance aux traumatismes). De la pierre ordinaire est transformable en chair, avec un volume maximum de 0.25 m³ par niveau du magicien. En lançant le sort sur un bloc de pierre, le magicien peut choisir d’affecter une zone d’effet cylindrique de diamètre compris entre 30 et 90 cm ; un passage peut ainsi être fait. L’inverse transforme n’importe quelle chair en pierre, avec les mêmes modalités que le sort non-inversé. Le sort inversé autorise la créature à lancer un jet de protection. Les composantes matérielles sont une pincée de terre et une goutte de sang ; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.",
+        "description_texte": "Ce sort transforme tout type de pierre en chair (si l’objet de pierre était auparavant vivant, il revient à la vie, quelle que soit sa taille, avec son matériel, bien qu’il lui faille lancer un dé de pourcentage pour tester sa résistance aux traumatismes). De la pierre ordinaire est transformable en chair, avec un volume maximum de 0.25 m³ par niveau du magicien. En lançant le sort sur un bloc de pierre, le magicien peut choisir d’affecter une zone d’effet cylindrique de diamètre compris entre 30 et 90 cm ; un passage peut ainsi être fait. L’inverse transforme n’importe quelle chair en pierre, avec les mêmes modalités que le sort non-inversé. Le sort inversé autorise la créature à lancer un jet de protection. Les composantes matérielles sont une pincée de terre et une goutte de sang ; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.",
+        "description_html": "<p>Ce sort transforme tout type de pierre en chair (si l’objet de pierre était auparavant vivant, il revient à la vie, quelle que soit sa taille, avec son matériel, bien qu’il lui faille lancer un dé de pourcentage pour tester sa résistance aux traumatismes). De la pierre ordinaire est transformable en chair, avec un volume maximum de 0.25 m³ par niveau du magicien. En lançant le sort sur un bloc de pierre, le magicien peut choisir d’affecter une zone d’effet cylindrique de diamètre compris entre 30 et 90 cm ; un passage peut ainsi être fait. L’inverse transforme n’importe quelle chair en pierre, avec les mêmes modalités que le sort non-inversé. Le sort inversé autorise la créature à lancer un jet de protection. Les composantes matérielles sont une pincée de terre et une goutte de sang ; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.</p>"
+      },
+      "effects": [
+        {
+          "name": "Transmutation de pierre en chair",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:transmutation_de_pierre_en_chair",
+                "type:terrain",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-transmutation-de-pierre-en-chair.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.JuvBBcG4jrwhlB1B",
+          "_id": "bYeC2tCIzG6b5Fqg",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567866,
+            "modifiedTime": 1780340567866
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:34:17.954Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-transmutation-de-pierre-en-chair.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.JuvBBcG4jrwhlB1B",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567866,
+        "modifiedTime": 1780340567866,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "Rayebc1FcgH7qAzl",
+      "sort": 0
+    },
+    {
+      "name": "Transvision",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-transvision.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Divination",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Grâce à ce sort, le magicien peut rendre une section de métal, de pierre ou de bois transparente comme du verre. Normalement, il peut affecter une épaisseur de 10 cm de métal, 1,80 m de pierre, ou 6 mètres de bois. Le sort ne fonctionne pas avec le plomb, l’or et le platine. Le magicien peut choisir de rendre une paroi transparente uniquement à son regard. Il peut aussi créer une fenêtre dont la transparence ne fonctionne que pour une face (principe des glaces sans tain). Il peut affecter une surface de 0,90 m de large sur 0,60 m de haut. La résistance de la section rendue transparente reste la même que celle de la substance d’origine. La composante matérielle est un petit morceau de verre ou de cristal.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-transvision.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-transvision.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Divination",
+        "on_use": "systems/add2e/scripts/sorts/magicien-transvision.js",
+        "composants_materiels": [
+          {
+            "slug": "petit_morceau_de_verre_ou_de_cristal",
+            "nom": "Petit morceau de verre ou de cristal",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "petit morceau de verre ou de cristal",
+        "description_reelle": "Grâce à ce sort, le magicien peut rendre une section de métal, de pierre ou de bois transparente comme du verre. Normalement, il peut affecter une épaisseur de 10 cm de métal, 1,80 m de pierre, ou 6 mètres de bois. Le sort ne fonctionne pas avec le plomb, l’or et le platine. Le magicien peut choisir de rendre une paroi transparente uniquement à son regard. Il peut aussi créer une fenêtre dont la transparence ne fonctionne que pour une face (principe des glaces sans tain). Il peut affecter une surface de 0,90 m de large sur 0,60 m de haut. La résistance de la section rendue transparente reste la même que celle de la substance d’origine. La composante matérielle est un petit morceau de verre ou de cristal.",
+        "description_texte": "Grâce à ce sort, le magicien peut rendre une section de métal, de pierre ou de bois transparente comme du verre. Normalement, il peut affecter une épaisseur de 10 cm de métal, 1,80 m de pierre, ou 6 mètres de bois. Le sort ne fonctionne pas avec le plomb, l’or et le platine. Le magicien peut choisir de rendre une paroi transparente uniquement à son regard. Il peut aussi créer une fenêtre dont la transparence ne fonctionne que pour une face (principe des glaces sans tain). Il peut affecter une surface de 0,90 m de large sur 0,60 m de haut. La résistance de la section rendue transparente reste la même que celle de la substance d’origine. La composante matérielle est un petit morceau de verre ou de cristal.",
+        "description_html": "<p>Grâce à ce sort, le magicien peut rendre une section de métal, de pierre ou de bois transparente comme du verre. Normalement, il peut affecter une épaisseur de 10 cm de métal, 1,80 m de pierre, ou 6 mètres de bois. Le sort ne fonctionne pas avec le plomb, l’or et le platine. Le magicien peut choisir de rendre une paroi transparente uniquement à son regard. Il peut aussi créer une fenêtre dont la transparence ne fonctionne que pour une face (principe des glaces sans tain). Il peut affecter une surface de 0,90 m de large sur 0,60 m de haut. La résistance de la section rendue transparente reste la même que celle de la substance d’origine. La composante matérielle est un petit morceau de verre ou de cristal.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Transvision",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:transvision",
+                "type:detection",
+                "ecole:divination"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-transvision.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.oXEMMFVyeM1UyGN7",
+          "_id": "HT7o0imWhuSUDqMD",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568877,
+            "modifiedTime": 1780340568877
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:34:18.835Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-transvision.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.oXEMMFVyeM1UyGN7",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568877,
+        "modifiedTime": 1780340568877,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "099z397bV3y5hUDt",
+      "sort": 0
+    },
+    {
+      "name": "Vigiles et sentinelles",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-vigiles-et-sentinelles.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Abjuration",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort particulier et puissant est généralement utilisé par les magiciens pour défendre leur place forte. Les effets suivants se produisent : 1) Tous les couloirs deviennent brumeux : la visibilité est réduite à 3 m. 2) Toutes les portes sont magiquement verrouillées (verrou magique) 3) Une porte par niveau du magicien est masquée par une illusion : elle semble alors faire partie du mur 4) Les escaliers sont remplis de toiles d’araignées, du sol au plafond 5) Quand se présente un choix de direction, un sort mineur de type confusion fait que les intrus ont 50 % de chance de croire qu’ils prennent la direction opposée 6) Toute la zone dégage une aura magique 7) Le magicien peut placer un des pouvoirs magiques suivants : A. Lumières dansantes dans 4 couloirs, ou B. Bouche magique dans 2 endroits, ou C. Nuage puant dans 2 endroits, ou D. Rafale de vent dans un couloir ou une salle, ou E. Suggestion dans un endroit. Les effets 3 et 7 ne fonctionnent que si le magicien a une connaissance parfaite des lieux situés dans la zone d’effet. Une dissipation de la magie peut annuler une fonction, au hasard, en dissipant l’effet. Un désenvoûtement est inefficace. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent. SORTS DE NIVEAU 7",
+        "onUse": "systems/add2e/scripts/sorts/magicien-vigiles-et-sentinelles.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-vigiles-et-sentinelles.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Abjuration",
+        "on_use": "systems/add2e/scripts/sorts/magicien-vigiles-et-sentinelles.js",
+        "composants_materiels": [
+          {
+            "slug": "peu_de_soufre",
+            "nom": "Peu de soufre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "peu_de_sang_d_ombre_des_roches",
+            "nom": "Peu de sang d’ombre des roches",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "petite_baguette_d_argent",
+            "nom": "Petite baguette d’argent",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "Ce sort particulier et puissant est généralement utilisé par les magiciens pour défendre leur place forte. Les effets suivants se produisent : 1) Tous les couloirs deviennent brumeux : la visibilité est réduite à 3 m. 2) Toutes les portes sont magiquement verrouillées (verrou magique) 3) Une porte par niveau du magicien est masquée par une illusion : elle semble alors faire partie du mur 4) Les escaliers sont remplis de toiles d’araignées, du sol au plafond 5) Quand se présente un choix de direction, un sort mineur de type confusion fait que les intrus ont 50 % de chance de croire qu’ils prennent la direction opposée 6) Toute la zone dégage une aura magique 7) Le magicien peut placer un des pouvoirs magiques suivants : A. Lumières dansantes dans 4 couloirs, ou B. Bouche magique dans 2 endroits, ou C. Nuage puant dans 2 endroits, ou D. Rafale de vent dans un couloir ou une salle, ou E. Suggestion dans un endroit. Les effets 3 et 7 ne fonctionnent que si le magicien a une connaissance parfaite des lieux situés dans la zone d’effet. Une dissipation de la magie peut annuler une fonction, au hasard, en dissipant l’effet. Un désenvoûtement est inefficace. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent. SORTS DE NIVEAU 7",
+        "description_texte": "Ce sort particulier et puissant est généralement utilisé par les magiciens pour défendre leur place forte. Les effets suivants se produisent : 1) Tous les couloirs deviennent brumeux : la visibilité est réduite à 3 m. 2) Toutes les portes sont magiquement verrouillées (verrou magique) 3) Une porte par niveau du magicien est masquée par une illusion : elle semble alors faire partie du mur 4) Les escaliers sont remplis de toiles d’araignées, du sol au plafond 5) Quand se présente un choix de direction, un sort mineur de type confusion fait que les intrus ont 50 % de chance de croire qu’ils prennent la direction opposée 6) Toute la zone dégage une aura magique 7) Le magicien peut placer un des pouvoirs magiques suivants : A. Lumières dansantes dans 4 couloirs, ou B. Bouche magique dans 2 endroits, ou C. Nuage puant dans 2 endroits, ou D. Rafale de vent dans un couloir ou une salle, ou E. Suggestion dans un endroit. Les effets 3 et 7 ne fonctionnent que si le magicien a une connaissance parfaite des lieux situés dans la zone d’effet. Une dissipation de la magie peut annuler une fonction, au hasard, en dissipant l’effet. Un désenvoûtement est inefficace. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent. SORTS DE NIVEAU 7",
+        "description_html": "<p>Ce sort particulier et puissant est généralement utilisé par les magiciens pour défendre leur place forte. Les effets suivants se produisent : 1) Tous les couloirs deviennent brumeux : la visibilité est réduite à 3 m. 2) Toutes les portes sont magiquement verrouillées (verrou magique) 3) Une porte par niveau du magicien est masquée par une illusion : elle semble alors faire partie du mur 4) Les escaliers sont remplis de toiles d’araignées, du sol au plafond 5) Quand se présente un choix de direction, un sort mineur de type confusion fait que les intrus ont 50 % de chance de croire qu’ils prennent la direction opposée 6) Toute la zone dégage une aura magique 7) Le magicien peut placer un des pouvoirs magiques suivants : A. Lumières dansantes dans 4 couloirs, ou B. Bouche magique dans 2 endroits, ou C. Nuage puant dans 2 endroits, ou D. Rafale de vent dans un couloir ou une salle, ou E. Suggestion dans un endroit. Les effets 3 et 7 ne fonctionnent que si le magicien a une connaissance parfaite des lieux situés dans la zone d’effet. Une dissipation de la magie peut annuler une fonction, au hasard, en dissipant l’effet. Un désenvoûtement est inefficace. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent. SORTS DE NIVEAU 7</p>"
+      },
+      "effects": [
+        {
+          "name": "Vigiles et sentinelles",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:6",
+                "sort:vigiles_et_sentinelles",
+                "type:protection",
+                "ecole:abjuration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-vigiles-et-sentinelles.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.XSLb6oUeBoUxB2s8",
+          "_id": "3KgFtgZVMBtyEC0U",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568063,
+            "modifiedTime": 1780340568063
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:34:27.650Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-vigiles-et-sentinelles.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 6",
+          "sourceFolderId": "vHe9KHsp95Vxftcc",
+          "exportedAt": "2026-05-22T09:57:29.904Z"
+        }
+      },
+      "folder": "3ncQM5L1dORmBNy8",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.XSLb6oUeBoUxB2s8",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568063,
+        "modifiedTime": 1780340568063,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "QBSmwoiVg1fTiVbR",
+      "sort": 0
+    }
+  ]
+}

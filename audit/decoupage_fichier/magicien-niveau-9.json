@@ -1,0 +1,1688 @@
+{
+  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "sourceFile": "fvtt-spells-all.json",
+  "group": {
+    "classe": "magicien",
+    "niveau": 9,
+    "key": "magicien-niveau-9",
+    "count": 11
+  },
+  "folders": [
+    {
+      "name": "Magicien",
+      "type": "Item",
+      "folder": "XnEirDAQ59Ik1Ohg",
+      "sorting": "a",
+      "_id": "UNadGYy33KgFskLj",
+      "description": "",
+      "sort": 800000,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566746,
+        "modifiedTime": 1780340566746,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Niveau 9",
+      "type": "Item",
+      "folder": "UNadGYy33KgFskLj",
+      "sorting": "a",
+      "_id": "5Rp0DV7LnqW8ykU6",
+      "description": "",
+      "sort": 0,
+      "color": null,
+      "flags": {},
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340566738,
+        "modifiedTime": 1780340566738,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      }
+    },
+    {
+      "name": "Sorts",
+      "type": "Item",
+      "color": null,
+      "_id": "XnEirDAQ59Ik1Ohg",
+      "description": "",
+      "folder": null,
+      "sorting": "a",
+      "sort": 0,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340564509,
+        "modifiedTime": 1780340564509,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "items": [
+    {
+      "name": "Arrêt du temps",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-arret-du-temps.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "En lançant ce sort, le magicien provoque un arrêt du temps dans la zone d’effet ; vue de l’extérieur, la sphère semble luire un instant. Pendant la durée du sort, le magicien peut bouger et agir librement dans la zone d’effet, alors que les autres créatures sont immobilisées ; le magicien ne connait pas la durée exacte du sort. Aucune créature ne peut entrer dans la sphère sans être immobilisée et si le magicien quitte cette sphère, le sort est immédiatement annulé. Quand le sort s’arrête, le magicien agit de nouveau dans le temps normal.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-arret-du-temps.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-arret-du-temps.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-arret-du-temps.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "En lançant ce sort, le magicien provoque un arrêt du temps dans la zone d’effet ; vue de l’extérieur, la sphère semble luire un instant. Pendant la durée du sort, le magicien peut bouger et agir librement dans la zone d’effet, alors que les autres créatures sont immobilisées ; le magicien ne connait pas la durée exacte du sort. Aucune créature ne peut entrer dans la sphère sans être immobilisée et si le magicien quitte cette sphère, le sort est immédiatement annulé. Quand le sort s’arrête, le magicien agit de nouveau dans le temps normal.",
+        "description_texte": "En lançant ce sort, le magicien provoque un arrêt du temps dans la zone d’effet ; vue de l’extérieur, la sphère semble luire un instant. Pendant la durée du sort, le magicien peut bouger et agir librement dans la zone d’effet, alors que les autres créatures sont immobilisées ; le magicien ne connait pas la durée exacte du sort. Aucune créature ne peut entrer dans la sphère sans être immobilisée et si le magicien quitte cette sphère, le sort est immédiatement annulé. Quand le sort s’arrête, le magicien agit de nouveau dans le temps normal.",
+        "description_html": "<p>En lançant ce sort, le magicien provoque un arrêt du temps dans la zone d’effet ; vue de l’extérieur, la sphère semble luire un instant. Pendant la durée du sort, le magicien peut bouger et agir librement dans la zone d’effet, alors que les autres créatures sont immobilisées ; le magicien ne connait pas la durée exacte du sort. Aucune créature ne peut entrer dans la sphère sans être immobilisée et si le magicien quitte cette sphère, le sort est immédiatement annulé. Quand le sort s’arrête, le magicien agit de nouveau dans le temps normal.</p>"
+      },
+      "effects": [
+        {
+          "name": "Arrêt du temps",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:arret_du_temps",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-arret-du-temps.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.4XsTUVbq56BQChPv",
+          "_id": "qIUMRhjAAAB186sj",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567107,
+            "modifiedTime": 1780340567107
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:28:30.978Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-arret-du-temps.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.4XsTUVbq56BQChPv",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567107,
+        "modifiedTime": 1780340567107,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "tWKvW4ahVQ2ANiFR",
+      "sort": 0
+    },
+    {
+      "name": "Emprisonnement",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-emprisonnement.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Quand ce sort est lancé et que la victime est touchée, cette dernière est enfermée, dans un état d’animation suspendue (voir stase temporelle p.94), dans une petite sphère, loin sous la surface de la terre. La victime reste à cet endroit, jusqu’à ce que l’inverse du sort soit lancé avec le nom de la victime et l’histoire de son passé. Une recherche magique par boule de cristal, par localisation d'objets ou par un autre moyen similaire ne révélera rien de la situation d’emprisonnement. L’inverse, libération, fera apparaître la victime là où elle a été affectée par le sort. Il y a 10 % de chance que de 1 à 100 créatures soient libérées en même temps si le magicien ne connait pas exactement le nom de la victime et l’histoire de son passé. Le sort ne fonctionne que si le magicien connait le nom et le passé de la victime.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-emprisonnement.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-emprisonnement.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-emprisonnement.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Quand ce sort est lancé et que la victime est touchée, cette dernière est enfermée, dans un état d’animation suspendue (voir stase temporelle p.94), dans une petite sphère, loin sous la surface de la terre. La victime reste à cet endroit, jusqu’à ce que l’inverse du sort soit lancé avec le nom de la victime et l’histoire de son passé. Une recherche magique par boule de cristal, par localisation d'objets ou par un autre moyen similaire ne révélera rien de la situation d’emprisonnement. L’inverse, libération, fera apparaître la victime là où elle a été affectée par le sort. Il y a 10 % de chance que de 1 à 100 créatures soient libérées en même temps si le magicien ne connait pas exactement le nom de la victime et l’histoire de son passé. Le sort ne fonctionne que si le magicien connait le nom et le passé de la victime.",
+        "description_texte": "Quand ce sort est lancé et que la victime est touchée, cette dernière est enfermée, dans un état d’animation suspendue (voir stase temporelle p.94), dans une petite sphère, loin sous la surface de la terre. La victime reste à cet endroit, jusqu’à ce que l’inverse du sort soit lancé avec le nom de la victime et l’histoire de son passé. Une recherche magique par boule de cristal, par localisation d'objets ou par un autre moyen similaire ne révélera rien de la situation d’emprisonnement. L’inverse, libération, fera apparaître la victime là où elle a été affectée par le sort. Il y a 10 % de chance que de 1 à 100 créatures soient libérées en même temps si le magicien ne connait pas exactement le nom de la victime et l’histoire de son passé. Le sort ne fonctionne que si le magicien connait le nom et le passé de la victime.",
+        "description_html": "<p>Quand ce sort est lancé et que la victime est touchée, cette dernière est enfermée, dans un état d’animation suspendue (voir stase temporelle p.94), dans une petite sphère, loin sous la surface de la terre. La victime reste à cet endroit, jusqu’à ce que l’inverse du sort soit lancé avec le nom de la victime et l’histoire de son passé. Une recherche magique par boule de cristal, par localisation d&#x27;objets ou par un autre moyen similaire ne révélera rien de la situation d’emprisonnement. L’inverse, libération, fera apparaître la victime là où elle a été affectée par le sort. Il y a 10 % de chance que de 1 à 100 créatures soient libérées en même temps si le magicien ne connait pas exactement le nom de la victime et l’histoire de son passé. Le sort ne fonctionne que si le magicien connait le nom et le passé de la victime.</p>"
+      },
+      "effects": [
+        {
+          "name": "Emprisonnement",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:emprisonnement",
+                "type:condition",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-emprisonnement.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fVQcgShgiYogbv4o",
+          "_id": "BbZwz7hsn9cdg9ny",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568732,
+            "modifiedTime": 1780340568732
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:29:34.914Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-emprisonnement.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.fVQcgShgiYogbv4o",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568732,
+        "modifiedTime": 1780340568732,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "iykW82ri4ir2kJbY",
+      "sort": 0
+    },
+    {
+      "name": "Hétéromorphisme",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-heteromorphisme.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Grâce à ce sort, le magicien peut prendre la forme de n’importe quelle créature, sauf celle d’un demi-dieu, d’un diable majeur, d’un prince-démon, d’un démon majeur ou d’un dragon unique. Le magicien devient la créature qu’il désire et possède toutes ses habilités, sauf celles en rapport avec l’intelligence car l’esprit de la créature est celui du magicien. Il peut par exemple se transformer en griffon, puis en éfrit et ensuite en titan, etc. Quelque soit la forme qu’il prend, le lanceur de sort conserve ses propres points de vie. Chaque changement demande 1 segment. Aucun test de résistance aux traumatismes n’est nécessaire. Exemple : un archimage, en combat, prend la forme d’un feu follet et, quand cette forme ne lui sert plus à rien, il se transforme en golem de pierre et s’enfuit. Poursuivi, le magicien sous forme de golem se transforme en puce qui se cache sur un cheval, jusqu’à ce qu’il le délaisse et se transforme en buisson. Si le magicien est détecté sous cette forme, il peut prendre celle d’un dragon, d’une mare ou de n’importe quoi d’autre. La composante matérielle est une petite couronne de jade d’une valeur minimale de 5.000 po, qui se brisera à la fin du sort. Pendant la durée du sort, cette couronne reste à l’endroit où a eu lieu d’incantation ; si elle est brisée avant la fin du sort, ce dernier est annulé.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-heteromorphisme.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-heteromorphisme.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-heteromorphisme.js",
+        "composants_materiels": [
+          {
+            "slug": "petite_couronne_de_jade_d_une_valeur_minimale_de_5",
+            "nom": "Petite couronne de jade d’une valeur minimale de 5",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "petite couronne de jade d’une valeur minimale de 5",
+        "description_reelle": "Grâce à ce sort, le magicien peut prendre la forme de n’importe quelle créature, sauf celle d’un demi-dieu, d’un diable majeur, d’un prince-démon, d’un démon majeur ou d’un dragon unique. Le magicien devient la créature qu’il désire et possède toutes ses habilités, sauf celles en rapport avec l’intelligence car l’esprit de la créature est celui du magicien. Il peut par exemple se transformer en griffon, puis en éfrit et ensuite en titan, etc. Quelque soit la forme qu’il prend, le lanceur de sort conserve ses propres points de vie. Chaque changement demande 1 segment. Aucun test de résistance aux traumatismes n’est nécessaire. Exemple : un archimage, en combat, prend la forme d’un feu follet et, quand cette forme ne lui sert plus à rien, il se transforme en golem de pierre et s’enfuit. Poursuivi, le magicien sous forme de golem se transforme en puce qui se cache sur un cheval, jusqu’à ce qu’il le délaisse et se transforme en buisson. Si le magicien est détecté sous cette forme, il peut prendre celle d’un dragon, d’une mare ou de n’importe quoi d’autre. La composante matérielle est une petite couronne de jade d’une valeur minimale de 5.000 po, qui se brisera à la fin du sort. Pendant la durée du sort, cette couronne reste à l’endroit où a eu lieu d’incantation ; si elle est brisée avant la fin du sort, ce dernier est annulé.",
+        "description_texte": "Grâce à ce sort, le magicien peut prendre la forme de n’importe quelle créature, sauf celle d’un demi-dieu, d’un diable majeur, d’un prince-démon, d’un démon majeur ou d’un dragon unique. Le magicien devient la créature qu’il désire et possède toutes ses habilités, sauf celles en rapport avec l’intelligence car l’esprit de la créature est celui du magicien. Il peut par exemple se transformer en griffon, puis en éfrit et ensuite en titan, etc. Quelque soit la forme qu’il prend, le lanceur de sort conserve ses propres points de vie. Chaque changement demande 1 segment. Aucun test de résistance aux traumatismes n’est nécessaire. Exemple : un archimage, en combat, prend la forme d’un feu follet et, quand cette forme ne lui sert plus à rien, il se transforme en golem de pierre et s’enfuit. Poursuivi, le magicien sous forme de golem se transforme en puce qui se cache sur un cheval, jusqu’à ce qu’il le délaisse et se transforme en buisson. Si le magicien est détecté sous cette forme, il peut prendre celle d’un dragon, d’une mare ou de n’importe quoi d’autre. La composante matérielle est une petite couronne de jade d’une valeur minimale de 5.000 po, qui se brisera à la fin du sort. Pendant la durée du sort, cette couronne reste à l’endroit où a eu lieu d’incantation ; si elle est brisée avant la fin du sort, ce dernier est annulé.",
+        "description_html": "<p>Grâce à ce sort, le magicien peut prendre la forme de n’importe quelle créature, sauf celle d’un demi-dieu, d’un diable majeur, d’un prince-démon, d’un démon majeur ou d’un dragon unique. Le magicien devient la créature qu’il désire et possède toutes ses habilités, sauf celles en rapport avec l’intelligence car l’esprit de la créature est celui du magicien. Il peut par exemple se transformer en griffon, puis en éfrit et ensuite en titan, etc. Quelque soit la forme qu’il prend, le lanceur de sort conserve ses propres points de vie. Chaque changement demande 1 segment. Aucun test de résistance aux traumatismes n’est nécessaire. Exemple : un archimage, en combat, prend la forme d’un feu follet et, quand cette forme ne lui sert plus à rien, il se transforme en golem de pierre et s’enfuit. Poursuivi, le magicien sous forme de golem se transforme en puce qui se cache sur un cheval, jusqu’à ce qu’il le délaisse et se transforme en buisson. Si le magicien est détecté sous cette forme, il peut prendre celle d’un dragon, d’une mare ou de n’importe quoi d’autre. La composante matérielle est une petite couronne de jade d’une valeur minimale de 5.000 po, qui se brisera à la fin du sort. Pendant la durée du sort, cette couronne reste à l’endroit où a eu lieu d’incantation ; si elle est brisée avant la fin du sort, ce dernier est annulé.</p>",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+      },
+      "effects": [
+        {
+          "name": "Hétéromorphisme",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:heteromorphisme",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-heteromorphisme.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.7ZaGRf0eBfBMpL9P",
+          "_id": "0HB1kOgvSYE8fxlp",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567151,
+            "modifiedTime": 1780340567151
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:09.009Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-heteromorphisme.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.7ZaGRf0eBfBMpL9P",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567151,
+        "modifiedTime": 1780340567151,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "SaSj5P1VI9svAYyC",
+      "sort": 0
+    },
+    {
+      "name": "Invocation de Monstre VII",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-vii.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort invoque 1 ou 2 monstres de niveau 7, apparaissant dans un délai de 1 round après son lancement ou un monstre de niveau 8 qui apparait 2 rounds après le lancement. Voir invocation de monstre I pour plus de détails.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-vii.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-vii.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-vii.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort invoque 1 ou 2 monstres de niveau 7, apparaissant dans un délai de 1 round après son lancement ou un monstre de niveau 8 qui apparait 2 rounds après le lancement. Voir invocation de monstre I pour plus de détails.",
+        "description_texte": "Ce sort invoque 1 ou 2 monstres de niveau 7, apparaissant dans un délai de 1 round après son lancement ou un monstre de niveau 8 qui apparait 2 rounds après le lancement. Voir invocation de monstre I pour plus de détails.",
+        "description_html": "<p>Ce sort invoque 1 ou 2 monstres de niveau 7, apparaissant dans un délai de 1 round après son lancement ou un monstre de niveau 8 qui apparait 2 rounds après le lancement. Voir invocation de monstre I pour plus de détails.</p>",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Invocation de Monstre VII",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:invocation_de_monstre_vii",
+                "type:summon",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-vii.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.2OHeZPvYIvCtLlKB",
+          "_id": "woiqtIkGTSaJaIYy",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567076,
+            "modifiedTime": 1780340567076
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:30:44.990Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-vii.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.2OHeZPvYIvCtLlKB",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567076,
+        "modifiedTime": 1780340567076,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "ahm7oemgFvV85Lkp",
+      "sort": 0
+    },
+    {
+      "name": "Main broyante de Bigby",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-main-broyante-de-bigby.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Cette énorme main est similaire aux sorts de main de force de Bigby et poing de Bigby (voir p.85 et 91). La main broyante de Bigby est sous le contrôle mental du magicien ; elle peut agripper et comprimer un adversaire. Les dégâts de cette constriction sont les suivants : 1er round 1d10 points de dégâts 2e et 3e round 2d10 points de dégâts 4e round et suivants 4d10 points de dégâts La main a autant de points de vie que le magicien qui a lancé le sort ; comme toutes les autres formes de mains de Bigby, sa CA est la même que celle du magicien et elle ne peut être touchée que par des armes magiques. Les composantes matérielles sont un gant en peau de serpent et une coquille d’œuf. MOT DE POUVOIR : « MORT » (Conjuration/Appel) Niveau : 9 Composantes : V Portée : ¼\"/niveau Temps d'incantation : 1 segment Durée : permanente Jet de protection : aucun Zone d'effet : 2\" de diamètre Explication/Description : quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée du sort et dans la zone d’effet meurent. Ce sort tue 1 créature avec 60 points de vie maximum ou bien 2 créatures ou plus avec 10 points de vie maximum chacune pour un total de 120 points de vie. La décision d’affecter une ou plusieurs créatures doit être annoncée, ainsi que la portée choisie et l’endroit correspondant au centre de la zone d’effet.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-main-broyante-de-bigby.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-main-broyante-de-bigby.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/magicien-main-broyante-de-bigby.js",
+        "composants_materiels": [
+          {
+            "slug": "gant_en_peau_de_serpent",
+            "nom": "Gant en peau de serpent",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "coquille_d_oeuf",
+            "nom": "Coquille d’œuf",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "Les composantes matérielles sont un gant en peau de serpent et une coquille d’œuf.",
+        "description_reelle": "Cette énorme main est similaire aux sorts de main de force de Bigby et poing de Bigby (voir p.85 et 91). La main broyante de Bigby est sous le contrôle mental du magicien ; elle peut agripper et comprimer un adversaire. Les dégâts de cette constriction sont les suivants : 1er round 1d10 points de dégâts 2e et 3e round 2d10 points de dégâts 4e round et suivants 4d10 points de dégâts La main a autant de points de vie que le magicien qui a lancé le sort ; comme toutes les autres formes de mains de Bigby, sa CA est la même que celle du magicien et elle ne peut être touchée que par des armes magiques. Les composantes matérielles sont un gant en peau de serpent et une coquille d’œuf. MOT DE POUVOIR : « MORT » (Conjuration/Appel) Niveau : 9 Composantes : V Portée : ¼\"/niveau Temps d'incantation : 1 segment Durée : permanente Jet de protection : aucun Zone d'effet : 2\" de diamètre Explication/Description : quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée du sort et dans la zone d’effet meurent. Ce sort tue 1 créature avec 60 points de vie maximum ou bien 2 créatures ou plus avec 10 points de vie maximum chacune pour un total de 120 points de vie. La décision d’affecter une ou plusieurs créatures doit être annoncée, ainsi que la portée choisie et l’endroit correspondant au centre de la zone d’effet.",
+        "description_texte": "Cette énorme main est similaire aux sorts de main de force de Bigby et poing de Bigby (voir p.85 et 91). La main broyante de Bigby est sous le contrôle mental du magicien ; elle peut agripper et comprimer un adversaire. Les dégâts de cette constriction sont les suivants : 1er round 1d10 points de dégâts 2e et 3e round 2d10 points de dégâts 4e round et suivants 4d10 points de dégâts La main a autant de points de vie que le magicien qui a lancé le sort ; comme toutes les autres formes de mains de Bigby, sa CA est la même que celle du magicien et elle ne peut être touchée que par des armes magiques. Les composantes matérielles sont un gant en peau de serpent et une coquille d’œuf. MOT DE POUVOIR : « MORT » (Conjuration/Appel) Niveau : 9 Composantes : V Portée : ¼\"/niveau Temps d'incantation : 1 segment Durée : permanente Jet de protection : aucun Zone d'effet : 2\" de diamètre Explication/Description : quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée du sort et dans la zone d’effet meurent. Ce sort tue 1 créature avec 60 points de vie maximum ou bien 2 créatures ou plus avec 10 points de vie maximum chacune pour un total de 120 points de vie. La décision d’affecter une ou plusieurs créatures doit être annoncée, ainsi que la portée choisie et l’endroit correspondant au centre de la zone d’effet.",
+        "description_html": "<p>Cette énorme main est similaire aux sorts de main de force de Bigby et poing de Bigby (voir p.85 et 91). La main broyante de Bigby est sous le contrôle mental du magicien ; elle peut agripper et comprimer un adversaire. Les dégâts de cette constriction sont les suivants : 1er round 1d10 points de dégâts 2e et 3e round 2d10 points de dégâts 4e round et suivants 4d10 points de dégâts La main a autant de points de vie que le magicien qui a lancé le sort ; comme toutes les autres formes de mains de Bigby, sa CA est la même que celle du magicien et elle ne peut être touchée que par des armes magiques. Les composantes matérielles sont un gant en peau de serpent et une coquille d’œuf. MOT DE POUVOIR : « MORT » (Conjuration/Appel) Niveau : 9 Composantes : V Portée : ¼&quot;/niveau Temps d&#x27;incantation : 1 segment Durée : permanente Jet de protection : aucun Zone d&#x27;effet : 2&quot; de diamètre Explication/Description : quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée du sort et dans la zone d’effet meurent. Ce sort tue 1 créature avec 60 points de vie maximum ou bien 2 créatures ou plus avec 10 points de vie maximum chacune pour un total de 120 points de vie. La décision d’affecter une ou plusieurs créatures doit être annoncée, ainsi que la portée choisie et l’endroit correspondant au centre de la zone d’effet.</p>"
+      },
+      "effects": [
+        {
+          "name": "Main broyante de Bigby",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:main_broyante_de_bigby",
+                "type:damage",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-main-broyante-de-bigby.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.qwK0DdplXCUID8Jb",
+          "_id": "qshiPzvIuuGrjhST",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569380,
+            "modifiedTime": 1780340569380
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:06.366Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-main-broyante-de-bigby.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.qwK0DdplXCUID8Jb",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569380,
+        "modifiedTime": 1780340569380,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "pDjjfXthimcJF8L7",
+      "sort": 0
+    },
+    {
+      "name": "Mot de pouvoir : « mort »",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-mot-de-pouvoir-mort.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Nécromancie",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Mot de pouvoir : « mort » produit un effet offensif de magicien. Les dégâts, jets de sauvegarde, résistances, immunités et effets secondaires doivent être appliqués selon la règle du sort et l’arbitrage du MD.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-mort.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-mort.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Nécromancie",
+        "on_use": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-mort.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": true,
+        "description_reelle": "Mot de pouvoir : « mort » produit un effet offensif de magicien. Les dégâts, jets de sauvegarde, résistances, immunités et effets secondaires doivent être appliqués selon la règle du sort et l’arbitrage du MD.",
+        "description_texte": "Mot de pouvoir : « mort » produit un effet offensif de magicien. Les dégâts, jets de sauvegarde, résistances, immunités et effets secondaires doivent être appliqués selon la règle du sort et l’arbitrage du MD.",
+        "description_html": "<p>Mot de pouvoir : « mort » produit un effet offensif de magicien. Les dégâts, jets de sauvegarde, résistances, immunités et effets secondaires doivent être appliqués selon la règle du sort et l’arbitrage du MD.</p>",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_verification_recommandee": true
+      },
+      "effects": [
+        {
+          "name": "Mot de pouvoir : « mort »",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:mot_de_pouvoir_mort",
+                "type:damage",
+                "ecole:necromancie"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-mot-de-pouvoir-mort.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.Q3QQNab3wlcscqyg",
+          "_id": "3StUTMZegL47genN",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567960,
+            "modifiedTime": 1780340567960
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:34.798Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-mort.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.Q3QQNab3wlcscqyg",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567960,
+        "modifiedTime": 1780340567960,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "4WhGYPz6t6SX2ImV",
+      "sort": 0
+    },
+    {
+      "name": "Nuée de météores",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-nuee-de-meteores.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Évocation",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Une nuée de météores est un sort très puissant et spectaculaire, similaire au sort boule de feu dans beaucoup d’aspects. Le magicien peut créer : soit 4 sphères de 60 cm de diamètre, soit 8 sphères de 30 cm de diamètre. Ces boules jaillissent en même temps de la main grande ouverte du lanceur de sort et se déplacent en ligne droite dans la direction qu’il désire, dans les limites de la portée autorisée. Toute créature se trouvant sur le chemin de ces sphères subit des dégâts sans jet de protection. Les météores laissent derrière eux une gerbe d’étincelles et chacun explose comme une boule de feu (voir p.73). Les grandes sphères infligent chacune 10d4 points de dégâts en explosant. Chaque boule agit sur une zone de 3\" de diamètre, chacune étant séparée de l’autre de 2\", le tout formant un carré ou un losange ; la zone au centre de ces météores est exposée au 4 explosions. Les 8 petites sphères infligent chacune 5d4 points de dégâts sur une zone de 1 ½\" de diamètre. La distance séparant chacune des petites sphères est de 1\", le tout formant un carré dans un losange ou vice-versa. Le centre subira les effets de 4 sphères et plusieurs zones périphériques subiront les effets de 2 sphères conjuguées. Un jet de protection pour chaque zone d’effet indique si les dégâts subis sont pleins ou réduits de moitié. L’impact de ces boules, grandes ou petites, n’autorise, quant à lui, aucun jet de protection. Ce sort ne peut pas être utilisé sous l’eau.",
+        "onUse": "systems/add2e/scripts/sorts/magicien-nuee-de-meteores.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-nuee-de-meteores.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Évocation",
+        "on_use": "systems/add2e/scripts/sorts/magicien-nuee-de-meteores.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Une nuée de météores est un sort très puissant et spectaculaire, similaire au sort boule de feu dans beaucoup d’aspects. Le magicien peut créer : soit 4 sphères de 60 cm de diamètre, soit 8 sphères de 30 cm de diamètre. Ces boules jaillissent en même temps de la main grande ouverte du lanceur de sort et se déplacent en ligne droite dans la direction qu’il désire, dans les limites de la portée autorisée. Toute créature se trouvant sur le chemin de ces sphères subit des dégâts sans jet de protection. Les météores laissent derrière eux une gerbe d’étincelles et chacun explose comme une boule de feu (voir p.73). Les grandes sphères infligent chacune 10d4 points de dégâts en explosant. Chaque boule agit sur une zone de 3\" de diamètre, chacune étant séparée de l’autre de 2\", le tout formant un carré ou un losange ; la zone au centre de ces météores est exposée au 4 explosions. Les 8 petites sphères infligent chacune 5d4 points de dégâts sur une zone de 1 ½\" de diamètre. La distance séparant chacune des petites sphères est de 1\", le tout formant un carré dans un losange ou vice-versa. Le centre subira les effets de 4 sphères et plusieurs zones périphériques subiront les effets de 2 sphères conjuguées. Un jet de protection pour chaque zone d’effet indique si les dégâts subis sont pleins ou réduits de moitié. L’impact de ces boules, grandes ou petites, n’autorise, quant à lui, aucun jet de protection. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_texte": "Une nuée de météores est un sort très puissant et spectaculaire, similaire au sort boule de feu dans beaucoup d’aspects. Le magicien peut créer : soit 4 sphères de 60 cm de diamètre, soit 8 sphères de 30 cm de diamètre. Ces boules jaillissent en même temps de la main grande ouverte du lanceur de sort et se déplacent en ligne droite dans la direction qu’il désire, dans les limites de la portée autorisée. Toute créature se trouvant sur le chemin de ces sphères subit des dégâts sans jet de protection. Les météores laissent derrière eux une gerbe d’étincelles et chacun explose comme une boule de feu (voir p.73). Les grandes sphères infligent chacune 10d4 points de dégâts en explosant. Chaque boule agit sur une zone de 3\" de diamètre, chacune étant séparée de l’autre de 2\", le tout formant un carré ou un losange ; la zone au centre de ces météores est exposée au 4 explosions. Les 8 petites sphères infligent chacune 5d4 points de dégâts sur une zone de 1 ½\" de diamètre. La distance séparant chacune des petites sphères est de 1\", le tout formant un carré dans un losange ou vice-versa. Le centre subira les effets de 4 sphères et plusieurs zones périphériques subiront les effets de 2 sphères conjuguées. Un jet de protection pour chaque zone d’effet indique si les dégâts subis sont pleins ou réduits de moitié. L’impact de ces boules, grandes ou petites, n’autorise, quant à lui, aucun jet de protection. Ce sort ne peut pas être utilisé sous l’eau.",
+        "description_html": "<p>Une nuée de météores est un sort très puissant et spectaculaire, similaire au sort boule de feu dans beaucoup d’aspects. Le magicien peut créer : soit 4 sphères de 60 cm de diamètre, soit 8 sphères de 30 cm de diamètre. Ces boules jaillissent en même temps de la main grande ouverte du lanceur de sort et se déplacent en ligne droite dans la direction qu’il désire, dans les limites de la portée autorisée. Toute créature se trouvant sur le chemin de ces sphères subit des dégâts sans jet de protection. Les météores laissent derrière eux une gerbe d’étincelles et chacun explose comme une boule de feu (voir p.73). Les grandes sphères infligent chacune 10d4 points de dégâts en explosant. Chaque boule agit sur une zone de 3&quot; de diamètre, chacune étant séparée de l’autre de 2&quot;, le tout formant un carré ou un losange ; la zone au centre de ces météores est exposée au 4 explosions. Les 8 petites sphères infligent chacune 5d4 points de dégâts sur une zone de 1 ½&quot; de diamètre. La distance séparant chacune des petites sphères est de 1&quot;, le tout formant un carré dans un losange ou vice-versa. Le centre subira les effets de 4 sphères et plusieurs zones périphériques subiront les effets de 2 sphères conjuguées. Un jet de protection pour chaque zone d’effet indique si les dégâts subis sont pleins ou réduits de moitié. L’impact de ces boules, grandes ou petites, n’autorise, quant à lui, aucun jet de protection. Ce sort ne peut pas être utilisé sous l’eau.</p>"
+      },
+      "effects": [
+        {
+          "name": "Nuée de météores",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:nuee_de_meteores",
+                "type:damage",
+                "ecole:evocation"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-nuee-de-meteores.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.9wDddiZ0iynLKAuS",
+          "_id": "w7B7gjH4wTEHw7zo",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340567182,
+            "modifiedTime": 1780340567182
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:31:51.760Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-nuee-de-meteores.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.9wDddiZ0iynLKAuS",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340567182,
+        "modifiedTime": 1780340567182,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "lbCWMQBWvtqGvi65",
+      "sort": 0
+    },
+    {
+      "name": "Seuil",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-seuil.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Conjuration/Appel",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 7 de clerc seuil (voir p.53).",
+        "onUse": "systems/add2e/scripts/sorts/magicien-seuil.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-seuil.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Conjuration/Appel",
+        "on_use": "systems/add2e/scripts/sorts/magicien-seuil.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Excepté ci-dessus, ce sort est le même que le sort de niveau 7 de clerc seuil (voir p.53).",
+        "description_texte": "Excepté ci-dessus, ce sort est le même que le sort de niveau 7 de clerc seuil (voir p.53).",
+        "description_html": "<p>Excepté ci-dessus, ce sort est le même que le sort de niveau 7 de clerc seuil (voir p.53).</p>"
+      },
+      "effects": [
+        {
+          "name": "Seuil",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:seuil",
+                "type:movement",
+                "ecole:conjuration_appel"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-seuil.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.fzF2vAkLCR7bJZv5",
+          "_id": "2Iu5N8vTzPNR2LEb",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568745,
+            "modifiedTime": 1780340568745
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:24.265Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-seuil.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ],
+          "scriptFlatNoSubdir": true
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.fzF2vAkLCR7bJZv5",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568745,
+        "modifiedTime": 1780340568745,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "MmczinwlejcFyrC0",
+      "sort": 0
+    },
+    {
+      "name": "Souhait majeur",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-souhait-majeur.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort est une version plus puissante du sort souhait mineur (voir p.89). S’il est utilisé pour changer la réalité en ce qui concerne les points de vie perdus par le groupe, pour ramener un personnage à la vie ou pour s’échapper d’une situation difficile en transportant le lanceur de sort (et ses éventuels compagnons) d’un endroit à un autre, le magicien ne subira aucun désagrément. Les autres formes de souhait majeur affaibliront le lanceur de sort (–3 en force) et nécessiteront de 2 à 8 jours de repos au lit pour effacer la fatigue provoquée par le lancement de ce sort. Quelle que soit la formulation du souhait majeur, le Maître de Donjon s’en tiendra mot pour mot à ce qui a été demandé. Le Maître de Donjon est seul juge en ce qui concerne le bien-fondé de certains souhaits ; des souhaits trop ambitieux ou trop puissants peuvent être ramenés à un degré moindre si le MD le juge ainsi. L’incantation de ce sort fait vieillir le lanceur de sort de 3 ans. 93 SORTS D'ILLUSIONNISTE (NIVEAU 1) SORTS DE MAGICIEN (NIVEAU 9)",
+        "onUse": "systems/add2e/scripts/sorts/magicien-souhait-majeur.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-souhait-majeur.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-souhait-majeur.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort est une version plus puissante du sort souhait mineur (voir p.89). S’il est utilisé pour changer la réalité en ce qui concerne les points de vie perdus par le groupe, pour ramener un personnage à la vie ou pour s’échapper d’une situation difficile en transportant le lanceur de sort (et ses éventuels compagnons) d’un endroit à un autre, le magicien ne subira aucun désagrément. Les autres formes de souhait majeur affaibliront le lanceur de sort (–3 en force) et nécessiteront de 2 à 8 jours de repos au lit pour effacer la fatigue provoquée par le lancement de ce sort. Quelle que soit la formulation du souhait majeur, le Maître de Donjon s’en tiendra mot pour mot à ce qui a été demandé. Le Maître de Donjon est seul juge en ce qui concerne le bien-fondé de certains souhaits ; des souhaits trop ambitieux ou trop puissants peuvent être ramenés à un degré moindre si le MD le juge ainsi. L’incantation de ce sort fait vieillir le lanceur de sort de 3 ans. 93 SORTS D'ILLUSIONNISTE (NIVEAU 1) SORTS DE MAGICIEN (NIVEAU 9)",
+        "description_texte": "Ce sort est une version plus puissante du sort souhait mineur (voir p.89). S’il est utilisé pour changer la réalité en ce qui concerne les points de vie perdus par le groupe, pour ramener un personnage à la vie ou pour s’échapper d’une situation difficile en transportant le lanceur de sort (et ses éventuels compagnons) d’un endroit à un autre, le magicien ne subira aucun désagrément. Les autres formes de souhait majeur affaibliront le lanceur de sort (–3 en force) et nécessiteront de 2 à 8 jours de repos au lit pour effacer la fatigue provoquée par le lancement de ce sort. Quelle que soit la formulation du souhait majeur, le Maître de Donjon s’en tiendra mot pour mot à ce qui a été demandé. Le Maître de Donjon est seul juge en ce qui concerne le bien-fondé de certains souhaits ; des souhaits trop ambitieux ou trop puissants peuvent être ramenés à un degré moindre si le MD le juge ainsi. L’incantation de ce sort fait vieillir le lanceur de sort de 3 ans. 93 SORTS D'ILLUSIONNISTE (NIVEAU 1) SORTS DE MAGICIEN (NIVEAU 9)",
+        "description_html": "<p>Ce sort est une version plus puissante du sort souhait mineur (voir p.89). S’il est utilisé pour changer la réalité en ce qui concerne les points de vie perdus par le groupe, pour ramener un personnage à la vie ou pour s’échapper d’une situation difficile en transportant le lanceur de sort (et ses éventuels compagnons) d’un endroit à un autre, le magicien ne subira aucun désagrément. Les autres formes de souhait majeur affaibliront le lanceur de sort (–3 en force) et nécessiteront de 2 à 8 jours de repos au lit pour effacer la fatigue provoquée par le lancement de ce sort. Quelle que soit la formulation du souhait majeur, le Maître de Donjon s’en tiendra mot pour mot à ce qui a été demandé. Le Maître de Donjon est seul juge en ce qui concerne le bien-fondé de certains souhaits ; des souhaits trop ambitieux ou trop puissants peuvent être ramenés à un degré moindre si le MD le juge ainsi. L’incantation de ce sort fait vieillir le lanceur de sort de 3 ans. 93 SORTS D&#x27;ILLUSIONNISTE (NIVEAU 1) SORTS DE MAGICIEN (NIVEAU 9)</p>"
+      },
+      "effects": [
+        {
+          "name": "Souhait majeur",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:souhait_majeur",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-souhait-majeur.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.ifWNTpxkA6fsDeE0",
+          "_id": "fLF3nLJtoXAEVNgh",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568788,
+            "modifiedTime": 1780340568788
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:37.680Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-souhait-majeur.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.ifWNTpxkA6fsDeE0",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568788,
+        "modifiedTime": 1780340568788,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "9Uvnif7ea2lFaGpn",
+      "sort": 0
+    },
+    {
+      "name": "Sphère prismatique",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-sphere-prismatique.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "Ce sort permet au magicien de créer un globe opaque composé de sphères lumineuses et multicolores, qui l’entoure et le protège de toutes les formes d’attaque. Cette sphère scintillante émet toutes les couleurs du spectre et chaque couleur a un pouvoir et un rôle différents. Toute créature avec moins de 8 dés de vie sera aveuglée par les couleurs pendant 2d4 tours. Ce phénomène est immobile et seul le magicien peut entrer et sortir de ce globe sans subir de dégâts. Seule l’hémisphère supérieur de cette boule est visible, puisque le lanceur de sort en est au centre ; l’hémisphère inférieur est caché par la surface sur laquelle se tient le magicien. Les couleurs et les effets de la sphère prismatique, ainsi que les méthodes d’annulation de chacune de ces sphères de couleur, sont : Couleur Ordre Effets Sort annulé par Rouge 1er Protège des projectiles non magiques, inflige 10 points de dégâts Cône de froid Orange 2e Protège des projectiles magiques, inflige 20 points de dégâts Rafale de vent Jaune 3e Protège des poisons, gaz et de la pétrification, inflige 40 points de dégâts Désintégration Vert 4e Protège de tous les souffles, jet de protection contre le poison ou mort Passe-muraille Projectile magique Bleu 5e Protège des localisations, des détections et des pouvoirs psis ; jet de protection contre la pétrification ou transformation en pierre Indigo 6e Protège de tous les sorts magiques, jet de protection contre baguette ou folie Lumière éternelle Violet 7e Champ de force de protection, jet de protection contre les sorts ou envoyé sur un autre plan Dissipation de la magie Une baguette d'annulation détruira une sphère prismatique. Dans les autres cas, tout ce qui pénétrera dans la sphère sera détruit, toute créature sujette aux effets de chaque couleur subira des dégâts et les effets ci-dessus, c.-à-d. 70 points de dégâts, la mort, la pétrification, l'insanité et/ou le transport sur un autre plan : seuls les 4 derniers effets donnent droit à un jet de protection. Chaque globe de couleur peut être détruit par l’attaque magique appropriée, mais ces globes doivent être détruits dans l’ordre (le 1er avant le 2e, etc.).",
+        "onUse": "systems/add2e/scripts/sorts/magicien-sphere-prismatique.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-sphere-prismatique.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-sphere-prismatique.js",
+        "composants_materiels": [],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "Ce sort permet au magicien de créer un globe opaque composé de sphères lumineuses et multicolores, qui l’entoure et le protège de toutes les formes d’attaque. Cette sphère scintillante émet toutes les couleurs du spectre et chaque couleur a un pouvoir et un rôle différents. Toute créature avec moins de 8 dés de vie sera aveuglée par les couleurs pendant 2d4 tours. Ce phénomène est immobile et seul le magicien peut entrer et sortir de ce globe sans subir de dégâts. Seule l’hémisphère supérieur de cette boule est visible, puisque le lanceur de sort en est au centre ; l’hémisphère inférieur est caché par la surface sur laquelle se tient le magicien. Les couleurs et les effets de la sphère prismatique, ainsi que les méthodes d’annulation de chacune de ces sphères de couleur, sont : Couleur Ordre Effets Sort annulé par Rouge 1er Protège des projectiles non magiques, inflige 10 points de dégâts Cône de froid Orange 2e Protège des projectiles magiques, inflige 20 points de dégâts Rafale de vent Jaune 3e Protège des poisons, gaz et de la pétrification, inflige 40 points de dégâts Désintégration Vert 4e Protège de tous les souffles, jet de protection contre le poison ou mort Passe-muraille Projectile magique Bleu 5e Protège des localisations, des détections et des pouvoirs psis ; jet de protection contre la pétrification ou transformation en pierre Indigo 6e Protège de tous les sorts magiques, jet de protection contre baguette ou folie Lumière éternelle Violet 7e Champ de force de protection, jet de protection contre les sorts ou envoyé sur un autre plan Dissipation de la magie Une baguette d'annulation détruira une sphère prismatique. Dans les autres cas, tout ce qui pénétrera dans la sphère sera détruit, toute créature sujette aux effets de chaque couleur subira des dégâts et les effets ci-dessus, c.-à-d. 70 points de dégâts, la mort, la pétrification, l'insanité et/ou le transport sur un autre plan : seuls les 4 derniers effets donnent droit à un jet de protection. Chaque globe de couleur peut être détruit par l’attaque magique appropriée, mais ces globes doivent être détruits dans l’ordre (le 1er avant le 2e, etc.).",
+        "description_texte": "Ce sort permet au magicien de créer un globe opaque composé de sphères lumineuses et multicolores, qui l’entoure et le protège de toutes les formes d’attaque. Cette sphère scintillante émet toutes les couleurs du spectre et chaque couleur a un pouvoir et un rôle différents. Toute créature avec moins de 8 dés de vie sera aveuglée par les couleurs pendant 2d4 tours. Ce phénomène est immobile et seul le magicien peut entrer et sortir de ce globe sans subir de dégâts. Seule l’hémisphère supérieur de cette boule est visible, puisque le lanceur de sort en est au centre ; l’hémisphère inférieur est caché par la surface sur laquelle se tient le magicien. Les couleurs et les effets de la sphère prismatique, ainsi que les méthodes d’annulation de chacune de ces sphères de couleur, sont : Couleur Ordre Effets Sort annulé par Rouge 1er Protège des projectiles non magiques, inflige 10 points de dégâts Cône de froid Orange 2e Protège des projectiles magiques, inflige 20 points de dégâts Rafale de vent Jaune 3e Protège des poisons, gaz et de la pétrification, inflige 40 points de dégâts Désintégration Vert 4e Protège de tous les souffles, jet de protection contre le poison ou mort Passe-muraille Projectile magique Bleu 5e Protège des localisations, des détections et des pouvoirs psis ; jet de protection contre la pétrification ou transformation en pierre Indigo 6e Protège de tous les sorts magiques, jet de protection contre baguette ou folie Lumière éternelle Violet 7e Champ de force de protection, jet de protection contre les sorts ou envoyé sur un autre plan Dissipation de la magie Une baguette d'annulation détruira une sphère prismatique. Dans les autres cas, tout ce qui pénétrera dans la sphère sera détruit, toute créature sujette aux effets de chaque couleur subira des dégâts et les effets ci-dessus, c.-à-d. 70 points de dégâts, la mort, la pétrification, l'insanité et/ou le transport sur un autre plan : seuls les 4 derniers effets donnent droit à un jet de protection. Chaque globe de couleur peut être détruit par l’attaque magique appropriée, mais ces globes doivent être détruits dans l’ordre (le 1er avant le 2e, etc.).",
+        "description_html": "<p>Ce sort permet au magicien de créer un globe opaque composé de sphères lumineuses et multicolores, qui l’entoure et le protège de toutes les formes d’attaque. Cette sphère scintillante émet toutes les couleurs du spectre et chaque couleur a un pouvoir et un rôle différents. Toute créature avec moins de 8 dés de vie sera aveuglée par les couleurs pendant 2d4 tours. Ce phénomène est immobile et seul le magicien peut entrer et sortir de ce globe sans subir de dégâts. Seule l’hémisphère supérieur de cette boule est visible, puisque le lanceur de sort en est au centre ; l’hémisphère inférieur est caché par la surface sur laquelle se tient le magicien. Les couleurs et les effets de la sphère prismatique, ainsi que les méthodes d’annulation de chacune de ces sphères de couleur, sont : Couleur Ordre Effets Sort annulé par Rouge 1er Protège des projectiles non magiques, inflige 10 points de dégâts Cône de froid Orange 2e Protège des projectiles magiques, inflige 20 points de dégâts Rafale de vent Jaune 3e Protège des poisons, gaz et de la pétrification, inflige 40 points de dégâts Désintégration Vert 4e Protège de tous les souffles, jet de protection contre le poison ou mort Passe-muraille Projectile magique Bleu 5e Protège des localisations, des détections et des pouvoirs psis ; jet de protection contre la pétrification ou transformation en pierre Indigo 6e Protège de tous les sorts magiques, jet de protection contre baguette ou folie Lumière éternelle Violet 7e Champ de force de protection, jet de protection contre les sorts ou envoyé sur un autre plan Dissipation de la magie Une baguette d&#x27;annulation détruira une sphère prismatique. Dans les autres cas, tout ce qui pénétrera dans la sphère sera détruit, toute créature sujette aux effets de chaque couleur subira des dégâts et les effets ci-dessus, c.-à-d. 70 points de dégâts, la mort, la pétrification, l&#x27;insanité et/ou le transport sur un autre plan : seuls les 4 derniers effets donnent droit à un jet de protection. Chaque globe de couleur peut être détruit par l’attaque magique appropriée, mais ces globes doivent être détruits dans l’ordre (le 1er avant le 2e, etc.).</p>"
+      },
+      "effects": [
+        {
+          "name": "Sphère prismatique",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:sphere_prismatique",
+                "type:utility",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-sphere-prismatique.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.gbL34JodsooPJ1jj",
+          "_id": "6V2BlbwoCOydpT10",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340568755,
+            "modifiedTime": 1780340568755
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:38.648Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-sphere-prismatique.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.gbL34JodsooPJ1jj",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340568755,
+        "modifiedTime": 1780340568755,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "UNXXLQYQfLs7yKMJ",
+      "sort": 0
+    },
+    {
+      "name": "Stase temporelle",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/magicien-stase-temporelle.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "école": "Altération",
+        "portee": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "cible": {
+          "valeur": "selon description",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "Spécial",
+        "composantes": "V, S, M",
+        "temps_incantation": {
+          "valeur": "spécial",
+          "unite": "texte"
+        },
+        "description": "En lançant ce sort, le magicien place la créature affectée dans un état d’animation suspendue. Cette stase temporelle signifie que la victime ne vieillit plus. Ses fonctions corporelles s’arrêtent virtuellement. Cette situation persiste à moins qu’une dissipation de la magie ne soit lancée ou que l’inverse du sort, rétablissement temporel, annule les effets de celui-ci. L’inverse ne demande qu’une composante verbale, un seul mot. La composante matérielle de la stase temporelle est une poudre composée de diamant, d’émeraude, de rubis et de saphir : une pierre de chaque type étant nécessaire. LES SORTS D’ILLUSIONNISTE Notes sur les sorts d’illusionniste : Il existe moins de sorts d’illusionniste que de sorts de magicien et quelquesuns sont communs aux deux classes de personnages. Au 7e niveau, la liste comprend tous les sorts de niveau 1 de magicien, certains d’entre eux sont considérés comme n’étant qu’un seul sort de niveau 7. Les pouvoirs d’illusion de cette classe augmentent avec la progression de niveau ; les fantasme tiennent une place importante et d’autres types de sorts peuvent se révéler efficaces (cf. tueur fantasmagorique, ombres, jet prismatique). Il existe certains sorts d’illusionniste qui ne comportent pas de composante verbale (V). De plus, la composante matérielle est souvent moins importante que pour les autres classes, la seule exception étant le sort vision qui demande un matériel important. SORTS DE NIVEAU 1",
+        "onUse": "systems/add2e/scripts/sorts/magicien-stase-temporelle.js",
+        "onuse": "systems/add2e/scripts/sorts/magicien-stase-temporelle.js",
+        "portée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "durée": {
+          "valeur": "spéciale",
+          "unite": "texte"
+        },
+        "ecole": "Altération",
+        "on_use": "systems/add2e/scripts/sorts/magicien-stase-temporelle.js",
+        "composants_materiels": [
+          {
+            "slug": "poudre_composee_de_diamant",
+            "nom": "Poudre composée de diamant",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
+        "composants_materiels_a_renseigner": false,
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "composants_materiels_source": "La composante matérielle de la stase temporelle est une poudre composée de diamant, d’émeraude, de rubis et de saphir : une pierre de chaque type étant nécessaire.",
+        "composants_materiels_verification_recommandee": true,
+        "description_reelle": "En lançant ce sort, le magicien place la créature affectée dans un état d’animation suspendue. Cette stase temporelle signifie que la victime ne vieillit plus. Ses fonctions corporelles s’arrêtent virtuellement. Cette situation persiste à moins qu’une dissipation de la magie ne soit lancée ou que l’inverse du sort, rétablissement temporel, annule les effets de celui-ci. L’inverse ne demande qu’une composante verbale, un seul mot. La composante matérielle de la stase temporelle est une poudre composée de diamant, d’émeraude, de rubis et de saphir : une pierre de chaque type étant nécessaire. LES SORTS D’ILLUSIONNISTE Notes sur les sorts d’illusionniste : Il existe moins de sorts d’illusionniste que de sorts de magicien et quelquesuns sont communs aux deux classes de personnages. Au 7e niveau, la liste comprend tous les sorts de niveau 1 de magicien, certains d’entre eux sont considérés comme n’étant qu’un seul sort de niveau 7. Les pouvoirs d’illusion de cette classe augmentent avec la progression de niveau ; les fantasme tiennent une place importante et d’autres types de sorts peuvent se révéler efficaces (cf. tueur fantasmagorique, ombres, jet prismatique). Il existe certains sorts d’illusionniste qui ne comportent pas de composante verbale (V). De plus, la composante matérielle est souvent moins importante que pour les autres classes, la seule exception étant le sort vision qui demande un matériel important. SORTS DE NIVEAU 1",
+        "description_texte": "En lançant ce sort, le magicien place la créature affectée dans un état d’animation suspendue. Cette stase temporelle signifie que la victime ne vieillit plus. Ses fonctions corporelles s’arrêtent virtuellement. Cette situation persiste à moins qu’une dissipation de la magie ne soit lancée ou que l’inverse du sort, rétablissement temporel, annule les effets de celui-ci. L’inverse ne demande qu’une composante verbale, un seul mot. La composante matérielle de la stase temporelle est une poudre composée de diamant, d’émeraude, de rubis et de saphir : une pierre de chaque type étant nécessaire. LES SORTS D’ILLUSIONNISTE Notes sur les sorts d’illusionniste : Il existe moins de sorts d’illusionniste que de sorts de magicien et quelquesuns sont communs aux deux classes de personnages. Au 7e niveau, la liste comprend tous les sorts de niveau 1 de magicien, certains d’entre eux sont considérés comme n’étant qu’un seul sort de niveau 7. Les pouvoirs d’illusion de cette classe augmentent avec la progression de niveau ; les fantasme tiennent une place importante et d’autres types de sorts peuvent se révéler efficaces (cf. tueur fantasmagorique, ombres, jet prismatique). Il existe certains sorts d’illusionniste qui ne comportent pas de composante verbale (V). De plus, la composante matérielle est souvent moins importante que pour les autres classes, la seule exception étant le sort vision qui demande un matériel important. SORTS DE NIVEAU 1",
+        "description_html": "<p>En lançant ce sort, le magicien place la créature affectée dans un état d’animation suspendue. Cette stase temporelle signifie que la victime ne vieillit plus. Ses fonctions corporelles s’arrêtent virtuellement. Cette situation persiste à moins qu’une dissipation de la magie ne soit lancée ou que l’inverse du sort, rétablissement temporel, annule les effets de celui-ci. L’inverse ne demande qu’une composante verbale, un seul mot. La composante matérielle de la stase temporelle est une poudre composée de diamant, d’émeraude, de rubis et de saphir : une pierre de chaque type étant nécessaire. LES SORTS D’ILLUSIONNISTE Notes sur les sorts d’illusionniste : Il existe moins de sorts d’illusionniste que de sorts de magicien et quelquesuns sont communs aux deux classes de personnages. Au 7e niveau, la liste comprend tous les sorts de niveau 1 de magicien, certains d’entre eux sont considérés comme n’étant qu’un seul sort de niveau 7. Les pouvoirs d’illusion de cette classe augmentent avec la progression de niveau ; les fantasme tiennent une place importante et d’autres types de sorts peuvent se révéler efficaces (cf. tueur fantasmagorique, ombres, jet prismatique). Il existe certains sorts d’illusionniste qui ne comportent pas de composante verbale (V). De plus, la composante matérielle est souvent moins importante que pour les autres classes, la seule exception étant le sort vision qui demande un matériel important. SORTS DE NIVEAU 1</p>"
+      },
+      "effects": [
+        {
+          "name": "Stase temporelle",
+          "flags": {
+            "add2e": {
+              "tags": [
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:9",
+                "sort:stase_temporelle",
+                "type:condition",
+                "ecole:alteration"
+              ]
+            }
+          },
+          "duration": {
+            "value": 0,
+            "units": "rounds",
+            "expiry": "turnStart",
+            "expired": false
+          },
+          "disabled": true,
+          "transfer": false,
+          "img": "systems/add2e/assets/icones/sorts/magicien-stase-temporelle.webp",
+          "type": "base",
+          "system": {
+            "changes": []
+          },
+          "description": "",
+          "tint": "#ffffff",
+          "statuses": [],
+          "sort": 0,
+          "origin": "Item.yYETOEfxvHxkahXY",
+          "_id": "DGN9JeAB4vBihhV9",
+          "_stats": {
+            "compendiumSource": null,
+            "duplicateSource": null,
+            "exportSource": null,
+            "coreVersion": "14.363",
+            "systemId": "add2e",
+            "systemVersion": "0.1.15",
+            "lastModifiedBy": "3qitoEt1cN3Qhvig",
+            "createdTime": 1780340569497,
+            "modifiedTime": 1780340569497
+          },
+          "start": null,
+          "showIcon": 1,
+          "folder": null
+        }
+      ],
+      "flags": {
+        "add2e": {
+          "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "magicien-niveaux-1-9",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-05-28T06:33:38.898Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/magicien-stase-temporelle.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ]
+        },
+        "add2eExport": {
+          "folderPath": "Sorts / Magicien / Niveau 9",
+          "sourceFolderId": "Gy4o0H8sMH4tDi9C",
+          "exportedAt": "2026-05-22T09:57:29.905Z"
+        }
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "compendiumSource": "Compendium.add2e.sorts.Item.yYETOEfxvHxkahXY",
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.15",
+        "createdTime": 1780340569497,
+        "modifiedTime": 1780340569497,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      },
+      "_id": "T61EpbWgHCtr2BRH",
+      "sort": 0
+    }
+  ]
+}
