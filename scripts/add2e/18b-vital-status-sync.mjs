@@ -8,9 +8,13 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v21-static-status-effect-ids";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v22-valid-document-status-ids";
 
 const LOCKS = new Set();
+const ADD2E_STATUS_IDS = {
+  dead: "ADD2Edead0000000",
+  unconscious: "ADD2Eunconsc0000"
+};
 
 function mergeStatus(base, patch) {
   try {
@@ -55,16 +59,12 @@ function tokenDiagnostic(token, actor, label = "token") {
     label,
     token: doc?.name ?? token?.name,
     tokenId: doc?.id ?? token?.id,
-    tokenUuid: doc?.uuid,
     actor: actor?.name,
     actorId: actor?.id,
     actorLink: doc?.actorLink,
     tokenActor: tokenActor?.name ?? null,
     tokenActorId: tokenActor?.id ?? null,
-    tokenActorType: tokenActor?.type ?? null,
     tokenActorIsToken: tokenActor?.isToken ?? null,
-    docEffects: add2eVitalArray(doc?.effects ?? doc?._source?.effects ?? []),
-    docOverlayEffect: doc?.overlayEffect ?? doc?._source?.overlayEffect ?? null,
     actorEffects: effectSummary(tokenActor)
   };
 }
@@ -114,22 +114,24 @@ async function safeToggleActorStatus(actor, statusId, active, { overlay = false,
 
   try {
     const result = await actor.toggleStatusEffect(statusId, { active, overlay: active ? overlay : false });
-    return {
-      changed: result !== undefined,
-      action: active ? "toggle-on" : "toggle-off",
-      statusId,
-      active,
-      overlay: active ? overlay : false,
-      existsBefore: exists,
-      result: result?.id ?? result ?? null
-    };
+    return { changed: result !== undefined, action: active ? "toggle-on" : "toggle-off", statusId, active, result: result?.id ?? result ?? null };
   } catch (err) {
     const msg = String(err?.message || err || "");
     if (!active && (msg.includes("does not exist") || msg.includes("n'existe pas"))) {
-      return { changed: false, action: "stale-off-ignored", statusId, active, existsBefore: exists, error: msg };
+      return { changed: false, action: "stale-off-ignored", statusId, active, error: msg };
     }
-    console.warn(`[ADD2E][VITAL_STATUS][${label.toUpperCase()}_TOGGLE][WARN]`, { actor: actor?.name, actorId: actor?.id, statusId, active, err });
-    return { changed: false, action: "toggle-warn", statusId, active, existsBefore: exists, error: msg };
+    console.warn(`[ADD2E][VITAL_STATUS][${label.toUpperCase()}_TOGGLE][WARN]`, {
+      actor: actor?.name,
+      actorId: actor?.id,
+      statusId,
+      active,
+      statusDefinition: statusDebug(statusId),
+      actorEffects: effectSummary(actor),
+      errName: err?.name ?? null,
+      errMessage: err?.message ?? msg,
+      errString: String(err)
+    });
+    return { changed: false, action: "toggle-warn", statusId, active, error: msg };
   }
 }
 
@@ -140,7 +142,7 @@ export function add2eVitalRegisterStatusEffects() {
 
   for (const definition of [
     {
-      _id: "dead",
+      _id: ADD2E_STATUS_IDS.dead,
       id: "dead",
       name: "Mort",
       label: "Mort",
@@ -151,7 +153,7 @@ export function add2eVitalRegisterStatusEffects() {
       flags: { core: { statusId: "dead" }, add2e: { vitalStatus: "dead", autoVitalStatus: true } }
     },
     {
-      _id: "unconscious",
+      _id: ADD2E_STATUS_IDS.unconscious,
       id: "unconscious",
       name: "Inconscient",
       label: "Inconscient",
@@ -172,6 +174,7 @@ export function add2eVitalRegisterStatusEffects() {
     core: globalThis.ADD2E_VITAL_STATUS_CORE_VERSION,
     sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
     cleanup: false,
+    statusIds: ADD2E_STATUS_IDS,
     monsterMode: "foundry-toggle-status-effect",
     characterMode: "foundry-toggle-status-effect",
     defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
@@ -255,14 +258,7 @@ async function syncCharacterStatus(actor, status) {
   }
 
   const after = effectSummary(actor);
-  console.log("[ADD2E][VITAL_STATUS][CHARACTER_STATUS_SYNC]", {
-    actor: actor?.name,
-    actorId: actor?.id,
-    status,
-    before,
-    after,
-    results
-  });
+  console.log("[ADD2E][VITAL_STATUS][CHARACTER_STATUS_SYNC]", { actor: actor?.name, actorId: actor?.id, status, before, after, results });
   return { changed: results.some(r => r?.changed), action: "character-status-toggle", results };
 }
 
