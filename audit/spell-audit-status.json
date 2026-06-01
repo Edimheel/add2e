@@ -1,0 +1,72 @@
+{
+  "generatedAt": "2026-06-01",
+  "sourceOfTruth": "Manuel des joueurs AD&D 2e pour toutes les règles ADD2E",
+  "branch": "agent-audit-sorts",
+  "statusLegend": {
+    "modele_valide": "Lot déjà corrigé et utilisé comme modèle",
+    "a_faire": "Lot non audité",
+    "audit_en_cours": "Audit commencé",
+    "audit_termine": "Audit terminé sans correction poussée",
+    "audit_termine_corrections_a_preparer": "Audit terminé, corrections identifiées",
+    "correction_preparee": "Corrections préparées mais non poussées",
+    "correction_poussee": "Corrections poussées",
+    "a_tester_foundry": "À tester dans Foundry",
+    "valide_foundry": "Validé par retour utilisateur dans Foundry",
+    "bloque_question": "Bloqué par une décision utilisateur ou une règle incertaine"
+  },
+  "lots": {
+    "clerc-niveau-1": {
+      "status": "modele_valide",
+      "notes": "Lot déjà corrigé par l’utilisateur et utilisé comme modèle de structure et de comportement."
+    },
+    "clerc-niveau-2": {
+      "status": "audit_termine_corrections_a_preparer",
+      "reference": "audit/reference/manuel-joueurs-clerc-niveau-2.json",
+      "rapport": "audit/rapports/clerc-niveau-2.md",
+      "export": "audit/decoupage_fichier/clerc-niveau-2.json",
+      "summary": {
+        "expectedSpells": 12,
+        "foundrySpells": 11,
+        "missingSpells": [
+          "Paralysie"
+        ],
+        "majorCorrections": [
+          "Ajouter Paralysie",
+          "Normaliser les noms visibles selon le Manuel des joueurs",
+          "Corriger les composants matériels d’Augure, Résistance au feu et Retardement du poison",
+          "Supprimer les mentions parasites de descriptions",
+          "Vérifier ou créer l’image assets/icones/sorts/paralysie.webp",
+          "Créer ou vérifier scripts/sorts/paralysie.js"
+        ]
+      }
+    },
+    "clerc-niveau-3": { "status": "a_faire" },
+    "clerc-niveau-4": { "status": "a_faire" },
+    "clerc-niveau-5": { "status": "a_faire" },
+    "clerc-niveau-6": { "status": "a_faire" },
+    "clerc-niveau-7": { "status": "a_faire" },
+    "druide-niveau-1": { "status": "a_faire" },
+    "druide-niveau-2": { "status": "a_faire" },
+    "druide-niveau-3": { "status": "a_faire" },
+    "druide-niveau-4": { "status": "a_faire" },
+    "druide-niveau-5": { "status": "a_faire" },
+    "druide-niveau-6": { "status": "a_faire" },
+    "druide-niveau-7": { "status": "a_faire" },
+    "magicien-niveau-1": { "status": "a_faire" },
+    "magicien-niveau-2": { "status": "a_faire" },
+    "magicien-niveau-3": { "status": "a_faire" },
+    "magicien-niveau-4": { "status": "a_faire" },
+    "magicien-niveau-5": { "status": "a_faire" },
+    "magicien-niveau-6": { "status": "a_faire" },
+    "magicien-niveau-7": { "status": "a_faire" },
+    "magicien-niveau-8": { "status": "a_faire" },
+    "magicien-niveau-9": { "status": "a_faire" },
+    "illusionniste-niveau-1": { "status": "a_faire" },
+    "illusionniste-niveau-2": { "status": "a_faire" },
+    "illusionniste-niveau-3": { "status": "a_faire" },
+    "illusionniste-niveau-4": { "status": "a_faire" },
+    "illusionniste-niveau-5": { "status": "a_faire" },
+    "illusionniste-niveau-6": { "status": "a_faire" },
+    "illusionniste-niveau-7": { "status": "a_faire" }
+  }
+}
