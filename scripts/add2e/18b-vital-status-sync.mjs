@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v12-stable-token-actor-effect";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v13-token-only-monsters";
 
 const LOCKS = new Set();
 
@@ -74,6 +74,7 @@ export function add2eVitalRegisterStatusEffects() {
     core: globalThis.ADD2E_VITAL_STATUS_CORE_VERSION,
     sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
     cleanup: false,
+    monsterMode: "token-only",
     defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
     dead: statusDebug("dead"),
     unconscious: statusDebug("unconscious")
@@ -110,179 +111,25 @@ async function syncToken(token, actor, status) {
 
   const patch = {};
   if (before.length !== after.length || before.some((value, index) => value !== after[index])) patch.effects = after;
+
   const overlay = doc.overlayEffect ?? doc._source?.overlayEffect ?? null;
   if (overlay === ADD2E_VITAL_STATUS.dead.icon || overlay === ADD2E_VITAL_STATUS.unconscious.icon || String(overlay ?? "").includes("add2e-monster-dead")) patch.overlayEffect = null;
 
   if (!Object.keys(patch).length) return false;
   await doc.update(patch, { add2eVitalStatusSync: true });
-  console.log("[ADD2E][VITAL_STATUS][TOKEN_SYNC]", { actor: actor?.name, token: doc.name, status, icon, patch });
-  return true;
-}
-
-function tokenActorFor(token) {
-  return token?.actor ?? token?.document?.actor ?? token?.object?.actor ?? null;
-}
-
-function tokenActorKey(tokenActor) {
-  return tokenActor?.uuid ?? tokenActor?.id ?? tokenActor?.name ?? null;
-}
-
-function tokenActorEffects(token) {
-  const tokenActor = tokenActorFor(token);
-  return tokenActor?.effects ? { actor: tokenActor, effects: [...tokenActor.effects] } : { actor: tokenActor, effects: [] };
-}
-
-function effectStatuses(effect) {
-  return new Set(add2eVitalArray(effect?.statuses ?? effect?.system?.statuses ?? []).map(add2eVitalNorm));
-}
-
-function findAdd2eTokenDeadEffect(tokenActor) {
-  for (const effect of tokenActor?.effects ?? []) {
-    const statuses = effectStatuses(effect);
-    const vitalStatus = add2eVitalNorm(effect?.flags?.add2e?.vitalStatus);
-    const autoVital = effect?.flags?.add2e?.autoVitalStatus === true;
-    const isDead = statuses.has("dead") || vitalStatus === "dead" || add2eVitalNorm(effect?.name) === "mort" || effect?.img === ADD2E_VITAL_STATUS.dead.icon;
-    if (isDead && (autoVital || statuses.has("dead"))) return effect;
-  }
-  return null;
-}
-
-async function safeDeleteTokenActorEffect(tokenActor, effect) {
-  if (!tokenActor?.deleteEmbeddedDocuments || !effect?.id) return false;
-  if (!tokenActor.effects?.get?.(effect.id)) return false;
-  try {
-    await tokenActor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], { add2eVitalStatusSync: true });
-    return true;
-  } catch (err) {
-    const msg = String(err?.message || err || "");
-    if (msg.includes("does not exist") || msg.includes("n'existe pas")) return false;
-    throw err;
-  }
-}
-
-async function safeUpdateTokenActorEffect(effect, patch) {
-  if (!effect?.id || !effect?.parent?.effects?.get?.(effect.id)) return false;
-  try {
-    await effect.update(patch, { add2eVitalStatusSync: true });
-    return true;
-  } catch (err) {
-    const msg = String(err?.message || err || "");
-    if (msg.includes("does not exist") || msg.includes("n'existe pas")) return false;
-    throw err;
-  }
-}
-
-async function syncMonsterTokenActorEffect(token, sourceActor, status) {
-  if (!add2eVitalIsMonster(sourceActor)) return { changed: false, action: "not-monster" };
-
-  const tokenActor = tokenActorFor(token);
-  if (!tokenActor?.createEmbeddedDocuments) return { changed: false, action: "no-token-actor" };
-
-  const existing = findAdd2eTokenDeadEffect(tokenActor);
-
-  if (status !== "dead") {
-    if (!existing) return { changed: false, action: "none", tokenActor: tokenActor.name };
-    const deleted = await safeDeleteTokenActorEffect(tokenActor, existing);
-    console.log("[ADD2E][VITAL_STATUS][TOKEN_ACTOR_DEAD_EFFECT][DELETE]", {
-      sourceActor: sourceActor?.name,
-      token: token?.document?.name ?? token?.name,
-      tokenActor: tokenActor.name,
-      effectId: existing.id,
-      deleted
-    });
-    return { changed: deleted, action: deleted ? "delete" : "delete-stale", effectId: existing.id, tokenActor: tokenActor.name };
-  }
-
-  if (existing) {
-    const patch = {
-      name: "Mort",
-      label: "Mort",
-      img: ADD2E_VITAL_STATUS.dead.icon,
-      icon: ADD2E_VITAL_STATUS.dead.icon,
-      statuses: ["dead"],
-      "flags.core.statusId": "dead",
-      "flags.add2e.vitalStatus": "dead",
-      "flags.add2e.autoVitalStatus": true
-    };
-    const updated = await safeUpdateTokenActorEffect(existing, patch);
-    console.log("[ADD2E][VITAL_STATUS][TOKEN_ACTOR_DEAD_EFFECT][UPDATE]", {
-      sourceActor: sourceActor?.name,
-      token: token?.document?.name ?? token?.name,
-      tokenActor: tokenActor.name,
-      effectId: existing.id,
-      updated,
-      patch
-    });
-    return { changed: updated, action: updated ? "update" : "update-stale", effectId: existing.id, tokenActor: tokenActor.name };
-  }
-
-  const data = {
-    name: "Mort",
-    label: "Mort",
-    img: ADD2E_VITAL_STATUS.dead.icon,
-    icon: ADD2E_VITAL_STATUS.dead.icon,
-    disabled: false,
-    statuses: ["dead"],
-    flags: {
-      core: { statusId: "dead" },
-      add2e: { vitalStatus: "dead", autoVitalStatus: true }
-    }
-  };
-
-  const created = await tokenActor.createEmbeddedDocuments("ActiveEffect", [data], { add2eVitalStatusSync: true });
-  const effectId = created?.[0]?.id ?? null;
-  console.log("[ADD2E][VITAL_STATUS][TOKEN_ACTOR_DEAD_EFFECT][CREATE]", {
-    sourceActor: sourceActor?.name,
-    token: token?.document?.name ?? token?.name,
-    tokenActor: tokenActor.name,
-    effectId,
-    img: data.img,
-    statuses: data.statuses
+  console.log("[ADD2E][VITAL_STATUS][TOKEN_SYNC]", {
+    actor: actor?.name,
+    actorId: actor?.id,
+    token: doc.name,
+    tokenId: doc.id,
+    actorLink: doc.actorLink,
+    status,
+    icon,
+    before,
+    patch,
+    after: add2eVitalArray(doc.effects ?? doc._source?.effects ?? [])
   });
-  return { changed: true, action: "create", effectId, tokenActor: tokenActor.name };
-}
-
-async function syncMonsterTokenActorEffects(actor, status) {
-  if (!add2eVitalIsMonster(actor)) return { changed: 0, results: [] };
-
-  const results = [];
-  const processed = new Set();
-  let changed = 0;
-
-  for (const token of actorTokens(actor)) {
-    const tokenActor = tokenActorFor(token);
-    const key = tokenActorKey(tokenActor);
-    if (key && processed.has(key)) {
-      results.push({
-        token: token?.document?.name ?? token?.name,
-        tokenId: token?.document?.id ?? token?.id,
-        tokenActor: tokenActor?.name ?? null,
-        tokenActorId: tokenActor?.id ?? null,
-        skipped: "duplicate-token-actor"
-      });
-      continue;
-    }
-    if (key) processed.add(key);
-
-    try {
-      const result = await syncMonsterTokenActorEffect(token, actor, status);
-      results.push({
-        token: token?.document?.name ?? token?.name,
-        tokenId: token?.document?.id ?? token?.id,
-        actorLink: token?.document?.actorLink,
-        tokenActor: tokenActor?.name ?? null,
-        tokenActorId: tokenActor?.id ?? null,
-        result,
-        effectsAfter: tokenActorEffects(token).effects.map(e => ({ id: e.id, name: e.name, img: e.img, statuses: [...(e.statuses ?? [])], flags: e.flags }))
-      });
-      if (result.changed) changed += 1;
-    } catch (err) {
-      console.warn("[ADD2E][VITAL_STATUS][TOKEN_ACTOR_DEAD_EFFECT][WARN]", { actor: actor?.name, token: token?.name, status, err });
-      results.push({ token: token?.document?.name ?? token?.name, error: String(err?.message || err || "") });
-    }
-  }
-
-  return { changed, results };
+  return true;
 }
 
 function actorCombatants(actor) {
@@ -321,6 +168,14 @@ async function syncCombatants(actor, inactive, status) {
       "flags.add2e.inactiveReason": inactive ? wantedStatus : null,
       "flags.add2e.vitalStatus": wantedStatus
     }, { add2eVitalStatusSync: true });
+    console.log("[ADD2E][VITAL_STATUS][COMBATANT_SYNC]", {
+      actor: actor?.name,
+      actorId: actor?.id,
+      combatant: combatant.id,
+      tokenId: combatant.tokenId,
+      inactive,
+      vitalStatus: wantedStatus
+    });
     changed += 1;
   }
   return changed;
@@ -328,14 +183,14 @@ async function syncCombatants(actor, inactive, status) {
 
 async function syncTokensAndCombat(actor, status, preserveInactive) {
   let tokenEffects = 0;
+  const tokens = actorTokens(actor);
   if (!preserveInactive) {
-    for (const token of actorTokens(actor)) {
+    for (const token of tokens) {
       if (await syncToken(token, actor, status)) tokenEffects += 1;
     }
   }
-  const monsterTokenActorEffects = await syncMonsterTokenActorEffects(actor, status);
   const combatants = preserveInactive ? 0 : await syncCombatants(actor, status !== null, status);
-  return { tokenEffects, monsterTokenActorEffects, combatants, tokenCount: actorTokens(actor).length };
+  return { tokenEffects, combatants, tokenCount: tokens.length, monsterMode: add2eVitalIsMonster(actor) ? "token-only" : "actor" };
 }
 
 export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
@@ -362,7 +217,7 @@ export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {})
       status,
       preserveInactive,
       cleanup: false,
-      tokenActorEffect: isMonster,
+      tokenActorEffect: false,
       state
     });
     return true;
