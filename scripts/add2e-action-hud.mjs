@@ -1,12 +1,13 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-05-29-v38-monsters-ignore-ammo-display
+// Version : 2026-06-01-v39-prepared-spells-free-position
 // Principe : le HUD est une interface. Les jets et actions délèguent strictement aux fonctions de la feuille/système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-05-29-v38-monsters-ignore-ammo-display";
+const ADD2E_ACTION_HUD_VERSION = "2026-06-01-v39-prepared-spells-free-position";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v34";
+const STORAGE_KEY = "add2e.actionHud.state.v39";
+const LEGACY_STORAGE_KEYS = ["add2e.actionHud.state.v34", "add2e.actionHud.layout.v1"];
 const TAG = "[ADD2E][ACTION_HUD]";
 
 let hudActor = null;
@@ -36,18 +37,43 @@ function isMonsterActor(actor) { return actorType(actor) === "monster"; }
 function usesProjectileInventory(actor) { return actorType(actor) === "personnage"; }
 function relevant(actor) { const t = actorType(actor); return t === "personnage" ? canUse(actor) : (t === "monster" ? game.user?.isGM === true : false); }
 
-function defaultState() { return { left: 116, bottom: 22, width: 640, maxMenuHeight: 360, collapsed: false }; }
-function loadState() { if (state) return state; try { state = { ...defaultState(), ...(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || {}) }; } catch (_e) { state = defaultState(); } return state; }
+function defaultState() { return { left: 116, top: null, bottom: 22, width: 640, maxMenuHeight: 360, collapsed: false }; }
+function normalizeLoadedState(raw = {}) {
+  const base = { ...defaultState(), ...(raw || {}) };
+  base.width = num(base.width, 640);
+  base.maxMenuHeight = num(base.maxMenuHeight ?? base.menuHeight, 360);
+  base.left = num(base.left, 116);
+  if (Number.isFinite(Number(base.top))) base.top = Number(base.top);
+  else if (Number.isFinite(Number(base.bottom))) base.top = Math.max(8, window.innerHeight - 110 - Number(base.bottom));
+  else base.top = null;
+  return base;
+}
+function loadState() {
+  if (state) return state;
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_e) { raw = null; }
+  if (!raw) {
+    for (const key of LEGACY_STORAGE_KEYS) {
+      try { raw = JSON.parse(localStorage.getItem(key) || "null"); } catch (_e) { raw = null; }
+      if (raw) break;
+    }
+  }
+  state = normalizeLoadedState(raw);
+  return state;
+}
 function saveState(partial = {}) { Object.assign(loadState(), partial); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_e) {} }
 function applyGeometry(el = hud(), force = false) {
   if (!el || (!force && (dragging || resizing))) return;
   const s = loadState();
   s.width = clamp(num(s.width, 640), 420, Math.max(440, window.innerWidth - 16));
   s.left = clamp(num(s.left, 116), 8, Math.max(8, window.innerWidth - s.width - 8));
-  s.bottom = clamp(num(s.bottom, 22), 8, Math.max(8, window.innerHeight - 110));
+  const fallbackTop = Math.max(8, window.innerHeight - (el.offsetHeight || 110) - num(s.bottom, 22));
+  s.top = clamp(Number.isFinite(Number(s.top)) ? Number(s.top) : fallbackTop, 8, Math.max(8, window.innerHeight - 48));
   s.maxMenuHeight = clamp(num(s.maxMenuHeight, 360), 140, Math.max(160, window.innerHeight - 130));
   el.style.left = `${Math.round(s.left)}px`;
-  el.style.bottom = `${Math.round(s.bottom)}px`;
+  el.style.top = `${Math.round(s.top)}px`;
+  el.style.bottom = "auto";
+  el.style.right = "auto";
   el.style.width = `${Math.round(s.width)}px`;
   el.style.setProperty("--a2e-hud-menu-max", `${Math.round(s.maxMenuHeight)}px`);
 }
@@ -65,7 +91,29 @@ function damage(item) { const s = item?.system ?? {}; return s?.dégâts?.contre
 function range(item) { const s = item?.system ?? {}; const p = [s.portee_courte ?? s.portee_short, s.portee_moyenne ?? s.portee_medium, s.portee_longue ?? s.portee_long].filter(v => v !== undefined && v !== null && String(v) !== ""); return p.length ? p.join(" / ") : "Contact"; }
 function weapons(actor) { return actor?.items?.filter?.(i => String(i.type ?? "").toLowerCase() === "arme" && itemEquipped(i)) ?? []; }
 
-function preparedCount(sort) { try { const n = Number(globalThis.add2eGetTotalMemorizedCount?.(sort)); if (Number.isFinite(n)) return n; } catch (_e) {} const f = sort?.flags?.add2e ?? {}, s = sort?.system ?? {}; for (const v of [sort?.getFlag?.("add2e", "memorizedCount"), f.memorizedCount, f.preparedCount, s.memorizedCount, s.preparedCount, s.prepared, s.memorise, s.memorized, s.memorisation?.value, s.memorisation, s.slots?.prepared, s.slots?.value]) { const n = num(v, NaN); if (Number.isFinite(n) && n > 0) return n; } return 0; }
+function sumPreparedTree(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, value);
+  if (typeof value === "string") return Math.max(0, num(value, 0));
+  if (!value || typeof value !== "object") return 0;
+  let total = 0;
+  for (const child of Object.values(value)) total += sumPreparedTree(child);
+  return total;
+}
+function preparedCount(sort) {
+  const f = sort?.flags?.add2e ?? {}, s = sort?.system ?? {};
+  const directValues = [sort?.getFlag?.("add2e", "memorizedCount"), f.memorizedCount, f.preparedCount, s.memorizedCount, s.preparedCount, s.prepared, s.memorise, s.memorized, s.memorisation?.value, s.memorisation, s.slots?.prepared, s.slots?.value];
+  let best = 0;
+  for (const v of directValues) {
+    const n = num(v, NaN);
+    if (Number.isFinite(n) && n > best) best = n;
+  }
+  best = Math.max(best, sumPreparedTree(sort?.getFlag?.("add2e", "memorizedByList")), sumPreparedTree(f.memorizedByList), sumPreparedTree(f.preparedByList), sumPreparedTree(s.memorizedByList), sumPreparedTree(s.preparedByList));
+  try {
+    const n = Number(globalThis.add2eGetTotalMemorizedCount?.(sort));
+    if (Number.isFinite(n) && n > best) best = n;
+  } catch (_e) {}
+  return Math.max(0, best);
+}
 function isObjectPowerSpell(sort) { const s = sort?.system ?? {}; if (s.isPower === true || s.isObjectPower === true || s.sourceWeaponId || s.sourceItemId || s.powerIndex !== undefined) return true; try { return globalThis.add2eIsObjectMagicSpellForPreparation?.(sort) === true; } catch (_e) { return false; } }
 function spells(actor) { return actor?.items?.filter?.(i => String(i.type ?? "").toLowerCase() === "sort" && !isObjectPowerSpell(i) && preparedCount(i) > 0) ?? []; }
 function spellLevel(sort) { return Math.max(0, num(sort?.system?.niveau ?? sort?.system?.level ?? sort?.system?.niveau_sort, 0)); }
@@ -117,7 +165,7 @@ function injectStyle() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-#${HUD_ID}{position:fixed;z-index:100;right:auto!important;top:auto!important;min-width:420px;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;user-select:none}
+#${HUD_ID}{position:fixed;z-index:100;right:auto!important;bottom:auto!important;min-width:420px;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;user-select:none}
 #${HUD_ID}.collapsed .a2e-hud-panel{display:none!important}
 #${HUD_ID} .a2e-hud-shell{border:1px solid #8a611d;border-radius:14px;overflow:hidden;background:linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48)}
 #${HUD_ID} .a2e-hud-panel{max-height:var(--a2e-hud-menu-max,360px);overflow:auto;padding:9px;border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.13)}
@@ -236,8 +284,8 @@ async function sheetRollSave(actor, idx) { if (typeof globalThis.add2eRollSaveCa
 async function sheetUseFeature(actor, index) { const feature = features(actor)[index]; if (!feature) return ui.notifications.warn("Capacité introuvable."); if (typeof globalThis.add2eExecuteClassFeatureOnUse !== "function") return ui.notifications.error("Fonction add2eExecuteClassFeatureOnUse introuvable."); return globalThis.add2eExecuteClassFeatureOnUse(actor, feature, null); }
 async function removeEffect(actor, effectId) { const effect = actor?.effects?.get?.(effectId); if (!effect) return ui.notifications.warn("Effet introuvable."); const DialogV2 = foundry?.applications?.api?.DialogV2; const ok = DialogV2?.confirm ? await DialogV2.confirm({ window: { title: "Supprimer l'effet" }, content: `<p>Supprimer <strong>${esc(effect.name)}</strong> ?</p>`, yes: { label: "Supprimer", icon: "fas fa-trash" }, no: { label: "Annuler" } }) : true; if (!ok) return false; await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]); return renderHud(actor, hudToken, { reason: "remove-effect" }); }
 
-function startResize(ev) { const handle = ev.target?.closest?.("[data-resize-handle]"); const el = ev.target?.closest?.(`#${HUD_ID}`); if (!handle || !el || ev.button !== 0) return false; ev.preventDefault(); ev.stopPropagation(); resizing = true; const start = { x: ev.clientX, y: ev.clientY, ...loadState() }; const move = e => { const s = loadState(); s.width = clamp(start.width + e.clientX - start.x, 420, Math.max(440, window.innerWidth - s.left - 8)); s.maxMenuHeight = clamp(start.maxMenuHeight + e.clientY - start.y, 140, Math.max(160, window.innerHeight - 130)); applyGeometry(el, true); }; const up = () => { window.removeEventListener("pointermove", move, true); window.removeEventListener("pointerup", up, true); resizing = false; saveState({ width: el.offsetWidth || loadState().width }); applyGeometry(el, true); }; window.addEventListener("pointermove", move, true); window.addEventListener("pointerup", up, true); return true; }
-function startDrag(ev) { const el = ev.target?.closest?.(`#${HUD_ID}`); const handle = ev.target?.closest?.("[data-drag-handle]"); if (!el || !handle || ev.button !== 0 || ev.target.closest?.("button,a,input,select,textarea,[data-action],[data-tab],[data-resize-handle]")) return; ev.preventDefault(); ev.stopPropagation(); dragging = true; const s0 = loadState(); const start = { x: ev.clientX, y: ev.clientY, left: s0.left, bottom: s0.bottom }; const move = e => { const s = loadState(); s.left = clamp(start.left + e.clientX - start.x, 8, Math.max(8, window.innerWidth - (el.offsetWidth || s.width) - 8)); s.bottom = clamp(start.bottom - (e.clientY - start.y), 8, Math.max(8, window.innerHeight - 110)); applyGeometry(el, true); saveState({ left: Math.round(s.left), bottom: Math.round(s.bottom) }); }; const up = () => { window.removeEventListener("pointermove", move, true); window.removeEventListener("pointerup", up, true); dragging = false; applyGeometry(el, true); }; window.addEventListener("pointermove", move, true); window.addEventListener("pointerup", up, true); }
+function startResize(ev) { const handle = ev.target?.closest?.("[data-resize-handle]"); const el = ev.target?.closest?.(`#${HUD_ID}`); if (!handle || !el || ev.button !== 0) return false; ev.preventDefault(); ev.stopPropagation(); resizing = true; const startState = loadState(); const start = { x: ev.clientX, y: ev.clientY, width: startState.width, maxMenuHeight: startState.maxMenuHeight, left: startState.left, top: startState.top }; const move = e => { const s = loadState(); s.width = clamp(start.width + e.clientX - start.x, 420, Math.max(440, window.innerWidth - start.left - 8)); s.maxMenuHeight = clamp(start.maxMenuHeight + e.clientY - start.y, 140, Math.max(160, window.innerHeight - start.top - 48)); applyGeometry(el, true); }; const up = () => { window.removeEventListener("pointermove", move, true); window.removeEventListener("pointerup", up, true); resizing = false; const s = loadState(); saveState({ width: el.offsetWidth || s.width, maxMenuHeight: s.maxMenuHeight, left: s.left, top: s.top }); applyGeometry(el, true); }; window.addEventListener("pointermove", move, true); window.addEventListener("pointerup", up, true); return true; }
+function startDrag(ev) { const el = ev.target?.closest?.(`#${HUD_ID}`); const handle = ev.target?.closest?.("[data-drag-handle]"); if (!el || !handle || ev.button !== 0 || ev.target.closest?.("button,a,input,select,textarea,[data-action],[data-tab],[data-resize-handle]")) return; ev.preventDefault(); ev.stopPropagation(); dragging = true; const s0 = loadState(); const start = { x: ev.clientX, y: ev.clientY, left: s0.left, top: s0.top }; const move = e => { const s = loadState(); const width = el.offsetWidth || s.width; const height = el.offsetHeight || 110; s.left = clamp(start.left + e.clientX - start.x, 8, Math.max(8, window.innerWidth - width - 8)); s.top = clamp(start.top + e.clientY - start.y, 8, Math.max(8, window.innerHeight - Math.min(height, 48))); applyGeometry(el, true); saveState({ left: Math.round(s.left), top: Math.round(s.top), bottom: null }); }; const up = () => { window.removeEventListener("pointermove", move, true); window.removeEventListener("pointerup", up, true); dragging = false; applyGeometry(el, true); }; window.addEventListener("pointermove", move, true); window.addEventListener("pointerup", up, true); }
 function pointerDown(ev) { if (startResize(ev)) return; startDrag(ev); }
 
 function currentCombatant(combat = game.combat) { if (!combat) return null; const id = combat.current?.combatantId ?? combat.combatantId ?? null; return (id ? combat.combatants?.get?.(id) : null) ?? combat.combatant ?? combat.turns?.[Number(combat.current?.turn ?? combat.turn)] ?? null; }
@@ -247,7 +295,7 @@ function followCombat(combat = game.combat, forceOpen = false) { if (Date.now() 
 Hooks.once("init", () => { game.add2e = game.add2e ?? {}; game.add2e.actionHudVersion = ADD2E_ACTION_HUD_VERSION; game.add2e.openActionHud = (actor = null) => { const token = canvas?.tokens?.controlled?.[0] ?? null; return renderHud(actor ?? token?.actor ?? game.user?.character, actor ? tokenFor(actor) : token, { reason: "api-open" }); }; game.add2e.closeActionHud = closeHud; game.add2e.refreshActionHud = () => hudActor ? renderHud(hudActor, hudToken, { reason: "api-refresh-current" }) : refreshHud("api-refresh"); Object.assign(globalThis, { add2eRenderActionHud: renderHud, add2eRefreshActionHud: refreshHud, add2eCloseActionHud: closeHud, add2eHudCheck: () => ({ version: ADD2E_ACTION_HUD_VERSION, actor: currentActor()?.name ?? null, actorId: currentActor()?.id ?? null, activeTab, selectedSpellGroup, attackRoll: typeof globalThis.add2eAttackRoll, castSpell: typeof globalThis.add2eCastSpell, rollCarac: typeof globalThis.add2eRollCharacteristicCard, rollSave: typeof globalThis.add2eRollSaveCard, featureUse: typeof globalThis.add2eExecuteClassFeatureOnUse, hud: !!hud() }) }); console.log(`${TAG}[INIT]`, ADD2E_ACTION_HUD_VERSION); });
 Hooks.once("ready", () => { document.addEventListener("pointerdown", pointerDown, true); window.addEventListener("resize", () => applyGeometry(hud(), true)); setTimeout(() => refreshHud("ready"), 300); });
 Hooks.on("controlToken", () => { manualIntentUntil = Date.now() + 500; setTimeout(() => refreshHud("controlToken"), 60); });
-Hooks.on("canvasReady", () => setTimeout(() => refreshHud("canvasReady", 150)));
+Hooks.on("canvasReady", () => setTimeout(() => refreshHud("canvasReady"), 150));
 Hooks.on("updateCombat", combat => setTimeout(() => followCombat(combat, false), 80));
 Hooks.on("combatTurn", combat => setTimeout(() => followCombat(combat, false), 80));
 Hooks.on("combatRound", combat => setTimeout(() => followCombat(combat, false), 80));
