@@ -1,10 +1,10 @@
 // ============================================================================
 // ADD2E — Gestion automatique de l’expiration des effets temporaires
 // + synchronisation automatique des états vitaux Inconscient / Mort.
-// Version : 2026-05-31-vital-status-monster-dead-only-v22
+// Version : 2026-05-31-vital-status-monster-rule-same-flow-v23
 // ============================================================================
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-monster-dead-only-v22";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-05-31-vital-status-monster-rule-same-flow-v23";
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION);
 
 const ADD2E_VITAL_STATUS = {
@@ -140,8 +140,9 @@ function add2eVitalIsMonster(actor) {
 function add2eVitalDesiredStatus(actor) {
   const hp = add2eVitalReadHP(actor);
 
-  // Règle stricte des monstres : PV > 0 vivant ; PV <= 0 mort.
-  // Un monstre ne passe jamais par Inconscient.
+  // Même mécanique que les personnages : une seule fonction décide de l'état vital.
+  // Seule la règle change pour les monstres : PV > 0 vivant ; PV <= 0 mort.
+  // Un monstre ne peut jamais recevoir l'état Inconscient.
   if (add2eVitalIsMonster(actor)) return hp <= 0 ? "dead" : null;
 
   if (add2eVitalActorType(actor) === "personnage") {
@@ -269,7 +270,6 @@ function add2eVitalCleanTokenEffects(effects) {
 }
 
 function add2eVitalIconForDesired(actor, desired) {
-  // Verrou final : même si un appel fournit unconscious par erreur, un monstre à 0 PV ou moins reçoit Mort.
   if (add2eVitalIsMonster(actor)) return desired === "dead" ? ADD2E_VITAL_STATUS.dead.icon : null;
   if (desired === "dead") return ADD2E_VITAL_STATUS.dead.icon;
   if (desired === "unconscious") return ADD2E_VITAL_STATUS.unconscious.icon;
@@ -373,10 +373,15 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
     const trackerDefeated = add2eVitalActorHasDefeatedCombatant(actor);
     const preserveDefeated = !isMonster && trackerDefeated && desired === null;
     const before = add2eVitalArray(actor?.effects).filter(e => add2eVitalEffectKind(e)).map(e => ({ id: e.id, name: e.name, kind: add2eVitalEffectKind(e), icon: e.icon }));
-    const monsterCleanup = await add2eVitalCleanWrongMonsterActorEffects(actor, desired);
-    const removed = monsterCleanup.removedActorEffects ?? 0;
+
+    const monsterCleanupBefore = await add2eVitalCleanWrongMonsterActorEffects(actor, desired);
     const actorStatus = null;
     const tokenState = await add2eVitalSyncTokenState(actor, desired, { preserveDefeated });
+
+    // Important : Foundry peut créer l'ActiveEffect de statut après Combatant.defeated.
+    // On refait donc le nettoyage après l'application, sinon un monstre mort peut recevoir Inconscient.
+    const monsterCleanupAfter = await add2eVitalCleanWrongMonsterActorEffects(actor, desired);
+
     console.log("[ADD2E][VITAL_STATUS][SYNC]", {
       reason,
       actor: actor.name,
@@ -387,10 +392,11 @@ async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
       desired,
       trackerDefeated,
       preserveDefeated,
-      monsterDeadOnlyRule: isMonster,
+      monsterSameFlowRule: isMonster,
       actorStatus,
-      removed,
-      monsterCleanup,
+      removed: (monsterCleanupBefore.removedActorEffects ?? 0) + (monsterCleanupAfter.removedActorEffects ?? 0),
+      monsterCleanupBefore,
+      monsterCleanupAfter,
       before,
       tokenState
     });
