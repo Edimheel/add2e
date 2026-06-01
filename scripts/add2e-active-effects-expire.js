@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : expiration des effets + états vitaux.
-// Version : 2026-06-01-active-effects-expire-split-entry-v3-tracker-visual
+// Version : 2026-06-01-active-effects-expire-split-entry-v4-native-tracker
 // ============================================================================
 
 import { ADD2E_VITAL_STATUS_CORE_VERSION } from "./add2e/18a-vital-status-core.mjs";
@@ -13,13 +13,11 @@ import {
   ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
   add2eExpireTemporaryEffectsForActor
 } from "./add2e/18c-active-effects-expiration.mjs";
-import { ADD2E_COMBAT_TRACKER_INACTIVE_VISUAL_VERSION } from "./add2e/18d-combat-tracker-inactive-visual.mjs";
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-06-01-active-effects-expire-split-entry-v3-tracker-visual";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-06-01-active-effects-expire-split-entry-v4-native-tracker";
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
 globalThis.ADD2E_VITAL_STATUS_SYNC_VERSION = ADD2E_VITAL_STATUS_SYNC_VERSION;
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION;
-globalThis.ADD2E_COMBAT_TRACKER_INACTIVE_VISUAL_VERSION = ADD2E_COMBAT_TRACKER_INACTIVE_VISUAL_VERSION;
 globalThis.add2eSyncActorVitalStatus = add2eSyncActorVitalStatus;
 globalThis.add2eVitalRegisterStatusEffects = add2eVitalRegisterStatusEffects;
 
@@ -27,8 +25,7 @@ console.log("[ADD2E][AUTO-REMOVE][VERSION]", {
   entry: globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION,
   core: ADD2E_VITAL_STATUS_CORE_VERSION,
   sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
-  expiration: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
-  trackerVisual: ADD2E_COMBAT_TRACKER_INACTIVE_VISUAL_VERSION
+  expiration: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION
 });
 
 Hooks.once("init", add2eVitalRegisterStatusEffects);
