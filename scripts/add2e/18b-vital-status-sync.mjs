@@ -1,6 +1,5 @@
 import {
   ADD2E_VITAL_STATUS,
-  ADD2E_VITAL_STATUS_EFFECT_IDS,
   add2eVitalArray,
   add2eVitalDesiredStatus,
   add2eVitalIsMonster,
@@ -9,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v9-no-cleanup";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v10-native-status-ids";
 
 const LOCKS = new Set();
 
@@ -21,6 +20,23 @@ function mergeStatus(base, patch) {
   }
 }
 
+function statusDebug(id) {
+  const wanted = add2eVitalNorm(id);
+  const effect = CONFIG.statusEffects?.find(e => add2eVitalStatusAliases(e).includes(wanted) || add2eVitalNorm(e?.id) === wanted || add2eVitalNorm(e?._id) === wanted);
+  if (!effect) return null;
+  return {
+    id: effect.id,
+    _id: effect._id,
+    name: effect.name,
+    label: effect.label,
+    img: effect.img,
+    icon: effect.icon,
+    statuses: effect.statuses,
+    special: effect.special,
+    flags: effect.flags
+  };
+}
+
 export function add2eVitalRegisterStatusEffects() {
   CONFIG.statusEffects = Array.isArray(CONFIG.statusEffects) ? CONFIG.statusEffects : [];
   CONFIG.specialStatusEffects ??= {};
@@ -28,7 +44,6 @@ export function add2eVitalRegisterStatusEffects() {
 
   for (const definition of [
     {
-      _id: ADD2E_VITAL_STATUS_EFFECT_IDS.dead,
       id: "dead",
       name: "Mort",
       label: "Mort",
@@ -39,7 +54,6 @@ export function add2eVitalRegisterStatusEffects() {
       flags: { core: { statusId: "dead" }, add2e: { vitalStatus: "dead", autoVitalStatus: true } }
     },
     {
-      _id: ADD2E_VITAL_STATUS_EFFECT_IDS.unconscious,
       id: "unconscious",
       name: "Inconscient",
       label: "Inconscient",
@@ -50,7 +64,7 @@ export function add2eVitalRegisterStatusEffects() {
     }
   ]) {
     const wanted = add2eVitalNorm(definition.id);
-    const index = CONFIG.statusEffects.findIndex(effect => add2eVitalStatusAliases(effect).includes(wanted));
+    const index = CONFIG.statusEffects.findIndex(effect => add2eVitalStatusAliases(effect).includes(wanted) || add2eVitalNorm(effect?.id) === wanted || add2eVitalNorm(effect?._id) === wanted);
     if (index >= 0) CONFIG.statusEffects[index] = mergeStatus(CONFIG.statusEffects[index], definition);
     else CONFIG.statusEffects.push(foundry.utils?.deepClone ? foundry.utils.deepClone(definition) : { ...definition });
   }
@@ -59,7 +73,10 @@ export function add2eVitalRegisterStatusEffects() {
     version: globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION,
     core: globalThis.ADD2E_VITAL_STATUS_CORE_VERSION,
     sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
-    cleanup: false
+    cleanup: false,
+    defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
+    dead: statusDebug("dead"),
+    unconscious: statusDebug("unconscious")
   });
 }
 
