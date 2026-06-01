@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v19-clear-recovered-character-inactive";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v20-character-status-toggle";
 
 const LOCKS = new Set();
 
@@ -69,16 +69,68 @@ function tokenDiagnostic(token, actor, label = "token") {
   };
 }
 
-function hasRealDeadEffect(actor) {
+function statusIcon(statusId) {
+  const id = add2eVitalNorm(statusId);
+  if (id === "dead") return ADD2E_VITAL_STATUS.dead.icon;
+  if (id === "unconscious") return ADD2E_VITAL_STATUS.unconscious.icon;
+  return null;
+}
+
+function statusLabel(statusId) {
+  const id = add2eVitalNorm(statusId);
+  if (id === "dead") return "mort";
+  if (id === "unconscious") return "inconscient";
+  return id;
+}
+
+function hasRealStatusEffect(actor, statusId) {
+  const wanted = add2eVitalNorm(statusId);
+  const icon = statusIcon(wanted);
+  const label = statusLabel(wanted);
   return add2eVitalArray(actor?.effects).some(e => {
     const statuses = new Set(add2eVitalArray(e?.statuses ?? e?.system?.statuses ?? []).map(add2eVitalNorm));
-    return statuses.has("dead") || add2eVitalNorm(e?.flags?.core?.statusId) === "dead" || e?.img === ADD2E_VITAL_STATUS.dead.icon || add2eVitalNorm(e?.name) === "mort";
+    return statuses.has(wanted)
+      || add2eVitalNorm(e?.flags?.core?.statusId) === wanted
+      || add2eVitalNorm(e?.flags?.add2e?.vitalStatus) === wanted
+      || (!!icon && e?.img === icon)
+      || add2eVitalNorm(e?.name) === label;
   });
+}
+
+function hasRealDeadEffect(actor) {
+  return hasRealStatusEffect(actor, "dead");
 }
 
 function isVitalInactiveReason(value) {
   const reason = add2eVitalNorm(value);
   return ["dead", "mort", "unconscious", "inconscient"].includes(reason);
+}
+
+async function safeToggleActorStatus(actor, statusId, active, { overlay = false, label = "status" } = {}) {
+  if (!actor?.toggleStatusEffect) return { changed: false, action: "no-toggle-status-effect", statusId, active };
+
+  const exists = hasRealStatusEffect(actor, statusId);
+  if (!active && !exists) return { changed: false, action: "skip-off-missing", statusId, active, exists };
+
+  try {
+    const result = await actor.toggleStatusEffect(statusId, { active, overlay: active ? overlay : false });
+    return {
+      changed: result !== undefined,
+      action: active ? "toggle-on" : "toggle-off",
+      statusId,
+      active,
+      overlay: active ? overlay : false,
+      existsBefore: exists,
+      result: result?.id ?? result ?? null
+    };
+  } catch (err) {
+    const msg = String(err?.message || err || "");
+    if (!active && (msg.includes("does not exist") || msg.includes("n'existe pas"))) {
+      return { changed: false, action: "stale-off-ignored", statusId, active, existsBefore: exists, error: msg };
+    }
+    console.warn(`[ADD2E][VITAL_STATUS][${label.toUpperCase()}_TOGGLE][WARN]`, { actor: actor?.name, actorId: actor?.id, statusId, active, err });
+    return { changed: false, action: "toggle-warn", statusId, active, existsBefore: exists, error: msg };
+  }
 }
 
 export function add2eVitalRegisterStatusEffects() {
@@ -119,6 +171,7 @@ export function add2eVitalRegisterStatusEffects() {
     sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
     cleanup: false,
     monsterMode: "foundry-toggle-status-effect",
+    characterMode: "foundry-toggle-status-effect",
     defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
     dead: statusDebug("dead"),
     unconscious: statusDebug("unconscious")
@@ -136,12 +189,6 @@ function actorTokens(actor) {
     seen.add(id);
     return !!token?.document;
   });
-}
-
-function desiredIcon(status) {
-  if (status === "dead") return ADD2E_VITAL_STATUS.dead.icon;
-  if (status === "unconscious") return ADD2E_VITAL_STATUS.unconscious.icon;
-  return null;
 }
 
 function tokenActorFor(token) {
@@ -171,14 +218,7 @@ async function syncMonsterTokenStatus(token, actor, status) {
     return { changed: false, action: "skip-toggle-dead-off", hasDead };
   }
 
-  let result = null;
-  try {
-    result = await tokenActor.toggleStatusEffect("dead", { active: true, overlay: true });
-  } catch (err) {
-    console.warn("[ADD2E][VITAL_STATUS][MONSTER_STATUS_TOGGLE][WARN]", { token: doc.name, tokenId: doc.id, active, err, before });
-    return { changed: false, action: "toggle-warn", error: String(err?.message || err || ""), before };
-  }
-
+  const result = await safeToggleActorStatus(tokenActor, "dead", true, { overlay: true, label: "monster_status" });
   const after = tokenDiagnostic(token, actor, "after-toggle-status");
   console.log("[ADD2E][VITAL_STATUS][MONSTER_STATUS_TOGGLE]", {
     token: doc.name,
@@ -189,36 +229,44 @@ async function syncMonsterTokenStatus(token, actor, status) {
     tokenActorIsToken: tokenActor.isToken,
     status,
     active,
-    resultType: result?.constructor?.name ?? typeof result,
-    resultId: result?.id ?? null,
+    result,
     before,
     after
   });
 
-  return { changed: result !== undefined, action: "toggle-dead-on", result: result?.id ?? result };
+  return result;
 }
 
-async function syncCharacterToken(token, actor, status) {
-  const doc = token?.document ?? token;
-  if (!doc?.update) return false;
+async function syncCharacterStatus(actor, status) {
+  const before = effectSummary(actor);
+  const results = [];
 
-  const icon = desiredIcon(status);
-  const before = add2eVitalArray(doc.effects ?? doc._source?.effects ?? []);
-  const after = before.filter(value => value !== ADD2E_VITAL_STATUS.dead.icon && value !== ADD2E_VITAL_STATUS.unconscious.icon);
-  if (icon && !after.includes(icon)) after.push(icon);
+  if (status === "dead") {
+    results.push(await safeToggleActorStatus(actor, "unconscious", false, { label: "character_status" }));
+    results.push(await safeToggleActorStatus(actor, "dead", true, { overlay: true, label: "character_status" }));
+  } else if (status === "unconscious") {
+    results.push(await safeToggleActorStatus(actor, "dead", false, { label: "character_status" }));
+    results.push(await safeToggleActorStatus(actor, "unconscious", true, { overlay: true, label: "character_status" }));
+  } else {
+    results.push(await safeToggleActorStatus(actor, "dead", false, { label: "character_status" }));
+    results.push(await safeToggleActorStatus(actor, "unconscious", false, { label: "character_status" }));
+  }
 
-  const patch = {};
-  if (before.length !== after.length || before.some((value, index) => value !== after[index])) patch.effects = after;
-  if (!Object.keys(patch).length) return false;
-
-  await doc.update(patch, { add2eVitalStatusSync: true });
-  console.log("[ADD2E][VITAL_STATUS][CHARACTER_TOKEN_SYNC]", { actor: actor?.name, token: doc.name, status, icon, patch });
-  return true;
+  const after = effectSummary(actor);
+  console.log("[ADD2E][VITAL_STATUS][CHARACTER_STATUS_SYNC]", {
+    actor: actor?.name,
+    actorId: actor?.id,
+    status,
+    before,
+    after,
+    results
+  });
+  return { changed: results.some(r => r?.changed), action: "character-status-toggle", results };
 }
 
 async function syncToken(token, actor, status) {
   if (add2eVitalIsMonster(actor)) return syncMonsterTokenStatus(token, actor, status);
-  return { changed: await syncCharacterToken(token, actor, status), action: "character-token" };
+  return { changed: false, action: "character-token-skipped" };
 }
 
 function actorCombatants(actor) {
@@ -282,15 +330,30 @@ async function syncTokensAndCombat(actor, status, preserveInactive) {
   const tokens = actorTokens(actor);
   let tokenEffects = 0;
   const tokenResults = [];
-  if (!preserveInactive) {
-    for (const token of tokens) {
-      const result = await syncToken(token, actor, status);
-      tokenResults.push({ tokenId: token?.document?.id ?? token?.id, token: token?.document?.name ?? token?.name, result });
-      if (result?.changed) tokenEffects += 1;
+
+  if (add2eVitalIsMonster(actor)) {
+    if (!preserveInactive) {
+      for (const token of tokens) {
+        const result = await syncToken(token, actor, status);
+        tokenResults.push({ tokenId: token?.document?.id ?? token?.id, token: token?.document?.name ?? token?.name, result });
+        if (result?.changed) tokenEffects += 1;
+      }
     }
+  } else if (!preserveInactive) {
+    const result = await syncCharacterStatus(actor, status);
+    tokenResults.push({ actor: actor?.name, actorId: actor?.id, result });
+    if (result?.changed) tokenEffects += 1;
   }
+
   const combatants = preserveInactive ? 0 : await syncCombatants(actor, status !== null, status);
-  return { tokenEffects, combatants, tokenCount: tokens.length, monsterMode: add2eVitalIsMonster(actor) ? "foundry-toggle-status-effect" : "actor", tokenResults };
+  return {
+    tokenEffects,
+    combatants,
+    tokenCount: tokens.length,
+    monsterMode: add2eVitalIsMonster(actor) ? "foundry-toggle-status-effect" : "actor",
+    characterMode: add2eVitalIsMonster(actor) ? null : "foundry-toggle-status-effect",
+    tokenResults
+  };
 }
 
 export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
