@@ -1,9 +1,9 @@
 // ============================================================================
 // ADD2E — États vitaux : constantes, lecture PV et règles métier.
-// Version : 2026-06-01-vital-status-split-core-v1
+// Version : 2026-06-01-vital-status-split-core-v2-explicit-rule-order
 // ============================================================================
 
-export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-06-01-vital-status-split-core-v1";
+export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-06-01-vital-status-split-core-v2-explicit-rule-order";
 
 export const ADD2E_VITAL_STATUS = {
   unconscious: { key: "unconscious", name: "Inconscient", icon: "icons/svg/daze.svg" },
@@ -35,8 +35,7 @@ export function add2eVitalNorm(value) {
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9:_-]+/g, "_")
     .replace(/^_|_$/g, "");
-}
-
+}\n
 export function add2eVitalNumber(value, fallback = NaN) {
   if (typeof value === "string") {
     const m = value.match(/-?\d+(?:[.,]\d+)?/);
@@ -74,15 +73,13 @@ export function add2eVitalReadHP(actor) {
 
 export function add2eVitalDesiredStatus(actor) {
   const hp = add2eVitalReadHP(actor);
+  const type = add2eVitalActorType(actor);
 
-  // Monstres : même flux technique, règle différente.
-  // PV > 0 = vivant ; PV <= 0 = mort ; jamais Inconscient.
-  if (add2eVitalIsMonster(actor)) return hp <= 0 ? "dead" : null;
-
-  // Personnages : règle AD&D 2e demandée.
-  if (add2eVitalActorType(actor) === "personnage") {
+  if (type === "personnage") {
     if (hp <= -11) return "dead";
     if (hp <= 0) return "unconscious";
+  } else if (type === "monster" || type === "monstre" || add2eVitalIsMonster(actor)) {
+    if (hp <= 0) return "dead";
   }
 
   return null;
