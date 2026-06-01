@@ -8,10 +8,9 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v11-token-actor-effect";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v12-stable-token-actor-effect";
 
 const LOCKS = new Set();
-const ADD2E_TOKEN_DEAD_EFFECT_ID = "ADD2Edead0000000";
 
 function mergeStatus(base, patch) {
   try {
@@ -120,64 +119,104 @@ async function syncToken(token, actor, status) {
   return true;
 }
 
+function tokenActorFor(token) {
+  return token?.actor ?? token?.document?.actor ?? token?.object?.actor ?? null;
+}
+
+function tokenActorKey(tokenActor) {
+  return tokenActor?.uuid ?? tokenActor?.id ?? tokenActor?.name ?? null;
+}
+
 function tokenActorEffects(token) {
-  const tokenActor = token?.actor ?? token?.document?.actor ?? token?.object?.actor ?? null;
+  const tokenActor = tokenActorFor(token);
   return tokenActor?.effects ? { actor: tokenActor, effects: [...tokenActor.effects] } : { actor: tokenActor, effects: [] };
+}
+
+function effectStatuses(effect) {
+  return new Set(add2eVitalArray(effect?.statuses ?? effect?.system?.statuses ?? []).map(add2eVitalNorm));
 }
 
 function findAdd2eTokenDeadEffect(tokenActor) {
   for (const effect of tokenActor?.effects ?? []) {
-    const statuses = new Set(add2eVitalArray(effect?.statuses ?? effect?.system?.statuses ?? []).map(add2eVitalNorm));
-    const isDead = statuses.has("dead") || add2eVitalNorm(effect?.flags?.add2e?.vitalStatus) === "dead" || add2eVitalNorm(effect?.name) === "mort" || effect?.img === ADD2E_VITAL_STATUS.dead.icon;
-    const isAuto = effect?.flags?.add2e?.autoVitalStatus === true || effect?.id === ADD2E_TOKEN_DEAD_EFFECT_ID || statuses.has("dead");
-    if (isDead && isAuto) return effect;
+    const statuses = effectStatuses(effect);
+    const vitalStatus = add2eVitalNorm(effect?.flags?.add2e?.vitalStatus);
+    const autoVital = effect?.flags?.add2e?.autoVitalStatus === true;
+    const isDead = statuses.has("dead") || vitalStatus === "dead" || add2eVitalNorm(effect?.name) === "mort" || effect?.img === ADD2E_VITAL_STATUS.dead.icon;
+    if (isDead && (autoVital || statuses.has("dead"))) return effect;
   }
   return null;
+}
+
+async function safeDeleteTokenActorEffect(tokenActor, effect) {
+  if (!tokenActor?.deleteEmbeddedDocuments || !effect?.id) return false;
+  if (!tokenActor.effects?.get?.(effect.id)) return false;
+  try {
+    await tokenActor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], { add2eVitalStatusSync: true });
+    return true;
+  } catch (err) {
+    const msg = String(err?.message || err || "");
+    if (msg.includes("does not exist") || msg.includes("n'existe pas")) return false;
+    throw err;
+  }
+}
+
+async function safeUpdateTokenActorEffect(effect, patch) {
+  if (!effect?.id || !effect?.parent?.effects?.get?.(effect.id)) return false;
+  try {
+    await effect.update(patch, { add2eVitalStatusSync: true });
+    return true;
+  } catch (err) {
+    const msg = String(err?.message || err || "");
+    if (msg.includes("does not exist") || msg.includes("n'existe pas")) return false;
+    throw err;
+  }
 }
 
 async function syncMonsterTokenActorEffect(token, sourceActor, status) {
   if (!add2eVitalIsMonster(sourceActor)) return { changed: false, action: "not-monster" };
 
-  const tokenActor = token?.actor ?? token?.document?.actor ?? token?.object?.actor ?? null;
+  const tokenActor = tokenActorFor(token);
   if (!tokenActor?.createEmbeddedDocuments) return { changed: false, action: "no-token-actor" };
 
   const existing = findAdd2eTokenDeadEffect(tokenActor);
 
   if (status !== "dead") {
     if (!existing) return { changed: false, action: "none", tokenActor: tokenActor.name };
-    await tokenActor.deleteEmbeddedDocuments("ActiveEffect", [existing.id], { add2eVitalStatusSync: true });
+    const deleted = await safeDeleteTokenActorEffect(tokenActor, existing);
     console.log("[ADD2E][VITAL_STATUS][TOKEN_ACTOR_DEAD_EFFECT][DELETE]", {
       sourceActor: sourceActor?.name,
       token: token?.document?.name ?? token?.name,
       tokenActor: tokenActor.name,
-      effectId: existing.id
+      effectId: existing.id,
+      deleted
     });
-    return { changed: true, action: "delete", effectId: existing.id, tokenActor: tokenActor.name };
+    return { changed: deleted, action: deleted ? "delete" : "delete-stale", effectId: existing.id, tokenActor: tokenActor.name };
   }
 
   if (existing) {
-    const patch = {};
-    if (existing.name !== "Mort") patch.name = "Mort";
-    if (existing.img !== ADD2E_VITAL_STATUS.dead.icon) patch.img = ADD2E_VITAL_STATUS.dead.icon;
-    if (existing.icon !== ADD2E_VITAL_STATUS.dead.icon) patch.icon = ADD2E_VITAL_STATUS.dead.icon;
-    patch.statuses = ["dead"];
-    patch["flags.add2e.vitalStatus"] = "dead";
-    patch["flags.add2e.autoVitalStatus"] = true;
-    patch["flags.core.statusId"] = "dead";
-
-    await existing.update(patch, { add2eVitalStatusSync: true });
+    const patch = {
+      name: "Mort",
+      label: "Mort",
+      img: ADD2E_VITAL_STATUS.dead.icon,
+      icon: ADD2E_VITAL_STATUS.dead.icon,
+      statuses: ["dead"],
+      "flags.core.statusId": "dead",
+      "flags.add2e.vitalStatus": "dead",
+      "flags.add2e.autoVitalStatus": true
+    };
+    const updated = await safeUpdateTokenActorEffect(existing, patch);
     console.log("[ADD2E][VITAL_STATUS][TOKEN_ACTOR_DEAD_EFFECT][UPDATE]", {
       sourceActor: sourceActor?.name,
       token: token?.document?.name ?? token?.name,
       tokenActor: tokenActor.name,
       effectId: existing.id,
+      updated,
       patch
     });
-    return { changed: true, action: "update", effectId: existing.id, tokenActor: tokenActor.name };
+    return { changed: updated, action: updated ? "update" : "update-stale", effectId: existing.id, tokenActor: tokenActor.name };
   }
 
   const data = {
-    _id: ADD2E_TOKEN_DEAD_EFFECT_ID,
     name: "Mort",
     label: "Mort",
     img: ADD2E_VITAL_STATUS.dead.icon,
@@ -190,32 +229,49 @@ async function syncMonsterTokenActorEffect(token, sourceActor, status) {
     }
   };
 
-  await tokenActor.createEmbeddedDocuments("ActiveEffect", [data], { keepId: true, add2eVitalStatusSync: true });
+  const created = await tokenActor.createEmbeddedDocuments("ActiveEffect", [data], { add2eVitalStatusSync: true });
+  const effectId = created?.[0]?.id ?? null;
   console.log("[ADD2E][VITAL_STATUS][TOKEN_ACTOR_DEAD_EFFECT][CREATE]", {
     sourceActor: sourceActor?.name,
     token: token?.document?.name ?? token?.name,
     tokenActor: tokenActor.name,
-    effectId: data._id,
+    effectId,
     img: data.img,
     statuses: data.statuses
   });
-  return { changed: true, action: "create", effectId: data._id, tokenActor: tokenActor.name };
+  return { changed: true, action: "create", effectId, tokenActor: tokenActor.name };
 }
 
 async function syncMonsterTokenActorEffects(actor, status) {
   if (!add2eVitalIsMonster(actor)) return { changed: 0, results: [] };
 
   const results = [];
+  const processed = new Set();
   let changed = 0;
+
   for (const token of actorTokens(actor)) {
+    const tokenActor = tokenActorFor(token);
+    const key = tokenActorKey(tokenActor);
+    if (key && processed.has(key)) {
+      results.push({
+        token: token?.document?.name ?? token?.name,
+        tokenId: token?.document?.id ?? token?.id,
+        tokenActor: tokenActor?.name ?? null,
+        tokenActorId: tokenActor?.id ?? null,
+        skipped: "duplicate-token-actor"
+      });
+      continue;
+    }
+    if (key) processed.add(key);
+
     try {
       const result = await syncMonsterTokenActorEffect(token, actor, status);
       results.push({
         token: token?.document?.name ?? token?.name,
         tokenId: token?.document?.id ?? token?.id,
         actorLink: token?.document?.actorLink,
-        tokenActor: token?.actor?.name ?? token?.document?.actor?.name ?? null,
-        tokenActorId: token?.actor?.id ?? token?.document?.actor?.id ?? null,
+        tokenActor: tokenActor?.name ?? null,
+        tokenActorId: tokenActor?.id ?? null,
         result,
         effectsAfter: tokenActorEffects(token).effects.map(e => ({ id: e.id, name: e.name, img: e.img, statuses: [...(e.statuses ?? [])], flags: e.flags }))
       });
