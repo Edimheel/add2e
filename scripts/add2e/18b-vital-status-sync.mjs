@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v17-foundry-toggle-status-effect";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v18-skip-stale-toggle-off";
 
 const LOCKS = new Set();
 
@@ -67,6 +67,13 @@ function tokenDiagnostic(token, actor, label = "token") {
     docOverlayEffect: doc?.overlayEffect ?? doc?._source?.overlayEffect ?? null,
     actorEffects: effectSummary(tokenActor)
   };
+}
+
+function hasRealDeadEffect(actor) {
+  return add2eVitalArray(actor?.effects).some(e => {
+    const statuses = new Set(add2eVitalArray(e?.statuses ?? e?.system?.statuses ?? []).map(add2eVitalNorm));
+    return statuses.has("dead") || add2eVitalNorm(e?.flags?.core?.statusId) === "dead" || e?.img === ADD2E_VITAL_STATUS.dead.icon || add2eVitalNorm(e?.name) === "mort";
+  });
 }
 
 export function add2eVitalRegisterStatusEffects() {
@@ -143,10 +150,25 @@ async function syncMonsterTokenStatus(token, actor, status) {
 
   const before = tokenDiagnostic(token, actor, "before-toggle-status");
   const active = status === "dead";
-  let result = null;
 
+  if (!active) {
+    const hasDead = hasRealDeadEffect(tokenActor);
+    console.log("[ADD2E][VITAL_STATUS][MONSTER_STATUS_TOGGLE_SKIP_OFF]", {
+      token: doc.name,
+      tokenId: doc.id,
+      actorLink: doc.actorLink,
+      tokenActor: tokenActor.name,
+      tokenActorId: tokenActor.id,
+      tokenActorIsToken: tokenActor.isToken,
+      hasDead,
+      before
+    });
+    return { changed: false, action: "skip-toggle-dead-off", hasDead };
+  }
+
+  let result = null;
   try {
-    result = await tokenActor.toggleStatusEffect("dead", { active, overlay: active });
+    result = await tokenActor.toggleStatusEffect("dead", { active: true, overlay: true });
   } catch (err) {
     console.warn("[ADD2E][VITAL_STATUS][MONSTER_STATUS_TOGGLE][WARN]", { token: doc.name, tokenId: doc.id, active, err, before });
     return { changed: false, action: "toggle-warn", error: String(err?.message || err || ""), before };
@@ -168,7 +190,7 @@ async function syncMonsterTokenStatus(token, actor, status) {
     after
   });
 
-  return { changed: result !== undefined, action: active ? "toggle-dead-on" : "toggle-dead-off", result: result?.id ?? result };
+  return { changed: result !== undefined, action: "toggle-dead-on", result: result?.id ?? result };
 }
 
 async function syncCharacterToken(token, actor, status) {
