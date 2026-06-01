@@ -1,5 +1,5 @@
 // ADD2E — Relais socket central pour ADD2E_GM_OPERATION et messages joueurs/MJ.
-// Version : 2026-05-30-independent-attack-chat-relay-v4
+// Version : 2026-06-01-restore-legacy-damage-route-v1
 
 import {
   ADD2E_GM_OPERATION,
@@ -26,7 +26,7 @@ import { vendorRecordProjectileSpent, consumeSpellComponent } from "./15b3-gm-re
 
 const ADD2E_ATTACK_PLAYER_LOCAL_CHAT = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
 const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
-const LOCAL_CHAT_VERSION = "2026-05-30-independent-attack-chat-relay-v4";
+const LOCAL_CHAT_VERSION = "2026-06-01-restore-legacy-damage-route-v1";
 const LOG = "[ADD2E][ATTACK_CHAT_RELAY]";
 
 globalThis.ADD2E_LOCAL_PLAYER_ATTACK_CHAT_RELAY_VERSION = LOCAL_CHAT_VERSION;
@@ -192,6 +192,32 @@ async function handleAttackChatSocket(data) {
   return false;
 }
 
+async function handleLegacyDamageFlag(data = {}) {
+  if (!game.user?.isGM) return false;
+  if (!isResponsibleGM()) return false;
+
+  const flagData = data.flagData ?? {};
+  const payload = {
+    actorId: data.actorId,
+    tokenId: data.tokenId,
+    sceneId: data.sceneId ?? canvas?.scene?.id ?? null,
+    montant: flagData.montant ?? data.montant ?? 0,
+    type: flagData.type ?? data.damageType ?? "",
+    details: flagData.details ?? data.details ?? "",
+    source: flagData.source ?? data.source ?? "legacy-applyDamageFlag",
+    fromUserId: flagData.fromUserId ?? data.fromUserId ?? null
+  };
+
+  console.log("[ADD2E][GM-RELAY][LEGACY_DAMAGE_FLAG][ROUTE]", {
+    relayVersion: LOCAL_CHAT_VERSION,
+    raw: data,
+    payload
+  });
+
+  await applyDamage(payload);
+  return true;
+}
+
 function registerAttackChatRelay() {
   if (!game?.socket?.on) {
     console.warn(`${LOG}[SOCKET_NOT_READY]`, {
@@ -276,6 +302,11 @@ function installGenericGmRelay() {
     });
 
     if (data?.type === ADD2E_ATTACK_PLAYER_LOCAL_CHAT || data?.type === ADD2E_ATTACK_GM_DETAIL_CHAT) return;
+
+    if (data?.type === "applyDamageFlag") {
+      await handleLegacyDamageFlag(data);
+      return;
+    }
 
     if (data?.type === "applyActiveEffect") {
       if (!game.user.isGM) return;
