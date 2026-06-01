@@ -1,0 +1,35 @@
+      <section class='a2e-tab-content tab tab-notes {{#if (eq activeTab "notes")}}active{{/if}}' data-group="primary" data-tab="notes">
+        <div class="a2e-grid-2">
+          <div class="a2e-panel">
+            <h2>Description de race</h2>
+            <div class="a2e-panel-body a2e-small">
+              {{#if actor.system.details_race.description_longue}}
+                {{{actor.system.details_race.description_longue}}}
+              {{else}}
+                {{{actor.system.details_race.description}}}
+              {{/if}}
+            </div>
+          </div>
+
+          <div class="a2e-panel">
+            <h2>Description de classe</h2>
+            <div class="a2e-panel-body a2e-small">
+              {{{actor.system.details_classe.description}}}
+              {{#if actor.system.details_classe.ruleNotes.length}}
+                <ul>
+                  {{#each actor.system.details_classe.ruleNotes}}
+                    <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+
+        <div class="a2e-panel">
+          <h2>Notes du personnage</h2>
+          <div class="a2e-panel-body">
+            <textarea name="system.notes" rows="8">{{actor.system.notes}}</textarea>
+          </div>
+        </div>
+      </section>

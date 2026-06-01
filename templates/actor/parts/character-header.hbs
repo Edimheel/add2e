@@ -1,0 +1,81 @@
+    <header class="a2e-header">
+      <div>
+        <img class="a2e-portrait" src="{{actor.img}}" alt="Portrait du personnage" data-edit="img">
+      </div>
+
+      <div>
+        <div class="a2e-name-line">
+          <input class="a2e-name" type="text" name="name" value="{{actor.name}}" aria-label="Nom du personnage">
+
+          <div class="a2e-field a2e-player-top">
+            <label>Joueur</label>
+            <input type="text" name="system.nom_joueur" value="{{actor.system.nom_joueur}}">
+          </div>
+        </div>
+
+        <div class="a2e-id-grid">
+          <div class="a2e-field">
+            <label>Classe</label>
+            <input type="text" name="system.classe" value="{{actor.system.classe}}">
+          </div>
+
+          <div class="a2e-field">
+            <label>Race</label>
+            <input type="text" name="system.race" value="{{actor.system.race}}">
+          </div>
+
+          <div class="a2e-field">
+            <label>Niveau</label>
+            <input type="number" name="system.niveau" value="{{actor.system.niveau}}" min="1">
+          </div>
+
+          <div class="a2e-field a2e-xp-field">
+            <label>XP</label>
+            <div class="a2e-xp-inline">
+              <input type="number" name="system.xp" value="{{actor.system.xp}}" min="0" step="1" title="{{actor.system.progression_xp}}">
+              <button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP">+</button>
+            </div>
+          </div>
+
+          <div class="a2e-field">
+            <label>Titre</label>
+            <input type="text" value="{{progressionCourante.title}}" readonly>
+          </div>
+
+          <div class="a2e-field">
+            <label>Alignement</label>
+            <select name="system.alignement">
+              {{#each alignementsDisponibles as |algn|}}
+                <option value="{{algn}}" {{#if (eq ../actor.system.alignement algn)}}selected{{/if}}>{{algn}}</option>
+              {{/each}}
+            </select>
+          </div>
+
+          <div class="a2e-field">
+            <label>Mouvement</label>
+            <input type="text" value="{{#if system.movement}}{{system.movement}}{{else}}{{actor.system.movement}}{{/if}} m" readonly>
+          </div>
+
+          <div class="a2e-field">
+            <label>PV max</label>
+            <input type="text" value="{{actor.system.points_de_coup}}" readonly>
+          </div>
+
+          <div class="a2e-field">
+            <label>PV courant</label>
+            <input type="number" name="system.pdv" value="{{actor.system.pdv}}" class="pv-courant">
+          </div>
+
+          <div class="a2e-field">
+            <label>CA</label>
+            <input type="text" value="{{actor.system.ca_total}}" readonly>
+          </div>
+
+          <div class="a2e-field">
+            <label>THAC0</label>
+            <input type="text" value="{{combatDefense.thaco}}" readonly>
+          </div>
+
+        </div>
+      </div>
+    </header>

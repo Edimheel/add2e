@@ -1,0 +1,276 @@
+{
+  "name": "Voleur",
+  "type": "classe",
+  "img": "systems/add2e/assets/voleur.png",
+  "system": {
+    "label": "Voleur",
+    "description": "Expert en infiltration, discrétion, filouterie et escalade. Le voleur survit par son agilité et sa ruse, mais aussi par ses nombreuses compétences spéciales.",
+    "caracs_min": { "dexterite": 9 },
+    "primaryAbility": "Dextérité",
+    "prerequis": {
+      "alignement": "Voir alignements autorisés",
+      "race": "Toutes",
+      "autre": "Pas d’armure lourde ni bouclier. Utilisation restreinte des armes."
+    },
+    "alignment": [
+      "Loyal Bon", "Loyal Neutre", "Loyal Mauvais",
+      "Neutre Bon", "Neutre", "Neutre Mauvais",
+      "Chaotique Bon", "Chaotique Neutre", "Chaotique Mauvais"
+    ],
+    "raceAllowed": [
+      "Humain", "Elfe", "Demi-elfe", "Halfelin", "Nain", "Gnome", "Demi-orque", "Kender"
+    ],
+    "armorAllowed": ["cuir", "cuir cloute"],
+    "shieldAllowed": false,
+    "armes_autorisees": [
+      "dague", "épée courte", "rapière",
+      "arc court", "arbalète légère", "bâton", "fronde", "bâton de jet"
+    ],
+    "weaponRestriction": { "allowedNames": ["dague", "épée courte", "rapière",
+      "arc court", "arbalète légère", "bâton", "fronde", "bâton de jet"],"encombrante": false },
+    "magicAllowed": "Aucun sort",
+    "hdPerLevel": "1d6",
+    "hpAfter9": 1,
+    "richesse_initiale": "2d6 × 10 po",
+    "skillLabels": [
+      "Crochetage de serrures",
+      "Ouverture de serrures",
+      "Détection de pièges",
+      "Déplacement silencieux",
+      "Dissimulation",
+      "Écoute",
+      "Escalade",
+      "Frappe dans le dos"
+    ],
+    "progression": [
+      {
+        "level": 1,
+        "xp": 0,
+        "hd": "1d6",
+        "title": "Apprenti",
+        "thac0": 20,
+        "savingThrows": [14,16,15,17,17],
+        "skills": [5,5,2,10,10,5,40,2],
+        "attacksPerRound": "1"
+      },
+      {
+        "level": 2,
+        "xp": 1251,
+        "hd": "2d6",
+        "title": "Filou",
+        "thac0": 20,
+        "savingThrows": [14,16,15,17,17],
+        "skills": [10,10,5,15,15,10,50,2],
+        "attacksPerRound": "1"
+      },
+      {
+        "level": 3,
+        "xp": 2501,
+        "hd": "3d6",
+        "title": "Escroc",
+        "thac0": 19,
+        "savingThrows": [14,16,15,17,17],
+        "skills": [15,20,10,20,20,15,60,2],
+        "attacksPerRound": "1"
+      },
+      {
+        "level": 4,
+        "xp": 5001,
+        "hd": "4d6",
+        "title": "Cambrioleur",
+        "thac0": 19,
+        "savingThrows": [12,14,13,15,15],
+        "skills": [20,25,15,25,25,20,70,2],
+        "attacksPerRound": "1"
+      },
+      {
+        "level": 5,
+        "xp": 10001,
+        "hd": "5d6",
+        "title": "Rôdeur",
+        "thac0": 18,
+        "savingThrows": [12,14,13,15,15],
+        "skills": [25,30,20,30,30,25,80,3],
+        "attacksPerRound": "3/2"
+      },
+      {
+        "level": 6,
+        "xp": 20001,
+        "hd": "6d6",
+        "title": "Brigand",
+        "thac0": 18,
+        "savingThrows": [12,14,13,15,15],
+        "skills": [30,35,25,35,35,30,90,3],
+        "attacksPerRound": "3/2"
+      },
+      {
+        "level": 7,
+        "xp": 40001,
+        "hd": "7d6",
+        "title": "Traqueur",
+        "thac0": 17,
+        "savingThrows": [12,14,13,15,15],
+        "skills": [35,40,30,40,40,35,99,3],
+        "attacksPerRound": "3/2"
+      },
+      {
+        "level": 8,
+        "xp": 75001,
+        "hd": "8d6",
+        "title": "Larron",
+        "thac0": 17,
+        "savingThrows": [11,13,12,14,14],
+        "skills": [40,45,35,45,45,40,99,3],
+        "attacksPerRound": "3/2"
+      },
+      {
+        "level": 9,
+        "xp": 150001,
+        "hd": "9d6",
+        "title": "Voleur habile",
+        "thac0": 16,
+        "savingThrows": [11,13,12,14,14],
+        "skills": [45,50,40,50,50,45,99,4],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 10,
+        "xp": 300001,
+        "hd": "9d6+1",
+        "title": "Maître Voleur",
+        "thac0": 16,
+        "savingThrows": [10,12,11,13,13],
+        "skills": [50,55,45,55,55,50,99,4],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 11,
+        "xp": 600001,
+        "hd": "9d6+2",
+        "title": "Seigneur Voleur",
+        "thac0": 15,
+        "savingThrows": [10,12,11,13,13],
+        "skills": [55,60,50,60,60,55,99,4],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 12,
+        "xp": 1200001,
+        "hd": "9d6+3",
+        "title": "Baron du Vol",
+        "thac0": 15,
+        "savingThrows": [9,11,10,12,12],
+        "skills": [60,65,55,65,65,60,99,4],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 13,
+        "xp": 2400001,
+        "hd": "9d6+4",
+        "title": "Prince du Crime",
+        "thac0": 14,
+        "savingThrows": [9,11,10,12,12],
+        "skills": [65,70,60,70,70,65,99,5],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 14,
+        "xp": 3600001,
+        "hd": "9d6+5",
+        "title": "Seigneur des Ombres",
+        "thac0": 14,
+        "savingThrows": [8,10,9,11,11],
+        "skills": [70,75,65,75,75,70,99,5],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 15,
+        "xp": 4800001,
+        "hd": "9d6+6",
+        "title": "Commandeur",
+        "thac0": 13,
+        "savingThrows": [8,10,9,11,11],
+        "skills": [75,80,70,80,80,75,99,5],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 16,
+        "xp": 6000001,
+        "hd": "9d6+7",
+        "title": "Vicomte",
+        "thac0": 13,
+        "savingThrows": [7,9,8,10,10],
+        "skills": [80,85,75,85,85,80,99,5],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 17,
+        "xp": 7200001,
+        "hd": "9d6+8",
+        "title": "Comte",
+        "thac0": 12,
+        "savingThrows": [7,9,8,10,10],
+        "skills": [85,90,80,90,90,85,99,5],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 18,
+        "xp": 8400001,
+        "hd": "9d6+9",
+        "title": "Duc",
+        "thac0": 12,
+        "savingThrows": [6,8,7,9,9],
+        "skills": [90,95,85,95,95,90,99,5],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 19,
+        "xp": 9600001,
+        "hd": "9d6+10",
+        "title": "Marquis",
+        "thac0": 11,
+        "savingThrows": [6,8,7,9,9],
+        "skills": [95,99,90,99,99,95,99,5],
+        "attacksPerRound": "2"
+      },
+      {
+        "level": 20,
+        "xp": 10800001,
+        "hd": "9d6+11",
+        "title": "Roi des Voleurs",
+        "thac0": 11,
+        "savingThrows": [5,7,6,8,8],
+        "skills": [99,99,95,99,99,99,99,5],
+        "attacksPerRound": "2"
+      }
+    ],
+    "specialAbilities": [
+      { "level": 1, "nom": "Crochetage de serrures", "description": "Peut ouvrir des serrures ordinaires et complexes, selon le niveau de compétence." },
+      { "level": 1, "nom": "Détection de pièges", "description": "Peut trouver et désamorcer divers types de pièges mécaniques." },
+      { "level": 1, "nom": "Déplacement silencieux", "description": "Peut se déplacer sans bruit, même sur des surfaces bruyantes." },
+      { "level": 1, "nom": "Vol à la tire", "description": "Peut subtiliser des objets sans se faire remarquer." },
+      { "level": 1, "nom": "Escalade", "description": "Peut escalader des surfaces presque verticales sans équipement." },
+      { "level": 1, "nom": "Tromper les gardes", "description": "Capable de duper, déguiser ou semer des poursuivants." },
+      { "level": 3, "nom": "Frappe dans le dos", "description": "Inflige des dégâts supplémentaires en cas d'attaque surprise (x2 à x4 selon le niveau)." }
+    ],
+    "notes": "Le voleur améliore automatiquement ses compétences à chaque niveau, et obtient des attaques supplémentaires à partir du niveau 5 (3/2), puis 2 attaques/round au niveau 9 et plus. Tableau conforme AD&D2."
+  },
+  "effects": [],
+  "folder": null,
+  "flags": {
+    "exportSource": {
+      "world": "test",
+      "system": "add2e",
+      "coreVersion": "12.343",
+      "systemVersion": "0.1.12"
+    }
+  },
+  "_stats": {
+    "coreVersion": "12.343",
+    "systemId": "add2e",
+    "systemVersion": "0.1.12",
+    "createdTime": 0,
+    "modifiedTime": 0,
+    "lastModifiedBy": ""
+  }
+}

@@ -1,0 +1,1514 @@
+{
+  "exporter": "ADD2E folder export",
+  "version": "2026-05-20-export-folder-dropdown-v1",
+  "exportedAt": "2026-05-24T15:22:17.655Z",
+  "world": "test",
+  "system": "add2e",
+  "systemVersion": "0.1.14",
+  "folder": {
+    "id": "oewKfdhMHYYKikxO",
+    "name": "Armures",
+    "type": "Item",
+    "path": "Armures"
+  },
+  "folders": [
+    {
+      "id": "oewKfdhMHYYKikxO",
+      "name": "Armures",
+      "type": "Item",
+      "path": "Armures",
+      "parent": null
+    }
+  ],
+  "count": 24,
+  "documents": [
+    {
+      "name": "Armure à bandes",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Armure_a_bandes.png",
+      "system": {
+        "nom": "Armure à bandes",
+        "ac": 4,
+        "weight": 35,
+        "properties": "Lourde",
+        "cost": "200 po",
+        "description": "Armure à bandes.",
+        "tags": "armure,categorie_armure:lourde,type_armure:bandes,matiere:metal,structure:bandes,magique,categorie_armure:armure,jp_meme_type:5",
+        "effectTags": "armure,categorie_armure:lourde,type_armure:bandes,matiere:metal,structure:bandes,magique,categorie_armure:armure,jp_meme_type:5",
+        "poids": 35,
+        "prix": "200 po",
+        "categorie": "Lourde",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": false,
+        "bonus_toucher": null,
+        "bonus_degats": null,
+        "materiau": "",
+        "base": false,
+        "bouclier": false,
+        "type_armure": "",
+        "structure": ""
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "iEZ9ANs47uMqyewL",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.14",
+        "createdTime": 1777658314609,
+        "modifiedTime": 1779208326397,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Armure annelée",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Hoqueton.webp",
+      "system": {
+        "nom": "Armure annelée",
+        "ac": 7,
+        "weight": 30,
+        "properties": "Moyenne",
+        "cost": "100 po",
+        "description": "Armure annelée.",
+        "tags": "armure,categorie_armure:moyenne,type_armure:annelee,matiere:cuir,matiere:metal,structure:anneaux,magique,categorie_armure:armure,jp_meme_type:5",
+        "effectTags": "armure,categorie_armure:moyenne,type_armure:annelee,matiere:cuir,matiere:metal,structure:anneaux,magique,categorie_armure:armure,jp_meme_type:5",
+        "poids": 30,
+        "prix": "100 po",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true,
+        "bonus_toucher": null,
+        "bonus_degats": null,
+        "base": false,
+        "bouclier": false,
+        "materiau": "",
+        "type_armure": "",
+        "structure": ""
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "XwlUfwZKdnMA42p4",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.14",
+        "createdTime": 1777658314509,
+        "modifiedTime": 1779211184101,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Armure d'écailles",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Armure_decailles.png",
+      "system": {
+        "nom": "Armure d'écailles",
+        "ac": 6,
+        "weight": 40,
+        "properties": "Moyenne",
+        "cost": "120 po",
+        "description": "Armure d'écailles.",
+        "tags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:ecailles",
+          "matiere:metal",
+          "structure:ecailles",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:ecailles",
+          "matiere:metal",
+          "structure:ecailles",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 40,
+        "prix": "120 po",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "G7eI2heW4y7ygOdC",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314251,
+        "modifiedTime": 1778184115707,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Armure d'écailles d'elfe de mer",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Armure_decailles_delfe_de_mer.png",
+      "system": {
+        "nom": "Armure d'écailles d'elfe de mer",
+        "ac": 6,
+        "weight": 25,
+        "properties": "Moyenne",
+        "cost": "rare",
+        "description": "Variante d'armure d'écailles des elfes de mer.",
+        "tags": "armure,categorie_armure:moyenne,type_armure:ecailles_elfe_de_mer,matiere:ecaille,structure:ecailles,aquatique,magique,categorie_armure:armure,jp_meme_type:5",
+        "effectTags": "armure,categorie_armure:moyenne,type_armure:ecailles_elfe_de_mer,matiere:ecaille,structure:ecailles,aquatique,magique,categorie_armure:armure,jp_meme_type:5",
+        "poids": 25,
+        "prix": "rare",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true,
+        "bonus_toucher": null,
+        "bonus_degats": null,
+        "base": false,
+        "bouclier": false,
+        "materiau": "",
+        "type_armure": "",
+        "structure": ""
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "FBa4DCr5z4mDIZE3",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.14",
+        "createdTime": 1777658314283,
+        "modifiedTime": 1779208342817,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Armure de cuir à pointes",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Armure_de_cuir_a_pointes.png",
+      "system": {
+        "nom": "Armure de cuir à pointes",
+        "ac": 7,
+        "weight": 25,
+        "properties": "Légère",
+        "cost": "20 po",
+        "description": "Variante de cuir clouté munie de pointes.",
+        "tags": "armure,categorie_armure:legere,type_armure:cuir_a_pointes,matiere:cuir,matiere:metal,danger:pointes,magique,categorie_armure:armure,jp_meme_type:5",
+        "effectTags": "armure,categorie_armure:legere,type_armure:cuir_a_pointes,matiere:cuir,matiere:metal,danger:pointes,magique,categorie_armure:armure,jp_meme_type:5",
+        "poids": 25,
+        "prix": "20 po",
+        "categorie": "Légère",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true,
+        "bonus_toucher": null,
+        "bonus_degats": null,
+        "base": false,
+        "bouclier": false,
+        "materiau": "",
+        "type_armure": "",
+        "structure": ""
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "YCxROp8LdwrJe1PX",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.14",
+        "createdTime": 1777658314006,
+        "modifiedTime": 1779211554172,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Armure de monnaie",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Armure_de_monnaie.png",
+      "system": {
+        "nom": "Armure de monnaie",
+        "ac": 6,
+        "weight": 40,
+        "properties": "Moyenne",
+        "cost": "variable",
+        "description": "Variante d'armure d'écailles utilisant des pièces.",
+        "tags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:monnaie",
+          "matiere:metal",
+          "structure:ecailles",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:monnaie",
+          "matiere:metal",
+          "structure:ecailles",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 40,
+        "prix": "variable",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "9SpH0HLLfGC4drTM",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314313,
+        "modifiedTime": 1778184115867,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Armure de peau",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Armure_de_peau.png",
+      "system": {
+        "nom": "Armure de peau",
+        "ac": 6,
+        "weight": 30,
+        "properties": "Moyenne",
+        "cost": "15 po",
+        "description": "Armure de peau.",
+        "tags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:peau",
+          "matiere:peau",
+          "matiere:cuir",
+          "culture:primitive",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:peau",
+          "matiere:peau",
+          "matiere:cuir",
+          "culture:primitive",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 30,
+        "prix": "15 po",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "iLMdPjLbqBrdrr5d",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314339,
+        "modifiedTime": 1778184115900,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Armure de plaques",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Armure_de_plaques.png",
+      "system": {
+        "nom": "Armure de plaques",
+        "ac": 3,
+        "weight": 50,
+        "properties": "Lourde",
+        "cost": "50 po",
+        "effectTags": [
+          "armure",
+          "categorie_armure:lourde",
+          "type_armure:plaques",
+          "matiere:metal",
+          "structure:plaques",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "tags": [
+          "armure",
+          "categorie_armure:lourde",
+          "type_armure:plaques",
+          "matiere:metal",
+          "structure:plaques",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 50,
+        "prix": "50 po",
+        "categorie": "Lourde",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "Ryh7qIv494PCD63H",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314537,
+        "modifiedTime": 1778184115931,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Armure feuilletée",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Armure_feuilletee.png",
+      "system": {
+        "nom": "Armure feuilletée",
+        "ac": 4,
+        "weight": 40,
+        "properties": "Lourde",
+        "cost": "80 po",
+        "description": "Armure feuilletée.",
+        "tags": [
+          "armure",
+          "categorie_armure:lourde",
+          "type_armure:feuilletee",
+          "matiere:metal",
+          "structure:plaques",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:lourde",
+          "type_armure:feuilletee",
+          "matiere:metal",
+          "structure:plaques",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 40,
+        "prix": "80 po",
+        "categorie": "Lourde",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "4ery541M1O83ef6a",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314577,
+        "modifiedTime": 1778184116242,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Armure rembourrée",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Armure_rembourree.png",
+      "system": {
+        "nom": "Armure rembourrée",
+        "ac": 8,
+        "weight": 10,
+        "properties": "Légère",
+        "cost": "5 po",
+        "effectTags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:rembourree",
+          "matiere:textile",
+          "matiere:matelassee",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "tags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:rembourree",
+          "matiere:textile",
+          "matiere:matelassee",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 10,
+        "prix": "5 po",
+        "categorie": "Légère",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "NAkIk3mj7YqsHOce",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314089,
+        "modifiedTime": 1778184116542,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Besantine",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Besantine.png",
+      "system": {
+        "nom": "Besantine",
+        "ac": 7,
+        "weight": 20,
+        "properties": "Légère",
+        "cost": "20 po",
+        "description": "Armure de cuir clouté ou besantine.",
+        "tags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:besantine",
+          "matiere:cuir",
+          "matiere:metal",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:besantine",
+          "matiere:cuir",
+          "matiere:metal",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 20,
+        "prix": "20 po",
+        "categorie": "Légère",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "2ScynIPxtRJ9lZph",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314030,
+        "modifiedTime": 1778184117203,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Bouclier de tour",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Bouclier_de_tour.png",
+      "system": {
+        "nom": "Bouclier de tour",
+        "ac": 3,
+        "weight": 15,
+        "properties": "Bouclier",
+        "cost": "20 po",
+        "effectTags": [
+          "armure",
+          "bouclier",
+          "categorie_armure:bouclier",
+          "type_bouclier:tour",
+          "magique",
+          "jp_meme_type:5"
+        ],
+        "tags": [
+          "armure",
+          "bouclier",
+          "categorie_armure:bouclier",
+          "type_bouclier:tour",
+          "magique",
+          "jp_meme_type:5"
+        ],
+        "poids": 15,
+        "prix": "20 po",
+        "categorie": "bouclier",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true,
+        "bonus_toucher": null,
+        "bonus_degats": null,
+        "materiau": "",
+        "description": ""
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "OvJAUZMOYGpa3DRw",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.14",
+        "createdTime": 1777658314733,
+        "modifiedTime": 1779206541021,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Bouclier lourd",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Bouclier_lourd.png",
+      "system": {
+        "nom": "Bouclier lourd",
+        "ac": 2,
+        "weight": 10,
+        "properties": "Bouclier",
+        "cost": "15 po",
+        "effectTags": [
+          "armure",
+          "bouclier",
+          "categorie_armure:bouclier",
+          "type_bouclier:lourd",
+          "magique",
+          "jp_meme_type:5"
+        ],
+        "tags": [
+          "armure",
+          "bouclier",
+          "categorie_armure:bouclier",
+          "type_bouclier:lourd",
+          "magique",
+          "jp_meme_type:5"
+        ],
+        "poids": 10,
+        "prix": "15 po",
+        "categorie": "bouclier",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "Hj2k6yVZIBo4tyAU",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314703,
+        "modifiedTime": 1778184118252,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Bouclier rond",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Bouclier_rond.png",
+      "system": {
+        "nom": "Bouclier rond",
+        "ac": 1,
+        "weight": 5,
+        "properties": "Bouclier",
+        "cost": "5 po",
+        "effectTags": [
+          "armure",
+          "bouclier",
+          "categorie_armure:bouclier",
+          "type_bouclier:rond",
+          "magique",
+          "jp_meme_type:5"
+        ],
+        "tags": [
+          "armure",
+          "bouclier",
+          "categorie_armure:bouclier",
+          "type_bouclier:rond",
+          "magique",
+          "jp_meme_type:5"
+        ],
+        "poids": 5,
+        "prix": "5 po",
+        "categorie": "bouclier",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "VZIbmR4C8bxQCc50",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314669,
+        "modifiedTime": 1778184118293,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Brigandine",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Brigandine.png",
+      "system": {
+        "nom": "Brigandine",
+        "ac": 6,
+        "weight": 35,
+        "properties": "Moyenne",
+        "cost": "120 po",
+        "description": "Brigandine.",
+        "tags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:brigandine",
+          "matiere:cuir",
+          "matiere:metal",
+          "structure:rivets",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:brigandine",
+          "matiere:cuir",
+          "matiere:metal",
+          "structure:rivets",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 35,
+        "prix": "120 po",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "2dO0b6q4INEjJ8GT",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314406,
+        "modifiedTime": 1778184118437,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Cotte de mailles",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Cotte_de_mailles.png",
+      "system": {
+        "nom": "Cotte de mailles",
+        "ac": 5,
+        "weight": 25,
+        "properties": "Moyenne",
+        "cost": "15 po",
+        "effectTags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:cotte_de_mailles",
+          "matiere:metal",
+          "structure:mailles",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "tags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:cotte_de_mailles",
+          "matiere:metal",
+          "structure:mailles",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 25,
+        "prix": "15 po",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "jaGh0GJbpoEKFXxd",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314187,
+        "modifiedTime": 1778184120176,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Cuir",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Cuir.png",
+      "system": {
+        "nom": "Cuir",
+        "ac": 7,
+        "weight": 15,
+        "properties": "Légère",
+        "cost": "10 po",
+        "effectTags": "armure,categorie_armure:legere,type_armure:cuir,matiere:cuir,magique,categorie_armure:armure,jp_meme_type:5",
+        "tags": "armure,categorie_armure:legere,type_armure:cuir,matiere:cuir,magique,categorie_armure:armure,jp_meme_type:5",
+        "poids": 15,
+        "prix": "10 po",
+        "categorie": "Légère",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true,
+        "bonus_toucher": null,
+        "bonus_degats": null,
+        "base": false,
+        "bouclier": false,
+        "materiau": "",
+        "type_armure": "",
+        "structure": "",
+        "description": ""
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "D6jxlUMb3gTw6psH",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.14",
+        "createdTime": 1777658314061,
+        "modifiedTime": 1779211131725,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Cuir bouilli",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Cuir_bouilli.png",
+      "system": {
+        "nom": "Cuir bouilli",
+        "ac": 8,
+        "weight": 15,
+        "properties": "Légère",
+        "cost": "5 po",
+        "description": "Variante d'armure de cuir.",
+        "tags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:cuir_bouilli",
+          "matiere:cuir",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:cuir_bouilli",
+          "matiere:cuir",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 15,
+        "prix": "5 po",
+        "categorie": "Légère",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "PrIslAeY7T7lUdJX",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314124,
+        "modifiedTime": 1778184121073,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Cuir clouté",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Cuir_cloute.png",
+      "system": {
+        "nom": "Cuir clouté",
+        "ac": 6,
+        "weight": 20,
+        "properties": "Légère",
+        "cost": "12 po",
+        "effectTags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:cuir_cloute",
+          "matiere:cuir",
+          "matiere:metal",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "tags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:cuir_cloute",
+          "matiere:cuir",
+          "matiere:metal",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 20,
+        "prix": "12 po",
+        "categorie": "Légère",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "q1e50IaByP1AgCng",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658313983,
+        "modifiedTime": 1778184121117,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Cuirasse",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Cuirasse.png",
+      "system": {
+        "nom": "Cuirasse",
+        "ac": 6,
+        "weight": 30,
+        "properties": "Moyenne",
+        "cost": "15 po",
+        "description": "Cuirasse ou armure de peau.",
+        "tags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:cuirasse",
+          "matiere:metal",
+          "protection:torse",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:cuirasse",
+          "matiere:metal",
+          "protection:torse",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 30,
+        "prix": "15 po",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "WCUAXm5ZDLSbmRJz",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.654Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314437,
+        "modifiedTime": 1778184121190,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Gambison",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Gambison.png",
+      "system": {
+        "nom": "Gambison",
+        "ac": 8,
+        "weight": 10,
+        "properties": "Légère",
+        "cost": "5 po",
+        "description": "Armure matelassée ou gambison.",
+        "tags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:gambison",
+          "matiere:textile",
+          "matiere:matelassee",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:legere",
+          "type_armure:gambison",
+          "matiere:textile",
+          "matiere:matelassee",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 10,
+        "prix": "5 po",
+        "categorie": "Légère",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "lhzfHNWTHuzuVRs2",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.655Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314155,
+        "modifiedTime": 1778184122483,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Jaseran",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Jaseran.png",
+      "system": {
+        "nom": "Jaseran",
+        "ac": 6,
+        "weight": 40,
+        "properties": "Moyenne",
+        "cost": "120 po",
+        "description": "Jaseran, proche de l'armure d'écailles.",
+        "tags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:jaseran",
+          "matiere:metal",
+          "structure:ecailles",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "effectTags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:jaseran",
+          "matiere:metal",
+          "structure:ecailles",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 40,
+        "prix": "120 po",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "4FHdSMgMkJcIqWKn",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.655Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314473,
+        "modifiedTime": 1778184123132,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Torse blindé",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Torse_blinde.png",
+      "system": {
+        "nom": "Torse blindé",
+        "ac": 4,
+        "weight": 40,
+        "properties": "Lourde",
+        "cost": "35 po",
+        "effectTags": [
+          "armure",
+          "categorie_armure:lourde",
+          "type_armure:torse_blinde",
+          "matiere:metal",
+          "protection:torse",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "tags": [
+          "armure",
+          "categorie_armure:lourde",
+          "type_armure:torse_blinde",
+          "matiere:metal",
+          "protection:torse",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 40,
+        "prix": "35 po",
+        "categorie": "Lourde",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "v5K81xpaM7SOsR2s",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.655Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314642,
+        "modifiedTime": 1778184125579,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    },
+    {
+      "name": "Tunique métallique",
+      "type": "armure",
+      "img": "systems/add2e/assets/icones/armures/Tunique_metallique.png",
+      "system": {
+        "nom": "Tunique métallique",
+        "ac": 5,
+        "weight": 30,
+        "properties": "Moyenne",
+        "cost": "20 po",
+        "effectTags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:tunique_metallique",
+          "matiere:metal",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "tags": [
+          "armure",
+          "categorie_armure:moyenne",
+          "type_armure:tunique_metallique",
+          "matiere:metal",
+          "magique",
+          "categorie_armure:armure",
+          "jp_meme_type:5"
+        ],
+        "poids": 30,
+        "prix": "20 po",
+        "categorie": "Moyenne",
+        "bonus_ac": 0,
+        "equipee": false,
+        "magique": true
+      },
+      "folder": "oewKfdhMHYYKikxO",
+      "_id": "t8LwkpO84Uccq41a",
+      "effects": [],
+      "sort": 0,
+      "ownership": {
+        "default": 0,
+        "sJuwkOXARIJD2Nsz": 3
+      },
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Armures",
+          "sourceFolderId": "oewKfdhMHYYKikxO",
+          "exportedAt": "2026-05-24T15:22:17.655Z"
+        }
+      },
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "add2e",
+        "systemVersion": "0.1.12",
+        "createdTime": 1777658314215,
+        "modifiedTime": 1778184125734,
+        "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+      }
+    }
+  ]
+}

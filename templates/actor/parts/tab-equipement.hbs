@@ -1,0 +1,58 @@
+      <section class='a2e-tab-content tab tab-equipement {{#if (eq activeTab "equipement")}}active{{/if}}' data-group="primary" data-tab="equipement">
+        <div style="display:grid;grid-template-columns:minmax(520px, 1fr) 190px;gap:14px;align-items:start;">
+          <div class="a2e-panel" style="min-width:0;">
+            <h2>Objets</h2>
+            <div class="a2e-panel-body">
+              <a class="a2e-action-icon a2e-action-add objet-create" title="Créer un objet" style="margin-bottom:8px;font-size:1.2em;"><i class="fas fa-plus-circle"></i></a>
+
+              {{#if listeObjetsDivers.length}}
+                <table class="a2e-table a2e-objets-table">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Qté</th>
+                      <th>Poids</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each listeObjetsDivers as |objet|}}
+                      <tr class="item" data-item-id="{{objet._id}}" data-itemId="{{objet._id}}">
+                        <td><b>{{objet.name}}</b></td>
+                        <td>{{objet.system.quantite}}</td>
+                        <td>{{objet.system.poids}}</td>
+                        <td>
+                          <div class="a2e-actions">
+                            <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if objet.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{objet._id}}" title="{{#if objet.system.equipee}}Équipé — cliquer pour retirer{{else}}Non équipé — cliquer pour équiper{{/if}}">
+                              <i class="fas fa-gem"></i>
+                            </a>
+                            <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{objet._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                            <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{objet._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                          </div>
+                        </td>
+                      </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+                <p class="a2e-small"><b>Poids total objets :</b> {{poidsTotalObjets}}</p>
+              {{else}}
+                <p class="a2e-muted">Aucun objet.</p>
+              {{/if}}
+            </div>
+          </div>
+
+          <div class="a2e-panel add2e-money-panel" style="min-width:170px;">
+            <h2>Monnaie</h2>
+            <div class="a2e-panel-body">
+              <div class="add2e-money-grid" style="display:grid;grid-template-columns:1fr;gap:6px;">
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PP <input class="add2e-money-input" name="flags.add2e.monnaie.pp" style="width:100%;" type="number" min="0" step="1" data-coin="pp" value="{{add2eVendorMoney.pp}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PO <input class="add2e-money-input" name="flags.add2e.monnaie.po" style="width:100%;" type="number" min="0" step="1" data-coin="po" value="{{add2eVendorMoney.po}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PE <input class="add2e-money-input" name="flags.add2e.monnaie.pe" style="width:100%;" type="number" min="0" step="1" data-coin="pe" value="{{add2eVendorMoney.pe}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PA <input class="add2e-money-input" name="flags.add2e.monnaie.pa" style="width:100%;" type="number" min="0" step="1" data-coin="pa" value="{{add2eVendorMoney.pa}}"></label>
+                <label style="display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;">PC <input class="add2e-money-input" name="flags.add2e.monnaie.pc" style="width:100%;" type="number" min="0" step="1" data-coin="pc" value="{{add2eVendorMoney.pc}}"></label>
+              </div>
+              <p class="a2e-small" style="margin:8px 0 0;line-height:1.35;"><b>Total :</b><br>{{add2eVendorMoneyLabel}}</p>
+            </div>
+          </div>
+        </div>
+      </section>

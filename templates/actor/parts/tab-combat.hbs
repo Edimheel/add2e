@@ -1,0 +1,152 @@
+      <section class='a2e-tab-content tab tab-combat {{#if (eq activeTab "combat")}}active{{/if}}' data-group="primary" data-tab="combat">
+        <div class="a2e-grid-2">
+          <div class="a2e-panel">
+            <h2>Défense</h2>
+            <div class="a2e-panel-body">
+              <table class="a2e-table">
+                <tbody>
+                  <tr><th>CA naturelle / physique</th><td>{{combatDefense.ac_naturelle}}</td></tr>
+                  <tr><th>CA totale</th><td><b>{{combatDefense.ac_totale}}</b></td></tr>
+                  <tr><th>Armure</th><td>{{{combatDefense.armure}}}</td></tr>
+                  <tr><th>Bouclier</th><td>{{{combatDefense.bouclier}}}</td></tr>
+                  <tr><th>Bonus magique</th><td title="{{magicSourceNames combatDefense.objets_magiques_defense.objectSources 'Aucun bonus magique hors armure/bouclier.'}}">{{negativeNumber combatDefense.objets_magiques_defense.objectProtectionBonus}}</td></tr>
+                  <tr><th>Mod. DEX défense</th><td>{{signedNumber actor.system.dex_def}}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="a2e-panel">
+            <h2>Armes équipées</h2>
+            <div class="a2e-panel-body">
+              <table class="a2e-table">
+                <thead>
+                  <tr>
+                    <th>Arme</th>
+                    <th>Dégâts</th>
+                    <th>Total toucher</th>
+                    <th>Total dégâts</th>
+                    <th>THAC0 effectif</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each (add2eEquippedWeaponRows actor listeArmes listeObjets combatDefense) as |row|}}
+                    <tr title="Toucher : magie {{row.magicHitSigned}} + {{row.abilityLabel}} {{row.abilityHitSigned}} + autres {{row.otherHitSigned}} = {{row.totalHitSigned}}&#10;Dégâts : magie {{row.magicDamageSigned}} + {{row.abilityLabel}} {{row.abilityDamageSigned}} + autres {{row.otherDamageSigned}} = {{row.totalDamageSigned}}&#10;THAC0 : {{row.thacoBase}} - bonus toucher {{row.totalHitSigned}} = {{row.thacoEffectif}}">
+                      <td><b>{{row.name}}</b></td>
+                      <td>{{row.damage}}</td>
+                      <td><b>{{row.totalHitSigned}}</b></td>
+                      <td><b>{{row.totalDamageSigned}}</b></td>
+                      <td><b>{{row.thacoEffectif}}</b></td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="a2e-panel">
+          <h2>Armes</h2>
+          <div class="a2e-panel-body">
+            {{#if listeArmes.length}}
+              <table class="a2e-table arme-table">
+                <thead>
+                  <tr><th></th><th>Arme</th><th>Équipée</th><th>Dégâts</th><th>Type</th><th>Bonus toucher</th><th>Bonus dégâts</th><th>Facteur</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {{#each listeArmes as |arme|}}
+                    <tr class="item" data-item-id="{{arme._id}}">
+                      <td><img class="arme-img-attack" data-item-id="{{arme._id}}" src="{{arme.img}}" title="Attaquer avec {{arme.name}}" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;"></td>
+                      <td><b>{{arme.name}}</b></td>
+                      <td>{{#if arme.system.equipee}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td>
+                      <td>{{add2eWeaponDisplayDamage arme ../listeObjets}}</td>
+                      <td>{{arme.system.type_degats}}</td>
+                      <td>{{signedNumber arme.system.bonus_hit}}</td>
+                      <td>{{signedNumber arme.system.bonus_dom}}</td>
+                      <td>{{arme.system.facteur_rapidité}}</td>
+                      <td>
+                        <div class="a2e-actions">
+                          <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if arme.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{arme._id}}" title="{{#if arme.system.equipee}}Équipée — cliquer pour retirer{{else}}Non équipée — cliquer pour équiper{{/if}}"><i class="fas fa-swords"></i></a>
+                          <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{arme._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                          <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{arme._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="a2e-muted">Aucune arme.</p>
+            {{/if}}
+          </div>
+        </div>
+
+        <div class="a2e-panel">
+          <h2>Carquois et projectiles</h2>
+          <div class="a2e-panel-body">
+            {{#if listeCarquois.length}}
+              <table class="a2e-table add2e-quiver-table">
+                <thead>
+                  <tr><th>État</th><th>Projectile</th><th>Type</th><th>Dégâts</th><th>Qté</th><th>Bonus</th><th>Récup.</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  {{#each listeCarquois as |munition|}}
+                    <tr class="item add2e-quiver-row" data-item-id="{{munition._id}}">
+                      <td>{{#if munition.system.equipee}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td>
+                      <td><b>{{munition.name}}</b></td>
+                      <td>{{munition.system.sousType}}{{munition.system.sous_type}}{{munition.system.munitionType}}</td>
+                      <td>{{add2eItemDisplayDamage munition}}</td>
+                      <td>{{munition.system.quantite}}</td>
+                      <td>{{signedNumber munition.system.bonus_hit}} / {{signedNumber munition.system.bonus_dom}}</td>
+                      <td>{{#if munition.system.recuperable}}{{munition.system.taux_recuperation}}{{else}}Non{{/if}}</td>
+                      <td>
+                        <div class="a2e-actions">
+                          <a class="item-control objet-equip a2e-action-icon a2e-equip-state-icon {{#if munition.system.equipee}}equip-green{{else}}equip-red{{/if}}"
+                             data-item-id="{{munition._id}}"
+                             title="{{#if munition.system.equipee}}Projectile équipé — cliquer pour retirer{{else}}Équiper ce projectile{{/if}}">
+                            <i class="fas fa-bullseye"></i>
+                          </a>
+                          <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{munition._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                          <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{munition._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+              <p class="a2e-small"><b>Total projectiles :</b> {{add2eConsumablesSummary.carquoisQuantity}}</p>
+            {{else}}
+              <p class="a2e-muted">Aucun projectile dans le carquois.</p>
+            {{/if}}
+          </div>
+        </div>
+
+        <div class="a2e-panel">
+          <h2>Armures, boucliers et heaumes</h2>
+          <div class="a2e-panel-body">
+            {{#if listeArmures.length}}
+              <table class="a2e-table">
+                <thead><tr><th>Nom</th><th>CA</th><th>Bonus CA</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {{#each listeArmures as |armure|}}
+                    <tr class="item" data-item-id="{{armure._id}}">
+                      <td><b>{{armure.name}}</b></td>
+                      <td>{{armure.system.ac}}</td>
+                      <td>{{signedNumber armure.system.bonus_ac}}</td>
+                      <td>
+                        <div class="a2e-actions">
+                          <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if armure.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{armure._id}}" title="{{#if armure.system.equipee}}Équipée — cliquer pour retirer{{else}}Non équipée — cliquer pour équiper{{/if}}"><i class="fas fa-shield-alt"></i></a>
+                          <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{armure._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
+                          <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{armure._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
+                        </div>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            {{else}}
+              <p class="a2e-muted">Aucune armure.</p>
+            {{/if}}
+          </div>
+        </div>
+      </section>

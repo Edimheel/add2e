@@ -1,0 +1,65 @@
+/* ADD2E — compatibilité feuille personnage ApplicationV2 */
+.application.add2e-character-v2-app,
+.application.add2e.sheet.actor.personnage,
+form.application.add2e.sheet.actor.personnage {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.application.add2e-character-v2-app .window-content,
+.application.add2e.sheet.actor.personnage .window-content {
+  padding: 0 !important;
+  background: transparent !important;
+  overflow: auto;
+}
+
+.application.add2e-character-v2-app [data-application-part="form"],
+.application.add2e.sheet.actor.personnage [data-application-part="form"] {
+  display: block !important;
+  min-height: 100%;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 {
+  display: block !important;
+  width: 100%;
+  min-width: 990px;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-tabs.sheet-tabs.tabs,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-tabs.sheet-tabs.tabs {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+  min-height: 34px;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: flex-end !important;
+  overflow-x: auto;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-tabs.sheet-tabs.tabs .item,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-tabs.sheet-tabs.tabs .item {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  visibility: visible !important;
+  opacity: 1 !important;
+  white-space: nowrap;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .sheet-body,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .sheet-body {
+  display: block !important;
+  overflow: visible;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .sheet-body .a2e-tab-content.active,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .sheet-body .a2e-tab-content.active {
+  display: block !important;
+}

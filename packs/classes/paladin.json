@@ -1,0 +1,74 @@
+{
+  "name": "Paladin",
+  "type": "classe",
+  "img": "systems/add2e/assets/paladin.png",
+  "system": {
+    "label": "Paladin",
+    "description": "Chevalier sacré, champion de la justice et de la foi...",
+    "caracs_min": {
+      "force": 12,
+      "constitution": 9,
+      "sagesse": 13,
+      "charisme": 17
+    },
+    "primaryAbility": "Force, Charisme",
+    "prerequis": {
+      "alignement": "Loyal Bon uniquement",
+      "race": "Humain uniquement",
+      "autre": "Doit respecter un code de conduite strict ; ne peut pas mentir, voler, ni commettre d’actes chaotiques."
+    },
+    "alignment": [ "Loyal Bon" ],
+    "raceAllowed": [ "Humain" ],
+    "armorAllowed": ["toutes"],
+    "shieldAllowed": true,
+    "armes_autorisees": ["toutes"],
+    "weaponRestriction": null,
+
+
+    "magicAllowed": "Sorts cléricaux (niveaux 1-4) selon progression",
+    "hdPerLevel": "1d10",
+    "hpAfter9": 3,
+    "richesse_initiale": "5d4 × 10 po",
+    "progression": [
+      { "level":  1, "xp":       0, "hd": "1d10",     "title": "Preux",         "thac0": 20, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [0,0,0,0,0,0,0], "attacksPerRound": "1" },
+      { "level":  2, "xp":    2751, "hd": "2d10",     "title": "Sentinelle",    "thac0": 19, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [0,0,0,0,0,0,0], "attacksPerRound": "1" },
+      { "level":  3, "xp":    5501, "hd": "3d10",     "title": "Protecteur",    "thac0": 18, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [0,0,0,0,0,0,0], "attacksPerRound": "1" },
+      { "level":  4, "xp":   12001, "hd": "4d10",     "title": "Défenseur",     "thac0": 17, "savingThrows": [12,14,13,15,15], "spellsPerLevel": [0,0,0,0,0,0,0], "attacksPerRound": "1" },
+      { "level":  5, "xp":   24001, "hd": "5d10",     "title": "Prétorien",     "thac0": 16, "savingThrows": [12,14,13,15,15], "spellsPerLevel": [0,0,0,0,0,0,0], "attacksPerRound": "1" },
+      { "level":  6, "xp":   45001, "hd": "6d10",     "title": "Gardien",       "thac0": 15, "savingThrows": [10,12,11,13,13], "spellsPerLevel": [0,0,0,0,0,0,0], "attacksPerRound": "1" },
+      { "level":  7, "xp":   95001, "hd": "7d10",     "title": "Chevalier",     "thac0": 14, "savingThrows": [10,12,11,13,13], "spellsPerLevel": [0,0,0,0,0,0,0], "attacksPerRound": "3/2" },
+      { "level":  8, "xp":  175001, "hd": "8d10",     "title": "Justicier",     "thac0": 13, "savingThrows": [8,10,9,11,11],   "spellsPerLevel": [0,0,0,0,0,0,0], "attacksPerRound": "3/2" },
+      { "level":  9, "xp":  350001, "hd": "9d10",     "title": "Paladin",       "thac0": 12, "savingThrows": [8,10,9,11,11],   "spellsPerLevel": [1,0,0,0,0,0,0], "attacksPerRound": "3/2" },
+      { "level": 10, "xp":  700001, "hd": "9d10+3",   "title": "Paladin X",     "thac0": 11, "savingThrows": [6,8,7,9,9],     "spellsPerLevel": [2,0,0,0,0,0,0], "attacksPerRound": "3/2" },
+      { "level": 11, "xp": 1050001, "hd": "9d10+6",   "title": "Paladin XI",    "thac0": 10, "savingThrows": [6,8,7,9,9],     "spellsPerLevel": [2,1,0,0,0,0,0], "attacksPerRound": "3/2" },
+      { "level": 12, "xp": 1400001, "hd": "9d10+9",   "title": "Paladin XII",   "thac0":  9, "savingThrows": [4,6,5,7,7],     "spellsPerLevel": [2,2,0,0,0,0,0], "attacksPerRound": "3/2" },
+      { "level": 13, "xp": 1750001, "hd": "9d10+12",  "title": "Paladin XIII",  "thac0":  8, "savingThrows": [4,6,5,7,7],     "spellsPerLevel": [2,2,1,0,0,0,0], "attacksPerRound": "2" },
+      { "level": 14, "xp": 2100001, "hd": "9d10+15",  "title": "Paladin XIV",   "thac0":  7, "savingThrows": [2,4,3,5,5],     "spellsPerLevel": [3,2,1,0,0,0,0], "attacksPerRound": "2" },
+      { "level": 15, "xp": 2450001, "hd": "9d10+18",  "title": "Paladin XV",    "thac0":  6, "savingThrows": [2,4,3,5,5],     "spellsPerLevel": [3,2,1,1,0,0,0], "attacksPerRound": "2" },
+      { "level": 16, "xp": 2800001, "hd": "9d10+21",  "title": "Paladin XVI",   "thac0":  5, "savingThrows": [2,4,3,5,5],     "spellsPerLevel": [3,3,1,1,0,0,0], "attacksPerRound": "2" },
+      { "level": 17, "xp": 3150001, "hd": "9d10+24",  "title": "Paladin XVII",  "thac0":  4, "savingThrows": [2,4,3,5,5],     "spellsPerLevel": [3,3,2,1,0,0,0], "attacksPerRound": "2" },
+      { "level": 18, "xp": 3500001, "hd": "9d10+27",  "title": "Paladin XVIII", "thac0":  3, "savingThrows": [2,4,3,5,5],     "spellsPerLevel": [3,3,3,1,0,0,0], "attacksPerRound": "2" },
+      { "level": 19, "xp": 3850001, "hd": "9d10+30",  "title": "Paladin XIX",   "thac0":  2, "savingThrows": [2,4,3,5,5],     "spellsPerLevel": [3,3,3,2,0,0,0], "attacksPerRound": "2" },
+      { "level": 20, "xp": 4200001, "hd": "9d10+33",  "title": "Paladin XX",    "thac0":  1, "savingThrows": [2,4,3,5,5],     "spellsPerLevel": [3,3,3,3,0,0,0], "attacksPerRound": "2" }
+    ],
+    "specialAbilities": [
+      { "level": 1, "nom": "Détection du mal", "description": "Détecte le mal dans un rayon de 18 mètres, à volonté." },
+      { "level": 1, "nom": "Immunité aux maladies", "description": "Totalement immunisé contre toutes les maladies." },
+      { "level": 1, "nom": "Protection contre le mal", "description": "Bonus de +2 en sauvegarde contre les sorts du mal, alliés proches bénéficient de ce bonus." },
+      { "level": 1, "nom": "Aura de courage", "description": "Ses alliés dans un rayon de 3m sont immunisés contre la peur." },
+      { "level": 1, "nom": "Cheval de guerre spécial", "description": "Peut appeler une monture spéciale à partir du niveau 4." },
+      { "level": 3, "nom": "Imposition des mains", "description": "Guérit 2 points de vie par niveau par jour." },
+      { "level": 4, "nom": "Résistance aux charmes", "description": "Jet de sauvegarde automatique contre les sorts de charme à partir du niveau 4." },
+      { "level": 9, "nom": "Sorts de clerc", "description": "Accès aux sorts de clerc (niveaux 1 à 4)." },
+      { "level": 9, "nom": "Forteresse & suivants", "description": "Peut établir une forteresse et attirer des suivants fidèles à sa cause." }
+    ],
+    "savingThrows": ["paralysie","pétrification","baguettes","souffles","sortilèges"],
+    "notes": "Le paladin doit être loyal bon, se comporter honorablement, et respecter sa foi. Toute faute ou action chaotique entraîne la perte de ses pouvoirs sacrés. Progression XP et HD d’après le Tableau I – Paladin du Manuel du Joueur AD&D2e."
+  },
+  "effects": [],
+  "folder": null,
+  "flags": {
+    "exportSource": {"world":"test","system":"add2e","coreVersion":"12.343","systemVersion":"0.1.12"}
+  },
+  "_stats": {"coreVersion":"12.343","systemId":"add2e","systemVersion":"0.1.12","createdTime":0,"modifiedTime":0,"lastModifiedBy":""}
+}

@@ -1,0 +1,645 @@
+{
+  "name": "Druide",
+  "type": "classe",
+  "img": "systems/add2e/assets/druide.png",
+  "system": {
+    "label": "Druide",
+    "hitDie": 8,
+    "hpFormula": "1d8 + constitution.mod",
+    "attacksPerRound": [
+      {
+        "minLevel": 1,
+        "maxLevel": 20,
+        "attacks": 1
+      }
+    ],
+    "specialAbilities": [
+      "Langage secret druidique",
+      "Magie druidique",
+      "Identification des plantes, animaux et eau pure au niveau 3",
+      "Déplacement sans trace sous obstacles boisés au niveau 3",
+      "Immunité aux charmes des créatures des bois au niveau 7",
+      "Forme animale trois fois par jour au niveau 7",
+      "Bonus de +2 aux jets de sauvegarde contre le feu et la foudre"
+    ],
+    "savingThrows": [
+      "sauvegarde_paralysie",
+      "sauvegarde_petrification",
+      "sauvegarde_baguettes",
+      "sauvegarde_souffles",
+      "sauvegarde_sortileges"
+    ],
+    "strengthAdjustments": [],
+    "hdPerLevel": "1d8",
+    "hpAfter14": 2,
+    "weaponRestriction": {
+      "mode": "allow-tags",
+      "allowedTags": [
+        "type_arme:baton",
+        "arme:baton",
+        "arme:fronde",
+        "type_arme:fronde",
+        "arme:cimeterre",
+        "type_arme:cimeterre",
+        "arme:javelot",
+        "arme:javeline",
+        "type_arme:javelot",
+        "type_arme:javeline"
+      ],
+      "forbiddenTags": []
+    },
+    "armorRestriction": {
+      "mode": "allow-tags",
+      "allowedTags": [
+        "type_armure:cuir",
+        "type_armure:cuir_cloute",
+        "type_armure:cuir_bouilli",
+        "armure:cuir",
+        "armure:cuir_cloute",
+        "armure:cuir_bouilli",
+        "bouclier",
+        "matiere:bois"
+      ],
+      "forbiddenTags": [
+        "matiere:metal",
+        "armure:metal"
+      ],
+      "note": "Le druide ne peut pas porter d'armure métallique ; le bouclier doit être en bois pour respecter strictement la règle."
+    },
+    "tags": [
+      "classe:druide",
+      "lanceur:divin",
+      "lanceur:druidique",
+      "bonus_save_vs:feu:2",
+      "bonus_save_vs:foudre:2",
+      "bonus_save_vs:electricite:2"
+    ],
+    "spellcasting": {
+      "enabled": true,
+      "mode": "divine",
+      "type": "prepared",
+      "ability": "sagesse",
+      "abilityKey": "wis",
+      "lists": [
+        "Druide"
+      ],
+      "startsAt": 1,
+      "maxSpellLevel": 7,
+      "usesSlots": true,
+      "usesPreparation": true,
+      "preparationSource": "progression.spellsPerLevel"
+    },
+    "spellLists": [
+      "Druide"
+    ],
+    "casterType": "divine",
+    "casterAbility": "sagesse",
+    "spellcastingNote": "Ajouté pour permettre au moteur ADD2E de reconnaître que la classe Druide utilise la liste de sorts Druide et prépare ses sorts via progression[].spellsPerLevel.",
+    "spellAccessRequirements": [
+      {
+        "spellLevel": 6,
+        "requires": {
+          "ability": "sagesse",
+          "min": 17,
+          "abilityKey": "wis"
+        }
+      },
+      {
+        "spellLevel": 7,
+        "requires": {
+          "ability": "sagesse",
+          "min": 18,
+          "abilityKey": "wis"
+        }
+      }
+    ],
+    "progression": [
+      {
+        "niveau": 1,
+        "xp": 0,
+        "thac0": 20,
+        "savingThrows": [
+          10,
+          14,
+          13,
+          16,
+          15
+        ],
+        "spellsPerLevel": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 2,
+        "xp": 2001,
+        "thac0": 20,
+        "savingThrows": [
+          10,
+          14,
+          13,
+          16,
+          15
+        ],
+        "spellsPerLevel": [
+          2,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 3,
+        "xp": 4001,
+        "thac0": 19,
+        "savingThrows": [
+          10,
+          14,
+          13,
+          16,
+          15
+        ],
+        "spellsPerLevel": [
+          3,
+          2,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 4,
+        "xp": 7501,
+        "thac0": 19,
+        "savingThrows": [
+          9,
+          13,
+          12,
+          15,
+          14
+        ],
+        "spellsPerLevel": [
+          4,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 5,
+        "xp": 12501,
+        "thac0": 18,
+        "savingThrows": [
+          9,
+          13,
+          12,
+          15,
+          14
+        ],
+        "spellsPerLevel": [
+          4,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 6,
+        "xp": 20001,
+        "thac0": 18,
+        "savingThrows": [
+          9,
+          13,
+          12,
+          15,
+          14
+        ],
+        "spellsPerLevel": [
+          4,
+          3,
+          2,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 7,
+        "xp": 35001,
+        "thac0": 17,
+        "savingThrows": [
+          8,
+          12,
+          11,
+          14,
+          13
+        ],
+        "spellsPerLevel": [
+          4,
+          4,
+          3,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 8,
+        "xp": 60001,
+        "thac0": 17,
+        "savingThrows": [
+          8,
+          12,
+          11,
+          14,
+          13
+        ],
+        "spellsPerLevel": [
+          4,
+          4,
+          3,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 9,
+        "xp": 90001,
+        "thac0": 16,
+        "savingThrows": [
+          8,
+          12,
+          11,
+          14,
+          13
+        ],
+        "spellsPerLevel": [
+          5,
+          4,
+          3,
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 10,
+        "xp": 125001,
+        "thac0": 16,
+        "savingThrows": [
+          7,
+          11,
+          10,
+          13,
+          12
+        ],
+        "spellsPerLevel": [
+          5,
+          4,
+          3,
+          3,
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 11,
+        "xp": 200001,
+        "thac0": 15,
+        "savingThrows": [
+          7,
+          11,
+          10,
+          13,
+          12
+        ],
+        "spellsPerLevel": [
+          5,
+          5,
+          3,
+          3,
+          2,
+          1,
+          0
+        ]
+      },
+      {
+        "niveau": 12,
+        "xp": 300001,
+        "thac0": 15,
+        "savingThrows": [
+          7,
+          11,
+          10,
+          13,
+          12
+        ],
+        "spellsPerLevel": [
+          5,
+          5,
+          4,
+          4,
+          3,
+          2,
+          1
+        ]
+      },
+      {
+        "niveau": 13,
+        "xp": 750001,
+        "thac0": 14,
+        "savingThrows": [
+          6,
+          10,
+          9,
+          12,
+          11
+        ],
+        "spellsPerLevel": [
+          6,
+          5,
+          5,
+          5,
+          4,
+          3,
+          2
+        ]
+      },
+      {
+        "niveau": 14,
+        "xp": 1500001,
+        "thac0": 14,
+        "savingThrows": [
+          6,
+          10,
+          9,
+          12,
+          11
+        ],
+        "spellsPerLevel": [
+          6,
+          6,
+          6,
+          6,
+          5,
+          4,
+          3
+        ]
+      },
+      {
+        "niveau": 15,
+        "xp": 3000000,
+        "thac0": 13,
+        "savingThrows": [
+          6,
+          10,
+          9,
+          12,
+          11
+        ],
+        "spellsPerLevel": [
+          6,
+          6,
+          6,
+          6,
+          5,
+          4,
+          3
+        ]
+      },
+      {
+        "niveau": 16,
+        "xp": 3500000,
+        "thac0": 13,
+        "savingThrows": [
+          5,
+          9,
+          8,
+          11,
+          10
+        ],
+        "spellsPerLevel": [
+          6,
+          6,
+          6,
+          6,
+          5,
+          4,
+          3
+        ]
+      },
+      {
+        "niveau": 17,
+        "xp": 4000000,
+        "thac0": 12,
+        "savingThrows": [
+          5,
+          9,
+          8,
+          11,
+          10
+        ],
+        "spellsPerLevel": [
+          6,
+          6,
+          6,
+          6,
+          5,
+          4,
+          3
+        ]
+      },
+      {
+        "niveau": 18,
+        "xp": 4500000,
+        "thac0": 12,
+        "savingThrows": [
+          5,
+          9,
+          8,
+          11,
+          10
+        ],
+        "spellsPerLevel": [
+          6,
+          6,
+          6,
+          6,
+          5,
+          4,
+          3
+        ]
+      },
+      {
+        "niveau": 19,
+        "xp": 5000000,
+        "thac0": 11,
+        "savingThrows": [
+          4,
+          8,
+          7,
+          10,
+          9
+        ],
+        "spellsPerLevel": [
+          6,
+          6,
+          6,
+          6,
+          5,
+          4,
+          3
+        ]
+      },
+      {
+        "niveau": 20,
+        "xp": 5500000,
+        "thac0": 11,
+        "savingThrows": [
+          4,
+          8,
+          7,
+          10,
+          9
+        ],
+        "spellsPerLevel": [
+          6,
+          6,
+          6,
+          6,
+          5,
+          4,
+          3
+        ]
+      }
+    ],
+    "titlesByLevel": [
+      {
+        "minLevel": 1,
+        "maxLevel": 1,
+        "title": "Novice"
+      },
+      {
+        "minLevel": 2,
+        "maxLevel": 2,
+        "title": "Ermite"
+      },
+      {
+        "minLevel": 3,
+        "maxLevel": 3,
+        "title": "Initié du 1er cercle"
+      },
+      {
+        "minLevel": 4,
+        "maxLevel": 4,
+        "title": "Initié du 2e cercle"
+      },
+      {
+        "minLevel": 5,
+        "maxLevel": 5,
+        "title": "Initié du 3e cercle"
+      },
+      {
+        "minLevel": 6,
+        "maxLevel": 6,
+        "title": "Initié du 4e cercle"
+      },
+      {
+        "minLevel": 7,
+        "maxLevel": 7,
+        "title": "Initié du 5e cercle"
+      },
+      {
+        "minLevel": 8,
+        "maxLevel": 8,
+        "title": "Initié du 6e cercle"
+      },
+      {
+        "minLevel": 9,
+        "maxLevel": 9,
+        "title": "Initié du 7e cercle"
+      },
+      {
+        "minLevel": 10,
+        "maxLevel": 10,
+        "title": "Initié du 8e cercle"
+      },
+      {
+        "minLevel": 11,
+        "maxLevel": 11,
+        "title": "Initié du 9e cercle"
+      },
+      {
+        "minLevel": 12,
+        "maxLevel": 12,
+        "title": "Druide"
+      },
+      {
+        "minLevel": 13,
+        "maxLevel": 13,
+        "title": "Archi-druide"
+      },
+      {
+        "minLevel": 14,
+        "maxLevel": 14,
+        "title": "Grand druide"
+      },
+      {
+        "minLevel": 15,
+        "maxLevel": 20,
+        "title": "Hiérophante druide"
+      }
+    ],
+    "ruleNotes": [
+      "Le druide lance ses sorts comme un prêtre de la nature et prépare ses sorts depuis la liste Druide.",
+      "Le druide utilise les mêmes tables de combat et de sauvegarde que le clerc.",
+      "Le druide reçoit +2 aux sauvegardes contre le feu et la foudre/électricité.",
+      "Le druide ne peut pas porter d’armure métallique ; le métal empêche ses sorts de fonctionner."
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Compendium.add2e.classes.Item.fMqbDeWeaOTYwZYz",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "test",
+      "uuid": "Item.GnLonhOh0wtq01v6",
+      "coreVersion": "13.351",
+      "systemId": "add2e",
+      "systemVersion": "0.1.12"
+    },
+    "coreVersion": "13.351",
+    "systemId": "add2e",
+    "systemVersion": "0.1.12",
+    "createdTime": 1777577204386,
+    "modifiedTime": 1777577204386,
+    "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

@@ -1,0 +1,28 @@
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="charisme" title="Jet de Charisme" style="color:#e056fd;"></i>
+                  <span class="carac-short">CHA</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="charisme" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="charisme"
+                       title="Base : {{actor.system.charisme_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.charisme}}&#10;Total : {{add actor.system.charisme_base actor.system.bonus_caracteristiques.charisme}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.charisme_base actor.system.bonus_caracteristiques.charisme}}</span>
+                    {{#if actor.system.bonus_caracteristiques.charisme}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.charisme 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.charisme}})</span>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="charisme" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <div class="a2e-adjustment-item"><label>Compagnons</label><input type="text" name="system.cha_compagnons" value="{{actor.system.cha_compagnons}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Loyauté</label><input type="text" name="system.cha_loy" value="{{actor.system.cha_loy}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Réaction</label><input type="text" name="system.cha_react" value="{{actor.system.cha_react}}" readonly></div>
+                </div>
+              </td>
+            </tr>

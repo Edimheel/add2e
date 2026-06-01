@@ -1,0 +1,4728 @@
+[
+  {
+    "name": "Arquebuse",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Arquebuse.png",
+    "data": {
+      "nom": "Arquebuse",
+      "cout": "500 po",
+      "degats": "1d10",
+      "degats_grand": "1d10",
+      "dégâts": {
+        "contre_moyen": "1d10",
+        "contre_grand": "1d10"
+      },
+      "poids": 10,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 15,
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "arquebuse",
+        "distance",
+        "projectile_propulse",
+        "perforante",
+        "feu"
+      ],
+      "tags": [
+        "arme:arquebuse",
+        "type_arme:arquebuse",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:perforante",
+        "arme:feu"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Hache de bataille",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Hache_de_bataille.png",
+    "data": {
+      "nom": "Hache de bataille",
+      "cout": "5 po",
+      "degats": "1d8",
+      "degats_grand": "1d8",
+      "dégâts": {
+        "contre_moyen": "1d8",
+        "contre_grand": "1d8"
+      },
+      "poids": 7,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "hache_de_bataille",
+        "hache",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:hache_de_bataille",
+        "type_arme:hache",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Cheville d'amarrage",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Cheville_damarrage.png",
+    "data": {
+      "nom": "Cheville d'amarrage",
+      "cout": "2 pc",
+      "degats": "1d3",
+      "degats_grand": "1d3",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d3"
+      },
+      "poids": 2,
+      "taille": "S",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "cheville_damarrage",
+        "improvisee",
+        "melee",
+        "contondante"
+      ],
+      "tags": [
+        "arme:cheville_damarrage",
+        "type_arme:improvisee",
+        "arme:melee",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Sarbacane",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Sarbacane.png",
+    "data": {
+      "nom": "Sarbacane",
+      "cout": "5 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 2,
+      "taille": "G",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 5,
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "sarbacane",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:sarbacane",
+        "type_arme:sarbacane",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Dard barbelé",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Dard_barbele.png",
+    "data": {
+      "nom": "Dard barbelé",
+      "cout": "1 pa",
+      "degats": "1d3",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d2"
+      },
+      "poids": "négl.",
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_lance",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "dard_barbele",
+        "dard",
+        "distance",
+        "projectile_lance",
+        "perforante"
+      ],
+      "tags": [
+        "arme:dard_barbele",
+        "type_arme:dard",
+        "arme:distance",
+        "projectile_lance",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Aiguille de sarbacane",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Aiguille_de_sarbacane.png",
+    "data": {
+      "nom": "Aiguille de sarbacane",
+      "cout": "2 pc",
+      "degats": "1",
+      "degats_grand": "1",
+      "dégâts": {
+        "contre_moyen": "1",
+        "contre_grand": "1"
+      },
+      "poids": "négl.",
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "aiguille_de_sarbacane",
+        "munition",
+        "distance",
+        "projectile_propulse",
+        "perforante"
+      ],
+      "tags": [
+        "arme:aiguille_de_sarbacane",
+        "type_arme:munition",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Bolas",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Bolas.png",
+    "data": {
+      "nom": "Bolas",
+      "cout": "5 pa",
+      "degats": "1d3",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d2"
+      },
+      "poids": 2,
+      "taille": "M",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": 8,
+      "categorie": "projectile_lance",
+      "portee_short": 10,
+      "portee_long": 30,
+      "portee_courte": 10,
+      "portee_moyenne": 20,
+      "portee_longue": 30,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "bolas",
+        "distance",
+        "projectile_lance",
+        "contondante",
+        "entrave"
+      ],
+      "tags": [
+        "arme:bolas",
+        "type_arme:bolas",
+        "arme:distance",
+        "projectile_lance",
+        "arme:contondante",
+        "arme:entrave"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Arc composite long",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Arc_composite_long.png",
+    "data": {
+      "nom": "Arc composite long",
+      "cout": "100 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 3,
+      "taille": "G",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 7,
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "arc_composite_long",
+        "arc",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:arc_composite_long",
+        "type_arme:arc",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Arc composite court",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Arc_composite_court.png",
+    "data": {
+      "nom": "Arc composite court",
+      "cout": "75 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 2,
+      "taille": "M",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 6,
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "arc_composite_court",
+        "arc",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:arc_composite_court",
+        "type_arme:arc",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Flèche de vol",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fleche_de_vol.png",
+    "data": {
+      "nom": "Flèche de vol",
+      "cout": "3 pa/12",
+      "degats": "1d6",
+      "degats_grand": "1d6",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d6"
+      },
+      "poids": "négl.",
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fleche_de_vol",
+        "munition",
+        "distance",
+        "projectile_propulse",
+        "perforante"
+      ],
+      "tags": [
+        "arme:fleche_de_vol",
+        "type_arme:munition",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Arc long",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Arc_long.png",
+    "data": {
+      "nom": "Arc long",
+      "cout": "75 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 3,
+      "taille": "G",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 8,
+      "categorie": "projectile_propulse",
+      "portee_short": 40,
+      "portee_long": 160,
+      "portee_courte": 40,
+      "portee_moyenne": 80,
+      "portee_longue": 160,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "arc_long",
+        "arc",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:arc_long",
+        "type_arme:arc",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Flèche de guerre",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fleche_de_guerre.png",
+    "data": {
+      "nom": "Flèche de guerre",
+      "cout": "3 pa/6",
+      "degats": "1d8",
+      "degats_grand": "1d8",
+      "dégâts": {
+        "contre_moyen": "1d8",
+        "contre_grand": "1d8"
+      },
+      "poids": "négl.",
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fleche_de_guerre",
+        "munition",
+        "distance",
+        "projectile_propulse",
+        "perforante"
+      ],
+      "tags": [
+        "arme:fleche_de_guerre",
+        "type_arme:munition",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Flèche de pierre",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fleche_de_pierre.png",
+    "data": {
+      "nom": "Flèche de pierre",
+      "cout": "3 pc/12",
+      "degats": "1d4",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d4"
+      },
+      "poids": 0.1,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fleche_de_pierre",
+        "munition",
+        "distance",
+        "projectile_propulse",
+        "perforante"
+      ],
+      "tags": [
+        "arme:fleche_de_pierre",
+        "type_arme:munition",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Arc court",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Arc_court.png",
+    "data": {
+      "nom": "Arc court",
+      "cout": "30 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 2,
+      "taille": "M",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 7,
+      "categorie": "projectile_propulse",
+      "portee_short": 30,
+      "portee_long": 120,
+      "portee_courte": 30,
+      "portee_moyenne": 60,
+      "portee_longue": 120,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "arc_court",
+        "arc",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:arc_court",
+        "type_arme:arc",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Chausse-trape",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Chausse_trape.png",
+    "data": {
+      "nom": "Chausse-trape",
+      "cout": "2 pa",
+      "degats": "1",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1",
+        "contre_grand": "1d2"
+      },
+      "poids": 0.2,
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": "n/a",
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "chausse_trape",
+        "piege",
+        "perforante"
+      ],
+      "tags": [
+        "arme:chausse_trape",
+        "type_arme:piege",
+        "arme:piege",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Ceste",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Ceste.png",
+    "data": {
+      "nom": "Ceste",
+      "cout": "1 po",
+      "degats": "1d4",
+      "degats_grand": "1d3",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d3"
+      },
+      "poids": 2,
+      "taille": "S",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "ceste",
+        "pugilat",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:ceste",
+        "type_arme:pugilat",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Chaîne",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Chaine.png",
+    "data": {
+      "nom": "Chaîne",
+      "cout": "5 pa",
+      "degats": "1d4+1",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d4+1",
+        "contre_grand": "1d4"
+      },
+      "poids": 3,
+      "taille": "G",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": 5,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "chaine",
+        "melee",
+        "contondante"
+      ],
+      "tags": [
+        "arme:chaine",
+        "type_arme:chaine",
+        "arme:melee",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Massue",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Massue.png",
+    "data": {
+      "nom": "Massue",
+      "cout": "—",
+      "degats": "1d6",
+      "degats_grand": "1d3",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d3"
+      },
+      "poids": 3,
+      "taille": "M",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "massue",
+        "masse",
+        "melee",
+        "contondante"
+      ],
+      "tags": [
+        "arme:massue",
+        "type_arme:masse",
+        "arme:melee",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Carreau d'arbalète de poing",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Carreau_darbalete_de_poing.png",
+    "data": {
+      "nom": "Carreau d'arbalète de poing",
+      "cout": "1 po",
+      "degats": "1d3",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d2"
+      },
+      "poids": "négl.",
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "carreau_darbalete_de_poing",
+        "munition",
+        "distance",
+        "projectile_propulse",
+        "perforante"
+      ],
+      "tags": [
+        "arme:carreau_darbalete_de_poing",
+        "type_arme:munition",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Arbalète de poing",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Arbalete_de_poing.png",
+    "data": {
+      "nom": "Arbalète de poing",
+      "cout": "300 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 3,
+      "taille": "S",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 5,
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "arbalete_de_poing",
+        "arbalete",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:arbalete_de_poing",
+        "type_arme:arbalete",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Carreau lourd",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Carreau_lourd.png",
+    "data": {
+      "nom": "Carreau lourd",
+      "cout": "2 pa",
+      "degats": "1d4+1",
+      "degats_grand": "1d6+1",
+      "dégâts": {
+        "contre_moyen": "1d4+1",
+        "contre_grand": "1d6+1"
+      },
+      "poids": "négl.",
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "carreau_lourd",
+        "munition",
+        "distance",
+        "projectile_propulse",
+        "perforante"
+      ],
+      "tags": [
+        "arme:carreau_lourd",
+        "type_arme:munition",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Arbalète lourde",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Arbalete_lourde.png",
+    "data": {
+      "nom": "Arbalète lourde",
+      "cout": "50 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 14,
+      "taille": "M",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 10,
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "arbalete_lourde",
+        "arbalete",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:arbalete_lourde",
+        "type_arme:arbalete",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Carreau léger",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Carreau_leger.png",
+    "data": {
+      "nom": "Carreau léger",
+      "cout": "1 pa",
+      "degats": "1d4",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d4"
+      },
+      "poids": "négl.",
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "carreau_leger",
+        "munition",
+        "distance",
+        "projectile_propulse",
+        "perforante"
+      ],
+      "tags": [
+        "arme:carreau_leger",
+        "type_arme:munition",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Arbalète légère",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Arbalete_legere.png",
+    "data": {
+      "nom": "Arbalète légère",
+      "cout": "35 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 7,
+      "taille": "S",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 7,
+      "categorie": "projectile_propulse",
+      "portee_short": 50,
+      "portee_long": 200,
+      "portee_courte": 50,
+      "portee_moyenne": 100,
+      "portee_longue": 200,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "arbalete_legere",
+        "arbalete",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:arbalete_legere",
+        "type_arme:arbalete",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Dague",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Dague.png",
+    "data": {
+      "nom": "Dague",
+      "cout": "2 po",
+      "degats": "1d4",
+      "degats_grand": "1d3",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d3"
+      },
+      "poids": 1,
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": 10,
+      "portee_long": 30,
+      "portee_courte": 10,
+      "portee_moyenne": 20,
+      "portee_longue": 30,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "dague",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:dague",
+        "type_arme:dague",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Dague en os",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Dague_en_os.png",
+    "data": {
+      "nom": "Dague en os",
+      "cout": "1 pa",
+      "degats": "1d2",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d2",
+        "contre_grand": "1d2"
+      },
+      "poids": 1,
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "dague_en_os",
+        "dague",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:dague_en_os",
+        "type_arme:dague",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Dague de parade",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Dague_de_parade.png",
+    "data": {
+      "nom": "Dague de parade",
+      "cout": "5 po",
+      "degats": "1d3",
+      "degats_grand": "1d3",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d3"
+      },
+      "poids": 1,
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "dague_de_parade",
+        "dague",
+        "melee",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:dague_de_parade",
+        "type_arme:dague",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Dague de pierre",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Dague_de_pierre.png",
+    "data": {
+      "nom": "Dague de pierre",
+      "cout": "2 pa",
+      "degats": "1d3",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d2"
+      },
+      "poids": 1,
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "dague_de_pierre",
+        "dague",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:dague_de_pierre",
+        "type_arme:dague",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Dard",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Dard.png",
+    "data": {
+      "nom": "Dard",
+      "cout": "5 pa",
+      "degats": "1d3",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d2"
+      },
+      "poids": 0.5,
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 2,
+      "categorie": "projectile_lance",
+      "portee_short": 10,
+      "portee_long": 40,
+      "portee_courte": 10,
+      "portee_moyenne": 20,
+      "portee_longue": 40,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "dard",
+        "distance",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:dard",
+        "type_arme:dard",
+        "arme:distance",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Fléau d'armes de fantassin",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fleau_darmes_de_fantassin.png",
+    "data": {
+      "nom": "Fléau d'armes de fantassin",
+      "cout": "15 po",
+      "degats": "1d6+1",
+      "degats_grand": "2d4",
+      "dégâts": {
+        "contre_moyen": "1d6+1",
+        "contre_grand": "2d4"
+      },
+      "poids": 15,
+      "taille": "M",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fleau_darmes_de_fantassin",
+        "masse",
+        "melee",
+        "contondante",
+        "fleau"
+      ],
+      "tags": [
+        "arme:fleau_darmes_de_fantassin",
+        "type_arme:masse",
+        "arme:melee",
+        "arme:contondante",
+        "arme:fleau"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Fléau d'armes de cavalier",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fleau_darmes_de_cavalier.png",
+    "data": {
+      "nom": "Fléau d'armes de cavalier",
+      "cout": "8 po",
+      "degats": "1d4+1",
+      "degats_grand": "1d4+1",
+      "dégâts": {
+        "contre_moyen": "1d4+1",
+        "contre_grand": "1d4+1"
+      },
+      "poids": 5,
+      "taille": "M",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": 6,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fleau_darmes_de_cavalier",
+        "masse",
+        "melee",
+        "contondante",
+        "fleau"
+      ],
+      "tags": [
+        "arme:fleau_darmes_de_cavalier",
+        "type_arme:masse",
+        "arme:melee",
+        "arme:contondante",
+        "arme:fleau"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Gaffe fixée",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Gaffe_fixee.png",
+    "data": {
+      "nom": "Gaffe fixée",
+      "cout": "2 po",
+      "degats": "1d4",
+      "degats_grand": "1d3",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d3"
+      },
+      "poids": 2,
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "gaffe_fixee",
+        "crochet",
+        "melee",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:gaffe_fixee",
+        "type_arme:crochet",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Gaffe tenue",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Gaffe_tenue.png",
+    "data": {
+      "nom": "Gaffe tenue",
+      "cout": "5 pc",
+      "degats": "1d4",
+      "degats_grand": "1d3",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d3"
+      },
+      "poids": 2,
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "gaffe_tenue",
+        "crochet",
+        "melee",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:gaffe_tenue",
+        "type_arme:crochet",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Hachette",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Hachette.png",
+    "data": {
+      "nom": "Hachette",
+      "cout": "1 po",
+      "degats": "1d6",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d4"
+      },
+      "poids": 5,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": 10,
+      "portee_long": 30,
+      "portee_courte": 10,
+      "portee_moyenne": 20,
+      "portee_longue": 30,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "hachette",
+        "hache",
+        "melee",
+        "projectile_lance",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:hachette",
+        "type_arme:hache",
+        "arme:melee",
+        "projectile_lance",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Harpon à une main",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Harpon_a_une_main.png",
+    "data": {
+      "nom": "Harpon à une main",
+      "cout": "20 po",
+      "degats": "1d4+1",
+      "degats_grand": "1d6+1",
+      "dégâts": {
+        "contre_moyen": "1d4+1",
+        "contre_grand": "1d6+1"
+      },
+      "poids": 6,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "harpon_a_une_main",
+        "harpon",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:harpon_a_une_main",
+        "type_arme:harpon",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Harpon à deux mains",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Harpon_a_deux_mains.png",
+    "data": {
+      "nom": "Harpon à deux mains",
+      "cout": "20 po",
+      "degats": "2d4",
+      "degats_grand": "2d6",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "2d6"
+      },
+      "poids": 6,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "harpon_a_deux_mains",
+        "harpon",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante",
+        "deux_mains"
+      ],
+      "tags": [
+        "arme:harpon_a_deux_mains",
+        "type_arme:harpon",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:deux_mains"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Javeline à une main",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Javeline_a_une_main.png",
+    "data": {
+      "nom": "Javeline à une main",
+      "cout": "5 pa",
+      "degats": "1d4",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d4"
+      },
+      "poids": 2,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 4,
+      "categorie": "projectile_lance",
+      "portee_short": 15,
+      "portee_long": 60,
+      "portee_courte": 15,
+      "portee_moyenne": 30,
+      "portee_longue": 60,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "javeline_a_une_main",
+        "javeline",
+        "distance",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:javeline_a_une_main",
+        "type_arme:javeline",
+        "arme:distance",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Javeline à deux mains",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Javeline_a_deux_mains.png",
+    "data": {
+      "nom": "Javeline à deux mains",
+      "cout": "5 pa",
+      "degats": "1d6",
+      "degats_grand": "1d6",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d6"
+      },
+      "poids": 2,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "javeline_a_deux_mains",
+        "javeline",
+        "melee",
+        "pointue",
+        "perforante",
+        "deux_mains"
+      ],
+      "tags": [
+        "arme:javeline_a_deux_mains",
+        "type_arme:javeline",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:deux_mains"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Javeline de pierre à une main",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Javeline_de_pierre_a_une_main.png",
+    "data": {
+      "nom": "Javeline de pierre à une main",
+      "cout": "5 pc",
+      "degats": "1d4",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d4"
+      },
+      "poids": 2,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 4,
+      "categorie": "projectile_lance",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "javeline_de_pierre_a_une_main",
+        "javeline",
+        "distance",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:javeline_de_pierre_a_une_main",
+        "type_arme:javeline",
+        "arme:distance",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Javeline de pierre à deux mains",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Javeline_de_pierre_a_deux_mains.png",
+    "data": {
+      "nom": "Javeline de pierre à deux mains",
+      "cout": "5 pc",
+      "degats": "1d4+1",
+      "degats_grand": "1d6",
+      "dégâts": {
+        "contre_moyen": "1d4+1",
+        "contre_grand": "1d6"
+      },
+      "poids": 2,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "javeline_de_pierre_a_deux_mains",
+        "javeline",
+        "melee",
+        "pointue",
+        "perforante",
+        "deux_mains"
+      ],
+      "tags": [
+        "arme:javeline_de_pierre_a_deux_mains",
+        "type_arme:javeline",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:deux_mains"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Couteau",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Couteau.png",
+    "data": {
+      "nom": "Couteau",
+      "cout": "5 pa",
+      "degats": "1d3",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d2"
+      },
+      "poids": 0.5,
+      "taille": "S",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "couteau",
+        "dague",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:couteau",
+        "type_arme:dague",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Couteau en os",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Couteau_en_os.png",
+    "data": {
+      "nom": "Couteau en os",
+      "cout": "3 pc",
+      "degats": "1d2",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d2",
+        "contre_grand": "1d2"
+      },
+      "poids": 0.5,
+      "taille": "S",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "couteau_en_os",
+        "dague",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:couteau_en_os",
+        "type_arme:dague",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Couteau de pierre",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Couteau_de_pierre.png",
+    "data": {
+      "nom": "Couteau de pierre",
+      "cout": "5 pc",
+      "degats": "1d2",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d2",
+        "contre_grand": "1d2"
+      },
+      "poids": 0.5,
+      "taille": "S",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "couteau_de_pierre",
+        "dague",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:couteau_de_pierre",
+        "type_arme:dague",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance de cavalerie lourde",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_de_cavalerie_lourde.png",
+    "data": {
+      "nom": "Lance de cavalerie lourde",
+      "cout": "15 po",
+      "degats": "1d8+1",
+      "degats_grand": "3d6",
+      "dégâts": {
+        "contre_moyen": "1d8+1",
+        "contre_grand": "3d6"
+      },
+      "poids": 15,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_de_cavalerie_lourde",
+        "lance_cavalerie",
+        "melee",
+        "pointue",
+        "perforante",
+        "charge"
+      ],
+      "tags": [
+        "arme:lance_de_cavalerie_lourde",
+        "type_arme:lance_cavalerie",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance de tournoi",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_de_tournoi.png",
+    "data": {
+      "nom": "Lance de tournoi",
+      "cout": "20 po",
+      "degats": "1d3-1",
+      "degats_grand": "1d2-1",
+      "dégâts": {
+        "contre_moyen": "1d3-1",
+        "contre_grand": "1d2-1"
+      },
+      "poids": 20,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 10,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_de_tournoi",
+        "lance_cavalerie",
+        "melee",
+        "pointue",
+        "perforante",
+        "charge"
+      ],
+      "tags": [
+        "arme:lance_de_tournoi",
+        "type_arme:lance_cavalerie",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance de cavalerie légère",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_de_cavalerie_legere.png",
+    "data": {
+      "nom": "Lance de cavalerie légère",
+      "cout": "6 po",
+      "degats": "1d6",
+      "degats_grand": "1d8",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d8"
+      },
+      "poids": 5,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 6,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_de_cavalerie_legere",
+        "lance_cavalerie",
+        "melee",
+        "pointue",
+        "perforante",
+        "charge"
+      ],
+      "tags": [
+        "arme:lance_de_cavalerie_legere",
+        "type_arme:lance_cavalerie",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance de cavalerie moyenne",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_de_cavalerie_moyenne.png",
+    "data": {
+      "nom": "Lance de cavalerie moyenne",
+      "cout": "10 po",
+      "degats": "1d6+1",
+      "degats_grand": "2d6",
+      "dégâts": {
+        "contre_moyen": "1d6+1",
+        "contre_grand": "2d6"
+      },
+      "poids": 10,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_de_cavalerie_moyenne",
+        "lance_cavalerie",
+        "melee",
+        "pointue",
+        "perforante",
+        "charge"
+      ],
+      "tags": [
+        "arme:lance_de_cavalerie_moyenne",
+        "type_arme:lance_cavalerie",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lasso",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lasso.png",
+    "data": {
+      "nom": "Lasso",
+      "cout": "5 pa",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 3,
+      "taille": "G",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_lance",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lasso",
+        "distance",
+        "projectile_lance",
+        "entrave"
+      ],
+      "tags": [
+        "arme:lasso",
+        "type_arme:lasso",
+        "arme:distance",
+        "projectile_lance",
+        "arme:entrave"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Main-gauche",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Main_gauche.png",
+    "data": {
+      "nom": "Main-gauche",
+      "cout": "3 po",
+      "degats": "1d4",
+      "degats_grand": "1d3",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d3"
+      },
+      "poids": 2,
+      "taille": "S",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "main_gauche",
+        "dague",
+        "melee",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:main_gauche",
+        "type_arme:dague",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Attrape-homme",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Attrape_homme.png",
+    "data": {
+      "nom": "Attrape-homme",
+      "cout": "30 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 8,
+      "taille": "G",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "attrape_homme",
+        "entrave",
+        "melee",
+        "hast"
+      ],
+      "tags": [
+        "arme:attrape_homme",
+        "type_arme:entrave",
+        "arme:melee",
+        "arme:entrave",
+        "arme:hast"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Morgenstern",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Morgenstern.png",
+    "data": {
+      "nom": "Morgenstern",
+      "cout": "10 po",
+      "degats": "2d4",
+      "degats_grand": "1d6+1",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "1d6+1"
+      },
+      "poids": 12,
+      "taille": "M",
+      "type_degats": "Perforant, Contondant",
+      "proprietes": "Perforant, Contondant",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "morgenstern",
+        "masse_a_pointes",
+        "melee",
+        "contondante",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:morgenstern",
+        "type_arme:masse_a_pointes",
+        "arme:melee",
+        "arme:contondante",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Filet",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Filet.png",
+    "data": {
+      "nom": "Filet",
+      "cout": "5 po",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 10,
+      "taille": "M",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 10,
+      "categorie": "projectile_lance",
+      "portee_short": 5,
+      "portee_long": 15,
+      "portee_courte": 5,
+      "portee_moyenne": 10,
+      "portee_longue": 15,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "filet",
+        "distance",
+        "projectile_lance",
+        "entrave"
+      ],
+      "tags": [
+        "arme:filet",
+        "type_arme:filet",
+        "arme:distance",
+        "projectile_lance",
+        "arme:entrave"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Pique",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Pique.png",
+    "data": {
+      "nom": "Pique",
+      "cout": "5 po",
+      "degats": "1d6",
+      "degats_grand": "1d12",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d12"
+      },
+      "poids": 12,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 13,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "pique",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "reception_charge"
+      ],
+      "tags": [
+        "arme:pique",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:reception_charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Bardiche",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Bardiche.png",
+    "data": {
+      "nom": "Bardiche",
+      "cout": "7 po",
+      "degats": "2d4",
+      "degats_grand": "2d6",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "2d6"
+      },
+      "poids": 12,
+      "taille": "G",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 9,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "bardiche",
+        "arme_hast",
+        "melee",
+        "hast",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:bardiche",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Bec de corbin",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Bec_de_corbin.png",
+    "data": {
+      "nom": "Bec de corbin",
+      "cout": "8 po",
+      "degats": "1d8",
+      "degats_grand": "1d6",
+      "dégâts": {
+        "contre_moyen": "1d8",
+        "contre_grand": "1d6"
+      },
+      "poids": 10,
+      "taille": "G",
+      "type_degats": "Perforant, Contondant",
+      "proprietes": "Perforant, Contondant",
+      "facteur_vitesse": 9,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "bec_de_corbin",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "contondante"
+      ],
+      "tags": [
+        "arme:bec_de_corbin",
+        "type_arme:bec_de_corbin",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Bill-guisarme",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Bill_guisarme.png",
+    "data": {
+      "nom": "Bill-guisarme",
+      "cout": "7 po",
+      "degats": "2d4",
+      "degats_grand": "1d10",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "1d10"
+      },
+      "poids": 15,
+      "taille": "G",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 10,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "bill_guisarme",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:bill_guisarme",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Fauchard",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fauchard.png",
+    "data": {
+      "nom": "Fauchard",
+      "cout": "5 po",
+      "degats": "1d6",
+      "degats_grand": "1d8",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d8"
+      },
+      "poids": 7,
+      "taille": "G",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fauchard",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:fauchard",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Fauchard-fourche",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fauchard_fourche.png",
+    "data": {
+      "nom": "Fauchard-fourche",
+      "cout": "8 po",
+      "degats": "1d8",
+      "degats_grand": "1d10",
+      "dégâts": {
+        "contre_moyen": "1d8",
+        "contre_grand": "1d10"
+      },
+      "poids": 9,
+      "taille": "G",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fauchard_fourche",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:fauchard_fourche",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Glaive",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Glaive.png",
+    "data": {
+      "nom": "Glaive",
+      "cout": "6 po",
+      "degats": "1d6",
+      "degats_grand": "1d10",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d10"
+      },
+      "poids": 8,
+      "taille": "G",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "glaive",
+        "arme_hast",
+        "melee",
+        "hast",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:glaive",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Glaive-guisarme",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Glaive_guisarme.png",
+    "data": {
+      "nom": "Glaive-guisarme",
+      "cout": "10 po",
+      "degats": "2d4",
+      "degats_grand": "2d6",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "2d6"
+      },
+      "poids": 10,
+      "taille": "G",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 9,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "glaive_guisarme",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:glaive_guisarme",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Guisarme",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Guisarme.png",
+    "data": {
+      "nom": "Guisarme",
+      "cout": "5 po",
+      "degats": "2d4",
+      "degats_grand": "1d8",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "1d8"
+      },
+      "poids": 8,
+      "taille": "G",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "guisarme",
+        "arme_hast",
+        "melee",
+        "hast",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:guisarme",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Guisarme-voulge",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Guisarme_voulge.png",
+    "data": {
+      "nom": "Guisarme-voulge",
+      "cout": "8 po",
+      "degats": "2d4",
+      "degats_grand": "2d4",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "2d4"
+      },
+      "poids": 15,
+      "taille": "G",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 10,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "guisarme_voulge",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:guisarme_voulge",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Hallebarde",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Hallebarde.png",
+    "data": {
+      "nom": "Hallebarde",
+      "cout": "10 po",
+      "degats": "1d10",
+      "degats_grand": "2d6",
+      "dégâts": {
+        "contre_moyen": "1d10",
+        "contre_grand": "2d6"
+      },
+      "poids": 15,
+      "taille": "G",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 9,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "hallebarde",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:hallebarde",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Fauchard à crochet",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fauchard_a_crochet.png",
+    "data": {
+      "nom": "Fauchard à crochet",
+      "cout": "10 po",
+      "degats": "1d4",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d4"
+      },
+      "poids": 8,
+      "taille": "G",
+      "type_degats": "Perforant, Tranchant",
+      "proprietes": "Perforant, Tranchant",
+      "facteur_vitesse": 9,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fauchard_a_crochet",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:fauchard_a_crochet",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Marteau de Lucerne",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Marteau_de_lucerne.png",
+    "data": {
+      "nom": "Marteau de Lucerne",
+      "cout": "7 po",
+      "degats": "2d4",
+      "degats_grand": "1d6",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "1d6"
+      },
+      "poids": 15,
+      "taille": "G",
+      "type_degats": "Perforant, Contondant",
+      "proprietes": "Perforant, Contondant",
+      "facteur_vitesse": 9,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "marteau_de_lucerne",
+        "bec_de_corbin",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "contondante",
+        "reception_charge"
+      ],
+      "tags": [
+        "arme:marteau_de_lucerne",
+        "type_arme:bec_de_corbin",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:contondante",
+        "arme:reception_charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Fourche de guerre",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fourche_de_guerre.png",
+    "data": {
+      "nom": "Fourche de guerre",
+      "cout": "5 po",
+      "degats": "1d8",
+      "degats_grand": "2d4",
+      "dégâts": {
+        "contre_moyen": "1d8",
+        "contre_grand": "2d4"
+      },
+      "poids": 7,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fourche_de_guerre",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:fourche_de_guerre",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Pertuisane",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Pertuisane.png",
+    "data": {
+      "nom": "Pertuisane",
+      "cout": "10 po",
+      "degats": "1d6",
+      "degats_grand": "1d6+1",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d6+1"
+      },
+      "poids": 8,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 9,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "pertuisane",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "reception_charge"
+      ],
+      "tags": [
+        "arme:pertuisane",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:reception_charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Ranseur",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Ranseur.png",
+    "data": {
+      "nom": "Ranseur",
+      "cout": "6 po",
+      "degats": "2d4",
+      "degats_grand": "2d4",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "2d4"
+      },
+      "poids": 7,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "ranseur",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "reception_charge"
+      ],
+      "tags": [
+        "arme:ranseur",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:reception_charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Spetum",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Spetum.png",
+    "data": {
+      "nom": "Spetum",
+      "cout": "5 po",
+      "degats": "1d6+1",
+      "degats_grand": "2d6",
+      "dégâts": {
+        "contre_moyen": "1d6+1",
+        "contre_grand": "2d6"
+      },
+      "poids": 7,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "spetum",
+        "arme_hast",
+        "melee",
+        "hast",
+        "pointue",
+        "perforante",
+        "reception_charge"
+      ],
+      "tags": [
+        "arme:spetum",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:reception_charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Voulge",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Voulge.png",
+    "data": {
+      "nom": "Voulge",
+      "cout": "5 po",
+      "degats": "2d4",
+      "degats_grand": "2d4",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "2d4"
+      },
+      "poids": 12,
+      "taille": "G",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 10,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "voulge",
+        "arme_hast",
+        "melee",
+        "hast",
+        "tranchante",
+        "reception_charge"
+      ],
+      "tags": [
+        "arme:voulge",
+        "type_arme:arme_hast",
+        "arme:melee",
+        "arme:hast",
+        "arme:tranchante",
+        "arme:reception_charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Bâton",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Baton.png",
+    "data": {
+      "nom": "Bâton",
+      "cout": "—",
+      "degats": "1d6",
+      "degats_grand": "1d6",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d6"
+      },
+      "poids": 4,
+      "taille": "G",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "baton",
+        "melee",
+        "contondante"
+      ],
+      "tags": [
+        "arme:baton",
+        "type_arme:baton",
+        "arme:melee",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Matraque",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Matraque.png",
+    "data": {
+      "nom": "Matraque",
+      "cout": "1 po",
+      "degats": "1d2",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d2",
+        "contre_grand": "1d2"
+      },
+      "poids": 0.1,
+      "taille": "S",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "matraque",
+        "melee",
+        "contondante"
+      ],
+      "tags": [
+        "arme:matraque",
+        "type_arme:matraque",
+        "arme:melee",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Martinet",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Martinet.png",
+    "data": {
+      "nom": "Martinet",
+      "cout": "1 po",
+      "degats": "1d4",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d2"
+      },
+      "poids": 2,
+      "taille": "S",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 5,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "martinet",
+        "fouet",
+        "melee",
+        "souplement"
+      ],
+      "tags": [
+        "arme:martinet",
+        "type_arme:fouet",
+        "arme:melee",
+        "arme:souplement"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Faucille",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Faucille.png",
+    "data": {
+      "nom": "Faucille",
+      "cout": "6 pa",
+      "degats": "1d4+1",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d4+1",
+        "contre_grand": "1d4"
+      },
+      "poids": 3,
+      "taille": "S",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "faucille",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:faucille",
+        "type_arme:faucille",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Fronde",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fronde.png",
+    "data": {
+      "nom": "Fronde",
+      "cout": "5 pc",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": "négl.",
+      "taille": "S",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 6,
+      "categorie": "projectile_propulse",
+      "portee_short": 20,
+      "portee_long": 60,
+      "portee_courte": 20,
+      "portee_moyenne": 40,
+      "portee_longue": 60,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fronde",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:fronde",
+        "type_arme:fronde",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Balle de fronde",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Balle_de_fronde.png",
+    "data": {
+      "nom": "Balle de fronde",
+      "cout": "1 pc",
+      "degats": "1d4+1",
+      "degats_grand": "1d6+1",
+      "dégâts": {
+        "contre_moyen": "1d4+1",
+        "contre_grand": "1d6+1"
+      },
+      "poids": 0.5,
+      "taille": "S",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "balle_de_fronde",
+        "munition",
+        "distance",
+        "projectile_propulse",
+        "contondante"
+      ],
+      "tags": [
+        "arme:balle_de_fronde",
+        "type_arme:munition",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Pierre de fronde",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Pierre_de_fronde.png",
+    "data": {
+      "nom": "Pierre de fronde",
+      "cout": "—",
+      "degats": "1d4",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d4"
+      },
+      "poids": 0.5,
+      "taille": "S",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "pierre_de_fronde",
+        "munition",
+        "distance",
+        "projectile_propulse",
+        "contondante"
+      ],
+      "tags": [
+        "arme:pierre_de_fronde",
+        "type_arme:munition",
+        "arme:distance",
+        "projectile_propulse",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance à une main",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_a_une_main.png",
+    "data": {
+      "nom": "Lance à une main",
+      "cout": "8 pa",
+      "degats": "1d6",
+      "degats_grand": "1d8",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d8"
+      },
+      "poids": 5,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 6,
+      "categorie": "melee",
+      "portee_short": 10,
+      "portee_long": 30,
+      "portee_courte": 10,
+      "portee_moyenne": 20,
+      "portee_longue": 30,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_a_une_main",
+        "lance",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:lance_a_une_main",
+        "type_arme:lance",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance à deux mains",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_a_deux_mains.png",
+    "data": {
+      "nom": "Lance à deux mains",
+      "cout": "8 pa",
+      "degats": "1d8+1",
+      "degats_grand": "2d6",
+      "dégâts": {
+        "contre_moyen": "1d8+1",
+        "contre_grand": "2d6"
+      },
+      "poids": 5,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 6,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_a_deux_mains",
+        "lance",
+        "melee",
+        "pointue",
+        "perforante",
+        "deux_mains"
+      ],
+      "tags": [
+        "arme:lance_a_deux_mains",
+        "type_arme:lance",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:deux_mains"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance longue à une main",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_longue_a_une_main.png",
+    "data": {
+      "nom": "Lance longue à une main",
+      "cout": "5 po",
+      "degats": "1d8",
+      "degats_grand": "1d8+1",
+      "dégâts": {
+        "contre_moyen": "1d8",
+        "contre_grand": "1d8+1"
+      },
+      "poids": 8,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_longue_a_une_main",
+        "lance",
+        "melee",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:lance_longue_a_une_main",
+        "type_arme:lance",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance longue à deux mains",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_longue_a_deux_mains.png",
+    "data": {
+      "nom": "Lance longue à deux mains",
+      "cout": "5 po",
+      "degats": "2d6",
+      "degats_grand": "3d6",
+      "dégâts": {
+        "contre_moyen": "2d6",
+        "contre_grand": "3d6"
+      },
+      "poids": 8,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_longue_a_deux_mains",
+        "lance",
+        "melee",
+        "pointue",
+        "perforante",
+        "deux_mains",
+        "reception_charge"
+      ],
+      "tags": [
+        "arme:lance_longue_a_deux_mains",
+        "type_arme:lance",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:deux_mains",
+        "arme:reception_charge"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance de pierre à une main",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_de_pierre_a_une_main.png",
+    "data": {
+      "nom": "Lance de pierre à une main",
+      "cout": "8 pc",
+      "degats": "1d4",
+      "degats_grand": "1d6",
+      "dégâts": {
+        "contre_moyen": "1d4",
+        "contre_grand": "1d6"
+      },
+      "poids": 5,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 6,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_de_pierre_a_une_main",
+        "lance",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:lance_de_pierre_a_une_main",
+        "type_arme:lance",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Lance de pierre à deux mains",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Lance_de_pierre_a_deux_mains.png",
+    "data": {
+      "nom": "Lance de pierre à deux mains",
+      "cout": "8 pc",
+      "degats": "1d6",
+      "degats_grand": "2d4",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "2d4"
+      },
+      "poids": 5,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 6,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "lance_de_pierre_a_deux_mains",
+        "lance",
+        "melee",
+        "pointue",
+        "perforante",
+        "deux_mains"
+      ],
+      "tags": [
+        "arme:lance_de_pierre_a_deux_mains",
+        "type_arme:lance",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:deux_mains"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Fustibale",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fustibale.png",
+    "data": {
+      "nom": "Fustibale",
+      "cout": "2 pa",
+      "degats": "",
+      "degats_grand": "",
+      "dégâts": {
+        "contre_moyen": "",
+        "contre_grand": ""
+      },
+      "poids": 2,
+      "taille": "M",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 11,
+      "categorie": "projectile_propulse",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fustibale",
+        "fronde",
+        "distance",
+        "projectile_propulse"
+      ],
+      "tags": [
+        "arme:fustibale",
+        "type_arme:fronde",
+        "arme:distance",
+        "projectile_propulse"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Pot puant",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Pot_puant.png",
+    "data": {
+      "nom": "Pot puant",
+      "cout": "1 pa",
+      "degats": "1d3",
+      "degats_grand": "1d3",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d3"
+      },
+      "poids": 2,
+      "taille": "S",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": "—",
+      "categorie": "projectile_lance",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "pot_puant",
+        "projectile",
+        "distance",
+        "projectile_lance",
+        "contondante"
+      ],
+      "tags": [
+        "arme:pot_puant",
+        "type_arme:projectile",
+        "arme:distance",
+        "projectile_lance",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Stylet",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Stylet.png",
+    "data": {
+      "nom": "Stylet",
+      "cout": "5 pa",
+      "degats": "1d3",
+      "degats_grand": "1d2",
+      "dégâts": {
+        "contre_moyen": "1d3",
+        "contre_grand": "1d2"
+      },
+      "poids": 0.5,
+      "taille": "S",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 2,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "stylet",
+        "dague",
+        "melee",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:stylet",
+        "type_arme:dague",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Épée bâtarde à une main",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Epee_batarde_a_une_main.png",
+    "data": {
+      "nom": "Épée bâtarde à une main",
+      "cout": "25 po",
+      "degats": "1d8",
+      "degats_grand": "1d12",
+      "dégâts": {
+        "contre_moyen": "1d8",
+        "contre_grand": "1d12"
+      },
+      "poids": 10,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 6,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "epee_batarde_a_une_main",
+        "epee",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:epee_batarde_a_une_main",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Épée bâtarde à deux mains",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Epee_batarde_a_deux_mains.png",
+    "data": {
+      "nom": "Épée bâtarde à deux mains",
+      "cout": "25 po",
+      "degats": "2d4",
+      "degats_grand": "2d8",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "2d8"
+      },
+      "poids": 10,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "epee_batarde_a_deux_mains",
+        "epee",
+        "melee",
+        "tranchante",
+        "deux_mains"
+      ],
+      "tags": [
+        "arme:epee_batarde_a_deux_mains",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante",
+        "arme:deux_mains"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Épée large",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Epee_large.png",
+    "data": {
+      "nom": "Épée large",
+      "cout": "10 po",
+      "degats": "2d4",
+      "degats_grand": "1d6+1",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "1d6+1"
+      },
+      "poids": 4,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 5,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "epee_large",
+        "epee",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:epee_large",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Claymore",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Claymore.png",
+    "data": {
+      "nom": "Claymore",
+      "cout": "25 po",
+      "degats": "2d4",
+      "degats_grand": "2d8",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "2d8"
+      },
+      "poids": 10,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "claymore",
+        "epee",
+        "melee",
+        "tranchante",
+        "deux_mains"
+      ],
+      "tags": [
+        "arme:claymore",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante",
+        "arme:deux_mains"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Coutelas",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Coutelas.png",
+    "data": {
+      "nom": "Coutelas",
+      "cout": "12 po",
+      "degats": "1d6",
+      "degats_grand": "1d8",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d8"
+      },
+      "poids": 4,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 5,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "coutelas",
+        "epee",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:coutelas",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Drusus",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Drusus.png",
+    "data": {
+      "nom": "Drusus",
+      "cout": "50 po",
+      "degats": "1d6+1",
+      "degats_grand": "1d8+1",
+      "dégâts": {
+        "contre_moyen": "1d6+1",
+        "contre_grand": "1d8+1"
+      },
+      "poids": 3,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 3,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "drusus",
+        "epee",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:drusus",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Falchion",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Falchion.png",
+    "data": {
+      "nom": "Falchion",
+      "cout": "17 po",
+      "degats": "1d6+1",
+      "degats_grand": "2d4",
+      "dégâts": {
+        "contre_moyen": "1d6+1",
+        "contre_grand": "2d4"
+      },
+      "poids": 8,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 5,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "falchion",
+        "epee",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:falchion",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Khopesh",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Khopesh.png",
+    "data": {
+      "nom": "Khopesh",
+      "cout": "10 po",
+      "degats": "2d4",
+      "degats_grand": "1d6",
+      "dégâts": {
+        "contre_moyen": "2d4",
+        "contre_grand": "1d6"
+      },
+      "poids": 7,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 9,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "khopesh",
+        "epee",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:khopesh",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Épée longue",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Epee_longue.png",
+    "data": {
+      "nom": "Épée longue",
+      "cout": "15 po",
+      "degats": "1d8",
+      "degats_grand": "1d12",
+      "dégâts": {
+        "contre_moyen": "1d8",
+        "contre_grand": "1d12"
+      },
+      "poids": 4,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 5,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "epee_longue",
+        "epee",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:epee_longue",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Rapière",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Rapiere.png",
+    "data": {
+      "nom": "Rapière",
+      "cout": "15 po",
+      "degats": "1d6+1",
+      "degats_grand": "1d8+1",
+      "dégâts": {
+        "contre_moyen": "1d6+1",
+        "contre_grand": "1d8+1"
+      },
+      "poids": 4,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "rapiere",
+        "epee",
+        "melee",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:rapiere",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Sabre",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Sabre.png",
+    "data": {
+      "nom": "Sabre",
+      "cout": "17 po",
+      "degats": "1d6+1",
+      "degats_grand": "1d8+1",
+      "dégâts": {
+        "contre_moyen": "1d6+1",
+        "contre_grand": "1d8+1"
+      },
+      "poids": 5,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "sabre",
+        "epee",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:sabre",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Cimeterre",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Cimeterre.png",
+    "data": {
+      "nom": "Cimeterre",
+      "cout": "15 po",
+      "degats": "1d8",
+      "degats_grand": "1d8",
+      "dégâts": {
+        "contre_moyen": "1d8",
+        "contre_grand": "1d8"
+      },
+      "poids": 4,
+      "taille": "M",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 5,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "cimeterre",
+        "epee",
+        "melee",
+        "tranchante"
+      ],
+      "tags": [
+        "arme:cimeterre",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Épée courte",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Epee_courte.png",
+    "data": {
+      "nom": "Épée courte",
+      "cout": "10 po",
+      "degats": "1d6",
+      "degats_grand": "1d8",
+      "dégâts": {
+        "contre_moyen": "1d6",
+        "contre_grand": "1d8"
+      },
+      "poids": 3,
+      "taille": "M",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 3,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "epee_courte",
+        "epee",
+        "melee",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:epee_courte",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Épée à deux mains",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Epee_a_deux_mains.png",
+    "data": {
+      "nom": "Épée à deux mains",
+      "cout": "50 po",
+      "degats": "1d10",
+      "degats_grand": "3d6",
+      "dégâts": {
+        "contre_moyen": "1d10",
+        "contre_grand": "3d6"
+      },
+      "poids": 15,
+      "taille": "G",
+      "type_degats": "Tranchant",
+      "proprietes": "Tranchant",
+      "facteur_vitesse": 10,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "epee_a_deux_mains",
+        "epee",
+        "melee",
+        "tranchante",
+        "deux_mains"
+      ],
+      "tags": [
+        "arme:epee_a_deux_mains",
+        "type_arme:epee",
+        "arme:melee",
+        "arme:tranchante",
+        "arme:deux_mains"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Trident à une main",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Trident_a_une_main.png",
+    "data": {
+      "nom": "Trident à une main",
+      "cout": "15 po",
+      "degats": "1d6+1",
+      "degats_grand": "3d4",
+      "dégâts": {
+        "contre_moyen": "1d6+1",
+        "contre_grand": "3d4"
+      },
+      "poids": 5,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": 10,
+      "portee_long": 30,
+      "portee_courte": 10,
+      "portee_moyenne": 20,
+      "portee_longue": 30,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "trident_a_une_main",
+        "trident",
+        "melee",
+        "projectile_lance",
+        "pointue",
+        "perforante"
+      ],
+      "tags": [
+        "arme:trident_a_une_main",
+        "type_arme:trident",
+        "arme:melee",
+        "projectile_lance",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Trident à deux mains",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Trident_a_deux_mains.png",
+    "data": {
+      "nom": "Trident à deux mains",
+      "cout": "15 po",
+      "degats": "1d8+1",
+      "degats_grand": "3d4",
+      "dégâts": {
+        "contre_moyen": "1d8+1",
+        "contre_grand": "3d4"
+      },
+      "poids": 5,
+      "taille": "G",
+      "type_degats": "Perforant",
+      "proprietes": "Perforant",
+      "facteur_vitesse": 7,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "trident_a_deux_mains",
+        "trident",
+        "melee",
+        "pointue",
+        "perforante",
+        "deux_mains"
+      ],
+      "tags": [
+        "arme:trident_a_deux_mains",
+        "type_arme:trident",
+        "arme:melee",
+        "arme:pointue",
+        "arme:perforante",
+        "arme:deux_mains"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Marteau de guerre",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Marteau_de_guerre.png",
+    "data": {
+      "nom": "Marteau de guerre",
+      "cout": "2 po",
+      "degats": "1d4+1",
+      "degats_grand": "1d4",
+      "dégâts": {
+        "contre_moyen": "1d4+1",
+        "contre_grand": "1d4"
+      },
+      "poids": 6,
+      "taille": "M",
+      "type_degats": "Contondant",
+      "proprietes": "Contondant",
+      "facteur_vitesse": 4,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "marteau_de_guerre",
+        "masse",
+        "melee",
+        "contondante"
+      ],
+      "tags": [
+        "arme:marteau_de_guerre",
+        "type_arme:masse",
+        "arme:melee",
+        "arme:contondante"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  },
+  {
+    "name": "Fouet",
+    "type": "arme",
+    "img": "systems/add2e/assets/icones/armes/Fouet.png",
+    "data": {
+      "nom": "Fouet",
+      "cout": "1 pa",
+      "degats": "1d2",
+      "degats_grand": "1",
+      "dégâts": {
+        "contre_moyen": "1d2",
+        "contre_grand": "1"
+      },
+      "poids": 2,
+      "taille": "M",
+      "type_degats": "Spécial",
+      "proprietes": "Spécial",
+      "facteur_vitesse": 8,
+      "categorie": "melee",
+      "portee_short": null,
+      "portee_long": null,
+      "portee_courte": null,
+      "portee_moyenne": null,
+      "portee_longue": null,
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "bonus_hit": 0,
+      "bonus_dom": 0,
+      "effectTags": [
+        "fouet",
+        "melee",
+        "souplement"
+      ],
+      "tags": [
+        "arme:fouet",
+        "type_arme:fouet",
+        "arme:melee",
+        "arme:souplement"
+      ],
+      "source": "AD&D2 Arms and Equipment Guide - Table 6 Master Weapons Chart"
+    }
+  }
+]

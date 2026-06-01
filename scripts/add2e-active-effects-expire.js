@@ -1,27 +1,77 @@
 // ============================================================================
-// ADD2E — Gestion automatique de l’expiration des effets temporaires
-// - Gère les effets à durée en rounds
-// - Fonctionne pour les sorts lancés en combat ET hors combat
-//   (si lancé hors combat : startRound est initialisé au premier round rencontré)
-// - Ne touche pas aux effets permanents ou sans "rounds"
+// ADD2E — Point d'entrée : expiration des effets + états vitaux.
+// Version : 2026-06-01-active-effects-expire-split-entry-v4-native-tracker
 // ============================================================================
 
+import { ADD2E_VITAL_STATUS_CORE_VERSION } from "./add2e/18a-vital-status-core.mjs";
+import {
+  ADD2E_VITAL_STATUS_SYNC_VERSION,
+  add2eSyncActorVitalStatus,
+  add2eVitalRegisterStatusEffects
+} from "./add2e/18b-vital-status-sync.mjs";
+import {
+  ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
+  add2eExpireTemporaryEffectsForActor
+} from "./add2e/18c-active-effects-expiration.mjs";
+
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-06-01-active-effects-expire-split-entry-v4-native-tracker";
+globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
+globalThis.ADD2E_VITAL_STATUS_SYNC_VERSION = ADD2E_VITAL_STATUS_SYNC_VERSION;
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION;
+globalThis.add2eSyncActorVitalStatus = add2eSyncActorVitalStatus;
+globalThis.add2eVitalRegisterStatusEffects = add2eVitalRegisterStatusEffects;
+
+console.log("[ADD2E][AUTO-REMOVE][VERSION]", {
+  entry: globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION,
+  core: ADD2E_VITAL_STATUS_CORE_VERSION,
+  sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
+  expiration: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION
+});
+
+Hooks.once("init", add2eVitalRegisterStatusEffects);
+Hooks.once("setup", add2eVitalRegisterStatusEffects);
+Hooks.once("ready", add2eVitalRegisterStatusEffects);
+
+Hooks.on("updateActor", async (actor, changed, options, userId) => {
+  if (!game.user?.isGM) return;
+  if (options?.add2eVitalStatusSync) return;
+
+  const hpChanged = foundry.utils.hasProperty(changed, "system.pdv") ||
+    foundry.utils.hasProperty(changed, "system.pv") ||
+    foundry.utils.hasProperty(changed, "system.hp") ||
+    foundry.utils.hasProperty(changed, "system.points_de_coup");
+
+  if (!hpChanged) return;
+  window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason: "updateActor:hp" }), 30);
+});
+
+Hooks.once("ready", () => {
+  if (!game.user?.isGM) return;
+
+  window.setTimeout(() => {
+    add2eVitalRegisterStatusEffects();
+
+    for (const actor of game.actors ?? []) {
+      add2eSyncActorVitalStatus(actor, { reason: "ready-scan" });
+    }
+
+    for (const token of canvas?.tokens?.placeables ?? []) {
+      if (token?.actor) add2eSyncActorVitalStatus(token.actor, { reason: "ready-token-scan" });
+    }
+  }, 500);
+});
+
 Hooks.on("updateCombat", async (combat, changed, options, userId) => {
-  // On ne réagit que quand le round ou le tour change
   if (!("round" in changed) && !("turn" in changed)) return;
 
   const currentRound = combat.round ?? 0;
   console.log("[ADD2E][AUTO-REMOVE] updateCombat déclenché :", { round: currentRound, changed });
 
   try {
-    const combatants = combat.combatants || [];
-    console.log("[ADD2E][AUTO-REMOVE] combatants =", combatants);
+    add2eVitalRegisterStatusEffects();
 
-    for (const combatant of combatants) {
-      if (!combatant) {
-        console.warn("[ADD2E][AUTO-REMOVE] combatant null/undefined, ignoré.");
-        continue;
-      }
+    for (const combatant of combat.combatants || []) {
+      if (!combatant) continue;
 
       const actor = combatant.actor;
       if (!actor) {
@@ -29,67 +79,8 @@ Hooks.on("updateCombat", async (combat, changed, options, userId) => {
         continue;
       }
 
-      console.log(`[ADD2E][AUTO-REMOVE] Acteur: ${actor.name}`);
-
-      const toDelete = [];
-
-      for (const effect of actor.effects) {
-        if (!effect) continue;
-
-        const dur = effect.duration || {};
-        console.log(
-          `[ADD2E][AUTO-REMOVE]  Effet "${effect.name}" duration =`,
-          dur
-        );
-
-        // Effet désactivé → ignoré
-        if (effect.disabled) {
-          console.log('   -> ignoré : effect.disabled = true');
-          continue;
-        }
-
-        // Pas de durée en rounds → effet permanent ou spécial → on ignore
-        if (typeof dur.rounds !== "number" || isNaN(dur.rounds)) {
-          console.log('   -> ignoré : pas de "rounds" numérique');
-          continue;
-        }
-
-        const totalRounds = dur.rounds;
-
-        // GESTION HORS COMBAT :
-        // Si startRound est absent / null / NaN, on l'initialise AU MOMENT où on voit
-        // l'effet pour la première fois dans un combat.
-        let startRound = dur.startRound;
-        if (typeof startRound !== "number" || isNaN(startRound)) {
-          console.log(
-            `   -> startRound absent pour "${effect.name}", initialisation à currentRound (${currentRound})`
-          );
-          await effect.update({ "duration.startRound": currentRound });
-          startRound = currentRound;
-        }
-
-        const elapsed = Math.max(0, currentRound - startRound);
-        const remaining = totalRounds - elapsed;
-
-        console.log(
-          `[ADD2E][AUTO-REMOVE]    Calcul "${effect.name}" -> total=${totalRounds}, startRound=${startRound}, elapsed=${elapsed}, remaining=${remaining}`
-        );
-
-        if (remaining <= 0) {
-          console.log(
-            `[ADD2E][AUTO-REMOVE]    -> marqué pour suppression : "${effect.name}" (id=${effect.id})`
-          );
-          toDelete.push(effect.id);
-        }
-      }
-
-      if (toDelete.length) {
-        console.log(
-          `[ADD2E][AUTO-REMOVE] Suppression auto des effets expirés sur ${actor.name} :`,
-          toDelete
-        );
-        await actor.deleteEmbeddedDocuments("ActiveEffect", toDelete);
-      }
+      await add2eExpireTemporaryEffectsForActor(actor, currentRound);
+      await add2eSyncActorVitalStatus(actor, { reason: "updateCombat:scan" });
     }
   } catch (err) {
     console.error("[ADD2E][AUTO-REMOVE] ERREUR dans updateCombat(auto-remove-effects) :", err);

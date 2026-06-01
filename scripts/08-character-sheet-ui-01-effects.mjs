@@ -1,8 +1,18 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 01 effets
+<<<<<<< HEAD
 // ============================================================
 import { escapeHtml, formatDuration, expose } from "./08-character-sheet-ui-00-utils.mjs";
 
+=======
+// Version : 2026-05-21-no-native-effect-handlers-v1
+// ============================================================
+import { escapeHtml, formatDuration, expose } from "./08-character-sheet-ui-00-utils.mjs";
+
+globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-05-21-no-native-effect-handlers-v1";
+console.log("[ADD2E][CHARACTER_UI][EFFECTS][VERSION]", globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION);
+
+>>>>>>> 3de7e039a4779c6b7a3f9a95f22618004cb090d3
 export function buildEffectsTab(sheet) {
   const actor = sheet?.actor ?? sheet?.document;
   const effects = Array.from(actor?.effects ?? []);
@@ -24,8 +34,13 @@ export function buildEffectsTab(sheet) {
         <td>${escapeHtml(formatDuration(eff))}</td>
         <td class="a2e-small">${desc}</td>
         <td style="white-space:nowrap;text-align:center;">
+<<<<<<< HEAD
           <a class="effect-edit add2e-effect-edit a2e-action-icon a2e-action-edit" data-effect-id="${escapeHtml(eff.id)}" title="Éditer l’effet"><i class="fas fa-edit"></i></a>
           <a class="effect-delete add2e-effect-delete a2e-action-icon a2e-action-delete" data-effect-id="${escapeHtml(eff.id)}" title="Supprimer l’effet"><i class="fas fa-trash"></i></a>
+=======
+          <a class="add2e-effect-edit a2e-action-icon a2e-action-edit" data-effect-id="${escapeHtml(eff.id)}" title="Éditer l’effet"><i class="fas fa-edit"></i></a>
+          <a class="add2e-effect-delete a2e-action-icon a2e-action-delete" data-effect-id="${escapeHtml(eff.id)}" title="Supprimer l’effet"><i class="fas fa-trash"></i></a>
+>>>>>>> 3de7e039a4779c6b7a3f9a95f22618004cb090d3
         </td>
       </tr>`;
   }).join("") : `
@@ -77,6 +92,7 @@ export function injectEffectsTab(sheet, sheetRoot) {
       sheet._add2eActivateTab?.("effets", sheetRoot);
     });
 
+<<<<<<< HEAD
   $(sheetRoot).find(".add2e-effect-edit, .effect-edit")
     .off("click.add2e-effects")
     .on("click.add2e-effects", ev => {
@@ -96,6 +112,77 @@ export function injectEffectsTab(sheet, sheetRoot) {
         await actor.deleteEmbeddedDocuments("ActiveEffect", [effectId]);
         sheet.render(false);
       }
+=======
+  $(sheetRoot).find(".add2e-effect-edit")
+    .off("click.add2e-effects")
+    .on("click.add2e-effects", ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
+
+      const effectId = String($(ev.currentTarget).data("effect-id") || "");
+      const effect = effectId ? actor.effects.get(effectId) : null;
+
+      if (!effect) {
+        console.warn("[ADD2E][CHARACTER_UI][EFFECT_EDIT][STALE] Effet introuvable, rafraîchissement fiche", {
+          actor: actor.name,
+          actorId: actor.id,
+          effectId
+        });
+        sheet.render(false);
+        return;
+      }
+
+      effect.sheet.render(true);
+    });
+
+  $(sheetRoot).find(".add2e-effect-delete")
+    .off("click.add2e-effects")
+    .on("click.add2e-effects", async ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
+      sheet._add2eRememberActiveTab?.(sheetRoot);
+
+      const effectId = String($(ev.currentTarget).data("effect-id") || "");
+      if (!effectId) return;
+
+      const effect = actor.effects.get(effectId);
+      if (!effect) {
+        console.warn("[ADD2E][CHARACTER_UI][EFFECT_DELETE][STALE] Effet déjà supprimé, suppression ignorée", {
+          actor: actor.name,
+          actorId: actor.id,
+          effectId
+        });
+        sheet.render(false);
+        return;
+      }
+
+      try {
+        await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
+      } catch (err) {
+        const msg = String(err?.message || err || "");
+        if (msg.includes("does not exist") || msg.includes("n'existe pas")) {
+          console.warn("[ADD2E][CHARACTER_UI][EFFECT_DELETE][ALREADY_GONE] Effet déjà absent côté serveur", {
+            actor: actor.name,
+            actorId: actor.id,
+            effectId,
+            err
+          });
+        } else {
+          console.error("[ADD2E][CHARACTER_UI][EFFECT_DELETE][ERROR] Suppression impossible", {
+            actor: actor.name,
+            actorId: actor.id,
+            effectId,
+            err
+          });
+          ui.notifications.error(`Impossible de supprimer l'effet ${effect.name}. Voir console.`);
+          return;
+        }
+      }
+
+      sheet.render(false);
+>>>>>>> 3de7e039a4779c6b7a3f9a95f22618004cb090d3
     });
 }
 

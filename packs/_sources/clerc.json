@@ -1,0 +1,594 @@
+{
+  "name": "Clerc",
+  "type": "classe",
+  "img": "systems/add2e/assets/clerc.png",
+  "system": {
+    "label": "Clerc",
+    "hitDie": 8,
+    "hpFormula": "1d8 + constitution.mod",
+    "attacksPerRound": [
+      {
+        "minLevel": 1,
+        "maxLevel": 20,
+        "attacks": 1
+      }
+    ],
+    "specialAbilities": "Lancer de sorts divins,Domaines divins,Imposition des mains mineures",
+    "titlesByLevel": [
+      {
+        "minLevel": 1,
+        "maxLevel": 1,
+        "title": "Acolyte"
+      },
+      {
+        "minLevel": 2,
+        "maxLevel": 2,
+        "title": "Adepte"
+      },
+      {
+        "minLevel": 3,
+        "maxLevel": 3,
+        "title": "Prêtre"
+      },
+      {
+        "minLevel": 4,
+        "maxLevel": 4,
+        "title": "Curé"
+      },
+      {
+        "minLevel": 5,
+        "maxLevel": 5,
+        "title": "Parfait"
+      },
+      {
+        "minLevel": 6,
+        "maxLevel": 6,
+        "title": "Évêque"
+      },
+      {
+        "minLevel": 7,
+        "maxLevel": 7,
+        "title": "Lama"
+      },
+      {
+        "minLevel": 8,
+        "maxLevel": 8,
+        "title": "Patriarche"
+      },
+      {
+        "minLevel": 9,
+        "maxLevel": 9,
+        "title": "Grand-prêtre"
+      },
+      {
+        "minLevel": 10,
+        "maxLevel": 10,
+        "title": "Grand-prêtre (niveau 10)"
+      },
+      {
+        "minLevel": 11,
+        "maxLevel": 11,
+        "title": "Grand-prêtre (niveau 11)"
+      },
+      {
+        "minLevel": 12,
+        "maxLevel": 20,
+        "title": "Grand-prêtre"
+      }
+    ],
+    "spellAccessRequirements": [
+      {
+        "spellLevel": 6,
+        "requires": {
+          "ability": "sagesse",
+          "min": 17,
+          "abilityKey": "wis"
+        }
+      },
+      {
+        "spellLevel": 7,
+        "requires": {
+          "ability": "sagesse",
+          "min": 18,
+          "abilityKey": "wis"
+        }
+      }
+    ],
+    "progression": [
+      {
+        "niveau": 1,
+        "xp": 0,
+        "thac0": 20,
+        "savingThrows": [
+          10,
+          14,
+          13,
+          16,
+          15
+        ],
+        "spellsPerLevel": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 2,
+        "xp": 1500,
+        "thac0": 20,
+        "savingThrows": [
+          10,
+          14,
+          13,
+          16,
+          15
+        ],
+        "spellsPerLevel": [
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 3,
+        "xp": 3000,
+        "thac0": 19,
+        "savingThrows": [
+          10,
+          14,
+          13,
+          16,
+          15
+        ],
+        "spellsPerLevel": [
+          2,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 4,
+        "xp": 6000,
+        "thac0": 19,
+        "savingThrows": [
+          9,
+          13,
+          12,
+          15,
+          14
+        ],
+        "spellsPerLevel": [
+          3,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 5,
+        "xp": 13000,
+        "thac0": 18,
+        "savingThrows": [
+          9,
+          13,
+          12,
+          15,
+          14
+        ],
+        "spellsPerLevel": [
+          3,
+          3,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 6,
+        "xp": 27500,
+        "thac0": 18,
+        "savingThrows": [
+          9,
+          13,
+          12,
+          15,
+          14
+        ],
+        "spellsPerLevel": [
+          3,
+          3,
+          2,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 7,
+        "xp": 55000,
+        "thac0": 17,
+        "savingThrows": [
+          8,
+          12,
+          11,
+          14,
+          13
+        ],
+        "spellsPerLevel": [
+          3,
+          3,
+          2,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 8,
+        "xp": 110000,
+        "thac0": 17,
+        "savingThrows": [
+          8,
+          12,
+          11,
+          14,
+          13
+        ],
+        "spellsPerLevel": [
+          3,
+          3,
+          3,
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 9,
+        "xp": 225000,
+        "thac0": 16,
+        "savingThrows": [
+          8,
+          12,
+          11,
+          14,
+          13
+        ],
+        "spellsPerLevel": [
+          4,
+          4,
+          3,
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 10,
+        "xp": 450000,
+        "thac0": 16,
+        "savingThrows": [
+          7,
+          11,
+          10,
+          13,
+          12
+        ],
+        "spellsPerLevel": [
+          4,
+          4,
+          3,
+          3,
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "niveau": 11,
+        "xp": 675000,
+        "thac0": 15,
+        "savingThrows": [
+          7,
+          11,
+          10,
+          13,
+          12
+        ],
+        "spellsPerLevel": [
+          5,
+          4,
+          4,
+          3,
+          2,
+          1,
+          0
+        ]
+      },
+      {
+        "niveau": 12,
+        "xp": 900000,
+        "thac0": 15,
+        "savingThrows": [
+          7,
+          11,
+          10,
+          13,
+          12
+        ],
+        "spellsPerLevel": [
+          6,
+          5,
+          5,
+          3,
+          2,
+          2,
+          0
+        ]
+      },
+      {
+        "niveau": 13,
+        "xp": 1125000,
+        "thac0": 14,
+        "savingThrows": [
+          6,
+          10,
+          9,
+          12,
+          11
+        ],
+        "spellsPerLevel": [
+          6,
+          6,
+          6,
+          4,
+          2,
+          2,
+          0
+        ]
+      },
+      {
+        "niveau": 14,
+        "xp": 1350000,
+        "thac0": 14,
+        "savingThrows": [
+          6,
+          10,
+          9,
+          12,
+          11
+        ],
+        "spellsPerLevel": [
+          6,
+          6,
+          6,
+          5,
+          3,
+          2,
+          0
+        ]
+      },
+      {
+        "niveau": 15,
+        "xp": 1575000,
+        "thac0": 13,
+        "savingThrows": [
+          6,
+          10,
+          9,
+          12,
+          11
+        ],
+        "spellsPerLevel": [
+          7,
+          7,
+          7,
+          5,
+          4,
+          2,
+          0
+        ]
+      },
+      {
+        "niveau": 16,
+        "xp": 1800000,
+        "thac0": 13,
+        "savingThrows": [
+          5,
+          9,
+          8,
+          11,
+          10
+        ],
+        "spellsPerLevel": [
+          7,
+          7,
+          7,
+          6,
+          5,
+          3,
+          1
+        ]
+      },
+      {
+        "niveau": 17,
+        "xp": 2025000,
+        "thac0": 12,
+        "savingThrows": [
+          5,
+          9,
+          8,
+          11,
+          10
+        ],
+        "spellsPerLevel": [
+          8,
+          8,
+          8,
+          6,
+          5,
+          3,
+          1
+        ]
+      },
+      {
+        "niveau": 18,
+        "xp": 2250000,
+        "thac0": 12,
+        "savingThrows": [
+          5,
+          9,
+          8,
+          11,
+          10
+        ],
+        "spellsPerLevel": [
+          8,
+          8,
+          8,
+          7,
+          6,
+          4,
+          1
+        ]
+      },
+      {
+        "niveau": 19,
+        "xp": 2475000,
+        "thac0": 11,
+        "savingThrows": [
+          4,
+          8,
+          7,
+          10,
+          9
+        ],
+        "spellsPerLevel": [
+          9,
+          9,
+          9,
+          7,
+          6,
+          4,
+          1
+        ]
+      },
+      {
+        "niveau": 20,
+        "xp": 2700000,
+        "thac0": 11,
+        "savingThrows": [
+          4,
+          8,
+          7,
+          10,
+          9
+        ],
+        "spellsPerLevel": [
+          9,
+          9,
+          9,
+          8,
+          7,
+          5,
+          2
+        ]
+      }
+    ],
+    "savingThrows": "",
+    "strengthAdjustments": "",
+    "spellcasting": {
+      "enabled": true,
+      "mode": "divine",
+      "type": "prepared",
+      "ability": "sagesse",
+      "abilityKey": "wis",
+      "lists": [
+        "Clerc"
+      ],
+      "startsAt": 1,
+      "maxSpellLevel": 7,
+      "usesSlots": true,
+      "usesPreparation": true,
+      "preparationSource": "progression.spellsPerLevel"
+    },
+    "spellLists": [
+      "Clerc"
+    ],
+    "casterType": "divine",
+    "casterAbility": "sagesse",
+    "spellcastingNote": "Ajouté pour permettre au moteur ADD2E de reconnaître que la classe Clerc utilise la liste de sorts clerc et prépare ses sorts via progression[].spellsPerLevel.",
+    "weaponRestriction": {
+      "mode": "allow-tags",
+      "allowedTags": [
+        "type_arme:masse",
+        "type_arme:baton"
+      ],
+      "forbiddenTags": [
+        "arme:tranchante",
+        "arme:pointue",
+        "arme:perforante"
+      ],
+      "notes": "Clerc AD&D2 : autorisation par type d’arme. type_arme:masse regroupe massue, fléau, marteau et masse d’armes ; type_arme:baton autorise le bâton."
+    },
+    "armorRestriction": {
+      "mode": "allow-tags",
+      "allowedTags": [
+        "armure:legere",
+        "armure:moyenne",
+        "armure:lourde",
+        "bouclier"
+      ],
+      "forbiddenTags": [],
+      "notes": "Clerc AD&D2 : autorisation des armures et boucliers exclusivement par tags."
+    },
+    "tags": [
+      "classe:clerc",
+      "lanceur:divin"
+    ]
+  },
+  "effects": [],
+  "folder": null,
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Compendium.add2e.classes.Item.EsbmEJiaY0KMMDRm",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "test",
+      "uuid": "Item.Os15Oek3jP3IGQov",
+      "coreVersion": "13.351",
+      "systemId": "add2e",
+      "systemVersion": "0.1.12"
+    },
+    "coreVersion": "13.351",
+    "systemId": "add2e",
+    "systemVersion": "0.1.12",
+    "createdTime": 1777571954949,
+    "modifiedTime": 1777571954949,
+    "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

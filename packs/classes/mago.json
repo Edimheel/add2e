@@ -1,0 +1,77 @@
+{
+  "name": "Magicien",
+  "type": "classe",
+  "img": "systems/add2e/assets/magicien.png",
+  "system": {
+    "label": "Magicien",
+    "description": "Le magicien est le maître des arcanes, spécialiste des sorts et de la manipulation de l'énergie magique. Il étudie longuement pour consigner et maîtriser une vaste gamme de sorts offensifs, défensifs ou utilitaires.",
+    "caracs_min": { "intelligence": 9 },
+    "primaryAbility": "Intelligence",
+    "prerequis": {
+      "alignement": "Voir alignements autorisés",
+      "race": "Toutes sauf demi-orque",
+      "autre": "Ne peut porter ni armure ni bouclier. Utilisation très limitée des armes."
+    },
+    "alignements_autorises": [
+      "Loyal Bon", "Loyal Neutre", "Loyal Mauvais",
+      "Neutre Bon", "Neutre", "Neutre Mauvais",
+      "Chaotique Bon", "Chaotique Neutre", "Chaotique Mauvais"
+    ],
+    "raceAllowed": [
+      "Humain", "Elfe", "Demi-Elfe"
+    ],
+
+    "armes_autorisees": [ "dague", "bâton", "arbalète légère" ],
+    "weaponRestriction": { "allowedNames": ["Dague", "Bâton", "Arbalète légère"] ,"encombrante": false}, 
+ 
+   "armorAllowed": ["aucune"],
+    "shieldAllowed": false,
+    "magicAllowed": "Sorts arcanes de tous niveaux selon progression. Peut employer de nombreux objets magiques sauf ceux réservés à d'autres classes.",
+    "richesse_initiale": "1d4+1 × 10 po",
+    "hdPerLevel": "1d4",
+    "hpAfter9": 1,
+    "followerLevel": null,
+    "progression": [
+      { "niveau": 1,  "xp":      0,    "hd": "1d4",      "title": "Apprenti-sorcier",  "thac0": 20, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [1,0,0,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 2,  "xp":   2500,    "hd": "2d4",      "title": "Envoûteur",         "thac0": 20, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [2,0,0,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 3,  "xp":   5000,    "hd": "3d4",      "title": "Invocateur",        "thac0": 19, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [2,1,0,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 4,  "xp":  10000,    "hd": "4d4",      "title": "Théurgiste",        "thac0": 19, "savingThrows": [13,15,14,16,16], "spellsPerLevel": [3,2,0,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 5,  "xp":  20000,    "hd": "5d4",      "title": "Thaumaturge",       "thac0": 18, "savingThrows": [13,15,14,16,16], "spellsPerLevel": [4,2,1,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 6,  "xp":  40000,    "hd": "6d4",      "title": "Magicien",          "thac0": 18, "savingThrows": [12,14,13,15,15], "spellsPerLevel": [4,2,2,0,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 7,  "xp":  60000,    "hd": "7d4",      "title": "Enchanteur",        "thac0": 17, "savingThrows": [12,14,13,15,15], "spellsPerLevel": [4,3,2,1,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 8,  "xp":  90000,    "hd": "8d4",      "title": "Magistère",         "thac0": 17, "savingThrows": [11,13,12,14,14], "spellsPerLevel": [4,3,3,2,0,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 9,  "xp": 135000,    "hd": "9d4",      "title": "Ensorceleur",       "thac0": 16, "savingThrows": [11,13,12,14,14], "spellsPerLevel": [4,3,3,2,1,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 10, "xp": 250000,    "hd": "10d4",     "title": "Nécromancien",      "thac0": 16, "savingThrows": [10,12,11,13,13], "spellsPerLevel": [4,4,3,2,2,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 11, "xp": 375000,    "hd": "11d4",     "title": "Sorcier",           "thac0": 15, "savingThrows": [10,12,11,13,13], "spellsPerLevel": [4,4,4,3,3,0,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 12, "xp": 750000,    "hd": "11d4+1",   "title": "Sorcier",           "thac0": 15, "savingThrows": [9,11,10,12,12],   "spellsPerLevel": [4,4,4,4,4,1,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 13, "xp":1125000,    "hd": "11d4+2",   "title": "Sorcier",           "thac0": 14, "savingThrows": [9,11,10,12,12],   "spellsPerLevel": [5,5,5,4,4,2,0,0,0], "attacksPerRound": 1 },
+      { "niveau": 14, "xp":1500000,    "hd": "11d4+3",   "title": "Sorcier",           "thac0": 14, "savingThrows": [8,10,9,11,11],    "spellsPerLevel": [5,5,5,4,4,2,1,0,0], "attacksPerRound": 1 },
+      { "niveau": 15, "xp":1875000,    "hd": "11d4+4",   "title": "Sorcier",           "thac0": 13, "savingThrows": [8,10,9,11,11],    "spellsPerLevel": [5,5,5,5,5,2,1,0,0], "attacksPerRound": 1 },
+      { "niveau": 16, "xp":2250000,    "hd": "11d4+5",   "title": "Mage",              "thac0": 13, "savingThrows": [7,9,8,10,10],     "spellsPerLevel": [5,5,5,5,5,3,2,1,0], "attacksPerRound": 1 },
+      { "niveau": 17, "xp":2625000,    "hd": "11d4+6",   "title": "Sorcier",           "thac0": 12, "savingThrows": [7,9,8,10,10],     "spellsPerLevel": [5,5,5,5,5,3,3,2,0], "attacksPerRound": 1 },
+      { "niveau": 18, "xp":3000000,    "hd": "11d4+7",   "title": "Archimage",         "thac0": 12, "savingThrows": [6,8,7,9,9],       "spellsPerLevel": [5,5,5,5,5,3,3,2,1], "attacksPerRound": 1 },
+      { "niveau": 19, "xp":3375000,    "hd": "11d4+8",   "title": "Archimage",         "thac0": 11, "savingThrows": [6,8,7,9,9],       "spellsPerLevel": [5,5,5,5,5,3,3,3,1], "attacksPerRound": 1 },
+      { "niveau": 20, "xp":3750000,    "hd": "11d4+9",   "title": "Archimage",         "thac0": 11, "savingThrows": [5,7,6,8,8],       "spellsPerLevel": [5,5,5,5,5,4,3,3,2], "attacksPerRound": 1 }
+    ],
+    "specialAbilities": [
+      {
+        "nom": "Livre de sorts",
+        "description": "Le magicien doit inscrire tous ses sorts dans un grimoire personnel, à partir duquel il prépare ses sorts chaque jour.",
+        "niveau": 1
+      },
+      {
+        "nom": "Sorts arcanes",
+        "description": "Peut lancer des sorts arcanes selon sa progression de niveau et les sorts appris. Doit mémoriser les sorts après chaque repos.",
+        "niveau": 1
+      },
+      {
+        "nom": "Création de parchemins",
+        "description": "Peut écrire et utiliser des parchemins de magie. Capacité à créer des objets magiques à haut niveau.",
+        "niveau": 9
+      }
+    ],
+    "notes": "Le magicien ne porte jamais d’armure ou de bouclier. Ses armes sont très limitées. S'il ne mémorise pas ses sorts à partir de son grimoire chaque jour, il ne peut pas lancer de magie."
+  },
+  "effects": [],
+  "folder": null
+}

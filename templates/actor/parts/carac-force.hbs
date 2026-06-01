@@ -1,0 +1,55 @@
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="force" title="Jet de Force" style="color:#27ce46;"></i>
+                  <span class="carac-short">FOR</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="force" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="force" style="position:relative;overflow:visible;"
+                       title="Base : {{actor.system.force_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.force}}&#10;Total : {{add actor.system.force_base actor.system.bonus_caracteristiques.force}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.force_base actor.system.bonus_caracteristiques.force}}</span>
+                    {{#if actor.system.bonus_caracteristiques.force}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.force 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.force}})</span>
+                    {{/if}}
+                    {{#if canExceptionalStrength}}
+                      {{#if editable}}
+                        <select name="system.force_ex" class="carac-ex-square carac-ex-badge" data-current-force-ex="{{actor.system.force_ex}}" style="position:absolute;right:-18px;bottom:-9px;width:46px;height:22px;min-width:46px;margin:0;padding:0 2px;border:1px solid #b89436;border-radius:999px;background:#fff8d8;color:#2b2410;font-size:.72rem;font-weight:900;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:3;" title="Force exceptionnelle (18/xx)">
+                          <option value="0">--</option>
+                          {{#each forceExValues}}
+                            <option value="{{this.value}}">{{this.label}}</option>
+                          {{/each}}
+                        </select>
+                      {{else}}
+                        <span class="carac-ex-square carac-ex-badge carac-ex-square--readonly" style="position:absolute;right:-18px;bottom:-9px;display:inline-flex;align-items:center;justify-content:center;width:46px;height:22px;border:1px solid #b89436;border-radius:999px;background:#fff8d8;color:#2b2410;font-size:.72rem;font-weight:900;box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:3;">{{actor.system.force_ex}}</span>
+                      {{/if}}
+                    {{else}}
+                      {{#if (eq (add actor.system.force_base actor.system.bonus_caracteristiques.force) 18)}}
+                        {{#if editable}}
+                          <select name="system.force_ex" class="carac-ex-square carac-ex-badge" data-current-force-ex="{{actor.system.force_ex}}" style="position:absolute;right:-18px;bottom:-9px;width:46px;height:22px;min-width:46px;margin:0;padding:0 2px;border:1px solid #b89436;border-radius:999px;background:#fff8d8;color:#2b2410;font-size:.72rem;font-weight:900;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:3;" title="Force exceptionnelle (18/xx)">
+                            <option value="0">--</option>
+                            {{#each forceExValues}}
+                              <option value="{{this.value}}">{{this.label}}</option>
+                            {{/each}}
+                          </select>
+                        {{else}}
+                          <span class="carac-ex-square carac-ex-badge carac-ex-square--readonly" style="position:absolute;right:-18px;bottom:-9px;display:inline-flex;align-items:center;justify-content:center;width:46px;height:22px;border:1px solid #b89436;border-radius:999px;background:#fff8d8;color:#2b2410;font-size:.72rem;font-weight:900;box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:3;">{{actor.system.force_ex}}</span>
+                        {{/if}}
+                      {{/if}}
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="force" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <div class="a2e-adjustment-item"><label>Toucher</label><input type="text" name="system.force_bonus_toucher" value="{{actor.system.force_bonus_toucher}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Dégâts</label><input type="text" name="system.force_bonus_degats" value="{{actor.system.force_bonus_degats}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Poids</label><input type="text" name="system.force_poids" value="{{actor.system.force_poids}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Portes</label><input type="text" name="system.force_ouvrir" value="{{actor.system.force_ouvrir}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Barreaux</label><input type="text" name="system.force_tordre" value="{{actor.system.force_tordre}}" readonly></div>
+                </div>
+              </td>
+            </tr>

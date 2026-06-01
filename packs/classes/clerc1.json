@@ -1,0 +1,95 @@
+{
+  "_id": "clericclass0001a",
+  "name": "Clerc",
+  "type": "classe",
+  "img": "systems/add2e/assets/clerc.png",
+  "system": {
+    "label": "Clerc",
+    "description": "Prêtre-guerrier, défenseur de la foi, spécialiste des sorts divins et des morts-vivants.",
+    "caracs_min": { "sagesse": 9 },
+    "primaryAbility": "Sagesse",
+    "prerequis": {
+      "alignement": "Voir alignements autorisés",
+      "race": "Toutes sauf demi-orc",
+      "autre": "Doit servir une divinité ; ne peut utiliser d'armes tranchantes ni pointues."
+    },
+    "alignment": [
+      "Loyal Bon", "Loyal Neutre", "Loyal Mauvais",
+      "Neutre Bon", "Neutre Mauvais",
+      "Chaotique Bon", "Chaotique Neutre", "Chaotique Mauvais"
+    ],
+    "raceAllowed": ["Humain", "Demi-elfe", "Demi-orque"],
+    "armes_autorisees": [
+      "masse", "marteau", "fléau"
+    ],
+    "weaponRestriction": { "tranchante": false, "perforante": false },
+    "armures_autorisees": ["toutes"],
+    "shieldAllowed": true,
+    "magicAllowed": "Objets magiques autorisés : potions, anneaux, bâtons, baguettes non-offensifs, armures et boucliers magiques, armes magiques autorisées.",
+    "richesse_initiale": "3d6x10 po",
+    "hdPerLevel": "1d8",
+    "hpAfter9": 2,
+    "followerLevel": 8,
+    "sorts_divins": true,
+    "progression": [
+      { "niveau": 1,  "xp": 0,        "hd": "1d8",     "title": "Acolyte",      "thac0": 20, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [1,0,0,0,0,0,0] },
+      { "niveau": 2,  "xp": 1501,     "hd": "2d8",     "title": "Adepte",       "thac0": 20, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [2,0,0,0,0,0,0] },
+      { "niveau": 3,  "xp": 3001,     "hd": "3d8",     "title": "Prêtre",       "thac0": 19, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [2,1,0,0,0,0,0] },
+      { "niveau": 4,  "xp": 6001,     "hd": "4d8",     "title": "Curé",         "thac0": 19, "savingThrows": [13,15,14,16,16], "spellsPerLevel": [3,2,0,0,0,0,0] },
+      { "niveau": 5,  "xp": 13001,    "hd": "5d8",     "title": "Parfait",      "thac0": 18, "savingThrows": [13,15,14,16,16], "spellsPerLevel": [3,3,1,0,0,0,0] },
+      { "niveau": 6,  "xp": 27501,    "hd": "6d8",     "title": "Évêque",       "thac0": 18, "savingThrows": [12,14,13,15,15], "spellsPerLevel": [3,3,2,0,0,0,0] },
+      { "niveau": 7,  "xp": 55001,    "hd": "7d8",     "title": "Lama",         "thac0": 17, "savingThrows": [12,14,13,15,15], "spellsPerLevel": [3,3,2,1,0,0,0] },
+      { "niveau": 8,  "xp": 110001,   "hd": "8d8",     "title": "Patriarche",   "thac0": 17, "savingThrows": [11,13,12,14,14], "spellsPerLevel": [3,3,3,2,0,0,0] },
+      { "niveau": 9,  "xp": 225001,   "hd": "9d8",     "title": "Grand-prêtre", "thac0": 16, "savingThrows": [11,13,12,14,14], "spellsPerLevel": [4,4,3,2,1,0,0] },
+      { "niveau": 10, "xp": 450001,   "hd": "9d8+2",   "title": "Grand-prêtre", "thac0": 16, "savingThrows": [10,12,11,13,13], "spellsPerLevel": [4,4,3,3,2,0,0] },
+      { "niveau": 11, "xp": 675001,   "hd": "9d8+4",   "title": "Grand-prêtre", "thac0": 15, "savingThrows": [10,12,11,13,13], "spellsPerLevel": [5,5,4,3,2,1,0] },
+      { "niveau": 12, "xp": 900001,   "hd": "9d8+6",   "title": "Grand-prêtre", "thac0": 15, "savingThrows": [9,11,10,12,12],   "spellsPerLevel": [6,6,5,4,2,2,1] },
+      { "niveau": 13, "xp": 1125001,  "hd": "9d8+8",   "title": "Grand-prêtre", "thac0": 14, "savingThrows": [9,11,10,12,12],   "spellsPerLevel": [6,6,6,5,3,2,1] },
+      { "niveau": 14, "xp": 1350001,  "hd": "9d8+10",  "title": "Grand-prêtre", "thac0": 14, "savingThrows": [8,10,9,11,11],    "spellsPerLevel": [7,7,6,5,3,2,2] },
+      { "niveau": 15, "xp": 1575001,  "hd": "9d8+12",  "title": "Grand-prêtre", "thac0": 13, "savingThrows": [8,10,9,11,11],    "spellsPerLevel": [7,7,7,6,4,3,2] },
+      { "niveau": 16, "xp": 1800001,  "hd": "9d8+14",  "title": "Grand-prêtre", "thac0": 13, "savingThrows": [7,9,8,10,10],     "spellsPerLevel": [8,8,7,6,4,3,2] },
+      { "niveau": 17, "xp": 2025001,  "hd": "9d8+16",  "title": "Grand-prêtre", "thac0": 12, "savingThrows": [7,9,8,10,10],     "spellsPerLevel": [8,8,8,7,5,4,3] },
+      { "niveau": 18, "xp": 2250001,  "hd": "9d8+18",  "title": "Grand-prêtre", "thac0": 12, "savingThrows": [6,8,7,9,9],       "spellsPerLevel": [9,9,8,7,5,4,3] },
+      { "niveau": 19, "xp": 2475001,  "hd": "9d8+20",  "title": "Grand-prêtre", "thac0": 11, "savingThrows": [6,8,7,9,9],       "spellsPerLevel": [9,9,9,8,6,5,4] },
+      { "niveau": 20, "xp": 2700001,  "hd": "9d8+22",  "title": "Grand-prêtre", "thac0": 11, "savingThrows": [5,7,6,8,8],       "spellsPerLevel": [9,9,9,9,7,6,5] }
+    ],
+    "specialAbilities": [
+      {
+        "nom": "Repousser ou commander les morts-vivants",
+        "description": "Permet de repousser ou commander des morts-vivants par une action spéciale, basée sur le niveau du clerc."
+      },
+      {
+        "nom": "Sorts divins",
+        "description": "Accès aux sorts divins selon le tableau de progression. Nécessite un symbole sacré."
+      },
+      {
+        "nom": "Temple et suivants",
+        "description": "Peut bâtir un temple au niveau 8 et attirer des suivants."
+      }
+    ],
+    "competences": [
+      "Tourner les morts-vivants",
+      "Lancer des sorts divins"
+    ],
+    "notes": "Un clerc doit rester fidèle à sa divinité pour conserver ses pouvoirs et ses suivants. Un clerc avec Sagesse 15+ gagne +10% d’XP. Interdit d'utiliser des armes tranchantes ou pointues. Progression THAC0 : 20 (niv.1-2), 19 (3-4), etc."
+  },
+
+  "effects": [],
+  "folder": null,
+  "flags": {
+    "exportSource": {
+      "world": "test",
+      "system": "add2e",
+      "coreVersion": "12.343",
+      "systemVersion": "0.1.12"
+    }
+  },
+  "_stats": {
+    "coreVersion": "12.343",
+    "systemId": "add2e",
+    "systemVersion": "0.1.12",
+    "createdTime": 1750881472417,
+    "modifiedTime": 1750881472417,
+    "lastModifiedBy": "sJuwkOXARIJD2Nsz"
+  }
+}

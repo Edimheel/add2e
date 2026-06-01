@@ -1,954 +1,488 @@
+/**
+ * ADD2E — Détection du mal / Détection du bien
+ * Version : 2026-05-21-detect-alignement-v2
+ *
+ * Contrat onUse :
+ * - true  = sort lancé et consommé ;
+ * - false = sort non consommé.
+ */
 
-// Généré pour ADD2E — Clerc niveau 1
-// Compatible Foundry V13, préparé V14.
-// Contrat moteur : return false = le sort n'est pas consommé ; return true = le sort est lancé.
-
-const ADD2E_CLERIC_ONUSE_CONFIG = {
-  "kind": "detection",
-  "durationRounds": "10+5*level",
-  "targetLabel": "Émanations",
-  "fields": [
-    {
-      "name": "mode",
-      "label": "Mode",
-      "type": "select",
-      "options": [
-        {
-          "value": "mal",
-          "label": "Détection du mal"
-        },
-        {
-          "value": "bien",
-          "label": "Inverse : détection du bien"
-        }
-      ]
-    },
-    {
-      "name": "direction",
-      "label": "Direction / zone observée",
-      "type": "text",
-      "value": "devant le lanceur"
-    }
-  ],
-  "tags": [
-    "sort:detection_du_mal",
-    "detection:mal",
-    "reversible:detection_du_bien",
-    "aura:alignement"
-  ],
-  "rule": "Détecte les émanations du mal provenant de créatures ou objets. Révèle le degré et la nature générale du mal. Inverse : détection du bien.",
-  "name": "Détection du mal",
-  "slug": "detection-du-mal",
-  "imgFallback": "systems/add2e/assets/icones/sorts/detection-du-mal.webp"
-};
+console.log("%c[ADD2E][DETECTION_DU_MAL] 2026-05-21-detect-alignement-v2", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
-  const CFG = ADD2E_CLERIC_ONUSE_CONFIG;
+  const DialogV2 = foundry.applications?.api?.DialogV2;
 
-  const ADD2E_CLERIC_CHAT = {
+  if (!DialogV2) {
+    ui.notifications.error("Détection du mal : DialogV2 introuvable. Foundry V13/V14 requis.");
+    return false;
+  }
+
+  const COLORS = {
     main: "#b88924",
     dark: "#6f4b12",
     pale: "#fff7df",
     pale2: "#fffaf0",
     border: "#e2bc63",
-    borderDark: "#8a611d",
     success: "#2f8f46",
     fail: "#b33a2e",
     warn: "#b88924",
     muted: "#6b5a35"
   };
 
-  function add2eEscapeHtml(value) {
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+  const esc = value => String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  const norm = value => String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9:]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+
+  function chatStyleData() {
+    return CONST.CHAT_MESSAGE_STYLES
+      ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
+      : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
   }
 
-  function add2eNormalizeTag(tag) {
-    if (typeof Add2eEffectsEngine !== "undefined" && Add2eEffectsEngine?.normalizeTag) {
-      return Add2eEffectsEngine.normalizeTag(tag);
-    }
-    return String(tag ?? "")
-      .trim()
-      .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[’']/g, "")
-      .replace(/\s+/g, "_");
-  }
-
-  function add2eSpellImg(src, fallback = "icons/magic/holy/prayer-hands-glowing-yellow.webp") {
-    return add2eEscapeHtml(src || fallback);
-  }
-
-  function add2eChatStyleData() {
-    if (CONST.CHAT_MESSAGE_STYLES) return { style: CONST.CHAT_MESSAGE_STYLES.OTHER };
-    return { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
-  }
-
-  async function add2eCreateChat({ caster, sourceItem, title, subtitle = "Sort divin", targetLabel = "—", resultHtml = "", detailsHtml = "" }) {
-    const casterName = add2eEscapeHtml(caster?.name ?? "Lanceur");
-    const spellName = add2eEscapeHtml(title || sourceItem?.name || CFG.name || "Sort");
-    const targetText = add2eEscapeHtml(targetLabel || "—");
-
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: caster }),
-      content: `
-        <div class="add2e-spell-card add2e-spell-card-clerc" style="
-          border-radius:12px;box-shadow:0 4px 10px #0002;
-          background:linear-gradient(135deg,${ADD2E_CLERIC_CHAT.pale2} 0%,${ADD2E_CLERIC_CHAT.pale} 100%);
-          border:1.5px solid ${ADD2E_CLERIC_CHAT.border};overflow:hidden;padding:0;font-family:var(--font-primary);">
-          <div style="background:linear-gradient(90deg,${ADD2E_CLERIC_CHAT.dark} 0%,${ADD2E_CLERIC_CHAT.main} 100%);padding:8px 12px;color:white;display:flex;align-items:center;gap:10px;border-bottom:2px solid ${ADD2E_CLERIC_CHAT.borderDark};">
-            <img src="${add2eSpellImg(caster?.img, "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
-            <div style="line-height:1.2;flex:1;">
-              <div style="font-weight:bold;font-size:1.05em;">${casterName}</div>
-              <div style="font-size:0.85em;opacity:0.95;">lance <b>${spellName}</b></div>
-            </div>
-            <div style="text-align:right;font-size:0.78em;opacity:0.95;">${add2eEscapeHtml(subtitle)}</div>
-            <img src="${add2eSpellImg(sourceItem?.img || CFG.imgFallback)}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
-          </div>
-          <div style="padding:10px;">
-            <div style="margin-bottom:6px;font-size:0.95em;color:${ADD2E_CLERIC_CHAT.dark};"><b>Cible :</b> ${targetText}</div>
-            ${resultHtml}
-            <details style="margin-top:8px;background:white;border:1px solid ${ADD2E_CLERIC_CHAT.border};border-radius:6px;">
-              <summary style="cursor:pointer;color:${ADD2E_CLERIC_CHAT.dark};font-weight:600;padding:6px;">Règle appliquée</summary>
-              <div style="padding:8px;font-size:0.85em;line-height:1.45;color:${ADD2E_CLERIC_CHAT.dark};">
-                ${detailsHtml || add2eEscapeHtml(CFG.rule || sourceItem?.system?.description || "")}
-              </div>
-            </details>
-          </div>
-        </div>`,
-      ...add2eChatStyleData()
-    });
-  }
-
-
-  async function add2ePlayVfx(target, preset = "divine") {
-    try {
-      if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) {
-        await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(target, preset);
-      }
-
-      let tokenObj = target;
-      if (target?.documentName === "Actor") tokenObj = target.getActiveTokens?.()[0] ?? null;
-      if (!tokenObj || !tokenObj.center || !canvas?.ready) return;
-
-      const point = tokenObj.center;
-
-      // VFX natif Foundry uniquement : aucun appel Sequencer/JB2A ici.
-      // Cela évite l'erreur Sequencer "baseTexture" quand un asset JB2A est absent.
-      try {
-        if (typeof canvas.ping === "function") {
-          canvas.ping(point, {
-            style: "pulse",
-            color: "#b88924",
-            size: 96,
-            duration: 700
-          });
-        } else if (typeof canvas.controls?.ping === "function") {
-          canvas.controls.ping(point, {
-            style: "pulse",
-            color: "#b88924",
-            size: 96,
-            duration: 700
-          });
-        }
-      } catch (e) {}
-
-      try {
-        if (canvas.interface?.createScrollingText) {
-          canvas.interface.createScrollingText(point, "✦", {
-            anchor: CONST.TEXT_ANCHOR_POINTS?.CENTER ?? 0,
-            direction: CONST.TEXT_ANCHOR_POINTS?.TOP ?? 1,
-            distance: 0.8,
-            fontSize: 28,
-            fill: "#f5d37a",
-            stroke: "#3a2608",
-            strokeThickness: 4,
-            duration: 900
-          });
-        }
-      } catch (e) {}
-    } catch (e) {
-      console.warn(`[ADD2E][${CFG.slug || CFG.name}] VFX natif impossible`, e);
-    }
-  }
-
-  function add2eGetSourceItem() {
+  function sourceItemFromContext() {
     let sourceItem = null;
     if (typeof sort !== "undefined" && sort) sourceItem = sort;
     else if (typeof item !== "undefined" && item) sourceItem = item;
     else if (typeof this !== "undefined" && this?.documentName === "Item") sourceItem = this;
     else if (typeof spell !== "undefined" && spell) sourceItem = spell;
     if ((!sourceItem || !sourceItem.system) && typeof args !== "undefined" && args?.[0]?.item) sourceItem = args[0].item;
-    if (!sourceItem && typeof arguments !== "undefined" && arguments.length > 1 && arguments[1]?.name) sourceItem = arguments[1];
     return sourceItem;
   }
 
-  function add2eGetCaster(sourceItem) {
+  function casterFromContext(sourceItem) {
     return (typeof actor !== "undefined" && actor) ? actor : sourceItem?.parent;
   }
 
-  function add2eGetCasterToken(caster) {
+  function casterTokenFor(caster) {
     return canvas.tokens?.controlled?.[0]
       ?? ((typeof token !== "undefined" && token) ? token : null)
       ?? caster?.getActiveTokens?.()[0]
       ?? null;
   }
 
-  function add2eDurationData(rounds) {
-    if (!Number.isFinite(Number(rounds)) || Number(rounds) <= 0) return {};
-    return {
-      rounds: Number(rounds),
-      startRound: game.combat?.round ?? null,
-      startTurn: game.combat?.turn ?? null,
-      startTime: game.time.worldTime
-    };
-  }
-
-  function add2eGetLevel(actorDoc) {
-    if (!actorDoc) return 1;
-    if (typeof Add2eEffectsEngine !== "undefined" && Add2eEffectsEngine?.getActorLevel) return Add2eEffectsEngine.getActorLevel(actorDoc);
+  function getLevel(actorDoc) {
     const candidates = [
-      actorDoc.system?.niveau,
-      actorDoc.system?.level,
-      actorDoc.system?.details?.niveau,
-      actorDoc.system?.details?.level
+      actorDoc?.system?.niveau,
+      actorDoc?.system?.level,
+      actorDoc?.system?.details?.niveau,
+      actorDoc?.system?.details?.level,
+      actorDoc?.system?.details_classe?.niveau
     ];
-    for (const v of candidates) {
-      const n = Number(v);
-      if (Number.isFinite(n) && n > 0) return n;
+    for (const raw of candidates) {
+      const value = Number(raw);
+      if (Number.isFinite(value) && value > 0) return value;
     }
     return 1;
   }
 
-  function add2eRounds(formula, level) {
-    if (formula === null || formula === undefined || formula === "") return 0;
-    if (typeof formula === "number") return formula;
-    const lvl = Math.max(1, Number(level) || 1);
-    switch (String(formula)) {
-      case "level": return lvl;
-      case "level*3": return lvl * 3;
-      case "level*4": return lvl * 4;
-      case "level*10": return lvl * 10;
-      case "10+level": return 10 + lvl;
-      case "2+level": return 2 + lvl;
-      case "10+5*level": return 10 + (5 * lvl);
-      case "min10_level*10": return Math.max(10, lvl * 10);
-      default: return Number(formula) || 0;
-    }
+  function durationRounds(level) {
+    return 10 + (5 * Math.max(1, Number(level) || 1));
   }
 
-  function add2eAEAddChange(key, value, priority = 20) {
-    if (CONST.ACTIVE_EFFECT_CHANGE_TYPES) return { key, type: "add", phase: "final", value: String(value), priority };
-    return { key, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(value), priority };
+  function unitToMeters(distance, unit) {
+    const u = String(unit ?? "").toLowerCase();
+    if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(u)) return distance * 0.3048;
+    if (["yd", "yard", "yards", "verge", "verges"].includes(u)) return distance * 0.9144;
+    if (["km", "kilometre", "kilomètre", "kilometres", "kilomètres"].includes(u)) return distance * 1000;
+    return distance;
   }
 
-  function add2eMakeChanges(rawChanges = []) {
-    return rawChanges.map(c => add2eAEAddChange(c.key, c.value, c.priority ?? 20));
-  }
-
-  function add2eEmitGMOperation(operation, payload) {
-    if (!game.socket) return false;
-    const message = {
-      type: "ADD2E_GM_OPERATION",
-      operation,
-      payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() }
-    };
-    console.log(`[ADD2E][${CFG.slug || CFG.name}][GM-RELAY] emit`, message);
-    game.socket.emit("system.add2e", message);
-    return true;
-  }
-
-  async function add2eCreateEffectOnActor(actorDoc, effectData, options = {}) {
-    if (!actorDoc) return false;
-
-    if (options.removeTags?.length && (game.user.isGM || actorDoc.isOwner)) {
-      const wanted = options.removeTags.map(add2eNormalizeTag);
-      const ids = actorDoc.effects.filter(e => {
-        const tags = (e.flags?.add2e?.tags ?? e.getFlag?.("add2e", "tags") ?? []).map(add2eNormalizeTag);
-        return wanted.some(t => tags.includes(t));
-      }).map(e => e.id).filter(Boolean);
-      if (ids.length) await actorDoc.deleteEmbeddedDocuments("ActiveEffect", ids);
-    }
-
-    if (game.user.isGM || actorDoc.isOwner) {
-      await actorDoc.createEmbeddedDocuments("ActiveEffect", [effectData]);
-      return true;
-    }
-
-    const emitted = add2eEmitGMOperation("createActiveEffect", {
-      actorUuid: actorDoc.uuid,
-      actorId: actorDoc.id,
-      effectData
-    });
-
-    if (!emitted) {
-      ui.notifications.error(`${CFG.name} : socket indisponible, impossible de demander l’effet au MJ.`);
-      return false;
-    }
-
-    return true;
-  }
-
-  function add2eTokensAuContact(a, b) {
-    if (!a || !b || a.id === b.id) return true;
-    const gridSize = canvas.grid?.size || 100;
-    const aLeft = a.document.x / gridSize;
-    const aTop = a.document.y / gridSize;
-    const aRight = aLeft + (a.document.width || 1);
-    const aBottom = aTop + (a.document.height || 1);
-    const bLeft = b.document.x / gridSize;
-    const bTop = b.document.y / gridSize;
-    const bRight = bLeft + (b.document.width || 1);
-    const bBottom = bTop + (b.document.height || 1);
-    const gapX = Math.max(0, bLeft - aRight, aLeft - bRight);
-    const gapY = Math.max(0, bTop - aBottom, aTop - bBottom);
-    return gapX <= 0.01 && gapY <= 0.01;
-  }
-
-  function add2eDistanceMeters(tokenA, tokenB) {
+  function distanceMeters(a, b) {
+    if (!a || !b) return 0;
     try {
-      if (!tokenA || !tokenB) return 0;
-      const gridSize = canvas.grid?.size || 100;
-      const gridDistance = Number(canvas.scene?.grid?.distance) || 1;
-
-      if (typeof canvas.grid?.measurePath === "function") {
-        const result = canvas.grid.measurePath([
-          { x: tokenA.center.x, y: tokenA.center.y },
-          { x: tokenB.center.x, y: tokenB.center.y }
-        ]);
-        const measured = Number(result?.distance) || Number(result?.cost) || Number(result?.segments?.[0]?.distance) || 0;
-        if (measured > 0) return measured;
-      }
-
-      if (typeof canvas.grid?.measureDistances === "function") {
-        const distance = canvas.grid.measureDistances([{ ray: new Ray(tokenA.center, tokenB.center) }], { gridSpaces: true })[0];
-        return Number(distance) || 0;
-      }
-
-      const dx = tokenA.center.x - tokenB.center.x;
-      const dy = tokenA.center.y - tokenB.center.y;
-      return Math.hypot(dx, dy) / gridSize * gridDistance;
+      const gridSize = Number(canvas.grid?.size || canvas.scene?.grid?.size || 100) || 100;
+      const gridDistance = Number(canvas.scene?.grid?.distance ?? 1) || 1;
+      const gridUnits = canvas.scene?.grid?.units ?? "m";
+      const dx = Number(a.center?.x ?? a.document?.x ?? 0) - Number(b.center?.x ?? b.document?.x ?? 0);
+      const dy = Number(a.center?.y ?? a.document?.y ?? 0) - Number(b.center?.y ?? b.document?.y ?? 0);
+      return unitToMeters((Math.hypot(dx, dy) / gridSize) * gridDistance, gridUnits);
     } catch (e) {
-      console.warn(`[ADD2E][${CFG.slug || CFG.name}] mesure distance impossible`, e);
+      console.warn("[ADD2E][DETECTION_DU_MAL][DISTANCE] mesure impossible", e);
       return 0;
     }
   }
 
-  async function add2eDialog({ title, content, buttons }) {
-    const DialogV2 = foundry.applications?.api?.DialogV2;
-    if (DialogV2) {
-      return await DialogV2.wait({
-        window: { title },
-        content,
-        buttons,
-        rejectClose: false
-      });
+  function collectTags(actorDoc) {
+    const sys = actorDoc?.system ?? {};
+    const flags = actorDoc?.flags?.add2e ?? {};
+    const all = [];
+
+    const push = value => {
+      if (value === undefined || value === null) return;
+      if (Array.isArray(value)) {
+        for (const v of value) push(v);
+        return;
+      }
+      if (typeof value === "object") {
+        for (const [k, v] of Object.entries(value)) {
+          if (v === true) all.push(k);
+          else if (typeof v !== "object") all.push(`${k}:${v}`);
+          else push(v);
+        }
+        return;
+      }
+      String(value).split(/[,;\n]+/).map(s => s.trim()).filter(Boolean).forEach(s => all.push(s));
+    };
+
+    push(sys.tags);
+    push(sys.effectTags);
+    push(sys.traits?.tags);
+    push(sys.capacites_monstre);
+    push(flags.tags);
+    push(flags.monsterCapabilities);
+    push(flags.effectTags);
+
+    for (const item of actorDoc?.items ?? []) {
+      push(item.system?.tags);
+      push(item.flags?.add2e?.tags);
     }
 
-    return await new Promise(resolve => {
-      const dialogButtons = {};
-      for (const b of buttons) {
-        dialogButtons[b.action] = {
-          label: b.label,
-          icon: b.icon,
-          callback: html => {
-            const form = html[0]?.querySelector?.("form") ?? html.find?.("form")?.[0];
-            const fakeButton = { form };
-            resolve(b.callback?.(null, fakeButton) ?? null);
-          }
-        };
-      }
-      new Dialog({ title, content, buttons: dialogButtons, close: () => resolve(null), default: buttons.find(b => b.default)?.action ?? buttons[0]?.action }).render(true);
-    });
+    return [...new Set(all.map(norm).filter(Boolean))];
   }
 
-  function add2eModeSelectHtml(modes, label = "Version du sort") {
-    if (!modes || modes.length <= 1) return "";
-    return `<div class="form-group"><label style="font-weight:bold;">${add2eEscapeHtml(label)} :</label><select name="mode" style="width:100%;">${modes.map(m => `<option value="${add2eEscapeHtml(m.key)}">${add2eEscapeHtml(m.label)}</option>`).join("")}</select></div>`;
+  function alignmentText(actorDoc) {
+    const sys = actorDoc?.system ?? {};
+    const values = [
+      sys.alignement,
+      sys.alignment,
+      sys.details?.alignement,
+      sys.details?.alignment,
+      sys.details_bio?.alignement,
+      sys.profil?.alignement,
+      sys.monstre?.alignement,
+      sys.biographie?.alignement,
+      actorDoc?.flags?.add2e?.alignement,
+      actorDoc?.flags?.add2e?.alignment
+    ];
+
+    return values.filter(v => v !== undefined && v !== null && String(v).trim()).join(" ");
   }
 
-  function add2eModeFromResult(result, modes) {
-    const key = String(result?.mode || modes?.[0]?.key || "default");
-    return modes?.find(m => m.key === key) ?? modes?.[0] ?? { key: "default", label: CFG.name, effectName: CFG.name, tags: CFG.tags ?? [] };
+  function detectedSide(actorDoc) {
+    const a = norm(alignmentText(actorDoc));
+    const tags = collectTags(actorDoc);
+
+    const evil =
+      a.includes("mauvais") ||
+      a.includes("evil") ||
+      tags.some(t => ["alignement:mauvais", "alignment:evil", "alignement:evil", "aura:mal", "detection:mal", "evil", "mauvais"].includes(t));
+
+    const good =
+      a.includes("bon") ||
+      a.includes("good") ||
+      tags.some(t => ["alignement:bon", "alignment:good", "alignement:good", "aura:bien", "detection:bien", "good", "bon"].includes(t));
+
+    return { evil, good, alignmentNorm: a, tags };
   }
 
-  async function add2eGetSaveVsSpells(actorDoc) {
-    if (!actorDoc) return NaN;
-    if (actorDoc.type === "monster") {
-      try {
-        const sheetData = await actorDoc.sheet.getData();
-        const val = Number(sheetData?.calculatedSaves?.sorts);
-        if (Number.isFinite(val) && val > 0) return val;
-      } catch (e) {
-        console.warn(`[ADD2E][${CFG.slug || CFG.name}] sauvegarde monstre impossible via sheet.getData`, e);
-      }
-    }
-
+  function hitDiceOrLevel(actorDoc) {
+    const sys = actorDoc?.system ?? {};
     const candidates = [
-      actorDoc.system?.sauvegarde_sortileges,
-      actorDoc.system?.sauvegardes?.sortileges,
-      actorDoc.system?.sauvegardes?.sorts,
-      actorDoc.system?.saves?.sorts,
-      actorDoc.system?.calculatedSaves?.sorts
+      sys.dv,
+      sys.hitDice,
+      sys.hit_dice,
+      sys.des_de_vie,
+      sys.niveau,
+      sys.level,
+      sys.details?.niveau,
+      sys.details?.level
     ];
 
     for (const raw of candidates) {
-      const val = Number(raw);
-      if (Number.isFinite(val) && val > 0) return val;
+      if (raw === undefined || raw === null || raw === "") continue;
+      const match = String(raw).match(/\d+(?:[.,]\d+)?/);
+      if (!match) continue;
+      const value = Number(match[0].replace(",", "."));
+      if (Number.isFinite(value) && value > 0) return value;
     }
 
-    return NaN;
+    return 1;
   }
 
-  async function add2eRollSaveVsSpells(actorDoc, bonus = 0) {
-    const saveVal = await add2eGetSaveVsSpells(actorDoc);
-    if (!Number.isFinite(saveVal) || saveVal <= 0) {
-      return { canRoll: false, saveVal: NaN, roll: null, total: 0, success: false };
+  function auraDegree(actorDoc) {
+    const hd = hitDiceOrLevel(actorDoc);
+    const tags = collectTags(actorDoc);
+
+    if (tags.some(t => ["extraplanaire", "demon", "diable", "fiend", "mort_vivant_majeur", "aura:extraordinaire"].includes(t))) {
+      return { label: "extraordinaire", hd };
     }
-    const formula = bonus ? `1d20+${Number(bonus) || 0}` : "1d20";
-    const roll = await new Roll(formula).evaluate({ async: true });
+
+    if (hd >= 11) return { label: "extraordinaire", hd };
+    if (hd >= 5) return { label: "forte", hd };
+    if (hd >= 2) return { label: "moyenne", hd };
+    return { label: "faible", hd };
+  }
+
+  function tendency(actorDoc) {
+    const a = norm(alignmentText(actorDoc));
+    if (a.includes("loyal") || a.includes("lawful")) return "loyale";
+    if (a.includes("chaotique") || a.includes("chaotic")) return "chaotique";
+    if (a.includes("neutre") || a.includes("neutral")) return "neutre";
+    return "indéterminée";
+  }
+
+  async function rollExtraordinaryTendency(casterLevel, actorDoc, degree) {
+    if (degree.label !== "extraordinaire") return { applicable: false };
+    const chance = Math.min(100, Math.max(0, casterLevel * 10));
+    const roll = await new Roll("1d100").evaluate({ async: true });
     if (game.dice3d) await game.dice3d.showForRoll(roll);
-    return { canRoll: true, saveVal, roll, total: roll.total, success: roll.total >= saveVal };
-  }
-
-  function add2eEffectData({ name, sourceItem, caster, tags = [], durationRounds = 0, description = "", changes = [], extraFlags = {} }) {
     return {
-      name,
-      img: sourceItem?.img || CFG.imgFallback || "icons/svg/aura.svg",
-      origin: sourceItem?.uuid ?? null,
-      disabled: false,
-      transfer: false,
-      duration: add2eDurationData(durationRounds),
-      description,
-      flags: {
-        add2e: {
-          spellName: sourceItem?.name ?? CFG.name,
-          sourceItemUuid: sourceItem?.uuid ?? null,
-          casterId: caster?.id ?? null,
-          casterUuid: caster?.uuid ?? null,
-          tags: [...new Set((tags ?? []).map(add2eNormalizeTag).filter(Boolean))],
-          ...extraFlags
-        }
-      },
-      changes: add2eMakeChanges(changes)
+      applicable: true,
+      chance,
+      roll: roll.total,
+      success: roll.total <= chance,
+      tendency: tendency(actorDoc)
     };
   }
 
-  function add2eGetMaxHP(actorDoc) {
-    const sys = actorDoc?.system || {};
-    return Number(sys.points_de_coup) || Number(sys.pv_max) || Number(sys.points_de_vie) || Number(sys.hp?.max) || Number(sys.attributes?.hp?.max) || 0;
-  }
-
-  function add2eGetCurrentHP(actorDoc, maxHP) {
-    const sys = actorDoc?.system || {};
-    const raw = sys.pdv;
-    if (raw === undefined || raw === null || raw === "" || Number.isNaN(Number(raw))) return maxHP;
-    return Number(raw) || 0;
-  }
-
-  async function add2eApplyHpDelta(targetToken, targetActor, delta, sourceItem, caster) {
-    if (typeof add2eApplyDamage === "function") {
-      await add2eApplyDamage({
-        cible: targetToken,
-        montant: delta < 0 ? Math.abs(delta) : -Math.abs(delta),
-        type: delta < 0 ? "degats_magiques" : "soin",
-        details: `${sourceItem.name} : ${Math.abs(delta)} ${delta < 0 ? "dégâts" : "PV rendus"}`,
-        source: sourceItem.name,
-        lanceur: caster,
-        silent: true,
-        noChat: true
-      });
-      return true;
-    }
-
-    if (!game.user.isGM && !targetActor.isOwner) {
-      ui.notifications.error(`${CFG.name} : add2eApplyDamage indisponible et cible non possédée.`);
-      return false;
-    }
-
-    const maxHP = add2eGetMaxHP(targetActor);
-    const currentHP = add2eGetCurrentHP(targetActor, maxHP);
-    await targetActor.update({ "system.pdv": Math.min(maxHP, currentHP + delta) });
-    return true;
-  }
-
-  function add2eTargetList() {
-    return Array.from(game.user.targets ?? []);
-  }
-
-  function add2eRequireSingleTarget(spellName) {
-    const targets = add2eTargetList();
-    if (targets.length !== 1) {
-      ui.notifications.warn(`${spellName} : cible exactement une créature.`);
-      return null;
-    }
-    if (!targets[0]?.actor) {
-      ui.notifications.warn(`${spellName} : la cible n’a pas d’acteur.`);
-      return null;
-    }
-    return targets[0];
-  }
-
-  async function runHealHarm(sourceItem, caster, casterToken) {
-    const modes = CFG.modes ?? [
-      { key: "heal", label: "Soins des Blessures Légères — rend 1d8 PV" },
-      { key: "harm", label: "Blessures Légères — inflige 1d8 PV" }
-    ];
-    const result = await add2eDialog({
-      title: `Lancement : ${CFG.name}`,
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">${add2eModeSelectHtml(modes, "Effet")}<label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" name="touchConfirmed" checked> Contact réussi ou cible consentante.</label></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ mode: button.form.elements.mode?.value || "heal", touchConfirmed: !!button.form.elements.touchConfirmed?.checked }) },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ]
-    });
-    if (!result) return false;
-    if (!result.touchConfirmed) return false;
-
-    const targetToken = add2eRequireSingleTarget(CFG.name);
-    if (!targetToken) return false;
-    if (casterToken && targetToken && !add2eTokensAuContact(casterToken, targetToken)) {
-      ui.notifications.warn(`${CFG.name} : la cible doit être au toucher.`);
-      return false;
-    }
-
-    const targetActor = targetToken.actor;
-    const mode = result.mode === "harm" ? "harm" : "heal";
-    const roll = await new Roll("1d8").evaluate({ async: true });
-    if (game.dice3d) await game.dice3d.showForRoll(roll);
-
-    const amount = Number(roll.total) || 0;
-    let resultHtml = "";
-
-    if (mode === "heal") {
-      const maxHP = add2eGetMaxHP(targetActor);
-      if (!maxHP || maxHP <= 0) {
-        ui.notifications.error(`${CFG.name} : PV maximum introuvables pour ${targetActor.name}.`);
-        return false;
-      }
-      const currentHP = add2eGetCurrentHP(targetActor, maxHP);
-      const effective = Math.min(amount, Math.max(0, maxHP - currentHP));
-      if (effective > 0) {
-        const ok = await add2eApplyHpDelta(targetToken, targetActor, effective, sourceItem, caster);
-        if (!ok) return false;
-      }
-      resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${ADD2E_CLERIC_CHAT.dark};"><div style="font-weight:bold;color:${ADD2E_CLERIC_CHAT.success};">SOINS</div><div>Jet : <b>${add2eEscapeHtml(roll.result)}</b> = <b>${amount}</b></div><div>PV rendus : <b>${effective}</b>${effective < amount ? " (limité par le maximum)" : ""}</div></div>`;
-    } else {
-      const ok = await add2eApplyHpDelta(targetToken, targetActor, -amount, sourceItem, caster);
-      if (!ok) return false;
-      resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.fail};background:#fff5f2;border-radius:6px;padding:8px;text-align:center;color:${ADD2E_CLERIC_CHAT.dark};"><div style="font-weight:bold;color:${ADD2E_CLERIC_CHAT.fail};">BLESSURES LÉGÈRES</div><div>Jet : <b>${add2eEscapeHtml(roll.result)}</b> = <b>${amount}</b></div><div>Dégâts infligés : <b>${amount}</b></div></div>`;
-    }
-
-    await add2ePlayVfx(targetToken, mode === "harm" ? "harm" : "heal");
-    await add2eCreateChat({ caster, sourceItem, title: mode === "harm" ? "Blessures Légères" : CFG.name, targetLabel: targetActor.name, resultHtml, detailsHtml: CFG.rule });
-    return true;
-  }
-
-  async function runCreateWater(sourceItem, caster) {
-    const level = add2eGetLevel(caster);
-    const maxLitres = level * 15;
-    const maxOutres = Math.max(1, Math.floor(maxLitres / 5));
-    const result = await add2eDialog({
-      title: `Lancement : ${CFG.name}`,
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label style="font-weight:bold;">Effet :</label><select name="mode" style="width:100%;"><option value="create">Créer de l’eau claire et potable</option><option value="destroy">Détruire de l’eau</option></select></div><div class="form-group"><label style="font-weight:bold;">Nombre d’outres de 5 L :</label><input type="number" name="nbOutres" value="${maxOutres}" min="1" max="${maxOutres}" step="1" style="width:100%;"><p style="margin:3px 0 0;color:#666;font-size:0.85em;">Maximum : ${maxOutres} outre(s), soit ${maxLitres} L au niveau ${level}.</p></div></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-droplet", default: true, callback: (event, button) => ({ mode: button.form.elements.mode?.value || "create", nbOutres: Number(button.form.elements.nbOutres?.value || 0) }) },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ]
-    });
-    if (!result) return false;
-    const mode = result.mode === "destroy" ? "destroy" : "create";
-    const nbOutres = Math.floor(Number(result.nbOutres) || 0);
-    const litres = nbOutres * 5;
-    if (nbOutres <= 0 || nbOutres > maxOutres) {
-      ui.notifications.warn(`${CFG.name} : quantité invalide.`);
-      return false;
-    }
-
-    let itemText = "";
-    if (mode === "create") {
-      const itemName = "Outre d’eau (5 L)";
-      const existing = caster.items?.find(i => i.type === "objet" && String(i.name || "").toLowerCase() === itemName.toLowerCase());
-      try {
-        if (existing) {
-          const currentQty = Number(existing.system?.quantite) || 0;
-          const newQty = currentQty + nbOutres;
-          await existing.update({
-            "system.quantite": newQty,
-            "system.volume_litres": newQty * 5,
-            "system.description": `Outres contenant de l’eau claire et potable créée par ${CFG.name}. Quantité : ${newQty} outre(s) de 5 L.`
-          });
-          itemText = `Équipement mis à jour : <b>${add2eEscapeHtml(itemName)}</b> +${nbOutres}`;
-        } else {
-          const created = await caster.createEmbeddedDocuments("Item", [{
-            name: itemName,
-            type: "objet",
-            img: "icons/consumables/drinks/water-jug-blue.webp",
-            system: {
-              nom: itemName,
-              description: `Outres contenant de l’eau claire et potable créée par ${CFG.name}.`,
-              quantite: nbOutres,
-              unite: "outre",
-              volume_litres: litres,
-              poids: 0,
-              valeur: 0,
-              equipee: false,
-              tags: ["sort:creation_eau", "objet:outre_eau", "eau:potable", "volume_unitaire_litres:5"]
-            },
-            flags: { add2e: { createdBySpell: CFG.name, spellUuid: sourceItem.uuid ?? null, casterUuid: caster.uuid ?? null } }
-          }]);
-          if (!created?.[0]) throw new Error("Objet non créé");
-          itemText = `Équipement créé : <b>${add2eEscapeHtml(itemName)}</b> × ${nbOutres}`;
+  function effectData({ name, sourceItem, caster, mode, direction, rounds }) {
+    const isGood = mode === "bien";
+    return {
+      name,
+      img: sourceItem?.img || "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+      origin: sourceItem?.uuid ?? null,
+      disabled: false,
+      transfer: false,
+      duration: {
+        rounds,
+        startRound: game.combat?.round ?? null,
+        startTurn: game.combat?.turn ?? null,
+        startTime: game.time.worldTime
+      },
+      description: `${name} : le lanceur détecte les émanations ${isGood ? "du bien" : "du mal"} dans la direction observée.`,
+      flags: {
+        add2e: {
+          spellName: name,
+          sourceItemUuid: sourceItem?.uuid ?? null,
+          casterId: caster?.id ?? null,
+          casterUuid: caster?.uuid ?? null,
+          mode,
+          direction,
+          tags: [
+            "sort:clerc",
+            "niveau:1",
+            "detection:alignement",
+            isGood ? "detection:bien" : "detection:mal",
+            isGood ? "aura:bien" : "aura:mal",
+            isGood ? "reversible:detection_du_mal" : "reversible:detection_du_bien"
+          ]
         }
-      } catch (e) {
-        console.error(`[ADD2E][${CFG.slug}] création eau impossible`, e);
-        ui.notifications.error(`${CFG.name} : impossible de créer ou mettre à jour l’objet d’eau.`);
-        return false;
-      }
-    } else {
-      itemText = "Destruction déclarée : retire manuellement l’eau concernée si elle est suivie dans l’inventaire.";
-    }
-
-    const resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${ADD2E_CLERIC_CHAT.dark};"><div style="font-weight:bold;color:${mode === "destroy" ? ADD2E_CLERIC_CHAT.warn : ADD2E_CLERIC_CHAT.success};">${mode === "destroy" ? "DESTRUCTION D’EAU" : "CRÉATION D’EAU"}</div><div>Quantité : <b>${litres} L</b> (${nbOutres} outre(s))</div><div style="margin-top:4px;">${itemText}</div></div>`;
-    await add2ePlayVfx(caster, "water");
-    await add2eCreateChat({ caster, sourceItem, title: CFG.name, targetLabel: "Eau", resultHtml, detailsHtml: CFG.rule });
-    return true;
+      },
+      changes: []
+    };
   }
 
-  async function runTouchEffect(sourceItem, caster, casterToken) {
-    const modes = CFG.modes ?? [{ key: "default", label: CFG.name, effectName: CFG.effectName ?? CFG.name, tags: CFG.tags ?? [], changes: CFG.changes ?? [] }];
-    const result = await add2eDialog({
-      title: `Lancement : ${CFG.name}`,
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">${add2eModeSelectHtml(modes, "Effet")}<label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" name="touchConfirmed" checked> Contact réussi ou cible consentante.</label><div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;">${add2eEscapeHtml(CFG.summary || CFG.rule || "")}</div></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ mode: button.form.elements.mode?.value || modes[0].key, touchConfirmed: !!button.form.elements.touchConfirmed?.checked }) },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ]
-    });
-    if (!result) return false;
-    if (!result.touchConfirmed) return false;
-    const mode = add2eModeFromResult(result, modes);
-    const targetToken = add2eRequireSingleTarget(CFG.name);
-    if (!targetToken) return false;
-    if (CFG.touch !== false && casterToken && !add2eTokensAuContact(casterToken, targetToken)) {
-      ui.notifications.warn(`${CFG.name} : la cible doit être au toucher.`);
-      return false;
+  async function createOrRefreshEffect(caster, data) {
+    const wantedMode = data.flags?.add2e?.mode;
+    const existing = caster.effects.find(e =>
+      e.name === data.name ||
+      (e.flags?.add2e?.spellName === data.name) ||
+      (e.flags?.add2e?.mode === wantedMode && ["mal", "bien"].includes(wantedMode))
+    );
+
+    if (existing) {
+      await existing.update(data);
+      return existing;
     }
-    const level = add2eGetLevel(caster);
-    const rounds = add2eRounds(mode.durationRounds ?? CFG.durationRounds, level);
-    const effectData = add2eEffectData({
-      name: mode.effectName || CFG.effectName || CFG.name,
-      sourceItem,
-      caster,
-      tags: mode.tags ?? CFG.tags ?? [],
-      changes: mode.changes ?? CFG.changes ?? [],
-      durationRounds: rounds,
-      description: mode.description || CFG.rule || sourceItem.system?.description || "",
-      extraFlags: mode.extraFlags ?? {}
-    });
-    const ok = await add2eCreateEffectOnActor(targetToken.actor, effectData, { removeTags: mode.removeTags ?? CFG.removeTags ?? [] });
-    if (!ok) return false;
-    const resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${ADD2E_CLERIC_CHAT.dark};"><div style="font-weight:bold;color:${ADD2E_CLERIC_CHAT.success};">${add2eEscapeHtml((mode.effectName || CFG.effectName || CFG.name).toUpperCase())} APPLIQUÉ</div><div>Durée : <b>${rounds ? `${rounds} round(s)` : "spéciale / jusqu’à suppression"}</b></div><div style="margin-top:4px;font-size:0.9em;color:${ADD2E_CLERIC_CHAT.muted};">Tags : ${(effectData.flags.add2e.tags || []).map(add2eEscapeHtml).join(", ")}</div></div>`;
-    await add2ePlayVfx(targetToken, mode.vfx || CFG.vfx || "divine");
-    await add2eCreateChat({ caster, sourceItem, title: mode.label || CFG.name, targetLabel: targetToken.actor.name, resultHtml, detailsHtml: CFG.rule });
-    return true;
+
+    const created = await caster.createEmbeddedDocuments("ActiveEffect", [data]);
+    return created?.[0] ?? null;
   }
 
-  async function runMultiEffect(sourceItem, caster, casterToken) {
-    const modes = CFG.modes ?? [{ key: "default", label: CFG.name, effectName: CFG.effectName ?? CFG.name, tags: CFG.tags ?? [], changes: CFG.changes ?? [] }];
-    const result = await add2eDialog({
-      title: `Lancement : ${CFG.name}`,
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">${add2eModeSelectHtml(modes, "Effet")}<div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;">Cible les tokens à affecter avant de lancer le sort.</div></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ mode: button.form.elements.mode?.value || modes[0].key }) },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ]
+  function tokenCandidates(casterToken, maxMeters) {
+    return Array.from(canvas.tokens?.placeables ?? []).filter(t => {
+      if (!t?.actor) return false;
+      if (casterToken && t.id === casterToken.id) return false;
+      if (t.document?.hidden && !game.user.isGM) return false;
+      if (!casterToken) return true;
+      return distanceMeters(casterToken, t) <= maxMeters;
     });
-    if (!result) return false;
-    const mode = add2eModeFromResult(result, modes);
-    const targets = add2eTargetList().filter(t => t?.actor);
-    if (!targets.length) {
-      ui.notifications.warn(`${CFG.name} : cible au moins une créature.`);
-      return false;
-    }
-    const range = Number(CFG.rangeMeters || 0);
-    if (range > 0 && casterToken) {
-      const out = targets.filter(t => add2eDistanceMeters(casterToken, t) > range);
-      if (out.length) {
-        ui.notifications.warn(`${CFG.name} : cible hors de portée (${out.map(t => t.name).join(", ")}).`);
-        return false;
-      }
-    }
-    const level = add2eGetLevel(caster);
-    const rounds = add2eRounds(mode.durationRounds ?? CFG.durationRounds, level);
-    const applied = [];
-    const resisted = [];
-    const failed = [];
-    for (const t of targets) {
-      let saveText = "";
-      let effectMode = mode;
-      if (CFG.save === true || mode.save === true) {
-        const save = await add2eRollSaveVsSpells(t.actor, Number(mode.saveBonus ?? CFG.saveBonus ?? 0));
-        if (save.canRoll && save.success) {
-          if (!CFG.applyOnSave) {
-            resisted.push(`${t.name} (${save.roll.total}/${save.saveVal})`);
-            continue;
-          }
-          effectMode = CFG.saveEffect ?? mode;
-          saveText = ` JS réussi ${save.roll.total}/${save.saveVal} — effet réduit`;
-          resisted.push(`${t.name} (${save.roll.total}/${save.saveVal}, effet réduit)`);
-        } else if (!save.canRoll && CFG.requireSaveValue) {
-          failed.push(`${t.name} (sauvegarde introuvable)`);
-          continue;
-        } else if (save.canRoll) {
-          saveText = ` JS raté ${save.roll.total}/${save.saveVal}`;
-        }
-      }
-      const effectData = add2eEffectData({
-        name: effectMode.effectName || mode.effectName || CFG.effectName || CFG.name,
-        sourceItem,
-        caster,
-        tags: effectMode.tags ?? mode.tags ?? CFG.tags ?? [],
-        changes: effectMode.changes ?? mode.changes ?? CFG.changes ?? [],
-        durationRounds: rounds,
-        description: effectMode.description || mode.description || CFG.rule || sourceItem.system?.description || "",
-        extraFlags: { saveText }
-      });
-      const ok = await add2eCreateEffectOnActor(t.actor, effectData, { removeTags: effectMode.removeTags ?? mode.removeTags ?? CFG.removeTags ?? [] });
-      if (ok) {
-        applied.push(t.name + saveText);
-        await add2ePlayVfx(t, mode.vfx || CFG.vfx || "bless");
-      }
-      else failed.push(t.name);
-    }
-    if (!applied.length && !resisted.length) return false;
-    const resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;color:${ADD2E_CLERIC_CHAT.dark};"><div style="text-align:center;font-weight:bold;color:${ADD2E_CLERIC_CHAT.success};">${add2eEscapeHtml((mode.effectName || CFG.effectName || CFG.name).toUpperCase())}</div>${applied.length ? `<div><b>Affectés :</b><ul>${applied.map(n => `<li>${add2eEscapeHtml(n)}</li>`).join("")}</ul></div>` : ""}${resisted.length ? `<div style="color:${ADD2E_CLERIC_CHAT.success};"><b>Résistent :</b> ${resisted.map(add2eEscapeHtml).join(", ")}</div>` : ""}${failed.length ? `<div style="color:${ADD2E_CLERIC_CHAT.fail};"><b>Non appliqués :</b> ${failed.map(add2eEscapeHtml).join(", ")}</div>` : ""}<div>Durée : <b>${rounds ? `${rounds} round(s)` : "spéciale"}</b></div></div>`;
-    await add2eCreateChat({ caster, sourceItem, title: mode.label || CFG.name, targetLabel: applied.join(", ") || resisted.join(", "), resultHtml, detailsHtml: CFG.rule });
-    return true;
   }
 
-  async function runDetection(sourceItem, caster) {
-    const fields = CFG.fields ?? [];
-    const fieldHtml = fields.map(f => {
-      if (f.type === "select") return `<div class="form-group"><label style="font-weight:bold;">${add2eEscapeHtml(f.label)} :</label><select name="${add2eEscapeHtml(f.name)}" style="width:100%;">${(f.options ?? []).map(o => `<option value="${add2eEscapeHtml(o.value)}">${add2eEscapeHtml(o.label)}</option>`).join("")}</select></div>`;
-      return `<div class="form-group"><label style="font-weight:bold;">${add2eEscapeHtml(f.label)} :</label><input type="text" name="${add2eEscapeHtml(f.name)}" value="${add2eEscapeHtml(f.value || "")}" style="width:100%;"></div>`;
-    }).join("");
-    const result = await add2eDialog({
-      title: `Lancement : ${CFG.name}`,
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">${fieldHtml}<div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;">${add2eEscapeHtml(CFG.summary || CFG.rule || "")}</div></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-eye", default: true, callback: (event, button) => { const out = {}; for (const f of fields) out[f.name] = button.form.elements[f.name]?.value || ""; return out; } },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ]
-    });
-    if (!result) return false;
-    const level = add2eGetLevel(caster);
-    const rounds = add2eRounds(CFG.durationRounds, level);
-    if (CFG.createEffect !== false) {
-      const effectData = add2eEffectData({
-        name: CFG.effectName || CFG.name,
-        sourceItem,
-        caster,
-        tags: CFG.tags ?? [],
-        durationRounds: rounds,
-        description: CFG.rule || sourceItem.system?.description || "",
-        extraFlags: { detectionOptions: result }
-      });
-      const ok = await add2eCreateEffectOnActor(caster, effectData, { removeTags: CFG.removeTags ?? [] });
-      if (!ok) return false;
+  async function scanTokens({ caster, casterToken, mode, maxMeters }) {
+    const casterLevel = getLevel(caster);
+    const matches = [];
+    const scanned = [];
+
+    for (const tok of tokenCandidates(casterToken, maxMeters)) {
+      const actorDoc = tok.actor;
+      const side = detectedSide(actorDoc);
+      const matched = mode === "bien" ? side.good : side.evil;
+      scanned.push({ name: actorDoc.name, matched, alignment: alignmentText(actorDoc), tags: side.tags });
+      if (!matched) continue;
+
+      const degree = auraDegree(actorDoc);
+      const tendencyRoll = await rollExtraordinaryTendency(casterLevel, actorDoc, degree);
+      matches.push({ token: tok, actor: actorDoc, side, degree, tendencyRoll, distance: casterToken ? distanceMeters(casterToken, tok) : 0 });
     }
-    const lines = Object.entries(result).map(([k,v]) => `<div><b>${add2eEscapeHtml(k)} :</b> ${add2eEscapeHtml(v || "—")}</div>`).join("");
-    const resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;color:${ADD2E_CLERIC_CHAT.dark};"><div style="text-align:center;font-weight:bold;color:${ADD2E_CLERIC_CHAT.success};">SORT ACTIF</div>${lines}<div style="margin-top:5px;">Le MJ annonce les informations détectées selon la scène.</div>${rounds ? `<div>Durée : <b>${rounds} round(s)</b></div>` : ""}</div>`;
-    await add2ePlayVfx(caster, CFG.vfx || "detection");
-    await add2eCreateChat({ caster, sourceItem, title: CFG.name, targetLabel: CFG.targetLabel || "Direction / zone", resultHtml, detailsHtml: CFG.rule });
-    return true;
+
+    console.log("[ADD2E][DETECTION_DU_MAL][SCAN]", { mode, maxMeters, scanned, matches });
+    return matches;
   }
 
-  async function runDeclaration(sourceItem, caster) {
-    const modes = CFG.modes ?? [{ key: "default", label: CFG.name }];
-    const fields = CFG.fields ?? [];
-    const html = `${add2eModeSelectHtml(modes, "Effet")}${fields.map(f => `<div class="form-group"><label style="font-weight:bold;">${add2eEscapeHtml(f.label)} :</label><input type="${f.type || "text"}" name="${add2eEscapeHtml(f.name)}" value="${add2eEscapeHtml(f.value || "")}" style="width:100%;"></div>`).join("")}`;
-    const result = await add2eDialog({
-      title: `Lancement : ${CFG.name}`,
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">${html}<div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;">${add2eEscapeHtml(CFG.summary || CFG.rule || "")}</div></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => { const out = { mode: button.form.elements.mode?.value || modes[0].key }; for (const f of fields) out[f.name] = button.form.elements[f.name]?.value || ""; return out; } },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ]
-    });
-    if (!result) return false;
-    const mode = add2eModeFromResult(result, modes);
-    const level = add2eGetLevel(caster);
-    const rounds = add2eRounds(mode.durationRounds ?? CFG.durationRounds, level);
-    if (CFG.createEffect === true) {
-      const effectData = add2eEffectData({
-        name: mode.effectName || CFG.effectName || CFG.name,
-        sourceItem,
-        caster,
-        tags: mode.tags ?? CFG.tags ?? [],
-        changes: mode.changes ?? CFG.changes ?? [],
-        durationRounds: rounds,
-        description: mode.description || CFG.rule || sourceItem.system?.description || "",
-        extraFlags: { declaration: result }
-      });
-      const ok = await add2eCreateEffectOnActor(caster, effectData, { removeTags: mode.removeTags ?? CFG.removeTags ?? [] });
-      if (!ok) return false;
-    }
-    const lines = Object.entries(result).filter(([k]) => k !== "mode").map(([k,v]) => `<div><b>${add2eEscapeHtml(k)} :</b> ${add2eEscapeHtml(v || "—")}</div>`).join("");
-    const resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;color:${ADD2E_CLERIC_CHAT.dark};"><div style="text-align:center;font-weight:bold;color:${ADD2E_CLERIC_CHAT.success};">${add2eEscapeHtml((mode.effectName || mode.label || CFG.name).toUpperCase())}</div>${lines}<div style="margin-top:5px;">${add2eEscapeHtml(mode.resultText || CFG.resultText || "Effet déclaré. Le MJ valide les conséquences exactes si nécessaire.")}</div>${rounds ? `<div>Durée : <b>${rounds} round(s)</b></div>` : ""}</div>`;
-    await add2ePlayVfx(caster, mode.vfx || CFG.vfx || "divine");
-    await add2eCreateChat({ caster, sourceItem, title: mode.label || CFG.name, targetLabel: CFG.targetLabel || "—", resultHtml, detailsHtml: CFG.rule });
-    return true;
+  function resultHtml({ mode, direction, matches, rounds }) {
+    const sideLabel = mode === "bien" ? "bien" : "mal";
+    const title = mode === "bien" ? "ÉMANATIONS DU BIEN" : "ÉMANATIONS DU MAL";
+
+    const rows = matches.length
+      ? matches.map(m => {
+        const tendency = m.tendencyRoll?.applicable
+          ? m.tendencyRoll.success
+            ? ` — tendance ${esc(m.tendencyRoll.tendency)} (${m.tendencyRoll.roll}/${m.tendencyRoll.chance}%)`
+            : ` — tendance non déterminée (${m.tendencyRoll.roll}/${m.tendencyRoll.chance}%)`
+          : "";
+        return `<li><b>${esc(m.actor.name)}</b> : aura ${esc(sideLabel)}, degré <b>${esc(m.degree.label)}</b>, nature générale : créature${tendency}${m.distance ? `, distance ${Math.round(m.distance)} m` : ""}</li>`;
+      }).join("")
+      : `<li>Aucune émanation du ${esc(sideLabel)} détectée.</li>`;
+
+    return `
+      <div style="border:1px solid ${COLORS.border};background:#fffdf4;border-radius:6px;padding:8px;color:${COLORS.dark};">
+        <div style="text-align:center;font-weight:bold;color:${matches.length ? COLORS.success : COLORS.warn};">${title}</div>
+        <div><b>Direction / zone :</b> ${esc(direction || "devant le lanceur")}</div>
+        <div><b>Durée :</b> ${rounds} round(s)</div>
+        <ul style="margin:6px 0 0 18px;">${rows}</ul>
+      </div>`;
   }
 
-  async function runCommand(sourceItem, caster, casterToken) {
-    const targetToken = add2eRequireSingleTarget(CFG.name);
-    if (!targetToken) return false;
-    const range = Number(CFG.rangeMeters || 0);
-    if (range > 0 && casterToken && add2eDistanceMeters(casterToken, targetToken) > range) {
-      ui.notifications.warn(`${CFG.name} : cible hors de portée.`);
-      return false;
-    }
-    const result = await add2eDialog({
-      title: `Lancement : ${CFG.name}`,
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label style="font-weight:bold;">Ordre d’un mot :</label><input type="text" name="command" value="Halte" style="width:100%;"></div><label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" name="allowSave" checked> La cible a droit au jet de protection.</label></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-comment", default: true, callback: (event, button) => ({ command: button.form.elements.command?.value || "Halte", allowSave: !!button.form.elements.allowSave?.checked }) },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ]
-    });
-    if (!result) return false;
-    let saveHtml = "";
-    if (result.allowSave) {
-      const save = await add2eRollSaveVsSpells(targetToken.actor);
-      if (save.canRoll && save.success) {
-        saveHtml = `<div style="color:${ADD2E_CLERIC_CHAT.success};">Jet de protection réussi : ${save.roll.total}/${save.saveVal}. Aucun effet.</div>`;
-        await add2eCreateChat({ caster, sourceItem, title: CFG.name, targetLabel: targetToken.actor.name, resultHtml: `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;">${saveHtml}</div>`, detailsHtml: CFG.rule });
-        return true;
-      }
-      if (save.canRoll) saveHtml = `<div>Jet de protection raté : <b>${save.roll.total}/${save.saveVal}</b>.</div>`;
-      else saveHtml = `<div style="color:${ADD2E_CLERIC_CHAT.warn};">Sauvegarde introuvable : le MJ doit valider.</div>`;
-    }
-    const effectData = add2eEffectData({
-      name: `Injonction : ${result.command}`,
-      sourceItem,
-      caster,
-      tags: CFG.tags ?? [],
-      durationRounds: 1,
-      description: `La cible doit obéir à l’ordre : ${result.command}`,
-      extraFlags: { command: result.command }
-    });
-    const ok = await add2eCreateEffectOnActor(targetToken.actor, effectData);
-    if (!ok) return false;
-    const resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${ADD2E_CLERIC_CHAT.dark};"><div style="font-weight:bold;color:${ADD2E_CLERIC_CHAT.success};">INJONCTION</div><div>Ordre : <b>${add2eEscapeHtml(result.command)}</b></div>${saveHtml}<div>Durée : <b>1 round</b>.</div></div>`;
-    await add2ePlayVfx(targetToken, CFG.vfx || "command");
-    await add2eCreateChat({ caster, sourceItem, title: CFG.name, targetLabel: targetToken.actor.name, resultHtml, detailsHtml: CFG.rule });
-    return true;
+  function ruleHtml(mode) {
+    const side = mode === "bien" ? "bien" : "mal";
+    const reverse = mode === "bien" ? "Détection du mal" : "Détection du bien";
+    return `
+      <div>Le sort détecte les émanations du ${esc(side)} provenant de créatures ou d’objets dans la direction observée.</div>
+      <div>Il révèle le degré et la nature générale de l’émanation, mais pas une identité complète ni les pensées de la cible.</div>
+      <div>Si l’émanation est extraordinaire, le script tente la tendance loyal/neutre/chaotique avec une chance de <b>10 % par niveau</b>.</div>
+      <div>Version inverse : <b>${esc(reverse)}</b>.</div>`;
   }
 
-  async function runMagicClub(sourceItem, caster) {
-    const weapons = Array.from(caster.items ?? []).filter(i => {
-      const n = String(i.name || "").toLowerCase();
-      const t = String(i.type || "").toLowerCase();
-      return t === "arme" && (n.includes("gourdin") || n.includes("bâton") || n.includes("baton") || n.includes("massue"));
+  async function createChat({ caster, sourceItem, title, mode, direction, matches, rounds }) {
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: caster }),
+      content: `
+        <div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,${COLORS.pale2} 0%,${COLORS.pale} 100%);border:1.5px solid ${COLORS.border};overflow:hidden;padding:0;font-family:var(--font-primary);">
+          <div style="background:linear-gradient(90deg,${COLORS.dark} 0%,${COLORS.main} 100%);padding:8px 12px;color:white;display:flex;align-items:center;gap:10px;border-bottom:2px solid #8a611d;">
+            <img src="${esc(caster?.img || "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
+            <div style="line-height:1.2;flex:1;">
+              <div style="font-weight:bold;font-size:1.05em;">${esc(caster.name)}</div>
+              <div style="font-size:0.85em;opacity:0.95;">lance <b>${esc(title)}</b></div>
+            </div>
+            <div style="text-align:right;font-size:0.78em;opacity:0.95;">Sort divin</div>
+            <img src="${esc(sourceItem?.img || "systems/add2e/assets/icones/sorts/detection-du-mal.webp")}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
+          </div>
+          <div style="padding:10px;">
+            <div style="margin-bottom:6px;font-size:0.95em;color:${COLORS.dark};"><b>Cible :</b> ${esc(direction || "Direction / zone")}</div>
+            ${resultHtml({ mode, direction, matches, rounds })}
+            <details style="margin-top:8px;background:white;border:1px solid ${COLORS.border};border-radius:6px;">
+              <summary style="cursor:pointer;color:${COLORS.dark};font-weight:600;padding:6px;">Règle appliquée</summary>
+              <div style="padding:8px;font-size:0.85em;line-height:1.45;color:${COLORS.dark};">${ruleHtml(mode)}</div>
+            </details>
+          </div>
+        </div>`,
+      ...chatStyleData()
     });
-    const options = weapons.map(w => `<option value="${w.id}">${add2eEscapeHtml(w.name)}</option>`).join("");
-    const result = await add2eDialog({
-      title: `Lancement : ${CFG.name}`,
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label style="font-weight:bold;">Arme de bois :</label><select name="weaponId" style="width:100%;">${options || `<option value="">Aucune arme trouvée — effet déclaratif</option>`}</select></div></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-wand-magic-sparkles", default: true, callback: (event, button) => ({ weaponId: button.form.elements.weaponId?.value || "" }) },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ]
-    });
-    if (!result) return false;
-    const weapon = result.weaponId ? caster.items.get(result.weaponId) : null;
-    const level = add2eGetLevel(caster);
-    const rounds = add2eRounds(CFG.durationRounds, level);
-    const effectData = add2eEffectData({
-      name: weapon ? `Gourdin Magique : ${weapon.name}` : "Gourdin Magique",
-      sourceItem,
-      caster,
-      tags: CFG.tags ?? [],
-      durationRounds: rounds,
-      description: CFG.rule,
-      extraFlags: { weaponId: weapon?.id ?? null, weaponName: weapon?.name ?? null }
-    });
-    const ok = await add2eCreateEffectOnActor(caster, effectData);
-    if (!ok) return false;
-    const resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${ADD2E_CLERIC_CHAT.dark};"><div style="font-weight:bold;color:${ADD2E_CLERIC_CHAT.success};">ARME ENCHANTÉE</div><div>Arme : <b>${add2eEscapeHtml(weapon?.name || "à définir par le MJ")}</b></div><div>Durée : <b>${rounds} round(s)</b>.</div><div style="font-size:0.9em;color:${ADD2E_CLERIC_CHAT.muted};">L’effet porte les tags nécessaires au moteur. Vérifie que l’attaque lit ces tags pour appliquer les bonus.</div></div>`;
-    await add2ePlayVfx(caster, CFG.vfx || "divine");
-    await add2eCreateChat({ caster, sourceItem, title: CFG.name, targetLabel: weapon?.name || "Arme", resultHtml, detailsHtml: CFG.rule });
-    return true;
   }
 
-  async function runMagicStone(sourceItem, caster) {
-    const result = await add2eDialog({
-      title: `Lancement : ${CFG.name}`,
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label style="font-weight:bold;">Nombre de pierres :</label><input type="number" name="qty" value="3" min="1" max="3" step="1" style="width:100%;"></div></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-gem", default: true, callback: (event, button) => ({ qty: Number(button.form.elements.qty?.value || 3) }) },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ]
-    });
-    if (!result) return false;
-    const qty = Math.max(1, Math.min(3, Math.floor(Number(result.qty) || 3)));
-    try {
-      await caster.createEmbeddedDocuments("Item", [{
-        name: "Pierre magique",
-        type: "objet",
-        img: sourceItem.img || CFG.imgFallback || "icons/commodities/stone/stone-round-grey.webp",
-        system: { nom: "Pierre magique", description: CFG.rule, quantite: qty, equipee: false, tags: CFG.tags ?? [] },
-        flags: { add2e: { createdBySpell: CFG.name, spellUuid: sourceItem.uuid ?? null, casterUuid: caster.uuid ?? null } }
-      }]);
-    } catch (e) {
-      console.error(`[ADD2E][${CFG.slug}] création pierres impossible`, e);
-      ui.notifications.error(`${CFG.name} : impossible de créer les pierres magiques dans l’inventaire.`);
-      return false;
-    }
-    const resultHtml = `<div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${ADD2E_CLERIC_CHAT.dark};"><div style="font-weight:bold;color:${ADD2E_CLERIC_CHAT.success};">PIERRES ENCHANTÉES</div><div>Créées dans l’inventaire : <b>${qty}</b>.</div></div>`;
-    await add2ePlayVfx(caster, CFG.vfx || "divine");
-    await add2eCreateChat({ caster, sourceItem, title: CFG.name, targetLabel: "Pierres", resultHtml, detailsHtml: CFG.rule });
-    return true;
-  }
-
-  // =====================================================
-  // Exécution
-  // =====================================================
-  console.log(`%c[ADD2E][${CFG.slug || CFG.name}] ON USE CLERC N1`, "color:#b88924;font-weight:bold;", CFG);
-
-  const sourceItem = add2eGetSourceItem();
+  const sourceItem = sourceItemFromContext();
   if (!sourceItem) {
-    ui.notifications.error(`${CFG.name} : sort introuvable.`);
+    ui.notifications.error("Détection du mal : sort introuvable.");
     return false;
   }
 
-  const caster = add2eGetCaster(sourceItem);
+  const caster = casterFromContext(sourceItem);
   if (!caster) {
-    ui.notifications.error(`${CFG.name} : lanceur introuvable.`);
+    ui.notifications.error("Détection du mal : lanceur introuvable.");
     return false;
   }
 
-  const casterToken = add2eGetCasterToken(caster);
+  const casterToken = casterTokenFor(caster);
+  const level = getLevel(caster);
+  const rounds = durationRounds(level);
+  const defaultRangeMeters = 110;
 
-  switch (CFG.kind) {
-    case "healHarm": { const r = await runHealHarm(sourceItem, caster, casterToken); console.log(`[ADD2E][${CFG.slug || CFG.name}][ONUSE_RESULT]`, r); return r; }
-    case "createWater": { const r = await runCreateWater(sourceItem, caster); console.log(`[ADD2E][${CFG.slug || CFG.name}][ONUSE_RESULT]`, r); return r; }
-    case "touchEffect": { const r = await runTouchEffect(sourceItem, caster, casterToken); console.log(`[ADD2E][${CFG.slug || CFG.name}][ONUSE_RESULT]`, r); return r; }
-    case "multiEffect": { const r = await runMultiEffect(sourceItem, caster, casterToken); console.log(`[ADD2E][${CFG.slug || CFG.name}][ONUSE_RESULT]`, r); return r; }
-    case "detection": { const r = await runDetection(sourceItem, caster); console.log(`[ADD2E][${CFG.slug || CFG.name}][ONUSE_RESULT]`, r); return r; }
-    case "declaration": { const r = await runDeclaration(sourceItem, caster); console.log(`[ADD2E][${CFG.slug || CFG.name}][ONUSE_RESULT]`, r); return r; }
-    case "command": { const r = await runCommand(sourceItem, caster, casterToken); console.log(`[ADD2E][${CFG.slug || CFG.name}][ONUSE_RESULT]`, r); return r; }
-    case "magicClub": { const r = await runMagicClub(sourceItem, caster); console.log(`[ADD2E][${CFG.slug || CFG.name}][ONUSE_RESULT]`, r); return r; }
-    case "magicStone": { const r = await runMagicStone(sourceItem, caster); console.log(`[ADD2E][${CFG.slug || CFG.name}][ONUSE_RESULT]`, r); return r; }
-    default:
-      ui.notifications.error(`${CFG.name} : mécanique onUse inconnue (${CFG.kind}).`);
-      return false;
+  const content = `
+    <form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">
+      <div class="form-group">
+        <label style="font-weight:bold;">Mode :</label>
+        <select name="mode" style="width:100%;">
+          <option value="mal">Détection du mal</option>
+          <option value="bien">Inverse : détection du bien</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label style="font-weight:bold;">Direction / zone observée :</label>
+        <input type="text" name="direction" value="devant le lanceur" style="width:100%;">
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" name="autoScan" checked>
+        <span>Détecter les émanations présentes sur les tokens visibles.</span>
+      </label>
+      <div class="form-group">
+        <label style="font-weight:bold;">Portée en mètres :</label>
+        <input type="number" name="rangeMeters" value="${defaultRangeMeters}" min="1" step="1" style="width:100%;">
+      </div>
+    </form>`;
+
+  const result = await DialogV2.wait({
+    window: { title: "Lancement : Détection du mal" },
+    add2eTheme: "cleric",
+    add2eImg: sourceItem.img || "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+    content,
+    buttons: [
+      {
+        action: "cast",
+        label: "Lancer",
+        icon: "fa-solid fa-eye",
+        default: true,
+        callback: (event, button) => ({
+          mode: button.form.elements.mode?.value || "mal",
+          direction: button.form.elements.direction?.value || "devant le lanceur",
+          autoScan: !!button.form.elements.autoScan?.checked,
+          rangeMeters: Number(button.form.elements.rangeMeters?.value || defaultRangeMeters)
+        })
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "fa-solid fa-xmark",
+        callback: () => null
+      }
+    ],
+    rejectClose: false
+  });
+
+  if (!result) return false;
+
+  const mode = result.mode === "bien" ? "bien" : "mal";
+  const title = mode === "bien" ? "Détection du bien" : "Détection du mal";
+  const direction = String(result.direction || "devant le lanceur");
+  const maxMeters = Math.max(1, Number(result.rangeMeters) || defaultRangeMeters);
+
+  const data = effectData({ name: title, sourceItem, caster, mode, direction, rounds });
+  await createOrRefreshEffect(caster, data);
+
+  const matches = result.autoScan
+    ? await scanTokens({ caster, casterToken, mode, maxMeters })
+    : [];
+
+  if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) {
+    await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(casterToken ?? caster, "detection");
   }
+
+  await createChat({ caster, sourceItem, title, mode, direction, matches, rounds });
+
+  console.log("[ADD2E][detection-du-mal.js][ONUSE_RESULT]", true);
+  return true;
 })();
 
 if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
@@ -956,7 +490,7 @@ if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
     script: "detection-du-mal.js",
     result: __add2eOnUseResult
   });
-  ui.notifications?.error?.(`${sourceItem?.name ?? item?.name ?? sort?.name ?? "Sort"} : le script onUse n'a pas retourné true/false.`);
+  ui.notifications?.error?.("Détection du mal : le script onUse n'a pas retourné true/false.");
   return false;
 }
 

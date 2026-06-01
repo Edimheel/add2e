@@ -1,0 +1,30 @@
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="intelligence" title="Jet d’Intelligence" style="color:#2980b9;"></i>
+                  <span class="carac-short">INT</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="intelligence" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="intelligence"
+                       title="Base : {{actor.system.intelligence_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.intelligence}}&#10;Total : {{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}</span>
+                    {{#if actor.system.bonus_caracteristiques.intelligence}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.intelligence 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.intelligence}})</span>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="intelligence" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <div class="a2e-adjustment-item"><label>Langues</label><input type="text" name="system.int_langues" value="{{actor.system.int_langues}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>% sort</label><input type="text" name="system.int_chance_sort" value="{{actor.system.int_chance_sort}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Sorts min</label><input type="text" name="system.int_sort_min" value="{{actor.system.int_sort_min}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Sorts max</label><input type="text" name="system.int_sort_max" value="{{actor.system.int_sort_max}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>/ niveau</label><input type="text" name="system.int_sort_par_niveau" value="{{actor.system.int_sort_par_niveau}}" readonly></div>
+                </div>
+              </td>
+            </tr>

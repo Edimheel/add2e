@@ -1,0 +1,659 @@
+[
+  {
+    "name": "Bâton de Magius",
+    "type": "arme",
+    "img": "icons/weapons/staves/staff-simple.webp",
+    "system": {
+      "nom": "Bâton de Magius",
+      "description": "<p>Un bâton de bois simple en apparence, mais imprégné d'une puissante magie.</p><p><strong>Propriétés :</strong></p><ul><li><strong>Protection :</strong> +3 à la CA (si équipé)</li><li><strong>Combat :</strong> +2 au toucher, Dégâts 1d8</li><li><strong>Pouvoirs (1/jour) :</strong> Lumière éternelle, Chute de plume.</li></ul>",
+      "equipee": false,
+      "type": "melee",
+      "categorie": "melee",
+      "bonus_hit": 2,
+      "bonus_dom": 0,
+      "degats": { "contre_moyen": "1d8", "contre_grand": "1d8" },
+      "type_degats": "contondant",
+      "facteur_rapidité": 4,
+      "poids": 4,
+      "deuxMains": true,
+      "pouvoirs": [
+        {
+          "name": "Lumière éternelle",
+          "img": "icons/magic/light/explosion-star-glow-yellow.webp",
+          "niveau": 3,
+          "ecole": "Altération",
+          "cout": 1,
+          "max": 1,
+          "description": "Illumine une zone.",
+          "onUse": "scripts/spells/lumiere.js"
+        },
+        {
+          "name": "Chute de plume",
+          "img": "icons/magic/air/wind-feather-falling-purple.webp",
+          "niveau": 1,
+          "ecole": "Altération",
+          "cout": 1,
+          "max": 1,
+          "description": "Ralentit la chute.",
+          "onUse": "scripts/spells/chute_plume.js"
+        }
+      ]
+    },
+    "effects": [
+      {
+        "name": "Protection du Magius (+3 CA)",
+        "icon": "icons/magic/defensive/shield-barrier-blue.webp",
+        "origin": "",
+        "disabled": false,
+        "flags": { "add2e": { "tags": ["bonus_ca:3"] } },
+        "transfer": true
+      }
+    ]
+  },
+  {
+    "name": "Massue +1",
+    "type": "arme",
+    "img": "icons/weapons/clubs/club-heavy-spiked-wood.webp",
+    "system": { "nom": "Massue +1", "degats": { "contre_moyen": "1d6+1", "contre_grand": "1d3+1" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Massue +2",
+    "type": "arme",
+    "img": "icons/weapons/clubs/club-heavy-spiked-wood.webp",
+    "system": { "nom": "Massue +2", "degats": { "contre_moyen": "1d6+2", "contre_grand": "1d3+2" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Massue +3",
+    "type": "arme",
+    "img": "icons/weapons/clubs/club-heavy-spiked-wood.webp",
+    "system": { "nom": "Massue +3", "degats": { "contre_moyen": "1d6+3", "contre_grand": "1d3+3" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Massue +4",
+    "type": "arme",
+    "img": "icons/weapons/clubs/club-heavy-spiked-wood.webp",
+    "system": { "nom": "Massue +4", "degats": { "contre_moyen": "1d6+4", "contre_grand": "1d3+4" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Massue +5",
+    "type": "arme",
+    "img": "icons/weapons/clubs/club-heavy-spiked-wood.webp",
+    "system": { "nom": "Massue +5", "degats": { "contre_moyen": "1d6+5", "contre_grand": "1d3+5" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Dague +1",
+    "type": "arme",
+    "img": "icons/weapons/daggers/dagger-straight-blue.webp",
+    "system": { "nom": "Dague +1", "degats": { "contre_moyen": "1d4+1", "contre_grand": "1d3+1" }, "poids": 1, "proprietes": "Lancer, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Dague +2",
+    "type": "arme",
+    "img": "icons/weapons/daggers/dagger-straight-blue.webp",
+    "system": { "nom": "Dague +2", "degats": { "contre_moyen": "1d4+2", "contre_grand": "1d3+2" }, "poids": 1, "proprietes": "Lancer, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Dague +3",
+    "type": "arme",
+    "img": "icons/weapons/daggers/dagger-straight-blue.webp",
+    "system": { "nom": "Dague +3", "degats": { "contre_moyen": "1d4+3", "contre_grand": "1d3+3" }, "poids": 1, "proprietes": "Lancer, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Dague +4",
+    "type": "arme",
+    "img": "icons/weapons/daggers/dagger-straight-blue.webp",
+    "system": { "nom": "Dague +4", "degats": { "contre_moyen": "1d4+4", "contre_grand": "1d3+4" }, "poids": 1, "proprietes": "Lancer, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Dague +5",
+    "type": "arme",
+    "img": "icons/weapons/daggers/dagger-straight-blue.webp",
+    "system": { "nom": "Dague +5", "degats": { "contre_moyen": "1d4+5", "contre_grand": "1d3+5" }, "poids": 1, "proprietes": "Lancer, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Bâton +1",
+    "type": "arme",
+    "img": "icons/weapons/staves/staff-simple.webp",
+    "system": { "nom": "Bâton +1", "degats": { "contre_moyen": "1d6+1", "contre_grand": "1d6+1" }, "poids": 3, "proprietes": "Corps à corps, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Bâton +2",
+    "type": "arme",
+    "img": "icons/weapons/staves/staff-simple.webp",
+    "system": { "nom": "Bâton +2", "degats": { "contre_moyen": "1d6+2", "contre_grand": "1d6+2" }, "poids": 3, "proprietes": "Corps à corps, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Bâton +3",
+    "type": "arme",
+    "img": "icons/weapons/staves/staff-simple.webp",
+    "system": { "nom": "Bâton +3", "degats": { "contre_moyen": "1d6+3", "contre_grand": "1d6+3" }, "poids": 3, "proprietes": "Corps à corps, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Bâton +4",
+    "type": "arme",
+    "img": "icons/weapons/staves/staff-simple.webp",
+    "system": { "nom": "Bâton +4", "degats": { "contre_moyen": "1d6+4", "contre_grand": "1d6+4" }, "poids": 3, "proprietes": "Corps à corps, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Bâton +5",
+    "type": "arme",
+    "img": "icons/weapons/staves/staff-simple.webp",
+    "system": { "nom": "Bâton +5", "degats": { "contre_moyen": "1d6+5", "contre_grand": "1d6+5" }, "poids": 3, "proprietes": "Corps à corps, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée longue +1",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-broad-crystal.webp",
+    "system": { "nom": "Épée longue +1", "degats": { "contre_moyen": "1d8+1", "contre_grand": "1d12+1" }, "poids": 3, "proprietes": "Tranchant, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée longue +2",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-broad-crystal.webp",
+    "system": { "nom": "Épée longue +2", "degats": { "contre_moyen": "1d8+2", "contre_grand": "1d12+2" }, "poids": 3, "proprietes": "Tranchant, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée longue +3",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-broad-crystal.webp",
+    "system": { "nom": "Épée longue +3", "degats": { "contre_moyen": "1d8+3", "contre_grand": "1d12+3" }, "poids": 3, "proprietes": "Tranchant, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée longue +4",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-broad-crystal.webp",
+    "system": { "nom": "Épée longue +4", "degats": { "contre_moyen": "1d8+4", "contre_grand": "1d12+4" }, "poids": 3, "proprietes": "Tranchant, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée longue +5",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-broad-crystal.webp",
+    "system": { "nom": "Épée longue +5", "degats": { "contre_moyen": "1d8+5", "contre_grand": "1d12+5" }, "poids": 3, "proprietes": "Tranchant, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arc long +1",
+    "type": "arme",
+    "img": "icons/weapons/bows/longbow-wood.webp",
+    "system": { "nom": "Arc long +1", "degats": { "contre_moyen": "1d8+1", "contre_grand": "1d8+1" }, "poids": 3, "proprietes": "Distance, Magique", "categorie": "projectile_propulse", "portee_courte": 40, "portee_moyenne": 80, "portee_longue": 160, "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arc long +2",
+    "type": "arme",
+    "img": "icons/weapons/bows/longbow-wood.webp",
+    "system": { "nom": "Arc long +2", "degats": { "contre_moyen": "1d8+2", "contre_grand": "1d8+2" }, "poids": 3, "proprietes": "Distance, Magique", "categorie": "projectile_propulse", "portee_courte": 40, "portee_moyenne": 80, "portee_longue": 160, "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arc long +3",
+    "type": "arme",
+    "img": "icons/weapons/bows/longbow-wood.webp",
+    "system": { "nom": "Arc long +3", "degats": { "contre_moyen": "1d8+3", "contre_grand": "1d8+3" }, "poids": 3, "proprietes": "Distance, Magique", "categorie": "projectile_propulse", "portee_courte": 40, "portee_moyenne": 80, "portee_longue": 160, "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arc long +4",
+    "type": "arme",
+    "img": "icons/weapons/bows/longbow-wood.webp",
+    "system": { "nom": "Arc long +4", "degats": { "contre_moyen": "1d8+4", "contre_grand": "1d8+4" }, "poids": 3, "proprietes": "Distance, Magique", "categorie": "projectile_propulse", "portee_courte": 40, "portee_moyenne": 80, "portee_longue": 160, "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arc long +5",
+    "type": "arme",
+    "img": "icons/weapons/bows/longbow-wood.webp",
+    "system": { "nom": "Arc long +5", "degats": { "contre_moyen": "1d8+5", "contre_grand": "1d8+5" }, "poids": 3, "proprietes": "Distance, Magique", "categorie": "projectile_propulse", "portee_courte": 40, "portee_moyenne": 80, "portee_longue": 160, "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée bâtarde +1",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-long-guard.webp",
+    "system": { "nom": "Épée bâtarde +1", "degats": { "contre_moyen": "1d10+1", "contre_grand": "2d8+1" }, "poids": 4, "proprietes": "Tranchant, Polyvalent, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée bâtarde +2",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-long-guard.webp",
+    "system": { "nom": "Épée bâtarde +2", "degats": { "contre_moyen": "1d10+2", "contre_grand": "2d8+2" }, "poids": 4, "proprietes": "Tranchant, Polyvalent, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée bâtarde +3",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-long-guard.webp",
+    "system": { "nom": "Épée bâtarde +3", "degats": { "contre_moyen": "1d10+3", "contre_grand": "2d8+3" }, "poids": 4, "proprietes": "Tranchant, Polyvalent, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée bâtarde +4",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-long-guard.webp",
+    "system": { "nom": "Épée bâtarde +4", "degats": { "contre_moyen": "1d10+4", "contre_grand": "2d8+4" }, "poids": 4, "proprietes": "Tranchant, Polyvalent, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Épée bâtarde +5",
+    "type": "arme",
+    "img": "icons/weapons/swords/sword-long-guard.webp",
+    "system": { "nom": "Épée bâtarde +5", "degats": { "contre_moyen": "1d10+5", "contre_grand": "2d8+5" }, "poids": 4, "proprietes": "Tranchant, Polyvalent, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hache d'arme +1",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-battle-double.webp",
+    "system": { "nom": "Hache d'arme +1", "degats": { "contre_moyen": "1d8+1", "contre_grand": "1d8+1" }, "poids": 5, "proprietes": "Tranchant, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hache d'arme +2",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-battle-double.webp",
+    "system": { "nom": "Hache d'arme +2", "degats": { "contre_moyen": "1d8+2", "contre_grand": "1d8+2" }, "poids": 5, "proprietes": "Tranchant, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hache d'arme +3",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-battle-double.webp",
+    "system": { "nom": "Hache d'arme +3", "degats": { "contre_moyen": "1d8+3", "contre_grand": "1d8+3" }, "poids": 5, "proprietes": "Tranchant, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hache d'arme +4",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-battle-double.webp",
+    "system": { "nom": "Hache d'arme +4", "degats": { "contre_moyen": "1d8+4", "contre_grand": "1d8+4" }, "poids": 5, "proprietes": "Tranchant, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hache d'arme +5",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-battle-double.webp",
+    "system": { "nom": "Hache d'arme +5", "degats": { "contre_moyen": "1d8+5", "contre_grand": "1d8+5" }, "poids": 5, "proprietes": "Tranchant, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hachette +1",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-broad.webp",
+    "system": { "nom": "Hachette +1", "degats": { "contre_moyen": "1d6+1", "contre_grand": "1d4+1" }, "poids": 2, "proprietes": "Tranchant, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hachette +2",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-broad.webp",
+    "system": { "nom": "Hachette +2", "degats": { "contre_moyen": "1d6+2", "contre_grand": "1d4+2" }, "poids": 2, "proprietes": "Tranchant, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hachette +3",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-broad.webp",
+    "system": { "nom": "Hachette +3", "degats": { "contre_moyen": "1d6+3", "contre_grand": "1d4+3" }, "poids": 2, "proprietes": "Tranchant, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hachette +4",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-broad.webp",
+    "system": { "nom": "Hachette +4", "degats": { "contre_moyen": "1d6+4", "contre_grand": "1d4+4" }, "poids": 2, "proprietes": "Tranchant, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Hachette +5",
+    "type": "arme",
+    "img": "icons/weapons/axes/axe-broad.webp",
+    "system": { "nom": "Hachette +5", "degats": { "contre_moyen": "1d6+5", "contre_grand": "1d4+5" }, "poids": 2, "proprietes": "Tranchant, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Masse d'armes +1",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Masse d'armes +1", "degats": { "contre_moyen": "1d8+1", "contre_grand": "1d6+1" }, "poids": 6, "proprietes": "Contondant, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Masse d'armes +2",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Masse d'armes +2", "degats": { "contre_moyen": "1d8+2", "contre_grand": "1d6+2" }, "poids": 6, "proprietes": "Contondant, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Masse d'armes +3",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Masse d'armes +3", "degats": { "contre_moyen": "1d8+3", "contre_grand": "1d6+3" }, "poids": 6, "proprietes": "Contondant, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Masse d'armes +4",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Masse d'armes +4", "degats": { "contre_moyen": "1d8+4", "contre_grand": "1d6+4" }, "poids": 6, "proprietes": "Contondant, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Masse d'armes +5",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Masse d'armes +5", "degats": { "contre_moyen": "1d8+5", "contre_grand": "1d6+5" }, "poids": 6, "proprietes": "Contondant, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Marteau de guerre +1",
+    "type": "arme",
+    "img": "icons/weapons/hammers/hammer-double.webp",
+    "system": { "nom": "Marteau de guerre +1", "degats": { "contre_moyen": "1d8+1", "contre_grand": "1d6+1" }, "poids": 5, "proprietes": "Contondant, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Marteau de guerre +2",
+    "type": "arme",
+    "img": "icons/weapons/hammers/hammer-double.webp",
+    "system": { "nom": "Marteau de guerre +2", "degats": { "contre_moyen": "1d8+2", "contre_grand": "1d6+2" }, "poids": 5, "proprietes": "Contondant, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Marteau de guerre +3",
+    "type": "arme",
+    "img": "icons/weapons/hammers/hammer-double.webp",
+    "system": { "nom": "Marteau de guerre +3", "degats": { "contre_moyen": "1d8+3", "contre_grand": "1d6+3" }, "poids": 5, "proprietes": "Contondant, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Marteau de guerre +4",
+    "type": "arme",
+    "img": "icons/weapons/hammers/hammer-double.webp",
+    "system": { "nom": "Marteau de guerre +4", "degats": { "contre_moyen": "1d8+4", "contre_grand": "1d6+4" }, "poids": 5, "proprietes": "Contondant, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Marteau de guerre +5",
+    "type": "arme",
+    "img": "icons/weapons/hammers/hammer-double.webp",
+    "system": { "nom": "Marteau de guerre +5", "degats": { "contre_moyen": "1d8+5", "contre_grand": "1d6+5" }, "poids": 5, "proprietes": "Contondant, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fléau +1",
+    "type": "arme",
+    "img": "icons/weapons/maces/flail-ball-spiked.webp",
+    "system": { "nom": "Fléau +1", "degats": { "contre_moyen": "1d8+1", "contre_grand": "1d8+1" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fléau +2",
+    "type": "arme",
+    "img": "icons/weapons/maces/flail-ball-spiked.webp",
+    "system": { "nom": "Fléau +2", "degats": { "contre_moyen": "1d8+2", "contre_grand": "1d8+2" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fléau +3",
+    "type": "arme",
+    "img": "icons/weapons/maces/flail-ball-spiked.webp",
+    "system": { "nom": "Fléau +3", "degats": { "contre_moyen": "1d8+3", "contre_grand": "1d8+3" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fléau +4",
+    "type": "arme",
+    "img": "icons/weapons/maces/flail-ball-spiked.webp",
+    "system": { "nom": "Fléau +4", "degats": { "contre_moyen": "1d8+4", "contre_grand": "1d8+4" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fléau +5",
+    "type": "arme",
+    "img": "icons/weapons/maces/flail-ball-spiked.webp",
+    "system": { "nom": "Fléau +5", "degats": { "contre_moyen": "1d8+5", "contre_grand": "1d8+5" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Morgenstern +1",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Morgenstern +1", "degats": { "contre_moyen": "1d8+1", "contre_grand": "1d8+1" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Morgenstern +2",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Morgenstern +2", "degats": { "contre_moyen": "1d8+2", "contre_grand": "1d8+2" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Morgenstern +3",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Morgenstern +3", "degats": { "contre_moyen": "1d8+3", "contre_grand": "1d8+3" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Morgenstern +4",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Morgenstern +4", "degats": { "contre_moyen": "1d8+4", "contre_grand": "1d8+4" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Morgenstern +5",
+    "type": "arme",
+    "img": "icons/weapons/maces/mace-round-studded.webp",
+    "system": { "nom": "Morgenstern +5", "degats": { "contre_moyen": "1d8+5", "contre_grand": "1d8+5" }, "poids": 4, "proprietes": "Contondant, Magique", "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arbalète légère +1",
+    "type": "arme",
+    "img": "icons/weapons/crossbows/crossbow-light.webp",
+    "system": { "nom": "Arbalète légère +1", "degats": { "contre_moyen": "1d6+1", "contre_grand": "1d6+1" }, "poids": 4, "proprietes": "Distance, Deux mains, Magique", "portee_short": 50, "portee_long": 200, "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arbalète légère +2",
+    "type": "arme",
+    "img": "icons/weapons/crossbows/crossbow-light.webp",
+    "system": { "nom": "Arbalète légère +2", "degats": { "contre_moyen": "1d6+2", "contre_grand": "1d6+2" }, "poids": 4, "proprietes": "Distance, Deux mains, Magique", "portee_short": 50, "portee_long": 200, "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arbalète légère +3",
+    "type": "arme",
+    "img": "icons/weapons/crossbows/crossbow-light.webp",
+    "system": { "nom": "Arbalète légère +3", "degats": { "contre_moyen": "1d6+3", "contre_grand": "1d6+3" }, "poids": 4, "proprietes": "Distance, Deux mains, Magique", "portee_short": 50, "portee_long": 200, "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arbalète légère +4",
+    "type": "arme",
+    "img": "icons/weapons/crossbows/crossbow-light.webp",
+    "system": { "nom": "Arbalète légère +4", "degats": { "contre_moyen": "1d6+4", "contre_grand": "1d6+4" }, "poids": 4, "proprietes": "Distance, Deux mains, Magique", "portee_short": 50, "portee_long": 200, "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Arbalète légère +5",
+    "type": "arme",
+    "img": "icons/weapons/crossbows/crossbow-light.webp",
+    "system": { "nom": "Arbalète légère +5", "degats": { "contre_moyen": "1d6+5", "contre_grand": "1d6+5" }, "poids": 4, "proprietes": "Distance, Deux mains, Magique", "portee_short": 50, "portee_long": 200, "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fronde +1",
+    "type": "arme",
+    "img": "icons/weapons/slings/sling-leather-tan.webp",
+    "system": { "nom": "Fronde +1", "degats": { "contre_moyen": "1d4+1", "contre_grand": "1d4+1" }, "poids": 1, "proprietes": "Distance, Magique", "portee_short": 20, "portee_long": 60, "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fronde +2",
+    "type": "arme",
+    "img": "icons/weapons/slings/sling-leather-tan.webp",
+    "system": { "nom": "Fronde +2", "degats": { "contre_moyen": "1d4+2", "contre_grand": "1d4+2" }, "poids": 1, "proprietes": "Distance, Magique", "portee_short": 20, "portee_long": 60, "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fronde +3",
+    "type": "arme",
+    "img": "icons/weapons/slings/sling-leather-tan.webp",
+    "system": { "nom": "Fronde +3", "degats": { "contre_moyen": "1d4+3", "contre_grand": "1d4+3" }, "poids": 1, "proprietes": "Distance, Magique", "portee_short": 20, "portee_long": 60, "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fronde +4",
+    "type": "arme",
+    "img": "icons/weapons/slings/sling-leather-tan.webp",
+    "system": { "nom": "Fronde +4", "degats": { "contre_moyen": "1d4+4", "contre_grand": "1d4+4" }, "poids": 1, "proprietes": "Distance, Magique", "portee_short": 20, "portee_long": 60, "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Fronde +5",
+    "type": "arme",
+    "img": "icons/weapons/slings/sling-leather-tan.webp",
+    "system": { "nom": "Fronde +5", "degats": { "contre_moyen": "1d4+5", "contre_grand": "1d4+5" }, "poids": 1, "proprietes": "Distance, Magique", "portee_short": 20, "portee_long": 60, "bonus_hit": 5, "bonus_dom": 5, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Javeline +1",
+    "type": "arme",
+    "img": "icons/weapons/polearms/spear-flanged.webp",
+    "system": { "nom": "Javeline +1", "degats": { "contre_moyen": "1d6+1", "contre_grand": "1d6+1" }, "poids": 2, "proprietes": "Lancer, Magique", "portee_short": 15, "portee_long": 60, "bonus_hit": 1, "bonus_dom": 1, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Javeline +2",
+    "type": "arme",
+    "img": "icons/weapons/polearms/spear-flanged.webp",
+    "system": { "nom": "Javeline +2", "degats": { "contre_moyen": "1d6+2", "contre_grand": "1d6+2" }, "poids": 2, "proprietes": "Lancer, Magique", "portee_short": 15, "portee_long": 60, "bonus_hit": 2, "bonus_dom": 2, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Javeline +3",
+    "type": "arme",
+    "img": "icons/weapons/polearms/spear-flanged.webp",
+    "system": { "nom": "Javeline +3", "degats": { "contre_moyen": "1d6+3", "contre_grand": "1d6+3" }, "poids": 2, "proprietes": "Lancer, Magique", "portee_short": 15, "portee_long": 60, "bonus_hit": 3, "bonus_dom": 3, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Javeline +4",
+    "type": "arme",
+    "img": "icons/weapons/polearms/spear-flanged.webp",
+    "system": { "nom": "Javeline +4", "degats": { "contre_moyen": "1d6+4", "contre_grand": "1d6+4" }, "poids": 2, "proprietes": "Lancer, Magique", "portee_short": 15, "portee_long": 60, "bonus_hit": 4, "bonus_dom": 4, "type": "melee", "equipee": false }
+  },
+  {
+    "name": "Javeline +5",
+    "type": "arme",
+    "img": "icons/weapons/polearms/spear-flanged.webp",
+    "system": {
+      "nom": "Javeline +5",
+      "degats": { "contre_moyen": "1d6+5", "contre_grand": "1d6+5" },
+      "poids": 2,
+      "proprietes": "Lancer, Magique",
+      "portee_short": 15,
+      "portee_long": 60,
+      "bonus_hit": 5,
+      "bonus_dom": 5,
+      "type": "melee",
+      "equipee": false
+    }
+  },
+  {
+    "name": "Bâton de Cristal Bleu",
+    "type": "arme",
+    "img": "icons/weapons/staves/staff-crystal-blue.webp",
+    "system": {
+      "nom": "Bâton de Cristal Bleu",
+      "description": "<p>Ce bâton divin est un artéfact majeur. Il frappe comme un bâton de contrecoup +2. Il possède de nombreux pouvoirs cléricaux.</p><p><strong>Propriétés :</strong></p><ul><li><strong>Frappe de contrecoup :</strong> Inflige 1d6 (bonus d'arme) + dégâts supplémentaires en consommant 1 charge par frappe.</li><li><strong>Soins & Sorts :</strong> Voir liste des pouvoirs.</li></ul>",
+      "degats": { "contre_moyen": "1d6+2", "contre_grand": "1d6+2" },
+      "poids": 3,
+      "proprietes": "Corps à corps, Magique, Légendaire",
+      "bonus_hit": 2,
+      "bonus_dom": 2,
+      "type": "melee",
+      "equipee": false,
+      "max_charges": 20,
+      "pouvoirs": [
+        {
+          "name": "Frappe de contrecoup",
+          "img": "icons/skills/melee/strike-blunt-blue.webp",
+          "niveau": 0,
+          "ecole": "Evocation",
+          "cout": 1,
+          "max": 20,
+          "description": "Consomme 1 charge pour infliger des dégâts doublés (ou selon règle maison)."
+        },
+        {
+          "name": "Apaisement",
+          "img": "icons/magic/light/beam-rays-blue.webp",
+          "niveau": 1,
+          "ecole": "Enchantement",
+          "cout": 2,
+          "max": 20,
+          "description": "Calme les créatures."
+        },
+        {
+          "name": "Commande",
+          "img": "icons/magic/control/mouth-smile-shout.webp",
+          "niveau": 1,
+          "ecole": "Enchantement",
+          "cout": 2,
+          "max": 20,
+          "description": "Donne un ordre d'un mot."
+        },
+        {
+          "name": "Soins mineurs",
+          "img": "icons/magic/life/cross-beam-green.webp",
+          "niveau": 1,
+          "ecole": "Nécromancie",
+          "cout": 2,
+          "max": 20,
+          "description": "Rend 1d8 points de vie."
+        },
+        {
+          "name": "Désenvoûtement",
+          "img": "icons/magic/defensive/shield-barrier-blue.webp",
+          "niveau": 3,
+          "ecole": "Abjuration",
+          "cout": 6,
+          "max": 20,
+          "description": "Retire les malédictions."
+        },
+        {
+          "name": "Lumière éternelle",
+          "img": "icons/magic/light/explosion-star-glow-blue.webp",
+          "niveau": 3,
+          "ecole": "Altération",
+          "cout": 6,
+          "max": 20,
+          "description": "Crée une lumière permanente."
+        },
+        {
+          "name": "Guérison de la cécité",
+          "img": "icons/magic/perception/eye-ringed-glow-blue.webp",
+          "niveau": 3,
+          "ecole": "Nécromancie",
+          "cout": 6,
+          "max": 20,
+          "description": "Soigne la cécité."
+        },
+        {
+          "name": "Guérison des maladies",
+          "img": "icons/magic/life/heart-cross-green.webp",
+          "niveau": 3,
+          "ecole": "Nécromancie",
+          "cout": 6,
+          "max": 20,
+          "description": "Soigne toutes les maladies."
+        },
+        {
+          "name": "Rappel à la vie",
+          "img": "icons/magic/life/ankh-gold-blue.webp",
+          "niveau": 5,
+          "ecole": "Nécromancie",
+          "cout": 10,
+          "max": 20,
+          "description": "Ramène un mort à la vie."
+        },
+        {
+          "name": "Soin ultime",
+          "img": "icons/magic/life/cross-yellow.webp",
+          "niveau": 5,
+          "ecole": "Nécromancie",
+          "cout": 10,
+          "max": 20,
+          "description": "Soigne tous les PV (sauf 1d4)."
+        },
+        {
+          "name": "Restauration",
+          "img": "icons/magic/time/hourglass-sand-blue.webp",
+          "niveau": 7,
+          "ecole": "Nécromancie",
+          "cout": 14,
+          "max": 20,
+          "description": "Rend les niveaux perdus."
+        },
+        {
+          "name": "Résurrection",
+          "img": "icons/magic/life/heart-shadow-white.webp",
+          "niveau": 7,
+          "ecole": "Nécromancie",
+          "cout": 14,
+          "max": 20,
+          "description": "Résurrection complète."
+        },
+        {
+          "name": "Téléportation",
+          "img": "icons/magic/movement/portal-vortex-blue.webp",
+          "niveau": 5,
+          "ecole": "Altération",
+          "cout": 15,
+          "max": 20,
+          "description": "Téléporte le porteur sans erreur."
+        },
+        {
+          "name": "Dévier souffle de dragon",
+          "img": "icons/magic/defensive/shield-dome-blue-purple.webp",
+          "niveau": 0,
+          "ecole": "Abjuration",
+          "cout": 10,
+          "max": 20,
+          "description": "Protège dans un rayon de 3m contre le souffle."
+        }
+      ]
+    }
+  }
+]

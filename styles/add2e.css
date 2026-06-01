@@ -227,3 +227,419 @@
     padding-top: 0 !important;
     border-top: none;
 }
+
+/* --- ADD2E ACTION HUD : bas fixe, menus déployés vers le haut --- */
+#add2e-action-hud {
+  top: auto !important;
+  bottom: 18px !important;
+  height: auto !important;
+}
+
+#add2e-action-hud .a2e-hud-shell {
+  height: auto !important;
+  max-height: calc(100vh - 36px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+}
+
+#add2e-action-hud .a2e-hud-menu-panel {
+  flex: 0 1 auto !important;
+  min-height: 0 !important;
+  max-height: var(--a2e-hud-menu-max, 320px) !important;
+  display: block !important;
+  overflow-y: auto !important;
+}
+
+#add2e-action-hud .a2e-hud-section.active {
+  display: grid !important;
+  gap: 7px !important;
+  align-content: start !important;
+  margin-top: 0 !important;
+}
+
+#add2e-action-hud .a2e-hud-section.active .a2e-hud-row:first-child,
+#add2e-action-hud .a2e-hud-section.active .a2e-hud-empty:first-child,
+#add2e-action-hud .a2e-hud-section.active .a2e-hud-ability-grid:first-child {
+  margin-top: 0 !important;
+}
+
+/* --- ADD2E Capacités : bouton utiliser des capacités de classe --- */
+.add2e-character-v3 .add2e-capacites-modern-root .add2e-feature-use {
+  min-width: 42px !important;
+  min-height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  border-radius: 10px !important;
+  border: 1px solid #1f5f99 !important;
+  background: linear-gradient(180deg, #2f8fcf, #17639f) !important;
+  color: #fff !important;
+  font-weight: 950 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,.18) !important;
+  cursor: pointer !important;
+  padding: 5px 10px !important;
+}
+
+.add2e-character-v3 .add2e-capacites-modern-root .add2e-feature-use i {
+  font-size: 1.15em !important;
+}
+
+.add2e-character-v3 .add2e-capacites-modern-root .add2e-feature-use:hover {
+  filter: brightness(1.08) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 3px 7px rgba(0,0,0,.24) !important;
+}
+
+/* --- ADD2E DialogV2 : fenêtre d'attaque --- */
+.application.add2e-attack-dialog,
+.application.add2e.add2e-attack-dialog,
+.add2e-attack-dialog {
+  min-width: 660px !important;
+}
+
+.application.add2e-attack-dialog .window-content,
+.application.add2e.add2e-attack-dialog .window-content,
+.add2e-attack-dialog .window-content {
+  padding: 12px !important;
+  background: linear-gradient(180deg, #fff8df, #f3e2b5) !important;
+  color: #2f250c !important;
+}
+
+.application.add2e-attack-dialog .dialog-content,
+.application.add2e.add2e-attack-dialog .dialog-content,
+.add2e-attack-dialog .dialog-content {
+  padding: 0 !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-form,
+.application.add2e.add2e-attack-dialog .add2e-attack-form,
+.add2e-attack-dialog .add2e-attack-form {
+  display: grid !important;
+  gap: 10px !important;
+  color: #2f250c !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-top,
+.application.add2e.add2e-attack-dialog .add2e-attack-top,
+.add2e-attack-dialog .add2e-attack-top {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-box,
+.application.add2e.add2e-attack-dialog .add2e-attack-box,
+.add2e-attack-dialog .add2e-attack-box,
+.application.add2e-attack-dialog .add2e-attack-line,
+.application.add2e.add2e-attack-dialog .add2e-attack-line,
+.add2e-attack-dialog .add2e-attack-line,
+.application.add2e-attack-dialog .add2e-check,
+.application.add2e.add2e-attack-dialog .add2e-check,
+.add2e-attack-dialog .add2e-check {
+  border: 1px solid #d9bf73 !important;
+  border-radius: 10px !important;
+  background: #fffdf4 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55) !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-box,
+.application.add2e.add2e-attack-dialog .add2e-attack-box,
+.add2e-attack-dialog .add2e-attack-box {
+  padding: 9px 11px !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-label,
+.application.add2e.add2e-attack-dialog .add2e-attack-label,
+.add2e-attack-dialog .add2e-attack-label {
+  font-size: .76rem !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .02em !important;
+  color: #5d3d0d !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-name,
+.application.add2e.add2e-attack-dialog .add2e-attack-name,
+.add2e-attack-dialog .add2e-attack-name {
+  font-size: 1.05rem !important;
+  font-weight: 950 !important;
+  margin-top: 2px !important;
+  color: #2f250c !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-pill,
+.application.add2e.add2e-attack-dialog .add2e-attack-pill,
+.add2e-attack-dialog .add2e-attack-pill {
+  display: inline-flex !important;
+  margin: 5px 4px 0 0 !important;
+  padding: 3px 8px !important;
+  border: 1px solid #d4af55 !important;
+  border-radius: 999px !important;
+  background: #fff3c7 !important;
+  color: #5d3d0d !important;
+  font-weight: 850 !important;
+  line-height: 1.25 !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-arrow,
+.application.add2e.add2e-attack-dialog .add2e-attack-arrow,
+.add2e-attack-dialog .add2e-attack-arrow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.8rem !important;
+  color: #5d3d0d !important;
+  font-weight: 950 !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-line,
+.application.add2e.add2e-attack-dialog .add2e-attack-line,
+.add2e-attack-dialog .add2e-attack-line {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 9px 11px !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-line label,
+.application.add2e.add2e-attack-dialog .add2e-attack-line label,
+.add2e-attack-dialog .add2e-attack-line label,
+.application.add2e-attack-dialog .add2e-check-title,
+.application.add2e.add2e-attack-dialog .add2e-check-title,
+.add2e-attack-dialog .add2e-check-title {
+  font-weight: 950 !important;
+  color: #3b2a0f !important;
+}
+
+.application.add2e-attack-dialog .add2e-attack-line input[type="number"],
+.application.add2e.add2e-attack-dialog .add2e-attack-line input[type="number"],
+.add2e-attack-dialog .add2e-attack-line input[type="number"] {
+  width: 76px !important;
+  flex: 0 0 76px !important;
+  border: 1px solid #d9bf73 !important;
+  border-radius: 8px !important;
+  background: #fffaf0 !important;
+  color: #2f250c !important;
+  padding: 6px 8px !important;
+  font-weight: 950 !important;
+  text-align: center !important;
+}
+
+.application.add2e-attack-dialog #add2e-position-zone,
+.application.add2e.add2e-attack-dialog #add2e-position-zone,
+.add2e-attack-dialog #add2e-position-zone {
+  width: 170px !important;
+  border: 1px solid #d9bf73 !important;
+  border-radius: 8px !important;
+  background: #fffaf0 !important;
+  color: #2f250c !important;
+  padding: 6px 8px !important;
+  font-weight: 950 !important;
+}
+
+.application.add2e-attack-dialog .add2e-special-grid,
+.application.add2e.add2e-attack-dialog .add2e-special-grid,
+.add2e-attack-dialog .add2e-special-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.application.add2e-attack-dialog .add2e-check,
+.application.add2e.add2e-attack-dialog .add2e-check,
+.add2e-attack-dialog .add2e-check {
+  display: grid !important;
+  grid-template-columns: 24px 1fr !important;
+  gap: 9px !important;
+  align-items: center !important;
+  background: #fff8e8 !important;
+  padding: 9px 10px !important;
+}
+
+.application.add2e-attack-dialog .add2e-check input[type="checkbox"],
+.application.add2e.add2e-attack-dialog .add2e-check input[type="checkbox"],
+.add2e-attack-dialog .add2e-check input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.application.add2e-attack-dialog .add2e-check-meta,
+.application.add2e.add2e-attack-dialog .add2e-check-meta,
+.add2e-attack-dialog .add2e-check-meta {
+  display: block !important;
+  margin-top: 2px !important;
+  font-size: .86rem !important;
+  color: #6b5a2a !important;
+  font-weight: 850 !important;
+}
+/* ========================================================================== 
+   ADD2E — Écran de pause personnalisé
+   Image locale : /data/Data/systems/add2e/assets/ui/pause_add2e.png
+
+   Objectif :
+   - masquer complètement l'image quand le jeu n'est pas en pause ;
+   - afficher l'image uniquement quand Foundry ajoute #pause.paused ;
+   - placer l'image en bas de l'écran.
+   ========================================================================== */
+
+#pause {
+  display: none !important;
+  position: fixed !important;
+  inset: auto 0 28px 0 !important;
+
+  justify-content: center !important;
+  align-items: flex-end !important;
+
+  width: 100vw !important;
+  height: auto !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  background: transparent !important;
+  pointer-events: none !important;
+  z-index: 70 !important;
+}
+
+#pause.paused {
+  display: flex !important;
+}
+
+#pause:not(.paused) {
+  display: none !important;
+}
+
+#pause img {
+  content: url("../assets/ui/pause_add2e.png");
+
+  width: min(460px, 34vw) !important;
+  height: auto !important;
+
+  max-height: 30vh !important;
+  object-fit: contain !important;
+
+  opacity: 0.96 !important;
+
+  filter:
+    drop-shadow(0 10px 18px rgba(0, 0, 0, 0.85))
+    drop-shadow(0 0 12px rgba(220, 170, 70, 0.55)) !important;
+
+  animation: none !important;
+}
+
+#pause:not(.paused) img {
+  display: none !important;
+}
+
+#pause figcaption,
+#pause h3,
+#pause .paused-text {
+  display: none !important;
+}
+/* ==========================================================================
+   ADD2E — Popups composants / projectiles
+   ========================================================================== */
+
+.application:has(.add2e-consumable-alert),
+.application:has(.add2e-cast-alert) {
+  border: 1px solid #b98b2d !important;
+  border-radius: 14px !important;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 240, 190, 0.35) inset !important;
+  overflow: hidden !important;
+}
+
+.application:has(.add2e-consumable-alert) .window-header,
+.application:has(.add2e-cast-alert) .window-header {
+  background: linear-gradient(180deg, #5a3511, #2f1b08) !important;
+  color: #ffe7a8 !important;
+  border-bottom: 1px solid #b98b2d !important;
+}
+
+.application:has(.add2e-consumable-alert) .window-title,
+.application:has(.add2e-cast-alert) .window-title {
+  color: #ffe7a8 !important;
+  font-weight: 900 !important;
+}
+
+.application:has(.add2e-consumable-alert) .window-content,
+.application:has(.add2e-cast-alert) .window-content {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 241, 187, 0.95), transparent 34%),
+    linear-gradient(180deg, #fff8df 0%, #f5dfaa 100%) !important;
+  color: #2f250c !important;
+  padding: 0 !important;
+}
+
+.application:has(.add2e-consumable-alert) .dialog-content,
+.application:has(.add2e-cast-alert) .dialog-content {
+  padding: 0 !important;
+}
+
+.add2e-consumable-alert,
+.add2e-cast-alert {
+  display: grid !important;
+  grid-template-columns: 56px minmax(0, 1fr) !important;
+  gap: 14px !important;
+  align-items: start !important;
+  min-width: 380px !important;
+  max-width: 520px !important;
+  padding: 18px 20px !important;
+  background:
+    linear-gradient(90deg, rgba(122, 70, 16, 0.08), transparent 42%),
+    rgba(255, 252, 242, 0.82) !important;
+  color: #2f250c !important;
+}
+
+.add2e-consumable-alert > div:first-child,
+.add2e-cast-alert > div:first-child {
+  width: 52px !important;
+  height: 52px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid #c99a3e !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 35% 25%, #fff1b8, #d9a441 68%, #8b5a15) !important;
+  color: #3a2208 !important;
+  font-size: 24px !important;
+}
+
+.add2e-consumable-alert h3,
+.add2e-cast-alert h3 {
+  margin: 1px 0 6px 0 !important;
+  color: #3a2208 !important;
+  font-size: 1.12rem !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+}
+
+.add2e-consumable-alert p,
+.add2e-cast-alert p {
+  margin: 0 !important;
+  color: #46300f !important;
+  font-size: 1rem !important;
+  line-height: 1.45 !important;
+  font-weight: 700 !important;
+}
+
+.application:has(.add2e-consumable-alert) .dialog-buttons,
+.application:has(.add2e-cast-alert) .dialog-buttons {
+  padding: 0 18px 16px 18px !important;
+  background: linear-gradient(180deg, rgba(245, 223, 170, 0.2), #efd08a) !important;
+  gap: 10px !important;
+}
+
+.application:has(.add2e-consumable-alert) .dialog-buttons button,
+.application:has(.add2e-cast-alert) .dialog-buttons button {
+  border: 1px solid #8d641b !important;
+  border-radius: 10px !important;
+  background: linear-gradient(180deg, #7b4b16, #4b2b0b) !important;
+  color: #ffe7a8 !important;
+  font-weight: 900 !important;
+}

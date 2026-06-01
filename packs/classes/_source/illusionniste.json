@@ -1,0 +1,45 @@
+{
+  "_id": "25048c5cb13943dfb3b1ac69f954cccb",
+  "name": "Illusionniste",
+  "type": "classe",
+  "img": "icons/svg/eye.svg",
+  "system": {
+    "label": "Illusionniste",
+    "hitDie": 4,
+    "hpFormula": "1d4 + constitution.mod",
+    "attacksPerRound": [
+      { "minLevel": 1, "maxLevel": 20, "attacks": 1 }
+    ],
+    "armorAllowed": [],
+    "shieldAllowed": false,
+    "weaponsAllowed": ["dague", "bâton"],
+    "specialAbilities": ["Magie d’illusion", "Maîtrise de l’esprit"],
+    "savingThrows": [
+      "sauvegarde_paralysie",
+      "sauvegarde_petrification",
+      "sauvegarde_baguettes",
+      "sauvegarde_souffles",
+      "sauvegarde_sortileges"
+    ],
+    "strengthAdjustments": [
+      { "score": "3", "toHit": -3, "damage": -1, "weight": -350, "openDoors": "1", "bendBars": "0%" },
+      { "score": "4–5", "toHit": -2, "damage": -1, "weight": -250, "openDoors": "1", "bendBars": "0%" },
+      { "score": "6–7", "toHit": -1, "damage": 0, "weight": -150, "openDoors": "1", "bendBars": "0%" },
+      { "score": "8–9", "toHit": 0, "damage": 0, "weight": "Normal", "openDoors": "1-2", "bendBars": "1%" },
+      { "score": "10–11", "toHit": 0, "damage": 0, "weight": "Normal", "openDoors": "1-2", "bendBars": "2%" },
+      { "score": "12–13", "toHit": 0, "damage": 0, "weight": 100, "openDoors": "1-2", "bendBars": "4%" },
+      { "score": "14–15", "toHit": 0, "damage": 0, "weight": 200, "openDoors": "1-2", "bendBars": "7%" },
+      { "score": "16", "toHit": 0, "damage": 1, "weight": 350, "openDoors": "1-3", "bendBars": "10%" },
+      { "score": "17", "toHit": 1, "damage": 1, "weight": 500, "openDoors": "1-3", "bendBars": "13%" },
+      { "score": "18", "toHit": 1, "damage": 2, "weight": 750, "openDoors": "1-3", "bendBars": "16%" },
+      { "score": "18/01-50", "toHit": 1, "damage": 3, "weight": 1000, "openDoors": "1-3", "bendBars": "20%" },
+      { "score": "18/51-75", "toHit": 2, "damage": 3, "weight": 1250, "openDoors": "1-4", "bendBars": "25%" },
+      { "score": "18/76-90", "toHit": 2, "damage": 4, "weight": 1500, "openDoors": "1-4", "bendBars": "30%" },
+      { "score": "18/91-99", "toHit": 2, "damage": 5, "weight": 2000, "openDoors": "1-4*", "bendBars": "35%" },
+      { "score": "18/00", "toHit": 3, "damage": 6, "weight": 3000, "openDoors": "1-5**", "bendBars": "40%" }
+    ]
+  },
+  "sort": 100000,
+  "flags": {},
+  "folder": null
+}

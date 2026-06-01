@@ -1,12 +1,11 @@
 // scripts/add2e-item-sheet.mjs
 // ADD2E — Feuille lisible dédiée aux items de type "classe"
-// Cette feuille réconcilie l'affichage avec les clés réellement présentes
-// dans les exports Foundry d'items classe.
-// Elle garde l'export Add2eItemSheet attendu par add2e.mjs.
 
-export const ADD2E_ITEM_SHEET_VERSION = "2026-05-01-class-export-keys-v6-no-submit-on-close";
+export const ADD2E_ITEM_SHEET_VERSION = "2026-05-24-class-sheet-v1-namespace-itemsheet";
 globalThis.ADD2E_ITEM_SHEET_VERSION = ADD2E_ITEM_SHEET_VERSION;
 globalThis.ADD2E_CLASS_SHEET_VERSION = ADD2E_ITEM_SHEET_VERSION;
+
+const Add2eBaseItemSheet = foundry.appv1.sheets.ItemSheet;
 
 function add2eIsEmpty(value) {
   return value === undefined || value === null || value === "";
@@ -18,13 +17,10 @@ function add2eMaybeJson(value) {
   const s = value.trim();
   if (!s || s === "[object Object]") return "";
 
-  if (
-    (s.startsWith("[") && s.endsWith("]")) ||
-    (s.startsWith("{") && s.endsWith("}"))
-  ) {
+  if ((s.startsWith("[") && s.endsWith("]")) || (s.startsWith("{") && s.endsWith("}"))) {
     try {
       return JSON.parse(s);
-    } catch (e) {
+    } catch (_e) {
       return value;
     }
   }
@@ -71,7 +67,6 @@ function add2eToArray(value) {
       if (key in value) return add2eToArray(value[key]);
     }
 
-    // Objet à clés numériques exporté par un formulaire Foundry
     const numericValues = Object.keys(value)
       .filter(k => /^\d+$/.test(k))
       .sort((a, b) => Number(a) - Number(b))
@@ -88,9 +83,7 @@ function add2eToObjectArray(value) {
 
   if (add2eIsEmpty(value)) return [];
 
-  if (Array.isArray(value)) {
-    return value.filter(v => v && typeof v === "object");
-  }
+  if (Array.isArray(value)) return value.filter(v => v && typeof v === "object");
 
   if (typeof value === "object") {
     if (Array.isArray(value.items)) return add2eToObjectArray(value.items);
@@ -191,10 +184,7 @@ function add2eHumanTag(tag) {
 }
 
 function add2eBadges(value) {
-  return add2eToArray(value).map(t => ({
-    raw: String(t),
-    label: add2eHumanTag(t)
-  }));
+  return add2eToArray(value).map(t => ({ raw: String(t), label: add2eHumanTag(t) }));
 }
 
 function add2eRestrictionObject(primary, legacyAllowed, legacyShield) {
@@ -253,14 +243,8 @@ function add2eProgressionRows(progression) {
       niveau: row.niveau ?? row.level ?? "",
       xp: row.xp ?? "",
       thac0: row.thac0 ?? row.thaco ?? "",
-      saves: add2eToArray(row.savingThrows ?? row.sauvegardes).map((value, index) => ({
-        label: saveLabels[index] ?? `JS ${index + 1}`,
-        value
-      })),
-      spells: add2eToArray(row.spellsPerLevel ?? row.sortsParNiveau).map((value, index) => ({
-        level: index + 1,
-        value
-      }))
+      saves: add2eToArray(row.savingThrows ?? row.sauvegardes).map((value, index) => ({ label: saveLabels[index] ?? `JS ${index + 1}`, value })),
+      spells: add2eToArray(row.spellsPerLevel ?? row.sortsParNiveau).map((value, index) => ({ level: index + 1, value }))
     }))
     .filter(row => row.niveau || row.xp || row.thac0 || row.saves.length || row.spells.length)
     .sort((a, b) => Number(a.niveau || 0) - Number(b.niveau || 0));
@@ -268,46 +252,24 @@ function add2eProgressionRows(progression) {
 
 function add2eTitleRows(titles) {
   return add2eToObjectArray(titles)
-    .map(t => ({
-      minLevel: t.minLevel ?? t.niveau ?? t.level ?? "",
-      maxLevel: t.maxLevel ?? t.niveau ?? t.level ?? "",
-      title: t.title ?? t.titre ?? t.name ?? ""
-    }))
+    .map(t => ({ minLevel: t.minLevel ?? t.niveau ?? t.level ?? "", maxLevel: t.maxLevel ?? t.niveau ?? t.level ?? "", title: t.title ?? t.titre ?? t.name ?? "" }))
     .filter(t => t.minLevel || t.maxLevel || t.title);
 }
 
 function add2eAttackRows(attacks) {
   return add2eToObjectArray(attacks)
-    .map(a => ({
-      minLevel: a.minLevel ?? a.niveau ?? "",
-      maxLevel: a.maxLevel ?? a.niveau ?? "",
-      attacks: a.attacks ?? a.value ?? a.nombre ?? ""
-    }))
+    .map(a => ({ minLevel: a.minLevel ?? a.niveau ?? "", maxLevel: a.maxLevel ?? a.niveau ?? "", attacks: a.attacks ?? a.value ?? a.nombre ?? "" }))
     .filter(a => a.minLevel || a.maxLevel || a.attacks);
 }
 
 function add2eSpellReqRows(reqs) {
   return add2eToObjectArray(reqs)
-    .map(r => ({
-      spellLevel: r.spellLevel ?? r.niveau ?? "",
-      ability: add2eHumanText(r.requires?.ability ?? r.ability ?? ""),
-      min: r.requires?.min ?? r.min ?? ""
-    }))
+    .map(r => ({ spellLevel: r.spellLevel ?? r.niveau ?? "", ability: add2eHumanText(r.requires?.ability ?? r.ability ?? ""), min: r.requires?.min ?? r.min ?? "" }))
     .filter(r => r.spellLevel || r.ability || r.min);
 }
 
 function add2eUsefulPermanentTags(tags) {
-  const ignorePrefixes = [
-    "classe:",
-    "lanceur:",
-    "sorts:",
-    "preparation:",
-    "armures:",
-    "boucliers:",
-    "type_action:",
-    "interdit:"
-  ];
-
+  const ignorePrefixes = ["classe:", "lanceur:", "sorts:", "preparation:", "armures:", "boucliers:", "type_action:", "interdit:"];
   return add2eToArray(tags).filter(tag => {
     const t = add2eNormalizeTag(tag);
     return !ignorePrefixes.some(prefix => t.startsWith(prefix));
@@ -343,29 +305,16 @@ function add2eClassData(item, editable) {
   const parentActor = item.parent?.documentName === "Actor" ? item.parent : null;
   const actorLevel = parentActor ? Number(parentActor.system?.niveau) || 1 : null;
 
-  const weaponRestriction = add2eRestrictionObject(
-    system.weaponRestriction,
-    system.weaponsAllowed,
-    false
-  );
-
-  const armorRestriction = add2eRestrictionObject(
-    system.armorRestriction,
-    system.armorAllowed,
-    system.shieldAllowed
-  );
-
+  const weaponRestriction = add2eRestrictionObject(system.weaponRestriction, system.weaponsAllowed, false);
+  const armorRestriction = add2eRestrictionObject(system.armorRestriction, system.armorAllowed, system.shieldAllowed);
   const spellcasting = add2eDerivedSpellcasting(system, item.name);
-
   const ruleNotes = add2eToArray(system.ruleNotes);
   const classFeatureNote = String(system.classFeatureNote ?? "").trim();
-
   const description = system.description || "";
   const notes = system.notes || "";
 
   return {
     canEditClass: !!(game.user?.isGM && editable),
-
     summary: {
       label: system.label || item.name,
       hitDie: system.hitDie ?? "—",
@@ -380,24 +329,20 @@ function add2eClassData(item, editable) {
       hasAnyNotes: !!description || !!notes || ruleNotes.length || !!classFeatureNote,
       spellcastingNote: system.spellcastingNote || ""
     },
-
     specialAbilities: add2eToArray(system.specialAbilities),
     permanentFeatures: add2eBadges(add2eUsefulPermanentTags(system.tags)),
     effectTags: add2eBadges(system.effectTags),
-
     restrictions: {
       weaponAllowed: add2eBadges(weaponRestriction.allowedTags),
       weaponForbidden: add2eBadges(weaponRestriction.forbiddenTags),
       weaponLegacyAllowed: weaponRestriction.legacyAllowed.map(v => add2eHumanText(v)),
       weaponIsEmpty: weaponRestriction.source === "empty",
-
       armorAllowed: add2eBadges(armorRestriction.allowedTags),
       armorForbidden: add2eBadges(armorRestriction.forbiddenTags),
       armorLegacyAllowed: armorRestriction.legacyAllowed.map(v => add2eHumanText(v)),
       shieldLegacyAllowed: armorRestriction.legacyShield,
       armorIsEmpty: armorRestriction.source === "empty"
     },
-
     spellcasting,
     spellLists: spellcasting.lists,
     spellAccessRequirements: add2eSpellReqRows(system.spellAccessRequirements),
@@ -412,7 +357,7 @@ function add2eClassData(item, editable) {
   };
 }
 
-export class Add2eClassSheet extends ItemSheet {
+export class Add2eClassSheet extends Add2eBaseItemSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["add2e", "sheet", "item", "classe"],
@@ -420,131 +365,72 @@ export class Add2eClassSheet extends ItemSheet {
       width: 980,
       height: 820,
       resizable: true,
-
-      // Cette fiche est principalement une fiche de lecture.
-      // Ne pas auto-submit à la fermeture : Foundry v13 déclenche sinon
-      // un update incomplet pouvant envoyer name: undefined.
       submitOnClose: false,
       submitOnChange: false,
-
       tabs: [{ navSelector: ".tabs", contentSelector: ".sheet-body", initial: "resume" }]
     });
   }
 
   getData(options = {}) {
     const data = super.getData(options);
-
     data.item = this.object;
     data.system = this.object.system ?? {};
-
     Object.assign(data, add2eClassData(this.object, data.editable));
-
     return data;
   }
 
   async close(options = {}) {
-    // Sécurité : cette fiche ne doit pas tenter de sauvegarder automatiquement
-    // à la fermeture. Les validations Item de Foundry exigent un name valide,
-    // et un submit automatique incomplet peut provoquer name: undefined.
     return super.close({ ...options, submit: false });
   }
 
   activateListeners(html) {
     super.activateListeners(html);
-
     html.find(".tabs a").on("click", ev => {
       ev.preventDefault();
-
       const tab = ev.currentTarget.dataset.tab;
-
       html.find(".tabs a").removeClass("active");
       html.find(ev.currentTarget).addClass("active");
-
       html.find(".content").addClass("hidden");
       html.find(`.content[data-tab="${tab}"]`).removeClass("hidden");
     });
   }
 
-  async _updateObject(event, formData) {
-    // Sécurité Foundry :
-    // ne jamais envoyer à Item.update() un objet contenant name: undefined.
-    // On reconstruit un objet plat propre, sans prototype ni getters parasites.
+  async _updateObject(_event, formData) {
     const source = formData ?? {};
     const flat = foundry.utils.flattenObject(source);
     const updateData = {};
 
     for (const [key, value] of Object.entries(flat)) {
-      if (!key) continue;
-      if (value === undefined) continue;
-
-      // Le nom d'un Item est obligatoire dans Foundry.
-      // Si le formulaire n'a pas fourni de nom valide, on remet le nom actuel.
+      if (!key || value === undefined) continue;
       if (key === "name") {
         const cleanName = String(value ?? "").trim();
         updateData.name = cleanName || this.object.name || "Classe";
         continue;
       }
-
       updateData[key] = value;
     }
 
-    // Si le formulaire n'a pas de champ name, on force le nom actuel.
-    // C'est volontaire : cela empêche Foundry de recevoir name: undefined
-    // lors d'une fermeture automatique ou d'un submit incomplet.
-    if (!updateData.name || String(updateData.name).trim() === "") {
-      updateData.name = this.object.name || "Classe";
-    }
-
-    // Deuxième nettoyage défensif, y compris après expandObject.
+    if (!updateData.name || String(updateData.name).trim() === "") updateData.name = this.object.name || "Classe";
     const expanded = foundry.utils.expandObject(updateData);
 
     function pruneUndefined(obj) {
       if (!obj || typeof obj !== "object") return obj;
-
       for (const key of Object.keys(obj)) {
         if (obj[key] === undefined) {
           delete obj[key];
           continue;
         }
-
         if (obj[key] && typeof obj[key] === "object") {
           pruneUndefined(obj[key]);
-
-          if (
-            !Array.isArray(obj[key]) &&
-            Object.keys(obj[key]).length === 0
-          ) {
-            delete obj[key];
-          }
+          if (!Array.isArray(obj[key]) && Object.keys(obj[key]).length === 0) delete obj[key];
         }
       }
-
       return obj;
     }
 
     pruneUndefined(expanded);
-
-    if (!expanded.name || String(expanded.name).trim() === "") {
-      expanded.name = this.object.name || "Classe";
-    }
-
-    console.log("[ADD2E][CLASS SHEET][UPDATE]", {
-      item: this.object.name,
-      id: this.object.id,
-      updateData: expanded
-    });
-
-    try {
-      await this.object.update(expanded);
-    } catch (err) {
-      console.error("[ADD2E][CLASS SHEET][UPDATE][ERROR]", {
-        item: this.object?.name,
-        id: this.object?.id,
-        expanded,
-        err
-      });
-      throw err;
-    }
+    if (!expanded.name || String(expanded.name).trim() === "") expanded.name = this.object.name || "Classe";
+    await this.object.update(expanded);
   }
 }
 

@@ -1,0 +1,294 @@
+[
+  {
+    "name": "Humain",
+    "type": "race",
+    "img": "icons/creatures/mammals/humanoid-male-human.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": 0,
+        "dexterite": 0,
+        "constitution": 0,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": 0
+      },
+      "vitesse": 36,
+      "capacites": [
+        "Aucune modification",
+        "Langues : commun",
+        "Classes : Toutes (Illimité)"
+      ],
+      "classLimits": {},
+      "description": "Les humains sont la race la plus adaptable et la plus commune."
+    },
+    "effects": []
+  },
+  {
+    "name": "Nain",
+    "type": "race",
+    "img": "icons/creatures/humanoids/dwarf-warrior.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": 0,
+        "dexterite": 0,
+        "constitution": 1,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": -1
+      },
+      "vitesse": 24,
+      "capacites": [
+        "Infravision (18m)",
+        "Bonus sauvegarde sort/baguettes (+1 par 3.5 CON)",
+        "Résistance aux poisons et magie",
+        "Langues : nain, gnome, gobelin, kobold, orque, commun",
+        "Classes : guerrier (9), voleur (9), assassin (9)"
+      ],
+      "classLimits": {
+        "guerrier": 9,
+        "voleur": 9,
+        "assassin": 9
+      },
+      "description": "Robustes et obstinés, les nains sont de fiers guerriers et artisans."
+    },
+    "effects": []
+  },
+  {
+    "name": "Elfe",
+    "type": "race",
+    "img": "icons/creatures/humanoids/elf-ranger.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": 0,
+        "dexterite": 1,
+        "constitution": -1,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": 0
+      },
+      "vitesse": 36,
+      "capacites": [
+        "Infravision (18m)",
+        "+1 toucher (épées/arcs)",
+        "90% résistance charme/sommeil",
+        "Détection portes secrètes (1 sur 1d6 passif)",
+        "Langues : elfe, commun, gnome, petite-gens, gobelin, orque, gnoll",
+        "Classes : guerrier (Illimité), magicien (Illimité), voleur (Illimité)"
+      ],
+      "classLimits": {
+        "guerrier": null,
+        "magicien": null,
+        "voleur": null
+      },
+      "description": "Nobles et gracieux, les elfes sont maîtres de la magie et de l'épée."
+    },
+    "effects": []
+  },
+  {
+    "name": "Gnome",
+    "type": "race",
+    "img": "icons/creatures/humanoids/gnome-mage.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": 0,
+        "dexterite": 0,
+        "constitution": 0,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": 0
+      },
+      "vitesse": 24,
+      "capacites": [
+        "Infravision (18m)",
+        "Détection des pièges et constructions",
+        "Langues : gnome, commun",
+        "Classes : guerrier (5), voleur (Illimité)"
+      ],
+      "classLimits": {
+        "guerrier": 5,
+        "voleur": null
+      },
+      "description": "Petits cousins des nains, amateurs de joyaux et d'illusions."
+    },
+    "effects": []
+  },
+  {
+    "name": "Petite-gens",
+    "type": "race",
+    "img": "icons/creatures/humanoids/halfling-rogue.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": -1,
+        "dexterite": 1,
+        "constitution": 0,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": 0
+      },
+      "vitesse": 24,
+      "capacites": [
+        "Infravision (18m)",
+        "+1 surprise",
+        "Bonus aux jets de sauvegarde (selon CON)",
+        "+1 toucher (fronde/jet)",
+        "Langues : commun, petite-gens, gnome, elfe",
+        "Classes : guerrier (6), voleur (Illimité)"
+      ],
+      "classLimits": {
+        "guerrier": 6,
+        "voleur": null
+      },
+      "description": "Paisibles et furtifs, ils sont d'excellents voleurs malgré eux."
+    },
+    "effects": []
+  },
+  {
+    "name": "Demi-elfe",
+    "type": "race",
+    "img": "icons/creatures/humanoids/halfelf.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": 0,
+        "dexterite": 0,
+        "constitution": 0,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": 0
+      },
+      "vitesse": 36,
+      "capacites": [
+        "Infravision (18m)",
+        "30% résistance charme/sommeil",
+        "Langues : commun, elfe, gnome, petite-gens, gobelin, orque, gnoll",
+        "Classes : clerc (5), druide (Illimité), guerrier (8), ranger (8), magicien (8), voleur (Illimité), assassin (11)"
+      ],
+      "classLimits": {
+        "clerc": 5,
+        "druide": null,
+        "guerrier": 8,
+        "ranger": 8,
+        "magicien": 8,
+        "voleur": null,
+        "assassin": 11
+      },
+      "description": "Héritiers des deux mondes, polyvalents et sociables."
+    },
+    "effects": []
+  },
+  {
+    "name": "Demi-orque",
+    "type": "race",
+    "img": "systems/add2e/assets/icones/races/Demi-orc.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": 1,
+        "dexterite": 0,
+        "constitution": 1,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": -2
+      },
+      "vitesse": 36,
+      "capacites": [
+        "Infravision 18 m",
+        "Peut passer pour humain",
+        "Haï des elfes et nains",
+        "Classes : clerc (4), guerrier (10), voleur (8), assassin (Illimité)",
+        "Multiclassage autorisé"
+      ],
+      "classLimits": {
+        "clerc": 4,
+        "guerrier": 10,
+        "voleur": 8,
+        "assassin": null
+      },
+      "description": "Puissant mais maléfique."
+    },
+    "effects": []
+  },
+ {
+  "name": "Kender",
+  "type": "race",
+  "img": "icons/creatures/mammals/humanoid-halfling-green.webp",
+  "system": {
+    "bonus_caracteristiques": {
+      "force": -1,
+      "dexterite": 1,
+      "constitution": 0,
+      "intelligence": 0,
+      "sagesse": 0,
+      "charisme": 0
+    },
+    "vitesse": 24,
+    "capacites": [
+      "Intrépidité (Immunisé peur)",
+      "Insulte (Provoque la rage)",
+      "Langues : commun, kenderspeak, patois",
+      "Classes : clerc (4), guerrier (10), voleur (8), assassin (Illimité)"
+    ],
+    "classLimits": {
+      "guerrier": 6,
+      "ranger": 6,
+      "clerc": 12,
+      "voleur": 20,
+      "magicien": 0,
+      "paladin": 0
+    },
+    "thief_adjustments": {
+      "pick_pockets": 5,
+      "open_locks": 5,
+      "find_remove_traps": 5,
+      "move_silently": 10,
+      "hide_in_shadows": 10,
+      "detect_noise": 5,
+      "climb_walls": 5,
+      "read_languages": -5
+    },
+    "onUse": "scripts/kender.js",
+    "description": "Petits, curieux et intrépides, les Kenders parcourent Krynn poussés par une envie irrépressible d'explorer."
+  },
+"effects": [
+  {
+    "name": "Immunité à la peur (Kender)",
+    "icon": "icons/svg/target.svg",
+    "disabled": false,
+    "transfer": true,
+    "duration": { "startTime": null },
+    "changes": [],
+    "flags": {
+      "add2e": {
+        "tags": [ "immunite:peur" ]
+      }
+    }
+  },
+  {
+    "name": "Bonus JS vs peur (Kender)",
+    "icon": "icons/svg/target.svg",
+    "disabled": false,
+    "transfer": true,
+    "duration": { "startTime": null },
+    "changes": [],
+    "flags": {
+      "add2e": {
+        "tags": [ "bonus_save_vs:peur:4" ]
+      }
+    }
+  },
+  {
+    "name": "Résistance au poison (Kender)",
+    "icon": "icons/svg/target.svg",
+    "disabled": false,
+    "transfer": true,
+    "duration": { "startTime": null },
+    "changes": [],
+    "flags": {
+      "add2e": {
+        "tags": [ "resistance:poison:1" ]
+      }
+    }
+  }
+]
+
+}
+
+]

@@ -1,0 +1,80 @@
+<form class="{{cssClass}} add2e-objet-sheet" autocomplete="off">
+  <style>
+    .add2e-objet-description-preview,.add2e-objet-rich-editor{min-height:110px;padding:8px 10px;border:1px solid #d0b16b;border-radius:8px;background:#fffdf7;color:#2f241c;line-height:1.35;}
+    .add2e-objet-description-preview p,.add2e-objet-rich-editor p{margin:0 0 .55em;}.add2e-objet-description-preview p:last-child,.add2e-objet-rich-editor p:last-child{margin-bottom:0;}
+    .add2e-objet-rich-editor .editor{min-height:140px;}.add2e-objet-rich-editor .editor-content{min-height:120px;}
+  </style>
+  <header class="sheet-header" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
+    <img class="profile-img" src="{{img}}" data-edit="img" title="{{item.name}}" width="96" height="96" style="object-fit:cover;border:1px solid #7a5a28;border-radius:6px;cursor:pointer;"/>
+    <div class="header-fields" style="flex:1;display:grid;gap:6px;">
+      <h1 style="margin:0;"><input name="name" type="text" value="{{item.name}}" placeholder="Nom" style="width:100%;font-size:1.25rem;font-weight:700;"/></h1>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;">
+        <label><span>Catégorie</span><input name="system.categorie" type="text" value="{{system.categorie}}"/></label>
+        <label><span>Sous-type</span><input name="system.sousType" type="text" value="{{system.sousType}}"/></label>
+        <label><span>Rareté</span><input name="system.rarete" type="text" value="{{system.rarete}}"/></label>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:end;">
+        <label><span>Quantité</span><input name="system.quantite" type="number" value="{{system.quantite}}"/></label>
+        <label><span>Poids</span><input name="system.poids" type="number" step="0.01" value="{{system.poids}}"/></label>
+        <label><span>Prix</span><input name="system.prix" type="text" value="{{system.prix}}"/></label>
+        <label style="display:flex;gap:6px;align-items:center;margin-top:18px;"><input name="system.equipee" type="checkbox" {{checked system.equipee}}/> Équipé</label>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs sheet-tabs" data-group="primary" style="display:flex;gap:6px;margin:8px 0;border-bottom:1px solid #b89b5e;">
+    <a class="item active" data-tab="resume">Résumé</a>
+    <a class="item" data-tab="pouvoirs">Pouvoirs</a>
+    <a class="item" data-tab="effets">Effets</a>
+    <a class="item" data-tab="description">Description</a>
+  </nav>
+
+  <section class="sheet-body" style="min-height:260px;">
+    <div class="content" data-tab="resume">
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+        <label><span>Magique</span><input name="system.magique" type="checkbox" {{checked system.magique}}/></label>
+        <label><span>Identifié</span><input name="system.identifie" type="checkbox" {{checked system.identifie}}/></label>
+        <label><span>Maudit</span><input name="system.maudit" type="checkbox" {{checked system.maudit}}/></label>
+      </div>
+      <fieldset style="margin-top:10px;border:1px solid #d0b16b;border-radius:6px;"><legend>Charges</legend>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;">
+          <label><span>Actuelles</span><input name="system.charges.value" type="number" value="{{charges.value}}"/></label>
+          <label><span>Maximum</span><input name="system.charges.max" type="number" value="{{charges.max}}"/></label>
+          <label><span>Mode</span><input name="system.charges.mode" type="text" value="{{system.charges.mode}}"/></label>
+          <label><span>Recharge</span><input name="system.charges.recharge" type="text" value="{{system.charges.recharge}}"/></label>
+        </div>
+      </fieldset>
+      <fieldset style="margin-top:10px;border:1px solid #d0b16b;border-radius:6px;"><legend>Activation</legend>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+          <label><span>Activation</span><input name="system.activation" type="text" value="{{system.activation}}"/></label>
+          <label><span>Cible</span><input name="system.cible" type="text" value="{{system.cible}}"/></label>
+          <label><span>Durée</span><input name="system.duree" type="text" value="{{system.duree}}"/></label>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="content hidden" data-tab="pouvoirs">
+      {{#if pouvoirs.length}}
+        <ol class="items-list" style="list-style:none;margin:0;padding:0;display:grid;gap:8px;">
+          {{#each pouvoirs as |p idx|}}
+            <li style="border:1px solid #d0b16b;border-radius:6px;padding:8px;background:#fffaf0;">
+              <div style="display:flex;gap:8px;align-items:center;"><img src="{{p.img}}" width="32" height="32" style="border:1px solid #8b6d2a;border-radius:4px;"/><strong>{{#if p.name}}{{p.name}}{{else}}{{p.nom}}{{/if}}</strong><span style="margin-left:auto;">Coût : {{#if p.cout}}{{p.cout}}{{else}}{{p.cost}}{{/if}}</span></div>
+              {{#if p.description}}<div style="margin-top:6px;">{{{p.description}}}</div>{{/if}}
+              {{#if p.onUse}}<div style="margin-top:4px;font-size:.85em;color:#555;"><strong>onUse :</strong> {{p.onUse}}</div>{{/if}}
+            </li>
+          {{/each}}
+        </ol>
+      {{else}}<p>Aucun pouvoir défini.</p>{{/if}}
+    </div>
+
+    <div class="content hidden" data-tab="effets">
+      <fieldset style="border:1px solid #d0b16b;border-radius:6px;"><legend>Tags</legend><textarea name="system.tags" rows="4" style="width:100%;">{{#each tags}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</textarea></fieldset>
+      <fieldset style="margin-top:10px;border:1px solid #d0b16b;border-radius:6px;"><legend>Effect tags</legend><textarea name="system.effectTags" rows="4" style="width:100%;">{{#each effectTags}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</textarea></fieldset>
+    </div>
+
+    <div class="content hidden" data-tab="description">
+      <label><strong>Description</strong></label>
+      <div class="add2e-objet-rich-editor">{{editor system.description target="system.description" button=true editable=editable engine="prosemirror"}}</div>
+    </div>
+  </section>
+</form>

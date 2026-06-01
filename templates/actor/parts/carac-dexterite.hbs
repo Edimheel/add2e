@@ -1,0 +1,27 @@
+            <tr>
+              <td class="carac-label-td">
+                <div class="carac-flex">
+                  <i class="fas fa-dice-d20 roll-stat" data-stat="dexterite" title="Jet de Dextérité" style="color:#ffae2f;"></i>
+                  <span class="carac-short">DEX</span>
+                </div>
+              </td>
+              <td>
+                <div class="carac-control-group">
+                  <button type="button" class="carac-btn moins" data-carac="dexterite" tabindex="-1">−</button>
+                  <div class="carac-value carac-drop-target" data-carac="dexterite"
+                       title="Base : {{actor.system.dexterite_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.dexterite}}&#10;Total : {{add actor.system.dexterite_base actor.system.bonus_caracteristiques.dexterite}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.dexterite_base actor.system.bonus_caracteristiques.dexterite}}</span>
+                    {{#if actor.system.bonus_caracteristiques.dexterite}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.dexterite 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.dexterite}})</span>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="carac-btn plus" data-carac="dexterite" tabindex="-1">+</button>
+                </div>
+              </td>
+              <td>
+                <div class="carac-adjustments-line">
+                  <div class="a2e-adjustment-item"><label>Réaction</label><input type="text" name="system.dex_att" value="{{actor.system.dex_att}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>CA défense</label><input type="text" name="system.dex_def" value="{{actor.system.dex_def}}" readonly></div>
+                </div>
+              </td>
+            </tr>

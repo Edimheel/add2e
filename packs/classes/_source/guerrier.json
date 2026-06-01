@@ -1,0 +1,55 @@
+{
+  "_id": "0bde8779c3354b3ea76cbae275024745",
+  "name": "Guerrier",
+  "type": "classe",
+  "img": "icons/svg/sword.svg",
+  "system": {
+    "label": "Guerrier",
+    "hitDie": 10,
+    "hpFormula": "1d10 + constitution.mod",
+
+    "allowExceptionalStrength": true,
+
+    "attacksPerRound": [
+      { "minLevel": 1, "maxLevel": 6,  "attacks": 1 },
+      { "minLevel": 7, "maxLevel": 12, "attacks": 1.5 },
+      { "minLevel": 13,"maxLevel": 20, "attacks": 2 }
+    ],
+
+    "armorAllowed": ["toutes"],
+    "shieldAllowed": true,
+    "weaponsAllowed": ["toutes"],
+
+    "specialAbilities": [
+      "Maîtrise martiale",
+      "Force exceptionnelle (18/xx)",
+      "Attaques multiples selon niveau"
+    ],
+
+    "progression": [
+      { "niveau": 1,  "xp": 0,        "thac0": 20, "savingThrows": [14,16,15,17,17] },
+      { "niveau": 2,  "xp": 2000,     "thac0": 19, "savingThrows": [14,16,15,17,17] },
+      { "niveau": 3,  "xp": 4000,     "thac0": 18, "savingThrows": [13,15,14,16,16] },
+      { "niveau": 4,  "xp": 8000,     "thac0": 17, "savingThrows": [13,15,14,16,16] },
+      { "niveau": 5,  "xp": 18000,    "thac0": 16, "savingThrows": [11,13,12,13,14] },
+      { "niveau": 6,  "xp": 35000,    "thac0": 15, "savingThrows": [11,13,12,13,14] },
+      { "niveau": 7,  "xp": 70000,    "thac0": 14, "savingThrows": [10,12,11,12,13] },
+      { "niveau": 8,  "xp": 125000,   "thac0": 13, "savingThrows": [10,12,11,12,13] },
+      { "niveau": 9,  "xp": 250000,   "thac0": 12, "savingThrows": [8,10,9,9,11] },
+      { "niveau": 10, "xp": 500000,   "thac0": 11, "savingThrows": [8,10,9,9,11] },
+      { "niveau": 11, "xp": 750000,   "thac0": 10, "savingThrows": [7,9,8,8,10] },
+      { "niveau": 12, "xp": 1000000,  "thac0": 9,  "savingThrows": [7,9,8,8,10] },
+      { "niveau": 13, "xp": 1250000,  "thac0": 8,  "savingThrows": [6,8,7,7,9] },
+      { "niveau": 14, "xp": 1500000,  "thac0": 7,  "savingThrows": [6,8,7,7,9] },
+      { "niveau": 15, "xp": 1750000,  "thac0": 6,  "savingThrows": [5,7,6,6,8] },
+      { "niveau": 16, "xp": 2000000,  "thac0": 5,  "savingThrows": [5,7,6,6,8] },
+      { "niveau": 17, "xp": 2250000,  "thac0": 4,  "savingThrows": [4,6,5,5,7] },
+      { "niveau": 18, "xp": 2500000,  "thac0": 3,  "savingThrows": [4,6,5,5,7] },
+      { "niveau": 19, "xp": 2750000,  "thac0": 2,  "savingThrows": [3,5,4,4,6] },
+      { "niveau": 20, "xp": 3000000,  "thac0": 1,  "savingThrows": [3,5,4,4,6] }
+    ]
+  },
+  "sort": 100000,
+  "flags": {},
+  "folder": null
+}

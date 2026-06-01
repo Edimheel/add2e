@@ -1,0 +1,74 @@
+{
+  "_id": "e2f7d6d94c4e4c5f9c8a1f7a2c0a9e01",
+  "name": "Magicien",
+  "type": "classe",
+  "img": "systems/add2e/assets/magicien.png",
+  "system": {
+    "label": "Magicien",
+    "hitDie": 4,
+    "hpFormula": "1d4 + constitution.mod",
+"spellcasting": {
+      "lists": ["wizard"],
+      "startsAt": 1,
+      "maxSpellLevel": 100
+    }, 
+    "attacksPerRound": [
+      { "minLevel": 1, "maxLevel": 20, "attacks": 1 }
+    ],
+
+    "armorAllowed": ["aucune"],
+    "shieldAllowed": false,
+    "weaponsAllowed": [
+      "dague",
+      "bâton",
+      "dard",
+      "fronde"
+    ],
+
+    "specialAbilities": [
+      "Lancer de sorts profanes",
+      "Livre de sorts",
+      "Mémorisation des sorts",
+      "Écoles de magie"
+    ],
+
+    "titlesByLevel": [
+      { "minLevel": 1, "maxLevel": 1, "title": "Apprenti" },
+      { "minLevel": 2, "maxLevel": 2, "title": "Disciple" },
+      { "minLevel": 3, "maxLevel": 3, "title": "Thaumaturge" },
+      { "minLevel": 4, "maxLevel": 4, "title": "Mage" },
+      { "minLevel": 5, "maxLevel": 5, "title": "Conjurateur" },
+      { "minLevel": 6, "maxLevel": 6, "title": "Invocateur" },
+      { "minLevel": 7, "maxLevel": 7, "title": "Ensorceleur" },
+      { "minLevel": 8, "maxLevel": 8, "title": "Magicien" },
+      { "minLevel": 9, "maxLevel": 9, "title": "Sorcier" },
+      { "minLevel": 10, "maxLevel": 20, "title": "Archimage" }
+    ],
+
+    "progression": [
+      { "niveau": 1,  "xp": 0,        "thac0": 20, "savingThrows": [14,15,16,17,15], "spellsPerLevel": [1,0,0,0,0,0,0,0,0] },
+      { "niveau": 2,  "xp": 2500,     "thac0": 20, "savingThrows": [14,15,16,17,15], "spellsPerLevel": [2,0,0,0,0,0,0,0,0] },
+      { "niveau": 3,  "xp": 5000,     "thac0": 20, "savingThrows": [13,14,15,16,14], "spellsPerLevel": [2,1,0,0,0,0,0,0,0] },
+      { "niveau": 4,  "xp": 10000,    "thac0": 19, "savingThrows": [13,14,15,16,14], "spellsPerLevel": [3,2,0,0,0,0,0,0,0] },
+      { "niveau": 5,  "xp": 20000,    "thac0": 19, "savingThrows": [12,13,14,15,13], "spellsPerLevel": [4,2,1,0,0,0,0,0,0] },
+      { "niveau": 6,  "xp": 40000,    "thac0": 19, "savingThrows": [12,13,14,15,13], "spellsPerLevel": [4,3,2,0,0,0,0,0,0] },
+      { "niveau": 7,  "xp": 60000,    "thac0": 18, "savingThrows": [11,12,13,14,12], "spellsPerLevel": [4,4,2,1,0,0,0,0,0] },
+      { "niveau": 8,  "xp": 90000,    "thac0": 18, "savingThrows": [11,12,13,14,12], "spellsPerLevel": [4,4,3,2,0,0,0,0,0] },
+      { "niveau": 9,  "xp": 135000,   "thac0": 18, "savingThrows": [10,11,12,13,11], "spellsPerLevel": [4,4,4,2,1,0,0,0,0] },
+      { "niveau": 10, "xp": 250000,   "thac0": 17, "savingThrows": [10,11,12,13,11], "spellsPerLevel": [5,5,4,3,2,0,0,0,0] },
+      { "niveau": 11, "xp": 375000,   "thac0": 17, "savingThrows": [9,10,11,12,10],  "spellsPerLevel": [5,5,5,4,2,1,0,0,0] },
+      { "niveau": 12, "xp": 750000,   "thac0": 17, "savingThrows": [9,10,11,12,10],  "spellsPerLevel": [5,5,5,4,3,2,0,0,0] },
+      { "niveau": 13, "xp": 1125000,  "thac0": 16, "savingThrows": [8,9,10,11,9],   "spellsPerLevel": [5,5,5,4,3,2,1,0,0] },
+      { "niveau": 14, "xp": 1500000,  "thac0": 16, "savingThrows": [8,9,10,11,9],   "spellsPerLevel": [5,5,5,4,4,3,2,0,0] },
+      { "niveau": 15, "xp": 1875000,  "thac0": 16, "savingThrows": [7,8,9,10,8],    "spellsPerLevel": [5,5,5,5,4,3,2,1,0] },
+      { "niveau": 16, "xp": 2250000,  "thac0": 15, "savingThrows": [7,8,9,10,8],    "spellsPerLevel": [5,5,5,5,4,4,3,2,0] },
+      { "niveau": 17, "xp": 2625000,  "thac0": 15, "savingThrows": [6,7,8,9,7],     "spellsPerLevel": [5,5,5,5,5,4,3,2,1] },
+      { "niveau": 18, "xp": 3000000,  "thac0": 15, "savingThrows": [6,7,8,9,7],     "spellsPerLevel": [5,5,5,5,5,4,4,3,2] },
+      { "niveau": 19, "xp": 3375000,  "thac0": 14, "savingThrows": [5,6,7,8,6],     "spellsPerLevel": [5,5,5,5,5,5,4,3,3] },
+      { "niveau": 20, "xp": 3750000,  "thac0": 14, "savingThrows": [5,6,7,8,6],     "spellsPerLevel": [5,5,5,5,5,5,5,4,4] }
+    ]
+  },
+  "sort": 100000,
+  "flags": {},
+  "folder": null
+}
