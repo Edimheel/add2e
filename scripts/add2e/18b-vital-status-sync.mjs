@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v20-character-status-toggle";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v21-static-status-effect-ids";
 
 const LOCKS = new Set();
 
@@ -140,6 +140,7 @@ export function add2eVitalRegisterStatusEffects() {
 
   for (const definition of [
     {
+      _id: "dead",
       id: "dead",
       name: "Mort",
       label: "Mort",
@@ -150,6 +151,7 @@ export function add2eVitalRegisterStatusEffects() {
       flags: { core: { statusId: "dead" }, add2e: { vitalStatus: "dead", autoVitalStatus: true } }
     },
     {
+      _id: "unconscious",
       id: "unconscious",
       name: "Inconscient",
       label: "Inconscient",
