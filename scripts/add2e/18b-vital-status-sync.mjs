@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — États vitaux : synchronisation token / combat tracker.
-// Version : 2026-06-01-vital-status-split-sync-v3-monster-visual-icon
+// Version : 2026-06-01-vital-status-split-sync-v4-monster-actor-visual-effect
 // ============================================================================
 
 import {
@@ -16,9 +16,10 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v3-monster-visual-icon";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v4-monster-actor-visual-effect";
 
 const ADD2E_MONSTER_DEAD_VISUAL_ICON = "systems/add2e/assets/icons/add2e-monster-dead.svg";
+const ADD2E_MONSTER_DEAD_EFFECT_ID = "ADD2Emondead0001";
 const ADD2E_VITAL_TOKEN_ICONS = new Set([...ADD2E_VITAL_ICONS, ADD2E_MONSTER_DEAD_VISUAL_ICON]);
 const ADD2E_VITAL_SYNC_LOCK = new Set();
 
@@ -77,7 +78,8 @@ export function add2eVitalRegisterStatusEffects() {
     defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
     hasDead: CONFIG.statusEffects.some(effect => add2eVitalStatusAliases(effect).includes("dead")),
     hasUnconscious: CONFIG.statusEffects.some(effect => add2eVitalStatusAliases(effect).includes("unconscious")),
-    monsterDeadVisualIcon: ADD2E_MONSTER_DEAD_VISUAL_ICON
+    monsterDeadVisualIcon: ADD2E_MONSTER_DEAD_VISUAL_ICON,
+    monsterDeadEffectId: ADD2E_MONSTER_DEAD_EFFECT_ID
   });
 }
 
@@ -89,6 +91,72 @@ export async function add2eVitalSetActorStatus(_actor, _statusId, _active, _over
   return false;
 }
 
+function add2eVitalIsMonsterDeadVisualEffect(effect) {
+  return String(effect?.id ?? effect?._id ?? "") === ADD2E_MONSTER_DEAD_EFFECT_ID ||
+    effect?.flags?.add2e?.monsterDeadVisual === true ||
+    effect?.img === ADD2E_MONSTER_DEAD_VISUAL_ICON ||
+    effect?.icon === ADD2E_MONSTER_DEAD_VISUAL_ICON;
+}
+
+function add2eVitalFindMonsterDeadVisualEffect(actor) {
+  for (const effect of actor?.effects ?? []) {
+    if (add2eVitalIsMonsterDeadVisualEffect(effect)) return effect;
+  }
+  return null;
+}
+
+async function add2eVitalEnsureMonsterDeadActorEffect(actor, desired) {
+  if (!actor || !add2eVitalIsMonster(actor)) return { changed: false, action: "not-monster" };
+
+  const existing = add2eVitalFindMonsterDeadVisualEffect(actor);
+
+  if (desired !== "dead") {
+    if (!existing) return { changed: false, action: "none" };
+    try {
+      await actor.deleteEmbeddedDocuments("ActiveEffect", [existing.id], { add2eVitalMonsterVisualEffect: true });
+      console.log("[ADD2E][VITAL_STATUS][MONSTER_ACTOR_EFFECT][DELETE]", { actor: actor.name, effectId: existing.id });
+      return { changed: true, action: "delete", effectId: existing.id };
+    } catch (err) {
+      const msg = String(err?.message || err || "");
+      if (msg.includes("does not exist") || msg.includes("n'existe pas")) return { changed: false, action: "delete-stale", effectId: existing.id };
+      console.warn("[ADD2E][VITAL_STATUS][MONSTER_ACTOR_EFFECT][DELETE_WARN]", { actor: actor.name, effectId: existing.id, err });
+      return { changed: false, action: "delete-error", effectId: existing.id, error: msg };
+    }
+  }
+
+  if (existing) return { changed: false, action: "exists", effectId: existing.id };
+
+  const data = {
+    _id: ADD2E_MONSTER_DEAD_EFFECT_ID,
+    name: "Mort",
+    label: "Mort",
+    img: ADD2E_MONSTER_DEAD_VISUAL_ICON,
+    icon: ADD2E_MONSTER_DEAD_VISUAL_ICON,
+    disabled: false,
+    flags: {
+      add2e: {
+        vitalStatus: "dead",
+        monsterDeadVisual: true,
+        autoVitalStatus: true
+      }
+    }
+  };
+
+  try {
+    await actor.createEmbeddedDocuments("ActiveEffect", [data], { keepId: true, add2eVitalMonsterVisualEffect: true });
+    console.log("[ADD2E][VITAL_STATUS][MONSTER_ACTOR_EFFECT][CREATE]", { actor: actor.name, effectId: data._id, icon: data.img });
+    return { changed: true, action: "create", effectId: data._id };
+  } catch (err) {
+    const msg = String(err?.message || err || "");
+    if (msg.includes("already exists") || msg.includes("existe déjà")) {
+      console.warn("[ADD2E][VITAL_STATUS][MONSTER_ACTOR_EFFECT][ALREADY_EXISTS]", { actor: actor.name, effectId: data._id });
+      return { changed: false, action: "already-exists", effectId: data._id };
+    }
+    console.warn("[ADD2E][VITAL_STATUS][MONSTER_ACTOR_EFFECT][CREATE_WARN]", { actor: actor.name, effectId: data._id, err });
+    return { changed: false, action: "create-error", effectId: data._id, error: msg };
+  }
+}
+
 export async function add2eVitalCleanWrongMonsterActorEffects(actor, desired) {
   if (!actor || !add2eVitalIsMonster(actor)) return { removedActorEffects: 0, removedKinds: [] };
 
@@ -96,6 +164,8 @@ export async function add2eVitalCleanWrongMonsterActorEffects(actor, desired) {
   const removedKinds = [];
 
   for (const effect of actor.effects ?? []) {
+    if (add2eVitalIsMonsterDeadVisualEffect(effect)) continue;
+
     const kind = add2eVitalEffectKind(effect);
     if (!kind) continue;
 
@@ -298,12 +368,13 @@ export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {})
     const isMonster = add2eVitalIsMonster(actor);
     const trackerDefeated = add2eVitalActorHasDefeatedCombatant(actor);
     const preserveDefeated = !isMonster && trackerDefeated && desired === null;
-    const before = add2eVitalArray(actor?.effects).filter(e => add2eVitalEffectKind(e)).map(e => ({ id: e.id, name: e.name, kind: add2eVitalEffectKind(e), icon: e.icon }));
+    const before = add2eVitalArray(actor?.effects).filter(e => add2eVitalEffectKind(e) || add2eVitalIsMonsterDeadVisualEffect(e)).map(e => ({ id: e.id, name: e.name, kind: add2eVitalEffectKind(e), icon: e.icon ?? e.img, monsterVisual: add2eVitalIsMonsterDeadVisualEffect(e) }));
 
     const monsterCleanupBefore = await add2eVitalCleanWrongMonsterActorEffects(actor, desired);
     const actorStatus = null;
     const tokenState = await add2eVitalSyncTokenState(actor, desired, { preserveDefeated });
     const monsterCleanupAfter = await add2eVitalCleanWrongMonsterActorEffects(actor, desired);
+    const monsterActorEffect = await add2eVitalEnsureMonsterDeadActorEffect(actor, desired);
 
     console.log("[ADD2E][VITAL_STATUS][SYNC]", {
       reason,
@@ -317,6 +388,7 @@ export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {})
       preserveDefeated,
       monsterUsesAdd2eInactiveFlag: isMonster,
       monsterDeadVisualIcon: isMonster ? ADD2E_MONSTER_DEAD_VISUAL_ICON : null,
+      monsterActorEffect,
       actorStatus,
       removed: (monsterCleanupBefore.removedActorEffects ?? 0) + (monsterCleanupAfter.removedActorEffects ?? 0),
       monsterCleanupBefore,
