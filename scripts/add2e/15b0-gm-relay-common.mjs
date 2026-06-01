@@ -25,10 +25,24 @@ export async function resolveActor(payload = {}) {
     }
   }
 
-  if (payload.sceneId && payload.tokenId) {
+  if (payload.tokenUuid) {
+    try {
+      const doc = await fromUuid(payload.tokenUuid);
+      if (doc?.actor) return doc.actor;
+      if (doc?.document?.actor) return doc.document.actor;
+    } catch (e) {
+      console.warn("[ADD2E][GM-RELAY] tokenUuid non résolu :", payload.tokenUuid, e);
+    }
+  }
+
+  if (payload.tokenId) {
     const scene = resolveScene(payload.sceneId);
-    const tokenDoc = scene?.tokens?.get(payload.tokenId);
+    const tokenDoc = scene?.tokens?.get(payload.tokenId) ?? canvas?.scene?.tokens?.get?.(payload.tokenId) ?? null;
     if (tokenDoc?.actor) return tokenDoc.actor;
+
+    const placeable = canvas?.tokens?.get?.(payload.tokenId) ?? canvas?.tokens?.placeables?.find?.(t => t?.id === payload.tokenId || t?.document?.id === payload.tokenId) ?? null;
+    if (placeable?.actor) return placeable.actor;
+    if (placeable?.document?.actor) return placeable.document.actor;
   }
 
   if (payload.actorId) return game.actors?.get?.(payload.actorId) ?? null;
