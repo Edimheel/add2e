@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v24-combatant-first-dead-only";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v25-token-isolated-monsters";
 
 const LOCKS = new Set();
 const ADD2E_STATUS_IDS = {
@@ -61,9 +61,13 @@ function tokenDiagnostic(token, actor, label = "token") {
     tokenId: doc?.id ?? token?.id,
     actor: actor?.name,
     actorId: actor?.id,
+    actorUuid: actor?.uuid ?? null,
+    actorIsToken: actor?.isToken ?? null,
+    actorTokenId: actorTokenDocumentId(actor),
     actorLink: doc?.actorLink,
     tokenActor: tokenActor?.name ?? null,
     tokenActorId: tokenActor?.id ?? null,
+    tokenActorUuid: tokenActor?.uuid ?? null,
     tokenActorIsToken: tokenActor?.isToken ?? null,
     actorEffects: effectSummary(tokenActor)
   };
@@ -176,7 +180,7 @@ export function add2eVitalRegisterStatusEffects() {
     sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
     cleanup: false,
     statusIds: ADD2E_STATUS_IDS,
-    monsterMode: "foundry-toggle-status-effect",
+    monsterMode: "foundry-toggle-status-effect-token-isolated",
     characterMode: "foundry-toggle-status-effect",
     defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
     dead: statusDebug("dead"),
@@ -184,21 +188,52 @@ export function add2eVitalRegisterStatusEffects() {
   });
 }
 
+function tokenActorFor(token) {
+  return token?.actor ?? token?.document?.actor ?? token?.object?.actor ?? null;
+}
+
+function tokenDocumentId(token) {
+  const doc = token?.document ?? token;
+  return doc?.id ?? token?.id ?? null;
+}
+
+function actorTokenDocumentId(actor) {
+  return actor?.token?.id ?? actor?.token?.document?.id ?? actor?.token?.object?.id ?? null;
+}
+
+function tokenMatchesActor(actor, token) {
+  const doc = token?.document ?? token;
+  const tokenActor = tokenActorFor(token);
+  if (!actor || !doc) return false;
+
+  if (actor.isToken === true) {
+    const actorTokenId = actorTokenDocumentId(actor);
+    if (actorTokenId && doc.id === actorTokenId) return true;
+    if (actor.uuid && tokenActor?.uuid === actor.uuid) return true;
+    return tokenActor === actor;
+  }
+
+  if (doc.actorLink === true) {
+    return doc.actorId === actor.id || tokenActor?.id === actor.id || tokenActor === actor;
+  }
+
+  return false;
+}
+
 function actorTokens(actor) {
   const tokens = [];
+
   try { tokens.push(...(actor?.getActiveTokens?.(true, true) ?? [])); } catch (_err) {}
-  try { tokens.push(...(canvas?.tokens?.placeables ?? []).filter(t => t?.actor?.id === actor?.id || t?.document?.actorId === actor?.id)); } catch (_err) {}
+  try { tokens.push(...(canvas?.tokens?.placeables ?? []).filter(token => tokenMatchesActor(actor, token))); } catch (_err) {}
+
   const seen = new Set();
   return tokens.filter(token => {
+    if (!tokenMatchesActor(actor, token)) return false;
     const id = token?.document?.uuid ?? token?.id ?? token?.document?.id;
     if (!id || seen.has(id)) return false;
     seen.add(id);
     return !!token?.document;
   });
-}
-
-function tokenActorFor(token) {
-  return token?.actor ?? token?.document?.actor ?? token?.object?.actor ?? null;
 }
 
 async function syncMonsterTokenStatus(token, actor, status) {
@@ -268,15 +303,29 @@ async function syncToken(token, actor, status) {
   return { changed: false, action: "character-token-skipped" };
 }
 
+function combatantMatchesActor(combatant, actor) {
+  if (!combatant?.id || !actor) return false;
+
+  const tokenDoc = combatant.token?.document ?? combatant.token ?? null;
+
+  if (actor.isToken === true) {
+    const actorTokenId = actorTokenDocumentId(actor);
+    if (actorTokenId && combatant.tokenId === actorTokenId) return true;
+    if (actor.uuid && combatant.actor?.uuid === actor.uuid) return true;
+    return combatant.actor === actor;
+  }
+
+  if (tokenDoc?.actorLink === false) return false;
+  return combatant.actor?.id === actor.id || combatant.actorId === actor.id || tokenDoc?.actorId === actor.id;
+}
+
 function actorCombatants(actor) {
   const combats = [game.combat, ...add2eVitalArray(game.combats)].filter(Boolean);
   const out = [];
   const seen = new Set();
   for (const combat of combats) {
     for (const combatant of add2eVitalArray(combat?.combatants)) {
-      if (!combatant?.id) continue;
-      const same = combatant.actor?.id === actor?.id || combatant.actorId === actor?.id || combatant.token?.actorId === actor?.id;
-      if (!same) continue;
+      if (!combatantMatchesActor(combatant, actor)) continue;
       const key = `${combat.id}:${combatant.id}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -315,6 +364,9 @@ async function syncCombatants(actor, inactive, status) {
     console.log("[ADD2E][VITAL_STATUS][COMBATANT_SYNC]", {
       actor: actor?.name,
       actorId: actor?.id,
+      actorUuid: actor?.uuid ?? null,
+      actorIsToken: actor?.isToken ?? null,
+      actorTokenId: actorTokenDocumentId(actor),
       combatant: combatant.id,
       tokenId: combatant.tokenId,
       inactive,
@@ -351,7 +403,7 @@ async function syncTokensAndCombat(actor, status, preserveInactive) {
     tokenEffects,
     combatants,
     tokenCount: tokens.length,
-    monsterMode: add2eVitalIsMonster(actor) ? "foundry-toggle-status-effect" : "actor",
+    monsterMode: add2eVitalIsMonster(actor) ? "foundry-toggle-status-effect-token-isolated" : "actor",
     characterMode: add2eVitalIsMonster(actor) ? null : "foundry-toggle-status-effect",
     tokenResults
   };
@@ -375,6 +427,9 @@ export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {})
       reason,
       actor: actor.name,
       actorId: actor.id,
+      actorUuid: actor.uuid ?? null,
+      actorIsToken: actor.isToken ?? null,
+      actorTokenId: actorTokenDocumentId(actor),
       type: actor.type,
       isMonster,
       hp: add2eVitalReadHP(actor),
