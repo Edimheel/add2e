@@ -1,0 +1,49 @@
+name: Générer les rapports d’audit des sorts
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent-audit-sorts
+    paths:
+      - audit/tools/generate-spell-audit-reports.mjs
+      - audit/decoupage_fichier/*.json
+      - audit/reference/*.json
+      - .github/workflows/generate-spell-audit-reports.yml
+
+permissions:
+  contents: write
+
+jobs:
+  generate-reports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent-audit-sorts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate reports
+        run: node audit/tools/generate-spell-audit-reports.mjs
+
+      - name: Show generated report summary
+        run: |
+          ls -lh audit/rapports || true
+          node -e "const fs=require('fs'); const p='audit/spell-audit-status.json'; if(fs.existsSync(p)) console.log(fs.readFileSync(p,'utf8').slice(0,4000));"
+
+      - name: Commit generated reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audit/rapports/*.md audit/spell-audit-status.json
+          if git diff --cached --quiet; then
+            echo "Aucun rapport à committer."
+          else
+            git commit -m "Generate spell audit reports"
+            git push origin agent-audit-sorts
+          fi
