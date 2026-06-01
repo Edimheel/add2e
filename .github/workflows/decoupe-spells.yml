@@ -1,0 +1,41 @@
+name: Découper le fichier des sorts
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  decoupe-spells:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent-audit-sorts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run split script
+        run: node audit/decoupage_fichier/decoupe-spells.mjs fvtt-spells-all.json
+
+      - name: Show generated files
+        run: |
+          ls -lh audit/decoupage_fichier
+          node -e "const fs=require('fs'); const p='audit/decoupage_fichier/index.json'; if (fs.existsSync(p)) console.log(fs.readFileSync(p,'utf8').slice(0,4000));"
+
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audit/decoupage_fichier/*.json
+          if git diff --cached --quiet; then
+            echo "Aucun fichier découpé à committer."
+          else
+            git commit -m "Generate split spell audit files"
+            git push origin agent-audit-sorts
+          fi
