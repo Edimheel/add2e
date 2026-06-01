@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-01",
+  "generatedAt": "2026-06-01T21:20:15.212Z",
   "sourceOfTruth": "Manuel des joueurs AD&D 2e pour toutes les règles ADD2E",
   "branch": "agent-audit-sorts",
   "statusLegend": {
@@ -17,10 +17,13 @@
   "lots": {
     "clerc-niveau-1": {
       "status": "modele_valide",
-      "notes": "Lot déjà corrigé par l’utilisateur et utilisé comme modèle de structure et de comportement."
+      "notes": "Lot déjà corrigé par l’utilisateur et utilisé comme modèle de structure et de comportement.",
+      "rapport": "audit/rapports/clerc-niveau-1.md",
+      "export": "audit/decoupage_fichier/clerc-niveau-1.json",
+      "foundrySpells": 10
     },
     "clerc-niveau-2": {
-      "status": "audit_termine_corrections_a_preparer",
+      "status": "audit_genere_reference_presente",
       "reference": "audit/reference/manuel-joueurs-clerc-niveau-2.json",
       "rapport": "audit/rapports/clerc-niveau-2.md",
       "export": "audit/decoupage_fichier/clerc-niveau-2.json",
@@ -38,35 +41,176 @@
           "Vérifier ou créer l’image assets/icones/sorts/paralysie.webp",
           "Créer ou vérifier scripts/sorts/paralysie.js"
         ]
-      }
+      },
+      "foundrySpells": 11
     },
-    "clerc-niveau-3": { "status": "a_faire" },
-    "clerc-niveau-4": { "status": "a_faire" },
-    "clerc-niveau-5": { "status": "a_faire" },
-    "clerc-niveau-6": { "status": "a_faire" },
-    "clerc-niveau-7": { "status": "a_faire" },
-    "druide-niveau-1": { "status": "a_faire" },
-    "druide-niveau-2": { "status": "a_faire" },
-    "druide-niveau-3": { "status": "a_faire" },
-    "druide-niveau-4": { "status": "a_faire" },
-    "druide-niveau-5": { "status": "a_faire" },
-    "druide-niveau-6": { "status": "a_faire" },
-    "druide-niveau-7": { "status": "a_faire" },
-    "magicien-niveau-1": { "status": "a_faire" },
-    "magicien-niveau-2": { "status": "a_faire" },
-    "magicien-niveau-3": { "status": "a_faire" },
-    "magicien-niveau-4": { "status": "a_faire" },
-    "magicien-niveau-5": { "status": "a_faire" },
-    "magicien-niveau-6": { "status": "a_faire" },
-    "magicien-niveau-7": { "status": "a_faire" },
-    "magicien-niveau-8": { "status": "a_faire" },
-    "magicien-niveau-9": { "status": "a_faire" },
-    "illusionniste-niveau-1": { "status": "a_faire" },
-    "illusionniste-niveau-2": { "status": "a_faire" },
-    "illusionniste-niveau-3": { "status": "a_faire" },
-    "illusionniste-niveau-4": { "status": "a_faire" },
-    "illusionniste-niveau-5": { "status": "a_faire" },
-    "illusionniste-niveau-6": { "status": "a_faire" },
-    "illusionniste-niveau-7": { "status": "a_faire" }
+    "clerc-niveau-3": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/clerc-niveau-3.md",
+      "export": "audit/decoupage_fichier/clerc-niveau-3.json",
+      "foundrySpells": 11
+    },
+    "clerc-niveau-4": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/clerc-niveau-4.md",
+      "export": "audit/decoupage_fichier/clerc-niveau-4.json",
+      "foundrySpells": 8
+    },
+    "clerc-niveau-5": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/clerc-niveau-5.md",
+      "export": "audit/decoupage_fichier/clerc-niveau-5.json",
+      "foundrySpells": 9
+    },
+    "clerc-niveau-6": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/clerc-niveau-6.md",
+      "export": "audit/decoupage_fichier/clerc-niveau-6.json",
+      "foundrySpells": 9
+    },
+    "clerc-niveau-7": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/clerc-niveau-7.md",
+      "export": "audit/decoupage_fichier/clerc-niveau-7.json",
+      "foundrySpells": 10
+    },
+    "druide-niveau-1": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/druide-niveau-1.md",
+      "export": "audit/decoupage_fichier/druide-niveau-1.json",
+      "foundrySpells": 12
+    },
+    "druide-niveau-2": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/druide-niveau-2.md",
+      "export": "audit/decoupage_fichier/druide-niveau-2.json",
+      "foundrySpells": 10
+    },
+    "druide-niveau-3": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/druide-niveau-3.md",
+      "export": "audit/decoupage_fichier/druide-niveau-3.json",
+      "foundrySpells": 9
+    },
+    "druide-niveau-4": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/druide-niveau-4.md",
+      "export": "audit/decoupage_fichier/druide-niveau-4.json",
+      "foundrySpells": 10
+    },
+    "druide-niveau-5": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/druide-niveau-5.md",
+      "export": "audit/decoupage_fichier/druide-niveau-5.json",
+      "foundrySpells": 8
+    },
+    "druide-niveau-6": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/druide-niveau-6.md",
+      "export": "audit/decoupage_fichier/druide-niveau-6.json",
+      "foundrySpells": 9
+    },
+    "druide-niveau-7": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/druide-niveau-7.md",
+      "export": "audit/decoupage_fichier/druide-niveau-7.json",
+      "foundrySpells": 8
+    },
+    "magicien-niveau-1": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/magicien-niveau-1.md",
+      "export": "audit/decoupage_fichier/magicien-niveau-1.json",
+      "foundrySpells": 26
+    },
+    "magicien-niveau-2": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/magicien-niveau-2.md",
+      "export": "audit/decoupage_fichier/magicien-niveau-2.json",
+      "foundrySpells": 18
+    },
+    "magicien-niveau-3": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/magicien-niveau-3.md",
+      "export": "audit/decoupage_fichier/magicien-niveau-3.json",
+      "foundrySpells": 18
+    },
+    "magicien-niveau-4": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/magicien-niveau-4.md",
+      "export": "audit/decoupage_fichier/magicien-niveau-4.json",
+      "foundrySpells": 21
+    },
+    "magicien-niveau-5": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/magicien-niveau-5.md",
+      "export": "audit/decoupage_fichier/magicien-niveau-5.json",
+      "foundrySpells": 22
+    },
+    "magicien-niveau-6": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/magicien-niveau-6.md",
+      "export": "audit/decoupage_fichier/magicien-niveau-6.json",
+      "foundrySpells": 19
+    },
+    "magicien-niveau-7": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/magicien-niveau-7.md",
+      "export": "audit/decoupage_fichier/magicien-niveau-7.json",
+      "foundrySpells": 16
+    },
+    "magicien-niveau-8": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/magicien-niveau-8.md",
+      "export": "audit/decoupage_fichier/magicien-niveau-8.json",
+      "foundrySpells": 15
+    },
+    "magicien-niveau-9": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/magicien-niveau-9.md",
+      "export": "audit/decoupage_fichier/magicien-niveau-9.json",
+      "foundrySpells": 11
+    },
+    "illusionniste-niveau-1": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/illusionniste-niveau-1.md",
+      "export": "audit/decoupage_fichier/illusionniste-niveau-1.json",
+      "foundrySpells": 11
+    },
+    "illusionniste-niveau-2": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/illusionniste-niveau-2.md",
+      "export": "audit/decoupage_fichier/illusionniste-niveau-2.json",
+      "foundrySpells": 10
+    },
+    "illusionniste-niveau-3": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/illusionniste-niveau-3.md",
+      "export": "audit/decoupage_fichier/illusionniste-niveau-3.json",
+      "foundrySpells": 8
+    },
+    "illusionniste-niveau-4": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/illusionniste-niveau-4.md",
+      "export": "audit/decoupage_fichier/illusionniste-niveau-4.json",
+      "foundrySpells": 7
+    },
+    "illusionniste-niveau-5": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/illusionniste-niveau-5.md",
+      "export": "audit/decoupage_fichier/illusionniste-niveau-5.json",
+      "foundrySpells": 7
+    },
+    "illusionniste-niveau-6": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/illusionniste-niveau-6.md",
+      "export": "audit/decoupage_fichier/illusionniste-niveau-6.json",
+      "foundrySpells": 8
+    },
+    "illusionniste-niveau-7": {
+      "status": "reference_manquante",
+      "rapport": "audit/rapports/illusionniste-niveau-7.md",
+      "export": "audit/decoupage_fichier/illusionniste-niveau-7.json",
+      "foundrySpells": 5
+    }
   }
 }
