@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v13-token-only-monsters";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v14-monster-overlay-token-only";
 
 const LOCKS = new Set();
 
@@ -74,7 +74,7 @@ export function add2eVitalRegisterStatusEffects() {
     core: globalThis.ADD2E_VITAL_STATUS_CORE_VERSION,
     sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
     cleanup: false,
-    monsterMode: "token-only",
+    monsterMode: "token-only-overlay",
     defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
     dead: statusDebug("dead"),
     unconscious: statusDebug("unconscious")
@@ -104,6 +104,7 @@ async function syncToken(token, actor, status) {
   const doc = token?.document ?? token;
   if (!doc?.update) return false;
 
+  const isMonster = add2eVitalIsMonster(actor);
   const icon = desiredIcon(status);
   const before = add2eVitalArray(doc.effects ?? doc._source?.effects ?? []);
   const after = before.filter(value => value !== ADD2E_VITAL_STATUS.dead.icon && value !== ADD2E_VITAL_STATUS.unconscious.icon && !String(value ?? "").includes("add2e-monster-dead"));
@@ -113,7 +114,15 @@ async function syncToken(token, actor, status) {
   if (before.length !== after.length || before.some((value, index) => value !== after[index])) patch.effects = after;
 
   const overlay = doc.overlayEffect ?? doc._source?.overlayEffect ?? null;
-  if (overlay === ADD2E_VITAL_STATUS.dead.icon || overlay === ADD2E_VITAL_STATUS.unconscious.icon || String(overlay ?? "").includes("add2e-monster-dead")) patch.overlayEffect = null;
+  if (isMonster) {
+    if (status === "dead") {
+      if (overlay !== ADD2E_VITAL_STATUS.dead.icon) patch.overlayEffect = ADD2E_VITAL_STATUS.dead.icon;
+    } else if (overlay === ADD2E_VITAL_STATUS.dead.icon || overlay === ADD2E_VITAL_STATUS.unconscious.icon || String(overlay ?? "").includes("add2e-monster-dead")) {
+      patch.overlayEffect = null;
+    }
+  } else if (overlay === ADD2E_VITAL_STATUS.dead.icon || overlay === ADD2E_VITAL_STATUS.unconscious.icon || String(overlay ?? "").includes("add2e-monster-dead")) {
+    patch.overlayEffect = null;
+  }
 
   if (!Object.keys(patch).length) return false;
   await doc.update(patch, { add2eVitalStatusSync: true });
@@ -123,11 +132,14 @@ async function syncToken(token, actor, status) {
     token: doc.name,
     tokenId: doc.id,
     actorLink: doc.actorLink,
+    isMonster,
     status,
     icon,
     before,
+    overlayBefore: overlay,
     patch,
-    after: add2eVitalArray(doc.effects ?? doc._source?.effects ?? [])
+    after: add2eVitalArray(doc.effects ?? doc._source?.effects ?? []),
+    overlayAfter: doc.overlayEffect ?? doc._source?.overlayEffect ?? null
   });
   return true;
 }
@@ -190,7 +202,7 @@ async function syncTokensAndCombat(actor, status, preserveInactive) {
     }
   }
   const combatants = preserveInactive ? 0 : await syncCombatants(actor, status !== null, status);
-  return { tokenEffects, combatants, tokenCount: tokens.length, monsterMode: add2eVitalIsMonster(actor) ? "token-only" : "actor" };
+  return { tokenEffects, combatants, tokenCount: tokens.length, monsterMode: add2eVitalIsMonster(actor) ? "token-only-overlay" : "actor" };
 }
 
 export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {}) {
@@ -218,6 +230,7 @@ export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {})
       preserveInactive,
       cleanup: false,
       tokenActorEffect: false,
+      tokenOverlay: isMonster,
       state
     });
     return true;
