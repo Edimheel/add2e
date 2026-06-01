@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — États vitaux : synchronisation token / combat tracker.
-// Version : 2026-06-01-vital-status-split-sync-v2-monster-inactive-flag
+// Version : 2026-06-01-vital-status-split-sync-v3-monster-visual-icon
 // ============================================================================
 
 import {
@@ -16,8 +16,10 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v2-monster-inactive-flag";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v3-monster-visual-icon";
 
+const ADD2E_MONSTER_DEAD_VISUAL_ICON = "systems/add2e/assets/icons/add2e-monster-dead.svg";
+const ADD2E_VITAL_TOKEN_ICONS = new Set([...ADD2E_VITAL_ICONS, ADD2E_MONSTER_DEAD_VISUAL_ICON]);
 const ADD2E_VITAL_SYNC_LOCK = new Set();
 
 function add2eVitalMergeObject(base, patch) {
@@ -74,7 +76,8 @@ export function add2eVitalRegisterStatusEffects() {
     sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
     defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
     hasDead: CONFIG.statusEffects.some(effect => add2eVitalStatusAliases(effect).includes("dead")),
-    hasUnconscious: CONFIG.statusEffects.some(effect => add2eVitalStatusAliases(effect).includes("unconscious"))
+    hasUnconscious: CONFIG.statusEffects.some(effect => add2eVitalStatusAliases(effect).includes("unconscious")),
+    monsterDeadVisualIcon: ADD2E_MONSTER_DEAD_VISUAL_ICON
   });
 }
 
@@ -147,12 +150,12 @@ function add2eVitalCleanTokenEffects(effects) {
   const clean = [];
   const removed = [];
   for (const value of add2eVitalArray(effects)) {
-    if (ADD2E_VITAL_ICONS.has(value)) {
+    if (ADD2E_VITAL_TOKEN_ICONS.has(value)) {
       removed.push(value);
       continue;
     }
     const n = add2eVitalNorm(value);
-    if (n.includes("skull") || n.includes("unconscious") || n.includes("daze")) {
+    if (n.includes("skull") || n.includes("unconscious") || n.includes("daze") || n.includes("add2e_monster_dead")) {
       removed.push(value);
       continue;
     }
@@ -162,7 +165,7 @@ function add2eVitalCleanTokenEffects(effects) {
 }
 
 function add2eVitalIconForDesired(actor, desired) {
-  if (add2eVitalIsMonster(actor)) return desired === "dead" ? ADD2E_VITAL_STATUS.dead.icon : null;
+  if (add2eVitalIsMonster(actor)) return desired === "dead" ? ADD2E_MONSTER_DEAD_VISUAL_ICON : null;
   if (desired === "dead") return ADD2E_VITAL_STATUS.dead.icon;
   if (desired === "unconscious") return ADD2E_VITAL_STATUS.unconscious.icon;
   return null;
@@ -182,7 +185,7 @@ async function add2eVitalSetTokenEffects(token, actor, desired) {
   const patch = {};
 
   if (currentEffects.length !== cleanEffects.length || currentEffects.some((v, i) => v !== cleanEffects[i])) patch.effects = cleanEffects;
-  if (ADD2E_VITAL_ICONS.has(currentOverlay) || currentOverlayNorm.includes("skull") || currentOverlayNorm.includes("daze") || currentOverlayNorm.includes("unconscious")) patch.overlayEffect = null;
+  if (ADD2E_VITAL_TOKEN_ICONS.has(currentOverlay) || currentOverlayNorm.includes("skull") || currentOverlayNorm.includes("daze") || currentOverlayNorm.includes("unconscious") || currentOverlayNorm.includes("add2e_monster_dead")) patch.overlayEffect = null;
 
   if (!Object.keys(patch).length) return false;
   await doc.update(patch, { add2eVitalStatusSync: true });
@@ -313,6 +316,7 @@ export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {})
       trackerDefeated,
       preserveDefeated,
       monsterUsesAdd2eInactiveFlag: isMonster,
+      monsterDeadVisualIcon: isMonster ? ADD2E_MONSTER_DEAD_VISUAL_ICON : null,
       actorStatus,
       removed: (monsterCleanupBefore.removedActorEffects ?? 0) + (monsterCleanupAfter.removedActorEffects ?? 0),
       monsterCleanupBefore,
