@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v18-skip-stale-toggle-off";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v19-clear-recovered-character-inactive";
 
 const LOCKS = new Set();
 
@@ -74,6 +74,11 @@ function hasRealDeadEffect(actor) {
     const statuses = new Set(add2eVitalArray(e?.statuses ?? e?.system?.statuses ?? []).map(add2eVitalNorm));
     return statuses.has("dead") || add2eVitalNorm(e?.flags?.core?.statusId) === "dead" || e?.img === ADD2E_VITAL_STATUS.dead.icon || add2eVitalNorm(e?.name) === "mort";
   });
+}
+
+function isVitalInactiveReason(value) {
+  const reason = add2eVitalNorm(value);
+  return ["dead", "mort", "unconscious", "inconscient"].includes(reason);
 }
 
 export function add2eVitalRegisterStatusEffects() {
@@ -234,8 +239,15 @@ function actorCombatants(actor) {
   return out;
 }
 
-function hasInactive(actor) {
-  return actorCombatants(actor).some(combatant => combatant?.defeated === true || combatant?.flags?.core?.defeated === true || combatant?.flags?.add2e?.inactive === true);
+function shouldPreserveManualInactive(actor) {
+  return actorCombatants(actor).some(combatant => {
+    const add2e = combatant?.flags?.add2e ?? {};
+    const vitalStatus = add2e.vitalStatus;
+    const inactiveReason = add2e.inactiveReason;
+    const isVitalInactive = isVitalInactiveReason(vitalStatus) || isVitalInactiveReason(inactiveReason);
+    const inactive = combatant?.defeated === true || combatant?.flags?.core?.defeated === true || add2e.inactive === true;
+    return inactive && !isVitalInactive;
+  });
 }
 
 async function syncCombatants(actor, inactive, status) {
@@ -293,7 +305,7 @@ export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {})
     add2eVitalRegisterStatusEffects();
     const status = add2eVitalDesiredStatus(actor);
     const isMonster = add2eVitalIsMonster(actor);
-    const preserveInactive = !isMonster && hasInactive(actor) && status === null;
+    const preserveInactive = !isMonster && status === null && shouldPreserveManualInactive(actor);
     const state = await syncTokensAndCombat(actor, status, preserveInactive);
     console.log("[ADD2E][VITAL_STATUS][SYNC]", {
       reason,
