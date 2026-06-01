@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — États vitaux : synchronisation token / combat tracker.
-// Version : 2026-06-01-vital-status-split-sync-v1
+// Version : 2026-06-01-vital-status-split-sync-v2-monster-inactive-flag
 // ============================================================================
 
 import {
@@ -16,7 +16,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v1";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v2-monster-inactive-flag";
 
 const ADD2E_VITAL_SYNC_LOCK = new Set();
 
@@ -222,17 +222,48 @@ function add2eVitalActorHasDefeatedCombatant(actor) {
 
 async function add2eVitalSetDefeated(actor, defeated) {
   const combatants = add2eVitalCombatantsForActor(actor);
+  const isMonster = add2eVitalIsMonster(actor);
   let changed = 0;
+
   for (const combatant of combatants) {
     if (!combatant?.update) continue;
-    if (combatant.defeated === defeated) continue;
+
     try {
+      if (isMonster) {
+        const inactive = Boolean(defeated);
+        const currentInactive = combatant.flags?.add2e?.inactive === true;
+        const currentVital = combatant.flags?.add2e?.vitalStatus ?? null;
+        const wantedVital = inactive ? "dead" : null;
+        const same = combatant.defeated === false && currentInactive === inactive && currentVital === wantedVital;
+
+        if (same) continue;
+
+        await combatant.update({
+          defeated: false,
+          "flags.add2e.inactive": inactive,
+          "flags.add2e.inactiveReason": inactive ? "dead" : null,
+          "flags.add2e.vitalStatus": wantedVital
+        }, { add2eVitalStatusSync: true });
+
+        console.log("[ADD2E][VITAL_STATUS][MONSTER_INACTIVE_FLAG]", {
+          actor: actor?.name,
+          combatant: combatant.id,
+          inactive,
+          defeated: false,
+          vitalStatus: wantedVital
+        });
+        changed += 1;
+        continue;
+      }
+
+      if (combatant.defeated === defeated) continue;
       await combatant.update({ defeated }, { add2eVitalStatusSync: true });
       changed += 1;
     } catch (err) {
-      console.warn("[ADD2E][VITAL_STATUS][DEFEATED][WARN]", { actor: actor?.name, combatant: combatant?.id, defeated, err });
+      console.warn("[ADD2E][VITAL_STATUS][DEFEATED][WARN]", { actor: actor?.name, combatant: combatant?.id, defeated, isMonster, err });
     }
   }
+
   return changed;
 }
 
@@ -281,7 +312,7 @@ export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {})
       desired,
       trackerDefeated,
       preserveDefeated,
-      monsterSameFlowRule: isMonster,
+      monsterUsesAdd2eInactiveFlag: isMonster,
       actorStatus,
       removed: (monsterCleanupBefore.removedActorEffects ?? 0) + (monsterCleanupAfter.removedActorEffects ?? 0),
       monsterCleanupBefore,
