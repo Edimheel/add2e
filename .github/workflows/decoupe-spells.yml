@@ -2,6 +2,13 @@ name: Découper le fichier des sorts
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - agent-audit-sorts
+    paths:
+      - .github/workflows/decoupe-spells.yml
+      - audit/decoupage_fichier/decoupe-spells.mjs
+      - fvtt-spells-all.json
 
 permissions:
   contents: write
