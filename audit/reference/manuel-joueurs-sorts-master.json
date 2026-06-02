@@ -1,0 +1,11 @@
+{
+  "source": {
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "reference": "Manuel des joueurs AD&D 2e",
+    "note": "Le Manuel des joueurs est la source de vérité prioritaire pour toutes les règles ADD2E."
+  },
+  "mode": "skeleton_only",
+  "defaultReferenceStatus": "reference_a_completer",
+  "preserveExistingReferences": true,
+  "lots": {}
+}
