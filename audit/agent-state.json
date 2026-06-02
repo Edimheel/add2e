@@ -1,7 +1,7 @@
 {
   "agentName": "add2e-spell-agent",
   "createdAt": "2026-06-02",
-  "lastRunAt": "2026-06-02T19:10:39.441Z",
+  "lastRunAt": "2026-06-02T19:38:42.175Z",
   "lastRunStatus": "ok_finished",
   "currentLot": null,
   "nextLot": "magicien-niveau-1",
@@ -11,7 +11,7 @@
     {
       "script": "audit/tools/generate-reference-files.mjs",
       "status": "ok",
-      "output": "Références créées : 0\nRéférences enrichies : 26\nRéférences détaillées conservées : 4\nLots sans liste maître : 0"
+      "output": "Références créées : 0\nRéférences enrichies : 25\nRéférences détaillées conservées : 5\nLots sans liste maître : 0"
     },
     {
       "script": "audit/tools/generate-spell-audit-reports.mjs",

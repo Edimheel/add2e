@@ -1,6 +1,6 @@
 # Agent run
 
-Run at: 2026-06-02T19:10:39.441Z
+Run at: 2026-06-02T19:38:42.175Z
 Status: ok_finished
 Run completed: true
 Mode: audit_and_plan
@@ -19,8 +19,8 @@ Status: ok
 
 ```text
 Références créées : 0
-Références enrichies : 26
-Références détaillées conservées : 4
+Références enrichies : 25
+Références détaillées conservées : 5
 Lots sans liste maître : 0
 ```
 

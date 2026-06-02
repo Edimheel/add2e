@@ -520,7 +520,7 @@
     },
     "clerc-niveau-5": {
       "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-5.json",
-      "status": "reference_liste_noms_complete_regles_a_completer"
+      "status": "detailed_reference_preserved"
     },
     "clerc-niveau-6": {
       "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-6.json",
@@ -623,5 +623,5 @@
       "status": "reference_liste_noms_complete_regles_a_completer"
     }
   },
-  "generatedAt": "2026-06-02T19:10:39.326Z"
+  "generatedAt": "2026-06-02T19:38:42.061Z"
 }
