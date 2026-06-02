@@ -1,7 +1,7 @@
 {
   "agentName": "add2e-spell-agent",
   "createdAt": "2026-06-02",
-  "lastRunAt": "2026-06-02T07:52:25.274Z",
+  "lastRunAt": "2026-06-02T08:15:45.109Z",
   "lastRunStatus": "ok_finished",
   "currentLot": null,
   "nextLot": "clerc-niveau-1",
@@ -242,8 +242,8 @@
     "Workflow trigger requested from chat.",
     "No logic change."
   ],
-  "mode": "audit_and_plan",
-  "allowProductionWrites": false,
+  "mode": "safe_fix",
+  "allowProductionWrites": true,
   "runCompleted": true,
   "totalLots": 30,
   "lotsWithFindingsCount": 27,

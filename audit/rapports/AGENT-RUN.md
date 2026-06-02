@@ -1,10 +1,10 @@
 # Agent run
 
-Run at: 2026-06-02T07:52:25.274Z
+Run at: 2026-06-02T08:15:45.109Z
 Status: ok_finished
 Run completed: true
-Mode: audit_and_plan
-Production writes: false
+Mode: safe_fix
+Production writes: true
 Total lots: 30
 Lots with findings: 27
 Planned actions: 27
