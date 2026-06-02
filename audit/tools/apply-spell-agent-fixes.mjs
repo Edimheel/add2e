@@ -9,7 +9,6 @@ const root = path.resolve(__dirname, "../..");
 const sourcePath = path.join(root, "fvtt-spells-all.json");
 const referenceDir = path.join(root, "audit/reference");
 const reportPath = path.join(root, "audit/rapports/AGENT-FIXES.md");
-const onUseDir = path.join(root, "scripts/sorts");
 
 const CLASS_LABELS = {
   clerc: "Clerc",
@@ -41,7 +40,9 @@ function normalize(value) {
 
 function readJson(filePath, fallback = null) {
   if (!fs.existsSync(filePath)) return fallback;
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  const raw = fs.readFileSync(filePath, "utf8");
+  if (!raw.trim()) throw new Error(`${filePath} is empty or unreadable`);
+  return JSON.parse(raw);
 }
 
 function writeJson(filePath, data) {
@@ -123,14 +124,40 @@ function uniqueId(prefix, existingIds) {
   throw new Error("Unable to generate id");
 }
 
+function buildOnUseContent(spellName) {
+  const escaped = String(spellName).replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+  return [
+    `// OnUse ADD2E genere automatiquement pour ${spellName}`,
+    "// Compatible Foundry V13/V14/V15.",
+    "// Retour attendu: true = sort consomme, false = sort non consomme.",
+    "",
+    "try {",
+    `  const sortName = item?.name ?? "${escaped}";`,
+    "  const actorName = actor?.name ?? token?.actor?.name ?? \"acteur\";",
+    "  const message = \"<p><strong>\" + sortName + \"</strong></p><p>\" + actorName + \" lance le sort. Les effets precis restent a appliquer selon le Manuel des joueurs AD&D 2e.</p>\";",
+    "  if (globalThis.ChatMessage?.create) {",
+    "    await ChatMessage.create({",
+    "      speaker: ChatMessage.getSpeaker ? ChatMessage.getSpeaker({ actor }) : undefined,",
+    "      content: message",
+    "    });",
+    "  }",
+    "  globalThis.ui?.notifications?.info?.(sortName + \" lance.\");",
+    "  return true;",
+    "} catch (error) {",
+    "  console.error(\"[ADD2E][SORT][ONUSE_AUTO]\", error);",
+    "  globalThis.ui?.notifications?.error?.(\"Erreur lors de l'execution du sort.\");",
+    "  return false;",
+    "}",
+    ""
+  ].join("\n");
+}
+
 function ensureOnUseScript(spellName, relativePath, createdScripts) {
   const repoPath = relativePath.replace(/^systems\/add2e\//, "");
   const fullPath = path.join(root, repoPath);
   if (fs.existsSync(fullPath)) return false;
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-  const safeName = spellName.replace(/`/g, "'");
-  const content = `// OnUse ADD2E genere automatiquement pour ${safeName}\n// Compatible Foundry V13/V14/V15.\n// Retour attendu: true = sort consomme, false = sort non consomme.\n\ntry {\n  const sortName = item?.name ?? "${safeName}";\n  const actorName = actor?.name ?? token?.actor?.name ?? "acteur";\n  const message = `<p><strong>${'${sortName}'}</strong></p><p>${'${actorName}'} lance le sort. Les effets precis restent a appliquer selon le Manuel des joueurs AD&D 2e.</p>`;\n  if (globalThis.ChatMessage?.create) {\n    await ChatMessage.create({\n      speaker: ChatMessage.getSpeaker ? ChatMessage.getSpeaker({ actor }) : undefined,\n      content: message\n    });\n  }\n  globalThis.ui?.notifications?.info?.(`${'${sortName}'} lance.`);\n  return true;\n} catch (error) {\n  console.error("[ADD2E][SORT][ONUSE_AUTO]", error);\n  globalThis.ui?.notifications?.error?.("Erreur lors de l'execution du sort.");\n  return false;\n}\n`;
-  fs.writeFileSync(fullPath, content, "utf8");
+  fs.writeFileSync(fullPath, buildOnUseContent(spellName), "utf8");
   createdScripts.push(repoPath);
   return true;
 }
@@ -195,9 +222,7 @@ function main() {
   const createdScripts = [];
   const createdSpells = [];
   const renamedSpells = [];
-  const ensuredOnUse = [];
 
-  const reports = [];
   const referenceFiles = fs.readdirSync(referenceDir).filter((file) => /^manuel-joueurs-.*\.json$/.test(file) && file !== "manuel-joueurs-sorts-master.json");
 
   for (const file of referenceFiles) {
@@ -221,7 +246,8 @@ function main() {
           match = fuzzy[0];
           const before = match.name;
           match.name = expected.nom;
-          if (match.system?.nom) match.system.nom = expected.nom;
+          match.system ||= {};
+          if (match.system.nom) match.system.nom = expected.nom;
           for (const effect of match.effects || []) if (effect?.name === before) effect.name = expected.nom;
           renamedSpells.push(`${lotKey}: ${before} -> ${expected.nom}`);
         }
@@ -240,7 +266,7 @@ function main() {
         match.system.onUse = onUse;
         match.system.onuse = onUse;
         match.system.on_use = onUse;
-        if (ensureOnUseScript(match.name, onUse, createdScripts)) ensuredOnUse.push(`${match.name}: ${onUse}`);
+        ensureOnUseScript(match.name, onUse, createdScripts);
       }
     }
   }
