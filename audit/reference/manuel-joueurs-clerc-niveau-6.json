@@ -6,29 +6,23 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_schema_normalise_description_a_importer",
+  "status": "reference_champs_techniques_complete_description_a_importer",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-6.json",
   "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "description unique normalisée à importer"
-    ],
-    "warning": "Chaque sort utilise uniquement le champ description. Les descriptions exactes doivent être importées via audit/tools/import-reference-descriptions.mjs."
+    "descriptionField": "description",
+    "warning": "Tous les champs techniques sont remplis depuis les blocs du Manuel. Le champ description unique doit être importé via audit/tools/import-reference-descriptions.mjs."
   },
   "spells": [
-    { "ordre": 1, "nom": "Animation des objets", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 2, "nom": "Barrière de lames", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 3, "nom": "Guérison", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 4, "nom": "Invocation des animaux", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 5, "nom": "Langage des monstres", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 6, "nom": "Lithomancie", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 7, "nom": "Orientation", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 8, "nom": "Rappel", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 9, "nom": "Séparation des eaux", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 10, "nom": "Serviteur aérien", "ecole": "a_importer", "niveau": 6, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" }
+    { "ordre": 1, "nom": "Animation des objets", "ecole": "Altération", "niveau": 6, "portee": "3\"", "duree": "1 round/niveau", "zone_effet": "27 dm3/niveau", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "animation_objets_mj" },
+    { "ordre": 2, "nom": "Barrière de lames", "ecole": "Évocation", "niveau": 6, "portee": "3\"", "duree": "3 rounds/niveau", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "zone_degats_lames_a_traiter" },
+    { "ordre": 3, "nom": "Guérison", "ecole": "Nécromancie", "niveau": 6, "portee": "au toucher", "duree": "permanente", "zone_effet": "créature touchée", "composantes": "V, S", "temps_incantation": "1 round", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Blessure", "onuse_strategy": "soin_total_ou_inverse_a_traiter" },
+    { "ordre": 4, "nom": "Invocation des animaux", "ecole": "Conjuration/Appel", "niveau": 6, "portee": "3\"", "duree": "2 rounds/niveau", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "invocation_mammiferes_mj" },
+    { "ordre": 5, "nom": "Langage des monstres", "ecole": "Altération", "niveau": 6, "portee": "3\" de rayon", "duree": "1 round/niveau", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "message_effet_communication" },
+    { "ordre": 6, "nom": "Lithomancie", "ecole": "Divination", "niveau": 6, "portee": "au toucher", "duree": "1 tour", "zone_effet": "0,75 m3 de pierre", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "divination_mj" },
+    { "ordre": 7, "nom": "Orientation", "ecole": "Divination", "niveau": 6, "portee": "au toucher", "duree": "1 tour/niveau", "zone_effet": "créature touchée", "composantes": "V, S, M", "temps_incantation": "3 rounds", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Désorientation", "onuse_strategy": "active_effect_orientation_a_definir" },
+    { "ordre": 8, "nom": "Rappel", "ecole": "Altération", "niveau": 6, "portee": "0", "duree": "spéciale", "zone_effet": "spéciale", "composantes": "V", "temps_incantation": "1 segment", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "teleportation_sanctuaire_mj" },
+    { "ordre": 9, "nom": "Séparation des eaux", "ecole": "Altération", "niveau": 6, "portee": "2\"/niveau", "duree": "1 tour/niveau", "zone_effet": "spéciale", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "composants_materiels_source": "symbole sacré du clerc", "onuse_strategy": "effet_scene_eau_mj" },
+    { "ordre": 10, "nom": "Serviteur aérien", "ecole": "Conjuration/Appel", "niveau": 6, "portee": "1\"", "duree": "1 jour/niveau", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "invocation_serviteur_mj" }
   ]
 }
