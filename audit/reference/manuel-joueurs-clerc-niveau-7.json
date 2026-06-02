@@ -2,11 +2,11 @@
   "source": {
     "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
     "reference": "Manuel des joueurs AD&D 2e",
-    "classe": "clerc",
+    "classe": "Clerc",
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_schema_normalise_description_a_importer",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-7.json",
   "rules": {
@@ -15,80 +15,20 @@
       "classe",
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
+      "description unique normalisée à importer"
     ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+    "warning": "Chaque sort utilise uniquement le champ description. Les descriptions exactes doivent être importées via audit/tools/import-reference-descriptions.mjs."
   },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Contrôle du climat",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Marche des vents",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Parole sacrée/maudite",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Régénération",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Restauration",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Résurrection",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Seuil",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Sort astral",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Symbole",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Tremblement de terre",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    { "ordre": 1, "nom": "Contrôle du climat", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 2, "nom": "Marche des vents", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 3, "nom": "Parole sacrée/maudite", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 4, "nom": "Régénération", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 5, "nom": "Restauration", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 6, "nom": "Résurrection", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 7, "nom": "Seuil", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 8, "nom": "Sort astral", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 9, "nom": "Symbole", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 10, "nom": "Tremblement de terre", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" }
   ]
 }
