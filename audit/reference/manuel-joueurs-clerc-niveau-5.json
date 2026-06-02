@@ -2,11 +2,11 @@
   "source": {
     "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
     "reference": "Manuel des joueurs AD&D 2e",
-    "classe": "clerc",
+    "classe": "Clerc",
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_schema_normalise_description_a_importer",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-5.json",
   "rules": {
@@ -15,80 +15,20 @@
       "classe",
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
+      "description unique normalisée à importer"
     ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+    "warning": "Chaque sort utilise uniquement le champ description. Les descriptions exactes doivent être importées via audit/tools/import-reference-descriptions.mjs."
   },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Changement de plan",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Communion",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Dissipation du mal",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Expiation",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Fléau d'insectes",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Pilier de feu",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Quête religieuse",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Rappel à la vie",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Soin ultime",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Vision réelle",
-      "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    { "ordre": 1, "nom": "Changement de plan", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 2, "nom": "Communion", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 3, "nom": "Dissipation du mal", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 4, "nom": "Expiation", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 5, "nom": "Fléau d'insectes", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 6, "nom": "Pilier de feu", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 7, "nom": "Quête religieuse", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 8, "nom": "Rappel à la vie", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 9, "nom": "Soin ultime", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
+    { "ordre": 10, "nom": "Vision réelle", "ecole": "a_importer", "niveau": 5, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" }
   ]
 }
