@@ -57,6 +57,17 @@ function chooseNextLot(config, lotReports) {
   }) || order[0] || null;
 }
 
+function plannedAction(entry) {
+  return {
+    lot: entry.lot,
+    expected: entry.expected,
+    foundry: entry.foundry,
+    missing: entry.missing || 0,
+    nameDiffs: entry.nameDiffs || 0,
+    action: "prepare_safe_correction_plan"
+  };
+}
+
 function main() {
   fs.mkdirSync(reportsDir, { recursive: true });
 
@@ -72,24 +83,24 @@ function main() {
   const nextLot = chooseNextLot(config, lotReports);
   const blockedLots = lotReports.filter((entry) => entry.status !== "report_ok").map((entry) => entry.lot);
   const lotsWithFindings = lotReports.filter((entry) => entry.status === "report_ok" && ((entry.missing || 0) > 0 || (entry.nameDiffs || 0) > 0));
+  const plannedActions = lotsWithFindings.map(plannedAction);
 
   const state = {
     ...previousState,
     agentName: config.agentName || "add2e-spell-agent",
     lastRunAt: new Date().toISOString(),
-    lastRunStatus: "ok",
+    lastRunStatus: "ok_finished",
+    runCompleted: true,
     mode: config.mode || "audit_and_plan",
     allowProductionWrites: Boolean(config.allowProductionWrites),
+    totalLots: lots.length,
+    lotsWithFindingsCount: lotsWithFindings.length,
+    plannedActionCount: plannedActions.length,
     currentLot: null,
     nextLot,
     blockedLots,
     safeActionsDone: actions,
-    productionActionsPlanned: lotsWithFindings.slice(0, 10).map((entry) => ({
-      lot: entry.lot,
-      missing: entry.missing || 0,
-      nameDiffs: entry.nameDiffs || 0,
-      action: "prepare_safe_correction_plan"
-    }))
+    productionActionsPlanned: plannedActions
   };
 
   writeJson(statePath, state);
@@ -98,8 +109,13 @@ function main() {
   lines.push("# Agent run");
   lines.push("");
   lines.push(`Run at: ${state.lastRunAt}`);
+  lines.push(`Status: ${state.lastRunStatus}`);
+  lines.push(`Run completed: ${state.runCompleted}`);
   lines.push(`Mode: ${state.mode}`);
   lines.push(`Production writes: ${state.allowProductionWrites}`);
+  lines.push(`Total lots: ${state.totalLots}`);
+  lines.push(`Lots with findings: ${state.lotsWithFindingsCount}`);
+  lines.push(`Planned actions: ${state.plannedActionCount}`);
   lines.push(`Next lot: ${nextLot || "none"}`);
   lines.push("");
   lines.push("## Actions");
@@ -115,7 +131,7 @@ function main() {
   }
   fs.writeFileSync(runReportPath, `${lines.join("\n")}\n`, "utf8");
 
-  console.log(`Agent run complete. Next lot: ${nextLot || "none"}`);
+  console.log(`Agent run complete. Findings: ${lotsWithFindings.length}. Next lot: ${nextLot || "none"}`);
 }
 
 main();
