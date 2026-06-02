@@ -1,6 +1,6 @@
 name: Générer les rapports d’audit des sorts
 
-# Trigger refresh: references skeletons are now available.
+# Trigger refresh: enriched references are now available.
 
 on:
   workflow_dispatch:
