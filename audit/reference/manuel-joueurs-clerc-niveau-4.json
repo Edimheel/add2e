@@ -2,11 +2,11 @@
   "source": {
     "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
     "reference": "Manuel des joueurs AD&D 2e",
-    "classe": "clerc",
+    "classe": "Clerc",
     "niveau": 4,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_blocs_techniques_partielle_description_a_completer",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-4.json",
   "rules": {
@@ -15,80 +15,175 @@
       "classe",
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
+      "école",
+      "portée",
+      "durée",
+      "zone d'effet",
+      "composantes",
+      "temps d'incantation",
+      "jet de sauvegarde"
     ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+    "notIncludedYet": [
+      "description complète",
+      "composants matériels détaillés",
+      "stratégie onUse détaillée"
+    ],
+    "warning": "Les sorts Langue et Protection contre le mal sur 3 m demandent une vérification complémentaire du bloc technique avant patch JSON."
   },
   "spells": [
     {
       "ordre": 1,
       "nom": "Abaissement des eaux",
+      "ecole": "Altération",
+      "inverse": "Élévation des eaux",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "12\"",
+      "duree": "1 tour/niveau",
+      "zone_effet": "1\" x 1\"/niveau",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 tour",
+      "jet_sauvegarde": "aucun",
+      "source_page": 49,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "effet_scene_ou_message_a_definir_depuis_description"
     },
     {
       "ordre": 2,
       "nom": "Bâtons à serpents",
+      "ecole": "Altération",
+      "inverse": "Serpents à bâtons",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "3\"",
+      "duree": "2 rounds/niveau",
+      "zone_effet": "27 m3",
+      "composantes": "V, S, M",
+      "temps_incantation": "7 segments",
+      "jet_sauvegarde": "aucun",
+      "source_page": 49,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "creation_acteurs_ou_message_a_definir_depuis_description"
     },
     {
       "ordre": 3,
       "nom": "Contre-poison",
+      "ecole": "Altération",
+      "inverse": "Poison",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "au toucher",
+      "duree": "permanente",
+      "zone_effet": "créature touchée ou 27 dm3 de substance/2 niveaux",
+      "composantes": "V, S",
+      "temps_incantation": "7 segments",
+      "jet_sauvegarde": "aucun",
+      "source_page": 49,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "suppression_etat_poison_ou_application_inverse_a_definir"
     },
     {
       "ordre": 4,
       "nom": "Détection des mensonges",
+      "ecole": "Divination",
+      "inverse": "Indétection des mensonges",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "3\"",
+      "duree": "1 round/niveau",
+      "zone_effet": "une personne",
+      "composantes": "V, S, M",
+      "temps_incantation": "7 segments",
+      "jet_sauvegarde": "aucun",
+      "source_page": 49,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "message_divination_a_definir_depuis_description"
     },
     {
       "ordre": 5,
       "nom": "Divination",
+      "ecole": "Divination",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "0",
+      "duree": "spéciale",
+      "zone_effet": "spéciale",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 tour",
+      "jet_sauvegarde": "aucun",
+      "source_page": 49,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "message_divination_a_definir_depuis_description"
     },
     {
       "ordre": 6,
       "nom": "Exorcisme",
+      "ecole": "Abjuration",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "1\"",
+      "duree": "permanente",
+      "zone_effet": "une créature ou un objet",
+      "composantes": "V, S, M",
+      "temps_incantation": "1-100+ tours",
+      "jet_sauvegarde": "aucun",
+      "source_page": 50,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "test_de_succes_et_suppression_effets_possession_a_definir"
     },
     {
       "ordre": 7,
       "nom": "Langage des plantes",
+      "ecole": "Altération",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "0",
+      "duree": "1 round/niveau",
+      "zone_effet": "cercle de 6\" de diamètre",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 tour",
+      "jet_sauvegarde": "aucun",
+      "source_page": 50,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "message_roleplay_et_effet_information_a_definir"
     },
     {
       "ordre": 8,
       "nom": "Langue",
+      "ecole": "Altération",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "a_verifier_manuellement",
+      "duree": "a_verifier_manuellement",
+      "zone_effet": "a_verifier_manuellement",
+      "composantes": "a_verifier_manuellement",
+      "temps_incantation": "a_verifier_manuellement",
+      "jet_sauvegarde": "a_verifier_manuellement",
+      "status": "reference_bloc_technique_a_verifier_manuellement",
+      "onuse_strategy": "bloquer_patch_json_jusqua_verification"
     },
     {
       "ordre": 9,
       "nom": "Protection contre le mal sur 3 m",
+      "ecole": "Abjuration",
+      "inverse": "Protection contre le bien sur 3 m",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "a_verifier_manuellement",
+      "duree": "a_verifier_manuellement",
+      "zone_effet": "a_verifier_manuellement",
+      "composantes": "a_verifier_manuellement",
+      "temps_incantation": "a_verifier_manuellement",
+      "jet_sauvegarde": "a_verifier_manuellement",
+      "status": "reference_bloc_technique_a_verifier_manuellement",
+      "onuse_strategy": "bloquer_patch_json_jusqua_verification"
     },
     {
       "ordre": 10,
       "nom": "Soins majeurs",
+      "ecole": "Nécromancie",
+      "inverse": "Blessures majeures",
       "niveau": 4,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "au toucher",
+      "duree": "permanente",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S",
+      "temps_incantation": "7 segments",
+      "jet_sauvegarde": "aucun",
+      "source_page": 50,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "soin_ou_blessure_inverse_a_definir_depuis_description"
     }
   ]
 }
