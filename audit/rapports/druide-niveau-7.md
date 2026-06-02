@@ -1,6 +1,6 @@
 # Audit automatique — druide-niveau-7
 
-Généré le : 2026-06-01T21:26:37.937Z
+Généré le : 2026-06-02T06:26:23.296Z
 
 ## Fichiers
 
