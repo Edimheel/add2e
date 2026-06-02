@@ -1,17 +1,91 @@
 {
   "agentName": "add2e-spell-agent",
   "createdAt": "2026-06-02",
-  "lastRunAt": "2026-06-02T07:33:34.165Z",
+  "lastRunAt": "2026-06-02T07:37:15.184Z",
   "lastRunStatus": "ok",
   "currentLot": null,
   "nextLot": "clerc-niveau-1",
   "completedLots": [],
   "blockedLots": [],
-  "safeActionsDone": [],
-  "productionActionsPlanned": [],
+  "safeActionsDone": [
+    {
+      "script": "audit/tools/generate-reference-files.mjs",
+      "status": "ok",
+      "output": "Références créées : 0\nRéférences enrichies : 28\nRéférences détaillées conservées : 2\nLots sans liste maître : 0"
+    },
+    {
+      "script": "audit/tools/generate-spell-audit-reports.mjs",
+      "status": "ok",
+      "output": "Rapports générés : 30\nRéférences présentes : 30\nRéférences manquantes : 0"
+    }
+  ],
+  "productionActionsPlanned": [
+    {
+      "lot": "clerc-niveau-1",
+      "missing": 4,
+      "nameDiffs": 0,
+      "action": "prepare_safe_correction_plan"
+    },
+    {
+      "lot": "clerc-niveau-2",
+      "missing": 3,
+      "nameDiffs": 1,
+      "action": "prepare_safe_correction_plan"
+    },
+    {
+      "lot": "clerc-niveau-3",
+      "missing": 2,
+      "nameDiffs": 0,
+      "action": "prepare_safe_correction_plan"
+    },
+    {
+      "lot": "clerc-niveau-4",
+      "missing": 4,
+      "nameDiffs": 0,
+      "action": "prepare_safe_correction_plan"
+    },
+    {
+      "lot": "clerc-niveau-5",
+      "missing": 2,
+      "nameDiffs": 0,
+      "action": "prepare_safe_correction_plan"
+    },
+    {
+      "lot": "clerc-niveau-6",
+      "missing": 1,
+      "nameDiffs": 1,
+      "action": "prepare_safe_correction_plan"
+    },
+    {
+      "lot": "clerc-niveau-7",
+      "missing": 1,
+      "nameDiffs": 2,
+      "action": "prepare_safe_correction_plan"
+    },
+    {
+      "lot": "druide-niveau-2",
+      "missing": 2,
+      "nameDiffs": 0,
+      "action": "prepare_safe_correction_plan"
+    },
+    {
+      "lot": "druide-niveau-3",
+      "missing": 3,
+      "nameDiffs": 0,
+      "action": "prepare_safe_correction_plan"
+    },
+    {
+      "lot": "druide-niveau-4",
+      "missing": 3,
+      "nameDiffs": 0,
+      "action": "prepare_safe_correction_plan"
+    }
+  ],
   "manualTrigger": "2026-06-02T20:trigger-001",
   "notes": [
     "Workflow trigger requested from chat.",
     "No logic change."
-  ]
+  ],
+  "mode": "audit_and_plan",
+  "allowProductionWrites": false
 }
