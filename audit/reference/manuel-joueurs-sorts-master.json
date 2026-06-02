@@ -504,7 +504,7 @@
   "lotsStatus": {
     "clerc-niveau-1": {
       "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-1.json",
-      "status": "reference_liste_noms_complete_regles_a_completer"
+      "status": "detailed_reference_preserved"
     },
     "clerc-niveau-2": {
       "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-2.json",
@@ -623,5 +623,5 @@
       "status": "reference_liste_noms_complete_regles_a_completer"
     }
   },
-  "generatedAt": "2026-06-02T16:48:41.902Z"
+  "generatedAt": "2026-06-02T19:09:35.938Z"
 }
