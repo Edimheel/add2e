@@ -6,11 +6,131 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_completer",
-  "expectedCount": null,
+  "status": "reference_liste_noms_complete_regles_a_completer",
+  "expectedCount": 16,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-7.json",
   "rules": {
-    "warning": "Squelette généré automatiquement. Ne pas utiliser comme référence de règle tant que les données du Manuel des joueurs ne sont pas complétées et vérifiées."
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
   },
-  "spells": []
+  "spells": [
+    {
+      "ordre": 1,
+      "nom": "Boule de feu à retardement",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 2,
+      "nom": "Cacodémon",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 3,
+      "nom": "Charme-plantes",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 4,
+      "nom": "Disparition",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 5,
+      "nom": "Duo-dimension",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 6,
+      "nom": "Épée de Mordenkainen",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 7,
+      "nom": "Inversion de la gravité",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 8,
+      "nom": "Invisibilité de masse",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 9,
+      "nom": "Invocation de monstre V",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 10,
+      "nom": "Invocation instantanée de Drawmij",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 11,
+      "nom": "Mot de pouvoir : « étourdissement »",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 12,
+      "nom": "Poigne de Bigby",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 13,
+      "nom": "Porte de phase",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 14,
+      "nom": "Simulacre",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 15,
+      "nom": "Souhait mineur",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 16,
+      "nom": "Statue",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    }
+  ]
 }

@@ -27,35 +27,601 @@
     ]
   },
   "lots": {
-    "clerc-niveau-1": ["Apaisement", "Aquagenèse", "Bénédiction", "Détection de la magie", "Détection du mal", "Injonction", "Lumière", "Protection contre le mal", "Purification de l'eau et des aliments", "Résistance au froid", "Sanctuaire", "Soins mineurs"],
-    "clerc-niveau-2": ["Augure", "Cantique", "Charme-serpents", "Détection des charmes", "Détection des pièges", "Langage animal", "Marteau spirituel", "Paralysie", "Perception des alignements", "Résistance au feu", "Retardement du poison", "Silence sur 5 mètres"],
-    "clerc-niveau-3": ["Catalepsie", "Désenvoûtement", "Dissipation de la magie", "Glyphe de garde", "Guérison de la cécité", "Guérison des maladies", "Localisation d'objets", "Lumière éternelle", "Manne", "Nécro-animation", "Nécromancie", "Prière"],
-    "clerc-niveau-4": ["Abaissement des eaux", "Bâtons à serpents", "Contre-poison", "Détection des mensonges", "Divination", "Exorcisme", "Langage des plantes", "Langue", "Protection contre le mal sur 3 m", "Soins majeurs"],
-    "clerc-niveau-5": ["Changement de plan", "Communion", "Dissipation du mal", "Expiation", "Fléau d'insectes", "Pilier de feu", "Quête religieuse", "Rappel à la vie", "Soin ultime", "Vision réelle"],
-    "clerc-niveau-6": ["Animation des objets", "Barrière de lames", "Guérison", "Invocation des animaux", "Langage des monstres", "Lithomancie", "Orientation", "Rappel", "Séparation des eaux", "Serviteur aérien"],
-    "clerc-niveau-7": ["Contrôle du climat", "Marche des vents", "Parole sacrée/maudite", "Régénération", "Restauration", "Résurrection", "Seuil", "Sort astral", "Symbole", "Tremblement de terre"],
-    "druide-niveau-1": ["Amitié animale", "Aura féérique", "Détection de la magie", "Détection des pièges sylvestres", "Enchevêtrement", "Invisibilité aux animaux", "Langage animal", "Localisation des animaux", "Passage sans trace", "Prévision du temps", "Purification de l'eau", "Shillelagh"],
-    "druide-niveau-2": ["Aquagenèse", "Catalepsie", "Charme-personnes ou mammifères", "Croc-en-jambe", "Distorsion du bois", "Flamme", "Localisation des plantes", "Métal brûlant", "Obscurcissement", "Peau d'écorce", "Piège à feu", "Soins mineurs"],
-    "druide-niveau-3": ["Arbre", "Contre-poison", "Embroussaillement", "Guérison des maladies", "Invocation de la foudre", "Invocation d'insectes", "Lithomorphose", "Paralysie animale", "Piège sylvestre", "Protection contre le feu", "Pyrotechnie", "Respiration aquatique"],
-    "druide-niveau-4": ["Contrôle de la température sur 3 m", "Dissipation de la magie", "Embrasement", "Forêt hallucinatoire", "Invocation animale I", "Invocation des créatures sylvestres", "Langage des plantes", "Paralysie végétale", "Porte végétale", "Protection contre la foudre", "Répulsion des insectes", "Soins majeurs"],
-    "druide-niveau-5": ["Bâtons à serpents", "Bouclier anti-plantes", "Communion avec la nature", "Contrôle des vents", "Croissance animale", "Fléau d’insectes", "Invocation animale II", "Mur de feu", "Passe-plantes", "Transmutation de pierre en boue"],
-    "druide-niveau-6": ["Bouclier anti-animal", "Débilité mentale", "Graines de feu", "Invocation animale III", "Invocation d'un élémental du feu", "Invocation du temps", "Mur d’épines", "Répulsion du bois", "Soin ultime", "Transit végétal"],
-    "druide-niveau-7": ["Animation de la roche", "Chariot de Sustarre", "Confusion", "Contrôle du climat", "Doigt de mort", "Invocation d'un élémental de terre", "Mort rampante", "Réincarnation", "Tempête de feu", "Transmutation du métal en bois"],
-    "magicien-niveau-1": ["Agrandissement", "Altération des feux normaux", "Amitié", "Aura magique de Nystul", "Bouclier", "Charme-personnes", "Chute de plume", "Compréhension des langues", "Disque flottant de Tenser", "Détection de la magie", "Écriture", "Effacement", "Escalade d’araignée", "Fermeture", "Identification", "Invocation d’un familier", "Lecture de la magie", "Lumière", "Lumières dansantes", "Mains brûlantes", "Message", "Poigne électrique", "Poussée", "Projectile magique", "Protection contre le mal", "Réparation", "Saut", "Serviteur invisible", "Sommeil", "Ventriloquie"],
-    "magicien-niveau-2": ["Bouche magique", "Bruitage", "Corde enchantée", "Détection de l'invisibilité", "Détection du mal", "E.S.P.", "Force", "Fracassement", "Image miroir", "Invisibilité", "Lévitation", "Localisation d'objets", "Lumière éternelle", "Nuage puant", "Or des fous", "Oubli", "Ouverture", "Peur", "Piège de Léomund", "Pyrotechnie", "Rayon d'affaiblissement", "Ténèbres sur 5 mètres", "Toile d'araignée", "Verrou magique"],
-    "magicien-niveau-3": ["Boule de feu", "Catalepsie", "Chaumière de Léomund", "Clairaudience", "Clairvoyance", "Dissipation de la magie", "Flèche de feu", "Force fantasmagorique", "Foudre", "Infravision", "Intermittence", "Invisibilité sur 3 m", "Invocation de monstres I", "Langues", "Paralysie", "Protection contre le mal sur 3 m", "Protection contre les projectiles normaux", "Rafale de vent", "Ralentissement", "Rapidité", "Respiration aquatique", "Runes explosives", "Suggestion", "Vol"],
-    "magicien-niveau-4": ["Allométamorphose", "Arme enchantée", "Autométamorphose", "Bouclier de feu", "Charme-monstres", "Confusion", "Désenvoûtement", "Effroi", "Embroussaillement", "Excavation", "Extension I", "Feu charmeur", "Globe mineur d'invulnérabilité", "Invocation de monstre II", "Maladresse", "Moyen mnémonique de Rary", "Mur de feu", "Mur de glace", "Œil magique", "Phytomorphose", "Piège à feu", "Porte dimensionnelle", "Tempête de glace", "Terrain hallucinatoire"],
-    "magicien-niveau-5": ["Chien fidèle de Mordenkainen", "Coffre secret de Léomund", "Cône de froid", "Contact d'autres plans", "Croissance animale", "Débilité mentale", "Distorsion des distances", "Eau aérée", "Extension II", "Invocation d'élémental", "Invocation de Monstre III", "Lithomorphose", "Main d'interposition de Bigby", "Métempsycose", "Mur de fer", "Mur de force", "Mur de roc", "Nécro-animation", "Nuage létal", "Paralysie des monstres", "Passe-muraille", "Télékinésie", "Téléportation", "Transmutation de pierre en boue"],
-    "magicien-niveau-6": ["Abaissement des eaux", "Bulle anti-magique", "Chasseur invisible", "Contrôle du climat", "Désintégration", "Enchantement", "Extension III", "Glissement de terrain", "Globe d'invulnérabilité", "Holographie", "Incantation mortelle", "Invocation de monstre IV", "Main de force de Bigby", "Mythomancie", "Punition spirituelle", "Quête magique", "Réincarnation", "Répulsion", "Séparation des eaux", "Sphère glaciale d'Otiluke", "Transformation de Tenser", "Transmutation de pierre en chair", "Transvision", "Vigiles et sentinelles"],
-    "magicien-niveau-7": ["Boule de feu à retardement", "Cacodémon", "Charme-plantes", "Disparition", "Duo-dimension", "Épée de Mordenkainen", "Inversion de la gravité", "Invisibilité de masse", "Invocation de monstre V", "Invocation instantanée de Drawmij", "Mot de pouvoir : « étourdissement »", "Poigne de Bigby", "Porte de phase", "Simulacre", "Souhait mineur", "Statue"],
-    "magicien-niveau-8": ["Antipathie/sympathie", "Charme-masse", "Clone", "Cristairain", "Danse irrésistible d'Otto", "Emprisonnement de l'âme", "Immunité magique de Serten", "Invocation de monstre VI", "Labyrinthe", "Mot de pouvoir : « cécité »", "Nuage incendiaire", "Permanence", "Poing de Bigby", "Protection d'esprit", "Symbole", "Transformation d'objets"],
-    "magicien-niveau-9": ["Arrêt du temps", "Emprisonnement", "Hétéromorphisme", "Invocation de Monstre VII", "Main broyante de Bigby", "Nuée de météores", "Mot de pouvoir : « mort »", "Seuil", "Sort astral", "Souhait majeur", "Sphère prismatique", "Stase temporelle"],
-    "illusionniste-niveau-1": ["Bruitage", "Changement d’apparence", "Détection de l’invisibilité", "Détection des illusions", "Force fantasmagorique", "Hypnotisme", "Jet de couleurs", "Lumière", "Lumières dansantes", "Mur de brouillard", "Réflexion des regards", "Ténèbres"],
-    "illusionniste-niveau-2": ["Bouche magique", "Cécité", "Désinformation", "Détection de la magie", "Force fantasmagorique améliorée", "Image miroir", "Invisibilité", "Motif hypnotique", "Nappe de brouillard", "Surdité", "Trouble", "Ventriloquie"],
-    "illusionniste-niveau-3": ["Corde enchantée", "Dissipation des illusions", "Écriture illusoire", "Effroi", "Force spectrale", "Invisibilité sur 3 m", "Lumière éternelle", "Non-détection", "Paralysie musculaire", "Suggestion", "Ténèbres éternelles", "Terrain hallucinatoire"],
-    "illusionniste-niveau-4": ["Confusion", "Création mineure", "Dissipation de l'épuisement", "Émotion", "Invisibilité améliorée", "Monstres des ombres", "Phytomorphose", "Tueur fantasmagorique"],
-    "illusionniste-niveau-5": ["Chaos", "Création majeure", "Holographie", "Invocation des ombres", "Labyrinthe", "Magie des ombres", "Monstres demi-ombre", "Porte des ombres"],
-    "illusionniste-niveau-6": ["Illusion permanente", "Illusion programmée", "Invocation des animaux", "Magie demi-ombre", "Ombres", "Suggestion de masse", "Vision réelle"],
-    "illusionniste-niveau-7": ["Altération de la réalité", "Jet prismatique", "Mur prismatique", "Sort astral", "Vision", "Sorts de niveau 1 de magicien"]
-  }
+    "clerc-niveau-1": [
+      "Apaisement",
+      "Aquagenèse",
+      "Bénédiction",
+      "Détection de la magie",
+      "Détection du mal",
+      "Injonction",
+      "Lumière",
+      "Protection contre le mal",
+      "Purification de l'eau et des aliments",
+      "Résistance au froid",
+      "Sanctuaire",
+      "Soins mineurs"
+    ],
+    "clerc-niveau-2": [
+      "Augure",
+      "Cantique",
+      "Charme-serpents",
+      "Détection des charmes",
+      "Détection des pièges",
+      "Langage animal",
+      "Marteau spirituel",
+      "Paralysie",
+      "Perception des alignements",
+      "Résistance au feu",
+      "Retardement du poison",
+      "Silence sur 5 mètres"
+    ],
+    "clerc-niveau-3": [
+      "Catalepsie",
+      "Désenvoûtement",
+      "Dissipation de la magie",
+      "Glyphe de garde",
+      "Guérison de la cécité",
+      "Guérison des maladies",
+      "Localisation d'objets",
+      "Lumière éternelle",
+      "Manne",
+      "Nécro-animation",
+      "Nécromancie",
+      "Prière"
+    ],
+    "clerc-niveau-4": [
+      "Abaissement des eaux",
+      "Bâtons à serpents",
+      "Contre-poison",
+      "Détection des mensonges",
+      "Divination",
+      "Exorcisme",
+      "Langage des plantes",
+      "Langue",
+      "Protection contre le mal sur 3 m",
+      "Soins majeurs"
+    ],
+    "clerc-niveau-5": [
+      "Changement de plan",
+      "Communion",
+      "Dissipation du mal",
+      "Expiation",
+      "Fléau d'insectes",
+      "Pilier de feu",
+      "Quête religieuse",
+      "Rappel à la vie",
+      "Soin ultime",
+      "Vision réelle"
+    ],
+    "clerc-niveau-6": [
+      "Animation des objets",
+      "Barrière de lames",
+      "Guérison",
+      "Invocation des animaux",
+      "Langage des monstres",
+      "Lithomancie",
+      "Orientation",
+      "Rappel",
+      "Séparation des eaux",
+      "Serviteur aérien"
+    ],
+    "clerc-niveau-7": [
+      "Contrôle du climat",
+      "Marche des vents",
+      "Parole sacrée/maudite",
+      "Régénération",
+      "Restauration",
+      "Résurrection",
+      "Seuil",
+      "Sort astral",
+      "Symbole",
+      "Tremblement de terre"
+    ],
+    "druide-niveau-1": [
+      "Amitié animale",
+      "Aura féérique",
+      "Détection de la magie",
+      "Détection des pièges sylvestres",
+      "Enchevêtrement",
+      "Invisibilité aux animaux",
+      "Langage animal",
+      "Localisation des animaux",
+      "Passage sans trace",
+      "Prévision du temps",
+      "Purification de l'eau",
+      "Shillelagh"
+    ],
+    "druide-niveau-2": [
+      "Aquagenèse",
+      "Catalepsie",
+      "Charme-personnes ou mammifères",
+      "Croc-en-jambe",
+      "Distorsion du bois",
+      "Flamme",
+      "Localisation des plantes",
+      "Métal brûlant",
+      "Obscurcissement",
+      "Peau d'écorce",
+      "Piège à feu",
+      "Soins mineurs"
+    ],
+    "druide-niveau-3": [
+      "Arbre",
+      "Contre-poison",
+      "Embroussaillement",
+      "Guérison des maladies",
+      "Invocation de la foudre",
+      "Invocation d'insectes",
+      "Lithomorphose",
+      "Paralysie animale",
+      "Piège sylvestre",
+      "Protection contre le feu",
+      "Pyrotechnie",
+      "Respiration aquatique"
+    ],
+    "druide-niveau-4": [
+      "Contrôle de la température sur 3 m",
+      "Dissipation de la magie",
+      "Embrasement",
+      "Forêt hallucinatoire",
+      "Invocation animale I",
+      "Invocation des créatures sylvestres",
+      "Langage des plantes",
+      "Paralysie végétale",
+      "Porte végétale",
+      "Protection contre la foudre",
+      "Répulsion des insectes",
+      "Soins majeurs"
+    ],
+    "druide-niveau-5": [
+      "Bâtons à serpents",
+      "Bouclier anti-plantes",
+      "Communion avec la nature",
+      "Contrôle des vents",
+      "Croissance animale",
+      "Fléau d’insectes",
+      "Invocation animale II",
+      "Mur de feu",
+      "Passe-plantes",
+      "Transmutation de pierre en boue"
+    ],
+    "druide-niveau-6": [
+      "Bouclier anti-animal",
+      "Débilité mentale",
+      "Graines de feu",
+      "Invocation animale III",
+      "Invocation d'un élémental du feu",
+      "Invocation du temps",
+      "Mur d’épines",
+      "Répulsion du bois",
+      "Soin ultime",
+      "Transit végétal"
+    ],
+    "druide-niveau-7": [
+      "Animation de la roche",
+      "Chariot de Sustarre",
+      "Confusion",
+      "Contrôle du climat",
+      "Doigt de mort",
+      "Invocation d'un élémental de terre",
+      "Mort rampante",
+      "Réincarnation",
+      "Tempête de feu",
+      "Transmutation du métal en bois"
+    ],
+    "magicien-niveau-1": [
+      "Agrandissement",
+      "Altération des feux normaux",
+      "Amitié",
+      "Aura magique de Nystul",
+      "Bouclier",
+      "Charme-personnes",
+      "Chute de plume",
+      "Compréhension des langues",
+      "Disque flottant de Tenser",
+      "Détection de la magie",
+      "Écriture",
+      "Effacement",
+      "Escalade d’araignée",
+      "Fermeture",
+      "Identification",
+      "Invocation d’un familier",
+      "Lecture de la magie",
+      "Lumière",
+      "Lumières dansantes",
+      "Mains brûlantes",
+      "Message",
+      "Poigne électrique",
+      "Poussée",
+      "Projectile magique",
+      "Protection contre le mal",
+      "Réparation",
+      "Saut",
+      "Serviteur invisible",
+      "Sommeil",
+      "Ventriloquie"
+    ],
+    "magicien-niveau-2": [
+      "Bouche magique",
+      "Bruitage",
+      "Corde enchantée",
+      "Détection de l'invisibilité",
+      "Détection du mal",
+      "E.S.P.",
+      "Force",
+      "Fracassement",
+      "Image miroir",
+      "Invisibilité",
+      "Lévitation",
+      "Localisation d'objets",
+      "Lumière éternelle",
+      "Nuage puant",
+      "Or des fous",
+      "Oubli",
+      "Ouverture",
+      "Peur",
+      "Piège de Léomund",
+      "Pyrotechnie",
+      "Rayon d'affaiblissement",
+      "Ténèbres sur 5 mètres",
+      "Toile d'araignée",
+      "Verrou magique"
+    ],
+    "magicien-niveau-3": [
+      "Boule de feu",
+      "Catalepsie",
+      "Chaumière de Léomund",
+      "Clairaudience",
+      "Clairvoyance",
+      "Dissipation de la magie",
+      "Flèche de feu",
+      "Force fantasmagorique",
+      "Foudre",
+      "Infravision",
+      "Intermittence",
+      "Invisibilité sur 3 m",
+      "Invocation de monstres I",
+      "Langues",
+      "Paralysie",
+      "Protection contre le mal sur 3 m",
+      "Protection contre les projectiles normaux",
+      "Rafale de vent",
+      "Ralentissement",
+      "Rapidité",
+      "Respiration aquatique",
+      "Runes explosives",
+      "Suggestion",
+      "Vol"
+    ],
+    "magicien-niveau-4": [
+      "Allométamorphose",
+      "Arme enchantée",
+      "Autométamorphose",
+      "Bouclier de feu",
+      "Charme-monstres",
+      "Confusion",
+      "Désenvoûtement",
+      "Effroi",
+      "Embroussaillement",
+      "Excavation",
+      "Extension I",
+      "Feu charmeur",
+      "Globe mineur d'invulnérabilité",
+      "Invocation de monstre II",
+      "Maladresse",
+      "Moyen mnémonique de Rary",
+      "Mur de feu",
+      "Mur de glace",
+      "Œil magique",
+      "Phytomorphose",
+      "Piège à feu",
+      "Porte dimensionnelle",
+      "Tempête de glace",
+      "Terrain hallucinatoire"
+    ],
+    "magicien-niveau-5": [
+      "Chien fidèle de Mordenkainen",
+      "Coffre secret de Léomund",
+      "Cône de froid",
+      "Contact d'autres plans",
+      "Croissance animale",
+      "Débilité mentale",
+      "Distorsion des distances",
+      "Eau aérée",
+      "Extension II",
+      "Invocation d'élémental",
+      "Invocation de Monstre III",
+      "Lithomorphose",
+      "Main d'interposition de Bigby",
+      "Métempsycose",
+      "Mur de fer",
+      "Mur de force",
+      "Mur de roc",
+      "Nécro-animation",
+      "Nuage létal",
+      "Paralysie des monstres",
+      "Passe-muraille",
+      "Télékinésie",
+      "Téléportation",
+      "Transmutation de pierre en boue"
+    ],
+    "magicien-niveau-6": [
+      "Abaissement des eaux",
+      "Bulle anti-magique",
+      "Chasseur invisible",
+      "Contrôle du climat",
+      "Désintégration",
+      "Enchantement",
+      "Extension III",
+      "Glissement de terrain",
+      "Globe d'invulnérabilité",
+      "Holographie",
+      "Incantation mortelle",
+      "Invocation de monstre IV",
+      "Main de force de Bigby",
+      "Mythomancie",
+      "Punition spirituelle",
+      "Quête magique",
+      "Réincarnation",
+      "Répulsion",
+      "Séparation des eaux",
+      "Sphère glaciale d'Otiluke",
+      "Transformation de Tenser",
+      "Transmutation de pierre en chair",
+      "Transvision",
+      "Vigiles et sentinelles"
+    ],
+    "magicien-niveau-7": [
+      "Boule de feu à retardement",
+      "Cacodémon",
+      "Charme-plantes",
+      "Disparition",
+      "Duo-dimension",
+      "Épée de Mordenkainen",
+      "Inversion de la gravité",
+      "Invisibilité de masse",
+      "Invocation de monstre V",
+      "Invocation instantanée de Drawmij",
+      "Mot de pouvoir : « étourdissement »",
+      "Poigne de Bigby",
+      "Porte de phase",
+      "Simulacre",
+      "Souhait mineur",
+      "Statue"
+    ],
+    "magicien-niveau-8": [
+      "Antipathie/sympathie",
+      "Charme-masse",
+      "Clone",
+      "Cristairain",
+      "Danse irrésistible d'Otto",
+      "Emprisonnement de l'âme",
+      "Immunité magique de Serten",
+      "Invocation de monstre VI",
+      "Labyrinthe",
+      "Mot de pouvoir : « cécité »",
+      "Nuage incendiaire",
+      "Permanence",
+      "Poing de Bigby",
+      "Protection d'esprit",
+      "Symbole",
+      "Transformation d'objets"
+    ],
+    "magicien-niveau-9": [
+      "Arrêt du temps",
+      "Emprisonnement",
+      "Hétéromorphisme",
+      "Invocation de Monstre VII",
+      "Main broyante de Bigby",
+      "Nuée de météores",
+      "Mot de pouvoir : « mort »",
+      "Seuil",
+      "Sort astral",
+      "Souhait majeur",
+      "Sphère prismatique",
+      "Stase temporelle"
+    ],
+    "illusionniste-niveau-1": [
+      "Bruitage",
+      "Changement d’apparence",
+      "Détection de l’invisibilité",
+      "Détection des illusions",
+      "Force fantasmagorique",
+      "Hypnotisme",
+      "Jet de couleurs",
+      "Lumière",
+      "Lumières dansantes",
+      "Mur de brouillard",
+      "Réflexion des regards",
+      "Ténèbres"
+    ],
+    "illusionniste-niveau-2": [
+      "Bouche magique",
+      "Cécité",
+      "Désinformation",
+      "Détection de la magie",
+      "Force fantasmagorique améliorée",
+      "Image miroir",
+      "Invisibilité",
+      "Motif hypnotique",
+      "Nappe de brouillard",
+      "Surdité",
+      "Trouble",
+      "Ventriloquie"
+    ],
+    "illusionniste-niveau-3": [
+      "Corde enchantée",
+      "Dissipation des illusions",
+      "Écriture illusoire",
+      "Effroi",
+      "Force spectrale",
+      "Invisibilité sur 3 m",
+      "Lumière éternelle",
+      "Non-détection",
+      "Paralysie musculaire",
+      "Suggestion",
+      "Ténèbres éternelles",
+      "Terrain hallucinatoire"
+    ],
+    "illusionniste-niveau-4": [
+      "Confusion",
+      "Création mineure",
+      "Dissipation de l'épuisement",
+      "Émotion",
+      "Invisibilité améliorée",
+      "Monstres des ombres",
+      "Phytomorphose",
+      "Tueur fantasmagorique"
+    ],
+    "illusionniste-niveau-5": [
+      "Chaos",
+      "Création majeure",
+      "Holographie",
+      "Invocation des ombres",
+      "Labyrinthe",
+      "Magie des ombres",
+      "Monstres demi-ombre",
+      "Porte des ombres"
+    ],
+    "illusionniste-niveau-6": [
+      "Illusion permanente",
+      "Illusion programmée",
+      "Invocation des animaux",
+      "Magie demi-ombre",
+      "Ombres",
+      "Suggestion de masse",
+      "Vision réelle"
+    ],
+    "illusionniste-niveau-7": [
+      "Altération de la réalité",
+      "Jet prismatique",
+      "Mur prismatique",
+      "Sort astral",
+      "Vision",
+      "Sorts de niveau 1 de magicien"
+    ]
+  },
+  "lotsStatus": {
+    "clerc-niveau-1": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "clerc-niveau-2": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-2.json",
+      "status": "detailed_reference_preserved"
+    },
+    "clerc-niveau-3": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-3.json",
+      "status": "detailed_reference_preserved"
+    },
+    "clerc-niveau-4": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-4.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "clerc-niveau-5": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-5.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "clerc-niveau-6": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-6.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "clerc-niveau-7": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-7.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "druide-niveau-1": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-1.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "druide-niveau-2": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-2.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "druide-niveau-3": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-3.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "druide-niveau-4": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-4.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "druide-niveau-5": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-5.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "druide-niveau-6": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-6.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "druide-niveau-7": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-7.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "illusionniste-niveau-1": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-1.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "illusionniste-niveau-2": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-2.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "illusionniste-niveau-3": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-3.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "illusionniste-niveau-4": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-4.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "illusionniste-niveau-5": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-5.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "illusionniste-niveau-6": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-6.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "illusionniste-niveau-7": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-7.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "magicien-niveau-1": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-1.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "magicien-niveau-2": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-2.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "magicien-niveau-3": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-3.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "magicien-niveau-4": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-4.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "magicien-niveau-5": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-5.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "magicien-niveau-6": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-6.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "magicien-niveau-7": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-7.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "magicien-niveau-8": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-8.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    },
+    "magicien-niveau-9": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-9.json",
+      "status": "reference_liste_noms_complete_regles_a_completer"
+    }
+  },
+  "generatedAt": "2026-06-02T06:55:05.102Z"
 }

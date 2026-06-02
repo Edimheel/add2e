@@ -6,11 +6,187 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_completer",
-  "expectedCount": null,
+  "status": "reference_liste_noms_complete_regles_a_completer",
+  "expectedCount": 24,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-6.json",
   "rules": {
-    "warning": "Squelette généré automatiquement. Ne pas utiliser comme référence de règle tant que les données du Manuel des joueurs ne sont pas complétées et vérifiées."
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
   },
-  "spells": []
+  "spells": [
+    {
+      "ordre": 1,
+      "nom": "Abaissement des eaux",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 2,
+      "nom": "Bulle anti-magique",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 3,
+      "nom": "Chasseur invisible",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 4,
+      "nom": "Contrôle du climat",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 5,
+      "nom": "Désintégration",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 6,
+      "nom": "Enchantement",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 7,
+      "nom": "Extension III",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 8,
+      "nom": "Glissement de terrain",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 9,
+      "nom": "Globe d'invulnérabilité",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 10,
+      "nom": "Holographie",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 11,
+      "nom": "Incantation mortelle",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 12,
+      "nom": "Invocation de monstre IV",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 13,
+      "nom": "Main de force de Bigby",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 14,
+      "nom": "Mythomancie",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 15,
+      "nom": "Punition spirituelle",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 16,
+      "nom": "Quête magique",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 17,
+      "nom": "Réincarnation",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 18,
+      "nom": "Répulsion",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 19,
+      "nom": "Séparation des eaux",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 20,
+      "nom": "Sphère glaciale d'Otiluke",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 21,
+      "nom": "Transformation de Tenser",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 22,
+      "nom": "Transmutation de pierre en chair",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 23,
+      "nom": "Transvision",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 24,
+      "nom": "Vigiles et sentinelles",
+      "niveau": 6,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    }
+  ]
 }

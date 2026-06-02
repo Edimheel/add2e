@@ -6,11 +6,229 @@
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_completer",
-  "expectedCount": null,
+  "status": "reference_liste_noms_complete_regles_a_completer",
+  "expectedCount": 30,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-1.json",
   "rules": {
-    "warning": "Squelette généré automatiquement. Ne pas utiliser comme référence de règle tant que les données du Manuel des joueurs ne sont pas complétées et vérifiées."
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
   },
-  "spells": []
+  "spells": [
+    {
+      "ordre": 1,
+      "nom": "Agrandissement",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 2,
+      "nom": "Altération des feux normaux",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 3,
+      "nom": "Amitié",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 4,
+      "nom": "Aura magique de Nystul",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 5,
+      "nom": "Bouclier",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 6,
+      "nom": "Charme-personnes",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 7,
+      "nom": "Chute de plume",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 8,
+      "nom": "Compréhension des langues",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 9,
+      "nom": "Disque flottant de Tenser",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 10,
+      "nom": "Détection de la magie",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 11,
+      "nom": "Écriture",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 12,
+      "nom": "Effacement",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 13,
+      "nom": "Escalade d’araignée",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 14,
+      "nom": "Fermeture",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 15,
+      "nom": "Identification",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 16,
+      "nom": "Invocation d’un familier",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 17,
+      "nom": "Lecture de la magie",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 18,
+      "nom": "Lumière",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 19,
+      "nom": "Lumières dansantes",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 20,
+      "nom": "Mains brûlantes",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 21,
+      "nom": "Message",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 22,
+      "nom": "Poigne électrique",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 23,
+      "nom": "Poussée",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 24,
+      "nom": "Projectile magique",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 25,
+      "nom": "Protection contre le mal",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 26,
+      "nom": "Réparation",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 27,
+      "nom": "Saut",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 28,
+      "nom": "Serviteur invisible",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 29,
+      "nom": "Sommeil",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 30,
+      "nom": "Ventriloquie",
+      "niveau": 1,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    }
+  ]
 }

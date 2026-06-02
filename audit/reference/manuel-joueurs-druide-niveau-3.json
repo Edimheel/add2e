@@ -6,11 +6,103 @@
     "niveau": 3,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_completer",
-  "expectedCount": null,
+  "status": "reference_liste_noms_complete_regles_a_completer",
+  "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-3.json",
   "rules": {
-    "warning": "Squelette généré automatiquement. Ne pas utiliser comme référence de règle tant que les données du Manuel des joueurs ne sont pas complétées et vérifiées."
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
   },
-  "spells": []
+  "spells": [
+    {
+      "ordre": 1,
+      "nom": "Arbre",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 2,
+      "nom": "Contre-poison",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 3,
+      "nom": "Embroussaillement",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 4,
+      "nom": "Guérison des maladies",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 5,
+      "nom": "Invocation de la foudre",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 6,
+      "nom": "Invocation d'insectes",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 7,
+      "nom": "Lithomorphose",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 8,
+      "nom": "Paralysie animale",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 9,
+      "nom": "Piège sylvestre",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 10,
+      "nom": "Protection contre le feu",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 11,
+      "nom": "Pyrotechnie",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 12,
+      "nom": "Respiration aquatique",
+      "niveau": 3,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    }
+  ]
 }

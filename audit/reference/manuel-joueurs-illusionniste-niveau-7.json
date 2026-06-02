@@ -6,11 +6,61 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_completer",
-  "expectedCount": null,
+  "status": "reference_liste_noms_complete_regles_a_completer",
+  "expectedCount": 6,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-7.json",
   "rules": {
-    "warning": "Squelette généré automatiquement. Ne pas utiliser comme référence de règle tant que les données du Manuel des joueurs ne sont pas complétées et vérifiées."
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
   },
-  "spells": []
+  "spells": [
+    {
+      "ordre": 1,
+      "nom": "Altération de la réalité",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 2,
+      "nom": "Jet prismatique",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 3,
+      "nom": "Mur prismatique",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 4,
+      "nom": "Sort astral",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 5,
+      "nom": "Vision",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 6,
+      "nom": "Sorts de niveau 1 de magicien",
+      "niveau": 7,
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    }
+  ]
 }
