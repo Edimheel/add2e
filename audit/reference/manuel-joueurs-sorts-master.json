@@ -7,5 +7,127 @@
   "mode": "skeleton_only",
   "defaultReferenceStatus": "reference_a_completer",
   "preserveExistingReferences": true,
-  "lots": {}
+  "lots": {
+    "clerc-niveau-1": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+      "status": "reference_a_completer"
+    },
+    "clerc-niveau-2": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-2.json",
+      "status": "existing_reference_preserved"
+    },
+    "clerc-niveau-3": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-3.json",
+      "status": "existing_reference_preserved"
+    },
+    "clerc-niveau-4": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-4.json",
+      "status": "reference_a_completer"
+    },
+    "clerc-niveau-5": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-5.json",
+      "status": "reference_a_completer"
+    },
+    "clerc-niveau-6": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-6.json",
+      "status": "reference_a_completer"
+    },
+    "clerc-niveau-7": {
+      "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-7.json",
+      "status": "reference_a_completer"
+    },
+    "druide-niveau-1": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-1.json",
+      "status": "reference_a_completer"
+    },
+    "druide-niveau-2": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-2.json",
+      "status": "reference_a_completer"
+    },
+    "druide-niveau-3": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-3.json",
+      "status": "reference_a_completer"
+    },
+    "druide-niveau-4": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-4.json",
+      "status": "reference_a_completer"
+    },
+    "druide-niveau-5": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-5.json",
+      "status": "reference_a_completer"
+    },
+    "druide-niveau-6": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-6.json",
+      "status": "reference_a_completer"
+    },
+    "druide-niveau-7": {
+      "referenceFile": "audit/reference/manuel-joueurs-druide-niveau-7.json",
+      "status": "reference_a_completer"
+    },
+    "illusionniste-niveau-1": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-1.json",
+      "status": "reference_a_completer"
+    },
+    "illusionniste-niveau-2": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-2.json",
+      "status": "reference_a_completer"
+    },
+    "illusionniste-niveau-3": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-3.json",
+      "status": "reference_a_completer"
+    },
+    "illusionniste-niveau-4": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-4.json",
+      "status": "reference_a_completer"
+    },
+    "illusionniste-niveau-5": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-5.json",
+      "status": "reference_a_completer"
+    },
+    "illusionniste-niveau-6": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-6.json",
+      "status": "reference_a_completer"
+    },
+    "illusionniste-niveau-7": {
+      "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-7.json",
+      "status": "reference_a_completer"
+    },
+    "magicien-niveau-1": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-1.json",
+      "status": "reference_a_completer"
+    },
+    "magicien-niveau-2": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-2.json",
+      "status": "reference_a_completer"
+    },
+    "magicien-niveau-3": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-3.json",
+      "status": "reference_a_completer"
+    },
+    "magicien-niveau-4": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-4.json",
+      "status": "reference_a_completer"
+    },
+    "magicien-niveau-5": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-5.json",
+      "status": "reference_a_completer"
+    },
+    "magicien-niveau-6": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-6.json",
+      "status": "reference_a_completer"
+    },
+    "magicien-niveau-7": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-7.json",
+      "status": "reference_a_completer"
+    },
+    "magicien-niveau-8": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-8.json",
+      "status": "reference_a_completer"
+    },
+    "magicien-niveau-9": {
+      "referenceFile": "audit/reference/manuel-joueurs-magicien-niveau-9.json",
+      "status": "reference_a_completer"
+    }
+  },
+  "generatedAt": "2026-06-02T06:28:37.910Z"
 }

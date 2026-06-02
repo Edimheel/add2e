@@ -1,0 +1,16 @@
+{
+  "source": {
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "reference": "Manuel des joueurs AD&D 2e",
+    "classe": "druide",
+    "niveau": 5,
+    "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
+  },
+  "status": "reference_a_completer",
+  "expectedCount": null,
+  "foundryExport": "audit/decoupage_fichier/druide-niveau-5.json",
+  "rules": {
+    "warning": "Squelette généré automatiquement. Ne pas utiliser comme référence de règle tant que les données du Manuel des joueurs ne sont pas complétées et vérifiées."
+  },
+  "spells": []
+}
