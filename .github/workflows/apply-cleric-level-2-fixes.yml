@@ -1,0 +1,40 @@
+name: Apply cleric level 2 fixes
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent-audit-sorts
+    paths:
+      - audit/tools/apply-cleric-level-2-fixes.mjs
+      - .github/workflows/apply-cleric-level-2-fixes.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fixes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent-audit-sorts
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Apply fixes
+        run: node audit/tools/apply-cleric-level-2-fixes.mjs
+
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fvtt-spells-all.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Apply cleric level 2 spell fixes"
+            git push origin agent-audit-sorts
+          fi
