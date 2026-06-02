@@ -1,6 +1,6 @@
 # Audit automatique — clerc-niveau-4
 
-Généré le : 2026-06-02T06:54:01.327Z
+Généré le : 2026-06-02T06:58:44.836Z
 
 ## Fichiers
 
@@ -12,25 +12,36 @@ Généré le : 2026-06-02T06:54:01.327Z
 - Classe : `clerc`
 - Niveau : `4`
 - Sorts dans l’export : `8`
-- Sorts attendus par la référence : `0`
-- Sorts manquants : `0`
+- Sorts attendus par la référence : `10`
+- Sorts manquants : `4`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
+| Abaissement des eaux | OK | OK | OK | Symbole sacré ; Pincée de poussière |
+| Bâtons à serpents | MANQUANT | — | — | — |
+| Contre-poison | MANQUANT | — | — | — |
+| Détection des mensonges | OK | OK | OK | Poussière de laiton ; Poussière d’or |
+| Divination | OK | OK | OK | Sacrifice d’une petite créature ; L’encens et le symbole sacré du clerc |
+| Exorcisme | OK | OK | OK | Symbole sacré |
+| Langage des plantes | OK | OK | OK | Goutte d’eau ; Pincée de bouse |
+| Langue | MANQUANT | — | — | — |
+| Protection contre le mal sur 3 m | MANQUANT | — | — | — |
+| Soins majeurs | OK | OK | OK | V, S |
+
+## Sorts manquants
+
+- Bâtons à serpents
+- Contre-poison
+- Langue
+- Protection contre le mal sur 3 m
 
 ## Sorts présents hors correspondance stricte
 
-- Abaissement des Eaux
 - Bâtons en Serpents
-- Détection des Mensonges
-- Divination
-- Exorcisme
-- Langage des Plantes
 - Protection contre le Mal (Rayon de 10 pieds)
-- Soins Majeurs
 
 ## Statut
 

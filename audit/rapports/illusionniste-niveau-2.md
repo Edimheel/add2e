@@ -1,6 +1,6 @@
 # Audit automatique — illusionniste-niveau-2
 
-Généré le : 2026-06-02T06:54:01.336Z
+Généré le : 2026-06-02T06:58:44.853Z
 
 ## Fichiers
 
@@ -12,27 +12,31 @@ Généré le : 2026-06-02T06:54:01.336Z
 - Classe : `illusionniste`
 - Niveau : `2`
 - Sorts dans l’export : `10`
-- Sorts attendus par la référence : `0`
-- Sorts manquants : `0`
+- Sorts attendus par la référence : `12`
+- Sorts manquants : `2`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
+| Bouche magique | OK | OK | OK | Petit morceau de rayon de miel |
+| Cécité | OK | OK | OK | V |
+| Désinformation | OK | OK | OK | V, S |
+| Détection de la magie | MANQUANT | — | — | — |
+| Force fantasmagorique améliorée | OK | OK | OK | V, S, M |
+| Image miroir | MANQUANT | — | — | — |
+| Invisibilité | OK | OK | OK | V, S |
+| Motif hypnotique | OK | OK | OK | Cire d’abeille |
+| Nappe de brouillard | OK | OK | OK | V, S |
+| Surdité | OK | OK | OK | Cire d’abeille |
+| Trouble | OK | OK | OK | V, S |
+| Ventriloquie | OK | OK | OK | Petit parchemin mis en cône |
 
-## Sorts présents hors correspondance stricte
+## Sorts manquants
 
-- Bouche magique
-- Cécité
-- Désinformation
-- Force fantasmagorique améliorée
-- Invisibilité
-- Motif hypnotique
-- Nappe de brouillard
-- Surdité
-- Trouble
-- Ventriloquie
+- Détection de la magie
+- Image miroir
 
 ## Statut
 

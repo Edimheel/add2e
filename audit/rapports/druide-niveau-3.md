@@ -1,6 +1,6 @@
 # Audit automatique — druide-niveau-3
 
-Généré le : 2026-06-02T06:54:01.332Z
+Généré le : 2026-06-02T06:58:44.846Z
 
 ## Fichiers
 
@@ -12,26 +12,32 @@ Généré le : 2026-06-02T06:54:01.332Z
 - Classe : `druide`
 - Niveau : `3`
 - Sorts dans l’export : `9`
-- Sorts attendus par la référence : `0`
-- Sorts manquants : `0`
+- Sorts attendus par la référence : `12`
+- Sorts manquants : `3`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
+| Arbre | OK | OK | OK | Gui |
+| Contre-poison | OK | OK | OK | V, S |
+| Embroussaillement | MANQUANT | — | — | — |
+| Guérison des maladies | MANQUANT | — | — | — |
+| Invocation de la foudre | OK | Manquant : scripts/sorts/druide-invocation-de-la-foudre.js | OK | Gui druidique |
+| Invocation d'insectes | OK | Manquant : scripts/sorts/druide-invocation-d-insectes.js | OK | Gui |
+| Lithomorphose | OK | OK | OK | Gui comme composante matérielle supplémentaire |
+| Paralysie animale | OK | OK | OK | Gui druidique |
+| Piège sylvestre | OK | OK | OK | Gui druidique |
+| Protection contre le feu | OK | OK | OK | Gui druidique |
+| Pyrotechnie | MANQUANT | — | — | — |
+| Respiration aquatique | OK | OK | Manquante : assets/icones/sorts/druide-respiration-aquatique.webp | V, S |
 
-## Sorts présents hors correspondance stricte
+## Sorts manquants
 
-- Arbre
-- Contre-poison
-- Invocation d'insectes
-- Invocation de la foudre
-- Lithomorphose
-- Paralysie animale
-- Piège sylvestre
-- Protection contre le feu
-- Respiration aquatique
+- Embroussaillement
+- Guérison des maladies
+- Pyrotechnie
 
 ## Statut
 

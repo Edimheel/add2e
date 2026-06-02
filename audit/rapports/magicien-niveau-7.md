@@ -1,6 +1,6 @@
 # Audit automatique — magicien-niveau-7
 
-Généré le : 2026-06-02T06:54:01.350Z
+Généré le : 2026-06-02T06:58:44.879Z
 
 ## Fichiers
 
@@ -12,7 +12,7 @@ Généré le : 2026-06-02T06:54:01.350Z
 - Classe : `magicien`
 - Niveau : `7`
 - Sorts dans l’export : `16`
-- Sorts attendus par la référence : `0`
+- Sorts attendus par la référence : `16`
 - Sorts manquants : `0`
 - Écarts de nom : `0`
 
@@ -20,25 +20,22 @@ Généré le : 2026-06-02T06:54:01.350Z
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
-
-## Sorts présents hors correspondance stricte
-
-- Boule de feu à retardement
-- Cacodémon
-- Charme-plantes
-- Disparition
-- Duo-dimension
-- Épée de Mordenkainen
-- Inversion de la gravité
-- Invisibilité de masse
-- Invocation de monstre V
-- Invocation instantanée de Drawmij
-- Mot de pouvoir : « étourdissement »
-- Poigne de Bigby
-- Porte de phase
-- Simulacre
-- Souhait mineur
-- Statue
+| Boule de feu à retardement | OK | OK | Manquante : assets/icones/sorts/magicien-boule-de-feu-a-retardement.webp | Comme Boule de feu : boule de soufre et fiente de chauve-souris |
+| Cacodémon | OK | OK | Manquante : assets/icones/sorts/magicien-cacodemon.webp | Cinq chandelles noires allumées ; Saindoux ; Suie ; Racine de mandragore ; Parchemin sur lequel est inscrit le nom du démon ; Coupe de sang de mammifère placé dans l’endroit où sera retenu le cacodémon |
+| Charme-plantes | OK | OK | Manquante : assets/icones/sorts/magicien-charme-plantes.webp | V, S, M |
+| Disparition | OK | OK | Manquante : assets/icones/sorts/magicien-disparition.webp | V |
+| Duo-dimension | OK | OK | Manquante : assets/icones/sorts/magicien-duo-dimension.webp | Figurine plate ; Sertie de gemmes |
+| Épée de Mordenkainen | OK | OK | Manquante : assets/icones/sorts/magicien-epee-de-mordenkainen.webp | V, S, M |
+| Inversion de la gravité | OK | OK | Manquante : assets/icones/sorts/magicien-inversion-de-la-gravite.webp | Limaille de fer |
+| Invisibilité de masse | OK | OK | Manquante : assets/icones/sorts/magicien-invisibilite-de-masse.webp | V, S, M |
+| Invocation de monstre V | OK | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstre-v.webp | V, S, M |
+| Invocation instantanée de Drawmij | OK | OK | Manquante : assets/icones/sorts/magicien-invocation-instantanee-de-drawmij.webp | V, S, M |
+| Mot de pouvoir : « étourdissement » | OK | OK | Manquante : assets/icones/sorts/magicien-mot-de-pouvoir-etourdissement.webp | V, S, M |
+| Poigne de Bigby | OK | OK | Manquante : assets/icones/sorts/magicien-poigne-de-bigby.webp | Gant en cuir |
+| Porte de phase | OK | OK | Manquante : assets/icones/sorts/magicien-porte-de-phase.webp | V |
+| Simulacre | OK | OK | Manquante : assets/icones/sorts/magicien-simulacre.webp | V, S, M |
+| Souhait mineur | OK | OK | Manquante : assets/icones/sorts/magicien-souhait-mineur.webp | V |
+| Statue | OK | OK | Manquante : assets/icones/sorts/magicien-statue.webp | Sable ; Goutte d’eau |
 
 ## Statut
 

@@ -1,6 +1,6 @@
 # Audit automatique — druide-niveau-2
 
-Généré le : 2026-06-02T06:54:01.331Z
+Généré le : 2026-06-02T06:58:44.844Z
 
 ## Fichiers
 
@@ -12,27 +12,31 @@ Généré le : 2026-06-02T06:54:01.331Z
 - Classe : `druide`
 - Niveau : `2`
 - Sorts dans l’export : `10`
-- Sorts attendus par la référence : `0`
-- Sorts manquants : `0`
+- Sorts attendus par la référence : `12`
+- Sorts manquants : `2`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
+| Aquagenèse | MANQUANT | — | — | — |
+| Catalepsie | OK | OK | OK | Feuille morte de chêne ; Gui |
+| Charme-personnes ou mammifères | OK | OK | OK | V, S |
+| Croc-en-jambe | OK | OK | OK | Gui druidique |
+| Distorsion du bois | OK | Manquant : scripts/sorts/druide-distorsion-du-bois.js | OK | Gui druidique |
+| Flamme | OK | Manquant : scripts/sorts/druide-flamme.js | OK | Gui druidique |
+| Localisation des plantes | OK | OK | OK | Gui druidique |
+| Métal brûlant | OK | OK | OK | Gui druidique |
+| Obscurcissement | OK | OK | OK | V, S |
+| Peau d'écorce | OK | OK | OK | Poignée d’écorce de chêne |
+| Piège à feu | MANQUANT | — | — | — |
+| Soins mineurs | OK | OK | OK | Symbole sacré du clerc et un petit miroir en argent |
 
-## Sorts présents hors correspondance stricte
+## Sorts manquants
 
-- Catalepsie
-- Charme-personnes ou mammifères
-- Croc-en-jambe
-- Distorsion du bois
-- Flamme
-- Localisation des plantes
-- Métal brûlant
-- Obscurcissement
-- Peau d'écorce
-- Soins mineurs
+- Aquagenèse
+- Piège à feu
 
 ## Statut
 

@@ -1,6 +1,6 @@
 # Audit automatique — clerc-niveau-7
 
-Généré le : 2026-06-02T06:54:01.329Z
+Généré le : 2026-06-02T06:58:44.841Z
 
 ## Fichiers
 
@@ -12,27 +12,34 @@ Généré le : 2026-06-02T06:54:01.329Z
 - Classe : `clerc`
 - Niveau : `7`
 - Sorts dans l’export : `10`
-- Sorts attendus par la référence : `0`
-- Sorts manquants : `0`
-- Écarts de nom : `0`
+- Sorts attendus par la référence : `10`
+- Sorts manquants : `1`
+- Écarts de nom : `2`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
+| Contrôle du climat | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/controle-du-climat.js | OK | Symbole sacré ; Son chapelet de prière |
+| Marche des vents | Écart : Marche des Vent | Manquant : scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js | OK | Feu et de l’eau bénite/maudite |
+| Parole sacrée/maudite | Écart : Parole Sacrée | Manquant : scripts/sorts/clerc-niveaux-5-6-7/parole-sacree.js | OK | Symbole sacré du clerc |
+| Régénération | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/regeneration.js | OK | Objet de prière et de l’eau bénite/maudite |
+| Restauration | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/restauration.js | OK | V, S |
+| Résurrection | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/resurrection.js | OK | Symbole sacré |
+| Seuil | MANQUANT | — | — | — |
+| Sort astral | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/sort-astral.js | OK | V, S |
+| Symbole | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/symbole.js | OK | Mercure |
+| Tremblement de terre | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/tremblement-de-terre.js | OK | Pincée de poussière |
+
+## Sorts manquants
+
+- Seuil
 
 ## Sorts présents hors correspondance stricte
 
 - Asile
-- Contrôle du Climat
 - Marche des Vent
 - Parole Sacrée
-- Régénération
-- Restauration
-- Résurrection
-- Sort Astral
-- Symbole
-- Tremblement de Terre
 
 ## Statut
 

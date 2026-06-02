@@ -1,6 +1,6 @@
 # Audit automatique — magicien-niveau-8
 
-Généré le : 2026-06-02T06:54:01.351Z
+Généré le : 2026-06-02T06:58:44.881Z
 
 ## Fichiers
 
@@ -12,32 +12,34 @@ Généré le : 2026-06-02T06:54:01.351Z
 - Classe : `magicien`
 - Niveau : `8`
 - Sorts dans l’export : `15`
-- Sorts attendus par la référence : `0`
-- Sorts manquants : `0`
+- Sorts attendus par la référence : `16`
+- Sorts manquants : `1`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
+| Antipathie/sympathie | OK | OK | Manquante : assets/icones/sorts/magicien-antipathie-sympathie.webp | Morceau d’alun trempé dans du vinaigre |
+| Charme-masse | OK | OK | Manquante : assets/icones/sorts/magicien-charme-masse.webp | V |
+| Clone | OK | OK | Manquante : assets/icones/sorts/magicien-clone.webp | Morceau de chair de l’original |
+| Cristairain | OK | OK | Manquante : assets/icones/sorts/magicien-cristairain.webp | Petit morceau d’acier |
+| Danse irrésistible d'Otto | OK | OK | Manquante : assets/icones/sorts/magicien-danse-irresistible-d-otto.webp | V |
+| Emprisonnement de l'âme | OK | OK | Manquante : assets/icones/sorts/magicien-emprisonnement-de-l-ame.webp | V, S, M |
+| Immunité magique de Serten | OK | OK | Manquante : assets/icones/sorts/magicien-immunite-magique-de-serten.webp | Diamant |
+| Invocation de monstre VI | OK | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstre-vi.webp | Diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille |
+| Labyrinthe | OK | OK | Manquante : assets/icones/sorts/magicien-labyrinthe.webp | V, S |
+| Mot de pouvoir : « cécité » | OK | OK | Manquante : assets/icones/sorts/magicien-mot-de-pouvoir-cecite.webp | V, S, M |
+| Nuage incendiaire | OK | OK | Manquante : assets/icones/sorts/magicien-nuage-incendiaire.webp | V, S, M |
+| Permanence | OK | OK | Manquante : assets/icones/sorts/magicien-permanence.webp | V, S, M |
+| Poing de Bigby | OK | OK | Manquante : assets/icones/sorts/magicien-poing-de-bigby.webp | Gant en cuir |
+| Protection d'esprit | OK | OK | Manquante : assets/icones/sorts/magicien-protection-d-esprit.webp | Gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe ; Tout attaché par une barrette en forme de « I » |
+| Symbole | MANQUANT | — | — | — |
+| Transformation d'objets | OK | OK | Manquante : assets/icones/sorts/magicien-transformation-d-objets.webp | Mercure |
 
-## Sorts présents hors correspondance stricte
+## Sorts manquants
 
-- Antipathie/sympathie
-- Charme-masse
-- Clone
-- Cristairain
-- Danse irrésistible d’Otto
-- Emprisonnement de l’âme
-- Immunité magique de Serten
-- Invocation de monstre VI
-- Labyrinthe
-- Mot de pouvoir : « Cécité »
-- Nuage incendiaire
-- Permanence
-- Poing de Bigby
-- Protection d’esprit
-- Transformation d’objets
+- Symbole
 
 ## Statut
 

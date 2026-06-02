@@ -1,6 +1,6 @@
 # Audit automatique — clerc-niveau-5
 
-Généré le : 2026-06-02T06:54:01.327Z
+Généré le : 2026-06-02T06:58:44.838Z
 
 ## Fichiers
 
@@ -12,25 +12,32 @@ Généré le : 2026-06-02T06:54:01.327Z
 - Classe : `clerc`
 - Niveau : `5`
 - Sorts dans l’export : `9`
-- Sorts attendus par la référence : `0`
-- Sorts manquants : `0`
+- Sorts attendus par la référence : `10`
+- Sorts manquants : `2`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
+| Changement de plan | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/changement-de-plan.js | OK | Petite baguette fourchue métallique |
+| Communion | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/communion.js | OK | Symbole sacré |
+| Dissipation du mal | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/dissipation-du-mal.js | OK | Symbole sacré |
+| Expiation | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/penitence.js | OK | Symbole sacré ; Son chapelet |
+| Fléau d'insectes | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/fleau-d-insectes.js | OK | Amandes |
+| Pilier de feu | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/colonne-de-feu.js | OK | Pincée de souffre |
+| Quête religieuse | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/quete-religieuse.js | OK | Symbole sacré |
+| Rappel à la vie | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/rappel-a-la-vie.js | OK | V, S |
+| Soin ultime | MANQUANT | — | — | — |
+| Vision réelle | MANQUANT | — | — | — |
+
+## Sorts manquants
+
+- Soin ultime
+- Vision réelle
 
 ## Sorts présents hors correspondance stricte
 
-- Changement de Plan
-- Communion
-- Dissipation du Mal
-- Expiation
-- Fléau d’Insectes
-- Pilier de Feu
-- Quête Religieuse
-- Rappel à la Vie
 - Soins ultime
 
 ## Statut

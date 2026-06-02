@@ -1,6 +1,6 @@
 # Audit automatique — illusionniste-niveau-6
 
-Généré le : 2026-06-02T06:54:01.338Z
+Généré le : 2026-06-02T06:58:44.857Z
 
 ## Fichiers
 
@@ -12,7 +12,7 @@ Généré le : 2026-06-02T06:54:01.338Z
 - Classe : `illusionniste`
 - Niveau : `6`
 - Sorts dans l’export : `8`
-- Sorts attendus par la référence : `0`
+- Sorts attendus par la référence : `7`
 - Sorts manquants : `0`
 - Écarts de nom : `0`
 
@@ -20,16 +20,16 @@ Généré le : 2026-06-02T06:54:01.338Z
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
+| Illusion permanente | OK | OK | Manquante : assets/icones/sorts/illusionniste-illusion-permanente.webp | V, S, M |
+| Illusion programmée | OK | OK | Manquante : assets/icones/sorts/illusionniste-illusion-programmee.webp | V, S, M |
+| Invocation des animaux | OK | OK | Manquante : assets/icones/sorts/illusionniste-invocation-des-animaux.webp | V, S |
+| Magie demi-ombre | OK | OK | OK | V, S |
+| Ombres | OK | OK | OK | V, S |
+| Suggestion de masse | OK | OK | OK | V, M |
+| Vision réelle | OK | OK | OK | V, S |
 
 ## Sorts présents hors correspondance stricte
 
-- Illusion permanente
-- Illusion programmée
-- Invocation des animaux
-- Magie demi-ombre
-- Ombres
-- Suggestion de masse
-- Vision réelle
 - Voile illusoire
 
 ## Statut

@@ -1,6 +1,6 @@
 # Audit automatique — druide-niveau-5
 
-Généré le : 2026-06-02T06:54:01.333Z
+Généré le : 2026-06-02T06:58:44.849Z
 
 ## Fichiers
 
@@ -12,25 +12,29 @@ Généré le : 2026-06-02T06:54:01.333Z
 - Classe : `druide`
 - Niveau : `5`
 - Sorts dans l’export : `8`
-- Sorts attendus par la référence : `0`
-- Sorts manquants : `0`
+- Sorts attendus par la référence : `10`
+- Sorts manquants : `2`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
+| Bâtons à serpents | OK | OK | OK | Gui druidique |
+| Bouclier anti-plantes | OK | OK | OK | Gui druidique |
+| Communion avec la nature | OK | OK | OK | Gui druidique |
+| Contrôle des vents | OK | OK | OK | Gui druidique |
+| Croissance animale | MANQUANT | — | — | — |
+| Fléau d’insectes | MANQUANT | — | — | — |
+| Invocation animale II | OK | Manquant : scripts/sorts/druide-invocation-animale-ii.js | OK | Gui druidique |
+| Mur de feu | OK | OK | OK | Phosphore |
+| Passe-plantes | OK | OK | OK | Gui druidique |
+| Transmutation de pierre en boue | OK | OK | OK | Eau et de l’argile (eau et sable pour l’inverse) |
 
-## Sorts présents hors correspondance stricte
+## Sorts manquants
 
-- Bâtons à serpents
-- Bouclier anti-plantes
-- Communion avec la nature
-- Contrôle des vents
-- Invocation animale II
-- Mur de feu
-- Passe-plantes
-- Transmutation de pierre en boue
+- Croissance animale
+- Fléau d’insectes
 
 ## Statut
 

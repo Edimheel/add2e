@@ -1,6 +1,6 @@
 # Audit automatique — druide-niveau-1
 
-Généré le : 2026-06-02T06:54:01.330Z
+Généré le : 2026-06-02T06:58:44.843Z
 
 ## Fichiers
 
@@ -12,7 +12,7 @@ Généré le : 2026-06-02T06:54:01.330Z
 - Classe : `druide`
 - Niveau : `1`
 - Sorts dans l’export : `12`
-- Sorts attendus par la référence : `0`
+- Sorts attendus par la référence : `12`
 - Sorts manquants : `0`
 - Écarts de nom : `0`
 
@@ -20,21 +20,18 @@ Généré le : 2026-06-02T06:54:01.330Z
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
-
-## Sorts présents hors correspondance stricte
-
-- Amitié animale
-- Aura féérique
-- Détection de la magie
-- Détection des pièges sylvestres
-- Enchevêtrement
-- Invisibilité aux animaux
-- Langage animal
-- Localisation des animaux
-- Passage sans trace
-- Prévision du temps
-- Purification de l'eau
-- Shillelagh
+| Amitié animale | OK | OK | OK | Gui |
+| Aura féérique | OK | OK | OK | V |
+| Détection de la magie | OK | OK | OK | Gui druidique |
+| Détection des pièges sylvestres | OK | OK | OK | Gui druidique |
+| Enchevêtrement | OK | Manquant : scripts/sorts/druide-enchevetrement.js | OK | Gui druidique |
+| Invisibilité aux animaux | OK | Manquant : scripts/sorts/druide-invisibilite-aux-animaux.js | OK | Houx avec lequel le druide doit se frotter |
+| Langage animal | OK | OK | OK | V, S |
+| Localisation des animaux | OK | OK | OK | Gui druidique |
+| Passage sans trace | OK | OK | OK | Feuille de gui ( |
+| Prévision du temps | OK | OK | OK | Gui druidique |
+| Purification de l'eau | OK | OK | OK | V, S |
+| Shillelagh | OK | OK | OK | Gui ; Feuille de trèfle |
 
 ## Statut
 
