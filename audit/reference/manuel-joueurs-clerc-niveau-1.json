@@ -2,11 +2,11 @@
   "source": {
     "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
     "reference": "Manuel des joueurs AD&D 2e",
-    "classe": "clerc",
+    "classe": "Clerc",
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_blocs_techniques_complete_description_a_completer",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-1.json",
   "rules": {
@@ -15,94 +15,209 @@
       "classe",
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
+      "école",
+      "portée",
+      "durée",
+      "zone d'effet",
+      "composantes",
+      "temps d'incantation",
+      "jet de sauvegarde"
     ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+    "notIncludedYet": [
+      "description complète",
+      "composants matériels détaillés",
+      "stratégie onUse détaillée"
+    ],
+    "warning": "Ces références peuvent servir aux comparaisons techniques et aux patchs non destructifs. Les descriptions complètes et mécaniques automatisées restent à compléter depuis le texte du Manuel."
   },
   "spells": [
     {
       "ordre": 1,
       "nom": "Apaisement",
+      "ecole": "Abjuration",
+      "inverse": "Épouvante",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "au toucher",
+      "duree": "spéciale",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S",
+      "temps_incantation": "4 segments",
+      "jet_sauvegarde": "aucun",
+      "source_page": 44,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "a_definir_depuis_description"
     },
     {
       "ordre": 2,
       "nom": "Aquagenèse",
+      "ecole": "Altération",
+      "inverse": "Déshydratation",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "1\"",
+      "duree": "permanente",
+      "zone_effet": "750 litres maximum",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "source_page": 44,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "a_definir_depuis_description"
     },
     {
       "ordre": 3,
       "nom": "Bénédiction",
+      "ecole": "Conjuration/Appel",
+      "inverse": "Malédiction",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "6\"",
+      "duree": "6 rounds de combat",
+      "zone_effet": "5\" x 5\"",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "source_page": 44,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "bonus_malus_temporaire_a_preciser"
     },
     {
       "ordre": 4,
       "nom": "Détection de la magie",
+      "ecole": "Divination",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "3\"",
+      "duree": "1 tour",
+      "zone_effet": "1\" de large, 3\" de long",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "source_page": 44,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "detection_a_traiter_par_message_et_eventuel_effet_scene"
     },
     {
       "ordre": 5,
       "nom": "Détection du mal",
+      "ecole": "Divination",
+      "inverse": "Détection du bien",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "12\"",
+      "duree": "1 tour + ½ tour par niveau",
+      "zone_effet": "1\" de large",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "source_page": 45,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "detection_a_traiter_par_message_et_eventuel_effet_scene"
     },
     {
       "ordre": 6,
       "nom": "Injonction",
+      "ecole": "Enchantement/Charme",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "1\"",
+      "duree": "1 round",
+      "zone_effet": "une créature",
+      "composantes": "V",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "spécial",
+      "source_page": 45,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "jet_sauvegarde_et_effet_court_a_definir_depuis_description"
     },
     {
       "ordre": 7,
       "nom": "Lumière",
+      "ecole": "Altération",
+      "inverse": "Ténèbres",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "12\"",
+      "duree": "6 tours + 1 tour/niveau",
+      "zone_effet": "sphère de 2\" de rayon",
+      "composantes": "V, S",
+      "temps_incantation": "4 segments",
+      "jet_sauvegarde": "aucun",
+      "source_page": 45,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "effet_lumiere_ou_tenebres_a_definir"
     },
     {
       "ordre": 8,
       "nom": "Protection contre le mal",
+      "ecole": "Abjuration",
+      "inverse": "Protection contre le bien",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "au toucher",
+      "duree": "3 rounds/niveau",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S, M",
+      "temps_incantation": "4 segments",
+      "jet_sauvegarde": "aucun",
+      "source_page": 45,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "active_effect_defensif_a_definir_depuis_description"
     },
     {
       "ordre": 9,
       "nom": "Purification de l'eau et des aliments",
+      "ecole": "Altération",
+      "inverse": "Putréfaction de l'eau et des aliments",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "3\"",
+      "duree": "permanente",
+      "zone_effet": "27 dm3/niveau dans une surface de 1\" de côté",
+      "composantes": "V, S",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "source_page": 45,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "message_et_eventuelle_modification_objet_a_definir"
     },
     {
       "ordre": 10,
       "nom": "Résistance au froid",
+      "ecole": "Altération",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "au toucher",
+      "duree": "1 tour/niveau",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "source_page": 45,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "active_effect_resistance_froid_a_definir_depuis_description"
     },
     {
       "ordre": 11,
       "nom": "Sanctuaire",
+      "ecole": "Abjuration",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "au toucher",
+      "duree": "2 rounds + 1 round/niveau",
+      "zone_effet": "une créature",
+      "composantes": "V, S, M",
+      "temps_incantation": "4 segments",
+      "jet_sauvegarde": "annule",
+      "source_page": 45,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "active_effect_defensif_avec_jets_contre_attaquants_a_definir"
     },
     {
       "ordre": 12,
       "nom": "Soins mineurs",
+      "ecole": "Nécromancie",
+      "inverse": "Blessures mineures",
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "au toucher",
+      "duree": "permanente",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S",
+      "temps_incantation": "5 segments",
+      "jet_sauvegarde": "aucun",
+      "source_page": 45,
+      "status": "reference_bloc_technique_complete_description_a_completer",
+      "onuse_strategy": "soin_1d8_ou_blessure_inverse_a_confirmer_depuis_description"
     }
   ]
 }
