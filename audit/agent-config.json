@@ -2,14 +2,15 @@
   "agentName": "add2e-spell-agent",
   "branch": "agent-audit-sorts",
   "sourceOfTruth": "Manuel des joueurs AD&D 2e pour toutes les règles ADD2E",
-  "mode": "audit_and_plan",
+  "mode": "safe_fix",
   "maxLotsPerRun": 30,
-  "allowProductionWrites": false,
-  "allowOnUseCreation": false,
+  "allowProductionWrites": true,
+  "allowOnUseCreation": true,
   "allowImageCreation": false,
   "autoGenerateReferences": true,
   "autoGenerateReports": true,
   "autoUpdateState": true,
+  "autoApplySafeFixes": true,
   "lotOrder": [
     "clerc-niveau-1",
     "clerc-niveau-2",
@@ -43,9 +44,8 @@
     "illusionniste-niveau-7"
   ],
   "blockedActions": [
-    "ne pas inventer de règles",
-    "ne pas corriger les sorts de production si allowProductionWrites=false",
-    "ne pas créer de onUse si allowOnUseCreation=false",
-    "ne pas créer d image si allowImageCreation=false"
+    "ne pas inventer de règles détaillées",
+    "ne pas créer d image si allowImageCreation=false",
+    "les onUse générés automatiquement doivent rester génériques si la règle détaillée n est pas validée"
   ]
 }
