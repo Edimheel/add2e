@@ -1,37 +1,42 @@
 # Audit automatique — druide-niveau-2
 
-Généré le : 2026-06-02T06:26:23.292Z
+Généré le : 2026-06-02T06:34:59.522Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/druide-niveau-2.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-druide-niveau-2.json`
 
 ## Résumé
 
 - Classe : `druide`
 - Niveau : `2`
 - Sorts dans l’export : `10`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Catalepsie | 2 | OK | OK |
-| Charme-personnes ou mammifères | 2 | OK | OK |
-| Croc-en-jambe | 2 | OK | OK |
-| Distorsion du bois | 2 | Manquant : scripts/sorts/druide-distorsion-du-bois.js | OK |
-| Flamme | 2 | Manquant : scripts/sorts/druide-flamme.js | OK |
-| Localisation des plantes | 2 | OK | OK |
-| Métal brûlant | 2 | OK | OK |
-| Obscurcissement | 2 | OK | OK |
-| Peau d'écorce | 2 | OK | OK |
-| Soins mineurs | 2 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Catalepsie
+- Charme-personnes ou mammifères
+- Croc-en-jambe
+- Distorsion du bois
+- Flamme
+- Localisation des plantes
+- Métal brûlant
+- Obscurcissement
+- Peau d'écorce
+- Soins mineurs
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

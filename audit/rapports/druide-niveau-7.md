@@ -1,35 +1,40 @@
 # Audit automatique — druide-niveau-7
 
-Généré le : 2026-06-02T06:26:23.296Z
+Généré le : 2026-06-02T06:34:59.526Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/druide-niveau-7.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-druide-niveau-7.json`
 
 ## Résumé
 
 - Classe : `druide`
 - Niveau : `7`
 - Sorts dans l’export : `8`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Animation de la roche | 7 | OK | OK |
-| Chariot de Sustarre | 7 | OK | OK |
-| Doigt de mort | 7 | Manquant : scripts/sorts/druide-doigt-de-mort.js | OK |
-| Invocation d'un élémental de terre | 7 | Manquant : scripts/sorts/druide-invocation-d-un-elemental-de-terre.js | OK |
-| Mort rampante | 7 | OK | OK |
-| Réincarnation | 7 | OK | OK |
-| Tempête de feu | 7 | OK | OK |
-| Transmutation du métal en bois | 7 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Animation de la roche
+- Chariot de Sustarre
+- Doigt de mort
+- Invocation d'un élémental de terre
+- Mort rampante
+- Réincarnation
+- Tempête de feu
+- Transmutation du métal en bois
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

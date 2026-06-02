@@ -1,48 +1,53 @@
 # Audit automatique — magicien-niveau-4
 
-Généré le : 2026-06-02T06:26:23.307Z
+Généré le : 2026-06-02T06:34:59.535Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/magicien-niveau-4.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-magicien-niveau-4.json`
 
 ## Résumé
 
 - Classe : `magicien`
 - Niveau : `4`
 - Sorts dans l’export : `21`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Allométamorphose | 4 | OK | Manquante : assets/icones/sorts/magicien-allometamorphose.webp |
-| Arme enchantée | 4 | OK | Manquante : assets/icones/sorts/magicien-arme-enchantee.webp |
-| Autométamorphose | 4 | OK | Manquante : assets/icones/sorts/magicien-autometamorphose.webp |
-| Bouclier de feu | 4 | OK | Manquante : assets/icones/sorts/magicien-bouclier-de-feu.webp |
-| Charme-monstres | 4 | OK | Manquante : assets/icones/sorts/magicien-charme-monstres.webp |
-| Confusion | 4 | OK | Manquante : assets/icones/sorts/magicien-confusion.webp |
-| Effroi | 4 | OK | Manquante : assets/icones/sorts/magicien-effroi.webp |
-| Embroussaillement | 4 | OK | Manquante : assets/icones/sorts/magicien-embroussaillement.webp |
-| Excavation | 4 | OK | Manquante : assets/icones/sorts/magicien-excavation.webp |
-| Extension I | 4 | OK | Manquante : assets/icones/sorts/magicien-extension-i.webp |
-| Feu charmeur | 4 | OK | Manquante : assets/icones/sorts/magicien-feu-charmeur.webp |
-| Globe mineur d’invulnérabilité | 4 | OK | Manquante : assets/icones/sorts/magicien-globe-mineur-d-invulnerabilite.webp |
-| Invocation de monstre II | 4 | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstre-ii.webp |
-| Maladresse | 4 | OK | Manquante : assets/icones/sorts/magicien-maladresse.webp |
-| Moyen mnémonique de Rary | 4 | OK | Manquante : assets/icones/sorts/magicien-moyen-mnemonique-de-rary.webp |
-| Mur de glace | 4 | OK | Manquante : assets/icones/sorts/magicien-mur-de-glace.webp |
-| Œil magique | 4 | OK | Manquante : assets/icones/sorts/magicien-il-magique.webp |
-| Piège à feu | 4 | OK | Manquante : assets/icones/sorts/magicien-piege-a-feu.webp |
-| Porte dimensionnelle | 4 | OK | Manquante : assets/icones/sorts/magicien-porte-dimensionnelle.webp |
-| Tempête de glace | 4 | OK | Manquante : assets/icones/sorts/magicien-tempete-de-glace.webp |
-| Terrain hallucinatoire | 4 | OK | Manquante : assets/icones/sorts/magicien-terrain-hallucinatoire.webp |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Allométamorphose
+- Arme enchantée
+- Autométamorphose
+- Bouclier de feu
+- Charme-monstres
+- Confusion
+- Effroi
+- Embroussaillement
+- Excavation
+- Extension I
+- Feu charmeur
+- Globe mineur d’invulnérabilité
+- Invocation de monstre II
+- Maladresse
+- Moyen mnémonique de Rary
+- Mur de glace
+- Œil magique
+- Piège à feu
+- Porte dimensionnelle
+- Tempête de glace
+- Terrain hallucinatoire
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

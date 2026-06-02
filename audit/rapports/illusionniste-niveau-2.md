@@ -1,37 +1,42 @@
 # Audit automatique — illusionniste-niveau-2
 
-Généré le : 2026-06-02T06:26:23.298Z
+Généré le : 2026-06-02T06:34:59.527Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/illusionniste-niveau-2.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-illusionniste-niveau-2.json`
 
 ## Résumé
 
 - Classe : `illusionniste`
 - Niveau : `2`
 - Sorts dans l’export : `10`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Bouche magique | 2 | OK | OK |
-| Cécité | 2 | OK | OK |
-| Désinformation | 2 | OK | OK |
-| Force fantasmagorique améliorée | 2 | OK | OK |
-| Invisibilité | 2 | OK | OK |
-| Motif hypnotique | 2 | OK | OK |
-| Nappe de brouillard | 2 | OK | OK |
-| Surdité | 2 | OK | OK |
-| Trouble | 2 | OK | OK |
-| Ventriloquie | 2 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Bouche magique
+- Cécité
+- Désinformation
+- Force fantasmagorique améliorée
+- Invisibilité
+- Motif hypnotique
+- Nappe de brouillard
+- Surdité
+- Trouble
+- Ventriloquie
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

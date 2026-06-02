@@ -1,37 +1,42 @@
 # Audit automatique — druide-niveau-4
 
-Généré le : 2026-06-02T06:26:23.294Z
+Généré le : 2026-06-02T06:34:59.524Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/druide-niveau-4.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-druide-niveau-4.json`
 
 ## Résumé
 
 - Classe : `druide`
 - Niveau : `4`
 - Sorts dans l’export : `10`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Contrôle de la température sur 3 m | 4 | OK | OK |
-| Dissipation de magie | 4 | Manquant : scripts/sorts/druide-dissipation-de-magie.js | OK |
-| Embrasement | 4 | Manquant : scripts/sorts/druide-embrasement.js | OK |
-| Forêt hallucinatoire | 4 | Manquant : scripts/sorts/druide-foret-hallucinatoire.js | OK |
-| Invocation animale I | 4 | Manquant : scripts/sorts/druide-invocation-animale-i.js | OK |
-| Invocation des créatures sylvestres | 4 | Manquant : scripts/sorts/druide-invocation-des-creatures-sylvestres.js | OK |
-| Paralysie végétale | 4 | OK | OK |
-| Porte végétale | 4 | OK | OK |
-| Protection contre la foudre | 4 | OK | OK |
-| Répulsion des insectes | 4 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Contrôle de la température sur 3 m
+- Dissipation de magie
+- Embrasement
+- Forêt hallucinatoire
+- Invocation animale I
+- Invocation des créatures sylvestres
+- Paralysie végétale
+- Porte végétale
+- Protection contre la foudre
+- Répulsion des insectes
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

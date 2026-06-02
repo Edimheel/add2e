@@ -1,37 +1,42 @@
 # Audit automatique — clerc-niveau-1
 
-Généré le : 2026-06-02T06:26:23.278Z
+Généré le : 2026-06-02T06:34:59.510Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/clerc-niveau-1.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-clerc-niveau-1.json`
 
 ## Résumé
 
 - Classe : `clerc`
 - Niveau : `1`
 - Sorts dans l’export : `10`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Apaisement | 1 | OK | OK |
-| Aquagenèse | 1 | OK | OK |
-| Bénédiction | 1 | OK | OK |
-| Détection du mal | 1 | OK | OK |
-| Injonction | 1 | OK | OK |
-| Protection contre le Mal | 1 | OK | OK |
-| Purification de la Nourriture et de la Boisson | 1 | OK | OK |
-| Résistance au Froid | 1 | OK | OK |
-| Sanctuaire | 1 | OK | OK |
-| Soins des Blessures Légères | 1 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Apaisement
+- Aquagenèse
+- Bénédiction
+- Détection du mal
+- Injonction
+- Protection contre le Mal
+- Purification de la Nourriture et de la Boisson
+- Résistance au Froid
+- Sanctuaire
+- Soins des Blessures Légères
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

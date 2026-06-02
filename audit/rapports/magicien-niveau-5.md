@@ -1,49 +1,54 @@
 # Audit automatique — magicien-niveau-5
 
-Généré le : 2026-06-02T06:26:23.309Z
+Généré le : 2026-06-02T06:34:59.536Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/magicien-niveau-5.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-magicien-niveau-5.json`
 
 ## Résumé
 
 - Classe : `magicien`
 - Niveau : `5`
 - Sorts dans l’export : `22`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Chien fidèle de Mordekainen | 5 | OK | Manquante : assets/icones/sorts/magicien-chien-fidele-de-mordekainen.webp |
-| Coffre secret de Léomund | 5 | OK | Manquante : assets/icones/sorts/magicien-coffre-secret-de-leomund.webp |
-| Cône de froid | 5 | OK | Manquante : assets/icones/sorts/magicien-cone-de-froid.webp |
-| Contact d'autres plans | 5 | OK | Manquante : assets/icones/sorts/magicien-contact-d-autres-plans.webp |
-| Croissance animale | 5 | OK | Manquante : assets/icones/sorts/magicien-croissance-animale.webp |
-| Débilité mentale | 5 | OK | Manquante : assets/icones/sorts/magicien-debilite-mentale.webp |
-| Distorsion des distances | 5 | OK | Manquante : assets/icones/sorts/magicien-distorsion-des-distances.webp |
-| Eau aérée | 5 | OK | Manquante : assets/icones/sorts/magicien-eau-aeree.webp |
-| Extension II | 5 | OK | Manquante : assets/icones/sorts/magicien-extension-ii.webp |
-| Invocation d’élémental | 5 | OK | Manquante : assets/icones/sorts/magicien-invocation-d-elemental.webp |
-| Invocation de Monstre III | 5 | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstre-iii.webp |
-| Main d’interposition de Bigby | 5 | OK | Manquante : assets/icones/sorts/magicien-main-d-interposition-de-bigby.webp |
-| Métempsycose | 5 | OK | Manquante : assets/icones/sorts/magicien-metempsycose.webp |
-| Mur de fer | 5 | OK | Manquante : assets/icones/sorts/magicien-mur-de-fer.webp |
-| Mur de force | 5 | OK | Manquante : assets/icones/sorts/magicien-mur-de-force.webp |
-| Mur de roc | 5 | OK | Manquante : assets/icones/sorts/magicien-mur-de-roc.webp |
-| Nécro-animation | 5 | OK | Manquante : assets/icones/sorts/magicien-necro-animation.webp |
-| Nuage létal | 5 | OK | Manquante : assets/icones/sorts/magicien-nuage-letal.webp |
-| Paralysie des monstres | 5 | OK | Manquante : assets/icones/sorts/magicien-paralysie-des-monstres.webp |
-| Passe-muraille | 5 | OK | Manquante : assets/icones/sorts/magicien-passe-muraille.webp |
-| Télékinésie | 5 | OK | Manquante : assets/icones/sorts/magicien-telekinesie.webp |
-| Téléportation | 5 | OK | Manquante : assets/icones/sorts/magicien-teleportation.webp |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Chien fidèle de Mordekainen
+- Coffre secret de Léomund
+- Cône de froid
+- Contact d'autres plans
+- Croissance animale
+- Débilité mentale
+- Distorsion des distances
+- Eau aérée
+- Extension II
+- Invocation d’élémental
+- Invocation de Monstre III
+- Main d’interposition de Bigby
+- Métempsycose
+- Mur de fer
+- Mur de force
+- Mur de roc
+- Nécro-animation
+- Nuage létal
+- Paralysie des monstres
+- Passe-muraille
+- Télékinésie
+- Téléportation
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

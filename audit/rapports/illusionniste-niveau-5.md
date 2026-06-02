@@ -1,34 +1,39 @@
 # Audit automatique — illusionniste-niveau-5
 
-Généré le : 2026-06-02T06:26:23.299Z
+Généré le : 2026-06-02T06:34:59.528Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/illusionniste-niveau-5.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-illusionniste-niveau-5.json`
 
 ## Résumé
 
 - Classe : `illusionniste`
 - Niveau : `5`
 - Sorts dans l’export : `7`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Chaos | 5 | OK | Manquante : assets/icones/sorts/illusionniste-chaos.webp |
-| Création majeure | 5 | OK | Manquante : assets/icones/sorts/illusionniste-creation-majeure.webp |
-| Holographie | 5 | OK | Manquante : assets/icones/sorts/illusionniste-holographie.webp |
-| Invocation des ombres | 5 | OK | Manquante : assets/icones/sorts/illusionniste-invocation-des-ombres.webp |
-| Magie des ombres | 5 | OK | Manquante : assets/icones/sorts/illusionniste-magie-des-ombres.webp |
-| Monstres demi-ombre | 5 | OK | Manquante : assets/icones/sorts/illusionniste-monstres-demi-ombre.webp |
-| Porte des ombres | 5 | OK | Manquante : assets/icones/sorts/illusionniste-porte-des-ombres.webp |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Chaos
+- Création majeure
+- Holographie
+- Invocation des ombres
+- Magie des ombres
+- Monstres demi-ombre
+- Porte des ombres
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

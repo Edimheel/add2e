@@ -1,38 +1,43 @@
 # Audit automatique — magicien-niveau-9
 
-Généré le : 2026-06-02T06:26:23.315Z
+Généré le : 2026-06-02T06:34:59.541Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/magicien-niveau-9.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-magicien-niveau-9.json`
 
 ## Résumé
 
 - Classe : `magicien`
 - Niveau : `9`
 - Sorts dans l’export : `11`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Arrêt du temps | 9 | OK | Manquante : assets/icones/sorts/magicien-arret-du-temps.webp |
-| Emprisonnement | 9 | OK | Manquante : assets/icones/sorts/magicien-emprisonnement.webp |
-| Hétéromorphisme | 9 | OK | Manquante : assets/icones/sorts/magicien-heteromorphisme.webp |
-| Invocation de Monstre VII | 9 | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstre-vii.webp |
-| Main broyante de Bigby | 9 | OK | Manquante : assets/icones/sorts/magicien-main-broyante-de-bigby.webp |
-| Mot de pouvoir : « mort » | 9 | OK | Manquante : assets/icones/sorts/magicien-mot-de-pouvoir-mort.webp |
-| Nuée de météores | 9 | OK | Manquante : assets/icones/sorts/magicien-nuee-de-meteores.webp |
-| Seuil | 9 | OK | Manquante : assets/icones/sorts/magicien-seuil.webp |
-| Souhait majeur | 9 | OK | Manquante : assets/icones/sorts/magicien-souhait-majeur.webp |
-| Sphère prismatique | 9 | OK | Manquante : assets/icones/sorts/magicien-sphere-prismatique.webp |
-| Stase temporelle | 9 | OK | Manquante : assets/icones/sorts/magicien-stase-temporelle.webp |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Arrêt du temps
+- Emprisonnement
+- Hétéromorphisme
+- Invocation de Monstre VII
+- Main broyante de Bigby
+- Mot de pouvoir : « mort »
+- Nuée de météores
+- Seuil
+- Souhait majeur
+- Sphère prismatique
+- Stase temporelle
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

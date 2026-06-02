@@ -1,35 +1,40 @@
 # Audit automatique — illusionniste-niveau-6
 
-Généré le : 2026-06-02T06:26:23.300Z
+Généré le : 2026-06-02T06:34:59.529Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/illusionniste-niveau-6.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-illusionniste-niveau-6.json`
 
 ## Résumé
 
 - Classe : `illusionniste`
 - Niveau : `6`
 - Sorts dans l’export : `8`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Illusion permanente | 6 | OK | Manquante : assets/icones/sorts/illusionniste-illusion-permanente.webp |
-| Illusion programmée | 6 | OK | Manquante : assets/icones/sorts/illusionniste-illusion-programmee.webp |
-| Invocation des animaux | 6 | OK | Manquante : assets/icones/sorts/illusionniste-invocation-des-animaux.webp |
-| Magie demi-ombre | 6 | OK | OK |
-| Ombres | 6 | OK | OK |
-| Suggestion de masse | 6 | OK | OK |
-| Vision réelle | 6 | OK | OK |
-| Voile illusoire | 6 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Illusion permanente
+- Illusion programmée
+- Invocation des animaux
+- Magie demi-ombre
+- Ombres
+- Suggestion de masse
+- Vision réelle
+- Voile illusoire
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

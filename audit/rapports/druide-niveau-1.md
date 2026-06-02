@@ -1,39 +1,44 @@
 # Audit automatique — druide-niveau-1
 
-Généré le : 2026-06-02T06:26:23.292Z
+Généré le : 2026-06-02T06:34:59.521Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/druide-niveau-1.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-druide-niveau-1.json`
 
 ## Résumé
 
 - Classe : `druide`
 - Niveau : `1`
 - Sorts dans l’export : `12`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Amitié animale | 1 | OK | OK |
-| Aura féérique | 1 | OK | OK |
-| Détection de la magie | 1 | OK | OK |
-| Détection des pièges sylvestres | 1 | OK | OK |
-| Enchevêtrement | 1 | Manquant : scripts/sorts/druide-enchevetrement.js | OK |
-| Invisibilité aux animaux | 1 | Manquant : scripts/sorts/druide-invisibilite-aux-animaux.js | OK |
-| Langage animal | 1 | OK | OK |
-| Localisation des animaux | 1 | OK | OK |
-| Passage sans trace | 1 | OK | OK |
-| Prévision du temps | 1 | OK | OK |
-| Purification de l'eau | 1 | OK | OK |
-| Shillelagh | 1 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Amitié animale
+- Aura féérique
+- Détection de la magie
+- Détection des pièges sylvestres
+- Enchevêtrement
+- Invisibilité aux animaux
+- Langage animal
+- Localisation des animaux
+- Passage sans trace
+- Prévision du temps
+- Purification de l'eau
+- Shillelagh
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

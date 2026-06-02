@@ -1,34 +1,39 @@
 # Audit automatique — illusionniste-niveau-4
 
-Généré le : 2026-06-02T06:26:23.299Z
+Généré le : 2026-06-02T06:34:59.528Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/illusionniste-niveau-4.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-illusionniste-niveau-4.json`
 
 ## Résumé
 
 - Classe : `illusionniste`
 - Niveau : `4`
 - Sorts dans l’export : `7`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Création mineure | 4 | OK | Manquante : assets/icones/sorts/illusionniste-creation-mineure.webp |
-| Dissipation de l’épuisement | 4 | OK | Manquante : assets/icones/sorts/illusionniste-dissipation-de-l-epuisement.webp |
-| Émotion | 4 | OK | Manquante : assets/icones/sorts/illusionniste-emotion.webp |
-| Invisibilité améliorée | 4 | OK | Manquante : assets/icones/sorts/illusionniste-invisibilite-amelioree.webp |
-| Monstres des ombres | 4 | OK | Manquante : assets/icones/sorts/illusionniste-monstres-des-ombres.webp |
-| Phytomorphose | 4 | OK | Manquante : assets/icones/sorts/illusionniste-phytomorphose.webp |
-| Tueur fantasmagorique | 4 | OK | Manquante : assets/icones/sorts/illusionniste-tueur-fantasmagorique.webp |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Création mineure
+- Dissipation de l’épuisement
+- Émotion
+- Invisibilité améliorée
+- Monstres des ombres
+- Phytomorphose
+- Tueur fantasmagorique
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

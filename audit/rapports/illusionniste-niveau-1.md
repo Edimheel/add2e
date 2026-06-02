@@ -1,38 +1,43 @@
 # Audit automatique — illusionniste-niveau-1
 
-Généré le : 2026-06-02T06:26:23.297Z
+Généré le : 2026-06-02T06:34:59.526Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/illusionniste-niveau-1.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-illusionniste-niveau-1.json`
 
 ## Résumé
 
 - Classe : `illusionniste`
 - Niveau : `1`
 - Sorts dans l’export : `11`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Bruitage | 1 | OK | OK |
-| Changement d’apparence | 1 | OK | OK |
-| Détection de l’invisibilité | 1 | OK | OK |
-| Détection des illusions | 1 | OK | OK |
-| Force fantasmagorique | 1 | OK | OK |
-| Hypnotisme | 1 | OK | OK |
-| Jet de couleurs | 1 | OK | OK |
-| Lumière | 1 | OK | OK |
-| Mur de brouillard | 1 | OK | OK |
-| Réflexion des regards | 1 | OK | OK |
-| Ténèbres | 1 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Bruitage
+- Changement d’apparence
+- Détection de l’invisibilité
+- Détection des illusions
+- Force fantasmagorique
+- Hypnotisme
+- Jet de couleurs
+- Lumière
+- Mur de brouillard
+- Réflexion des regards
+- Ténèbres
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

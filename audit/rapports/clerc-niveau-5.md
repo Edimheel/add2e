@@ -1,36 +1,41 @@
 # Audit automatique — clerc-niveau-5
 
-Généré le : 2026-06-02T06:26:23.288Z
+Généré le : 2026-06-02T06:34:59.519Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/clerc-niveau-5.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-clerc-niveau-5.json`
 
 ## Résumé
 
 - Classe : `clerc`
 - Niveau : `5`
 - Sorts dans l’export : `9`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Changement de Plan | 5 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/changement-de-plan.js | OK |
-| Communion | 5 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/communion.js | OK |
-| Dissipation du Mal | 5 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/dissipation-du-mal.js | OK |
-| Expiation | 5 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/penitence.js | OK |
-| Fléau d’Insectes | 5 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/fleau-d-insectes.js | OK |
-| Pilier de Feu | 5 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/colonne-de-feu.js | OK |
-| Quête Religieuse | 5 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/quete-religieuse.js | OK |
-| Rappel à la Vie | 5 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/rappel-a-la-vie.js | OK |
-| Soins ultime | 5 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/soins-des-blessures-critiques.js | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Changement de Plan
+- Communion
+- Dissipation du Mal
+- Expiation
+- Fléau d’Insectes
+- Pilier de Feu
+- Quête Religieuse
+- Rappel à la Vie
+- Soins ultime
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

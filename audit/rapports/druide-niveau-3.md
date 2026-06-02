@@ -1,36 +1,41 @@
 # Audit automatique — druide-niveau-3
 
-Généré le : 2026-06-02T06:26:23.293Z
+Généré le : 2026-06-02T06:34:59.523Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/druide-niveau-3.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-druide-niveau-3.json`
 
 ## Résumé
 
 - Classe : `druide`
 - Niveau : `3`
 - Sorts dans l’export : `9`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Arbre | 3 | OK | OK |
-| Contre-poison | 3 | OK | OK |
-| Invocation d'insectes | 3 | Manquant : scripts/sorts/druide-invocation-d-insectes.js | OK |
-| Invocation de la foudre | 3 | Manquant : scripts/sorts/druide-invocation-de-la-foudre.js | OK |
-| Lithomorphose | 3 | OK | OK |
-| Paralysie animale | 3 | OK | OK |
-| Piège sylvestre | 3 | OK | OK |
-| Protection contre le feu | 3 | OK | OK |
-| Respiration aquatique | 3 | OK | Manquante : assets/icones/sorts/druide-respiration-aquatique.webp |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Arbre
+- Contre-poison
+- Invocation d'insectes
+- Invocation de la foudre
+- Lithomorphose
+- Paralysie animale
+- Piège sylvestre
+- Protection contre le feu
+- Respiration aquatique
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

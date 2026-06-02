@@ -1,45 +1,50 @@
 # Audit automatique — magicien-niveau-3
 
-Généré le : 2026-06-02T06:26:23.306Z
+Généré le : 2026-06-02T06:34:59.534Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/magicien-niveau-3.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-magicien-niveau-3.json`
 
 ## Résumé
 
 - Classe : `magicien`
 - Niveau : `3`
 - Sorts dans l’export : `18`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Boule de feu | 3 | OK | Manquante : assets/icones/sorts/magicien-boule-de-feu.webp |
-| Chaumière de Léomund | 3 | OK | Manquante : assets/icones/sorts/magicien-chaumiere-de-leomund.webp |
-| Clairaudience | 3 | OK | Manquante : assets/icones/sorts/magicien-clairaudience.webp |
-| Clairvoyance | 3 | OK | Manquante : assets/icones/sorts/magicien-clairvoyance.webp |
-| Flèche de feu | 3 | OK | Manquante : assets/icones/sorts/magicien-fleche-de-feu.webp |
-| Foudre | 3 | OK | Manquante : assets/icones/sorts/magicien-foudre.webp |
-| Infravision | 3 | OK | Manquante : assets/icones/sorts/magicien-infravision.webp |
-| Intermittence | 3 | OK | Manquante : assets/icones/sorts/magicien-intermittence.webp |
-| Invocation de monstres I | 3 | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstres-i.webp |
-| Langues | 3 | OK | Manquante : assets/icones/sorts/magicien-langues.webp |
-| Paralysie | 3 | OK | Manquante : assets/icones/sorts/magicien-paralysie.webp |
-| Protection contre le mal sur 3 m | 3 | OK | Manquante : assets/icones/sorts/magicien-protection-contre-le-mal-sur-3-m.webp |
-| Protection contre les projectiles normaux | 3 | OK | Manquante : assets/icones/sorts/magicien-protection-contre-les-projectiles-normaux.webp |
-| Rafale de vent | 3 | OK | Manquante : assets/icones/sorts/magicien-rafale-de-vent.webp |
-| Ralentissement | 3 | OK | Manquante : assets/icones/sorts/magicien-ralentissement.webp |
-| Rapidité | 3 | OK | Manquante : assets/icones/sorts/magicien-rapidite.webp |
-| Runes explosives | 3 | OK | Manquante : assets/icones/sorts/magicien-runes-explosives.webp |
-| Vol | 3 | OK | Manquante : assets/icones/sorts/magicien-vol.webp |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Boule de feu
+- Chaumière de Léomund
+- Clairaudience
+- Clairvoyance
+- Flèche de feu
+- Foudre
+- Infravision
+- Intermittence
+- Invocation de monstres I
+- Langues
+- Paralysie
+- Protection contre le mal sur 3 m
+- Protection contre les projectiles normaux
+- Rafale de vent
+- Ralentissement
+- Rapidité
+- Runes explosives
+- Vol
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

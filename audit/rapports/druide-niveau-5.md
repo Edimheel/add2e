@@ -1,35 +1,40 @@
 # Audit automatique — druide-niveau-5
 
-Généré le : 2026-06-02T06:26:23.294Z
+Généré le : 2026-06-02T06:34:59.524Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/druide-niveau-5.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-druide-niveau-5.json`
 
 ## Résumé
 
 - Classe : `druide`
 - Niveau : `5`
 - Sorts dans l’export : `8`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Bâtons à serpents | 5 | OK | OK |
-| Bouclier anti-plantes | 5 | OK | OK |
-| Communion avec la nature | 5 | OK | OK |
-| Contrôle des vents | 5 | OK | OK |
-| Invocation animale II | 5 | Manquant : scripts/sorts/druide-invocation-animale-ii.js | OK |
-| Mur de feu | 5 | OK | OK |
-| Passe-plantes | 5 | OK | OK |
-| Transmutation de pierre en boue | 5 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Bâtons à serpents
+- Bouclier anti-plantes
+- Communion avec la nature
+- Contrôle des vents
+- Invocation animale II
+- Mur de feu
+- Passe-plantes
+- Transmutation de pierre en boue
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

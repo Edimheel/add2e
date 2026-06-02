@@ -1,35 +1,40 @@
 # Audit automatique — illusionniste-niveau-3
 
-Généré le : 2026-06-02T06:26:23.298Z
+Généré le : 2026-06-02T06:34:59.527Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/illusionniste-niveau-3.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-illusionniste-niveau-3.json`
 
 ## Résumé
 
 - Classe : `illusionniste`
 - Niveau : `3`
 - Sorts dans l’export : `8`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Dissipation des illusions | 3 | OK | OK |
-| Écriture illusoire | 3 | OK | OK |
-| Force spectrale | 3 | OK | OK |
-| Invisibilité sur 3 m | 3 | OK | OK |
-| Non-détection | 3 | OK | OK |
-| Paralysie musculaire | 3 | OK | OK |
-| Suggestion | 3 | OK | OK |
-| Ténèbres éternelles | 3 | OK | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Dissipation des illusions
+- Écriture illusoire
+- Force spectrale
+- Invisibilité sur 3 m
+- Non-détection
+- Paralysie musculaire
+- Suggestion
+- Ténèbres éternelles
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

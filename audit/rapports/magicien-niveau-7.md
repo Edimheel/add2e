@@ -1,43 +1,48 @@
 # Audit automatique — magicien-niveau-7
 
-Généré le : 2026-06-02T06:26:23.313Z
+Généré le : 2026-06-02T06:34:59.539Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/magicien-niveau-7.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-magicien-niveau-7.json`
 
 ## Résumé
 
 - Classe : `magicien`
 - Niveau : `7`
 - Sorts dans l’export : `16`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Boule de feu à retardement | 7 | OK | Manquante : assets/icones/sorts/magicien-boule-de-feu-a-retardement.webp |
-| Cacodémon | 7 | OK | Manquante : assets/icones/sorts/magicien-cacodemon.webp |
-| Charme-plantes | 7 | OK | Manquante : assets/icones/sorts/magicien-charme-plantes.webp |
-| Disparition | 7 | OK | Manquante : assets/icones/sorts/magicien-disparition.webp |
-| Duo-dimension | 7 | OK | Manquante : assets/icones/sorts/magicien-duo-dimension.webp |
-| Épée de Mordenkainen | 7 | OK | Manquante : assets/icones/sorts/magicien-epee-de-mordenkainen.webp |
-| Inversion de la gravité | 7 | OK | Manquante : assets/icones/sorts/magicien-inversion-de-la-gravite.webp |
-| Invisibilité de masse | 7 | OK | Manquante : assets/icones/sorts/magicien-invisibilite-de-masse.webp |
-| Invocation de monstre V | 7 | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstre-v.webp |
-| Invocation instantanée de Drawmij | 7 | OK | Manquante : assets/icones/sorts/magicien-invocation-instantanee-de-drawmij.webp |
-| Mot de pouvoir : « étourdissement » | 7 | OK | Manquante : assets/icones/sorts/magicien-mot-de-pouvoir-etourdissement.webp |
-| Poigne de Bigby | 7 | OK | Manquante : assets/icones/sorts/magicien-poigne-de-bigby.webp |
-| Porte de phase | 7 | OK | Manquante : assets/icones/sorts/magicien-porte-de-phase.webp |
-| Simulacre | 7 | OK | Manquante : assets/icones/sorts/magicien-simulacre.webp |
-| Souhait mineur | 7 | OK | Manquante : assets/icones/sorts/magicien-souhait-mineur.webp |
-| Statue | 7 | OK | Manquante : assets/icones/sorts/magicien-statue.webp |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Boule de feu à retardement
+- Cacodémon
+- Charme-plantes
+- Disparition
+- Duo-dimension
+- Épée de Mordenkainen
+- Inversion de la gravité
+- Invisibilité de masse
+- Invocation de monstre V
+- Invocation instantanée de Drawmij
+- Mot de pouvoir : « étourdissement »
+- Poigne de Bigby
+- Porte de phase
+- Simulacre
+- Souhait mineur
+- Statue
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 

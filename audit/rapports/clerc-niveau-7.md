@@ -1,37 +1,42 @@
 # Audit automatique — clerc-niveau-7
 
-Généré le : 2026-06-02T06:26:23.291Z
+Généré le : 2026-06-02T06:34:59.521Z
 
 ## Fichiers
 
 - Export découpé : `audit/decoupage_fichier/clerc-niveau-7.json`
-- Référence : manquante
+- Référence : `audit/reference/manuel-joueurs-clerc-niveau-7.json`
 
 ## Résumé
 
 - Classe : `clerc`
 - Niveau : `7`
 - Sorts dans l’export : `10`
-- Statut : référence Manuel des joueurs manquante ; rapport d’inventaire seulement.
+- Sorts attendus par la référence : `0`
+- Sorts manquants : `0`
+- Écarts de nom : `0`
 
-## Inventaire export Foundry
+## Comparaison à la référence
 
-| Sort | Niveau | onUse | Image |
-| --- | --- | --- | --- |
-| Asile | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/asile.js | OK |
-| Contrôle du Climat | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/controle-du-climat.js | OK |
-| Marche des Vent | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js | OK |
-| Parole Sacrée | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/parole-sacree.js | OK |
-| Régénération | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/regeneration.js | OK |
-| Restauration | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/restauration.js | OK |
-| Résurrection | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/resurrection.js | OK |
-| Sort Astral | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/sort-astral.js | OK |
-| Symbole | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/symbole.js | OK |
-| Tremblement de Terre | 7 | Manquant : scripts/sorts/clerc-niveaux-5-6-7/tremblement-de-terre.js | OK |
+| Sort attendu | Nom | onUse | Image | Composants export |
+| --- | --- | --- | --- | --- |
+
+## Sorts présents hors correspondance stricte
+
+- Asile
+- Contrôle du Climat
+- Marche des Vent
+- Parole Sacrée
+- Régénération
+- Restauration
+- Résurrection
+- Sort Astral
+- Symbole
+- Tremblement de Terre
 
 ## Statut
 
-`reference_manquante`
+`audit_genere_reference_presente`
 
 ## Limites
 
