@@ -1,5 +1,7 @@
 name: Générer les rapports d’audit des sorts
 
+# Trigger refresh: references skeletons are now available.
+
 on:
   workflow_dispatch:
   push:
