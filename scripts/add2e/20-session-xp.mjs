@@ -1,17 +1,16 @@
 // ADD2E — XP de session automatisée — ApplicationV2
-// Version : 2026-05-24-session-xp-v2-single-file-token-sync
+// Version : 2026-06-02-session-xp-v3-dead-monsters-shared-recap
 //
 // Règles :
 // - Les monstres ne montent jamais de niveau.
 // - Un monstre est une source de PX uniquement.
-// - Un monstre est enregistré quand ses PV passent à 0 ou moins.
-// - Un token monstre supprimé est enregistré par sécurité.
+// - Seuls les monstres morts ou tombés à 0 PV apparaissent dans le bilan/récap.
+// - Le récap chat affiche le partage de chaque monstre entre les personnages.
 // - Le bilan XP est une ApplicationV2 native, sans Dialog V1.
-// - Le bouton de scène utilise SceneControlTool#onChange, pas onClick.
 // - L'XP est appliquée uniquement aux acteurs type "personnage".
 // - Les tokens non liés des personnages reçoivent aussi la même XP.
 
-const VERSION = "2026-05-24-session-xp-v2-single-file-token-sync";
+const VERSION = "2026-06-02-session-xp-v3-dead-monsters-shared-recap";
 const TAG = "[ADD2E][SESSION_XP]";
 const FLAG_SCOPE = "add2e";
 const FLAG_LEDGER = "sessionXpLedger";
@@ -22,13 +21,8 @@ const ApplicationV2 = foundry.applications.api.ApplicationV2;
 
 globalThis.ADD2E_SESSION_XP_VERSION = VERSION;
 
-function log(label, data = {}) {
-  console.log(`${TAG}${label}`, data);
-}
-
-function warn(label, data = {}) {
-  console.warn(`${TAG}${label}`, data);
-}
+function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
+function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
 
 function num(value, fallback = 0) {
   if (typeof value === "number") return Number.isFinite(value) ? value : fallback;
@@ -59,8 +53,12 @@ function nowIso() {
 }
 
 function currentLedger() {
-  const ledger = game.settings.get("add2e", FLAG_LEDGER);
-  return Array.isArray(ledger) ? ledger : [];
+  try {
+    const ledger = game.settings.get("add2e", FLAG_LEDGER);
+    return Array.isArray(ledger) ? ledger : [];
+  } catch (_e) {
+    return [];
+  }
 }
 
 async function saveLedger(ledger) {
@@ -84,6 +82,10 @@ function changedHpValue(changes, fallback) {
     if (foundry.utils.hasProperty(changes, path)) return num(foundry.utils.getProperty(changes, path), fallback);
   }
   return null;
+}
+
+function isDeadMonsterActor(actor) {
+  return actor?.type === "monster" && actorHpValue(actor) <= 0;
 }
 
 function actorDropsToZero(actor, changes) {
@@ -119,6 +121,7 @@ function tokenKey({ actor = null, tokenDoc = null, scene = null } = {}) {
 function buildLedgerEntry(actor, { tokenDoc = null, scene = null, reason = "pv_zero", xpOverride = null } = {}) {
   const xp = Math.max(0, Math.floor(num(xpOverride ?? monsterXpValue(actor), 0)));
   const realScene = scene ?? tokenDoc?.parent ?? tokenDoc?.scene ?? canvas?.scene ?? null;
+  const hp = actorHpValue(actor);
   return {
     key: tokenKey({ actor, tokenDoc, scene: realScene }),
     actorId: actor?.id ?? tokenDoc?.actorId ?? "",
@@ -129,9 +132,11 @@ function buildLedgerEntry(actor, { tokenDoc = null, scene = null, reason = "pv_z
     sceneId: realScene?.id ?? "",
     sceneName: realScene?.name ?? "",
     xp,
+    hp,
+    dead: hp <= 0,
     reason,
     recordedAt: nowIso(),
-    included: true
+    included: hp <= 0
   };
 }
 
@@ -149,9 +154,23 @@ function alreadyRecorded(actor, tokenDoc, ledger, key) {
   return false;
 }
 
+function ledgerEntryIsDead(entry) {
+  if (!entry || entry.included === false) return false;
+  if (entry.dead === true) return true;
+  if (num(entry.hp, 1) <= 0) return true;
+  const actor = game.actors?.get?.(entry.actorId);
+  if (actor?.type === "monster" && actorHpValue(actor) <= 0) return true;
+  const reason = String(entry.reason ?? "").toLowerCase();
+  return /pv_zero|dead|mort/.test(reason) && !/^token_deleted$/.test(reason);
+}
+
 async function recordMonsterXp(actor, { tokenDoc = null, scene = null, reason = "pv_zero", notify = false, force = false } = {}) {
   if (!game.user?.isGM) return null;
   if (!actor || actor.type !== "monster") return null;
+  if (!isDeadMonsterActor(actor)) {
+    log("[RECORD][SKIP_ALIVE]", { actor: actor.name, hp: actorHpValue(actor), reason });
+    return null;
+  }
 
   const entry = buildLedgerEntry(actor, { tokenDoc, scene, reason });
   const ledger = currentLedger();
@@ -176,15 +195,16 @@ function queueRecord(actor, options = {}) {
 }
 
 function allSceneMonsterRows() {
-  const activeKeys = new Set(currentLedger().filter(e => e?.included !== false).map(e => e.key));
+  const activeKeys = new Set(currentLedger().filter(ledgerEntryIsDead).map(e => e.key));
   const rows = [];
 
   for (const scene of game.scenes ?? []) {
     for (const tokenDoc of scene.tokens ?? []) {
       const actor = tokenDoc.actor;
       if (!actor || actor.type !== "monster") continue;
-      const key = tokenKey({ actor, tokenDoc, scene });
       const hp = actorHpValue(actor);
+      if (hp > 0) continue;
+      const key = tokenKey({ actor, tokenDoc, scene });
       const xp = monsterXpValue(actor);
       rows.push({
         key,
@@ -201,9 +221,11 @@ function allSceneMonsterRows() {
         sceneName: scene.name,
         xp,
         hp,
-        included: hp <= 0 || activeKeys.has(key),
+        dead: true,
+        included: true,
         alreadyRecorded: activeKeys.has(key),
-        reason: hp <= 0 ? "pv_zero_scene" : "scene_scan"
+        checked: true,
+        reason: "pv_zero_scene"
       });
     }
   }
@@ -213,14 +235,25 @@ function allSceneMonsterRows() {
 
 function activeLedgerRows() {
   return currentLedger()
-    .filter(entry => entry && entry.included !== false)
-    .map(entry => ({ ...entry, source: "ledger", alreadyRecorded: true, checked: true }));
+    .filter(ledgerEntryIsDead)
+    .map(entry => ({ ...entry, source: "ledger", alreadyRecorded: true, checked: true, dead: true }));
 }
 
 function sceneRowsNotInActiveLedger() {
   return allSceneMonsterRows()
     .filter(row => row && !row.alreadyRecorded)
-    .map(row => ({ ...row, checked: row.hp <= 0 }));
+    .map(row => ({ ...row, checked: true }));
+}
+
+function sourceRowsForApp() {
+  const rows = [];
+  const keys = new Set();
+  for (const row of [...activeLedgerRows(), ...sceneRowsNotInActiveLedger()]) {
+    if (!row?.key || keys.has(row.key)) continue;
+    keys.add(row.key);
+    rows.push(row);
+  }
+  return rows;
 }
 
 function characterRows() {
@@ -242,6 +275,7 @@ function auditXpFields() {
     xp: monsterXpValue(actor),
     rawXp: actor.system?.xp,
     hp: actorHpValue(actor),
+    dead: actorHpValue(actor) <= 0,
     ok: monsterXpValue(actor) > 0
   }));
   const characterRowsAudit = chars.map(actor => ({
@@ -255,6 +289,8 @@ function auditXpFields() {
   const result = {
     version: VERSION,
     monsters: monsterRows,
+    deadMonsters: monsterRows.filter(r => r.dead),
+    aliveMonstersIgnored: monsterRows.filter(r => !r.dead),
     characters: characterRowsAudit,
     monstersWithoutXp: monsterRows.filter(r => !r.ok),
     charactersWithMissingXpFields: characterRowsAudit.filter(r => !r.ok),
@@ -268,9 +304,8 @@ function auditXpFields() {
 
 function sourceRowHtml(row) {
   const checked = row.checked || row.included ? "checked" : "";
-  const hpText = row.source === "scene"
-    ? `<span class="a2e-xp-chip ${row.hp <= 0 ? "dead" : "alive"}">PV ${esc(row.hp)}</span>`
-    : `<span class="a2e-xp-chip ledger">registre</span>`;
+  const hpValue = row.hp ?? "0";
+  const hpText = `<span class="a2e-xp-chip dead">Mort / PV ${esc(hpValue)}</span>`;
   return `<tr class="a2e-xp-source-row" data-key="${esc(row.key)}" data-source="${esc(row.source)}" data-monster-name="${esc(row.monsterName)}" data-token-name="${esc(row.tokenName)}" data-scene-name="${esc(row.sceneName)}" data-scene-id="${esc(row.sceneId)}" data-token-id="${esc(row.tokenId)}" data-actor-id="${esc(row.actorId)}" data-actor-uuid="${esc(row.actorUuid)}" data-reason="${esc(row.reason || row.source)}">
     <td class="center"><input type="checkbox" data-role="include-source" ${checked}></td>
     <td><div class="a2e-xp-name"><strong>${esc(row.monsterName || row.tokenName)}</strong>${hpText}</div></td>
@@ -291,7 +326,7 @@ function characterRowHtml(row) {
 }
 
 function appHtml() {
-  const sourceRows = [...activeLedgerRows(), ...sceneRowsNotInActiveLedger()];
+  const sourceRows = sourceRowsForApp();
   const chars = characterRows();
 
   return `<div class="add2e-session-xp-v2">
@@ -304,17 +339,17 @@ function appHtml() {
       .add2e-session-xp-v2 th,.add2e-session-xp-v2 td{border:1px solid var(--gold);padding:6px 7px;vertical-align:middle;color:#2b1b0c}.add2e-session-xp-v2 th{background:linear-gradient(180deg,#f0dda2,#d9bd65);color:#3b2207;font-weight:900;text-shadow:none}
       .add2e-session-xp-v2 tbody tr:nth-child(even){background:#fff5dc}.add2e-session-xp-v2 tbody tr:hover{background:#fff0bd}.add2e-session-xp-v2 .center{text-align:center}.add2e-session-xp-v2 .right{text-align:right}
       .add2e-session-xp-v2 input[type="checkbox"]{width:20px;height:20px;accent-color:#346f38}.add2e-session-xp-v2 .a2e-xp-number{width:86px;max-width:100%;text-align:right;padding:4px 6px;border:1px solid #9d8542;border-radius:5px;background:#fff;color:#111;font-weight:700}.add2e-session-xp-v2 .a2e-xp-number.small{width:68px}
-      .add2e-session-xp-v2 .a2e-xp-name{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.add2e-session-xp-v2 .a2e-xp-chip{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;font-size:.72rem;font-weight:800;border:1px solid #bfa65a;background:#fff6d8;color:#4a300b}.add2e-session-xp-v2 .a2e-xp-chip.dead{border-color:#9d2d25;background:#ffe4df;color:#8d2b22}.add2e-session-xp-v2 .a2e-xp-chip.alive{border-color:#3b7b45;background:#e5f7e8;color:#267a3d}.add2e-session-xp-v2 .a2e-xp-chip.ledger{border-color:#235f8f;background:#e7f2ff;color:#235f8f}
+      .add2e-session-xp-v2 .a2e-xp-name{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.add2e-session-xp-v2 .a2e-xp-chip{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;font-size:.72rem;font-weight:800;border:1px solid #bfa65a;background:#fff6d8;color:#4a300b}.add2e-session-xp-v2 .a2e-xp-chip.dead{border-color:#9d2d25;background:#ffe4df;color:#8d2b22}
       .add2e-session-xp-v2 .global-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:6px 0 12px}.add2e-session-xp-v2 .global-grid label{display:flex;flex-direction:column;gap:3px;padding:7px;border:1px solid var(--gold);border-radius:7px;background:#fffaf0;font-weight:800;color:#4a2d0a}.add2e-session-xp-v2 .global-grid input{width:100%;padding:5px 7px;border:1px solid #9d8542;border-radius:5px;background:#fff;color:#111}
       .add2e-session-xp-v2 .footer-note{padding:7px 9px;border-radius:6px;background:#f1fff0;border:1px solid #7caf78;color:#285c2a;font-weight:700}.add2e-session-xp-v2 .source-table col:nth-child(1){width:62px}.add2e-session-xp-v2 .source-table col:nth-child(2){width:auto}.add2e-session-xp-v2 .source-table col:nth-child(3){width:120px}.add2e-session-xp-v2 .source-table col:nth-child(4){width:105px}.add2e-session-xp-v2 .char-table col:nth-child(1){width:62px}.add2e-session-xp-v2 .char-table col:nth-child(2){width:auto}.add2e-session-xp-v2 .char-table col:nth-child(3){width:105px}.add2e-session-xp-v2 .char-table col:nth-child(4){width:82px}.add2e-session-xp-v2 .char-table col:nth-child(5){width:92px}.add2e-session-xp-v2 .char-table col:nth-child(6){width:92px}
       .add2e-session-xp-v2 .buttons{display:flex;gap:8px;justify-content:flex-end;padding:9px 10px;border-top:1px solid #b99742;background:#e5d09a;flex:0 0 auto}.add2e-session-xp-v2 button{padding:7px 12px;border:1px solid #7a5a16;border-radius:6px;background:#fff7d9;color:#2c1a07;font-weight:800;cursor:pointer}.add2e-session-xp-v2 button.apply{background:#2d7a3e;color:#fff;border-color:#1f5a2d}.add2e-session-xp-v2 button.reset{background:#8d2b22;color:#fff;border-color:#6f1d17}.add2e-session-xp-v2 button:disabled{opacity:.55;cursor:wait}
     </style>
     <div class="scroll">
-      <h3>Sources d'XP monstres</h3><div class="hint">Les monstres tombés à 0 PV sont enregistrés automatiquement. Les sources déjà appliquées disparaissent à la réouverture. Le bouton de réinitialisation permet de repartir à zéro.</div>
-      <table class="source-table"><colgroup><col><col><col><col></colgroup><thead><tr><th>Incl.</th><th>Monstre</th><th>Scène</th><th>PX</th></tr></thead><tbody>${sourceRows.map(sourceRowHtml).join("") || `<tr><td colspan="4"><em>Aucune source d'XP disponible.</em></td></tr>`}</tbody></table>
+      <h3>Sources d'XP monstres morts</h3><div class="hint">Seuls les monstres morts ou à 0 PV apparaissent ici. Les monstres encore vivants sont exclus du bilan et du récap.</div>
+      <table class="source-table"><colgroup><col><col><col><col></colgroup><thead><tr><th>Incl.</th><th>Monstre mort</th><th>Scène</th><th>PX</th></tr></thead><tbody>${sourceRows.map(sourceRowHtml).join("") || `<tr><td colspan="4"><em>Aucun monstre mort enregistré ou présent sur les scènes.</em></td></tr>`}</tbody></table>
       <h3>Bonus globaux</h3><div class="global-grid"><label>Objectifs / rôleplay <input type="number" name="objectivesXp" value="0" step="1"></label><label>Trésors <input type="number" name="treasureXp" value="0" step="1"></label><label>Bonus MJ global <input type="number" name="gmBonusXp" value="0" step="1"></label><label>Motif <input type="text" name="reason" value="Bilan XP de session"></label></div>
       <h3>Répartition vers les personnages</h3><table class="char-table"><colgroup><col><col><col><col><col><col></colgroup><thead><tr><th>Incl.</th><th>Personnage</th><th>XP actuel</th><th>Part</th><th>Bonus %</th><th>Bonus fixe</th></tr></thead><tbody>${chars.map(characterRowHtml).join("") || `<tr><td colspan="6"><em>Aucun personnage trouvé.</em></td></tr>`}</tbody></table>
-      <div class="footer-note">Application : seuls les acteurs de type <code>personnage</code> reçoivent l'XP. Les monstres restent uniquement des sources de PX.</div>
+      <div class="footer-note">Application : seuls les acteurs de type <code>personnage</code> reçoivent l'XP. Les monstres morts restent uniquement des sources de PX.</div>
     </div>
     <div class="buttons"><button type="button" data-action="audit">Audit champs</button><button type="button" class="reset" data-action="reset">Réinitialiser registre</button><button type="button" class="apply" data-action="apply">Appliquer l'XP</button><button type="button" data-action="close">Fermer</button></div>
   </div>`;
@@ -359,28 +394,56 @@ function readAppData(root) {
   const gmBonusXp = Math.max(0, Math.floor(num(root.querySelector("input[name='gmBonusXp']")?.value, 0)));
   const monsterXp = selectedSources.reduce((sum, row) => sum + row.xp, 0);
 
-  return { selectedSources, recipients, monsterXp, objectivesXp, treasureXp, gmBonusXp, sourceTotal: monsterXp + objectivesXp + treasureXp + gmBonusXp, reason: root.querySelector("input[name='reason']")?.value || "Bilan XP de session" };
+  return {
+    selectedSources,
+    recipients,
+    monsterXp,
+    objectivesXp,
+    treasureXp,
+    gmBonusXp,
+    sourceTotal: monsterXp + objectivesXp + treasureXp + gmBonusXp,
+    reason: root.querySelector("input[name='reason']")?.value || "Bilan XP de session"
+  };
 }
 
-function computeDistribution(data) {
-  const shareTotal = data.recipients.reduce((sum, row) => sum + row.share, 0);
-  if (shareTotal <= 0) return [];
-  const rows = data.recipients.map(row => {
-    const raw = data.sourceTotal * (row.share / shareTotal);
+function splitXpByShares(totalXp, recipients) {
+  const xp = Math.max(0, Math.floor(num(totalXp, 0)));
+  const shareTotal = recipients.reduce((sum, row) => sum + Math.max(0, num(row.share, 0)), 0);
+  if (xp <= 0 || shareTotal <= 0) return recipients.map(row => ({ ...row, base: 0, raw: 0, fraction: 0 }));
+
+  const rows = recipients.map(row => {
+    const raw = xp * (row.share / shareTotal);
     const base = Math.floor(raw);
     return { ...row, raw, base, fraction: raw - base };
   });
-  let remainder = data.sourceTotal - rows.reduce((sum, row) => sum + row.base, 0);
+  let remainder = xp - rows.reduce((sum, row) => sum + row.base, 0);
   for (const row of [...rows].sort((a, b) => b.fraction - a.fraction)) {
     if (remainder <= 0) break;
     row.base += 1;
     remainder -= 1;
   }
+  return rows;
+}
+
+function computeDistribution(data) {
+  const rows = splitXpByShares(data.sourceTotal, data.recipients);
   return rows.map(row => {
     const percentBonus = Math.floor(row.base * (row.bonusPercent / 100));
     const total = Math.max(0, row.base + percentBonus + row.bonusFlat);
     return { ...row, percentBonus, total };
   });
+}
+
+function computeMonsterShareRows(data) {
+  return data.selectedSources.map(source => ({
+    ...source,
+    shares: splitXpByShares(source.xp, data.recipients).map(row => ({
+      actorId: row.actorId,
+      name: row.name,
+      share: row.share,
+      xp: row.base
+    }))
+  }));
 }
 
 async function markSourcesApplied(selectedSources, reason) {
@@ -399,6 +462,7 @@ async function markSourcesApplied(selectedSources, reason) {
       sceneId: source.sceneId,
       sceneName: source.sceneName,
       xp: source.xp,
+      dead: true,
       reason: source.reason || "session_apply",
       included: false,
       appliedAt,
@@ -465,9 +529,9 @@ async function awardCharacterXp(actor, total, reason) {
   const before = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
   const amount = Math.max(0, Math.floor(num(total, 0)));
   const expectedAfter = before + amount;
-  log("[AWARD][START]", { actor: actor.name, before, amount, expectedAfter });
+  log("[AWARD][START]", { actor: actor.name, before, amount, expectedAfter, reason });
 
-  await actor.update({ "system.xp": expectedAfter }, { add2eReason: "session-xp-v2" });
+  await actor.update({ "system.xp": expectedAfter }, { add2eReason: "session-xp-v3" });
 
   const liveActor = game.actors.get(actor.id) ?? actor;
   const after = Math.max(0, Math.floor(num(liveActor.system?.xp, expectedAfter)));
@@ -480,12 +544,21 @@ async function awardCharacterXp(actor, total, reason) {
   return { before, after, expectedAfter, tokenSync };
 }
 
+function monsterShareHtml(monsterShareRows) {
+  return monsterShareRows.map(row => {
+    const parts = row.shares.map(s => `<li>${esc(s.name)} : <b>${s.xp.toLocaleString()}</b> XP <small>(part ${esc(s.share)})</small></li>`).join("");
+    return `<li><b>${esc(row.monsterName)}</b> : ${row.xp.toLocaleString()} PX${row.sceneName ? ` <small>(${esc(row.sceneName)})</small>` : ""}<ul>${parts || "<li>Aucun personnage inclus.</li>"}</ul></li>`;
+  }).join("");
+}
+
 async function applySessionXp(data) {
   if (!game.user?.isGM) return ui.notifications.warn("Seul le MJ peut appliquer l'XP de session.");
   if (data.sourceTotal <= 0) return ui.notifications.warn("Le total d'XP est à 0.");
   if (!data.recipients.length) return ui.notifications.warn("Aucun personnage destinataire sélectionné.");
+  if (!data.selectedSources.length && data.monsterXp <= 0 && data.objectivesXp <= 0 && data.treasureXp <= 0 && data.gmBonusXp <= 0) return ui.notifications.warn("Aucune source d'XP sélectionnée.");
 
   const distribution = computeDistribution(data);
+  const monsterShares = computeMonsterShareRows(data);
   const results = [];
 
   for (const row of distribution) {
@@ -505,26 +578,26 @@ async function applySessionXp(data) {
 
   await markSourcesApplied(data.selectedSources, data.reason);
 
-  const monsterLines = data.selectedSources.map(row => `<li>${esc(row.monsterName)} : <b>${row.xp.toLocaleString()}</b> PX${row.sceneName ? ` <small>(${esc(row.sceneName)})</small>` : ""}</li>`).join("");
+  const monsterLines = monsterShareHtml(monsterShares);
   const resultLines = results.map(row => {
     const tokenNote = row.tokenSync?.length ? ` <small>— tokens synchronisés : ${row.tokenSync.length}</small>` : "";
     return `<li>${esc(row.actor.name)} : +<b>${row.gained.toLocaleString()}</b> XP <small>(base ${row.base.toLocaleString()}${row.percentBonus ? `, bonus % ${row.percentBonus.toLocaleString()}` : ""}${row.bonusFlat ? `, bonus fixe ${row.bonusFlat.toLocaleString()}` : ""})</small> — ${row.before.toLocaleString()} → ${row.after.toLocaleString()}${tokenNote}</li>`;
   }).join("");
 
   await ChatMessage.create({
-    content: `<div class="add2e-xp-session-chat" style="border:2px solid #a87924;border-radius:10px;background:#fff8df;padding:.75em .95em;color:#2b1b0c;"><h2 style="margin:.1em 0 .45em;color:#7d331f;">Bilan XP de session</h2><p><b>Total réparti :</b> ${data.sourceTotal.toLocaleString()} XP</p><p><b>Monstres :</b> ${data.monsterXp.toLocaleString()} XP — <b>Objectifs :</b> ${data.objectivesXp.toLocaleString()} XP — <b>Trésors :</b> ${data.treasureXp.toLocaleString()} XP — <b>Bonus MJ :</b> ${data.gmBonusXp.toLocaleString()} XP</p><details open><summary><b>Sources</b></summary><ul>${monsterLines || "<li>Aucune source monstre.</li>"}</ul></details><details open><summary><b>Répartition</b></summary><ul>${resultLines}</ul></details></div>`
+    content: `<div class="add2e-xp-session-chat" style="border:2px solid #a87924;border-radius:10px;background:#fff8df;padding:.75em .95em;color:#2b1b0c;"><h2 style="margin:.1em 0 .45em;color:#7d331f;">Bilan XP de session</h2><p><b>Total réparti :</b> ${data.sourceTotal.toLocaleString()} XP</p><p><b>Monstres morts :</b> ${data.monsterXp.toLocaleString()} XP — <b>Objectifs :</b> ${data.objectivesXp.toLocaleString()} XP — <b>Trésors :</b> ${data.treasureXp.toLocaleString()} XP — <b>Bonus MJ :</b> ${data.gmBonusXp.toLocaleString()} XP</p><details open><summary><b>Monstres morts et partage par personnage</b></summary><ul>${monsterLines || "<li>Aucun monstre mort sélectionné.</li>"}</ul></details><details open><summary><b>Répartition finale appliquée</b></summary><ul>${resultLines}</ul></details></div>`
   });
 
   for (const row of results) refreshActorAndTokenSheets(row.actor);
 
   ui.notifications.info("XP de session appliquée. Les sources utilisées sont maintenant masquées.");
-  log("[APPLIED]", { data, distribution, results });
-  return { data, distribution, results };
+  log("[APPLIED]", { data, distribution, monsterShares, results });
+  return { data, distribution, monsterShares, results };
 }
 
 class Add2eSessionXpApp extends ApplicationV2 {
   static DEFAULT_OPTIONS = {
-    id: "add2e-session-xp-app-v2",
+    id: "add2e-session-xp-app-v3",
     classes: ["add2e", "session-xp", "app-v2"],
     tag: "section",
     window: { title: "ADD2E — Bilan XP de session", resizable: true },
@@ -584,7 +657,9 @@ async function clearSessionXpLedger({ alsoFlags = false } = {}) {
       const updates = [];
       for (const token of scene.tokens ?? []) {
         const flags = foundry.utils.deepClone(token.flags ?? {});
-        if (flags?.add2e?.[FLAG_RECORDED] || flags?.add2e?.[FLAG_RECORDED_KEY]) updates.push({ _id: token.id, [`flags.${FLAG_SCOPE}.-=${FLAG_RECORDED}`]: null, [`flags.${FLAG_SCOPE}.-=${FLAG_RECORDED_KEY}`]: null });
+        if (flags?.add2e?.[FLAG_RECORDED] || flags?.add2e?.[FLAG_RECORDED_KEY]) {
+          updates.push({ _id: token.id, [`flags.${FLAG_SCOPE}.-=${FLAG_RECORDED}`]: null, [`flags.${FLAG_SCOPE}.-=${FLAG_RECORDED_KEY}`]: null });
+        }
       }
       if (updates.length) await scene.updateEmbeddedDocuments("Token", updates).catch(err => warn("[CLEAR_FLAGS_TOKEN_ERROR]", err));
     }
@@ -598,8 +673,8 @@ async function registerTokenDeletion(tokenDoc) {
   if (!actor || actor.type !== "monster") return;
   if (tokenDoc.getFlag?.(FLAG_SCOPE, FLAG_RECORDED)) return;
   const hp = actorHpValue(actor);
-  const reason = hp <= 0 ? "token_deleted_dead" : "token_deleted";
-  await recordMonsterXp(actor, { tokenDoc, scene: tokenDoc.parent, reason, notify: false });
+  if (hp > 0) return;
+  await recordMonsterXp(actor, { tokenDoc, scene: tokenDoc.parent, reason: "token_deleted_dead", notify: false });
 }
 
 function openXpSessionFromTool() {
@@ -618,19 +693,19 @@ function installToolInControl(control, tool = xpToolDefinition()) {
   if (!control) return false;
   if (Array.isArray(control.tools)) {
     const existing = control.tools.find(t => t?.name === tool.name || t?.id === tool.name);
-    if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; }
+    if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; existing.visible = tool.visible; }
     else control.tools.push(tool);
     return true;
   }
   if (control.tools instanceof Map) {
     const existing = control.tools.get(tool.name);
-    if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; }
+    if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; existing.visible = tool.visible; }
     else control.tools.set(tool.name, tool);
     return true;
   }
   if (control.tools && typeof control.tools === "object") {
     const existing = control.tools[tool.name];
-    if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; }
+    if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; existing.visible = tool.visible; }
     else control.tools[tool.name] = tool;
     return true;
   }
@@ -681,7 +756,14 @@ function injectActorDirectoryButton(app, html) {
 }
 
 Hooks.once("init", () => {
-  game.settings.register("add2e", FLAG_LEDGER, { name: "ADD2E — Registre XP de session", hint: "Registre interne des monstres tombés à 0 PV ou supprimés pendant la session.", scope: "world", config: false, type: Array, default: [] });
+  game.settings.register("add2e", FLAG_LEDGER, {
+    name: "ADD2E — Registre XP de session",
+    hint: "Registre interne des monstres morts ou tombés à 0 PV pendant la session.",
+    scope: "world",
+    config: false,
+    type: Array,
+    default: []
+  });
 });
 
 Hooks.once("ready", () => {
@@ -705,7 +787,10 @@ Hooks.on("preUpdateToken", (tokenDoc, changes, _options, userId) => {
 Hooks.on("preDeleteToken", tokenDoc => registerTokenDeletion(tokenDoc));
 Hooks.on("getSceneControlButtons", controls => installSceneControlButton(controls));
 Hooks.on("renderActorDirectory", injectActorDirectoryButton);
-Hooks.on("renderSidebarTab", (app, html) => { const id = app?.id ?? app?.tabName ?? app?.constructor?.name ?? ""; if (/actor/i.test(String(id))) injectActorDirectoryButton(app, html); });
+Hooks.on("renderSidebarTab", (app, html) => {
+  const id = app?.id ?? app?.tabName ?? app?.constructor?.name ?? "";
+  if (/actor/i.test(String(id))) injectActorDirectoryButton(app, html);
+});
 
 globalThis.add2eRecordMonsterXp = recordMonsterXp;
 globalThis.add2eAuditXpFields = auditXpFields;
@@ -717,3 +802,4 @@ globalThis.add2eClearSessionXpLedger = clearSessionXpLedger;
 globalThis.add2eInstallXpSceneButton = installSceneControlButton;
 globalThis.add2eInjectXpActorDirectoryButton = injectActorDirectoryButton;
 globalThis.add2eSyncXpToUnlinkedTokens = syncXpToUnlinkedTokens;
+globalThis.add2eSessionXpComputeMonsterShares = computeMonsterShareRows;
