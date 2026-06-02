@@ -64,7 +64,7 @@ function plannedAction(entry) {
     foundry: entry.foundry,
     missing: entry.missing || 0,
     nameDiffs: entry.nameDiffs || 0,
-    action: "prepare_safe_correction_plan"
+    action: "review_remaining_after_safe_fix"
   };
 }
 
@@ -76,6 +76,12 @@ function main() {
   const actions = [];
 
   if (config.autoGenerateReferences) actions.push(runNodeScript("audit/tools/generate-reference-files.mjs"));
+
+  if (config.autoApplySafeFixes && config.allowProductionWrites) {
+    actions.push(runNodeScript("audit/tools/apply-spell-agent-fixes.mjs"));
+    actions.push(runNodeScript("audit/decoupage_fichier/decoupe-spells.mjs"));
+  }
+
   if (config.autoGenerateReports) actions.push(runNodeScript("audit/tools/generate-spell-audit-reports.mjs"));
 
   const lots = Array.isArray(config.lotOrder) ? config.lotOrder : [];
@@ -93,6 +99,7 @@ function main() {
     runCompleted: true,
     mode: config.mode || "audit_and_plan",
     allowProductionWrites: Boolean(config.allowProductionWrites),
+    allowOnUseCreation: Boolean(config.allowOnUseCreation),
     totalLots: lots.length,
     lotsWithFindingsCount: lotsWithFindings.length,
     plannedActionCount: plannedActions.length,
@@ -113,6 +120,7 @@ function main() {
   lines.push(`Run completed: ${state.runCompleted}`);
   lines.push(`Mode: ${state.mode}`);
   lines.push(`Production writes: ${state.allowProductionWrites}`);
+  lines.push(`OnUse creation: ${state.allowOnUseCreation}`);
   lines.push(`Total lots: ${state.totalLots}`);
   lines.push(`Lots with findings: ${state.lotsWithFindingsCount}`);
   lines.push(`Planned actions: ${state.plannedActionCount}`);
@@ -120,9 +128,19 @@ function main() {
   lines.push("");
   lines.push("## Actions");
   lines.push("");
-  for (const action of actions) lines.push(`- ${action.script}: ${action.status}`);
-  lines.push("");
-  lines.push("## Lots with findings");
+  for (const action of actions) {
+    lines.push(`### ${action.script}`);
+    lines.push("");
+    lines.push(`Status: ${action.status}`);
+    if (action.output) {
+      lines.push("");
+      lines.push("```text");
+      lines.push(action.output);
+      lines.push("```");
+    }
+    lines.push("");
+  }
+  lines.push("## Lots with remaining findings");
   lines.push("");
   lines.push("| Lot | Expected | Export | Missing | Name diffs |");
   lines.push("| --- | ---: | ---: | ---: | ---: |");
@@ -131,7 +149,7 @@ function main() {
   }
   fs.writeFileSync(runReportPath, `${lines.join("\n")}\n`, "utf8");
 
-  console.log(`Agent run complete. Findings: ${lotsWithFindings.length}. Next lot: ${nextLot || "none"}`);
+  console.log(`Agent run complete. Remaining findings: ${lotsWithFindings.length}. Next lot: ${nextLot || "none"}`);
 }
 
 main();
