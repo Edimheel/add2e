@@ -1,0 +1,16 @@
+{
+  "agentName": "add2e-spell-agent",
+  "createdAt": "2026-06-02",
+  "lastRunAt": null,
+  "lastRunStatus": "not_started",
+  "currentLot": null,
+  "nextLot": "clerc-niveau-1",
+  "completedLots": [],
+  "blockedLots": [],
+  "safeActionsDone": [],
+  "productionActionsPlanned": [],
+  "notes": [
+    "Mode initial: audit_and_plan.",
+    "Production corrections disabled while allowProductionWrites=false."
+  ]
+}
