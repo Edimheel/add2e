@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "illusionniste",
@@ -1110,7 +1110,7 @@
       "sort": 0
     },
     {
-      "name": "Lumière",
+      "name": "Lumières dansantes",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/illusionniste-lumiere.webp",
       "system": {
@@ -1144,7 +1144,7 @@
         },
         "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc lumière (voir p.44).",
         "onUse": "systems/add2e/scripts/sorts/lumiere.js",
-        "onuse": "systems/add2e/scripts/sorts/illusionniste-lumiere.js",
+        "onuse": "systems/add2e/scripts/sorts/lumiere.js",
         "portée": {
           "valeur": "spéciale",
           "unite": "texte"
@@ -1164,7 +1164,7 @@
       },
       "effects": [
         {
-          "name": "Lumière",
+          "name": "Lumières dansantes",
           "flags": {
             "add2e": {
               "tags": [

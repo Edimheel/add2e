@@ -1,6 +1,6 @@
 # Audit automatique — illusionniste-niveau-1
 
-Généré le : 2026-06-02T08:15:45.069Z
+Généré le : 2026-06-02T08:44:53.088Z
 
 ## Fichiers
 
@@ -27,8 +27,8 @@ Généré le : 2026-06-02T08:15:45.069Z
 | Force fantasmagorique | OK | OK | OK | V, S, M |
 | Hypnotisme | OK | OK | OK | V, S |
 | Jet de couleurs | OK | OK | OK | Pincée de sable |
-| Lumière | OK | OK | OK | V, S |
-| Lumières dansantes | Écart : Lumière | OK | OK | V, S |
+| Lumière | Écart : Lumières dansantes | OK | OK | V, S |
+| Lumières dansantes | OK | OK | OK | V, S |
 | Mur de brouillard | OK | OK | OK | Poudre de poix séchés |
 | Réflexion des regards | OK | OK | OK | V, S |
 | Ténèbres | OK | OK | OK | V, S |

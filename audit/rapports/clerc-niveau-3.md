@@ -1,6 +1,6 @@
 # Audit automatique — clerc-niveau-3
 
-Généré le : 2026-06-02T08:15:45.052Z
+Généré le : 2026-06-02T08:44:53.069Z
 
 ## Fichiers
 
@@ -11,32 +11,27 @@ Généré le : 2026-06-02T08:15:45.052Z
 
 - Classe : `clerc`
 - Niveau : `3`
-- Sorts dans l’export : `11`
+- Sorts dans l’export : `13`
 - Sorts attendus par la référence : `12`
-- Sorts manquants : `2`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
-| Catalepsie | MANQUANT | — | — | — |
+| Catalepsie | OK | OK | Manquante : assets/icones/sorts/catalepsie.webp | V, S, M |
 | Désenvoûtement | OK | OK | OK | V, S |
 | Dissipation de la magie | OK | OK | OK | V, S |
 | Glyphe de garde | OK | OK | OK | Symbole sacré du clerc |
 | Guérison de la cécité | OK | OK | OK | V, S |
 | Guérison des maladies | OK | OK | OK | V, S |
-| Localisation d'objets | MANQUANT | — | — | — |
+| Localisation d'objets | OK | OK | Manquante : assets/icones/sorts/localisation-dobjets.webp | V, S, M |
 | Lumière éternelle | OK | OK | OK | V, S |
 | Manne | OK | OK | OK | V, S |
 | Nécro-animation | OK | OK | OK | Symbole sacré du clerc |
 | Nécromancie | OK | OK | OK | Son symbole sacré |
 | Prière | OK | OK | OK | Son symbole religieux en argent ; Son chapelet de prière |
-
-## Sorts manquants
-
-- Catalepsie
-- Localisation d'objets
 
 ## Sorts présents hors correspondance stricte
 

@@ -1,21 +1,70 @@
 {
   "agentName": "add2e-spell-agent",
   "createdAt": "2026-06-02",
-  "lastRunAt": "2026-06-02T08:15:45.109Z",
-  "lastRunStatus": "trigger_requested",
+  "lastRunAt": "2026-06-02T08:44:53.133Z",
+  "lastRunStatus": "ok_finished",
   "currentLot": null,
-  "nextLot": "clerc-niveau-1",
+  "nextLot": "magicien-niveau-1",
   "completedLots": [],
   "blockedLots": [],
-  "safeActionsDone": [],
-  "productionActionsPlanned": [],
+  "safeActionsDone": [
+    {
+      "script": "audit/tools/generate-reference-files.mjs",
+      "status": "ok",
+      "output": "Références créées : 0\nRéférences enrichies : 28\nRéférences détaillées conservées : 2\nLots sans liste maître : 0"
+    },
+    {
+      "script": "audit/tools/apply-spell-agent-fixes.mjs",
+      "status": "ok",
+      "output": "Created spells: 65\nRenamed spells: 8\nCreated onUse scripts: 80"
+    },
+    {
+      "script": "audit/decoupage_fichier/decoupe-spells.mjs",
+      "status": "ok",
+      "output": "Source : fvtt-spells-all.json\nTableau de sorts : items\nSorts détectés : 421\nGroupes générés : 30\nSortie : audit/decoupage_fichier"
+    },
+    {
+      "script": "audit/tools/generate-spell-audit-reports.mjs",
+      "status": "ok",
+      "output": "Rapports générés : 30\nRéférences présentes : 30\nRéférences manquantes : 0"
+    }
+  ],
+  "productionActionsPlanned": [
+    {
+      "lot": "magicien-niveau-1",
+      "expected": 30,
+      "foundry": 30,
+      "missing": 0,
+      "nameDiffs": 1,
+      "action": "review_remaining_after_safe_fix"
+    },
+    {
+      "lot": "magicien-niveau-2",
+      "expected": 24,
+      "foundry": 23,
+      "missing": 0,
+      "nameDiffs": 1,
+      "action": "review_remaining_after_safe_fix"
+    },
+    {
+      "lot": "illusionniste-niveau-1",
+      "expected": 12,
+      "foundry": 11,
+      "missing": 0,
+      "nameDiffs": 1,
+      "action": "review_remaining_after_safe_fix"
+    }
+  ],
   "manualTrigger": "2026-06-02-effective-run-001",
   "mode": "safe_fix",
   "allowProductionWrites": true,
   "allowOnUseCreation": true,
-  "runCompleted": false,
+  "runCompleted": true,
   "notes": [
     "Effective run requested from chat.",
     "The central agent should apply JSON and onUse fixes, then regenerate split files and reports."
-  ]
+  ],
+  "totalLots": 30,
+  "lotsWithFindingsCount": 3,
+  "plannedActionCount": 3
 }

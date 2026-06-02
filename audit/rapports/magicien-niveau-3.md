@@ -1,6 +1,6 @@
 # Audit automatique — magicien-niveau-3
 
-Généré le : 2026-06-02T08:15:45.083Z
+Généré le : 2026-06-02T08:44:53.105Z
 
 ## Fichiers
 
@@ -11,9 +11,9 @@ Généré le : 2026-06-02T08:15:45.083Z
 
 - Classe : `magicien`
 - Niveau : `3`
-- Sorts dans l’export : `18`
+- Sorts dans l’export : `24`
 - Sorts attendus par la référence : `24`
-- Sorts manquants : `6`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
@@ -21,17 +21,17 @@ Généré le : 2026-06-02T08:15:45.083Z
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
 | Boule de feu | OK | OK | Manquante : assets/icones/sorts/magicien-boule-de-feu.webp | Petite boule composée de fiente de chauve-souris |
-| Catalepsie | MANQUANT | — | — | — |
+| Catalepsie | OK | OK | Manquante : assets/icones/sorts/catalepsie.webp | a_completer |
 | Chaumière de Léomund | OK | OK | Manquante : assets/icones/sorts/magicien-chaumiere-de-leomund.webp | Petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite |
 | Clairaudience | OK | OK | Manquante : assets/icones/sorts/magicien-clairaudience.webp | Petite corne d’argent d’une valeur minimale de 100 po |
 | Clairvoyance | OK | OK | Manquante : assets/icones/sorts/magicien-clairvoyance.webp | Pincée de poudre faite à partir de la glande pinéale d’un humain |
-| Dissipation de la magie | MANQUANT | — | — | — |
+| Dissipation de la magie | OK | OK | OK | a_completer |
 | Flèche de feu | OK | OK | Manquante : assets/icones/sorts/magicien-fleche-de-feu.webp | Poudre de feu ou composant pyrotechnique du projectile selon la version du sort |
-| Force fantasmagorique | MANQUANT | — | — | — |
+| Force fantasmagorique | OK | OK | Manquante : assets/icones/sorts/force-fantasmagorique.webp | a_completer |
 | Foudre | OK | OK | Manquante : assets/icones/sorts/magicien-foudre.webp | Morceau de fourrure et une baguette de verre ; Ambre ou de cristal |
 | Infravision | OK | OK | Manquante : assets/icones/sorts/magicien-infravision.webp | Pincée de poudre de carotte séchée ; Agate |
 | Intermittence | OK | OK | Manquante : assets/icones/sorts/magicien-intermittence.webp | V, S, M |
-| Invisibilité sur 3 m | MANQUANT | — | — | — |
+| Invisibilité sur 3 m | OK | OK | Manquante : assets/icones/sorts/invisibilite-sur-3-m.webp | a_completer |
 | Invocation de monstres I | OK | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstres-i.webp | V, S, M |
 | Langues | OK | OK | Manquante : assets/icones/sorts/magicien-langues.webp | Petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée |
 | Paralysie | OK | OK | Manquante : assets/icones/sorts/magicien-paralysie.webp | V |
@@ -40,19 +40,10 @@ Généré le : 2026-06-02T08:15:45.083Z
 | Rafale de vent | OK | OK | Manquante : assets/icones/sorts/magicien-rafale-de-vent.webp | Graine de légume |
 | Ralentissement | OK | OK | Manquante : assets/icones/sorts/magicien-ralentissement.webp | Goutte de mélasse |
 | Rapidité | OK | OK | Manquante : assets/icones/sorts/magicien-rapidite.webp | Fragment de racine de réglisse |
-| Respiration aquatique | MANQUANT | — | — | — |
+| Respiration aquatique | OK | OK | Manquante : assets/icones/sorts/respiration-aquatique.webp | a_completer |
 | Runes explosives | OK | OK | Manquante : assets/icones/sorts/magicien-runes-explosives.webp | V, S |
-| Suggestion | MANQUANT | — | — | — |
+| Suggestion | OK | OK | Manquante : assets/icones/sorts/suggestion.webp | a_completer |
 | Vol | OK | OK | Manquante : assets/icones/sorts/magicien-vol.webp | Plume d’aile d’oiseau |
-
-## Sorts manquants
-
-- Catalepsie
-- Dissipation de la magie
-- Force fantasmagorique
-- Invisibilité sur 3 m
-- Respiration aquatique
-- Suggestion
 
 ## Statut
 

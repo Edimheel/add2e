@@ -1,6 +1,6 @@
 # Audit automatique — magicien-niveau-8
 
-Généré le : 2026-06-02T08:15:45.098Z
+Généré le : 2026-06-02T08:44:53.120Z
 
 ## Fichiers
 
@@ -11,9 +11,9 @@ Généré le : 2026-06-02T08:15:45.098Z
 
 - Classe : `magicien`
 - Niveau : `8`
-- Sorts dans l’export : `15`
+- Sorts dans l’export : `16`
 - Sorts attendus par la référence : `16`
-- Sorts manquants : `1`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
@@ -34,12 +34,8 @@ Généré le : 2026-06-02T08:15:45.098Z
 | Permanence | OK | OK | Manquante : assets/icones/sorts/magicien-permanence.webp | V, S, M |
 | Poing de Bigby | OK | OK | Manquante : assets/icones/sorts/magicien-poing-de-bigby.webp | Gant en cuir |
 | Protection d'esprit | OK | OK | Manquante : assets/icones/sorts/magicien-protection-d-esprit.webp | Gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe ; Tout attaché par une barrette en forme de « I » |
-| Symbole | MANQUANT | — | — | — |
+| Symbole | OK | OK | OK | a_completer |
 | Transformation d'objets | OK | OK | Manquante : assets/icones/sorts/magicien-transformation-d-objets.webp | Mercure |
-
-## Sorts manquants
-
-- Symbole
 
 ## Statut
 

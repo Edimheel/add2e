@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "illusionniste",
     "niveau": 4,
     "key": "illusionniste-niveau-4",
-    "count": 7
+    "count": 8
   },
   "folders": [
     {
@@ -76,6 +76,61 @@
     }
   ],
   "items": [
+    {
+      "name": "Confusion",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/confusion.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/confusion.js",
+        "onuse": "systems/add2e/scripts/sorts/confusion.js",
+        "on_use": "systems/add2e/scripts/sorts/confusion.js",
+        "tags": [
+          "classe:illusionniste",
+          "niveau:4",
+          "sort:confusion",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:confusion"
+        ]
+      },
+      "folder": "FkK6AEGxk13vUAUK",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sxn92jrvw",
+      "sort": 0
+    },
     {
       "name": "Création mineure",
       "type": "sort",

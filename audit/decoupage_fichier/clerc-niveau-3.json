@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "clerc",
     "niveau": 3,
     "key": "clerc-niveau-3",
-    "count": 11
+    "count": 13
   },
   "folders": [
     {
@@ -76,6 +76,61 @@
     }
   ],
   "items": [
+    {
+      "name": "Catalepsie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/catalepsie.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "ecole": "Nécromancie",
+        "école": "Nécromancie",
+        "portee": "au toucher",
+        "portée": "au toucher",
+        "duree": "1 tour + 1 round/niveau",
+        "durée": "1 tour + 1 round/niveau",
+        "zone_effet": "une personne",
+        "jet_sauvegarde": "aucun",
+        "composantes": "V, S, M",
+        "composants_materiels": [],
+        "composants_materiels_source": "pincée de poussière d’un cimetière et symbole sacré du clerc",
+        "temps_incantation": "2 segments",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/catalepsie.js",
+        "onuse": "systems/add2e/scripts/sorts/catalepsie.js",
+        "on_use": "systems/add2e/scripts/sorts/catalepsie.js",
+        "tags": [
+          "classe:clerc",
+          "niveau:3",
+          "sort:catalepsie",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:catalepsie"
+        ]
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sa3zkx6mz",
+      "sort": 0
+    },
     {
       "name": "Désenvoûtement",
       "type": "sort",
@@ -1321,6 +1376,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "YCzH60fklmXZm4NG",
+      "sort": 0
+    },
+    {
+      "name": "Localisation d'objets",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/localisation-dobjets.webp",
+      "system": {
+        "niveau": 3,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "ecole": "Divination",
+        "école": "Divination",
+        "portee": "6 pouces + 1 pouce/niveau",
+        "portée": "6 pouces + 1 pouce/niveau",
+        "duree": "1 round/niveau",
+        "durée": "1 round/niveau",
+        "zone_effet": "spéciale",
+        "jet_sauvegarde": "aucun",
+        "composantes": "V, S, M",
+        "composants_materiels": [],
+        "composants_materiels_source": "pierre aimantée",
+        "temps_incantation": "1 tour",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/localisation-dobjets.js",
+        "onuse": "systems/add2e/scripts/sorts/localisation-dobjets.js",
+        "on_use": "systems/add2e/scripts/sorts/localisation-dobjets.js",
+        "tags": [
+          "classe:clerc",
+          "niveau:3",
+          "sort:localisation-dobjets",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:localisation-dobjets"
+        ]
+      },
+      "folder": "nVwHVJGLpzDmmNFR",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sj06p4tw4",
       "sort": 0
     },
     {

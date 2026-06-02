@@ -1,6 +1,6 @@
 # Audit automatique — druide-niveau-2
 
-Généré le : 2026-06-02T08:15:45.061Z
+Généré le : 2026-06-02T08:44:53.079Z
 
 ## Fichiers
 
@@ -11,32 +11,27 @@ Généré le : 2026-06-02T08:15:45.061Z
 
 - Classe : `druide`
 - Niveau : `2`
-- Sorts dans l’export : `10`
+- Sorts dans l’export : `12`
 - Sorts attendus par la référence : `12`
-- Sorts manquants : `2`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
-| Aquagenèse | MANQUANT | — | — | — |
+| Aquagenèse | OK | OK | Manquante : assets/icones/sorts/aquagenese.webp | a_completer |
 | Catalepsie | OK | OK | OK | Feuille morte de chêne ; Gui |
 | Charme-personnes ou mammifères | OK | OK | OK | V, S |
 | Croc-en-jambe | OK | OK | OK | Gui druidique |
-| Distorsion du bois | OK | Manquant : scripts/sorts/druide-distorsion-du-bois.js | OK | Gui druidique |
-| Flamme | OK | Manquant : scripts/sorts/druide-flamme.js | OK | Gui druidique |
+| Distorsion du bois | OK | OK | OK | Gui druidique |
+| Flamme | OK | OK | OK | Gui druidique |
 | Localisation des plantes | OK | OK | OK | Gui druidique |
 | Métal brûlant | OK | OK | OK | Gui druidique |
 | Obscurcissement | OK | OK | OK | V, S |
 | Peau d'écorce | OK | OK | OK | Poignée d’écorce de chêne |
-| Piège à feu | MANQUANT | — | — | — |
+| Piège à feu | OK | OK | Manquante : assets/icones/sorts/piege-a-feu.webp | a_completer |
 | Soins mineurs | OK | OK | OK | Symbole sacré du clerc et un petit miroir en argent |
-
-## Sorts manquants
-
-- Aquagenèse
-- Piège à feu
 
 ## Statut
 

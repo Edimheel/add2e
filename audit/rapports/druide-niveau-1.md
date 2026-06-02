@@ -1,6 +1,6 @@
 # Audit automatique — druide-niveau-1
 
-Généré le : 2026-06-02T08:15:45.059Z
+Généré le : 2026-06-02T08:44:53.078Z
 
 ## Fichiers
 
@@ -24,8 +24,8 @@ Généré le : 2026-06-02T08:15:45.059Z
 | Aura féérique | OK | OK | OK | V |
 | Détection de la magie | OK | OK | OK | Gui druidique |
 | Détection des pièges sylvestres | OK | OK | OK | Gui druidique |
-| Enchevêtrement | OK | Manquant : scripts/sorts/druide-enchevetrement.js | OK | Gui druidique |
-| Invisibilité aux animaux | OK | Manquant : scripts/sorts/druide-invisibilite-aux-animaux.js | OK | Houx avec lequel le druide doit se frotter |
+| Enchevêtrement | OK | OK | OK | Gui druidique |
+| Invisibilité aux animaux | OK | OK | OK | Houx avec lequel le druide doit se frotter |
 | Langage animal | OK | OK | OK | V, S |
 | Localisation des animaux | OK | OK | OK | Gui druidique |
 | Passage sans trace | OK | OK | OK | Feuille de gui ( |

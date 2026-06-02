@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "magicien",
     "niveau": 1,
     "key": "magicien-niveau-1",
-    "count": 26
+    "count": 30
   },
   "folders": [
     {
@@ -1004,7 +1004,7 @@
       "sort": 0
     },
     {
-      "name": "Charme-personne",
+      "name": "Charme-personnes",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/charme_personne.webp",
       "system": {
@@ -1444,6 +1444,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "87QO92XmR11xX6d8",
+      "sort": 0
+    },
+    {
+      "name": "Détection de la magie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/detection-de-la-magie.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/detection-de-la-magie.js",
+        "onuse": "systems/add2e/scripts/sorts/detection-de-la-magie.js",
+        "on_use": "systems/add2e/scripts/sorts/detection-de-la-magie.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:1",
+          "sort:detection-de-la-magie",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:detection-de-la-magie"
+        ]
+      },
+      "folder": "i73MGKcOPWcOk5kn",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sxmmsj8ap",
       "sort": 0
     },
     {
@@ -3555,6 +3610,116 @@
       "sort": 0
     },
     {
+      "name": "Projectile magique",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/projectile-magique.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/projectile-magique.js",
+        "onuse": "systems/add2e/scripts/sorts/projectile-magique.js",
+        "on_use": "systems/add2e/scripts/sorts/projectile-magique.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:1",
+          "sort:projectile-magique",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:projectile-magique"
+        ]
+      },
+      "folder": "i73MGKcOPWcOk5kn",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sr8hvuf42",
+      "sort": 0
+    },
+    {
+      "name": "Protection contre le mal",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal.js",
+        "onuse": "systems/add2e/scripts/sorts/protection-contre-le-mal.js",
+        "on_use": "systems/add2e/scripts/sorts/protection-contre-le-mal.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:1",
+          "sort:protection-contre-le-mal",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:protection-contre-le-mal"
+        ]
+      },
+      "folder": "i73MGKcOPWcOk5kn",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "S3owai0q7",
+      "sort": 0
+    },
+    {
       "name": "Réparation",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/magicien-reparation.webp",
@@ -4163,6 +4328,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "YzvHRmS0SVf0NDfO",
+      "sort": 0
+    },
+    {
+      "name": "Ventriloquie",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/ventriloquie.webp",
+      "system": {
+        "niveau": 1,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/ventriloquie.js",
+        "onuse": "systems/add2e/scripts/sorts/ventriloquie.js",
+        "on_use": "systems/add2e/scripts/sorts/ventriloquie.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:1",
+          "sort:ventriloquie",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:ventriloquie"
+        ]
+      },
+      "folder": "i73MGKcOPWcOk5kn",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sh0s7nf55",
       "sort": 0
     }
   ]

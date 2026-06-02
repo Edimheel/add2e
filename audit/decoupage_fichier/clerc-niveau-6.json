@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "clerc",
     "niveau": 6,
     "key": "clerc-niveau-6",
-    "count": 9
+    "count": 10
   },
   "folders": [
     {
@@ -77,7 +77,7 @@
   ],
   "items": [
     {
-      "name": "Animation des Objet",
+      "name": "Animation des objets",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/animation-d-un-objet.webp",
       "system": {
@@ -806,6 +806,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "oSfALhtUqR6esjsF",
+      "sort": 0
+    },
+    {
+      "name": "Invocation des animaux",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/invocation-des-animaux.webp",
+      "system": {
+        "niveau": 6,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/invocation-des-animaux.js",
+        "onuse": "systems/add2e/scripts/sorts/invocation-des-animaux.js",
+        "on_use": "systems/add2e/scripts/sorts/invocation-des-animaux.js",
+        "tags": [
+          "classe:clerc",
+          "niveau:6",
+          "sort:invocation-des-animaux",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:invocation-des-animaux"
+        ]
+      },
+      "folder": "cdZpM0rhaQLLmUZj",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sh66nk11o",
       "sort": 0
     },
     {

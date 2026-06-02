@@ -1,0 +1,166 @@
+# Agent fixes
+
+Run at: 2026-06-02T08:44:52.881Z
+
+Created spells: 65
+Renamed spells: 8
+Created onUse scripts: 80
+
+## Created spells
+- clerc-niveau-1: Détection de la magie
+- clerc-niveau-1: Lumière
+- clerc-niveau-1: Purification de l'eau et des aliments
+- clerc-niveau-1: Soins mineurs
+- clerc-niveau-2: Paralysie
+- clerc-niveau-3: Catalepsie
+- clerc-niveau-3: Localisation d'objets
+- clerc-niveau-4: Bâtons à serpents
+- clerc-niveau-4: Contre-poison
+- clerc-niveau-4: Langue
+- clerc-niveau-4: Protection contre le mal sur 3 m
+- clerc-niveau-5: Soin ultime
+- clerc-niveau-5: Vision réelle
+- clerc-niveau-6: Invocation des animaux
+- clerc-niveau-7: Seuil
+- druide-niveau-2: Aquagenèse
+- druide-niveau-2: Piège à feu
+- druide-niveau-3: Embroussaillement
+- druide-niveau-3: Guérison des maladies
+- druide-niveau-3: Pyrotechnie
+- druide-niveau-4: Dissipation de la magie
+- druide-niveau-4: Langage des plantes
+- druide-niveau-4: Soins majeurs
+- druide-niveau-5: Croissance animale
+- druide-niveau-5: Fléau d’insectes
+- druide-niveau-6: Débilité mentale
+- druide-niveau-7: Confusion
+- druide-niveau-7: Contrôle du climat
+- illusionniste-niveau-2: Détection de la magie
+- illusionniste-niveau-2: Image miroir
+- illusionniste-niveau-3: Corde enchantée
+- illusionniste-niveau-3: Effroi
+- illusionniste-niveau-3: Lumière éternelle
+- illusionniste-niveau-3: Terrain hallucinatoire
+- illusionniste-niveau-4: Confusion
+- illusionniste-niveau-5: Labyrinthe
+- illusionniste-niveau-7: Sort astral
+- magicien-niveau-1: Détection de la magie
+- magicien-niveau-1: Projectile magique
+- magicien-niveau-1: Protection contre le mal
+- magicien-niveau-1: Ventriloquie
+- magicien-niveau-2: Bouche magique
+- magicien-niveau-2: Bruitage
+- magicien-niveau-2: Détection de l'invisibilité
+- magicien-niveau-2: Détection du mal
+- magicien-niveau-2: Lumière éternelle
+- magicien-niveau-3: Catalepsie
+- magicien-niveau-3: Dissipation de la magie
+- magicien-niveau-3: Force fantasmagorique
+- magicien-niveau-3: Invisibilité sur 3 m
+- magicien-niveau-3: Respiration aquatique
+- magicien-niveau-3: Suggestion
+- magicien-niveau-4: Désenvoûtement
+- magicien-niveau-4: Mur de feu
+- magicien-niveau-4: Phytomorphose
+- magicien-niveau-5: Chien fidèle de Mordenkainen
+- magicien-niveau-5: Lithomorphose
+- magicien-niveau-5: Transmutation de pierre en boue
+- magicien-niveau-6: Abaissement des eaux
+- magicien-niveau-6: Contrôle du climat
+- magicien-niveau-6: Holographie
+- magicien-niveau-6: Réincarnation
+- magicien-niveau-6: Séparation des eaux
+- magicien-niveau-8: Symbole
+- magicien-niveau-9: Sort astral
+
+## Renamed spells
+- clerc-niveau-6: Animation des Objet -> Animation des objets
+- clerc-niveau-7: Marche des Vent -> Marche des vents
+- clerc-niveau-7: Parole Sacrée -> Parole sacrée/maudite
+- illusionniste-niveau-1: Lumière -> Lumières dansantes
+- magicien-niveau-1: Charme-personne -> Charme-personnes
+- magicien-niveau-1: Lumières dansantes -> Lumière
+- magicien-niveau-1: Lumière -> Lumières dansantes
+- magicien-niveau-2: Détection de l'invisibilité -> Invisibilité
+
+## Created onUse scripts
+- scripts/sorts/purification-de-leau-et-des-aliments.js
+- scripts/sorts/paralysie.js
+- scripts/sorts/catalepsie.js
+- scripts/sorts/localisation-dobjets.js
+- scripts/sorts/batons-a-serpents.js
+- scripts/sorts/contre-poison.js
+- scripts/sorts/langue.js
+- scripts/sorts/protection-contre-le-mal-sur-3-m.js
+- scripts/sorts/clerc-niveaux-5-6-7/changement-de-plan.js
+- scripts/sorts/clerc-niveaux-5-6-7/communion.js
+- scripts/sorts/clerc-niveaux-5-6-7/dissipation-du-mal.js
+- scripts/sorts/clerc-niveaux-5-6-7/penitence.js
+- scripts/sorts/clerc-niveaux-5-6-7/fleau-d-insectes.js
+- scripts/sorts/clerc-niveaux-5-6-7/colonne-de-feu.js
+- scripts/sorts/clerc-niveaux-5-6-7/quete-religieuse.js
+- scripts/sorts/clerc-niveaux-5-6-7/rappel-a-la-vie.js
+- scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js
+- scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js
+- scripts/sorts/clerc-niveaux-5-6-7/guerison.js
+- scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js
+- scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js
+- scripts/sorts/clerc-niveaux-5-6-7/orientation.js
+- scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js
+- scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js
+- scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js
+- scripts/sorts/clerc-niveaux-5-6-7/controle-du-climat.js
+- scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js
+- scripts/sorts/clerc-niveaux-5-6-7/parole-sacree.js
+- scripts/sorts/clerc-niveaux-5-6-7/regeneration.js
+- scripts/sorts/clerc-niveaux-5-6-7/restauration.js
+- scripts/sorts/clerc-niveaux-5-6-7/resurrection.js
+- scripts/sorts/clerc-niveaux-5-6-7/sort-astral.js
+- scripts/sorts/clerc-niveaux-5-6-7/symbole.js
+- scripts/sorts/clerc-niveaux-5-6-7/tremblement-de-terre.js
+- scripts/sorts/druide-enchevetrement.js
+- scripts/sorts/druide-invisibilite-aux-animaux.js
+- scripts/sorts/aquagenese.js
+- scripts/sorts/druide-distorsion-du-bois.js
+- scripts/sorts/druide-flamme.js
+- scripts/sorts/piege-a-feu.js
+- scripts/sorts/embroussaillement.js
+- scripts/sorts/druide-invocation-de-la-foudre.js
+- scripts/sorts/druide-invocation-d-insectes.js
+- scripts/sorts/druide-embrasement.js
+- scripts/sorts/druide-foret-hallucinatoire.js
+- scripts/sorts/druide-invocation-animale-i.js
+- scripts/sorts/druide-invocation-des-creatures-sylvestres.js
+- scripts/sorts/soins-majeurs.js
+- scripts/sorts/croissance-animale.js
+- scripts/sorts/fleau-dinsectes.js
+- scripts/sorts/druide-invocation-animale-ii.js
+- scripts/sorts/debilite-mentale.js
+- scripts/sorts/druide-graines-de-feu.js
+- scripts/sorts/druide-invocation-animale-iii.js
+- scripts/sorts/druide-invocation-d-un-elemental-du-feu.js
+- scripts/sorts/druide-invocation-du-temps.js
+- scripts/sorts/confusion.js
+- scripts/sorts/druide-doigt-de-mort.js
+- scripts/sorts/druide-invocation-d-un-elemental-de-terre.js
+- scripts/sorts/image-miroir.js
+- scripts/sorts/corde-enchantee.js
+- scripts/sorts/effroi.js
+- scripts/sorts/lumiere-eternelle.js
+- scripts/sorts/terrain-hallucinatoire.js
+- scripts/sorts/labyrinthe.js
+- scripts/sorts/projectile-magique.js
+- scripts/sorts/ventriloquie.js
+- scripts/sorts/bouche-magique.js
+- scripts/sorts/detection-de-linvisibilite.js
+- scripts/sorts/force-fantasmagorique.js
+- scripts/sorts/invisibilite-sur-3-m.js
+- scripts/sorts/suggestion.js
+- scripts/sorts/desenvoutement.js
+- scripts/sorts/mur-de-feu.js
+- scripts/sorts/phytomorphose.js
+- scripts/sorts/chien-fidele-de-mordenkainen.js
+- scripts/sorts/lithomorphose.js
+- scripts/sorts/transmutation-de-pierre-en-boue.js
+- scripts/sorts/holographie.js
+- scripts/sorts/reincarnation.js

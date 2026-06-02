@@ -1,6 +1,6 @@
 # Audit automatique — druide-niveau-3
 
-Généré le : 2026-06-02T08:15:45.062Z
+Généré le : 2026-06-02T08:44:53.080Z
 
 ## Fichiers
 
@@ -11,9 +11,9 @@ Généré le : 2026-06-02T08:15:45.062Z
 
 - Classe : `druide`
 - Niveau : `3`
-- Sorts dans l’export : `9`
+- Sorts dans l’export : `12`
 - Sorts attendus par la référence : `12`
-- Sorts manquants : `3`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
@@ -22,22 +22,16 @@ Généré le : 2026-06-02T08:15:45.062Z
 | --- | --- | --- | --- | --- |
 | Arbre | OK | OK | OK | Gui |
 | Contre-poison | OK | OK | OK | V, S |
-| Embroussaillement | MANQUANT | — | — | — |
-| Guérison des maladies | MANQUANT | — | — | — |
-| Invocation de la foudre | OK | Manquant : scripts/sorts/druide-invocation-de-la-foudre.js | OK | Gui druidique |
-| Invocation d'insectes | OK | Manquant : scripts/sorts/druide-invocation-d-insectes.js | OK | Gui |
+| Embroussaillement | OK | OK | Manquante : assets/icones/sorts/embroussaillement.webp | a_completer |
+| Guérison des maladies | OK | OK | OK | a_completer |
+| Invocation de la foudre | OK | OK | OK | Gui druidique |
+| Invocation d'insectes | OK | OK | OK | Gui |
 | Lithomorphose | OK | OK | OK | Gui comme composante matérielle supplémentaire |
 | Paralysie animale | OK | OK | OK | Gui druidique |
 | Piège sylvestre | OK | OK | OK | Gui druidique |
 | Protection contre le feu | OK | OK | OK | Gui druidique |
-| Pyrotechnie | MANQUANT | — | — | — |
+| Pyrotechnie | OK | OK | Manquante : assets/icones/sorts/pyrotechnie.webp | a_completer |
 | Respiration aquatique | OK | OK | Manquante : assets/icones/sorts/druide-respiration-aquatique.webp | V, S |
-
-## Sorts manquants
-
-- Embroussaillement
-- Guérison des maladies
-- Pyrotechnie
 
 ## Statut
 

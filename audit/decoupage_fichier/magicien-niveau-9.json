@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "magicien",
     "niveau": 9,
     "key": "magicien-niveau-9",
-    "count": 11
+    "count": 12
   },
   "folders": [
     {
@@ -1244,6 +1244,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "MmczinwlejcFyrC0",
+      "sort": 0
+    },
+    {
+      "name": "Sort astral",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
+      "system": {
+        "niveau": 9,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/sort-astral.js",
+        "onuse": "systems/add2e/scripts/sorts/sort-astral.js",
+        "on_use": "systems/add2e/scripts/sorts/sort-astral.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:9",
+          "sort:sort-astral",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:sort-astral"
+        ]
+      },
+      "folder": "5Rp0DV7LnqW8ykU6",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "S3uv2zi0o",
       "sort": 0
     },
     {

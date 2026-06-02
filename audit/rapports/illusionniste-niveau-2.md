@@ -1,6 +1,6 @@
 # Audit automatique — illusionniste-niveau-2
 
-Généré le : 2026-06-02T08:15:45.070Z
+Généré le : 2026-06-02T08:44:53.089Z
 
 ## Fichiers
 
@@ -11,9 +11,9 @@ Généré le : 2026-06-02T08:15:45.070Z
 
 - Classe : `illusionniste`
 - Niveau : `2`
-- Sorts dans l’export : `10`
+- Sorts dans l’export : `12`
 - Sorts attendus par la référence : `12`
-- Sorts manquants : `2`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
@@ -23,20 +23,15 @@ Généré le : 2026-06-02T08:15:45.070Z
 | Bouche magique | OK | OK | OK | Petit morceau de rayon de miel |
 | Cécité | OK | OK | OK | V |
 | Désinformation | OK | OK | OK | V, S |
-| Détection de la magie | MANQUANT | — | — | — |
+| Détection de la magie | OK | OK | Manquante : assets/icones/sorts/detection-de-la-magie.webp | a_completer |
 | Force fantasmagorique améliorée | OK | OK | OK | V, S, M |
-| Image miroir | MANQUANT | — | — | — |
+| Image miroir | OK | OK | Manquante : assets/icones/sorts/image-miroir.webp | a_completer |
 | Invisibilité | OK | OK | OK | V, S |
 | Motif hypnotique | OK | OK | OK | Cire d’abeille |
 | Nappe de brouillard | OK | OK | OK | V, S |
 | Surdité | OK | OK | OK | Cire d’abeille |
 | Trouble | OK | OK | OK | V, S |
 | Ventriloquie | OK | OK | OK | Petit parchemin mis en cône |
-
-## Sorts manquants
-
-- Détection de la magie
-- Image miroir
 
 ## Statut
 

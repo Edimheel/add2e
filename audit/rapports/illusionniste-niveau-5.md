@@ -1,6 +1,6 @@
 # Audit automatique — illusionniste-niveau-5
 
-Généré le : 2026-06-02T08:15:45.072Z
+Généré le : 2026-06-02T08:44:53.093Z
 
 ## Fichiers
 
@@ -11,9 +11,9 @@ Généré le : 2026-06-02T08:15:45.072Z
 
 - Classe : `illusionniste`
 - Niveau : `5`
-- Sorts dans l’export : `7`
+- Sorts dans l’export : `8`
 - Sorts attendus par la référence : `8`
-- Sorts manquants : `1`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
@@ -24,14 +24,10 @@ Généré le : 2026-06-02T08:15:45.072Z
 | Création majeure | OK | OK | Manquante : assets/icones/sorts/illusionniste-creation-majeure.webp | V, S, M |
 | Holographie | OK | OK | Manquante : assets/icones/sorts/illusionniste-holographie.webp | Petite réplique (poupée) du magicien |
 | Invocation des ombres | OK | OK | Manquante : assets/icones/sorts/illusionniste-invocation-des-ombres.webp | Morceau de quartz fumé |
-| Labyrinthe | MANQUANT | — | — | — |
+| Labyrinthe | OK | OK | Manquante : assets/icones/sorts/labyrinthe.webp | a_completer |
 | Magie des ombres | OK | OK | Manquante : assets/icones/sorts/illusionniste-magie-des-ombres.webp | V, S |
 | Monstres demi-ombre | OK | OK | Manquante : assets/icones/sorts/illusionniste-monstres-demi-ombre.webp | V, S |
 | Porte des ombres | OK | OK | Manquante : assets/icones/sorts/illusionniste-porte-des-ombres.webp | S |
-
-## Sorts manquants
-
-- Labyrinthe
 
 ## Statut
 

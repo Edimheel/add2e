@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "druide",
     "niveau": 7,
     "key": "druide-niveau-7",
-    "count": 8
+    "count": 10
   },
   "folders": [
     {
@@ -383,6 +383,116 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "6lBtsrAE6tTEJDJI",
+      "sort": 0
+    },
+    {
+      "name": "Confusion",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/confusion.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/confusion.js",
+        "onuse": "systems/add2e/scripts/sorts/confusion.js",
+        "on_use": "systems/add2e/scripts/sorts/confusion.js",
+        "tags": [
+          "classe:druide",
+          "niveau:7",
+          "sort:confusion",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:confusion"
+        ]
+      },
+      "folder": "zSFw7DDY497JZXku",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Siwmacb6r",
+      "sort": 0
+    },
+    {
+      "name": "Contrôle du climat",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Druide",
+        "spellLists": [
+          "Druide"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/controle-du-climat.js",
+        "onuse": "systems/add2e/scripts/sorts/controle-du-climat.js",
+        "on_use": "systems/add2e/scripts/sorts/controle-du-climat.js",
+        "tags": [
+          "classe:druide",
+          "niveau:7",
+          "sort:controle-du-climat",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:controle-du-climat"
+        ]
+      },
+      "folder": "zSFw7DDY497JZXku",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Szz8xxhao",
       "sort": 0
     },
     {

@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "magicien",
     "niveau": 4,
     "key": "magicien-niveau-4",
-    "count": 21
+    "count": 24
   },
   "folders": [
     {
@@ -976,6 +976,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "qc2S7OiREu8cVCKQ",
+      "sort": 0
+    },
+    {
+      "name": "Désenvoûtement",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/desenvoutement.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/desenvoutement.js",
+        "onuse": "systems/add2e/scripts/sorts/desenvoutement.js",
+        "on_use": "systems/add2e/scripts/sorts/desenvoutement.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:4",
+          "sort:desenvoutement",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:desenvoutement"
+        ]
+      },
+      "folder": "D439FXzcoJ576S1E",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sq750xrgb",
       "sort": 0
     },
     {
@@ -2359,6 +2414,61 @@
       "sort": 0
     },
     {
+      "name": "Mur de feu",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/mur-de-feu.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/mur-de-feu.js",
+        "onuse": "systems/add2e/scripts/sorts/mur-de-feu.js",
+        "on_use": "systems/add2e/scripts/sorts/mur-de-feu.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:4",
+          "sort:mur-de-feu",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:mur-de-feu"
+        ]
+      },
+      "folder": "D439FXzcoJ576S1E",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sl22x1gv4",
+      "sort": 0
+    },
+    {
       "name": "Mur de glace",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/magicien-mur-de-glace.webp",
@@ -2660,6 +2770,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "NENvm4CbdMhFClxo",
+      "sort": 0
+    },
+    {
+      "name": "Phytomorphose",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/phytomorphose.webp",
+      "system": {
+        "niveau": 4,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/phytomorphose.js",
+        "onuse": "systems/add2e/scripts/sorts/phytomorphose.js",
+        "on_use": "systems/add2e/scripts/sorts/phytomorphose.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:4",
+          "sort:phytomorphose",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:phytomorphose"
+        ]
+      },
+      "folder": "D439FXzcoJ576S1E",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sjja6qk18",
       "sort": 0
     },
     {

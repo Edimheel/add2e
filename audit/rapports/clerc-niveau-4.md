@@ -1,6 +1,6 @@
 # Audit automatique — clerc-niveau-4
 
-Généré le : 2026-06-02T08:15:45.053Z
+Généré le : 2026-06-02T08:44:53.071Z
 
 ## Fichiers
 
@@ -11,9 +11,9 @@ Généré le : 2026-06-02T08:15:45.053Z
 
 - Classe : `clerc`
 - Niveau : `4`
-- Sorts dans l’export : `8`
+- Sorts dans l’export : `12`
 - Sorts attendus par la référence : `10`
-- Sorts manquants : `4`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
@@ -21,22 +21,15 @@ Généré le : 2026-06-02T08:15:45.053Z
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
 | Abaissement des eaux | OK | OK | OK | Symbole sacré ; Pincée de poussière |
-| Bâtons à serpents | MANQUANT | — | — | — |
-| Contre-poison | MANQUANT | — | — | — |
+| Bâtons à serpents | OK | OK | Manquante : assets/icones/sorts/batons-a-serpents.webp | a_completer |
+| Contre-poison | OK | OK | Manquante : assets/icones/sorts/contre-poison.webp | a_completer |
 | Détection des mensonges | OK | OK | OK | Poussière de laiton ; Poussière d’or |
 | Divination | OK | OK | OK | Sacrifice d’une petite créature ; L’encens et le symbole sacré du clerc |
 | Exorcisme | OK | OK | OK | Symbole sacré |
 | Langage des plantes | OK | OK | OK | Goutte d’eau ; Pincée de bouse |
-| Langue | MANQUANT | — | — | — |
-| Protection contre le mal sur 3 m | MANQUANT | — | — | — |
+| Langue | OK | OK | Manquante : assets/icones/sorts/langue.webp | a_completer |
+| Protection contre le mal sur 3 m | OK | OK | Manquante : assets/icones/sorts/protection-contre-le-mal-sur-3-m.webp | a_completer |
 | Soins majeurs | OK | OK | OK | V, S |
-
-## Sorts manquants
-
-- Bâtons à serpents
-- Contre-poison
-- Langue
-- Protection contre le mal sur 3 m
 
 ## Sorts présents hors correspondance stricte
 

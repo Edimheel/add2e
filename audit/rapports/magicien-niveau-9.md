@@ -1,6 +1,6 @@
 # Audit automatique — magicien-niveau-9
 
-Généré le : 2026-06-02T08:15:45.100Z
+Généré le : 2026-06-02T08:44:53.122Z
 
 ## Fichiers
 
@@ -11,9 +11,9 @@ Généré le : 2026-06-02T08:15:45.100Z
 
 - Classe : `magicien`
 - Niveau : `9`
-- Sorts dans l’export : `11`
+- Sorts dans l’export : `12`
 - Sorts attendus par la référence : `12`
-- Sorts manquants : `1`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
@@ -28,14 +28,10 @@ Généré le : 2026-06-02T08:15:45.100Z
 | Nuée de météores | OK | OK | Manquante : assets/icones/sorts/magicien-nuee-de-meteores.webp | V, S |
 | Mot de pouvoir : « mort » | OK | OK | Manquante : assets/icones/sorts/magicien-mot-de-pouvoir-mort.webp | V, S, M |
 | Seuil | OK | OK | Manquante : assets/icones/sorts/magicien-seuil.webp | V, S |
-| Sort astral | MANQUANT | — | — | — |
+| Sort astral | OK | OK | OK | a_completer |
 | Souhait majeur | OK | OK | Manquante : assets/icones/sorts/magicien-souhait-majeur.webp | V |
 | Sphère prismatique | OK | OK | Manquante : assets/icones/sorts/magicien-sphere-prismatique.webp | V |
 | Stase temporelle | OK | OK | Manquante : assets/icones/sorts/magicien-stase-temporelle.webp | Poudre composée de diamant |
-
-## Sorts manquants
-
-- Sort astral
 
 ## Statut
 

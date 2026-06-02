@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "magicien",
     "niveau": 5,
     "key": "magicien-niveau-5",
-    "count": 22
+    "count": 25
   },
   "folders": [
     {
@@ -232,6 +232,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "DeyfF4yHmCC6d058",
+      "sort": 0
+    },
+    {
+      "name": "Chien fidèle de Mordenkainen",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/chien-fidele-de-mordenkainen.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/chien-fidele-de-mordenkainen.js",
+        "onuse": "systems/add2e/scripts/sorts/chien-fidele-de-mordenkainen.js",
+        "on_use": "systems/add2e/scripts/sorts/chien-fidele-de-mordenkainen.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:5",
+          "sort:chien-fidele-de-mordenkainen",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:chien-fidele-de-mordenkainen"
+        ]
+      },
+      "folder": "mLf6ZlGc1Eo25tkp",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "So9k2n77e",
       "sort": 0
     },
     {
@@ -1709,6 +1764,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "PBUGHsDhjfmhPM0p",
+      "sort": 0
+    },
+    {
+      "name": "Lithomorphose",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/lithomorphose.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/lithomorphose.js",
+        "onuse": "systems/add2e/scripts/sorts/lithomorphose.js",
+        "on_use": "systems/add2e/scripts/sorts/lithomorphose.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:5",
+          "sort:lithomorphose",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:lithomorphose"
+        ]
+      },
+      "folder": "mLf6ZlGc1Eo25tkp",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Smft9cj75",
       "sort": 0
     },
     {
@@ -3355,6 +3465,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "fz3mzpALqk4DBvS8",
+      "sort": 0
+    },
+    {
+      "name": "Transmutation de pierre en boue",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/transmutation-de-pierre-en-boue.webp",
+      "system": {
+        "niveau": 5,
+        "classe": "Magicien",
+        "spellLists": [
+          "Magicien"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/transmutation-de-pierre-en-boue.js",
+        "onuse": "systems/add2e/scripts/sorts/transmutation-de-pierre-en-boue.js",
+        "on_use": "systems/add2e/scripts/sorts/transmutation-de-pierre-en-boue.js",
+        "tags": [
+          "classe:magicien",
+          "niveau:5",
+          "sort:transmutation-de-pierre-en-boue",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:transmutation-de-pierre-en-boue"
+        ]
+      },
+      "folder": "mLf6ZlGc1Eo25tkp",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Sd3li1719",
       "sort": 0
     }
   ]

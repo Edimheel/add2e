@@ -1,6 +1,6 @@
 # Audit automatique — clerc-niveau-1
 
-Généré le : 2026-06-02T08:15:45.045Z
+Généré le : 2026-06-02T08:44:53.061Z
 
 ## Fichiers
 
@@ -11,9 +11,9 @@ Généré le : 2026-06-02T08:15:45.045Z
 
 - Classe : `clerc`
 - Niveau : `1`
-- Sorts dans l’export : `10`
+- Sorts dans l’export : `14`
 - Sorts attendus par la référence : `12`
-- Sorts manquants : `4`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
@@ -23,22 +23,15 @@ Généré le : 2026-06-02T08:15:45.045Z
 | Apaisement | OK | OK | OK | V, S |
 | Aquagenèse | OK | OK | OK | Goutte d’eau ou une pincée de poussière |
 | Bénédiction | OK | OK | OK | Eau bénite, ou maudite pour l’inverse |
-| Détection de la magie | MANQUANT | — | — | — |
+| Détection de la magie | OK | OK | Manquante : assets/icones/sorts/detection-de-la-magie.webp | a_completer |
 | Détection du mal | OK | OK | OK | Son symbole sacré |
 | Injonction | OK | OK | OK | V |
-| Lumière | MANQUANT | — | — | — |
+| Lumière | OK | OK | OK | a_completer |
 | Protection contre le mal | OK | OK | OK | Poudre de fer et d’argent pour tracer le cercle de protection |
-| Purification de l'eau et des aliments | MANQUANT | — | — | — |
+| Purification de l'eau et des aliments | OK | OK | Manquante : assets/icones/sorts/purification-de-leau-et-des-aliments.webp | a_completer |
 | Résistance au froid | OK | OK | OK | Pincée de souffre comme composante matérielle |
 | Sanctuaire | OK | OK | OK | Symbole sacré ; Petit miroir en argent |
-| Soins mineurs | MANQUANT | — | — | — |
-
-## Sorts manquants
-
-- Détection de la magie
-- Lumière
-- Purification de l'eau et des aliments
-- Soins mineurs
+| Soins mineurs | OK | OK | Manquante : assets/icones/sorts/soins-mineurs.webp | a_completer |
 
 ## Sorts présents hors correspondance stricte
 

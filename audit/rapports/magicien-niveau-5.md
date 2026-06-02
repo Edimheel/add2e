@@ -1,6 +1,6 @@
 # Audit automatique — magicien-niveau-5
 
-Généré le : 2026-06-02T08:15:45.090Z
+Généré le : 2026-06-02T08:44:53.111Z
 
 ## Fichiers
 
@@ -11,16 +11,16 @@ Généré le : 2026-06-02T08:15:45.090Z
 
 - Classe : `magicien`
 - Niveau : `5`
-- Sorts dans l’export : `22`
+- Sorts dans l’export : `25`
 - Sorts attendus par la référence : `24`
-- Sorts manquants : `3`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
-| Chien fidèle de Mordenkainen | MANQUANT | — | — | — |
+| Chien fidèle de Mordenkainen | OK | OK | Manquante : assets/icones/sorts/chien-fidele-de-mordenkainen.webp | a_completer |
 | Coffre secret de Léomund | OK | OK | Manquante : assets/icones/sorts/magicien-coffre-secret-de-leomund.webp | V, S, M |
 | Cône de froid | OK | OK | Manquante : assets/icones/sorts/magicien-cone-de-froid.webp | Cône de verre ou de cristal de très petite taille |
 | Contact d'autres plans | OK | OK | Manquante : assets/icones/sorts/magicien-contact-d-autres-plans.webp | V |
@@ -31,7 +31,7 @@ Généré le : 2026-06-02T08:15:45.090Z
 | Extension II | OK | OK | Manquante : assets/icones/sorts/magicien-extension-ii.webp | V |
 | Invocation d'élémental | OK | OK | Manquante : assets/icones/sorts/magicien-invocation-d-elemental.webp | V, S, M |
 | Invocation de Monstre III | OK | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstre-iii.webp | V, S, M |
-| Lithomorphose | MANQUANT | — | — | — |
+| Lithomorphose | OK | OK | Manquante : assets/icones/sorts/lithomorphose.webp | a_completer |
 | Main d'interposition de Bigby | OK | OK | Manquante : assets/icones/sorts/magicien-main-d-interposition-de-bigby.webp | Gant |
 | Métempsycose | OK | OK | Manquante : assets/icones/sorts/magicien-metempsycose.webp | Réceptacle lui-même |
 | Mur de fer | OK | OK | Manquante : assets/icones/sorts/magicien-mur-de-fer.webp | Petit morceau de plaque de fer |
@@ -43,13 +43,7 @@ Généré le : 2026-06-02T08:15:45.090Z
 | Passe-muraille | OK | OK | Manquante : assets/icones/sorts/magicien-passe-muraille.webp | Pincée de graines de sésame |
 | Télékinésie | OK | OK | Manquante : assets/icones/sorts/magicien-telekinesie.webp | V, S |
 | Téléportation | OK | OK | Manquante : assets/icones/sorts/magicien-teleportation.webp | V |
-| Transmutation de pierre en boue | MANQUANT | — | — | — |
-
-## Sorts manquants
-
-- Chien fidèle de Mordenkainen
-- Lithomorphose
-- Transmutation de pierre en boue
+| Transmutation de pierre en boue | OK | OK | Manquante : assets/icones/sorts/transmutation-de-pierre-en-boue.webp | a_completer |
 
 ## Sorts présents hors correspondance stricte
 

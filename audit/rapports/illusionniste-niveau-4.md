@@ -1,6 +1,6 @@
 # Audit automatique — illusionniste-niveau-4
 
-Généré le : 2026-06-02T08:15:45.072Z
+Généré le : 2026-06-02T08:44:53.092Z
 
 ## Fichiers
 
@@ -11,16 +11,16 @@ Généré le : 2026-06-02T08:15:45.072Z
 
 - Classe : `illusionniste`
 - Niveau : `4`
-- Sorts dans l’export : `7`
+- Sorts dans l’export : `8`
 - Sorts attendus par la référence : `8`
-- Sorts manquants : `1`
+- Sorts manquants : `0`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
-| Confusion | MANQUANT | — | — | — |
+| Confusion | OK | OK | Manquante : assets/icones/sorts/confusion.webp | a_completer |
 | Création mineure | OK | OK | Manquante : assets/icones/sorts/illusionniste-creation-mineure.webp | V, S, M |
 | Dissipation de l'épuisement | OK | OK | Manquante : assets/icones/sorts/illusionniste-dissipation-de-l-epuisement.webp | V, S |
 | Émotion | OK | OK | Manquante : assets/icones/sorts/illusionniste-emotion.webp | V, S |
@@ -28,10 +28,6 @@ Généré le : 2026-06-02T08:15:45.072Z
 | Monstres des ombres | OK | OK | Manquante : assets/icones/sorts/illusionniste-monstres-des-ombres.webp | V, S |
 | Phytomorphose | OK | OK | Manquante : assets/icones/sorts/illusionniste-phytomorphose.webp | V, S |
 | Tueur fantasmagorique | OK | OK | Manquante : assets/icones/sorts/illusionniste-tueur-fantasmagorique.webp | V, S |
-
-## Sorts manquants
-
-- Confusion
 
 ## Statut
 

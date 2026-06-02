@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-01T20:49:21.118Z",
+  "generatedAt": "2026-06-02T08:44:52.970Z",
   "sourceFile": "fvtt-spells-all.json",
   "group": {
     "classe": "clerc",
     "niveau": 7,
     "key": "clerc-niveau-7",
-    "count": 10
+    "count": 11
   },
   "folders": [
     {
@@ -589,7 +589,7 @@
       "sort": 0
     },
     {
-      "name": "Marche des Vent",
+      "name": "Marche des vents",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/marche-sur-le-vent.webp",
       "system": {
@@ -843,7 +843,7 @@
       "sort": 0
     },
     {
-      "name": "Parole Sacrée",
+      "name": "Parole sacrée/maudite",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/parole-sacree.webp",
       "system": {
@@ -907,7 +907,7 @@
       },
       "effects": [
         {
-          "name": "Parole Sacrée",
+          "name": "Parole sacrée/maudite",
           "flags": {
             "add2e": {
               "tags": [
@@ -957,7 +957,7 @@
           "folder": null
         },
         {
-          "name": "Parole Sacrée",
+          "name": "Parole sacrée/maudite",
           "flags": {
             "add2e": {
               "tags": [
@@ -1007,7 +1007,7 @@
           "folder": null
         },
         {
-          "name": "Parole Sacrée",
+          "name": "Parole sacrée/maudite",
           "flags": {
             "add2e": {
               "tags": [
@@ -1836,6 +1836,61 @@
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "_id": "x3fOxKCADgNdvfyU",
+      "sort": 0
+    },
+    {
+      "name": "Seuil",
+      "type": "sort",
+      "img": "systems/add2e/assets/icones/sorts/seuil.webp",
+      "system": {
+        "niveau": 7,
+        "classe": "Clerc",
+        "spellLists": [
+          "Clerc"
+        ],
+        "ecole": "a_completer",
+        "école": "a_completer",
+        "portee": "a_completer",
+        "portée": "a_completer",
+        "duree": "a_completer",
+        "durée": "a_completer",
+        "zone_effet": "a_completer",
+        "jet_sauvegarde": "a_completer",
+        "composantes": "a_completer",
+        "composants_materiels": [],
+        "composants_materiels_source": "a_completer",
+        "temps_incantation": "a_completer",
+        "description": "Reference creee automatiquement. Description et mecanique detaillee a completer depuis le Manuel des joueurs AD&D 2e.",
+        "description_source": "Manuel des joueurs AD&D 2e",
+        "description_reelle": "a_completer",
+        "description_texte": "a_completer",
+        "description_html": "<p>a_completer</p>",
+        "onUse": "systems/add2e/scripts/sorts/seuil.js",
+        "onuse": "systems/add2e/scripts/sorts/seuil.js",
+        "on_use": "systems/add2e/scripts/sorts/seuil.js",
+        "tags": [
+          "classe:clerc",
+          "niveau:7",
+          "sort:seuil",
+          "a_completer"
+        ],
+        "effectTags": [
+          "sort:seuil"
+        ]
+      },
+      "folder": "6Rzv4BEmmsytROwN",
+      "effects": [],
+      "flags": {
+        "add2e": {
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true
+        }
+      },
+      "ownership": {
+        "default": 0
+      },
+      "_id": "Shi1vnnug",
       "sort": 0
     },
     {
