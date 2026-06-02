@@ -7,9 +7,11 @@ on:
       - agent-audit-sorts
     paths:
       - AGENTS.md
+      - fvtt-spells-all.json
       - audit/agent-config.json
       - audit/agent-state.json
       - audit/tools/spell-agent.mjs
+      - audit/tools/apply-spell-agent-fixes.mjs
       - audit/tools/generate-reference-files.mjs
       - audit/tools/generate-spell-audit-reports.mjs
       - audit/reference/*.json
@@ -38,7 +40,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add audit/agent-state.json audit/rapports/*.md audit/reference/*.json
+          git add fvtt-spells-all.json scripts/sorts/*.js audit/agent-state.json audit/rapports/*.md audit/reference/*.json audit/decoupage_fichier/*.json
           if git diff --cached --quiet; then
             echo "No agent outputs to commit"
           else
