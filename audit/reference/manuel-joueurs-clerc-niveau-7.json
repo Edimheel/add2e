@@ -6,29 +6,23 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_schema_normalise_description_a_importer",
+  "status": "reference_champs_techniques_complete_description_a_importer",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-7.json",
   "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "description unique normalisée à importer"
-    ],
-    "warning": "Chaque sort utilise uniquement le champ description. Les descriptions exactes doivent être importées via audit/tools/import-reference-descriptions.mjs."
+    "descriptionField": "description",
+    "warning": "Tous les champs techniques sont remplis depuis les blocs du Manuel. Le champ description unique doit être importé via audit/tools/import-reference-descriptions.mjs."
   },
   "spells": [
-    { "ordre": 1, "nom": "Contrôle du climat", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 2, "nom": "Marche des vents", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 3, "nom": "Parole sacrée/maudite", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 4, "nom": "Régénération", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 5, "nom": "Restauration", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 6, "nom": "Résurrection", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 7, "nom": "Seuil", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 8, "nom": "Sort astral", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 9, "nom": "Symbole", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" },
-    { "ordre": 10, "nom": "Tremblement de terre", "ecole": "a_importer", "niveau": 7, "portee": "a_importer", "duree": "a_importer", "zone_effet": "a_importer", "composantes": "a_importer", "temps_incantation": "a_importer", "jet_sauvegarde": "a_importer", "description": "", "status": "description_a_importer", "onuse_strategy": "a_definir_apres_import_description" }
+    { "ordre": 1, "nom": "Contrôle du climat", "ecole": "Évocation - Altération", "niveau": 7, "portee": "0", "duree": "4-48 heures", "zone_effet": "10 à 40 km2", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "controle_climat_mj" },
+    { "ordre": 2, "nom": "Marche des vents", "ecole": "Altération", "niveau": 7, "portee": "au toucher", "duree": "6 tours/niveau", "zone_effet": "spéciale", "composantes": "V, S, M", "temps_incantation": "1 round", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "active_effect_deplacement_vol_mj" },
+    { "ordre": 3, "nom": "Parole sacrée/maudite", "ecole": "Conjuration/Appel", "niveau": 7, "portee": "0", "duree": "spéciale", "zone_effet": "3\" de rayon", "composantes": "V", "temps_incantation": "1 segment", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "effet_zone_selon_dv_alignement" },
+    { "ordre": 4, "nom": "Régénération", "ecole": "Nécromancie", "niveau": 7, "portee": "au toucher", "duree": "permanente", "zone_effet": "créature touchée", "composantes": "V, S, M", "temps_incantation": "3 rounds", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Flétrissement", "composants_materiels_source": "objet de prière et eau bénite/maudite", "onuse_strategy": "restauration_membre_mj" },
+    { "ordre": 5, "nom": "Restauration", "ecole": "Nécromancie", "niveau": 7, "portee": "au toucher", "duree": "permanente", "zone_effet": "créature touchée", "composantes": "V, S", "temps_incantation": "3 rounds", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Perte d’énergie", "onuse_strategy": "restauration_niveau_energie_mj" },
+    { "ordre": 6, "nom": "Résurrection", "ecole": "Nécromancie", "niveau": 7, "portee": "au toucher", "duree": "permanente", "zone_effet": "personne touchée", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Anéantissement", "composants_materiels_source": "symbole sacré du clerc et eau bénite/maudite", "onuse_strategy": "resurrection_complete_mj" },
+    { "ordre": 7, "nom": "Seuil", "ecole": "Conjuration/Appel", "niveau": 7, "portee": "3\"", "duree": "spéciale", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "5 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "appel_entite_planaire_mj" },
+    { "ordre": 8, "nom": "Sort astral", "ecole": "Altération", "niveau": 7, "portee": "au toucher", "duree": "spéciale", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "3 tours", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "projection_astrale_mj" },
+    { "ordre": 9, "nom": "Symbole", "ecole": "Conjuration/Appel", "niveau": 7, "portee": "au toucher", "duree": "1 tour/niveau", "zone_effet": "spéciale", "composantes": "V, S, M", "temps_incantation": "3 segments", "jet_sauvegarde": "annule", "description": "", "status": "description_a_importer", "onuse_strategy": "symbole_choix_effet_dialogue_mj" },
+    { "ordre": 10, "nom": "Tremblement de terre", "ecole": "Altération", "niveau": 7, "portee": "12\"", "duree": "1 round", "zone_effet": "1/2\" de diamètre par niveau", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "composants_materiels_source": "pincée de poussière, petit caillou et motte de terre", "onuse_strategy": "effet_zone_mj_selon_terrain" }
   ]
 }
