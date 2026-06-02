@@ -1,11 +1,11 @@
 # Agent run
 
-Run at: 2026-06-02T08:44:53.133Z
+Run at: 2026-06-02T16:48:42.019Z
 Status: ok_finished
 Run completed: true
-Mode: safe_fix
-Production writes: true
-OnUse creation: true
+Mode: audit_and_plan
+Production writes: false
+OnUse creation: false
 Total lots: 30
 Lots with findings: 3
 Planned actions: 3
@@ -22,28 +22,6 @@ Références créées : 0
 Références enrichies : 28
 Références détaillées conservées : 2
 Lots sans liste maître : 0
-```
-
-### audit/tools/apply-spell-agent-fixes.mjs
-
-Status: ok
-
-```text
-Created spells: 65
-Renamed spells: 8
-Created onUse scripts: 80
-```
-
-### audit/decoupage_fichier/decoupe-spells.mjs
-
-Status: ok
-
-```text
-Source : fvtt-spells-all.json
-Tableau de sorts : items
-Sorts détectés : 421
-Groupes générés : 30
-Sortie : audit/decoupage_fichier
 ```
 
 ### audit/tools/generate-spell-audit-reports.mjs

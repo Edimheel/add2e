@@ -1,7 +1,7 @@
 {
   "agentName": "add2e-spell-agent",
   "createdAt": "2026-06-02",
-  "lastRunAt": "2026-06-02T08:44:53.133Z",
+  "lastRunAt": "2026-06-02T16:48:42.019Z",
   "lastRunStatus": "ok_finished",
   "currentLot": null,
   "nextLot": "magicien-niveau-1",
@@ -12,16 +12,6 @@
       "script": "audit/tools/generate-reference-files.mjs",
       "status": "ok",
       "output": "Références créées : 0\nRéférences enrichies : 28\nRéférences détaillées conservées : 2\nLots sans liste maître : 0"
-    },
-    {
-      "script": "audit/tools/apply-spell-agent-fixes.mjs",
-      "status": "ok",
-      "output": "Created spells: 65\nRenamed spells: 8\nCreated onUse scripts: 80"
-    },
-    {
-      "script": "audit/decoupage_fichier/decoupe-spells.mjs",
-      "status": "ok",
-      "output": "Source : fvtt-spells-all.json\nTableau de sorts : items\nSorts détectés : 421\nGroupes générés : 30\nSortie : audit/decoupage_fichier"
     },
     {
       "script": "audit/tools/generate-spell-audit-reports.mjs",
@@ -56,9 +46,9 @@
     }
   ],
   "manualTrigger": "2026-06-02-effective-run-001",
-  "mode": "safe_fix",
-  "allowProductionWrites": true,
-  "allowOnUseCreation": true,
+  "mode": "audit_and_plan",
+  "allowProductionWrites": false,
+  "allowOnUseCreation": false,
   "runCompleted": true,
   "notes": [
     "Effective run requested from chat.",

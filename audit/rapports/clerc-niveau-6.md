@@ -1,6 +1,6 @@
 # Audit automatique — clerc-niveau-6
 
-Généré le : 2026-06-02T08:44:53.075Z
+Généré le : 2026-06-02T16:48:41.960Z
 
 ## Fichiers
 
@@ -20,16 +20,16 @@ Généré le : 2026-06-02T08:44:53.075Z
 
 | Sort attendu | Nom | onUse | Image | Composants export |
 | --- | --- | --- | --- | --- |
-| Animation des objets | OK | OK | OK | V, S |
-| Barrière de lames | OK | OK | OK | V, S |
-| Guérison | OK | OK | OK | V, S |
+| Animation des objets | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js | OK | V, S |
+| Barrière de lames | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js | OK | V, S |
+| Guérison | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/guerison.js | OK | V, S |
 | Invocation des animaux | OK | OK | Manquante : assets/icones/sorts/invocation-des-animaux.webp | a_completer |
-| Langage des monstres | OK | OK | OK | V, S |
-| Lithomancie | OK | OK | OK | Goutte de mercure |
-| Orientation | OK | OK | OK | Jeu d’objets divinatoires de ceux appréciés par le clerc : en os |
-| Rappel | OK | OK | OK | V |
-| Séparation des eaux | OK | OK | OK | Symbole sacré |
-| Serviteur aérien | OK | OK | OK | V, S |
+| Langage des monstres | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js | OK | V, S |
+| Lithomancie | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js | OK | Goutte de mercure |
+| Orientation | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/orientation.js | OK | Jeu d’objets divinatoires de ceux appréciés par le clerc : en os |
+| Rappel | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js | OK | V |
+| Séparation des eaux | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js | OK | Symbole sacré |
+| Serviteur aérien | OK | Manquant : scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js | OK | V, S |
 
 ## Statut
 
