@@ -3815,27 +3815,15 @@
         },
         "ecole": "Divination",
         "on_use": "systems/add2e/scripts/sorts/augure.js",
-        "composants_materiels": [
-          {
-            "slug": "jeu_de_baguettes_serties_de_gemmes",
-            "nom": "Jeu de baguettes serties de gemmes",
-            "quantite": 1,
-            "consomme": true
-          },
-          {
-            "slug": "os_de_dragon",
-            "nom": "Os de dragon",
-            "quantite": 1,
-            "consomme": true
-          }
-        ],
+        "composants_materiels": [],
         "composants_materiels_a_renseigner": false,
         "description_source": "Manuel des joueurs AD&D 2e",
-        "composants_materiels_source": "La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion.",
+        "composants_materiels_source": "Composants alternatifs selon la methode choisie: baguettes serties de gemmes, os de dragon, objets similaires ou feuilles d'infusion humides; si la methode de l'infusion est utilisee, une perle ecrasee d'au moins 100 po est ajoutee a la boisson avant consommation.",
         "composants_materiels_verification_recommandee": true,
         "description_reelle": "Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.",
         "description_texte": "Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.",
-        "description_html": "<p>Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.</p>"
+        "description_html": "<p>Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.</p>",
+        "composants_materiels_choix_manuel": true
       },
       "folder": "KoHiALDxso8oenFP",
       "effects": [
@@ -31693,7 +31681,7 @@
       "sort": 0
     },
     {
-      "name": "Langage des Animaux",
+      "name": "Langage animal",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/langage-des-animaux.webp",
       "system": {
@@ -31748,7 +31736,7 @@
       "folder": "KoHiALDxso8oenFP",
       "effects": [
         {
-          "name": "Langage des Animaux",
+          "name": "Langage animal",
           "flags": {
             "add2e": {
               "tags": [
@@ -31798,7 +31786,7 @@
           "folder": null
         },
         {
-          "name": "Langage des Animaux",
+          "name": "Langage animal",
           "flags": {
             "add2e": {
               "tags": [
@@ -31848,7 +31836,7 @@
           "folder": null
         },
         {
-          "name": "Langage des Animaux",
+          "name": "Langage animal",
           "flags": {
             "add2e": {
               "tags": [
@@ -31898,7 +31886,7 @@
           "folder": null
         },
         {
-          "name": "Langage des Animaux",
+          "name": "Langage animal",
           "flags": {
             "add2e": {
               "tags": [
@@ -31948,7 +31936,7 @@
           "folder": null
         },
         {
-          "name": "Langage des Animaux",
+          "name": "Langage animal",
           "flags": {
             "add2e": {
               "tags": [
@@ -31998,7 +31986,7 @@
           "folder": null
         },
         {
-          "name": "Langage des Animaux",
+          "name": "Langage animal",
           "flags": {
             "add2e": {
               "tags": [
@@ -36312,7 +36300,7 @@
           "valeur": "5",
           "unite": "segments"
         },
-        "description": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé. SORTS DE CLERC (NIVEAU 2)",
+        "description": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé.",
         "onUse": "systems/add2e/scripts/sorts/marteau-spirituel.js",
         "onuse": "systems/add2e/scripts/sorts/marteau-spirituel.js",
         "portée": {
@@ -36336,9 +36324,9 @@
         "composants_materiels_a_renseigner": false,
         "description_source": "Manuel des joueurs AD&D 2e",
         "composants_materiels_source": "marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu",
-        "description_reelle": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé. SORTS DE CLERC (NIVEAU 2)",
-        "description_texte": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé. SORTS DE CLERC (NIVEAU 2)",
-        "description_html": "<p>En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé. SORTS DE CLERC (NIVEAU 2)</p>",
+        "description_reelle": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé.",
+        "description_texte": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé.",
+        "description_html": "<p>En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé. </p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
       },
@@ -52108,7 +52096,7 @@
       "sort": 0
     },
     {
-      "name": "Résistance au Feu/Résistance au Froid",
+      "name": "Résistance au feu",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/resistance-au-feu-resistance-au-froid.webp",
       "system": {
@@ -52155,8 +52143,8 @@
         "on_use": "systems/add2e/scripts/sorts/resistance-au-feu-resistance-au-froid.js",
         "composants_materiels": [
           {
-            "slug": "symbole_sacre_du_clerc",
-            "nom": "Symbole sacré du clerc",
+            "slug": "goutte_de_mercure",
+            "nom": "Goutte de mercure",
             "quantite": 1,
             "consomme": true
           }
@@ -52167,13 +52155,13 @@
         "description_texte": "Quand ce sort est lancé, la personne touchée est capable de résister à des chaleurs importantes : brûlures ou canicule. Elle peut même supporter des chaleurs très importantes, tels que des feux magiques brûlants, des incendies, des braises incandescentes, de l’huile bouillante en grande quantité, des épées langues de feu, des tempêtes de feu, des boules de feu, des nuées de météores ou le souffle de dragons rouges. Cependant, la personne en question subira quand même des dommages, mais moindres que si elle ne bénéficiait pas du sort. Avec un jet de protection réussi, la victime ne subira que le quart des dégâts ; si le jet de protection est raté, elle subira la moitié des dégâts. De plus, le jet de protection obtient un bonus de +3. La résistance dure 1 tour pour chaque niveau d’expérience atteint par le clerc qui lance le sort. Le lanceur du sort a besoin d’une goutte de mercure comme composante matérielle.",
         "description_html": "<p>Quand ce sort est lancé, la personne touchée est capable de résister à des chaleurs importantes : brûlures ou canicule. Elle peut même supporter des chaleurs très importantes, tels que des feux magiques brûlants, des incendies, des braises incandescentes, de l’huile bouillante en grande quantité, des épées langues de feu, des tempêtes de feu, des boules de feu, des nuées de météores ou le souffle de dragons rouges. Cependant, la personne en question subira quand même des dommages, mais moindres que si elle ne bénéficiait pas du sort. Avec un jet de protection réussi, la victime ne subira que le quart des dégâts ; si le jet de protection est raté, elle subira la moitié des dégâts. De plus, le jet de protection obtient un bonus de +3. La résistance dure 1 tour pour chaque niveau d’expérience atteint par le clerc qui lance le sort. Le lanceur du sort a besoin d’une goutte de mercure comme composante matérielle.</p>",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_source": "symbole sacré du clerc",
+        "composants_materiels_source": "La composante matérielle est une goutte de mercure.",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément"
       },
       "folder": "KoHiALDxso8oenFP",
       "effects": [
         {
-          "name": "Résistance au Feu/Résistance au Froid",
+          "name": "Résistance au feu",
           "flags": {
             "add2e": {
               "tags": [
@@ -52223,7 +52211,7 @@
           "folder": null
         },
         {
-          "name": "Résistance au Feu/Résistance au Froid",
+          "name": "Résistance au feu",
           "flags": {
             "add2e": {
               "tags": [
@@ -52273,7 +52261,7 @@
           "folder": null
         },
         {
-          "name": "Résistance au Feu/Résistance au Froid",
+          "name": "Résistance au feu",
           "flags": {
             "add2e": {
               "tags": [
@@ -52323,7 +52311,7 @@
           "folder": null
         },
         {
-          "name": "Résistance au Feu/Résistance au Froid",
+          "name": "Résistance au feu",
           "flags": {
             "add2e": {
               "tags": [
@@ -52373,7 +52361,7 @@
           "folder": null
         },
         {
-          "name": "Résistance au Feu/Résistance au Froid",
+          "name": "Résistance au feu",
           "flags": {
             "add2e": {
               "tags": [
@@ -52423,7 +52411,7 @@
           "folder": null
         },
         {
-          "name": "Résistance au Feu/Résistance au Froid",
+          "name": "Résistance au feu",
           "flags": {
             "add2e": {
               "tags": [
@@ -53413,11 +53401,17 @@
             "nom": "Symbole sacré",
             "quantite": 1,
             "consomme": false
+          },
+          {
+            "slug": "gousse_ail",
+            "nom": "Gousse d’ail",
+            "quantite": 1,
+            "consomme": true
           }
         ],
         "composants_materiels_a_renseigner": false,
         "description_source": "Manuel des joueurs AD&D 2e",
-        "composants_materiels_source": "Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
+        "composants_materiels_source": "Symbole sacre du clerc et gousse d'ail ecrasee repandue sur les pieds nus de la victime.",
         "composants_materiels_verification_recommandee": true,
         "description_reelle": "Quand ce sort est lancé sur une personne empoisonnée, il ralentit très sensiblement les effets du poison. Il peut même redonner la vie à un individu mort par empoisonnement s’il est lancé sur la victime dans un laps de temps inférieur ou égal à 1 tour par niveau du clerc ; par exemple, un clerc de niveau 10 pourra temporairement sauver une personne empoisonnée et morte depuis un maximum de 10 tours. Si ce sort ne neutralise pas le poison, il empêche toutefois de subir des dégâts importants. La victime, cependant, perdra 1 point de vie par tour, sans pourtant ne jamais descendre au dessous de 1 point de vie. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
         "description_texte": "Quand ce sort est lancé sur une personne empoisonnée, il ralentit très sensiblement les effets du poison. Il peut même redonner la vie à un individu mort par empoisonnement s’il est lancé sur la victime dans un laps de temps inférieur ou égal à 1 tour par niveau du clerc ; par exemple, un clerc de niveau 10 pourra temporairement sauver une personne empoisonnée et morte depuis un maximum de 10 tours. Si ce sort ne neutralise pas le poison, il empêche toutefois de subir des dégâts importants. La victime, cependant, perdra 1 point de vie par tour, sans pourtant ne jamais descendre au dessous de 1 point de vie. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
@@ -55367,7 +55361,7 @@
       "sort": 0
     },
     {
-      "name": "Silence (Rayon de 15 pieds)",
+      "name": "Silence sur 5 mètres",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/silence-rayon-de-15-pieds.webp",
       "system": {
@@ -55399,7 +55393,7 @@
           "valeur": "5",
           "unite": "segments"
         },
-        "description": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc. SORTS DE NIVEAU 3",
+        "description": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc.",
         "onUse": "systems/add2e/scripts/sorts/silence-rayon-de-15-pieds.js",
         "onuse": "systems/add2e/scripts/sorts/silence-rayon-de-15-pieds.js",
         "portée": {
@@ -55415,14 +55409,14 @@
         "composants_materiels": [],
         "description_source": "Manuel des joueurs AD&D 2e",
         "composants_materiels_a_renseigner": false,
-        "description_reelle": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc. SORTS DE NIVEAU 3",
-        "description_texte": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc. SORTS DE NIVEAU 3",
-        "description_html": "<p>En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c&#x27;est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc. SORTS DE NIVEAU 3</p>"
+        "description_reelle": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc.",
+        "description_texte": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc.",
+        "description_html": "<p>En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c&#x27;est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc. </p>"
       },
       "folder": "KoHiALDxso8oenFP",
       "effects": [
         {
-          "name": "Silence (Rayon de 15 pieds)",
+          "name": "Silence sur 5 mètres",
           "flags": {
             "add2e": {
               "tags": [
@@ -55472,7 +55466,7 @@
           "folder": null
         },
         {
-          "name": "Silence (Rayon de 15 pieds)",
+          "name": "Silence sur 5 mètres",
           "flags": {
             "add2e": {
               "tags": [
@@ -55522,7 +55516,7 @@
           "folder": null
         },
         {
-          "name": "Silence (Rayon de 15 pieds)",
+          "name": "Silence sur 5 mètres",
           "flags": {
             "add2e": {
               "tags": [
@@ -55572,7 +55566,7 @@
           "folder": null
         },
         {
-          "name": "Silence (Rayon de 15 pieds)",
+          "name": "Silence sur 5 mètres",
           "flags": {
             "add2e": {
               "tags": [
@@ -55622,7 +55616,7 @@
           "folder": null
         },
         {
-          "name": "Silence (Rayon de 15 pieds)",
+          "name": "Silence sur 5 mètres",
           "flags": {
             "add2e": {
               "tags": [
@@ -55672,7 +55666,7 @@
           "folder": null
         },
         {
-          "name": "Silence (Rayon de 15 pieds)",
+          "name": "Silence sur 5 mètres",
           "flags": {
             "add2e": {
               "tags": [
