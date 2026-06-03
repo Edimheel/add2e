@@ -98,7 +98,7 @@
       "status": "reference_complete_description_normalisee",
       "onuse_strategy": "detection_a_traiter_par_message_et_eventuel_effet_scene",
       "composants_materiels_source": "a besoin de son symbole sacré",
-      "description": "Quand ce sort est lancé, le clerc détecte les émanations magiques sur une largeur de 1\" et une longueur de 3\" dans la direction qu’il regarde. Le clerc peut pivoter de 60° par round. Les murs de pierre épais de 30 cm et plus, une épaisseur de métal de 3 cm et plus ou une épaisseur de bois de 90 cm et plus empêchent le sort de fonctionner. Le clerc peut discerner si la magie est forte ou faible. Pour lancer ce sort, le clerc a besoin de son symbole sacré. SORTS DE CLERC (NIVEAU 1)"
+      "description": "Quand ce sort est lancé, le clerc détecte les émanations magiques sur une largeur de 1\" et une longueur de 3\" dans la direction qu’il regarde. Le clerc peut pivoter de 60° par round. Les murs de pierre épais de 30 cm et plus, une épaisseur de métal de 3 cm et plus ou une épaisseur de bois de 90 cm et plus empêchent le sort de fonctionner. Le clerc peut discerner si la magie est forte ou faible. Pour lancer ce sort, le clerc a besoin de son symbole sacré."
     },
     {
       "ordre": 5,
@@ -234,7 +234,7 @@
       "source_page": 45,
       "status": "reference_complete_description_normalisee",
       "onuse_strategy": "soin_1d8_ou_blessure_inverse_a_confirmer_depuis_description",
-      "description": "En posant ses mains sur une créature blessée, le clerc peut lui redonner de 1 à 8 points de vie perdus (1d8). Ce sort ne peut pas soigner les créatures sans enveloppe corporelle, ni les morts-vivants, ni les créatures uniquement touchées par des armes en fer, en argent ou ma44 giques. L’effet des soins mineurs est permanent tant que la personne guérie ne subit pas d’autres dommages. L’inverse de ce sort, blessures mineures, agit selon les mêmes principes mais cause de 1 à 8 points de dommages. Si une créature évite le contact des mains du clerc, celui-ci doit lancer une « probabilité de toucher » pour voir s’il a pu poser ses mains sur la victime pour infliger une blessure. SORTS DE NIVEAU 2"
+      "description": "En posant ses mains sur une créature blessée, le clerc peut lui redonner de 1 à 8 points de vie perdus (1d8). Ce sort ne peut pas soigner les créatures sans enveloppe corporelle, ni les morts-vivants, ni les créatures uniquement touchées par des armes en fer, en argent ou ma44 giques. L’effet des soins mineurs est permanent tant que la personne guérie ne subit pas d’autres dommages. L’inverse de ce sort, blessures mineures, agit selon les mêmes principes mais cause de 1 à 8 points de dommages. Si une créature évite le contact des mains du clerc, celui-ci doit lancer une « probabilité de toucher » pour voir s’il a pu poser ses mains sur la victime pour infliger une blessure."
     }
   ]
 }

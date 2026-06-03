@@ -198,7 +198,7 @@
       "source_page": 50,
       "status": "reference_complete_description_normalisee",
       "onuse_strategy": "soin_ou_blessure_inverse_a_definir_depuis_description",
-      "description": "Ce sort est une version plus puissante du sort de niveau 1 soins mineurs (voir p.44) et il fonctionne de la même manière avec les mêmes restrictions. Soins majeurs permet de redonner 3-17 points de vie (2d8+1). L’inverse, blessures majeures, inflige 3-17 points de dommages si un jet pour toucher est réussi. SORTS DE NIVEAU 5"
+      "description": "Ce sort est une version plus puissante du sort de niveau 1 soins mineurs (voir p.44) et il fonctionne de la même manière avec les mêmes restrictions. Soins majeurs permet de redonner 3-17 points de vie (2d8+1). L’inverse, blessures majeures, inflige 3-17 points de dommages si un jet pour toucher est réussi."
     }
   ]
 }

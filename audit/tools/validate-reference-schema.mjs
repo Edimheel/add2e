@@ -16,6 +16,16 @@ const forbiddenDescriptionFields = [
   "description_resumee_regles"
 ];
 
+const forbiddenDescriptionArtifacts = [
+  "SORTS DE CLERC",
+  "SORTS DE NIVEAU",
+  "LES SORTS DE DRUIDE",
+  "Notes concernant les sorts de druide",
+  "Explication/Description appartenant au sort suivant",
+  "Explication/Description",
+  "PAROLE SACRÉE/MAUDITE"
+];
+
 const requiredSpellFields = [
   "ordre",
   "nom",
@@ -58,6 +68,14 @@ function validateSpell(file, index, spell, errors, warnings) {
 
   if (typeof spell.description === "string" && /\n/.test(spell.description)) {
     errors.push(`${label}: description non normalisee, retours ligne interdits`);
+  }
+
+  if (typeof spell.description === "string") {
+    for (const artifact of forbiddenDescriptionArtifacts) {
+      if (spell.description.includes(artifact)) {
+        errors.push(`${label}: artefact d'extraction interdit dans description: ${artifact}`);
+      }
+    }
   }
 }
 

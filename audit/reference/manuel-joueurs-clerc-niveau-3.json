@@ -208,7 +208,7 @@
       "composants_materiels_source": "symbole religieux en argent, chapelet de prière ou objet similaire",
       "notes_regles": "Effets similaires à Cantique : +1 pour les alliés et -1 pour les ennemis aux probabilités de toucher, dommages et jets de protection ; le clerc peut agir après l’incantation.",
       "onuse_strategy": "script_existant:priere.js",
-      "description": "Ce sort a les mêmes effets que le sort cantique en ce qui concerne le bonus de +1 pour les amis et –1 pour les ennemis pour les probabilités de toucher, la détermination des dommages et les jets de protection. Cependant, le clerc peut entreprendre autre chose une fois que la prière est terminée (c'est-à-dire l’incantation). Le clerc a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation. SORTS DE NIVEAU 4",
+      "description": "Ce sort a les mêmes effets que le sort cantique en ce qui concerne le bonus de +1 pour les amis et –1 pour les ennemis pour les probabilités de toucher, la détermination des dommages et les jets de protection. Cependant, le clerc peut entreprendre autre chose une fois que la prière est terminée (c'est-à-dire l’incantation). Le clerc a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation.",
       "status": "reference_complete_description_normalisee"
     }
   ],
