@@ -1,48 +1,50 @@
 # Rapport onUse — Clerc niveau 3
+
 ## Diagnostic
+
 - Référence lue : `audit/reference/manuel-joueurs-clerc-niveau-3.json`.
 - Aucun JSON Foundry n'a été modifié.
-- Les scripts créés dans ce lot sont des aides MJ DialogV2 lorsque l'automatisation complète serait incertaine.
+- Aucun script existant n'a été modifié : les onUse historiques fonctionnels sont préservés.
+- Correction PR4 : les scripts génériques d'aide MJ ajoutés précédemment ont été retirés, car ils dupliquaient des scripts existants et n'étaient pas raccordés au JSON Foundry.
 
 ## Scripts créés
-- `scripts/sorts/guerison-de-la-cecite.js`
-- `scripts/sorts/localisation-d-objets.js`
-- `scripts/sorts/manne.js`
-- `scripts/sorts/necro-animation.js`
-- `scripts/sorts/necromancie.js`
+
+- Aucun.
 
 ## Scripts modifiés
-- Aucun script existant n'a été modifié : les onUse présents ont été préservés pour éviter une régression fonctionnelle.
+
+- Aucun.
 
 ## Scripts laissés inchangés
-- `Catalepsie` : script existant ou chemin historique conservé.
-- `Désenvoûtement` : script existant ou chemin historique conservé.
-- `Dissipation de la magie` : script existant ou chemin historique conservé.
-- `Glyphe de garde` : script existant ou chemin historique conservé.
-- `Guérison des maladies` : script existant ou chemin historique conservé.
-- `Lumière éternelle` : script existant ou chemin historique conservé.
-- `Prière` : script existant ou chemin historique conservé.
+
+- `Catalepsie` : chemin Foundry historique `scripts/sorts/mort-simulee.js` ou script voisin existant conservé.
+- `Désenvoûtement` : chemin Foundry historique `scripts/sorts/delivrance-de-la-malediction.js` conservé.
+- `Dissipation de la magie` : `scripts/sorts/dissipation-de-la-magie.js`.
+- `Glyphe de garde` : `scripts/sorts/glyphe-de-garde.js`.
+- `Guérison de la cécité` : chemin Foundry historique `scripts/sorts/guerison-de-la-cecite-ou-de-la-surdite.js` conservé.
+- `Guérison des maladies` : `scripts/sorts/guerison-des-maladies.js`.
+- `Localisation d'objets` : chemin Foundry historique `scripts/sorts/localisation-d-un-objet.js` conservé.
+- `Lumière éternelle` : chemin Foundry historique `scripts/sorts/lumiere-continuelle.js` conservé.
+- `Manne` : chemin Foundry historique `scripts/sorts/creation-de-nourriture-et-d-eau.js` conservé.
+- `Nécro-animation` : chemin Foundry historique `scripts/sorts/animation-des-morts.js` conservé.
+- `Nécromancie` : chemin Foundry historique `scripts/sorts/communication-avec-les-morts.js` conservé.
+- `Prière` : `scripts/sorts/priere.js`.
 
 ## Sorts automatisés
-- Aucun nouveau sort complexe n'a reçu d'automatisation destructive dans ce lot.
-- Les scripts existants déjà fonctionnels sont conservés tels quels.
+
+- Aucun nouveau sort n'a reçu d'automatisation destructive dans ce lot.
+- Les automatisations déjà présentes dans les scripts historiques sont conservées telles quelles.
 
 ## Sorts en aide MJ
-- `guerison-de-la-cecite.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
-- `localisation-d-objets.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
-- `manne.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
-- `necro-animation.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
-- `necromancie.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
+
+- Aucun nouveau script d'aide MJ générique n'est créé dans ce correctif PR4.
+- Les sorts ambigus restent traités par leurs scripts historiques ou par arbitrage MJ dans Foundry.
 
 ## Limites connues
+
 - Test runtime Foundry non exécuté dans l'environnement Codex.
-- Les scripts historiques qui contiennent déjà dialogue legacy V1 sont une dette technique préexistante et ne sont pas réécrits dans ce lot.
-- Les effets d'invocation, de déplacement, de zone persistante ou d'interprétation restent à arbitrer par le MJ si le script existant ne les automatise pas de façon fiable.
+- Des scripts historiques peuvent encore contenir des dialogues legacy ; ils sont hors périmètre de ce correctif et n'ont pas été réécrits.
 
 ## Fichiers touchés
-- `scripts/sorts/guerison-de-la-cecite.js`
-- `scripts/sorts/localisation-d-objets.js`
-- `scripts/sorts/manne.js`
-- `scripts/sorts/necro-animation.js`
-- `scripts/sorts/necromancie.js`
+
 - `audit/rapports/ONUSE-CLERC-NIVEAU-3.md`

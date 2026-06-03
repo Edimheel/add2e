@@ -1,48 +1,50 @@
 # Rapport onUse — Clerc niveau 2
+
 ## Diagnostic
+
 - Référence lue : `audit/reference/manuel-joueurs-clerc-niveau-2.json`.
 - Aucun JSON Foundry n'a été modifié.
-- Les scripts créés dans ce lot sont des aides MJ DialogV2 lorsque l'automatisation complète serait incertaine.
+- Aucun script existant n'a été modifié : les onUse historiques fonctionnels sont préservés.
+- Correction PR4 : les scripts génériques d'aide MJ ajoutés précédemment ont été retirés, car ils dupliquaient des scripts existants et n'étaient pas raccordés au JSON Foundry.
 
 ## Scripts créés
-- `scripts/sorts/langage-animal.js`
-- `scripts/sorts/perception-des-alignements.js`
-- `scripts/sorts/resistance-au-feu.js`
-- `scripts/sorts/retardement-du-poison.js`
-- `scripts/sorts/silence-sur-5-metres.js`
+
+- Aucun.
 
 ## Scripts modifiés
-- Aucun script existant n'a été modifié : les onUse présents ont été préservés pour éviter une régression fonctionnelle.
+
+- Aucun.
 
 ## Scripts laissés inchangés
-- `Augure` : script existant ou chemin historique conservé.
-- `Cantique` : script existant ou chemin historique conservé.
-- `Charme-serpents` : script existant ou chemin historique conservé.
-- `Détection des charmes` : script existant ou chemin historique conservé.
-- `Détection des pièges` : script existant ou chemin historique conservé.
-- `Marteau spirituel` : script existant ou chemin historique conservé.
-- `Paralysie` : script existant ou chemin historique conservé.
+
+- `Augure` : `scripts/sorts/augure.js`.
+- `Cantique` : `scripts/sorts/cantique.js`.
+- `Charme-serpents` : `scripts/sorts/charme-serpents.js`.
+- `Détection des charmes` : `scripts/sorts/detection-des-charmes.js`.
+- `Détection des pièges` : `scripts/sorts/detection-des-pieges.js`.
+- `Langage animal` : chemin Foundry historique `scripts/sorts/langage-des-animaux.js` conservé.
+- `Marteau spirituel` : `scripts/sorts/marteau-spirituel.js`.
+- `Paralysie` : chemin Foundry historique `scripts/sorts/immobilisation-des-personnes.js` conservé.
+- `Perception des alignements` : chemin Foundry historique `scripts/sorts/connaissance-des-alignements.js` conservé.
+- `Résistance au feu` : chemin Foundry historique `scripts/sorts/resistance-au-feu-resistance-au-froid.js` conservé.
+- `Retardement du poison` : chemin Foundry historique `scripts/sorts/ralentissement-du-poison.js` conservé.
+- `Silence sur 5 mètres` : chemin Foundry historique `scripts/sorts/silence-rayon-de-15-pieds.js` conservé.
 
 ## Sorts automatisés
-- Aucun nouveau sort complexe n'a reçu d'automatisation destructive dans ce lot.
-- Les scripts existants déjà fonctionnels sont conservés tels quels.
+
+- Aucun nouveau sort n'a reçu d'automatisation destructive dans ce lot.
+- Les automatisations déjà présentes dans les scripts historiques sont conservées telles quelles.
 
 ## Sorts en aide MJ
-- `langage-animal.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
-- `perception-des-alignements.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
-- `resistance-au-feu.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
-- `retardement-du-poison.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
-- `silence-sur-5-metres.js` : dialogue DialogV2 récapitulant portée, durée, zone, composantes, temps d'incantation, sauvegarde et cibles ; retourne `true` seulement après confirmation de consommation.
+
+- Aucun nouveau script d'aide MJ générique n'est créé dans ce correctif PR4.
+- Les sorts ambigus restent traités par leurs scripts historiques ou par arbitrage MJ dans Foundry.
 
 ## Limites connues
+
 - Test runtime Foundry non exécuté dans l'environnement Codex.
-- Les scripts historiques qui contiennent déjà dialogue legacy V1 sont une dette technique préexistante et ne sont pas réécrits dans ce lot.
-- Les effets d'invocation, de déplacement, de zone persistante ou d'interprétation restent à arbitrer par le MJ si le script existant ne les automatise pas de façon fiable.
+- Des scripts historiques peuvent encore contenir des dialogues legacy ; ils sont hors périmètre de ce correctif et n'ont pas été réécrits.
 
 ## Fichiers touchés
-- `scripts/sorts/langage-animal.js`
-- `scripts/sorts/perception-des-alignements.js`
-- `scripts/sorts/resistance-au-feu.js`
-- `scripts/sorts/retardement-du-poison.js`
-- `scripts/sorts/silence-sur-5-metres.js`
+
 - `audit/rapports/ONUSE-CLERC-NIVEAU-2.md`
