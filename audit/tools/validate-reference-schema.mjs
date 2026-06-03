@@ -45,6 +45,23 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+function findManualVerificationValues(value, currentPath = "") {
+  const hits = [];
+  if (value === "a_verifier_manuellement") {
+    hits.push(currentPath || "<root>");
+  } else if (Array.isArray(value)) {
+    value.forEach((entry, index) => {
+      hits.push(...findManualVerificationValues(entry, `${currentPath}[${index}]`));
+    });
+  } else if (value && typeof value === "object") {
+    for (const [key, entry] of Object.entries(value)) {
+      const nextPath = currentPath ? `${currentPath}.${key}` : key;
+      hits.push(...findManualVerificationValues(entry, nextPath));
+    }
+  }
+  return hits;
+}
+
 function validateSpell(file, index, spell, errors, warnings) {
   const label = `${file} > spells[${index}] ${spell?.nom ?? "sans_nom"}`;
 
@@ -98,6 +115,10 @@ function main() {
     if (data.status !== "reference_complete_description_normalisee") {
       skippedFiles.push(file);
       continue;
+    }
+    const manualVerificationValues = findManualVerificationValues(data);
+    for (const valuePath of manualVerificationValues) {
+      errors.push(`${file}: valeur a_verifier_manuellement interdite dans un fichier finalise (${valuePath})`);
     }
     if (!Array.isArray(data.spells)) {
       errors.push(`${file}: spells doit etre un tableau`);
