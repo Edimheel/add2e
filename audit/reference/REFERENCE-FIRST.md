@@ -14,14 +14,7 @@ Chaque sort de reference doit utiliser un seul champ de description :
 
 - `description`
 
-Les champs suivants sont interdits dans les references de sorts :
-
-- `description_exacte_manuel`
-- `description_source`
-- `description_reelle`
-- `description_texte`
-- `description_html`
-- `description_resumee_regles`
+Les anciens champs alternatifs de description sont interdits dans les references de sorts. La liste executable de ces champs est maintenue dans `audit/tools/validate-reference-schema.mjs` afin d'eviter de conserver leurs noms interdits dans les documents de reference.
 
 Le champ `description` doit contenir le texte normalise issu du Manuel des joueurs. Normaliser signifie :
 
@@ -64,10 +57,8 @@ Un patch JSON peut ajouter ou corriger :
 
 Un patch JSON ne doit jamais ecraser :
 
-- `system.description` ;
-- `system.description_reelle` ;
-- `system.description_texte` ;
-- `system.description_html` ;
+- la description systeme existante ;
+- les champs historiques de description systeme ;
 - une liste de composants existante non vide ;
 - un script `onUse` existant ;
 - un objet de sort existant avec un objet minimal.

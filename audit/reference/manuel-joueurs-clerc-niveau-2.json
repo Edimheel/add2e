@@ -20,7 +20,10 @@
       "temps_incantation": "2 rounds",
       "jet_sauvegarde": "aucun",
       "composants_materiels_source": "jeu de baguettes serties de gemmes, os de dragon ou objets similaires, ou feuilles d’infusion encore humides ; si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant consommation",
-      "composants_materiels_notes": "Composants alternatifs : ne pas traiter tous les composants comme obligatoires simultanément."
+      "composants_materiels_notes": "Composants alternatifs : ne pas traiter tous les composants comme obligatoires simultanément.",
+      "onuse_strategy": "script_existant:augure.js",
+      "description": "Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -32,7 +35,10 @@
       "zone_effet": "3 pouces de rayon",
       "composantes": "V, S",
       "temps_incantation": "1 tour",
-      "jet_sauvegarde": "aucun"
+      "jet_sauvegarde": "aucun",
+      "onuse_strategy": "script_existant:cantique.js",
+      "description": "En lançant ce sort, c'est-à-dire en chantant, le clerc provoque un regain d’énergie pour ses amis et lui-même, tandis qu’il amoindrit la force de ses ennemis. Une fois que les incantations du sort sont achevées, les attaques, les dommages et les jets de protection des amis du clerc obtiennent un bonus de +1, alors que ceux de ces ennemis subissent un malus de –1. Ce bonus/malus continue tant que le clerc chante et qu’il reste immobile. Une interruption provoquée par une attaque réussie contre le clerc, un sort de silence ou même le fait de bousculer le clerc fait que le sort est annulé.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -44,7 +50,10 @@
       "zone_effet": "spéciale",
       "composantes": "V, S",
       "temps_incantation": "5 segments",
-      "jet_sauvegarde": "aucun"
+      "jet_sauvegarde": "aucun",
+      "onuse_strategy": "script_existant:charme-serpents.js",
+      "description": "Lancer ce sort crée une force hypnotique qui calme un ou plusieurs serpents ; ceux-ci se dressent alors et se contentent d’osciller doucement et lentement. Si les serpents sont charmés en état de torpeur, la durée du sort est de 3 à 6 tours (1d4+2) ; si les serpents sont éveillés mais ni agressifs ni affamés, le charme durera de 1 à 3 tours ; si les serpents sont agressifs et/ou affamés, le sort durera de 5 à 8 rounds (1d4+4). Un clerc peut charmer des serpents dont le nombre total de points de vie est inférieur ou égal au sien. En moyenne, un clerc de niveau 1 peut charmer des serpents dont le total de points de vie est d’environ 4 ou 5 points de vie ; un clerc de niveau 2, 9 points de vie environ ; un clerc de niveau 3, 13 ou 14 points de vie environ. Les points de vie peuvent représenter un ou plusieurs serpents, mais le total des points de vie ne peut excéder ceux du clerc qui lance le sort. Toujours en respectant la règle précédente, le sort peut fonctionner contre n’importe quel ophidien ou assimilé (naga, couatl, etc.), mais résistance à la magie et jets de protection sont à prendre en considération.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -57,7 +66,10 @@
       "composantes": "V, S",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "annule",
-      "inverse": "Dissimulation des charmes"
+      "inverse": "Dissimulation des charmes",
+      "onuse_strategy": "script_existant:detection-des-charmes.js",
+      "description": "Quand il est lancé par un clerc, ce sort détermine si une personne ou un monstre est oui ou non sous l’influence d’un charme. Jusqu’à 10 créatures peuvent être examinées avant que le sort ne soit plus effectif. L’inverse du sort, dissimulation des charmes, protège d’une telle détection, mais une seule créature peut alors être protégée.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -69,7 +81,10 @@
       "zone_effet": "1 pouce de large",
       "composantes": "V, S",
       "temps_incantation": "5 segments",
-      "jet_sauvegarde": "aucun"
+      "jet_sauvegarde": "aucun",
+      "onuse_strategy": "script_existant:detection-des-pieges.js",
+      "description": "Quand un clerc lance ce sort, tous les pièges — normalement ou magiquement cachés — de nature mécanique ou magique lui apparaissent. Ce sort est directionnel et le lanceur de sort doit faire face à la direction désirée afin de déterminer si un piège se trouve dans cette direction. Le sort donne au clerc 10 % de chance par niveau de détecter le type de magie en jeu (divination, altération, etc.) dans le cas d’un piège magique ou caché par magie.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -81,7 +96,10 @@
       "zone_effet": "un animal dans un rayon de 3 pouces autour du clerc",
       "composantes": "V, S",
       "temps_incantation": "5 segments",
-      "jet_sauvegarde": "aucun"
+      "jet_sauvegarde": "aucun",
+      "onuse_strategy": "script_existant:langage-des-animaux.js",
+      "description": "En employant ce sort, le clerc obtient le pouvoir de parler à tout animal à sang chaud ou froid, du moment que cet animal possède un esprit (il est par exemple impossible de parler à une amibe). Le clerc est donc capable de poser des questions, de recevoir des réponses et de les comprendre et, d’une manière générale, d’être en bons termes avec l’animal. Même si le penchant de l’animal est opposé à l’alignement du clerc (mauvais/bon, bon/ mauvais), il ne l’attaquera pas pendant la durée du sort, de même que les autres animaux de la même famille qui l’accompagnent. Si l’animal est neutre ou de même moralité que le clerc (bon/bon, mauvais/mauvais), il est possible que l’animal et ses semblables accordent leurs faveurs et même rendent service au clerc. Cette éventualité sera déterminée par le MD, qui consultera une table de réaction basée sur le charisme et prenant en compte le comportement du clerc envers l’animal. Le sort ne transforme pas obligatoirement l’animal en un ami loyal et volontaire du clerc. Ce sort ne permet pas de parler aux monstres, mais aux animaux traditionnels tels que chats, chiens, éléphants, ours, singes, etc.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -94,7 +112,10 @@
       "composantes": "V, S, M",
       "temps_incantation": "5 segments",
       "jet_sauvegarde": "spécial",
-      "composants_materiels_source": "marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu ; le marteau disparaît quand le sort est lancé"
+      "composants_materiels_source": "marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu ; le marteau disparaît quand le sort est lancé",
+      "onuse_strategy": "script_existant:marteau-spirituel.js",
+      "description": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -108,7 +129,10 @@
       "temps_incantation": "5 segments",
       "jet_sauvegarde": "annule",
       "composants_materiels_source": "petite tige de métal droite et rigide",
-      "notes_regles": "Affecte 1 à 3 humains ou créatures humanoïdes listées par le Manuel ; malus de sauvegarde selon le nombre de cibles : normal contre 3, -1 contre 2, -2 contre 1."
+      "notes_regles": "Affecte 1 à 3 humains ou créatures humanoïdes listées par le Manuel ; malus de sauvegarde selon le nombre de cibles : normal contre 3, -1 contre 2, -2 contre 1.",
+      "onuse_strategy": "script_existant:immobilisation-des-personnes.js",
+      "description": "Ce sort permet d’immobiliser sur place 1 à 3 humains ou créatures humanoïdes (voir ci-dessous) pour 5 rounds ou plus. La durée de ce sort est de 4 rounds plus le niveau du clerc. Si le sort est dirigé contre 3 cibles, chacune des trois obtient un jet de protection normal ; si seulement 2 cibles sont visées, leur jet de protection subit un malus de –1 ; si le clerc ne veut paralyser qu’une seule cible, le jet de protection de cette dernière subit un malus de –2. Les victimes réussissant leur jet de protection ne ressentent absolument rien. Les créatures affectées par ce sort sont : demi-elfes, demi-orques, dryades, elfes, esprits follets, génies des eaux, gnolls, gnomes, gobelins, hobgobelins, hommes-lézards, humains, kobolds, lutins, nains, orques, petites-gens, pixies et troglodytes. Le clerc a besoin d’une petite tige de métal droite et rigide.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -121,7 +145,10 @@
       "composantes": "V, S",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "inverse": "Confusion de l’alignement"
+      "inverse": "Confusion de l’alignement",
+      "onuse_strategy": "script_existant:connaissance-des-alignements.js",
+      "description": "Ce sort permet au clerc de connaître exactement l’alignement d’une personne : humaine, semi-humaine ou non-humaine. Jusqu’à 10 personnes peuvent ainsi être examinées. L’inverse de ce sort, confusion de l’alignement, cache totalement l’alignement d’une personne pendant 1 tour et si un nouveau sort de perception de l’alignement est lancé ensuite sur cette personne, dans la limite de la durée, il sera inefficace. L’inverse peut cacher l’alignement d’une personne pendant un tour, 2 personnes pendant 5 rounds, etc. Certains objets magiques annulent le pouvoir de ce sort.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -134,7 +161,10 @@
       "composantes": "V, S, M",
       "temps_incantation": "5 segments",
       "jet_sauvegarde": "aucun",
-      "composants_materiels_source": "goutte de mercure"
+      "composants_materiels_source": "goutte de mercure",
+      "onuse_strategy": "script_existant:resistance-au-feu-resistance-au-froid.js",
+      "description": "Quand ce sort est lancé, la personne touchée est capable de résister à des chaleurs importantes : brûlures ou canicule. Elle peut même supporter des chaleurs très importantes, tels que des feux magiques brûlants, des incendies, des braises incandescentes, de l’huile bouillante en grande quantité, des épées langues de feu, des tempêtes de feu, des boules de feu, des nuées de météores ou le souffle de dragons rouges. Cependant, la personne en question subira quand même des dommages, mais moindres que si elle ne bénéficiait pas du sort. Avec un jet de protection réussi, la victime ne subira que le quart des dégâts ; si le jet de protection est raté, elle subira la moitié des dégâts. De plus, le jet de protection obtient un bonus de +3. La résistance dure 1 tour pour chaque niveau d’expérience atteint par le clerc qui lance le sort. Le lanceur du sort a besoin d’une goutte de mercure comme composante matérielle.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -147,7 +177,10 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "aucun",
-      "composants_materiels_source": "symbole sacré du clerc et gousse d’ail écrasée et répandue sur les pieds nus de la victime"
+      "composants_materiels_source": "symbole sacré du clerc et gousse d’ail écrasée et répandue sur les pieds nus de la victime",
+      "onuse_strategy": "script_existant:ralentissement-du-poison.js",
+      "description": "Quand ce sort est lancé sur une personne empoisonnée, il ralentit très sensiblement les effets du poison. Il peut même redonner la vie à un individu mort par empoisonnement s’il est lancé sur la victime dans un laps de temps inférieur ou égal à 1 tour par niveau du clerc ; par exemple, un clerc de niveau 10 pourra temporairement sauver une personne empoisonnée et morte depuis un maximum de 10 tours. Si ce sort ne neutralise pas le poison, il empêche toutefois de subir des dégâts importants. La victime, cependant, perdra 1 point de vie par tour, sans pourtant ne jamais descendre au dessous de 1 point de vie. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -159,7 +192,11 @@
       "zone_effet": "sphère de 9 mètres de diamètre",
       "composantes": "V, S",
       "temps_incantation": "5 segments",
-      "jet_sauvegarde": "spécial"
+      "jet_sauvegarde": "spécial",
+      "onuse_strategy": "script_existant:silence-rayon-de-15-pieds.js",
+      "description": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc.",
+      "status": "reference_complete_description_normalisee"
     }
-  ]
+  ],
+  "status": "reference_complete_description_normalisee"
 }
