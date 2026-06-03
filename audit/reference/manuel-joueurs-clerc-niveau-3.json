@@ -20,7 +20,10 @@
       "temps_incantation": "2 segments",
       "jet_sauvegarde": "aucun",
       "composants_materiels_source": "pincée de poussière d’un cimetière et symbole sacré du clerc",
-      "notes_regles": "Sort similaire à catalepsie de magicien niveau 3, avec la précision qu’un personnage de niveau supérieur à celui du clerc peut aussi être affecté."
+      "notes_regles": "Sort similaire à catalepsie de magicien niveau 3, avec la précision qu’un personnage de niveau supérieur à celui du clerc peut aussi être affecté.",
+      "onuse_strategy": "script_existant:mort-simulee.js",
+      "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien catalepsie (voir p.73). À noter néanmoins que même un personnage de niveau supérieur à celui du clerc qui lance ce sort peut être affecté. Les composantes matérielles de ce sort sont une pincée de poussière d’un cimetière et le symbole sacré du clerc.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -34,7 +37,10 @@
       "temps_incantation": "6 segments",
       "jet_sauvegarde": "spécial",
       "inverse": "Envoûtement",
-      "notes_regles": "L’inverse dure 1 tour par niveau du clerc et impose un effet de malédiction déterminé par pourcentage ou validé par le MD."
+      "notes_regles": "L’inverse dure 1 tour par niveau du clerc et impose un effet de malédiction déterminé par pourcentage ou validé par le MD.",
+      "onuse_strategy": "script_existant:delivrance-de-la-malediction.js",
+      "description": "En lançant ce sort, un clerc est normalement capable de lever une malédiction, qu’elle soit sur un objet, sur une personne ou sous la forme d’une présence indésirable et mauvaise. Ce sort n’affecte pas les armes, les armures ou les boucliers maudits par exemple ; néanmoins, ce sort permet à une personne portant un tel objet maudit de s’en débarrasser. L’inverse de ce sort, envoûtement, n’est pas permanent ; il dure pendant 1 tour par niveau du clerc qui lance le sort. Lancé sur une personne, le sort d’envoûtement aura l’un des effets suivants, déterminé par un jet de pourcentage : (1-50) amener une de ses caractéristiques (tirée au hasard par le MD) à 3 ; (51-75) altérer sa probabilité de toucher et ses jets de protection avec un malus de –4 ; (76–100) de lui faire lâcher 1 fois sur 2 par tour ce qu’elle tient dans les mains (ou rien si la personne n’a rien dans les mains). Un clerc peut inventer son propre envoûtement, mais il devra être similaire à ceux cités ci-dessus. Dans ce cas, il est préférable de consulter le MD. La victime d’un envoûtement doit être touchée par le clerc. Si elle l’est, elle a droit à un jet de protection qui, s’il est réussi, annulera les effets de cette malédiction.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -47,7 +53,10 @@
       "composantes": "V, S",
       "temps_incantation": "6 segments",
       "jet_sauvegarde": "aucun",
-      "notes_regles": "Chance de base de dissipation : 50 %, modifiée par la différence de niveau entre le clerc et la magie à dissiper. Annule automatiquement la magie lancée par le clerc lui-même."
+      "notes_regles": "Chance de base de dissipation : 50 %, modifiée par la différence de niveau entre le clerc et la magie à dissiper. Annule automatiquement la magie lancée par le clerc lui-même.",
+      "onuse_strategy": "script_existant:dissipation-de-la-magie.js",
+      "description": "Quand un clerc lance ce sort, il neutralise ou annule les magies suivantes : il détruit les potions magiques (elles sont considérées comme étant de niveau 12) ; il annule les effets des sorts lancés sur des personnes ou des objets ; il contre le lancement de sorts lancés dans la zone d’effet. Par contre, il ne peut dissiper la magie contenue dans les parchemins, les anneaux magiques, les bâtons, baguettes et bâtonnets, les armes magiques, les objets magiques divers, les armures magiques et les boucliers magiques. Lancé sur un objet magique de ce type — et seulement sur cet objet, pas ailleurs ni sur quelque chose d’autre en même temps — le sort se contente d’annuler les pouvoirs de cet objet pour le round qui suit (cet objet aura droit à un jet de protection s'il est porté par quelqu'un).. Les chances de base de réussir une dissipation de la magie sont de 50 %. Pour chaque niveau d’expérience supérieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, les chances de base augmentent de 5 %. Pour chaque niveau inférieur à celui de la créature qui a créé la magie ou le niveau d’efficacité de l’objet duquel est issue la magie, la chance est réduite de 2 %.Ce sort peut être très efficace contre les créatures charmées ou séduites. C’est automatique pour annuler la magie lancée par le clerc lui-même.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -61,7 +70,10 @@
       "temps_incantation": "spécial",
       "jet_sauvegarde": "spécial",
       "composants_materiels_source": "encens pour l’endroit à protéger ; si la zone excède 4,5 m², poudre de diamant d’au moins 2 000 po",
-      "notes_regles": "Le jet de protection réduit ou annule selon la magie placée dans le glyphe. Le temps de traçage dépend de la surface."
+      "notes_regles": "Le jet de protection réduit ou annule selon la magie placée dans le glyphe. Le temps de traçage dépend de la surface.",
+      "onuse_strategy": "script_existant:glyphe-de-garde.js",
+      "description": "Un glyphe de garde est une inscription puissante tracée magiquement pour se garder des créatures hostiles, pour les empêcher de passer, d’entrer quelque part ou d’ouvrir quelque chose. Il peut être utilisé pour garder un petit pont, le pas d’une porte, un coffre, etc. Quand le sort est lancé, le clerc trace des lignes légèrement brillantes devant le lieu ou l’objet à protéger. Quand l’incantation est terminée, la marque devient invisible, mais toute créature touchant la zone gardée sans prononcer le nom du glyphe sera victime de la magie placée dans ce glyphe, magie qu’aura lui-même instaurée le clerc selon les pouvoirs qu’il possède. Un jet de protection réduit les effets de moitié ou les annule selon la magie placée dans le glyphe. Pour chaque portion de 30 cm x 30 cm de la zone à protéger, un segment est nécessaire pour tracer le glyphe, plus un segment initial pour préparer la zone. Une surface maximale de 1,5 x 1,5 mètre par niveau du clerc peut être protégée. Le clerc doit encenser l’endroit à protéger et, si cette zone excède 4,5 m², il doit également la saupoudrer avec la poudre d’un diamant d’une valeur d’au moins 2.000 po. Les glyphes les plus courants infligent une décharge électrique ou infligent des dégâts par le feu, causant la perte de 2 points de vie par niveau du clerc, ou rendent aveugles, paralysent ou même drainent un niveau d’énergie si le clerc est assez puissant.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -75,7 +87,10 @@
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
       "inverse": "Cécité",
-      "notes_regles": "L’inverse requiert un jet pour toucher et la victime a droit à un jet de protection qui annule l’effet en cas de réussite."
+      "notes_regles": "L’inverse requiert un jet pour toucher et la victime a droit à un jet de protection qui annule l’effet en cas de réussite.",
+      "onuse_strategy": "script_existant:guerison-de-la-cecite-ou-de-la-surdite.js",
+      "description": "En touchant la créature aveugle, le clerc peut lui rendre la vue. Il peut guérir pratiquement toutes les formes de cécité. Le sort ne régénère cependant pas les organes détruits à la suite de blessures ou de maladies. L’inverse du sort, cécité, rend une victime aveugle, mais le clerc doit alors réussir un jet pour toucher et la victime a le droit à un jet de protection qui, s’il est réussit, annule les effets du sort.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -89,7 +104,10 @@
       "temps_incantation": "1 tour",
       "jet_sauvegarde": "aucun",
       "inverse": "Contamination",
-      "notes_regles": "L’inverse requiert un jet pour toucher ; la victime a droit à un jet de protection qui annule l’effet."
+      "notes_regles": "L’inverse requiert un jet pour toucher ; la victime a droit à un jet de protection qui annule l’effet.",
+      "onuse_strategy": "script_existant:guerison-des-maladies.js",
+      "description": "Avec ce sort, le clerc peut guérir pratiquement toutes les maladies, dont les maladies bactériennes, virales ou parasitaires, en posant la main sur la créature malade. La maladie disparaît ensuite rapidement, le malade retrouvant un état normal dans une période allant de 1 tour à une semaine (cela dépend de la gravité de la maladie et de son stade d’avancement au moment de la guérison). L’inverse du sort, contamination, provoque une maladie chez la créature touchée ; mais pour infliger cette maladie, le clerc réussir un jet pour toucher la créature ; la victime a alors le droit à un jet de protection, qui, s’il est réussi, annule les effets du sort. Si le jet de protection est raté, la maladie commencera à affecter la victime dans un délai de 1 à 6 tours, ce qui lui causera la perte d’1 point de vie par tour et 1 point de force par heure, jusqu’à ce qu’elle n’ait plus que 10 % de ses points vie originels et 10 % de sa force ; arrivé à ce stade, la victime malade est faible et virtuellement impuissante.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -104,7 +122,10 @@
       "jet_sauvegarde": "aucun",
       "inverse": "Dissimulation d'objets",
       "composants_materiels_source": "pierre aimantée",
-      "notes_regles": "Ne fonctionne pas sur un être vivant. Le clerc tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet."
+      "notes_regles": "Ne fonctionne pas sur un être vivant. Le clerc tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet.",
+      "onuse_strategy": "script_existant:localisation-d-un-objet.js",
+      "description": "Ce sort aide à localiser un objet connu ou familier. Le clerc lance le sort, tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet à découvrir, tant que cet objet se trouve dans la portée du sort. Ce sort demande une pierre aimantée comme composante matérielle. On peut localiser des objets tels que : un bijou, un outil, une arme ou même une échelle ou un escalier. L’inverse de ce sort, dissimulation d'objets, permet au clerc de protéger un objet d’une telle détection, d’une localisation par boule de cristal ou par des moyens similaires. Aucune application du sort ne fonctionne sur un être vivant.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -118,7 +139,10 @@
       "temps_incantation": "6 segments",
       "jet_sauvegarde": "aucun",
       "inverse": "Ténèbres éternelles",
-      "notes_regles": "Si lancé sur une créature, la lumière se crée 30 cm derrière elle si la victime réussit son jet de protection. Le sort aveugle si le jet est raté."
+      "notes_regles": "Si lancé sur une créature, la lumière se crée 30 cm derrière elle si la victime réussit son jet de protection. Le sort aveugle si le jet est raté.",
+      "onuse_strategy": "script_existant:lumiere-continuelle.js",
+      "description": "Ce sort est similaire au sort lumière excepté qu’il dure jusqu’à ce qu’il soit annulé par les sorts ténèbres éternelles ou dissipation de la magie. La lumière créée est très vive (pratiquement comme en plein jour). Le sort peut être lancé sur un objet, dans les airs ou sur une créature. Dans ce dernier cas, la lumière se crée et affecte l’espace à 30 cm derrière la créature si la victime a réussi son jet de protection. Ce sort aveuglera si le jet de protection est raté. L’inverse du sort, ténèbres éternelles, crée une obscurité totale.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -131,7 +155,10 @@
       "composantes": "V, S",
       "temps_incantation": "1 tour",
       "jet_sauvegarde": "aucun",
-      "notes_regles": "Crée eau et nourriture. Pour chaque niveau du clerc, nourrit 3 créatures de taille humaine ou une créature de taille cheval pour une journée."
+      "notes_regles": "Crée eau et nourriture. Pour chaque niveau du clerc, nourrit 3 créatures de taille humaine ou une créature de taille cheval pour une journée.",
+      "onuse_strategy": "script_existant:creation-de-nourriture-et-d-eau.js",
+      "description": "Quand ce sort est lancé, le clerc fait apparaître de l’eau et de la nourriture. Les aliments créés sont très nourrissants et pour chacun de ses niveaux, le clerc peut créer de quoi rassasier 3 créatures de taille humaine ou une créature de la taille d’un cheval, et ce pour une journée entière. Pour chaque niveau que le clerc a atteint, il peur créer 27 dm³ de nourriture et/ou d’eau, c.-à-d. 54 dm³ au niveau 2, 81 dm³ au niveau 3, 108 dm³ au niveau 4, etc. ; ou alors, le clerc peut créer nourriture et eau en quantités égales : 27 dm³ d'aliments et 27 dm³ d'eau au niveau 2, etc.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -145,7 +172,10 @@
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
       "composants_materiels_source": "goutte de sang, morceau de chair humaine et pincée d’os en poudre ou écharde d’os",
-      "notes_regles": "Anime un squelette ou un zombie par niveau d’expérience du clerc, à partir d’os et de corps d’humains morts."
+      "notes_regles": "Anime un squelette ou un zombie par niveau d’expérience du clerc, à partir d’os et de corps d’humains morts.",
+      "onuse_strategy": "script_existant:animation-des-morts.js",
+      "description": "À partir des os et des corps d’humains morts, ce sort crée les plus faibles des morts-vivants : des squelettes et des zombies. Le sort anime ces « restes » qui obéissent alors au clerc qui a lancé le sort. Les morts-vivants suivront le clerc ou défendront une place qu’il aura désignée (ou alors attaqueront une créature spécifique). Le sort animera les morts-vivants jusqu’à ce qu’ils soient détruits ou jusqu’à ce que la magie soit dissipée (voir le sort dissipation de la magie p.46). Le clerc peut animer un squelette ou un zombie pour chaque niveau d’expérience qu’il a atteint. Ainsi, un clerc de niveau 2 peut animer 2 de ces morts-vivants, un clerc de niveau 3 peut en animer 3, etc. L’acte d’animer des morts n’est pas bon en soi et doit être utilisé avec précaution par des clercs d’alignement bon. Comme composantes matérielles, ce sort demande une goutte de sang, un morceau de chair humaine et une pincée d’os en poudre ou une écharde d’os.",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -159,7 +189,10 @@
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
       "composants_materiels_source": "symbole sacré du clerc et encens brûlé au-dessus du corps, des restes ou de la partie concernés",
-      "notes_regles": "Permet de poser un nombre de questions à une créature morte selon le niveau du clerc, la durée et le temps écoulé depuis la mort."
+      "notes_regles": "Permet de poser un nombre de questions à une créature morte selon le niveau du clerc, la durée et le temps écoulé depuis la mort.",
+      "onuse_strategy": "script_existant:communication-avec-les-morts.js",
+      "description": "En lançant ce sort, le clerc peut poser plusieurs questions à une créature morte depuis une période de temps précise et recevoir des réponses en fonction des connaissances de la créature morte. Le clerc doit être capable de converser dans la langue de la créature morte. Le temps depuis lequel la créature est morte est un facteur à prendre en compte car seuls les clercs les plus puissants peuvent parler avec des créatures décédées depuis longtemps. De la même manière, le nombre de questions et la durée du sort dépendent aussi du niveau du clerc. Ce dernier a besoin de son symbole sacré ; il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés. Niveau d'expérience Temps maximum écoulé depuis la mort Durée du sort Nombre de questions 6e et moins 1 semaine 1 round 2 7e-8e 1 mois 3 rounds 3 9e-12e 1 année 1 tour 4 13e-15e 10 ans 2 tours 5 16e-20e 100 ans 3 tours 6 21e et plus 1.000 ans 6 tours 7",
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -173,7 +206,11 @@
       "temps_incantation": "6 segments",
       "jet_sauvegarde": "aucun",
       "composants_materiels_source": "symbole religieux en argent, chapelet de prière ou objet similaire",
-      "notes_regles": "Effets similaires à Cantique : +1 pour les alliés et -1 pour les ennemis aux probabilités de toucher, dommages et jets de protection ; le clerc peut agir après l’incantation."
+      "notes_regles": "Effets similaires à Cantique : +1 pour les alliés et -1 pour les ennemis aux probabilités de toucher, dommages et jets de protection ; le clerc peut agir après l’incantation.",
+      "onuse_strategy": "script_existant:priere.js",
+      "description": "Ce sort a les mêmes effets que le sort cantique en ce qui concerne le bonus de +1 pour les amis et –1 pour les ennemis pour les probabilités de toucher, la détermination des dommages et les jets de protection. Cependant, le clerc peut entreprendre autre chose une fois que la prière est terminée (c'est-à-dire l’incantation). Le clerc a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation. SORTS DE NIVEAU 4",
+      "status": "reference_complete_description_normalisee"
     }
-  ]
+  ],
+  "status": "reference_complete_description_normalisee"
 }

@@ -72,12 +72,20 @@ function main() {
   const errors = [];
   const warnings = [];
 
+  const validatedFiles = [];
+  const skippedFiles = [];
+
   for (const file of files) {
     const data = readJson(path.join(referenceDir, file));
+    if (data.status !== "reference_complete_description_normalisee") {
+      skippedFiles.push(file);
+      continue;
+    }
     if (!Array.isArray(data.spells)) {
       errors.push(`${file}: spells doit etre un tableau`);
       continue;
     }
+    validatedFiles.push(file);
     data.spells.forEach((spell, index) => validateSpell(file, index, spell, errors, warnings));
   }
 
@@ -86,7 +94,8 @@ function main() {
     for (const error of errors) console.error(`[ERROR] ${error}`);
     process.exit(1);
   }
-  console.log(`References validees: ${files.length}`);
+  console.log(`References validees: ${validatedFiles.length}`);
+  console.log(`References ignorees (statut non final): ${skippedFiles.length}`);
   console.log(`Avertissements: ${warnings.length}`);
 }
 
