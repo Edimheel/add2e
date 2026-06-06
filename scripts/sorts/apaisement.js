@@ -1,13 +1,13 @@
 /**
  * ADD2E — Apaisement / Épouvante
- * Version : 2026-05-21-epouvante-no-fallback-v2
+ * Clerc niveau 1
+ * Version : 2026-06-06-apaisement-time-engine-v1
  *
  * Contrat onUse : true = sort consommé, false = sort non consommé.
- * Épouvante ne possède aucun fallback de mouvement : si le mouvement est absent/invalide,
- * le script signale l'erreur pour corriger le JSON du bestiaire.
+ * Épouvante conserve la règle existante : pas de fallback de mouvement.
  */
 
-console.log("%c[ADD2E][APAISEMENT] 2026-05-21-epouvante-no-fallback-v2", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][APAISEMENT] 2026-06-06-apaisement-time-engine-v1", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   const DialogV2 = foundry.applications?.api?.DialogV2;
@@ -18,8 +18,21 @@ const __add2eOnUseResult = await (async () => {
 
   const COLORS = { main: "#b88924", dark: "#6f4b12", pale: "#fff7df", pale2: "#fffaf0", border: "#e2bc63", success: "#2f8f46", fail: "#b33a2e", warn: "#b88924" };
 
-  const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
-  const norm = value => String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9:]+/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+  const esc = value => String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  const norm = value => String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9:]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
 
   function num(value) {
     if (typeof value === "number") return Number.isFinite(value) ? value : NaN;
@@ -39,7 +52,29 @@ const __add2eOnUseResult = await (async () => {
   }
 
   function chatStyleData() {
-    return CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+    return CONST.CHAT_MESSAGE_STYLES
+      ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
+      : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+  }
+
+  function timeApi() {
+    return game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  }
+
+  function durationData(rounds) {
+    const time = timeApi();
+    return time?.durationData?.(rounds) ?? {
+      rounds,
+      startRound: game.combat?.round ?? null,
+      startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null,
+      combat: game.combat?.id ?? null
+    };
+  }
+
+  function toRounds(value, unit, level = 1) {
+    const time = timeApi();
+    return time?.toRounds?.(value, unit, { level }) ?? (unit === "tour" ? Number(value) * 10 : Number(value));
   }
 
   function gmRelay(operation, payload) {
@@ -56,7 +91,9 @@ const __add2eOnUseResult = await (async () => {
 
   function findEffects(actorDoc, mode) {
     if (!actorDoc?.effects) return [];
-    const wanted = mode === "epouvante" ? ["etat:epouvante", "etat:peur", "controle:fuite"] : ["etat:apaise", "bonus_js_peur:4", "bonus_save_vs:peur:4"];
+    const wanted = mode === "epouvante"
+      ? ["etat:epouvante", "etat:peur", "controle:fuite"]
+      : ["etat:apaise", "bonus_js_peur:4", "bonus_save_vs:peur:4"];
     const wantedNorm = wanted.map(norm);
     return actorDoc.effects.filter(effect => {
       const name = norm(effect.name);
@@ -66,16 +103,27 @@ const __add2eOnUseResult = await (async () => {
     });
   }
 
-  async function createEffect(actorDoc, effectData, tokenDoc = null) {
+  async function createEffect(actorDoc, effectData, tokenDoc = null, removeTags = []) {
     if (!actorDoc) return false;
+    const wanted = removeTags.map(norm).filter(Boolean);
+
     if (game.user.isGM || actorDoc.isOwner) {
+      if (wanted.length) {
+        const ids = Array.from(actorDoc.effects ?? [])
+          .filter(e => wanted.some(t => effectTags(e).includes(t)))
+          .map(e => e.id)
+          .filter(Boolean);
+        if (ids.length) await actorDoc.deleteEmbeddedDocuments("ActiveEffect", ids);
+      }
       await actorDoc.createEmbeddedDocuments("ActiveEffect", [effectData]);
       return true;
     }
+
     if (!game.socket) {
       ui.notifications.error("Apaisement : socket indisponible, impossible de demander l’effet au MJ.");
       return false;
     }
+
     gmRelay("createActiveEffect", { actorUuid: actorDoc.uuid, actorId: actorDoc.id, sceneId: tokenDoc?.parent?.id ?? canvas.scene?.id, tokenId: tokenDoc?.id ?? null, effectData });
     return true;
   }
@@ -224,6 +272,72 @@ const __add2eOnUseResult = await (async () => {
     return NaN;
   }
 
+  function timeFlags({ sourceItem, caster, targetActor, mode, rounds }) {
+    const isFear = mode === "epouvante";
+    const tags = isFear
+      ? ["sort:apaisement", "etat:epouvante", "etat:peur", "controle:fuite"]
+      : ["sort:apaisement", "etat:apaise", "bonus_js_peur:4", "bonus_save_vs:peur:4"];
+    const endMessage = isFear
+      ? "L’épouvante de {actor} prend fin."
+      : "L’apaisement de {actor} prend fin.";
+    const time = timeApi();
+    return time?.flags?.({
+      source: "apaisement.js",
+      rounds,
+      unit: "round",
+      endMessage,
+      extra: {
+        spellName: isFear ? "Épouvante" : "Apaisement",
+        spellKey: isFear ? "epouvante" : "apaisement",
+        mode,
+        sourceItemUuid: sourceItem?.uuid ?? null,
+        casterId: caster?.id ?? null,
+        casterUuid: caster?.uuid ?? null,
+        targetId: targetActor?.id ?? null,
+        targetUuid: targetActor?.uuid ?? null,
+        tags
+      }
+    }) ?? {
+      timeEngine: { managed: true, unit: "round", totalRounds: rounds },
+      roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage },
+      endMessage,
+      spellName: isFear ? "Épouvante" : "Apaisement",
+      spellKey: isFear ? "epouvante" : "apaisement",
+      mode,
+      sourceItemUuid: sourceItem?.uuid ?? null,
+      casterId: caster?.id ?? null,
+      casterUuid: caster?.uuid ?? null,
+      targetId: targetActor?.id ?? null,
+      targetUuid: targetActor?.uuid ?? null,
+      tags
+    };
+  }
+
+  function effectData({ sourceItem, caster, targetActor, mode, rounds }) {
+    const isFear = mode === "epouvante";
+    const tags = isFear
+      ? ["sort:apaisement", "etat:epouvante", "etat:peur", "controle:fuite"]
+      : ["sort:apaisement", "etat:apaise", "bonus_js_peur:4", "bonus_save_vs:peur:4"];
+    return {
+      name: isFear ? "Épouvante" : "Apaisement",
+      img: sourceItem.img || (isFear ? "icons/magic/control/fear-fright-monster-red.webp" : "icons/magic/holy/barrier-shield-winged-blue.webp"),
+      origin: sourceItem.uuid ?? null,
+      disabled: false,
+      transfer: false,
+      duration: durationData(rounds),
+      description: isFear
+        ? `Épouvante : la victime touchée fuit le plus vite possible et le plus loin possible du clerc pendant ${rounds} round(s).`
+        : "Apaisement : +4 aux jets de protection contre les attaques magiques provoquant la peur pendant 1 tour.",
+      flags: {
+        add2e: {
+          ...timeFlags({ sourceItem, caster, targetActor, mode, rounds }),
+          tags
+        }
+      },
+      changes: []
+    };
+  }
+
   function spellCard({ caster, sourceItem, targetActor, title, resultHtml, mode }) {
     const casterName = esc(caster?.name ?? "Lanceur");
     const targetName = esc(targetActor?.name ?? "Cible");
@@ -257,7 +371,18 @@ const __add2eOnUseResult = await (async () => {
   const casterLevel = Math.max(1, Number(caster.system?.niveau) || Number(caster.system?.level) || 1);
   const content = `<form class="add2e-apaisement-form" style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label style="font-weight:bold;">Version du sort :</label><select name="mode" style="width:100%;"><option value="apaisement">Apaisement — protection contre la peur</option><option value="epouvante">Épouvante — inverse du sort</option></select></div><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="touchConfirmed" checked><span>La cible est consentante ou le contact a été réussi.</span></label><div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;"><div><b>Cible :</b> ${esc(targetActorDoc.name)}</div><div><b>Niveau du clerc :</b> ${casterLevel}</div><div><b>Apaisement :</b> +4 aux JS contre peur magique pendant 1 tour.</div><div><b>Épouvante :</b> fuite immédiate au maximum du déplacement, puis peur pendant ${casterLevel} round(s).</div></div></form>`;
 
-  const dialogResult = await DialogV2.wait({ window: { title: "Lancement : Apaisement" }, content, buttons: [ { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "apaisement"), touchConfirmed: !!button.form.elements.touchConfirmed?.checked }) }, { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null } ], rejectClose: false });
+  const dialogResult = await DialogV2.wait({
+    window: { title: "Lancement : Apaisement" },
+    add2eTheme: "cleric",
+    add2eImg: sourceItem.img || "icons/magic/holy/barrier-shield-winged-blue.webp",
+    content,
+    buttons: [
+      { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "apaisement"), touchConfirmed: !!button.form.elements.touchConfirmed?.checked }) },
+      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
+    ],
+    rejectClose: false
+  });
+
   if (!dialogResult) return false;
   if (!dialogResult.touchConfirmed) { ui.notifications.warn("Apaisement : le contact n’est pas confirmé. Le sort n’est pas lancé."); return false; }
 
@@ -280,23 +405,44 @@ const __add2eOnUseResult = await (async () => {
         saveHtml = `<div style="margin-top:6px;border:1px solid ${COLORS.warn};background:#fffdf4;border-radius:6px;padding:7px;text-align:center;color:${COLORS.dark};"><b>JS supplémentaire non automatisé</b><br>Sauvegarde contre les sortilèges introuvable. Bonus applicable : <b>+${casterLevel}</b>.</div>`;
       }
     }
-    const created = await createEffect(targetActorDoc, { name: "Apaisement", img: sourceItem.img || "icons/magic/holy/barrier-shield-winged-blue.webp", origin: sourceItem.uuid, disabled: false, transfer: false, duration: { rounds: 10, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time.worldTime }, description: "Apaisement : +4 aux jets de protection contre les attaques magiques provoquant la peur pendant 1 tour.", flags: { add2e: { spellName: "Apaisement", mode: "apaisement", sourceItemUuid: sourceItem.uuid, casterId: caster.id, casterUuid: caster.uuid, tags: ["etat:apaise", "bonus_js_peur:4", "bonus_save_vs:peur:4"] } }, changes: [] }, targetTokenDoc);
+
+    const rounds = toRounds(1, "tour", casterLevel);
+    const created = await createEffect(
+      targetActorDoc,
+      effectData({ sourceItem, caster, targetActor: targetActorDoc, mode, rounds }),
+      targetTokenDoc,
+      ["etat:apaise", "bonus_js_peur:4", "bonus_save_vs:peur:4"]
+    );
     if (!created) return false;
-    resultHtml = `<div style="border:1px solid ${COLORS.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${COLORS.success};">APAISEMENT APPLIQUÉ</div><div>Bonus : <b>+4</b> aux JS contre les attaques magiques provoquant la peur.</div><div>Durée : <b>1 tour</b> / 10 rounds.</div></div>${saveHtml}`;
+    resultHtml = `<div style="border:1px solid ${COLORS.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${COLORS.success};">APAISEMENT APPLIQUÉ</div><div>Bonus : <b>+4</b> aux JS contre les attaques magiques provoquant la peur.</div><div>Durée : <b>1 tour</b> / ${rounds} rounds.</div></div>${saveHtml}`;
   }
 
   if (mode === "epouvante") {
     const deleteResult = await deleteEffects(targetActorDoc, findEffects(targetActorDoc, "apaisement"));
     const moveResult = await moveTokenForEpouvante(casterTokenDoc, targetTokenDoc, targetActorDoc);
     if (moveResult.fatal) { ui.notifications.error(`Épouvante : ${moveResult.reason}`); return false; }
-    const created = await createEffect(targetActorDoc, { name: "Épouvante", img: sourceItem.img || "icons/magic/control/fear-fright-monster-red.webp", origin: sourceItem.uuid, disabled: false, transfer: false, duration: { rounds: casterLevel, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time.worldTime }, description: `Épouvante : la victime touchée fuit le plus vite possible et le plus loin possible du clerc pendant ${casterLevel} round(s).`, flags: { add2e: { spellName: "Épouvante", mode: "epouvante", sourceItemUuid: sourceItem.uuid, casterId: caster.id, casterUuid: caster.uuid, tags: ["etat:epouvante", "etat:peur", "controle:fuite"] } }, changes: [] }, targetTokenDoc);
+
+    const rounds = toRounds("level", "round", casterLevel);
+    const created = await createEffect(
+      targetActorDoc,
+      effectData({ sourceItem, caster, targetActor: targetActorDoc, mode, rounds }),
+      targetTokenDoc,
+      ["etat:epouvante", "etat:peur", "controle:fuite"]
+    );
     if (!created) return false;
-    const moveHtml = moveResult.requested ? `<div>Déplacement de fuite demandé au MJ : <b>${moveResult.movedMeters} m</b> / ${moveResult.maxMeters} m.</div>` : moveResult.moved ? `<div>Déplacement de fuite appliqué : <b>${moveResult.movedMeters} m</b> / ${moveResult.maxMeters} m.</div>` : `<div style="color:${COLORS.warn};">Déplacement automatique non appliqué : ${esc(moveResult.reason)}</div>`;
-    resultHtml = `<div style="border:1px solid ${COLORS.fail};background:#fff5f2;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${COLORS.fail};">ÉPOUVANTE APPLIQUÉE</div><div>La victime fuit le plus vite possible et le plus loin possible du clerc.</div>${moveHtml}<div>Durée : <b>${casterLevel}</b> round(s).</div>${deleteResult.deleted ? `<div>Apaisement annulé : <b>${deleteResult.deleted}</b> effet(s) supprimé(s).</div>` : ""}${deleteResult.blocked ? `<div style="color:${COLORS.warn};">Un effet d’Apaisement est présent : suppression à effectuer par le MJ si nécessaire.</div>` : ""}</div>`;
+
+    const moveHtml = moveResult.requested
+      ? `<div>Déplacement demandé au MJ : <b>${moveResult.maxMeters} m</b>.</div>`
+      : moveResult.moved
+        ? `<div>Déplacement appliqué : <b>${moveResult.movedMeters} m</b> sur un maximum de ${moveResult.maxMeters} m.</div>`
+        : `<div>${esc(moveResult.reason)}</div>`;
+    const clearHtml = deleteResult.deleted ? `<div>Apaisement retiré : <b>${deleteResult.deleted}</b>.</div>` : "";
+    resultHtml = `<div style="border:1px solid ${COLORS.fail};background:#fff5f2;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${COLORS.fail};">ÉPOUVANTE APPLIQUÉE</div>${moveHtml}<div>Durée : <b>${rounds} round(s)</b>.</div>${clearHtml}</div>`;
   }
 
-  if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(casterTokenObj, "divine");
+  await globalThis.ADD2E_PLAY_SPELL_FX?.(mode === "epouvante" ? "epouvante" : "apaisement", { casterToken: casterTokenObj, targetToken: targetTokenObj });
   await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: caster }), content: spellCard({ caster, sourceItem, targetActor: targetActorDoc, title, resultHtml, mode }), ...chatStyleData() });
+
   console.log("[ADD2E][apaisement.js][ONUSE_RESULT]", true);
   return true;
 })();
