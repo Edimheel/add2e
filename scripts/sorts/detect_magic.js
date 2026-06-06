@@ -1,6 +1,6 @@
 /**
  * ADD2E — Détection de la magie — Clerc niveau 1
- * Version : 2026-05-21-clerc-v3-central-fx
+ * Version : 2026-06-02-clerc-detect-magic-time-engine-v1
  *
  * Règle clerc :
  * - Portée : 3"
@@ -11,7 +11,7 @@
  * - Blocage : pierre 30 cm+, métal 3 cm+, bois 90 cm+
  */
 
-console.log("%c[ADD2E][DETECTION_MAGIE][CLERC] 2026-05-21-clerc-v3-central-fx", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][DETECTION_MAGIE][CLERC] 2026-06-02-clerc-detect-magic-time-engine-v1", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   const esc = value => String(value ?? "")
@@ -50,7 +50,26 @@ const __add2eOnUseResult = await (async () => {
     ?? caster.getActiveTokens?.()[0]
     ?? null;
 
-  const durationRounds = 10;
+  const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  const durationRounds = time?.toRounds?.(1, "tour") ?? 10;
+  const durationData = time?.durationData?.(durationRounds) ?? {
+    rounds: durationRounds,
+    startRound: game.combat?.round ?? null,
+    startTurn: game.combat?.turn ?? null,
+    startTime: game.time.worldTime,
+    combat: game.combat?.id ?? null
+  };
+  const timeFlags = time?.flags?.({
+    source: "detect_magic.js",
+    rounds: durationRounds,
+    unit: "round",
+    endMessage: "La détection de la magie de {actor} se dissipe."
+  }) ?? {
+    timeEngine: { managed: true, unit: "round", totalRounds: durationRounds },
+    roundEngine: { managed: true, unit: "round", totalRounds: durationRounds, endMessage: "La détection de la magie de {actor} se dissipe." },
+    endMessage: "La détection de la magie de {actor} se dissipe."
+  };
+
   const effectIcon = sourceItem.img || "systems/add2e/assets/icones/sorts/detection-magie-violet.webp";
 
   const effectData = {
@@ -60,15 +79,11 @@ const __add2eOnUseResult = await (async () => {
     origin: sourceItem.uuid,
     disabled: false,
     transfer: false,
-    duration: {
-      rounds: durationRounds,
-      startRound: game.combat?.round ?? null,
-      startTurn: game.combat?.turn ?? null,
-      startTime: game.time.worldTime
-    },
+    duration: durationData,
     description: "Détection de la magie cléricale : le clerc perçoit les émanations magiques faibles ou fortes dans un cône rectangulaire de 1\" de large sur 3\" de long, dans la direction regardée.",
     flags: {
       add2e: {
+        ...timeFlags,
         spellKey: "detection_magie_clerc",
         spellName: "Détection de la magie",
         spellList: "cleric",
@@ -79,6 +94,7 @@ const __add2eOnUseResult = await (async () => {
         range: "3\"",
         area: "1\" de large, 3\" de long",
         duration: "1 tour",
+        durationRounds,
         rotationPerRound: "60°",
         detectionDetail: "faible_ou_forte_uniquement",
         blockedBy: { stoneCm: 30, metalCm: 3, woodCm: 90 },
@@ -95,10 +111,10 @@ const __add2eOnUseResult = await (async () => {
 
   if (existing) {
     await existing.update(effectData);
-    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet existant mis à jour", { actor: caster.name, effectId: existing.id });
+    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet existant mis à jour", { actor: caster.name, effectId: existing.id, durationRounds });
   } else {
     await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
-    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet créé", { actor: caster.name });
+    console.log("[ADD2E][DETECTION_MAGIE][CLERC] Effet créé", { actor: caster.name, durationRounds });
   }
 
   const detailsData = [
