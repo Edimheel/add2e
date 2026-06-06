@@ -1,11 +1,17 @@
 // ============================================================================
 // ADD2E — Expiration des effets temporaires.
-// Version : 2026-06-02-active-effects-expiration-end-message-v1
+// Version : 2026-06-06-active-effects-expiration-world-tick-v1
 // ============================================================================
 
 import { add2eVitalEffectKind } from "./18a-vital-status-core.mjs";
+import {
+  ADD2E_TIME_ENGINE_VERSION,
+  add2eTimeCurrentTick,
+  add2eTimeRoundsFromEffect,
+  add2eTimeStartTickFromEffect
+} from "./19a-time-engine.mjs";
 
-export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-06-02-active-effects-expiration-end-message-v1";
+export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-06-06-active-effects-expiration-world-tick-v1";
 
 function add2eExpireHtmlEscape(value) {
   return String(value ?? "")
@@ -61,9 +67,8 @@ function add2eActorOwnerPlayerIds(actor) {
 }
 
 function add2eEffectFlag(effect, key) {
-  try {
-    if (typeof effect?.getFlag === "function") return effect.getFlag("add2e", key);
-  } catch (_err) {}
+  try { if (typeof effect?.getFlag === "function") return effect.getFlag("add2e", key); }
+  catch (_err) {}
   return effect?.flags?.add2e?.[key];
 }
 
@@ -96,6 +101,9 @@ function add2eEffectExpiryDescription(effect, actor, currentRound) {
   const roundText = Number.isFinite(Number(currentRound)) && Number(currentRound) > 0
     ? ` Round ${Number(currentRound)}.`
     : "";
+  const tickText = Number.isFinite(Number(currentRound)) && Number(currentRound) > 0
+    ? ""
+    : ` Temps ADD2E : ${add2eTimeCurrentTick()} round(s).`;
 
   const customEndMessage = add2eEffectFlag(effect, "endMessage")
     ?? effect?.flags?.add2e?.roundEngine?.endMessage
@@ -107,7 +115,7 @@ function add2eEffectExpiryDescription(effect, actor, currentRound) {
     .replace(/\{effect\}/g, effectName)
     .replace(/\{round\}/g, String(currentRound ?? ""));
 
-  return `L’effet ${effectName} prend fin sur ${actorName}.${roundText}`;
+  return `L’effet ${effectName} prend fin sur ${actorName}.${roundText}${tickText}`;
 }
 
 async function add2eNotifyExpiredEffect(actor, effectSnapshot, currentRound) {
@@ -162,24 +170,41 @@ async function add2eNotifyExpiredEffect(actor, effectSnapshot, currentRound) {
           actorId: actor.id ?? null,
           actorUuid: actor.uuid ?? null,
           round: currentRound ?? null,
-          version: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION
+          tick: add2eTimeCurrentTick(),
+          expirationVersion: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
+          timeEngineVersion: ADD2E_TIME_ENGINE_VERSION
         }
       },
       ...add2eExpireChatStyleData()
     });
     return true;
   } catch (err) {
-    console.warn("[ADD2E][AUTO-REMOVE][EXPIRE_MESSAGE_FAILED] Message d'expiration impossible", {
-      actor: actor.name,
-      effectId: effectSnapshot.id,
-      effectName,
-      err
-    });
+    console.warn("[ADD2E][AUTO-REMOVE][EXPIRE_MESSAGE_FAILED] Message d'expiration impossible", { actor: actor.name, effectId: effectSnapshot.id, effectName, err });
     return false;
   }
 }
 
-export async function add2eExpireTemporaryEffectsForActor(actor, currentRound) {
+function add2eEffectExpirationState(effect, currentRound) {
+  const totalRounds = add2eTimeRoundsFromEffect(effect);
+  if (!Number.isFinite(totalRounds) || totalRounds <= 0) return null;
+
+  const startTick = add2eTimeStartTickFromEffect(effect);
+  if (Number.isFinite(startTick)) {
+    const currentTick = add2eTimeCurrentTick();
+    const elapsed = Math.max(0, currentTick - startTick);
+    return { totalRounds, elapsed, remaining: totalRounds - elapsed, clock: "world", startTick, currentTick };
+  }
+
+  const dur = effect.duration || {};
+  let startRound = Number(dur.startRound);
+  if (!Number.isFinite(startRound)) startRound = NaN;
+  if (!Number.isFinite(startRound)) return { totalRounds, elapsed: 0, remaining: totalRounds, clock: "unstarted", startRound: null };
+
+  const elapsed = Math.max(0, Number(currentRound || 0) - startRound);
+  return { totalRounds, elapsed, remaining: totalRounds - elapsed, clock: "combat", startRound };
+}
+
+export async function add2eExpireTemporaryEffectsForActor(actor, currentRound = game.combat?.round ?? null) {
   if (!actor) return { actor: null, deleted: 0, ids: [], messages: 0 };
 
   const toDelete = [];
@@ -187,36 +212,24 @@ export async function add2eExpireTemporaryEffectsForActor(actor, currentRound) {
   for (const effect of Array.from(actor.effects ?? [])) {
     if (!effect) continue;
     if (add2eVitalEffectKind(effect)) continue;
-
-    const dur = effect.duration || {};
     if (effect.disabled) continue;
-    if (typeof dur.rounds !== "number" || Number.isNaN(dur.rounds)) continue;
 
-    const totalRounds = dur.rounds;
-    let startRound = dur.startRound;
+    const state = add2eEffectExpirationState(effect, currentRound);
+    if (!state) continue;
 
-    if (typeof startRound !== "number" || Number.isNaN(startRound)) {
+    if (state.clock === "unstarted") {
       try {
         if (!actor.effects.get(effect.id)) continue;
-        await effect.update({ "duration.startRound": currentRound });
-        startRound = currentRound;
+        await effect.update({ "duration.startRound": currentRound ?? game.combat?.round ?? 1 }, { add2eExpirationInit: true });
       } catch (err) {
         const msg = String(err?.message || err || "");
-        if (msg.includes("does not exist") || msg.includes("n'existe pas")) {
-          console.warn("[ADD2E][AUTO-REMOVE][STALE_UPDATE] Effet déjà absent pendant l'initialisation startRound", {
-            actor: actor.name,
-            effectId: effect.id,
-            effectName: effect.name
-          });
-          continue;
-        }
+        if (msg.includes("does not exist") || msg.includes("n'existe pas")) continue;
         throw err;
       }
+      continue;
     }
 
-    const elapsed = Math.max(0, currentRound - startRound);
-    const remaining = totalRounds - elapsed;
-    if (remaining <= 0) {
+    if (state.remaining <= 0) {
       toDelete.push({
         id: effect.id,
         name: effect.name ?? effect.label ?? "Effet",
@@ -224,7 +237,8 @@ export async function add2eExpireTemporaryEffectsForActor(actor, currentRound) {
         img: effect.img ?? effect.icon ?? null,
         icon: effect.icon ?? effect.img ?? null,
         duration: foundry.utils.deepClone(effect.duration ?? {}),
-        flags: foundry.utils.deepClone(effect.flags ?? {})
+        flags: foundry.utils.deepClone(effect.flags ?? {}),
+        expirationState: state
       });
     }
   }
@@ -233,7 +247,7 @@ export async function add2eExpireTemporaryEffectsForActor(actor, currentRound) {
   const validIds = valid.map(row => row.id);
   if (!validIds.length) return { actor: actor.name, deleted: 0, ids: [], messages: 0 };
 
-  console.log("[ADD2E][AUTO-REMOVE] Suppression auto des effets expirés", { actor: actor.name, ids: validIds });
+  console.log("[ADD2E][AUTO-REMOVE] Suppression auto des effets expirés", { actor: actor.name, ids: validIds, tick: add2eTimeCurrentTick() });
 
   let deleted = 0;
   let messages = 0;
