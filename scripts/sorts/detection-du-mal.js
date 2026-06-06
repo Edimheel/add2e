@@ -1,13 +1,11 @@
 /**
  * ADD2E — Détection du mal / Détection du bien
- * Version : 2026-05-21-detect-alignement-v2
+ * Version : 2026-06-02-detect-alignement-time-engine-v1
  *
- * Contrat onUse :
- * - true  = sort lancé et consommé ;
- * - false = sort non consommé.
+ * Contrat onUse : true = sort lancé et consommé ; false = sort non consommé.
  */
 
-console.log("%c[ADD2E][DETECTION_DU_MAL] 2026-05-21-detect-alignement-v2", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][DETECTION_DU_MAL] 2026-06-02-detect-alignement-time-engine-v1", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   const DialogV2 = foundry.applications?.api?.DialogV2;
@@ -88,7 +86,19 @@ const __add2eOnUseResult = await (async () => {
   }
 
   function durationRounds(level) {
-    return 10 + (5 * Math.max(1, Number(level) || 1));
+    const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+    return time?.toRounds?.("10+5*level", "round", { level }) ?? (10 + (5 * Math.max(1, Number(level) || 1)));
+  }
+
+  function durationData(rounds) {
+    const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+    return time?.durationData?.(rounds) ?? {
+      rounds,
+      startRound: game.combat?.round ?? null,
+      startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null,
+      combat: game.combat?.id ?? null
+    };
   }
 
   function unitToMeters(distance, unit) {
@@ -189,16 +199,7 @@ const __add2eOnUseResult = await (async () => {
 
   function hitDiceOrLevel(actorDoc) {
     const sys = actorDoc?.system ?? {};
-    const candidates = [
-      sys.dv,
-      sys.hitDice,
-      sys.hit_dice,
-      sys.des_de_vie,
-      sys.niveau,
-      sys.level,
-      sys.details?.niveau,
-      sys.details?.level
-    ];
+    const candidates = [sys.dv, sys.hitDice, sys.hit_dice, sys.des_de_vie, sys.niveau, sys.level, sys.details?.niveau, sys.details?.level];
 
     for (const raw of candidates) {
       if (raw === undefined || raw === null || raw === "") continue;
@@ -238,48 +239,58 @@ const __add2eOnUseResult = await (async () => {
     const chance = Math.min(100, Math.max(0, casterLevel * 10));
     const roll = await new Roll("1d100").evaluate({ async: true });
     if (game.dice3d) await game.dice3d.showForRoll(roll);
-    return {
-      applicable: true,
-      chance,
-      roll: roll.total,
-      success: roll.total <= chance,
-      tendency: tendency(actorDoc)
-    };
+    return { applicable: true, chance, roll: roll.total, success: roll.total <= chance, tendency: tendency(actorDoc) };
   }
 
   function effectData({ name, sourceItem, caster, mode, direction, rounds }) {
     const isGood = mode === "bien";
+    const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+    const tags = [
+      "sort:clerc",
+      "niveau:1",
+      "detection:alignement",
+      isGood ? "detection:bien" : "detection:mal",
+      isGood ? "aura:bien" : "aura:mal",
+      isGood ? "reversible:detection_du_mal" : "reversible:detection_du_bien"
+    ];
+    const timeFlags = time?.flags?.({
+      source: "detection-du-mal.js",
+      rounds,
+      unit: "round",
+      endMessage: `La ${name.toLowerCase()} de {actor} prend fin.`,
+      extra: {
+        spellName: name,
+        spellKey: mode === "bien" ? "detection_du_bien" : "detection_du_mal",
+        sourceItemUuid: sourceItem?.uuid ?? null,
+        casterId: caster?.id ?? null,
+        casterUuid: caster?.uuid ?? null,
+        mode,
+        direction,
+        tags
+      }
+    }) ?? {
+      timeEngine: { managed: true, unit: "round", totalRounds: rounds },
+      roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage: `La ${name.toLowerCase()} de {actor} prend fin.` },
+      endMessage: `La ${name.toLowerCase()} de {actor} prend fin.`,
+      spellName: name,
+      spellKey: mode === "bien" ? "detection_du_bien" : "detection_du_mal",
+      sourceItemUuid: sourceItem?.uuid ?? null,
+      casterId: caster?.id ?? null,
+      casterUuid: caster?.uuid ?? null,
+      mode,
+      direction,
+      tags
+    };
+
     return {
       name,
       img: sourceItem?.img || "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
       origin: sourceItem?.uuid ?? null,
       disabled: false,
       transfer: false,
-      duration: {
-        rounds,
-        startRound: game.combat?.round ?? null,
-        startTurn: game.combat?.turn ?? null,
-        startTime: game.time.worldTime
-      },
+      duration: durationData(rounds),
       description: `${name} : le lanceur détecte les émanations ${isGood ? "du bien" : "du mal"} dans la direction observée.`,
-      flags: {
-        add2e: {
-          spellName: name,
-          sourceItemUuid: sourceItem?.uuid ?? null,
-          casterId: caster?.id ?? null,
-          casterUuid: caster?.uuid ?? null,
-          mode,
-          direction,
-          tags: [
-            "sort:clerc",
-            "niveau:1",
-            "detection:alignement",
-            isGood ? "detection:bien" : "detection:mal",
-            isGood ? "aura:bien" : "aura:mal",
-            isGood ? "reversible:detection_du_mal" : "reversible:detection_du_bien"
-          ]
-        }
-      },
+      flags: { add2e: { ...timeFlags, tags } },
       changes: []
     };
   }
@@ -451,12 +462,7 @@ const __add2eOnUseResult = await (async () => {
           rangeMeters: Number(button.form.elements.rangeMeters?.value || defaultRangeMeters)
         })
       },
-      {
-        action: "cancel",
-        label: "Annuler",
-        icon: "fa-solid fa-xmark",
-        callback: () => null
-      }
+      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
     ],
     rejectClose: false
   });
