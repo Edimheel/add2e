@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-06-02-active-effects-expire-entry-time-engine-v1
+// Version : 2026-06-06-active-effects-expire-entry-world-time-v1
 // ============================================================================
 
 import { ADD2E_VITAL_STATUS_CORE_VERSION } from "./add2e/18a-vital-status-core.mjs";
@@ -22,17 +22,28 @@ import {
   add2eRegisterRoundEngineHooks,
   add2eRoundEngineOnCombatProgress
 } from "./add2e/19-round-engine.mjs";
+import {
+  ADD2E_WORLD_TIME_ENGINE_VERSION,
+  add2eRegisterWorldTimeEngine,
+  add2eOpenWorldTimeApplication,
+  add2eWorldTimeAdvance,
+  add2eWorldTimeExpireAllActors
+} from "./add2e/19b-world-time-engine.mjs";
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-06-02-active-effects-expire-entry-time-engine-v1";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-06-06-active-effects-expire-entry-world-time-v1";
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
 globalThis.ADD2E_VITAL_STATUS_SYNC_VERSION = ADD2E_VITAL_STATUS_SYNC_VERSION;
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION;
 globalThis.ADD2E_TIME_ENGINE_VERSION = ADD2E_TIME_ENGINE_VERSION;
 globalThis.ADD2E_ROUND_ENGINE_VERSION = ADD2E_ROUND_ENGINE_VERSION;
+globalThis.ADD2E_WORLD_TIME_ENGINE_VERSION = ADD2E_WORLD_TIME_ENGINE_VERSION;
 globalThis.add2eSyncActorVitalStatus = add2eSyncActorVitalStatus;
 globalThis.add2eVitalRegisterStatusEffects = add2eVitalRegisterStatusEffects;
 globalThis.add2eExpireTemporaryEffectsForActor = add2eExpireTemporaryEffectsForActor;
 globalThis.add2eRoundEngineOnCombatProgress = add2eRoundEngineOnCombatProgress;
+globalThis.add2eOpenWorldTimeApplication = add2eOpenWorldTimeApplication;
+globalThis.add2eWorldTimeAdvance = add2eWorldTimeAdvance;
+globalThis.add2eWorldTimeExpireAllActors = add2eWorldTimeExpireAllActors;
 
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", {
   entry: globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION,
@@ -40,7 +51,8 @@ console.log("[ADD2E][AUTO-REMOVE][VERSION]", {
   sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
   expiration: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
   timeEngine: ADD2E_TIME_ENGINE_VERSION,
-  roundEngine: ADD2E_ROUND_ENGINE_VERSION
+  roundEngine: ADD2E_ROUND_ENGINE_VERSION,
+  worldTimeEngine: ADD2E_WORLD_TIME_ENGINE_VERSION
 });
 
 Hooks.once("init", add2eRegisterTimeEngineApi);
@@ -49,6 +61,7 @@ Hooks.once("setup", add2eRegisterTimeEngineApi);
 Hooks.once("setup", add2eVitalRegisterStatusEffects);
 Hooks.once("ready", add2eRegisterTimeEngineApi);
 Hooks.once("ready", add2eVitalRegisterStatusEffects);
+Hooks.once("ready", add2eRegisterWorldTimeEngine);
 Hooks.once("ready", add2eRegisterRoundEngineHooks);
 
 Hooks.on("updateActor", async (actor, changed, options, userId) => {
@@ -69,6 +82,7 @@ Hooks.once("ready", () => {
 
   window.setTimeout(() => {
     add2eRegisterTimeEngineApi();
+    add2eRegisterWorldTimeEngine();
     add2eVitalRegisterStatusEffects();
 
     for (const actor of game.actors ?? []) {
