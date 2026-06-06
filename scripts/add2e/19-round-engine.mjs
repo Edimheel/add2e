@@ -1,20 +1,11 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-06-02-round-engine-v1-combat-tracker
-//
-// Rôle :
-// - Unifie les traitements liés au passage des rounds du Combat Tracker.
-// - Sert de point central pour les durées d'effets, les effets de sorts,
-//   les états vitaux et les pertes de PV automatiques.
-// - Compatible Foundry V13/V14/V15 : ApplicationV2/DialogV2 non concernés ici,
-//   hooks combatRound/combatTurnChange utilisés quand disponibles, updateCombat
-//   conservé comme filet de compatibilité.
+// Version : 2026-06-02-round-engine-v2-time-service
 // ============================================================================
 
 import {
   add2eVitalIsMonster,
   add2eVitalNorm,
-  add2eVitalNumber,
   add2eVitalReadHP
 } from "./18a-vital-status-core.mjs";
 import {
@@ -22,26 +13,24 @@ import {
   add2eVitalRegisterStatusEffects
 } from "./18b-vital-status-sync.mjs";
 import { add2eExpireTemporaryEffectsForActor } from "./18c-active-effects-expiration.mjs";
+import {
+  ADD2E_TIME_ENGINE_VERSION,
+  add2eRegisterTimeEngineApi,
+  add2eTimeNormalizeActorEffects
+} from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-06-02-round-engine-v1-combat-tracker";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-06-02-round-engine-v2-time-service";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
 const FLAG_PROCESSED = "roundEngineProcessed";
 const LOCAL_PROCESSED = new Set();
 const LOCAL_LIMIT = 200;
+let FALLBACK_ACTOR_KEY = 0;
 
-function log(label, data = {}) {
-  console.log(`${TAG}${label}`, data);
-}
-
-function warn(label, data = {}) {
-  console.warn(`${TAG}${label}`, data);
-}
-
-function error(label, data = {}) {
-  console.error(`${TAG}${label}`, data);
-}
+function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
+function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
+function error(label, data = {}) { console.error(`${TAG}${label}`, data); }
 
 function toArray(value) {
   if (!value) return [];
@@ -63,18 +52,14 @@ function isResponsibleGM() {
   return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
 }
 
-function combatId(combat) {
-  return combat?.uuid ?? combat?.id ?? "combat";
-}
+function combatId(combat) { return combat?.uuid ?? combat?.id ?? "combat"; }
 
 function roundNumber(combat, fallback = 0) {
   const n = Number(combat?.round ?? fallback ?? 0);
   return Number.isFinite(n) ? n : 0;
 }
 
-function roundKey(combat, round) {
-  return `${combatId(combat)}::round::${round}`;
-}
+function roundKey(combat, round) { return `${combatId(combat)}::round::${round}`; }
 
 function rememberLocalKey(key) {
   LOCAL_PROCESSED.add(key);
@@ -98,6 +83,7 @@ async function wasRoundAlreadyProcessed(combat, round, source) {
   try {
     await combat?.setFlag?.(FLAG_SCOPE, FLAG_PROCESSED, {
       version: ADD2E_ROUND_ENGINE_VERSION,
+      timeEngineVersion: ADD2E_TIME_ENGINE_VERSION,
       combatId: combatId(combat),
       round,
       source,
@@ -116,134 +102,25 @@ function combatantActor(combatant) {
 }
 
 function actorKey(actor) {
-  return actor?.uuid ?? actor?.id ?? actor?.name ?? Math.random().toString(36);
+  if (actor?.uuid) return actor.uuid;
+  if (actor?.id) return actor.id;
+  if (actor?.name) return actor.name;
+  FALLBACK_ACTOR_KEY += 1;
+  return `actor-${FALLBACK_ACTOR_KEY}`;
 }
 
 function uniqueCombatActors(combat) {
   const out = [];
   const seen = new Set();
-
   for (const combatant of toArray(combat?.combatants)) {
     const actor = combatantActor(combatant);
     if (!actor) continue;
-
     const key = actorKey(actor);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push({ actor, combatant });
   }
-
   return out;
-}
-
-function readFlag(effect, path) {
-  try {
-    if (typeof effect?.getFlag === "function") {
-      const parts = String(path).split(".");
-      if (parts.length === 1) return effect.getFlag(FLAG_SCOPE, parts[0]);
-    }
-  } catch (_err) {}
-
-  try {
-    return foundry.utils.getProperty(effect?.flags?.[FLAG_SCOPE] ?? {}, path);
-  } catch (_err) {
-    return undefined;
-  }
-}
-
-function firstNumber(...values) {
-  for (const value of values) {
-    const n = add2eVitalNumber(value, NaN);
-    if (Number.isFinite(n)) return n;
-  }
-  return NaN;
-}
-
-function normalizeDurationUnit(value) {
-  const unit = add2eVitalNorm(value);
-  if (["round", "rounds", "round_de_combat", "rounds_de_combat", "combat_round", "combat_rounds"].includes(unit)) return "round";
-  if (["tour", "tours", "turn", "turns"].includes(unit)) return "turn";
-  if (["segment", "segments"].includes(unit)) return "segment";
-  return unit || "round";
-}
-
-function durationRoundsFromEffect(effect) {
-  const duration = effect?.duration ?? {};
-  const flags = effect?.flags?.[FLAG_SCOPE] ?? {};
-  const roundEngine = flags.roundEngine ?? {};
-  const genericDuration = flags.duration ?? {};
-
-  const nativeRounds = firstNumber(duration.rounds);
-  if (Number.isFinite(nativeRounds) && nativeRounds > 0) return nativeRounds;
-
-  const explicitRounds = firstNumber(
-    flags.rounds,
-    flags.durationRounds,
-    flags.dureeRounds,
-    flags.duree_rounds,
-    flags.roundDuration,
-    roundEngine.rounds,
-    roundEngine.durationRounds,
-    roundEngine.dureeRounds,
-    genericDuration.rounds,
-    genericDuration.durationRounds
-  );
-  if (Number.isFinite(explicitRounds) && explicitRounds > 0) return explicitRounds;
-
-  const value = firstNumber(roundEngine.value, roundEngine.duration, genericDuration.value, genericDuration.duration, flags.duree, flags.durationValue);
-  const unit = normalizeDurationUnit(roundEngine.unit ?? genericDuration.unit ?? flags.durationUnit ?? flags.unite ?? flags.unit ?? "round");
-
-  if (!Number.isFinite(value) || value <= 0) return NaN;
-
-  if (unit === "round") return value;
-  if (unit === "turn") return value;
-  if (unit === "segment") return Math.max(1, Math.ceil(value / 10));
-
-  return NaN;
-}
-
-async function normalizeGenericEffectDurations(actor, currentRound) {
-  if (!actor) return { normalized: 0, skipped: 0 };
-
-  let normalized = 0;
-  let skipped = 0;
-
-  for (const effect of Array.from(actor.effects ?? [])) {
-    if (!effect || effect.disabled) continue;
-
-    const rounds = durationRoundsFromEffect(effect);
-    if (!Number.isFinite(rounds) || rounds <= 0) {
-      skipped += 1;
-      continue;
-    }
-
-    const duration = effect.duration ?? {};
-    const hasNativeRounds = Number.isFinite(add2eVitalNumber(duration.rounds, NaN));
-    const hasStartRound = Number.isFinite(add2eVitalNumber(duration.startRound, NaN));
-    const patch = {};
-
-    if (!hasNativeRounds) patch["duration.rounds"] = Math.max(1, Math.floor(rounds));
-    if (!hasStartRound) patch["duration.startRound"] = currentRound;
-
-    patch["flags.add2e.roundEngine.version"] = ADD2E_ROUND_ENGINE_VERSION;
-    patch["flags.add2e.roundEngine.managed"] = true;
-    patch["flags.add2e.roundEngine.unit"] = "round";
-    patch["flags.add2e.roundEngine.totalRounds"] = Math.max(1, Math.floor(rounds));
-
-    if (!Object.keys(patch).length) continue;
-
-    try {
-      if (!actor.effects.get(effect.id)) continue;
-      await effect.update(patch, { add2eRoundEngine: true });
-      normalized += 1;
-    } catch (err) {
-      const msg = String(err?.message || err || "");
-      if (msg.includes("does not exist") || msg.includes("n'existe pas")) continue;
-      warn("[EFFECT_DURATION_NORMALIZE_FAILED]", { actor: actor.name, effect: effect.name, effectId: effect.id, err });
-    }
-  }
-
-  return { normalized, skipped };
 }
 
 function isCharacterActor(actor) {
@@ -262,14 +139,12 @@ function hpUpdatePath(actor) {
 
 async function applyNegativeHpRoundLoss(actor, currentRound, combat) {
   if (!isCharacterActor(actor)) return { applied: false, reason: "not-character" };
-
   const hp = add2eVitalReadHP(actor);
   if (!Number.isFinite(hp)) return { applied: false, reason: "hp-invalid" };
   if (!(hp < 0 && hp > -11)) return { applied: false, reason: "hp-out-of-range", hp };
 
   const nextHp = hp - 1;
   const path = hpUpdatePath(actor);
-
   await actor.update({ [path]: nextHp }, {
     add2eRoundEngine: true,
     add2eRoundEngineReason: "negative-hp-round-loss",
@@ -277,50 +152,29 @@ async function applyNegativeHpRoundLoss(actor, currentRound, combat) {
     add2eCombatRound: currentRound
   });
 
-  log("[NEGATIVE_HP_LOSS]", {
-    actor: actor.name,
-    actorId: actor.id,
-    combat: combat?.id ?? null,
-    round: currentRound,
-    path,
-    before: hp,
-    after: nextHp
-  });
-
+  log("[NEGATIVE_HP_LOSS]", { actor: actor.name, actorId: actor.id, combat: combat?.id ?? null, round: currentRound, path, before: hp, after: nextHp });
   return { applied: true, hp, nextHp, path };
 }
 
 async function processActorForRound(actor, combatant, currentRound, combat, { perRound = false, source = "unknown" } = {}) {
-  const duration = await normalizeGenericEffectDurations(actor, currentRound);
+  const duration = await add2eTimeNormalizeActorEffects(actor, currentRound);
   const expired = await add2eExpireTemporaryEffectsForActor(actor, currentRound);
   const negativeHp = perRound ? await applyNegativeHpRoundLoss(actor, currentRound, combat) : { applied: false, reason: "scan-only" };
   const vital = await add2eSyncActorVitalStatus(actor, { reason: `round-engine:${source}` });
-
-  return {
-    actor: actor.name,
-    actorId: actor.id,
-    actorUuid: actor.uuid ?? null,
-    combatantId: combatant?.id ?? null,
-    duration,
-    expired,
-    negativeHp,
-    vital
-  };
+  return { actor: actor.name, actorId: actor.id, actorUuid: actor.uuid ?? null, combatantId: combatant?.id ?? null, duration, expired, negativeHp, vital };
 }
 
 async function processCombat(combat, { source = "unknown", perRound = false } = {}) {
   if (!combat) return { processed: false, reason: "no-combat" };
   if (!isResponsibleGM()) return { processed: false, reason: "not-responsible-gm" };
-
   const currentRound = roundNumber(combat);
   if (currentRound <= 0) return { processed: false, reason: "round-zero", round: currentRound };
 
+  add2eRegisterTimeEngineApi();
   add2eVitalRegisterStatusEffects();
 
-  const rows = uniqueCombatActors(combat);
   const actors = [];
-
-  for (const { actor, combatant } of rows) {
+  for (const { actor, combatant } of uniqueCombatActors(combat)) {
     try {
       actors.push(await processActorForRound(actor, combatant, currentRound, combat, { perRound, source }));
     } catch (err) {
@@ -329,17 +183,7 @@ async function processCombat(combat, { source = "unknown", perRound = false } = 
     }
   }
 
-  const result = {
-    processed: true,
-    version: ADD2E_ROUND_ENGINE_VERSION,
-    combat: combat.id,
-    round: currentRound,
-    source,
-    perRound,
-    actorCount: actors.length,
-    actors
-  };
-
+  const result = { processed: true, version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, combat: combat.id, round: currentRound, source, perRound, actorCount: actors.length, actors };
   log(perRound ? "[ROUND_PROCESSED]" : "[COMBAT_SCAN]", result);
   return result;
 }
@@ -347,11 +191,9 @@ async function processCombat(combat, { source = "unknown", perRound = false } = 
 export async function add2eRoundEngineOnCombatProgress(combat, changed = {}, { source = "updateCombat", forceRound = false, scanOnly = false } = {}) {
   if (!combat) return false;
   if (!isResponsibleGM()) return false;
-
   const hasRound = forceRound || Object.prototype.hasOwnProperty.call(changed ?? {}, "round");
   const hasTurn = Object.prototype.hasOwnProperty.call(changed ?? {}, "turn");
   if (!hasRound && !hasTurn && !scanOnly) return false;
-
   const currentRound = roundNumber(combat, changed?.round);
 
   if (hasRound && !scanOnly) {
@@ -371,6 +213,7 @@ export async function add2eRoundEngineOnCombatProgress(combat, changed = {}, { s
 export function add2eRegisterRoundEngineHooks() {
   if (globalThis.__ADD2E_ROUND_ENGINE_REGISTERED) return false;
   globalThis.__ADD2E_ROUND_ENGINE_REGISTERED = true;
+  add2eRegisterTimeEngineApi();
 
   Hooks.on("combatRound", (combat, round, options, userId) => {
     add2eRoundEngineOnCombatProgress(combat, { round: round ?? combat?.round }, { source: "combatRound", forceRound: true })
@@ -397,11 +240,6 @@ export function add2eRegisterRoundEngineHooks() {
   globalThis.ADD2E_ROUND_ENGINE_VERSION = ADD2E_ROUND_ENGINE_VERSION;
   globalThis.add2eRoundEngineOnCombatProgress = add2eRoundEngineOnCombatProgress;
 
-  log("[REGISTERED]", {
-    version: ADD2E_ROUND_ENGINE_VERSION,
-    hooks: ["combatRound", "combatTurnChange", "combatTurn", "updateCombat"],
-    mode: "combat-tracker"
-  });
-
+  log("[REGISTERED]", { version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, hooks: ["combatRound", "combatTurnChange", "combatTurn", "updateCombat"], mode: "combat-tracker" });
   return true;
 }
