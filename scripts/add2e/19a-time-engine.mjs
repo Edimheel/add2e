@@ -1,27 +1,26 @@
 // ============================================================================
 // ADD2E — Service générique de gestion du temps et des durées.
-// Version : 2026-06-02-time-engine-v1
+// Version : 2026-06-06-time-engine-world-tick-v1
 //
 // Rôle :
 // - Fournit un format commun pour les durées en rounds.
-// - Convertit tours / segments / rounds vers des rounds de combat.
-// - Normalise les ActiveEffect existants pour le moteur de rounds.
+// - Convertit tours / segments / rounds vers des rounds moteur ADD2E.
+// - Ajoute un tick global de temps de jeu utilisable hors combat.
+// - Normalise les ActiveEffect existants pour le moteur de rounds et de temps.
 // - Expose des helpers réutilisables par les scripts onUse sans dépendre d'un sort.
 // - Compatible Foundry V13/V14/V15.
 // ============================================================================
 
-export const ADD2E_TIME_ENGINE_VERSION = "2026-06-02-time-engine-v1";
+export const ADD2E_TIME_ENGINE_VERSION = "2026-06-06-time-engine-world-tick-v1";
 
 const TAG = "[ADD2E][TIME_ENGINE]";
 const FLAG_SCOPE = "add2e";
+const SETTING_SCOPE = "add2e";
+export const ADD2E_TIME_TICK_SETTING = "worldTimeTick";
+export const ADD2E_TIME_TICK_LABEL = "Temps ADD2E — compteur global en rounds";
 
-function log(label, data = {}) {
-  console.log(`${TAG}${label}`, data);
-}
-
-function warn(label, data = {}) {
-  console.warn(`${TAG}${label}`, data);
-}
+function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
+function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
 
 function norm(value) {
   return String(value ?? "")
@@ -62,11 +61,62 @@ function currentCombatData() {
   };
 }
 
+export function add2eTimeRegisterSettings() {
+  if (!game?.settings) return false;
+  try {
+    if (!game.settings.settings?.has?.(`${SETTING_SCOPE}.${ADD2E_TIME_TICK_SETTING}`)) {
+      game.settings.register(SETTING_SCOPE, ADD2E_TIME_TICK_SETTING, {
+        name: ADD2E_TIME_TICK_LABEL,
+        hint: "Compteur de temps de jeu ADD2E, exprimé en rounds moteur. Le MJ le fait avancer hors combat ; le Combat Tracker l'avance en combat.",
+        scope: "world",
+        config: false,
+        type: Number,
+        default: 0
+      });
+    }
+    return true;
+  } catch (err) {
+    warn("[SETTINGS_REGISTER_FAILED]", { err });
+    return false;
+  }
+}
+
+export function add2eTimeCurrentTick() {
+  try {
+    add2eTimeRegisterSettings();
+    const value = Number(game.settings.get(SETTING_SCOPE, ADD2E_TIME_TICK_SETTING));
+    return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+  } catch (_err) {
+    return 0;
+  }
+}
+
+export async function add2eTimeSetTick(value, { reason = "manual" } = {}) {
+  if (!game.user?.isGM) return { ok: false, reason: "not-gm", tick: add2eTimeCurrentTick() };
+  add2eTimeRegisterSettings();
+  const next = Math.max(0, Math.floor(Number(value) || 0));
+  await game.settings.set(SETTING_SCOPE, ADD2E_TIME_TICK_SETTING, next);
+  log("[TICK_SET]", { tick: next, reason });
+  return { ok: true, tick: next, reason };
+}
+
+export async function add2eTimeAdvanceTick(rounds = 0, { reason = "manual" } = {}) {
+  if (!game.user?.isGM) return { ok: false, reason: "not-gm", before: add2eTimeCurrentTick(), after: add2eTimeCurrentTick(), delta: 0 };
+  const delta = Math.max(0, Math.floor(Number(rounds) || 0));
+  const before = add2eTimeCurrentTick();
+  const after = before + delta;
+  await add2eTimeSetTick(after, { reason });
+  log("[TICK_ADVANCE]", { before, after, delta, reason });
+  return { ok: true, before, after, delta, reason };
+}
+
 export function add2eTimeNormalizeUnit(value) {
   const unit = norm(value || "round");
 
   if (["round", "rounds", "round_de_combat", "rounds_de_combat", "combat_round", "combat_rounds", "r"].includes(unit)) return "round";
   if (["tour", "tours", "turn", "turns", "t"].includes(unit)) return "turn";
+  if (["minute", "minutes", "min", "mn"].includes(unit)) return "minute";
+  if (["hour", "hours", "heure", "heures", "h"].includes(unit)) return "hour";
   if (["segment", "segments", "seg", "segs", "s"].includes(unit)) return "segment";
   if (["special", "speciale", "manual", "manuelle", "permanent", "permanente", "until_removed", "jusqua_suppression"].includes(unit)) return "special";
 
@@ -100,8 +150,6 @@ export function add2eTimeFormulaToRounds(formula, level = 1) {
   if (/^[0-9+*().level-]+$/.test(normalized)) {
     try {
       const expr = normalized.replace(/level/g, String(lvl));
-      // Expression strictement numérique après remplacement de level.
-      // Aucun identifiant ni appel de fonction n'est autorisé par la regexp ci-dessus.
       const result = Function(`"use strict"; return (${expr});`)();
       const n = Number(result);
       if (Number.isFinite(n)) return Math.max(0, Math.floor(n));
@@ -123,6 +171,8 @@ export function add2eTimeToRounds(value, unit = "round", { level = 1 } = {}) {
 
   if (normalizedUnit === "round") return Math.max(1, Math.floor(amount));
   if (normalizedUnit === "turn") return Math.max(1, Math.floor(amount * 10));
+  if (normalizedUnit === "minute") return Math.max(1, Math.floor(amount));
+  if (normalizedUnit === "hour") return Math.max(1, Math.floor(amount * 60));
   if (normalizedUnit === "segment") return Math.max(1, Math.ceil(amount / 10));
 
   return Math.max(1, Math.floor(amount));
@@ -151,6 +201,7 @@ export function add2eTimeFlags({
   extra = {}
 } = {}) {
   const totalRounds = Math.max(0, Math.floor(Number(rounds) || 0));
+  const startTick = add2eTimeCurrentTick();
   const out = {
     timeEngine: {
       version: ADD2E_TIME_ENGINE_VERSION,
@@ -158,13 +209,16 @@ export function add2eTimeFlags({
       managed: totalRounds > 0,
       unit: add2eTimeNormalizeUnit(unit),
       totalRounds,
+      startTick,
+      createdAtTick: startTick,
       createdAt: Date.now()
     },
     roundEngine: {
       version: ADD2E_TIME_ENGINE_VERSION,
       managed: totalRounds > 0,
       unit: "round",
-      totalRounds
+      totalRounds,
+      startTick
     },
     ...deepClone(extra)
   };
@@ -288,20 +342,32 @@ export function add2eTimeRoundsFromEffect(effect) {
   return add2eTimeToRounds(rawValue, rawUnit);
 }
 
+export function add2eTimeStartTickFromEffect(effect) {
+  const flags = effect?.flags?.[FLAG_SCOPE] ?? {};
+  return firstNumber(
+    flags.timeEngine?.startTick,
+    flags.timeEngine?.createdAtTick,
+    flags.roundEngine?.startTick,
+    flags.startTick
+  );
+}
+
 export function add2eTimeRemainingRounds(effect, currentRound = game.combat?.round ?? 0) {
   const rounds = add2eTimeRoundsFromEffect(effect);
   if (!Number.isFinite(rounds) || rounds <= 0) return null;
 
+  const startTick = add2eTimeStartTickFromEffect(effect);
+  if (Number.isFinite(startTick)) {
+    const currentTick = add2eTimeCurrentTick();
+    const elapsedTick = Math.max(0, currentTick - startTick);
+    return { totalRounds: rounds, elapsed: elapsedTick, remaining: Math.max(0, rounds - elapsedTick), startTick, currentTick, clock: "world" };
+  }
+
   const startRound = number(effect?.duration?.startRound, NaN);
-  if (!Number.isFinite(startRound)) return { totalRounds: rounds, elapsed: 0, remaining: rounds, startRound: null };
+  if (!Number.isFinite(startRound)) return { totalRounds: rounds, elapsed: 0, remaining: rounds, startRound: null, clock: "combat" };
 
   const elapsed = Math.max(0, Number(currentRound || 0) - startRound);
-  return {
-    totalRounds: rounds,
-    elapsed,
-    remaining: Math.max(0, rounds - elapsed),
-    startRound
-  };
+  return { totalRounds: rounds, elapsed, remaining: Math.max(0, rounds - elapsed), startRound, clock: "combat" };
 }
 
 export async function add2eTimeNormalizeEffect(effect, currentRound = game.combat?.round ?? 0) {
@@ -313,7 +379,9 @@ export async function add2eTimeNormalizeEffect(effect, currentRound = game.comba
   const duration = effect.duration ?? {};
   const hasNativeRounds = Number.isFinite(number(duration.rounds, NaN));
   const hasStartRound = Number.isFinite(number(duration.startRound, NaN));
+  const hasStartTick = Number.isFinite(add2eTimeStartTickFromEffect(effect));
   const totalRounds = Math.max(1, Math.floor(rounds));
+  const currentTick = add2eTimeCurrentTick();
   const patch = {};
 
   if (!hasNativeRounds) patch["duration.rounds"] = totalRounds;
@@ -327,6 +395,12 @@ export async function add2eTimeNormalizeEffect(effect, currentRound = game.comba
   patch["flags.add2e.roundEngine.managed"] = true;
   patch["flags.add2e.roundEngine.totalRounds"] = totalRounds;
   patch["flags.add2e.roundEngine.unit"] = "round";
+
+  if (!hasStartTick) {
+    patch["flags.add2e.timeEngine.startTick"] = currentTick;
+    patch["flags.add2e.timeEngine.createdAtTick"] = currentTick;
+    patch["flags.add2e.roundEngine.startTick"] = currentTick;
+  }
 
   if (!Object.keys(patch).length) return { normalized: false, reason: "no-patch" };
 
@@ -342,10 +416,7 @@ export async function add2eTimeNormalizeActorEffects(actor, currentRound = game.
   let errors = 0;
 
   for (const effect of Array.from(actor.effects ?? [])) {
-    if (!effect || effect.disabled) {
-      skipped += 1;
-      continue;
-    }
+    if (!effect || effect.disabled) { skipped += 1; continue; }
 
     try {
       if (!actor.effects.get(effect.id)) continue;
@@ -389,10 +460,17 @@ export async function add2eCreateTimedActiveEffect(actor, effectData, { removeTa
 }
 
 export function add2eRegisterTimeEngineApi() {
+  add2eTimeRegisterSettings();
   game.add2e = game.add2e ?? {};
+  const previous = game.add2e.time ?? {};
   game.add2e.timeEngineVersion = ADD2E_TIME_ENGINE_VERSION;
   game.add2e.time = {
+    ...previous,
     version: ADD2E_TIME_ENGINE_VERSION,
+    registerSettings: add2eTimeRegisterSettings,
+    currentTick: add2eTimeCurrentTick,
+    setTick: add2eTimeSetTick,
+    advanceTick: add2eTimeAdvanceTick,
     normalizeUnit: add2eTimeNormalizeUnit,
     formulaToRounds: add2eTimeFormulaToRounds,
     toRounds: add2eTimeToRounds,
@@ -400,6 +478,7 @@ export function add2eRegisterTimeEngineApi() {
     flags: add2eTimeFlags,
     effectData: add2eTimeEffectData,
     roundsFromEffect: add2eTimeRoundsFromEffect,
+    startTickFromEffect: add2eTimeStartTickFromEffect,
     remainingRounds: add2eTimeRemainingRounds,
     normalizeEffect: add2eTimeNormalizeEffect,
     normalizeActorEffects: add2eTimeNormalizeActorEffects,
@@ -409,6 +488,6 @@ export function add2eRegisterTimeEngineApi() {
   globalThis.ADD2E_TIME_ENGINE_VERSION = ADD2E_TIME_ENGINE_VERSION;
   globalThis.ADD2E_TIME_ENGINE = game.add2e.time;
 
-  log("[REGISTERED]", { version: ADD2E_TIME_ENGINE_VERSION });
+  log("[REGISTERED]", { version: ADD2E_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick() });
   return true;
 }
