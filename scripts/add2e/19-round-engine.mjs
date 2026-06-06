@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-06-02-round-engine-v2-time-service
+// Version : 2026-06-06-round-engine-world-time-v1
 // ============================================================================
 
 import {
@@ -16,10 +16,11 @@ import { add2eExpireTemporaryEffectsForActor } from "./18c-active-effects-expira
 import {
   ADD2E_TIME_ENGINE_VERSION,
   add2eRegisterTimeEngineApi,
+  add2eTimeAdvanceTick,
   add2eTimeNormalizeActorEffects
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-06-02-round-engine-v2-time-service";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-06-06-round-engine-world-time-v1";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -173,6 +174,10 @@ async function processCombat(combat, { source = "unknown", perRound = false } = 
   add2eRegisterTimeEngineApi();
   add2eVitalRegisterStatusEffects();
 
+  if (perRound) {
+    await add2eTimeAdvanceTick(1, { reason: `combat-round:${combat.id}:${currentRound}` });
+  }
+
   const actors = [];
   for (const { actor, combatant } of uniqueCombatActors(combat)) {
     try {
@@ -240,6 +245,6 @@ export function add2eRegisterRoundEngineHooks() {
   globalThis.ADD2E_ROUND_ENGINE_VERSION = ADD2E_ROUND_ENGINE_VERSION;
   globalThis.add2eRoundEngineOnCombatProgress = add2eRoundEngineOnCombatProgress;
 
-  log("[REGISTERED]", { version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, hooks: ["combatRound", "combatTurnChange", "combatTurn", "updateCombat"], mode: "combat-tracker" });
+  log("[REGISTERED]", { version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, hooks: ["combatRound", "combatTurnChange", "combatTurn", "updateCombat"], mode: "combat-tracker+world-time" });
   return true;
 }
