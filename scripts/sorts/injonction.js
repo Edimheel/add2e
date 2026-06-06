@@ -1,12 +1,12 @@
 /**
  * ADD2E — Injonction
  * Clerc niveau 1 — Enchantement/Charme
- * Version : 2026-05-22-v2-command-vfx
+ * Version : 2026-06-02-injonction-time-engine-v1
  *
  * Contrat onUse : true = consommé ; false = non consommé.
  */
 
-console.log("%c[ADD2E][INJONCTION] 2026-05-22-v2-command-vfx", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][INJONCTION] 2026-06-02-injonction-time-engine-v1", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   try {
@@ -120,6 +120,47 @@ const __add2eOnUseResult = await (async () => {
       };
     }
 
+    function durationData(rounds) {
+      const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+      return time?.durationData?.(rounds) ?? {
+        rounds,
+        startRound: game.combat?.round ?? null,
+        startTurn: game.combat?.turn ?? null,
+        startTime: game.time?.worldTime ?? null,
+        combat: game.combat?.id ?? null
+      };
+    }
+
+    function timeFlags({ sourceItem, caster, commandWord }) {
+      const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+      return time?.flags?.({
+        source: "injonction.js",
+        rounds: 1,
+        unit: "round",
+        endMessage: `L’injonction imposant « ${commandWord} » à {actor} prend fin.`,
+        extra: {
+          spellName: "Injonction",
+          spellKey: "injonction",
+          sourceItemUuid: sourceItem?.uuid ?? null,
+          casterId: caster?.id ?? null,
+          casterUuid: caster?.uuid ?? null,
+          commandWord,
+          tags: ["sort:injonction", "controle:ordre", "etat:injonction", "duree:1_round", "cible:creature"]
+        }
+      }) ?? {
+        timeEngine: { managed: true, unit: "round", totalRounds: 1 },
+        roundEngine: { managed: true, unit: "round", totalRounds: 1, endMessage: `L’injonction imposant « ${commandWord} » à {actor} prend fin.` },
+        endMessage: `L’injonction imposant « ${commandWord} » à {actor} prend fin.`,
+        spellName: "Injonction",
+        spellKey: "injonction",
+        sourceItemUuid: sourceItem?.uuid ?? null,
+        casterId: caster?.id ?? null,
+        casterUuid: caster?.uuid ?? null,
+        commandWord,
+        tags: ["sort:injonction", "controle:ordre", "etat:injonction", "duree:1_round", "cible:creature"]
+      };
+    }
+
     function effectData({ sourceItem, caster, commandWord }) {
       return {
         name: `Injonction : ${commandWord}`,
@@ -127,20 +168,11 @@ const __add2eOnUseResult = await (async () => {
         origin: sourceItem?.uuid ?? null,
         disabled: false,
         transfer: false,
-        duration: {
-          rounds: 1,
-          startRound: game.combat?.round ?? null,
-          startTurn: game.combat?.turn ?? null,
-          startTime: game.time.worldTime
-        },
+        duration: durationData(1),
         description: `La cible est soumise à l'injonction : ${commandWord}. Durée : 1 round.`,
         flags: {
           add2e: {
-            spellName: "Injonction",
-            sourceItemUuid: sourceItem?.uuid ?? null,
-            casterId: caster?.id ?? null,
-            casterUuid: caster?.uuid ?? null,
-            commandWord,
+            ...timeFlags({ sourceItem, caster, commandWord }),
             tags: [
               "sort:injonction",
               "controle:ordre",
@@ -264,7 +296,7 @@ const __add2eOnUseResult = await (async () => {
             </select>
           </div>
           <div style="font-size:0.9em;color:#6f4b12;border-top:1px solid #e2bc63;padding-top:6px;">
-            Cible : <b>${esc(targetToken.name)}</b> — Durée : 1 round.
+            L’ordre doit tenir en un seul mot. En cas de réussite au jet de protection, aucun effet n’est posé.
           </div>
         </form>`,
       buttons: [
