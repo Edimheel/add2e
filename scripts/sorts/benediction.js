@@ -1,6 +1,7 @@
 /**
  * ADD2E — Sort BÉNÉDICTION / MALÉDICTION
  * Clerc niveau 1 — Conjuration/Appel
+ * Version : 2026-06-02-benediction-time-engine-v1
  *
  * Effet : +1 au moral et +1 aux jets d'attaque des alliés dans la zone.
  * Inverse : Malédiction, -1 au moral et -1 aux jets d'attaque.
@@ -16,7 +17,7 @@
 
 const __add2eOnUseResult = await (async () => {
 
-  console.log("%c[ADD2E][BENEDICTION] SCRIPT CUSTOM", "color:#b88924;font-weight:bold;");
+  console.log("%c[ADD2E][BENEDICTION] 2026-06-02-benediction-time-engine-v1", "color:#b88924;font-weight:bold;");
 
   const ADD2E_CLERIC_CHAT = {
     main: "#b88924",
@@ -117,6 +118,48 @@ const __add2eOnUseResult = await (async () => {
     }
   }
 
+  function add2eDurationData(rounds) {
+    const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+    return time?.durationData?.(rounds) ?? {
+      rounds,
+      startRound: game.combat?.round ?? null,
+      startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null,
+      combat: game.combat?.id ?? null
+    };
+  }
+
+  function add2eTimeFlags({ sourceItem, caster, effectName, isCurse, durationRounds }) {
+    const tags = isCurse
+      ? ["etat:malediction", "malus_attaque:1", "malus_moral:1", "bonus_attaque:-1", "bonus_moral:-1"]
+      : ["etat:benediction", "bonus_attaque:1", "bonus_moral:1"];
+    const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+    return time?.flags?.({
+      source: "benediction.js",
+      rounds: durationRounds,
+      unit: "round",
+      endMessage: isCurse ? "La malédiction de {actor} prend fin." : "La bénédiction de {actor} prend fin.",
+      extra: {
+        spellName: sourceItem?.name ?? effectName,
+        spellKey: isCurse ? "malediction" : "benediction",
+        sourceItemUuid: sourceItem?.uuid ?? null,
+        casterId: caster?.id ?? null,
+        casterUuid: caster?.uuid ?? null,
+        tags
+      }
+    }) ?? {
+      timeEngine: { managed: true, unit: "round", totalRounds: durationRounds },
+      roundEngine: { managed: true, unit: "round", totalRounds: durationRounds, endMessage: isCurse ? "La malédiction de {actor} prend fin." : "La bénédiction de {actor} prend fin." },
+      endMessage: isCurse ? "La malédiction de {actor} prend fin." : "La bénédiction de {actor} prend fin.",
+      spellName: sourceItem?.name ?? effectName,
+      spellKey: isCurse ? "malediction" : "benediction",
+      sourceItemUuid: sourceItem?.uuid ?? null,
+      casterId: caster?.id ?? null,
+      casterUuid: caster?.uuid ?? null,
+      tags
+    };
+  }
+
   let sourceItem = null;
   if (typeof sort !== "undefined" && sort) sourceItem = sort;
   else if (typeof item !== "undefined" && item) sourceItem = item;
@@ -176,7 +219,10 @@ const __add2eOnUseResult = await (async () => {
   const modeLabel = isCurse ? "Malédiction" : "Bénédiction";
   const effectName = isCurse ? "Malédiction" : "Bénédiction";
   const icon = sourceItem.img || (isCurse ? "icons/magic/control/debuff-energy-hold-pink.webp" : "icons/magic/holy/prayer-hands-glowing-yellow.webp");
-  const durationData = { rounds: 6, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time.worldTime };
+  const durationRounds = 6;
+  const tags = isCurse
+    ? ["etat:malediction", "malus_attaque:1", "malus_moral:1", "bonus_attaque:-1", "bonus_moral:-1"]
+    : ["etat:benediction", "bonus_attaque:1", "bonus_moral:1"];
 
   function add2eAEAddChange(key, value, priority = 20) {
     if (CONST.ACTIVE_EFFECT_CHANGE_TYPES) return { key, type: "add", phase: "final", value: String(value), priority };
@@ -189,9 +235,14 @@ const __add2eOnUseResult = await (async () => {
     origin: sourceItem.uuid,
     disabled: false,
     transfer: false,
-    duration: durationData,
+    duration: add2eDurationData(durationRounds),
     description: isCurse ? "Malus de -1 au moral et aux jets d'attaque." : "Bonus de +1 au moral et aux jets d'attaque.",
-    flags: { add2e: { spellName: sourceItem.name, casterId: caster.id, casterUuid: caster.uuid, tags: isCurse ? ["etat:malediction", "malus_attaque:1", "malus_moral:1", "bonus_attaque:-1", "bonus_moral:-1"] : ["etat:benediction", "bonus_attaque:1", "bonus_moral:1"] } },
+    flags: {
+      add2e: {
+        ...add2eTimeFlags({ sourceItem, caster, effectName, isCurse, durationRounds }),
+        tags
+      }
+    },
     changes: [add2eAEAddChange("system.bonus_attaque", bonusValue), add2eAEAddChange("system.bonus_moral", bonusValue)]
   };
 
@@ -232,7 +283,7 @@ const __add2eOnUseResult = await (async () => {
 
 if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
   console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", { script: "benediction.js", result: __add2eOnUseResult });
-  ui.notifications?.error?.(`${sourceItem?.name ?? item?.name ?? sort?.name ?? "Sort"} : le script onUse n'a pas retourné true/false.`);
+  ui.notifications?.error?.("Bénédiction : le script onUse n'a pas retourné true/false.");
   return false;
 }
 
