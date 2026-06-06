@@ -1,5 +1,5 @@
-// ADD2E — onUse Magicien : Bouclier
-// Version : 2026-05-25-magicien-bouclier-v3-normalise
+// ADD2E — onUse Magicien niveau 1 : Bouclier
+// Version : 2026-06-06-magicien-bouclier-time-engine-v1
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -81,13 +81,72 @@ function add2eGetCasterToken(actorDoc) {
     ?? null;
 }
 
-function add2eEffectDuration(level) {
-  return {
-    rounds: Math.max(1, level) * 5,
+function add2eTimeApi() {
+  return game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+}
+
+function add2eBouclierRounds(level) {
+  const time = add2eTimeApi();
+  return time?.toRounds?.("level*5", "round", { level }) ?? (Math.max(1, level) * 5);
+}
+
+function add2eEffectDuration(rounds) {
+  const time = add2eTimeApi();
+  return time?.durationData?.(rounds) ?? {
+    rounds,
     startRound: game.combat?.round ?? null,
     startTurn: game.combat?.turn ?? null,
     startTime: game.time?.worldTime ?? null,
     combat: game.combat?.id ?? null
+  };
+}
+
+function add2eTimeFlags({ actorDoc, rounds }) {
+  const tags = [
+    "classe:magicien",
+    "liste:magicien",
+    "niveau:1",
+    "sort:bouclier",
+    "ecole:evocation",
+    "type:protection",
+    "type:defense",
+    "immunite:missile_magique",
+    "ca_fixe_projectile_lance:2",
+    "ca_fixe_projectile_propulse:3",
+    "ca_fixe_autres:4",
+    "bonus_save_frontal:1",
+    "condition:attaque_frontale",
+    "duree:5_rounds_par_niveau",
+    `duree_rounds:${rounds}`
+  ];
+  const time = add2eTimeApi();
+  return time?.flags?.({
+    source: "bouclier.js",
+    rounds,
+    unit: "round",
+    endMessage: "Le bouclier magique de {actor} se dissipe.",
+    extra: {
+      spellName: ADD2E_SORT_CONFIG.name,
+      spellKey: ADD2E_SORT_CONFIG.slug,
+      sourceItemId: ADD2E_ITEM?.id ?? null,
+      sourceItemUuid: ADD2E_ITEM?.uuid ?? null,
+      casterId: actorDoc?.id ?? null,
+      casterUuid: actorDoc?.uuid ?? null,
+      casterName: actorDoc?.name ?? "",
+      tags
+    }
+  }) ?? {
+    timeEngine: { managed: true, unit: "round", totalRounds: rounds },
+    roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage: "Le bouclier magique de {actor} se dissipe." },
+    endMessage: "Le bouclier magique de {actor} se dissipe.",
+    spellName: ADD2E_SORT_CONFIG.name,
+    spellKey: ADD2E_SORT_CONFIG.slug,
+    sourceItemId: ADD2E_ITEM?.id ?? null,
+    sourceItemUuid: ADD2E_ITEM?.uuid ?? null,
+    casterId: actorDoc?.id ?? null,
+    casterUuid: actorDoc?.uuid ?? null,
+    casterName: actorDoc?.name ?? "",
+    tags
   };
 }
 
@@ -100,7 +159,25 @@ function add2eEmitGmOperation(operation, payload) {
 }
 
 function add2eBuildBouclierEffect(actorDoc, level) {
-  const rounds = Math.max(1, level) * 5;
+  const rounds = add2eBouclierRounds(level);
+  const timeFlags = add2eTimeFlags({ actorDoc, rounds });
+  const tags = timeFlags.tags ?? [
+    "classe:magicien",
+    "liste:magicien",
+    "niveau:1",
+    "sort:bouclier",
+    "ecole:evocation",
+    "type:protection",
+    "type:defense",
+    "immunite:missile_magique",
+    "ca_fixe_projectile_lance:2",
+    "ca_fixe_projectile_propulse:3",
+    "ca_fixe_autres:4",
+    "bonus_save_frontal:1",
+    "condition:attaque_frontale",
+    "duree:5_rounds_par_niveau",
+    `duree_rounds:${rounds}`
+  ];
 
   return {
     name: ADD2E_SORT_CONFIG.name,
@@ -111,27 +188,12 @@ function add2eBuildBouclierEffect(actorDoc, level) {
     system: {},
     origin: ADD2E_ITEM?.uuid ?? null,
     changes: [],
-    duration: add2eEffectDuration(level),
+    duration: add2eEffectDuration(rounds),
     description: "Une barrière invisible se déplace devant le magicien et le protège des attaques frontales.",
     flags: {
       add2e: {
-        tags: [
-          "classe:magicien",
-          "liste:magicien",
-          "niveau:1",
-          "sort:bouclier",
-          "ecole:evocation",
-          "type:protection",
-          "type:defense",
-          "immunite:missile_magique",
-          "ca_fixe_projectile_lance:2",
-          "ca_fixe_projectile_propulse:3",
-          "ca_fixe_autres:4",
-          "bonus_save_frontal:1",
-          "condition:attaque_frontale",
-          "duree:5_rounds_par_niveau",
-          `duree_rounds:${rounds}`
-        ],
+        ...timeFlags,
+        tags,
         spell: {
           slug: ADD2E_SORT_CONFIG.slug,
           name: ADD2E_SORT_CONFIG.name,
@@ -270,7 +332,7 @@ async function add2eChatBouclier(actorDoc, level) {
   const casterName = actorDoc?.name ?? casterToken?.name ?? "Magicien";
   const casterImg = casterToken?.document?.texture?.src ?? actorDoc?.img ?? "icons/svg/mystery-man.svg";
   const spellImg = add2eSpellImg();
-  const rounds = Math.max(1, level) * 5;
+  const rounds = add2eBouclierRounds(level);
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: actorDoc, token: casterToken }),
@@ -319,12 +381,13 @@ add2eRegisterBouclierVfxHooks();
 
 const level = add2eCasterLevel(ADD2E_ACTOR);
 const effectData = add2eBuildBouclierEffect(ADD2E_ACTOR, level);
+const durationRounds = add2eBouclierRounds(level);
 
 console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   actor: ADD2E_ACTOR?.name,
   sort: ADD2E_ITEM?.name,
   level,
-  durationRounds: Math.max(1, level) * 5
+  durationRounds
 });
 
 await add2eDeleteExistingBouclier(ADD2E_ACTOR);
@@ -335,7 +398,7 @@ await add2eChatBouclier(ADD2E_ACTOR, level);
 console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   consumedByDispatcher: true,
   effectRequested,
-  durationRounds: Math.max(1, level) * 5
+  durationRounds
 });
 
 return true;
