@@ -1,5 +1,6 @@
-// Sommeil.js — ADD2E corrigé
-// Version : 2026-05-05-v2-safe-onuse
+// Sommeil.js — ADD2E
+// Magicien niveau 1
+// Version : 2026-06-06-magicien-sommeil-time-engine-v1
 // Retour attendu : true = consommé, false = non consommé.
 
 return await (async () => {
@@ -58,12 +59,95 @@ return await (async () => {
     return null;
   }
 
-  function registerSleepHooks() {
-    if (game.add2eSleepHooksRegistered) return;
-    game.add2eSleepHooksRegistered = true;
+  function casterLevel(actorDoc) {
+    return Number(
+      actorDoc?.system?.niveau ??
+      actorDoc?.system?.level ??
+      actorDoc?.system?.details?.niveau ??
+      actorDoc?.system?.details?.level ??
+      1
+    ) || 1;
+  }
 
-    const endSleepVfx = (effect) => {
-      if (!String(effect?.label || effect?.name || "").toLowerCase().includes("sommeil")) return;
+  function timeApi() {
+    return game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  }
+
+  function sleepRounds(level) {
+    const time = timeApi();
+    return time?.toRounds?.("level*5", "round", { level }) ?? (Math.max(1, Number(level) || 1) * 5);
+  }
+
+  function durationData(rounds) {
+    const time = timeApi();
+    return time?.durationData?.(rounds) ?? {
+      rounds,
+      startRound: game.combat?.round ?? null,
+      startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null,
+      combat: game.combat?.id ?? null
+    };
+  }
+
+  function sleepTags(rounds) {
+    return [
+      "classe:magicien",
+      "liste:magicien",
+      "niveau:1",
+      "sort:sommeil",
+      "ecole:enchantement_charme",
+      "etat:sommeil",
+      "sommeil",
+      "controle:inconscient",
+      "duree:5_rounds_par_niveau",
+      `duree_rounds:${rounds}`
+    ];
+  }
+
+  function timeFlags({ sourceItem, caster, targetActor, rounds }) {
+    const tags = sleepTags(rounds);
+    const time = timeApi();
+    return time?.flags?.({
+      source: "sommeil.js",
+      rounds,
+      unit: "round",
+      endMessage: "Le sommeil magique de {actor} prend fin.",
+      extra: {
+        spellName: "Sommeil",
+        spellKey: "sommeil",
+        spellList: "wizard",
+        sourceItemUuid: sourceItem?.uuid ?? null,
+        casterId: caster?.id ?? null,
+        casterUuid: caster?.uuid ?? null,
+        targetId: targetActor?.id ?? null,
+        targetUuid: targetActor?.uuid ?? null,
+        tags
+      }
+    }) ?? {
+      timeEngine: { managed: true, unit: "round", totalRounds: rounds },
+      roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage: "Le sommeil magique de {actor} prend fin." },
+      endMessage: "Le sommeil magique de {actor} prend fin.",
+      spellName: "Sommeil",
+      spellKey: "sommeil",
+      spellList: "wizard",
+      sourceItemUuid: sourceItem?.uuid ?? null,
+      casterId: caster?.id ?? null,
+      casterUuid: caster?.uuid ?? null,
+      targetId: targetActor?.id ?? null,
+      targetUuid: targetActor?.uuid ?? null,
+      tags
+    };
+  }
+
+  function registerSleepHooks() {
+    if (game.add2eSleepHooksRegistered === "2026-06-06-magicien-sommeil-time-engine-v1") return;
+    game.add2eSleepHooksRegistered = "2026-06-06-magicien-sommeil-time-engine-v1";
+
+    const endSleepVfx = effect => {
+      const tags = effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? [];
+      const list = Array.isArray(tags) ? tags : String(tags).split(/[,;|\n]+/);
+      const isSleep = String(effect?.label || effect?.name || "").toLowerCase().includes("sommeil") || list.includes("sort:sommeil") || list.includes("etat:sommeil");
+      if (!isSleep) return;
       const tokens = effect?.parent?.getActiveTokens?.() || [];
       for (const token of tokens) {
         try {
@@ -82,28 +166,43 @@ return await (async () => {
     });
   }
 
+  function emitGmOperation(operation, payload) {
+    game.socket?.emit?.("system.add2e", {
+      type: "ADD2E_GM_OPERATION",
+      operation,
+      payload: {
+        ...(payload ?? {}),
+        fromUserId: game.user?.id ?? null,
+        sentAt: Date.now()
+      }
+    });
+  }
+
   async function createOrSocketEffect(targetToken, effectData) {
     const targetActor = targetToken.actor;
     if (!targetActor) return false;
 
-    if (game.user.isGM) {
+    if (game.user.isGM || targetActor.isOwner) {
+      const oldIds = Array.from(targetActor.effects ?? [])
+        .filter(e => {
+          const tags = e.flags?.add2e?.tags ?? [];
+          return Array.isArray(tags) && (tags.includes("sort:sommeil") || tags.includes("etat:sommeil"));
+        })
+        .map(e => e.id)
+        .filter(Boolean);
+      if (oldIds.length) await targetActor.deleteEmbeddedDocuments("ActiveEffect", oldIds);
       await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
       return true;
     }
 
-    if (game.socket) {
-      game.socket.emit("system.add2e", {
-        type: "applyActiveEffect",
-        actorId: targetActor.id,
-        actorUuid: targetActor.uuid,
-        sceneId: canvas.scene?.id,
-        tokenId: targetToken.id,
-        effectData
-      });
-      return true;
-    }
-
-    return false;
+    emitGmOperation("createActiveEffect", {
+      actorId: targetActor.id,
+      actorUuid: targetActor.uuid,
+      sceneId: canvas.scene?.id,
+      tokenId: targetToken.id,
+      effectData
+    });
+    return true;
   }
 
   async function playSleepVfx(t) {
@@ -137,6 +236,39 @@ return await (async () => {
     }
   }
 
+  function buildSleepEffect({ sourceItem, caster, targetActor, rounds }) {
+    const flags = timeFlags({ sourceItem, caster, targetActor, rounds });
+    const tags = flags.tags ?? sleepTags(rounds);
+    return {
+      name: "Sommeil",
+      img: sourceItem.img || "icons/svg/sleep.svg",
+      icon: sourceItem.img || "icons/svg/sleep.svg",
+      origin: sourceItem.uuid,
+      disabled: false,
+      transfer: false,
+      duration: durationData(rounds),
+      description: `La créature est plongée dans un sommeil magique pendant ${rounds} round(s), sauf réveil par les moyens prévus par la règle ou décision du MJ.`,
+      flags: {
+        add2e: {
+          ...flags,
+          tags,
+          spell: {
+            slug: "sommeil",
+            name: "Sommeil",
+            level: 1,
+            school: "Enchantement/Charme",
+            casterId: caster?.id ?? null,
+            casterUuid: caster?.uuid ?? null,
+            targetId: targetActor?.id ?? null,
+            targetUuid: targetActor?.uuid ?? null,
+            durationRounds: rounds
+          }
+        }
+      },
+      changes: []
+    };
+  }
+
   console.log(`${TAG}[START]`);
 
   const sourceItem = getSourceItem();
@@ -152,6 +284,9 @@ return await (async () => {
   }
 
   registerSleepHooks();
+
+  const level = casterLevel(caster);
+  const rounds = sleepRounds(level);
 
   const refund = async (raison = "") => {
     if (raison) ui.notifications.warn(raison);
@@ -284,6 +419,7 @@ return await (async () => {
         <div style="background:#fff;border:1px solid #e0d4fc;border-radius:6px;padding:6px;margin-bottom:8px;">
           <div style="text-align:center;color:#6a3c99;font-weight:bold;border-bottom:1px solid #eee;margin-bottom:4px;">Résultat</div>
           ${rows || "<i>Aucune cible</i>"}
+          <div style="font-size:0.85em;margin-top:6px;text-align:center;color:#6a3c99;"><b>Durée des effets posés :</b> ${rounds} round(s).</div>
         </div>
         <details style="background:#fff;border:1px solid #e0d4fc;border-radius:6px;">
           <summary style="cursor:pointer;color:#6a3c99;font-weight:600;padding:6px;">Détails</summary>
@@ -295,20 +431,11 @@ return await (async () => {
 
   for (const t of affectedTokens) {
     if (!t.actor) continue;
-
-    const effectData = {
-      name: "Sommeil",
-      img: "icons/svg/sleep.svg",
-      icon: "icons/svg/sleep.svg",
-      duration: { rounds: 5 },
-      flags: { add2e: { tags: ["etat:sommeil", "sommeil"] } },
-      origin: sourceItem.uuid
-    };
-
+    const effectData = buildSleepEffect({ sourceItem, caster, targetActor: t.actor, rounds });
     await createOrSocketEffect(t, effectData);
     await playSleepVfx(t);
   }
 
-  console.log(`${TAG}[END]`, { affected: affectedTokens.map(t => t.name) });
+  console.log(`${TAG}[END]`, { affected: affectedTokens.map(t => t.name), durationRounds: rounds });
   return true;
 })();
