@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Gestion du temps hors combat.
-// Version : 2026-06-06-world-time-engine-v3-left-toolbar-xp-style
+// Version : 2026-06-06-world-time-engine-v4-toolbar-hook-load-time
 //
 // Rôle :
 // - Avancer le temps de jeu hors combat par commandes MJ.
@@ -21,7 +21,7 @@ import {
 import { add2eExpireTemporaryEffectsForActor } from "./18c-active-effects-expiration.mjs";
 import { add2eSyncActorVitalStatus, add2eVitalRegisterStatusEffects } from "./18b-vital-status-sync.mjs";
 
-export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-06-world-time-engine-v3-left-toolbar-xp-style";
+export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-06-world-time-engine-v4-toolbar-hook-load-time";
 
 const TAG = "[ADD2E][WORLD_TIME]";
 const SETTINGS_SCOPE = "add2e";
@@ -322,6 +322,15 @@ function installSceneButton(controls) {
   }
 }
 
+function registerToolbarHook() {
+  if (HOOKS_REGISTERED) return false;
+  HOOKS_REGISTERED = true;
+  Hooks.on("getSceneControlButtons", installSceneButton);
+  return true;
+}
+
+registerToolbarHook();
+
 export function add2eRegisterWorldTimeEngine() {
   add2eRegisterTimeEngineApi();
   game.add2e = game.add2e ?? {};
@@ -338,12 +347,8 @@ export function add2eRegisterWorldTimeEngine() {
   globalThis.add2eOpenWorldTimeApplication = add2eOpenWorldTimeApplication;
 
   registerSettingsMenu();
+  registerToolbarHook();
 
-  if (!HOOKS_REGISTERED) {
-    HOOKS_REGISTERED = true;
-    Hooks.on("getSceneControlButtons", installSceneButton);
-  }
-
-  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), menu: MENU_REGISTERED, toolbar: "xp-style-left-controls" });
+  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), menu: MENU_REGISTERED, toolbar: "xp-style-left-controls-load-time" });
   return true;
 }
