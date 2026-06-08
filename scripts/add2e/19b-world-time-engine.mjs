@@ -1,13 +1,13 @@
 // ============================================================================
 // ADD2E — Gestion du temps hors combat.
-// Version : 2026-06-06-world-time-engine-v4-toolbar-hook-load-time
+// Version : 2026-06-06-world-time-engine-v6-first-toolbar-slot
 //
 // Rôle :
 // - Avancer le temps de jeu hors combat par commandes MJ.
 // - Réutiliser le même tick global que le moteur de combat.
 // - Expirer les ActiveEffect gérés par ADD2E_TIME_ENGINE.
 // - Fournir une interface MJ ApplicationV2 + DialogV2.
-// - Exposer l'interface dans la barre d'outils gauche comme le bouton XP.
+// - Exposer l'interface au premier emplacement disponible de la barre gauche.
 // - Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -21,7 +21,7 @@ import {
 import { add2eExpireTemporaryEffectsForActor } from "./18c-active-effects-expiration.mjs";
 import { add2eSyncActorVitalStatus, add2eVitalRegisterStatusEffects } from "./18b-vital-status-sync.mjs";
 
-export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-06-world-time-engine-v4-toolbar-hook-load-time";
+export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-06-world-time-engine-v6-first-toolbar-slot";
 
 const TAG = "[ADD2E][WORLD_TIME]";
 const SETTINGS_SCOPE = "add2e";
@@ -220,7 +220,7 @@ export class ADD2EWorldTimeApplication extends foundry.applications.api.Applicat
         </div>
         <button type="button" data-action="scan" style="width:100%;margin-top:8px;"><i class="fa-solid fa-magnifying-glass"></i> Scanner les expirations sans avancer</button>
         <div style="font-size:11px;color:#6d4c41;margin-top:8px;line-height:1.35;">
-          Accès : barre d'outils gauche, à côté du bouton XP, ou console <code>game.add2e.time.open()</code>.
+          Accès : premier emplacement disponible de la barre gauche, ou console <code>game.add2e.time.open()</code>.
         </div>
       </div>`;
   }
@@ -285,19 +285,25 @@ function installOrReplaceTool(control) {
   const tool = timeToolDefinition();
 
   if (Array.isArray(control.tools)) {
-    const index = control.tools.findIndex(t => t?.name === tool.name || t?.id === tool.name);
-    if (index >= 0) control.tools[index] = tool;
-    else control.tools.push(tool);
+    const existing = control.tools.findIndex(t => t?.name === tool.name || t?.id === tool.name);
+    if (existing >= 0) control.tools.splice(existing, 1);
+    control.tools.unshift(tool);
     return true;
   }
 
   if (control.tools instanceof Map) {
-    control.tools.set(tool.name, tool);
+    control.tools.delete(tool.name);
+    control.tools = new Map([[tool.name, tool], ...Array.from(control.tools.entries())]);
     return true;
   }
 
   if (control.tools && typeof control.tools === "object") {
-    control.tools[tool.name] = tool;
+    const oldTools = control.tools;
+    const nextTools = { [tool.name]: tool };
+    for (const [key, value] of Object.entries(oldTools)) {
+      if (key !== tool.name && value?.name !== tool.name && value?.id !== tool.name) nextTools[key] = value;
+    }
+    control.tools = nextTools;
     return true;
   }
 
@@ -305,21 +311,15 @@ function installOrReplaceTool(control) {
   return true;
 }
 
+function firstAvailableControl(controls) {
+  if (Array.isArray(controls)) return controls.find(c => c?.tools !== undefined) ?? controls[0] ?? null;
+  if (controls && typeof controls === "object") return Object.values(controls).find(c => c?.tools !== undefined) ?? Object.values(controls)[0] ?? null;
+  return null;
+}
+
 function installSceneButton(controls) {
   if (!game.user?.isGM) return;
-
-  if (Array.isArray(controls)) {
-    const tokenControl = controls.find(c => c?.name === "token" || c?.name === "tokens") ?? controls[0];
-    installOrReplaceTool(tokenControl);
-    return;
-  }
-
-  if (controls && typeof controls === "object") {
-    const tokenControl = controls.token ?? controls.tokens ?? Object.values(controls).find(c => c?.name === "token" || c?.name === "tokens");
-    if (installOrReplaceTool(tokenControl)) return;
-    controls.add2e = controls.add2e ?? { name: "add2e", title: "ADD2E", icon: "fas fa-dragon", tools: [] };
-    installOrReplaceTool(controls.add2e);
-  }
+  installOrReplaceTool(firstAvailableControl(controls));
 }
 
 function registerToolbarHook() {
@@ -349,6 +349,6 @@ export function add2eRegisterWorldTimeEngine() {
   registerSettingsMenu();
   registerToolbarHook();
 
-  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), menu: MENU_REGISTERED, toolbar: "xp-style-left-controls-load-time" });
+  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), menu: MENU_REGISTERED, toolbar: "first-available-left-slot" });
   return true;
 }
