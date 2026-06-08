@@ -1,12 +1,13 @@
 // ============================================================================
 // ADD2E — Gestion du temps hors combat.
-// Version : 2026-06-06-world-time-engine-v1
+// Version : 2026-06-06-world-time-engine-v2-visible-entrypoints
 //
 // Rôle :
 // - Avancer le temps de jeu hors combat par commandes MJ.
 // - Réutiliser le même tick global que le moteur de combat.
 // - Expirer les ActiveEffect gérés par ADD2E_TIME_ENGINE.
 // - Fournir une interface MJ ApplicationV2 + DialogV2.
+// - Exposer l'interface dans les menus système et les Scene Controls.
 // - Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -20,11 +21,14 @@ import {
 import { add2eExpireTemporaryEffectsForActor } from "./18c-active-effects-expiration.mjs";
 import { add2eSyncActorVitalStatus, add2eVitalRegisterStatusEffects } from "./18b-vital-status-sync.mjs";
 
-export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-06-world-time-engine-v1";
+export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-06-world-time-engine-v2-visible-entrypoints";
 
 const TAG = "[ADD2E][WORLD_TIME]";
+const SETTINGS_SCOPE = "add2e";
+const MENU_KEY = "worldTimeControls";
 let APP_INSTANCE = null;
 let HOOKS_REGISTERED = false;
+let MENU_REGISTERED = false;
 
 function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
 function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
@@ -51,9 +55,7 @@ function isResponsibleGM() {
   return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
 }
 
-function allWorldActors() {
-  return Array.from(game.actors ?? []).filter(Boolean);
-}
+function allWorldActors() { return Array.from(game.actors ?? []).filter(Boolean); }
 
 function unitLabel(unit) {
   switch (unit) {
@@ -97,9 +99,7 @@ async function notifyAdvance({ before, after, delta, label, reason, expired }) {
       },
       ...chatStyleData()
     });
-  } catch (e) {
-    warn("[CHAT_NOTIFY_FAILED]", { e });
-  }
+  } catch (e) { warn("[CHAT_NOTIFY_FAILED]", { e }); }
 }
 
 export async function add2eWorldTimeExpireAllActors({ reason = "world-time", currentRound = null } = {}) {
@@ -173,37 +173,12 @@ async function askCustomAdvance() {
     window: { title: "Avancer le temps ADD2E" },
     content: `
       <form class="add2e-world-time-custom" style="display:flex;flex-direction:column;gap:8px;font-family:var(--font-primary);">
-        <div class="form-group">
-          <label style="font-weight:bold;">Valeur</label>
-          <input type="number" name="value" value="1" min="1" step="1" style="width:100%;">
-        </div>
-        <div class="form-group">
-          <label style="font-weight:bold;">Unité</label>
-          <select name="unit" style="width:100%;">
-            <option value="segment">Segment</option>
-            <option value="round">Round</option>
-            <option value="turn">Tour</option>
-            <option value="minute">Minute</option>
-            <option value="hour">Heure</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label style="font-weight:bold;">Raison / note MJ</label>
-          <input type="text" name="reason" value="" style="width:100%;" placeholder="Exploration, voyage, fouille, repos...">
-        </div>
+        <div class="form-group"><label style="font-weight:bold;">Valeur</label><input type="number" name="value" value="1" min="1" step="1" style="width:100%;"></div>
+        <div class="form-group"><label style="font-weight:bold;">Unité</label><select name="unit" style="width:100%;"><option value="segment">Segment</option><option value="round">Round</option><option value="turn">Tour</option><option value="minute">Minute</option><option value="hour">Heure</option></select></div>
+        <div class="form-group"><label style="font-weight:bold;">Raison / note MJ</label><input type="text" name="reason" value="" style="width:100%;" placeholder="Exploration, voyage, fouille, repos..."></div>
       </form>`,
     buttons: [
-      {
-        action: "advance",
-        label: "Avancer",
-        icon: "fa-solid fa-clock",
-        default: true,
-        callback: (event, button) => ({
-          value: Number(button.form.elements.value?.value || 1),
-          unit: String(button.form.elements.unit?.value || "round"),
-          reason: String(button.form.elements.reason?.value || "")
-        })
-      },
+      { action: "advance", label: "Avancer", icon: "fa-solid fa-clock", default: true, callback: (event, button) => ({ value: Number(button.form.elements.value?.value || 1), unit: String(button.form.elements.unit?.value || "round"), reason: String(button.form.elements.reason?.value || "") }) },
       { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
     ],
     rejectClose: false
@@ -214,11 +189,7 @@ export class ADD2EWorldTimeApplication extends foundry.applications.api.Applicat
   static DEFAULT_OPTIONS = {
     id: "add2e-world-time-app",
     tag: "section",
-    window: {
-      title: "Temps ADD2E",
-      icon: "fa-solid fa-hourglass-half",
-      resizable: true
-    },
+    window: { title: "Temps ADD2E", icon: "fa-solid fa-hourglass-half", resizable: true },
     position: { width: 380, height: "auto" },
     actions: {
       advanceSegment: ADD2EWorldTimeApplication._advanceSegment,
@@ -239,7 +210,6 @@ export class ADD2EWorldTimeApplication extends foundry.applications.api.Applicat
           <div style="font-weight:900;color:#4e342e;font-size:15px;">Temps ADD2E hors combat</div>
           <div style="font-size:12px;color:#6d4c41;margin-top:4px;">Tick global actuel : <b>${tick}</b> round(s)</div>
         </div>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
           <button type="button" data-action="advanceSegment"><i class="fa-solid fa-forward-step"></i> +1 segment</button>
           <button type="button" data-action="advanceRound"><i class="fa-solid fa-forward"></i> +1 round</button>
@@ -248,37 +218,22 @@ export class ADD2EWorldTimeApplication extends foundry.applications.api.Applicat
           <button type="button" data-action="advanceHour"><i class="fa-solid fa-hourglass"></i> +1 heure</button>
           <button type="button" data-action="custom"><i class="fa-solid fa-sliders"></i> Personnalisé</button>
         </div>
-
         <button type="button" data-action="scan" style="width:100%;margin-top:8px;"><i class="fa-solid fa-magnifying-glass"></i> Scanner les expirations sans avancer</button>
-
         <div style="font-size:11px;color:#6d4c41;margin-top:8px;line-height:1.35;">
-          Le temps réel du serveur n'est pas utilisé. Le MJ avance le temps de jeu. Les effets expirés sont supprimés via ActiveEffect, ce qui conserve les nettoyages existants : lumière, VFX, etc.
+          Accès : barre d'outils scène, Configuration des paramètres > ADD2E > Temps ADD2E, ou console <code>game.add2e.time.open()</code>.
         </div>
       </div>`;
   }
 
-  _replaceHTML(result, content, _options) {
-    content.innerHTML = result;
-  }
+  _replaceHTML(result, content, _options) { content.innerHTML = result; }
 
   static async _advanceSegment() { await add2eWorldTimeAdvance({ value: 1, unit: "segment", reason: "Bouton MJ : +1 segment" }); APP_INSTANCE?.render({ force: true }); }
   static async _advanceRound() { await add2eWorldTimeAdvance({ value: 1, unit: "round", reason: "Bouton MJ : +1 round" }); APP_INSTANCE?.render({ force: true }); }
   static async _advanceTurn() { await add2eWorldTimeAdvance({ value: 1, unit: "turn", reason: "Bouton MJ : +1 tour" }); APP_INSTANCE?.render({ force: true }); }
   static async _advance10Minutes() { await add2eWorldTimeAdvance({ value: 10, unit: "minute", reason: "Bouton MJ : +10 minutes" }); APP_INSTANCE?.render({ force: true }); }
   static async _advanceHour() { await add2eWorldTimeAdvance({ value: 1, unit: "hour", reason: "Bouton MJ : +1 heure" }); APP_INSTANCE?.render({ force: true }); }
-
-  static async _custom() {
-    const data = await askCustomAdvance();
-    if (!data) return;
-    await add2eWorldTimeAdvance(data);
-    APP_INSTANCE?.render({ force: true });
-  }
-
-  static async _scan() {
-    const result = await add2eWorldTimeExpireAllActors({ reason: "world-time-scan" });
-    ui.notifications?.info?.(`Scan temps ADD2E : ${result.deleted ?? 0} effet(s) expiré(s).`);
-    APP_INSTANCE?.render({ force: true });
-  }
+  static async _custom() { const data = await askCustomAdvance(); if (!data) return; await add2eWorldTimeAdvance(data); APP_INSTANCE?.render({ force: true }); }
+  static async _scan() { const result = await add2eWorldTimeExpireAllActors({ reason: "world-time-scan" }); ui.notifications?.info?.(`Scan temps ADD2E : ${result.deleted ?? 0} effet(s) expiré(s).`); APP_INSTANCE?.render({ force: true }); }
 }
 
 export function add2eOpenWorldTimeApplication() {
@@ -289,6 +244,68 @@ export function add2eOpenWorldTimeApplication() {
   APP_INSTANCE = APP_INSTANCE ?? new ADD2EWorldTimeApplication();
   APP_INSTANCE.render({ force: true });
   return APP_INSTANCE;
+}
+
+function registerSettingsMenu() {
+  if (MENU_REGISTERED || !game.settings?.registerMenu) return false;
+  try {
+    if (!game.settings.menus?.has?.(`${SETTINGS_SCOPE}.${MENU_KEY}`)) {
+      game.settings.registerMenu(SETTINGS_SCOPE, MENU_KEY, {
+        name: "Temps ADD2E",
+        label: "Ouvrir la gestion du temps",
+        hint: "Avancer le temps hors combat et déclencher les expirations d'effets temporaires.",
+        icon: "fas fa-hourglass-half",
+        type: ADD2EWorldTimeApplication,
+        restricted: true
+      });
+    }
+    MENU_REGISTERED = true;
+    return true;
+  } catch (e) {
+    warn("[SETTINGS_MENU_FAILED]", { e });
+    return false;
+  }
+}
+
+function toolEntry() {
+  const open = () => add2eOpenWorldTimeApplication();
+  return {
+    name: "add2e-world-time",
+    title: "Temps ADD2E",
+    icon: "fa-solid fa-hourglass-half",
+    button: true,
+    toggle: false,
+    visible: true,
+    onClick: open,
+    onChange: open,
+    order: 99
+  };
+}
+
+function addToolToControls(controls) {
+  if (!game.user?.isGM) return;
+  const entry = toolEntry();
+
+  if (Array.isArray(controls)) {
+    let target = controls.find(c => ["token", "tokens", "measure", "templates"].includes(c.name)) ?? controls[0];
+    if (!target) return;
+    target.tools = target.tools ?? [];
+    if (Array.isArray(target.tools)) {
+      if (!target.tools.some(t => t.name === entry.name)) target.tools.push(entry);
+    } else if (!target.tools[entry.name]) {
+      target.tools[entry.name] = entry;
+    }
+    return;
+  }
+
+  const control = controls?.tokens ?? controls?.token ?? controls?.measure ?? Object.values(controls ?? {})?.[0];
+  if (!control) return;
+  control.tools = control.tools ?? {};
+  if (Array.isArray(control.tools)) {
+    if (!control.tools.some(t => t.name === entry.name)) control.tools.push(entry);
+  } else {
+    control.tools[entry.name] = entry;
+  }
 }
 
 export function add2eRegisterWorldTimeEngine() {
@@ -306,33 +323,14 @@ export function add2eRegisterWorldTimeEngine() {
   globalThis.add2eWorldTimeExpireAllActors = add2eWorldTimeExpireAllActors;
   globalThis.add2eOpenWorldTimeApplication = add2eOpenWorldTimeApplication;
 
+  registerSettingsMenu();
+
   if (!HOOKS_REGISTERED) {
     HOOKS_REGISTERED = true;
-    Hooks.on("getSceneControlButtons", controls => {
-      if (!game.user?.isGM) return;
-      const tokenControls = Array.isArray(controls)
-        ? controls.find(c => c.name === "token" || c.name === "tokens")
-        : controls?.tokens ?? controls?.token ?? null;
-      const tools = tokenControls?.tools;
-      if (!tools) return;
-
-      const tool = {
-        name: "add2e-world-time",
-        title: "Temps ADD2E",
-        icon: "fa-solid fa-hourglass-half",
-        button: true,
-        visible: true,
-        onClick: () => add2eOpenWorldTimeApplication()
-      };
-
-      if (Array.isArray(tools)) {
-        if (!tools.some(t => t.name === tool.name)) tools.push(tool);
-      } else if (!tools[tool.name]) {
-        tools[tool.name] = tool;
-      }
-    });
+    Hooks.on("getSceneControlButtons", addToolToControls);
   }
 
-  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick() });
+  ui.notifications?.info?.("Temps ADD2E disponible : Configuration > Paramètres > ADD2E > Temps ADD2E, ou console game.add2e.time.open().", { permanent: false });
+  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), menu: MENU_REGISTERED });
   return true;
 }
