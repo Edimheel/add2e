@@ -1,13 +1,13 @@
 // ============================================================================
 // ADD2E — Gestion du temps hors combat.
-// Version : 2026-06-06-world-time-engine-v2-visible-entrypoints
+// Version : 2026-06-06-world-time-engine-v3-left-toolbar-xp-style
 //
 // Rôle :
 // - Avancer le temps de jeu hors combat par commandes MJ.
 // - Réutiliser le même tick global que le moteur de combat.
 // - Expirer les ActiveEffect gérés par ADD2E_TIME_ENGINE.
 // - Fournir une interface MJ ApplicationV2 + DialogV2.
-// - Exposer l'interface dans les menus système et les Scene Controls.
+// - Exposer l'interface dans la barre d'outils gauche comme le bouton XP.
 // - Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -21,7 +21,7 @@ import {
 import { add2eExpireTemporaryEffectsForActor } from "./18c-active-effects-expiration.mjs";
 import { add2eSyncActorVitalStatus, add2eVitalRegisterStatusEffects } from "./18b-vital-status-sync.mjs";
 
-export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-06-world-time-engine-v2-visible-entrypoints";
+export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-06-world-time-engine-v3-left-toolbar-xp-style";
 
 const TAG = "[ADD2E][WORLD_TIME]";
 const SETTINGS_SCOPE = "add2e";
@@ -220,7 +220,7 @@ export class ADD2EWorldTimeApplication extends foundry.applications.api.Applicat
         </div>
         <button type="button" data-action="scan" style="width:100%;margin-top:8px;"><i class="fa-solid fa-magnifying-glass"></i> Scanner les expirations sans avancer</button>
         <div style="font-size:11px;color:#6d4c41;margin-top:8px;line-height:1.35;">
-          Accès : barre d'outils scène, Configuration des paramètres > ADD2E > Temps ADD2E, ou console <code>game.add2e.time.open()</code>.
+          Accès : barre d'outils gauche, à côté du bouton XP, ou console <code>game.add2e.time.open()</code>.
         </div>
       </div>`;
   }
@@ -267,44 +267,58 @@ function registerSettingsMenu() {
   }
 }
 
-function toolEntry() {
+function timeToolDefinition() {
   const open = () => add2eOpenWorldTimeApplication();
   return {
     name: "add2e-world-time",
-    title: "Temps ADD2E",
-    icon: "fa-solid fa-hourglass-half",
+    title: "ADD2E — Temps",
+    icon: "fas fa-hourglass-half",
     button: true,
-    toggle: false,
-    visible: true,
-    onClick: open,
+    visible: game.user?.isGM === true,
     onChange: open,
-    order: 99
+    onClick: open
   };
 }
 
-function addToolToControls(controls) {
+function installOrReplaceTool(control) {
+  if (!control) return false;
+  const tool = timeToolDefinition();
+
+  if (Array.isArray(control.tools)) {
+    const index = control.tools.findIndex(t => t?.name === tool.name || t?.id === tool.name);
+    if (index >= 0) control.tools[index] = tool;
+    else control.tools.push(tool);
+    return true;
+  }
+
+  if (control.tools instanceof Map) {
+    control.tools.set(tool.name, tool);
+    return true;
+  }
+
+  if (control.tools && typeof control.tools === "object") {
+    control.tools[tool.name] = tool;
+    return true;
+  }
+
+  control.tools = [tool];
+  return true;
+}
+
+function installSceneButton(controls) {
   if (!game.user?.isGM) return;
-  const entry = toolEntry();
 
   if (Array.isArray(controls)) {
-    let target = controls.find(c => ["token", "tokens", "measure", "templates"].includes(c.name)) ?? controls[0];
-    if (!target) return;
-    target.tools = target.tools ?? [];
-    if (Array.isArray(target.tools)) {
-      if (!target.tools.some(t => t.name === entry.name)) target.tools.push(entry);
-    } else if (!target.tools[entry.name]) {
-      target.tools[entry.name] = entry;
-    }
+    const tokenControl = controls.find(c => c?.name === "token" || c?.name === "tokens") ?? controls[0];
+    installOrReplaceTool(tokenControl);
     return;
   }
 
-  const control = controls?.tokens ?? controls?.token ?? controls?.measure ?? Object.values(controls ?? {})?.[0];
-  if (!control) return;
-  control.tools = control.tools ?? {};
-  if (Array.isArray(control.tools)) {
-    if (!control.tools.some(t => t.name === entry.name)) control.tools.push(entry);
-  } else {
-    control.tools[entry.name] = entry;
+  if (controls && typeof controls === "object") {
+    const tokenControl = controls.token ?? controls.tokens ?? Object.values(controls).find(c => c?.name === "token" || c?.name === "tokens");
+    if (installOrReplaceTool(tokenControl)) return;
+    controls.add2e = controls.add2e ?? { name: "add2e", title: "ADD2E", icon: "fas fa-dragon", tools: [] };
+    installOrReplaceTool(controls.add2e);
   }
 }
 
@@ -327,10 +341,9 @@ export function add2eRegisterWorldTimeEngine() {
 
   if (!HOOKS_REGISTERED) {
     HOOKS_REGISTERED = true;
-    Hooks.on("getSceneControlButtons", addToolToControls);
+    Hooks.on("getSceneControlButtons", installSceneButton);
   }
 
-  ui.notifications?.info?.("Temps ADD2E disponible : Configuration > Paramètres > ADD2E > Temps ADD2E, ou console game.add2e.time.open().", { permanent: false });
-  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), menu: MENU_REGISTERED });
+  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), menu: MENU_REGISTERED, toolbar: "xp-style-left-controls" });
   return true;
 }
