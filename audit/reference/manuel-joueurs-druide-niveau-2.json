@@ -6,103 +6,271 @@
     "niveau": 2,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_a_verifier_manuellement",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-2.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Aquagenèse",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "le druide, avec ce sort, peut créer de l’eau pure et potable. Il crée 27 dm3 d’eau pour chacun de ses niveaux. L’eau peut être créée à une distance maximale de 1\" du druide. Il n’est pas possible de créer l’eau à l’intérieur de quelque chose de vivant, c'est-à-dire qu’on ne peut pas lancer le sort sur une créature et créer de l’eau dans une partie de son corps.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Aquagenèse",
+        "id": "Scjl76ai5",
+        "img": "systems/add2e/assets/icones/sorts/aquagenese.webp",
+        "onUse": "systems/add2e/scripts/sorts/aquagenese.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 2,
       "nom": "Catalepsie",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que celui de niveau 3 de magicien catalepsie (voir p.73). Les composantes matérielles de ce sort sont une feuille morte de chêne et du gui.",
+      "composants_materiels_objets": [
+        {
+          "nom": "une feuille morte de chêne et du gui",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Catalepsie",
+        "id": "sRd64Nw20WZ1cSFk",
+        "img": "systems/add2e/assets/icones/sorts/druide-catalepsie.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-catalepsie.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 3,
       "nom": "Charme-personnes ou mammifères",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort affectera toute personne ou tout mammifère sur lequel il sera lancé. La créature considérera alors le druide comme un ami sincère et s’alliera à lui pour l’aider et le protéger. Le sort ne permet pas au druide de contrôler la créature comme si elle était un automate, mais ses paroles et ses actes seront vus d’un bon œil. Ainsi, une créature charmée n’obéira pas à une demande de suicide mais pourra croire le druide si celui-ci lui assure que le seul moyen de sauver sa vie est que la créature aille retenir un dragon rouge qui l’attaque, «juste pour un round ou deux». À noter que ce sort ne donne pas au druide la possibilité de parler le langage de la créature charmée s’il ne connaît pas ce langage. La durée du sort dépend de l’intelligence de la créature charmée. Si le jet de protection initial est raté, un jet de protection est lancé à une fréquence régulière déterminée par l’intelligence de la créature. Intelligence Délai entre chaque jet de protection 3 ou moins 3 mois 4-6 2 mois 7-9 1 mois 10-12 3 semaines 13-14 2 semaines 15-16 1 semaine 17 3 jours 18 2 jours 19+ 1 jour Si la créature destinataire du charme est atteinte par un sort, ou bien blessée par un projectile ou une arme (agressions venant du groupe du druide), au moment (pendant le round) où le charme-personnes ou mammifères est incanté, le jet de protection subit un ajustement de +1 par point de dommage ainsi subi. Si le druide blesse ou tente de blesser la créature charmée de façon évidente, ou bien si le sort dissipation de la magie est lancé avec succès sur la créature charmée, le charme est automatiquement rompu. Le sort affecte tous les mammifères et les personnes. Le mot «personne» désigne tous les humains et les créatures humanoïdes bipèdes de taille humaine ou moins, notamment celles citées dans le sort paralysie (voir p.46). Si la créature visée réussit son jet de protection, le sort est annulé.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Charme-personnes ou mammifères",
+        "id": "A5ByNdQ49OPXdHGs",
+        "img": "systems/add2e/assets/icones/sorts/druide-charme-personnes-ou-mammiferes.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-charme-personnes-ou-mammiferes.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 4,
       "nom": "Croc-en-jambe",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "pour ce sort, le druide doit avoir un sarment de vigne, un bâton, un manche, une corde ou un autre objet similaire sur lequel il lance le sort. L’objet s’élève alors légèrement au-dessus du sol et fait tomber les créatures qui l’enjambent si elles ratent leur jet de protection contre les sorts. Un objet de 90 cm peut faire tomber une seule créature de taille humaine. Si la créature se déplace très vite, en courant pas exemple, les dégâts qu’elle subit en tombant sont de 1 à 6 (1d6) points et elle est étourdie pendant 2 à 5 rounds (1d4+1) si la surface sur laquelle elle tombe est dure, 2 à 5 segments (1d4+1) si la surface n’est pas très dure. Des créatures très grandes, un éléphant par exemple, ne sont pas du tout affectées par ce sort. Tant que le sort est actif, l’objet enchanté continue à faire tomber les créatures qui essayent de le franchir, y compris le lanceur du sort lui-même. Les créatures averties de la présence de l’objet obtiennent un bonus de +4 sur leur jet de protection. L’objet est à 80 % indétectable sans moyen de détection magique.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Croc-en-jambe",
+        "id": "j5rfK0nQ9OfvVRP0",
+        "img": "systems/add2e/assets/icones/sorts/druide-croc-en-jambe.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-croc-en-jambe.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 5,
       "nom": "Distorsion du bois",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, le druide peut faire se tordre et se déformer un volume de bois, de façon permanente, détruisant leur rectitude, leur forme et leur force. La portée du sort est de 1\" par niveau du druide. Il affecte environ une longueur de bois de 35 cm pour un diamètre de 2,5 cm, et ce pour chaque niveau du druide. Ainsi, un druide de niveau 1 peut déformer le manche d’une hachette ou 4 carreaux d’arbalète; au niveau 5 il peut déformer le manche d’une lance de fantassin. Les plaques et les planches peuvent aussi être affectées pour, par exemple, déformer une porte ou créer une brèche dans un bateau. Tenter d’affecter le bois d’une porte fermée magiquement ou munie d’un verrou magique est une autre histoire! Le niveau du druide doit être supérieur à celui du magicien qui a lancé le sort ou les sorts pour que l’incantation ait la moindre chance de réussite. Pour chaque niveau d’expérience au-dessus du magicien, le druide à 20 % de chance de distordre le bois enchanté.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Distorsion du bois",
+        "id": "VGjbP8bf6jxpaH2r",
+        "img": "systems/add2e/assets/icones/sorts/druide-distorsion-du-bois.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-distorsion-du-bois.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 6,
       "nom": "Flamme",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "une flamme brillante, égale à la lueur d’une torche, jaillit de la paume du druide. Cette flamme magique dure pendant 2 rounds par niveau du druide. Elle n’est pas dangereuse pour le druide, mais elle peut enflammer des matériaux inflammables (papier, vêtements, bois sec, huile, etc.). Le druide peut lancer cette flamme comme un projectile, à une distance de 4\" (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer où frappe la flamme). La flamme explosera au moment de l’impact, enflammant les combustibles dans un rayon de 45 cm par rapport au point d’impact et s’éteindra d'elle-même. Le druide peut éteindre la flamme quand il veut, mais il ne peut pas éteindre les feux causés par cette flamme. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Flamme",
+        "id": "bGozecWB2h2bzLHW",
+        "img": "systems/add2e/assets/icones/sorts/druide-flamme.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-flamme.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 7,
       "nom": "Localisation des plantes",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, le druide est capable de localiser tout type de plante recherché dans la zone d’effet. Le druide doit se concentrer sur la plante précise qu’il recherche. Le druide est au centre de la zone d’effet qui se déplace avec lui.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Localisation des plantes",
+        "id": "u9Y1HnfaWsDkiH2j",
+        "img": "systems/add2e/assets/icones/sorts/druide-localisation-des-plantes.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-localisation-des-plantes.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 8,
       "nom": "Métal brûlant",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, le druide a la possibilité d’exciter les molécules des métaux ferreux (fer, alliages ferreux, acier) et provoquer ainsi une augmentation de la température, qui fait que le métal devient brûlant. Au premier round du sort, le métal devient très chaud et difficile à toucher. C’est aussi l’effet qu’aura ce sort au dernier round de sa durée. Aux 2e et 6e rounds d’effet, la chaleur est encore plus forte, et des cloques apparaissent, causant des dégâts. Les 3e, 4e et 5e rounds, le métal devient excessivement brûlant (rougi), causant des dommages plus important et provoquant certaines incapacités, comme suit: Par round de contact Température du métal Dégâts Incapacité Très chaud Aucun Aucune Brûlant 1 à 4 points de vie Aucune Très brûlant 2 à 8 points de vie Mains ou pieds: 2 à 8 jours Tête: 1 à 4 tours (inconscience) Corps: 1 à 4 jours Les matériaux tels que le bois, le cuir ou les vêtements inflammables brûleront s’ils sont au contact du métal rougi, causant ainsi des dégâts au round suivant, s’ils sont en contact avec la chair. Une résistance au feu (potion ou anneau) ou un sort de protection contre le feu annule totalement les effets du sort, ainsi qu’une immersion dans de l’eau ou de la neige, ou une exposition à des sorts de froid ou de tempête de glace (voir p.79). Une cotte de maille elfique est immunisée aux effets de ce sort. Toutes les armures magiques en métal ou alliage ferreux ont le droit à un jet de protection contre le feu magique. S’il est réussi, le sort ne les affecte pas. Pour chaque niveau du druide qui lance le sort, ce dernier peut affecter le métal que portent une créature de taille humaine, c.-à-d. une masse de métal d’environ 500 po en poids. Métal brûlant ne peut pas être utilisé sous l’eau. L’inverse, métal glacial, annule les effets d’un métal brûlant ou agit sur le métal de la façon suivante: Par round de contact Température du métal Dégâts Incapacité Froid Aucun Aucune Glacé 1 à 2 points de vie Aucune Gelé 2 à 4 points de vie Amputation des doigts, orteils, nez ou oreilles Le sort de métal glacial est annulé par le sort de résistance au froid ou par un dégagement de chaleur importante, par exemple, une épée langue de feu, un mur de feu, etc. Une cotte de maille elfique est immunisée aux effets de ce sort. Toutes les armures magiques en métal ou alliage ferreux ont le droit à un jet de protection contre le froid. S’il est réussi, le sort ne les affecte pas. Métal glacial peut lui être utilisé sous l’eau.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Métal brûlant",
+        "id": "N7TTlafX2FuoYgAD",
+        "img": "systems/add2e/assets/icones/sorts/druide-metal-brulant.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-metal-brulant.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 9,
       "nom": "Obscurcissement",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort crée une vapeur brumeuse qui s’élève autour du druide. Elle persiste à cet endroit pendant 4 rounds par niveau du druide et elle réduit la visibilité (même l’infravision) de 60 cm à 2,40 m (2d4 x 30 cm). La zone d’effet a une progression cubique dont le volume augmente avec les niveaux du druide: cube de 1\" d’arête au 1er niveau, de 2\" au 2e, de 3\" au 3e, etc. En intérieur, la vapeur est limitée à une hauteur de 1\", bien que la longueur et largeur ne soit pas limitées. Un vent puissant réduira la puissance du sort de 75 %. Un sort de rafale de vent fera tourbillonner la vapeur et la dissipera en 25 % du temps normal: l’effet du sort d’obscurcissement ne dure plus 4 rounds par niveau mais 1 seul, après que l’incantation pour la rafale de vent ait été prononcée, bien sûr.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Obscurcissement",
+        "id": "NU1wGTCbnOH6Oz1H",
+        "img": "systems/add2e/assets/icones/sorts/druide-obscurcissement.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-obscurcissement.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 10,
       "nom": "Peau d'écorce",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand le druide lance ce sort sur une créature, cette créature obtient un bonus de 1 sur sa classe d’armure, la peau devenant aussi dure que de l’écorce. En plus, le bonus de 1 s’applique aussi aux jets de protection contre toutes les formes d’attaque, sauf la magie. Ce sort peut être lancé sur le druide lui-même ou sur un autre personnage. En plus du gui, le druide doit avoir une poignée d’écorce de chêne comme composante matérielle.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Peau d'écorce",
+        "id": "RA3FoJdMhOl9lLSY",
+        "img": "systems/add2e/assets/icones/sorts/druide-peau-d-ecorce.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-peau-d-ecorce.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 11,
       "nom": "Piège à feu",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est le même que le sort de niveau 4 de magicien piège à feu (voir p.79) excepté ci-dessus, et en ce qui concerne les composantes matérielles: des baies de houx et un morceau de charbon avec lequel le druide doit surligner la fermeture. Le piège à feu peut être ôté/annulé par un sort de dissipation de la magie.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Piège à feu",
+        "id": "Slo4ivq91",
+        "img": "systems/add2e/assets/icones/sorts/piege-a-feu.webp",
+        "onUse": "systems/add2e/scripts/sorts/piege-a-feu.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 12,
       "nom": "Soins mineurs",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "à part le fait que le druide doive utiliser du gui (de n’importe quelle sorte), ce sort est le même que le sort de niveau 1 de clerc soins mineurs (voir p.44).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Soins mineurs",
+        "id": "193bqqLSQr0HC1bm",
+        "img": "systems/add2e/assets/icones/sorts/druide-soins-mineurs.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-soins-mineurs.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     }
   ]
 }
