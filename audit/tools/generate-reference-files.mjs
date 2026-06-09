@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 
 const repo = process.env.GITHUB_WORKSPACE;
 execFileSync("git", ["fetch", "--depth=8", "origin", "agent-audit-sorts"], { cwd: repo, stdio: "inherit" });
+execFileSync("git", ["fetch", "origin", "778698a11b119558de349211e1a15c5bd5888cc0"], { cwd: repo, stdio: "inherit" });
 const source = execFileSync("git", ["show", "75b4cc5c01d638aee34a45f5e68eec6a84a827f4:audit/tools/generate-reference-files.mjs"], { cwd: repo, encoding: "utf8" })
   .replace("old.jet_sauvegarde ??? null", "old.jet_sauvegarde ?? null")
   .replaceAll('h"node"', '"node"');
