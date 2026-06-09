@@ -6,131 +6,405 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_a_verifier_manuellement",
   "expectedCount": 16,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-7.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Boule de feu à retardement",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort crée une boule de feu avec +1 sur chaque dé de dégâts; cette boule n’explosera qu’après une période de 1 à 50 segments (de 1/10e de round à 5 rounds) selon l’ordre du magicien qui lance le sort. Ce sort ne peut pas être utilisé sous l’eau. Pour les autres détails, se reporter au sort de niveau 3 boule de feu (voir p.73).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Boule de feu à retardement",
+        "id": "mV9ra1fRVpnBeCjh",
+        "img": "systems/add2e/assets/icones/sorts/magicien-boule-de-feu-a-retardement.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-boule-de-feu-a-retardement.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 2,
       "nom": "Cacodémon",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort, dangereux, invoque un puissant démon de type IV, V ou VI, selon le nom du démon que connait le magicien. Le pouvoir du sort n’est pas suffisant pour invoquer des démons plus puissants et ceux de moindre envergure ne peuvent pas être conjurés, ne possédant pas de nom connu. Dans tous les cas, le magicien doit connaitre le nom du démon qu’il conjure. Ce dernier sera dans de mauvaises dispositions et en colère. Le lanceur de sort doit se placer dans un cercle de protection (ou dans un triangle thaumaturgique avec une protection contre le mal); le démon, quant à lui, doit être confiné dans un pentagramme (pentacle cerclé) si le magicien ne veut pas être tué ou emmené par le démon conjuré. Le démon appelé peut être traité des façons suivantes: A) Le magicien peut forcer le démon à accomplir une série d’actions en le menaçant de souffrir d’un sort tel que punition spirituelle (voir p.85), lui accordant la liberté après l’accomplissement total de sa tâche et en le forçant à s’engager sur l’honneur. Ceci peut être excessivement dangereux, car la moindre faille dans un tel accord sera exploitée par la créature pour inverser le résultat désiré ou tout simplement pour tuer et dévorer le conjurateur. De plus, le démon considérera à jamais le magicien comme son ennemi juré, après avoir été contraint de la sorte. Le magicien a intérêt à être puissant et efficace. B) En lui promettant du sang humain frais et au moins un sacrifice humain, le magicien peut se mettre d’accord avec le démon pour que ce dernier lui rende un service. Encore une fois, il est préférable que le conjurateur ait de bonnes protections et soit puissant pour se défendre, au cas où le démon jugerait l’offre insuffisante (ou que la mort lente du conjurateur serait plus amusante) et décide de refuser les termes du marché. Bien que le démon doive rester fidèle à sa parole donnée, du fait que son nom soit connu, il se contentera de respecter à la lettre les mots de l’accord sans être tenu d’en respecter l’esprit. Seuls les magiciens profondément mauvais sont susceptibles de tenter de parvenir à une telle forme d’accord, et le démon conjuré devrait être plus favorablement disposé à l’égard d’un tel personnage, spécialement s’il est aussi chaotique. C) Le démon conjuré peut être sujet au sort emprisonnement de l’âme. Dans ce cas, le magicien ne lui parlera pas. Il ne lui demandera pas de service, bien que le cacodémon puisse lui-même essayer d’obtenir un accord, avant son emprisonnement. Un tel emprisonnement n’est risqué que si les précautions nécessaires n’ont pas été prises, car un échec signifie seulement que le démon s’échappe pour retourner sur son plan. Une fois emprisonné, le démon le reste jusqu’à ce que le possesseur de l’objet de confinement le brise et le libère, lui demandant alors de lui rendre un service. Si l’individu (ou les individus) qui libère le démon oublie de lui demander un service alors que le démon lui demande ce qu’on attend de lui, plus rien n’empêche le démon de tuer son (ou ses) libérateur(s) immédiatement. Mais si un service est demandé, le démon doit s’en acquitter du mieux qu’il pourra, avant de retourner ensuite dans les abysses. La durée du service d’un démon doit être limitée, à moins que le démon luimême accepte de servir pendant une période plus longue. Toute suite d’actions ou service requérant une durée inhabituelle ou alors simplement impossible à accomplir, donne au démon 50 % de chances de se libérer de ses obligations et d’assouvir sa vengeance envers le lanceur du sort, si ce dernier n’est pas protégé de façon continue, puisqu’un démon peut rester sur le plan où à lieu la conjuration pendant 666 jours. Le démon appelé sera extrêmement puissant: 8 points de vie par dé de vie. Le temps d’incantation est de 1 heure par type de démon appelé (4 heures pour un démon de type IV, 5 pour un type V, 6 pour un type VI). Si cette incantation est interrompue, le sort est annulé. En cas d’interruption après l’appel du cacodémon, il y a 10 % de chances cumulatives par round d’interruption contigu que le démon échappe à la puissance du sort et attaque le magicien. Chaque démon a le droit à un jet de protection spécial: si un score supérieur au niveau du magicien est obtenu avec 3d6 (2d10 pour les démons de type VI), le sort échoue. Si cela arrive, cela signifie souvent que le démon invoqué est déjà mort ou emprisonné ou alors que le nom prononcé n’était pas correct. Le conjurateur devra se procurer un autre nom pour appeler un autre cacodémon. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes matérielles sont cinq chandelles noires allumées, un brasero de charbons ardents dans lequel le magicien doit brûler du soufre, des fourrures de chauves-souris, du saindoux, de la suie, des cristaux d’acide mercuro-nitrique, une racine de mandragore, de l’alcool, un parchemin sur lequel est inscrit le nom du démon, sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon.",
+      "composants_materiels_objets": [
+        {
+          "nom": "cinq chandelles noires allumées, un brasero de charbons ardents dans lequel le magicien doit brûler du soufre, des fourrures de chauves-souris, du saindoux, de la suie, des cristaux d’acide mercuro-nitrique, une racine de mandragore, de l’alcool, un parchemin sur lequel est inscrit le nom du démon, sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Cacodémon",
+        "id": "iqIwPvTxcgl4rPbw",
+        "img": "systems/add2e/assets/icones/sorts/magicien-cacodemon.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-cacodemon.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 3,
       "nom": "Charme-plantes",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort permet au magicien de mettre sous ses ordres des formes de vie végétales et de communiquer avec elles. Les plantes obéiront au mieux de leurs possibilités. La zone d’effet est de 3\" x 1\". Le sort ne donne pas de nouveaux pouvoirs ni de nouvelles habilités aux plantes mais elles utiliseront tous leurs moyens, même ceux qui sont inhabituels, pour répondre aux ordres du lanceur de sort. Le jet de protection s’applique uniquement aux plantes intelligentes et subit un malus de –4 sur le dé. Les composantes matérielles sont une pincée d’humus, une goutte d’eau et une feuille ou une brindille.",
+      "composants_materiels_objets": [
+        {
+          "nom": "une pincée d’humus, une goutte d’eau et une feuille ou une brindille",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Charme-plantes",
+        "id": "sH3OXreq75Zw9e9W",
+        "img": "systems/add2e/assets/icones/sorts/magicien-charme-plantes.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-charme-plantes.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 4,
       "nom": "Disparition",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, le magicien provoque la disparition d’un objet. Il peut le téléporter (voir téléportation p.82) si cet objet ne pèse pas plus de 500 po (25 kg) par niveau du magicien. Un magicien de niveau 14 pourra faire disparaître et réapparaître à l’endroit qu’il désire un objet d’un poids de 7.000 po (350kg) maximum. Les objets plus lourds peuvent aussi disparaître, mais ils sont simplement placés sur le plan éthéré et remplacés par leur réplique en pierre. Ainsi, une porte peut disparaitre et être remplacée par un mur en pierre de 30 cm d’épaisseur ou d’épaisseur égale à celle de la porte, la plus grande épaisseur étant prise en compte. Le magicien peut affecter un volume maximal de 80 dm³ par niveau. L’efficacité du sort est ainsi limitée par le poids et le volume. Une dissipation de la magie réussie fera revenir l’objet du plan éthéré.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Disparition",
+        "id": "m63ZR7K71ZuYpFQW",
+        "img": "systems/add2e/assets/icones/sorts/magicien-disparition.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-disparition.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 5,
       "nom": "Duo-dimension",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort réduit le nombre de dimensions du magicien à 2: hauteur et largeur, mais plus d’épaisseur. Il devient ainsi invisible lorsqu’il se met de profil; cette invisibilité ne peut être détectée que par un sort de vision réelle ou par des moyens similaires. Ce sort permet au magicien de passer par les espaces les plus restreints du moment que les deux dimensions restantes le permettent; il peut par exemple passer entre une porte et son encadrement. Le lanceur de sort peut agir comme à l’accoutumée; il peut se mettre de profil et devenir invisible, se déplacer dans cet état et réapparaître le round suivant et lancer un sort, disparaitre le round suivant. Quand le magicien est de profil, il ne peut être attaqué, quelque soit le moyen utilisé; par contre, visible, il subira le triple des dégâts s’il est attaqué, c.-à-d. qu’une dague infligera 3 à 12 points de dommages à un magicien en duo-dimension. De plus, une partie du magicien se trouve sur le plan astral où des créatures peuvent l’y repérer. Si c’est le cas et que cette créature astrale l'attaque, il y a alors 25% de chances que son corps en entier soit amené sur le plan astral. Les composantes matérielles sont une figurine plate et fine en ivoire représentant le magicien (de très belle facture, filigranée d’or, émaillée et sertie de gemmes, le tout pour une valeur de 5.000 à 10.000 po) et une bande de parchemin. Quand l’incantation est prononcée, le parchemin se courbe et les deux extrémités se rejoignent. La figurine est alors passée dans la bande de parchemin en forme de cylindre et les deux éléments disparaissent pour toujours.",
+      "composants_materiels_objets": [
+        {
+          "nom": "une figurine plate et fine en ivoire représentant le magicien (de très belle facture, filigranée d’or, émaillée et sertie de gemmes, le tout pour une valeur de 5",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Duo-dimension",
+        "id": "f8pifdWCFFcLeyvl",
+        "img": "systems/add2e/assets/icones/sorts/magicien-duo-dimension.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-duo-dimension.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 6,
       "nom": "Épée de Mordenkainen",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "en lançant ce sort, le magicien crée un champ de force luisant en forme d’épée. Le magicien peut mentalement manœuvrer cette épée (il ne peut alors rien faire d’autre que se déplacer), pouvant ainsi la déplacer et la faire frapper comme si elle était utilisée par un guerrier. La probabilité de toucher avec cette épée est celle d’un guerrier ayant la moitié des niveaux du magicien: c'est-à-dire que si un magicien de niveau 14 lance le sort, il a la même probabilité de toucher qu’un guerrier de niveau 7. L’épée n’a pas de bonus magique pour toucher, mais elle peut toucher n’importe quel adversaire — même ceux uniquement touchés par des armes +3, les créatures éthérées, astrales ou hors de phase. L’épée touche automatiquement sur un score de 19 ou 20. Elle inflige de 5 à 20 (5d4) points sur des créatures de taille humaine ou plus petite et 5 à 30 (5d6) points sur des adversaires de taille plus grande qu’humaine. Elle peut être utilisée pour subjuguer. L’épée reste jusqu’à l’expiration du sort, jusqu’à ce qu’une dissipation de la magie soit réussie ou jusqu’à ce que le magicien arrête lui-même le sort. La composante matérielle est une épée miniature en platine avec une poignée et un pommeau en cuivre et en zinc, dont le prix de fabrication est de 500 po. L’épée miniature disparaît à la fin du sort.",
+      "composants_materiels_objets": [
+        {
+          "nom": "une épée miniature en platine avec une poignée et un pommeau en cuivre et en zinc, dont le prix de fabrication est de 500 po",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Épée de Mordenkainen",
+        "id": "IXG8uzCpQ5qpIsN1",
+        "img": "systems/add2e/assets/icones/sorts/magicien-epee-de-mordenkainen.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-epee-de-mordenkainen.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 7,
       "nom": "Inversion de la gravité",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort inverse la gravité de la zone d’effet, ce qui fait que tous les objets non fixés et les créatures dans la zone d’effet «tombent vers le haut». L’inversion dure 1 seconde (1/6e de segment), pendant laquelle les créatures et les objets «tombent» de 5 m vers le haut. S’il y a contact avec un objet solide durant cette «chute», l’objet provoque les mêmes dégâts que pour une chute normale. À la fin de la durée du sort, les créatures et les objets affectés retombent à terre. Comme le sort affecte une aire d’effet, des objets se trouvant à plusieurs dizaines de mètres de hauteur peuvent être affectés. Les composantes matérielles sont une pierre aimantée et de la limaille de fer.",
+      "composants_materiels_objets": [
+        {
+          "nom": "une pierre aimantée et de la limaille de fer",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Inversion de la gravité",
+        "id": "mzAdqJsIUuesaFZp",
+        "img": "systems/add2e/assets/icones/sorts/magicien-inversion-de-la-gravite.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-inversion-de-la-gravite.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 8,
       "nom": "Invisibilité de masse",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est le même que le sort invisibilité (voir p.71), mais il affecte toutes les créatures se trouvant dans une zone de 3\" x 3\"; il peut ainsi rendre invisible de 300 à 400 créatures de taille humaine, de 30 à 40 créatures de la taille des géants, de 6 à 8 dragons de grande taille.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Invisibilité de masse",
+        "id": "JDNcfhvRpMwstMnV",
+        "img": "systems/add2e/assets/icones/sorts/magicien-invisibilite-de-masse.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-invisibilite-de-masse.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 9,
       "nom": "Invocation de monstre V",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort invoque 1 à 2 monstres de niveau 5, apparaissant dans un délai de 1 à 3 rounds. Voir invocation de monstre I pour plus de détails.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Invocation de monstre V",
+        "id": "YrbPeiD5D7vKuZga",
+        "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-v.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-v.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 10,
       "nom": "Invocation instantanée de Drawmij",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, le magicien fait apparaître par téléportation l’objet qu’il désire. Cet objet arrive dans sa main, quelque soit l’endroit où il se trouvait. Il ne peut pas être plus long qu’une épée et ne doit pas peser plus de 75 po (3,75 kg); l’objet ne doit pas être vivant. Pour préparer ce sort, le magicien doit posséder une gemme d’une valeur minimale de 5.000 po et prononcer l’incantation, SAUF le mot final. Il doit garder la gemme sur lui. Plus tard, tout ce qu’aura à faire le magicien sera de prononcer le dernier mot de l’incantation en écrasant la gemme et l’objet désiré arrivera immédiatement dans sa main (droite ou gauche, au choix). L’objet devra avoir été au préalable touché et précisément nommé durant l’incantation initiale, et seul cet objet particulier sera appelé par le sort. Si l’objet est en la possession d’une créature, le sort ne fonctionne pas mais le magicien connait alors son possesseur et sait vaguement où il se trouve. Les objets peuvent être rappelés d’un autre plan d’existence, mais seulement s’ils ne sont pas en possession d’une autre créature (pas nécessairement tenus physiquement). Pour chaque niveau au-dessus du 14e, le magicien est capable d’appeler un objet se trouvant sur 1 plan plus éloigné que celui sur lequel il se trouve: 1 plan d’éloignement au niveau 14, 2 au niveau 15, 3 au niveau 16, etc. Ainsi, un magicien de niveau 16 peut faire venir un objet se trouvant sur le second monde de l’un des plans extérieurs, alors qu’un magicien de niveau 14 ne pourra invoquer qu’un objet qui se trouve au maximum sur le plan astral, éthéré ou un des plans élémentaires. Généralement la gemme spéciale employée pour ce sort se retrouve magiquement gravée avec le nom de l’objet qu’elle conjure. Cette inscription est invisible et illisible, sauf pour le lanceur du sort ou grâce à un sort de lecture de la magie. Les objets contenus dans un coffre secret de Léomund ne sont pas affectés par le sort. MOT DE POUVOIR: «ÉTOURDISSEMENT» (Conjuration/Appel) Niveau: 7 Composantes: V Portée: 1/2\"/niveau Temps d'incantation: 1 segment Durée: spéciale Jet de protection: aucun Zone d'effet: une créature",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Invocation instantanée de Drawmij",
+        "id": "yrBFmSm59mx7Q7HN",
+        "img": "systems/add2e/assets/icones/sorts/magicien-invocation-instantanee-de-drawmij.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-instantanee-de-drawmij.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 11,
       "nom": "Mot de pouvoir : « étourdissement »",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Mot de pouvoir : « étourdissement »",
+        "id": "grimbAQpwEflPDvb",
+        "img": "systems/add2e/assets/icones/sorts/magicien-mot-de-pouvoir-etourdissement.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-etourdissement.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 12,
       "nom": "Poigne de Bigby",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "la poigne de Bigby est une version supérieure au sort de niveau 6 main de force de Bigby (voir p.85). La poigne peut maintenir immobile une créature de 500 kg maximum ou retenir un objet de même poids. Elle peut aussi faire se déplacer des créatures deux fois plus vite que la main de force de Bigby. La composante matérielle est un gant en cuir.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un gant en cuir",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Poigne de Bigby",
+        "id": "vvhMZVFLUPBZCsMm",
+        "img": "systems/add2e/assets/icones/sorts/magicien-poigne-de-bigby.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-poigne-de-bigby.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 13,
       "nom": "Porte de phase",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, le magicien harmonise son corps, et une section de mur est affectée comme par un sort de passe-muraille (voir p.82). La porte de phase est invisible à toute autre créature que le magicien lui-même. Lui seul peut utiliser le passage crée par le sort. Le magicien disparaît quand il entre dans ce passage et réapparaît quand il en sort. Le magicien peut traverser ce passage une fois par tranche de 2 niveaux. Le sort ne peut être annulé que par une dissipation de la magie lancée par un magicien de niveau supérieur ou bien par plusieurs magiciens de niveaux inférieurs, agissant de concert, dont les niveaux cumulés dépassent le double du niveau du magicien qui a lancé le sort. Ce sort fournit donc un moyen d’évasion pour les magiciens de haut niveau, bien que des araignées éclipsantes puissent voir et emprunter l’accès avec facilité. Une gemme de vision ainsi qu'un sort de vision réelle révèlent la présence de la porte de phase.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Porte de phase",
+        "id": "RZIlm8nxGzJ4NOgu",
+        "img": "systems/add2e/assets/icones/sorts/magicien-porte-de-phase.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-porte-de-phase.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 14,
       "nom": "Simulacre",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, le magicien peut créer le duplicata de n’importe quelle créature. Ce duplicata ressemble exactement à l’original. Les seules différences sont les suivantes: le simulacre n’aura que 51 à 60 % (50 % + 1d10 %) des points de vie de l’original; il y aura des différences de personnalité et des domaines de connaissance que le double n’aura pas. Une détection de la magie révélera immédiatement ce qu’est vraiment le simulacre, ainsi qu’une vision réelle. Le duplicata reste sous le contrôle permanent du magicien, bien qu’il n’existe aucun lien télépathique spécial; les ordres doivent donc être donnés de façon ordinaire. Ce sort reproduit exactement la forme d’une créature, mais cette forme est en fait une sorte de zombie. Pour donner une force vitale au simulacre, il faut employer une réincarnation, et un souhait mineur est indispensable pour accorder au duplicata de 40 % à 65 % (35 % + 5d6 %) des connaissances et personnalité de la vraie créature. Le niveau du double, si niveau il y a, sera de 20 % à 50 % de celui de la vraie créature. Le duplicata est formé à partir de glace ou de neige. Le sort est lancé sur cette forme grossière en neige ou en glace, dans laquelle un morceau de l’original doit être placé. Comme composante matérielle supplémentaire, le sort demande de la poudre de rubis. Le simulacre n’a aucun moyen d’augmenter sa puissance: c'est-à-dire qu’il ne peut monter en niveau ni augmenter ses capacités.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Simulacre",
+        "id": "TH7LxMtCxwD0LXBC",
+        "img": "systems/add2e/assets/icones/sorts/magicien-simulacre.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-simulacre.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 15,
       "nom": "Souhait mineur",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est très puissant mais il présente des difficultés. Il exauce littéralement le souhait du magicien, mais seulement partiellement ou pour une durée limitée. Ainsi, le passé, le présent ou le futur peuvent être altérés (mais peut-être seulement pour le magicien à moins que la formulation du souhait soit soigneusement choisie), dans des proportions limitées. Un souhait mineur ne changera pas profondément les grandes réalités de ce monde, pas plus qu’il n’apportera richesses ou expérience sur simple demande. Ce sort peut, par exemple, redonner des points de vie (ou tous les points de vie pour une période limitée) que le magicien a perdu. Il peut réduire la probabilité de toucher d’un adversaire ou les dommages qu’il peut infliger, augmenter la durée d’un certain effet magique, rendre une créature amicale envers le magicien, etc. (voir souhait majeur p.93). Il peut aussi donner un indice mineur pour la recherche d’un trésor ou d’un objet magique. Les souhaits cupides du magicien auront généralement des effets désastreux pour lui. Le temps d’incantation est le temps nécessaire pour formuler le souhait mineur. L’incantation de ce sort fait vieillir le lanceur du sort de 1 an.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Souhait mineur",
+        "id": "JwVX4SDziizeDdWT",
+        "img": "systems/add2e/assets/icones/sorts/magicien-souhait-mineur.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-souhait-mineur.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 16,
       "nom": "Statue",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, la créature touchée (ou le magicien lui-même) ainsi que tout son équipement semblent être transformés en pierre. La transmutation initiale de la chair en pierre prend un round entier après le temps d’incantation. Ensuite, même une inspection minutieuse ne révélera rien, bien qu’une détection de la magie mette en évidence une faible aura irradiant de la statue. La créature pétrifiée peut voir, entendre et sentir normalement. Les sensations ressenties sont celles que peut ressentir du granit, c'est-à-dire qu’un éclat correspond à une légère blessure, mais attention aux coups puissants qui peuvent casser un morceau entier. La créature affectée peut redevenir normale en 1 seconde (1/6e de segment), puis se retransformer en pierre si elle le veut, à la même vitesse, ceci tant que dure le sort. Pendant la transformation initiale de la chair en pierre, la créature affectée doit réussir un tirage de pourcentage de 82 % ou moins, avec –1 % sur le dé pour chaque point de constitution qu’elle a; avec une constitution de 18, il n’y a donc aucun danger. Si ce tirage de pourcentage est raté, la créature subit un violent traumatisme et meurt. Les composantes matérielles sont: de la chaud, du sable et une goutte d’eau, le tout mélangé par une tige en fer (pointe ou clou par exemple).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Statue",
+        "id": "RasgmaIC4muPvU6s",
+        "img": "systems/add2e/assets/icones/sorts/magicien-statue.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-statue.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     }
   ]
 }
