@@ -7,7 +7,7 @@
 - Fichier déjà finalisé e conservé : `audit/reference/manuel-joueurs-clerc-niveau-2.json`
 - Sorts traités : 401
 - Sorts laisés à vérifier : 401
-- Descriptions manquantes : 26
+- Descriptions manquantes : 19
 - Composants à vérifier : 143
 - Correspondances Foundry absentes : 3
 
@@ -19,20 +19,20 @@ Les descriptions présentes sont reprises strictement depuis `audit/source/refer
 |---|---:|---:|---:|---|
 | clerc-niveau-1 | 12 | 12 | 12 | reference_a_verifier_manuellement |
 | clerc-niveau-3 | 12 | 12 | 12 | reference_a_verifier_manuellement |
-| clerc-niveau-4 | 10 | 8 | 10 | reference_a_verifier_manuellement |
+| clerc-niveau-4 | 10 | 10 | 10 | reference_a_verifier_manuellement |
 | clerc-niveau-5 | 10 | 9 | 10 | reference_a_verifier_manuellement |
 | clerc-niveau-6 | 10 | 10 | 10 | reference_a_verifier_manuellement |
 | clerc-niveau-7 | 10 | 10 | 10 | reference_a_verifier_manuellement |
 | druide-niveau-1 | 12 | 11 | 12 | reference_a_verifier_manuellement |
 | druide-niveau-2 | 12 | 12 | 12 | reference_a_verifier_manuellement |
 | druide-niveau-3 | 12 | 12 | 12 | reference_a_verifier_manuellement |
-| druide-niveau-4 | 12 | 10 | 12 | reference_a_verifier_manuellement |
+| druide-niveau-4 | 12 | 11 | 12 | reference_a_verifier_manuellement |
 | druide-niveau-5 | 10 | 8 | 10 | reference_a_verifier_manuellement |
 | druide-niveau-6 | 10 | 9 | 10 | reference_a_verifier_manuellement |
 | druide-niveau-7 | 10 | 8 | 10 | reference_a_verifier_manuellement |
 | magicien-niveau-1 | 30 | 30 | 30 | reference_a_verifier_manuellement |
 | magicien-niveau-2 | 24 | 24 | 24 | reference_a_verifier_manuellement |
-| magicien-niveau-3 | 24 | 20 | 24 | reference_a_verifier_manuellement |
+| magicien-niveau-3 | 24 | 23 | 24 | reference_a_verifier_manuellement |
 | magicien-niveau-4 | 24 | 23 | 24 | reference_a_verifier_manuellement |
 | magicien-niveau-5 | 24 | 24 | 24 | reference_a_verifier_manuellement |
 | magicien-niveau-6 | 24 | 23 | 24 | reference_a_verifier_manuellement |
@@ -41,7 +41,7 @@ Les descriptions présentes sont reprises strictement depuis `audit/source/refer
 | magicien-niveau-9 | 12 | 10 | 12 | reference_a_verifier_manuellement |
 | illusionniste-niveau-1 | 12 | 12 | 12 | reference_a_verifier_manuellement |
 | illusionniste-niveau-2 | 12 | 12 | 12 | reference_a_verifier_manuellement |
-| illusionniste-niveau-3 | 12 | 11 | 12 | reference_a_verifier_manuellement |
+| illusionniste-niveau-3 | 12 | 12 | 12 | reference_a_verifier_manuellement |
 | illusionniste-niveau-4 | 8 | 8 | 8 | reference_a_verifier_manuellement |
 | illusionniste-niveau-5 | 8 | 8 | 8 | reference_a_verifier_manuellement |
 | illusionniste-niveau-6 | 7 | 7 | 7 | reference_a_verifier_manuellement |
@@ -49,11 +49,10 @@ Les descriptions présentes sont reprises strictement depuis `audit/source/refer
 
 ## Descriptions manquantes
 
-- clerc-niveau-4: Langue
-- clerc-niveau-4: Protection contre le mal sur 3 m
+Le PDF du Manuel du joueur n'étant pas disponible dans l'environnement Codex, les descriptions suivantes restent absentes faute de confirmation possible depuis la source autorisée. Les sept faux manquants dus à une variante de clé ont été réalignés sans modifier leur texte extrait.
+
 - clerc-niveau-5: Quête religieuse
 - druide-niveau-1: Enchevêtrement
-- druide-niveau-4: Contrôle de la température sur 3 m
 - druide-niveau-4: Forêt hallucinatoire
 - druide-niveau-5: Contrôle des vents
 - druide-niveau-5: Mur de feu
@@ -61,9 +60,6 @@ Les descriptions présentes sont reprises strictement depuis `audit/source/refer
 - druide-niveau-7: Animation de la roche
 - druide-niveau-7: Tempête de feu
 - magicien-niveau-3: Intermittence
-- magicien-niveau-3: Invisibilité sur 3 m
-- magicien-niveau-3: Invocation de monstres I
-- magicien-niveau-3: Protection contre le mal sur 3 m
 - magicien-niveau-4: Tempête de glace
 - magicien-niveau-6: Quête magique
 - magicien-niveau-7: Mot de pouvoir : « étourdissement »
@@ -72,7 +68,6 @@ Les descriptions présentes sont reprises strictement depuis `audit/source/refer
 - magicien-niveau-8: Protection d'esprit
 - magicien-niveau-9: Arrêt du temps
 - magicien-niveau-9: Mot de pouvoir : « mort »
-- illusionniste-niveau-3: Invisibilité sur 3 m
 - illusionniste-niveau-7: Vision
 - illusionniste-niveau-7: Sorts de niveau 1 de magicien
 
