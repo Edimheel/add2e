@@ -5,6 +5,7 @@ const repo = process.env.GITHUB_WORKSPACE;
 const base = "8bd7b2b9a9eca1bfa7fb848bf773d622d5afc7d3";
 const git = (...args) => execFileSync("git", args, { cwd: repo, encoding: "utf8", stdio: "inherit" });
 const run = (command, args) => execFileSync(command, args, { cwd: repo, encoding: "utf8", stdio: "inherit" });
+git("fetch", "origin", base);
 const sourcePath = `${repo}/audit/source/reference-descriptions.json`;
 const reportPath = `${repo}/audit/rapports/REFERENCE-SPELLS-GENERATION.md`;
 const renames = [
