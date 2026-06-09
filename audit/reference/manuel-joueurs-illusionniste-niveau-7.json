@@ -6,61 +6,135 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_a_verifier_manuellement",
   "expectedCount": 6,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-7.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Altération de la réalité",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est similaire au sort de niveau 7 de magicien souhait mineur (voir p.89). Pour qu’il soit efficace, l’illusionniste doit décrire l’action du changement en lançant une force fantasmagorique et en le verbalisant dans les grandes lignes, avant que le sort n’entre en action. L’incantation de ce sort fait vieillir le lanceur du sort de 3 ans.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Altération de la réalité",
+        "id": "WLWi5ajizykNFffK",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-alteration-de-la-realite.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-alteration-de-la-realite.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 2,
       "nom": "Jet prismatique",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand il lance ce sort, l’illusionniste fait jaillir de sa main 7 rayons de couleur (cf. sphère prismatique p.94). Toute créature dans la zone d’effet sera touchée par un rayon ou plus. Pour déterminer quel rayon touche la créature concernée, lancer 1d8: d8 Couleur Effets 1 Rouge inflige 10 points de dégâts 2 Orange inflige 20 points de dégâts 3 Jaune inflige 40 points de dégâts 4 Vert jet de protection contre le poison ou mort 5 Bleu jet de protection contre pétrification ou transformation en pierre 6 Indigo jet de protection contre les baguettes ou folie 7 Violet jet de protection contre les sorts ou envoyé sur un autre plan 8 2 rayons touchent: relancez le dé 2 fois en ignorant le 8 s’il ressort",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Jet prismatique",
+        "id": "qEqxbIe6jPNTHEgC",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-jet-prismatique.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-jet-prismatique.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 3,
       "nom": "Mur prismatique",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est similaire au sort de niveau 9 de magicien sphère prismatique (voir p.94). La différence tient dans le fait qu’il crée un mur de couleurs scintillantes. Les dimensions maximales sont: 1,20 m de large par niveau d’expérience du lanceur de sort et 60 cm de haut par niveau.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Mur prismatique",
+        "id": "ULLJUpLwbeQMLzAt",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-mur-prismatique.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-mur-prismatique.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 4,
       "nom": "Sort astral",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est le même que le sort de niveau 7 de clerc sort astral (voir p.53).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Sort astral",
+        "id": "S6ybq84lw",
+        "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
+        "onUse": "systems/add2e/scripts/sorts/sort-astral.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 5,
       "nom": "Vision",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Vision",
+        "id": "1FDkJAlbuzYtOUON",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-vision.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-vision.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 6,
       "nom": "Sorts de niveau 1 de magicien",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Sorts de niveau 1 de magicien",
+        "id": "yxZAGhZDEaT0e6Am",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-sorts-de-niveau-1-de-magicien.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-sorts-de-niveau-1-de-magicien.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     }
   ]
 }

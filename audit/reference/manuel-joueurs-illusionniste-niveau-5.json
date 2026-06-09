@@ -6,75 +6,187 @@
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_a_verifier_manuellement",
   "expectedCount": 8,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-5.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Chaos",
+      "ecole": null,
       "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Chaos",
+        "id": "h3w9xJRIMFBZSPQK",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-chaos.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-chaos.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 2,
       "nom": "Création majeure",
+      "ecole": null,
       "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est comparable au sort création mineure (voir p.97), mais il permet de créer des objets minéraux. Le sort peut aussi servir à créer des objets végétaux, mais leur durée d’existence est alors de 12 tours/niveau.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Création majeure",
+        "id": "bfKkGhHAvYuzbb4B",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-creation-majeure.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-creation-majeure.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 3,
       "nom": "Holographie",
+      "ecole": null,
       "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 6 de magicien holographie (voir p.84).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Holographie",
+        "id": "FrUiFMdhrdEVVoGU",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-holographie.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-holographie.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 4,
       "nom": "Invocation des ombres",
+      "ecole": null,
       "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, l’illusionniste invoque et fait venir une ombre (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Ombre) pour chaque tranche de 3 niveaux qu'il possède. Ces monstres sont sous son contrôle et attaqueront ses ennemis sur simple demande. Les ombres restent jusqu’à la fin du sort à moins qu’elles ne soient tuées ou repoussées (vade-retro). La composante matérielle est un morceau de quartz fumé.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un morceau de quartz fumé",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Invocation des ombres",
+        "id": "PBTAq8GBzCXTrX17",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-invocation-des-ombres.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-invocation-des-ombres.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 5,
       "nom": "Labyrinthe",
+      "ecole": null,
       "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 8 de magicien labyrinthe (voir p.91).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Labyrinthe",
+        "id": "Sa6lcn10r",
+        "img": "systems/add2e/assets/icones/sorts/labyrinthe.webp",
+        "onUse": "systems/add2e/scripts/sorts/labyrinthe.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 6,
       "nom": "Magie des ombres",
+      "ecole": null,
       "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort permet à l’illusionniste de lancer un sort quasiréel de magicien. Cela peut-être: projectile magique, boule de feu, foudre, cône de froid. Ces sorts auront un effet identique à celui des originaux sur les créatures qui ratent leur jet de protection. S’il est réussi, la magie des ombres n’infligera qu’un point de dégât par niveau de l’illusionniste.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Magie des ombres",
+        "id": "QGnxlhJpGGXH7fpw",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-magie-des-ombres.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-magie-des-ombres.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 7,
       "nom": "Monstres demi-ombre",
+      "ecole": null,
       "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est similaire au sort de niveau 4 d’illusionniste monstres des ombres, mais les monstres créés ont 40 % des points de vie normaux. Pour les adversaires ayant réussi leur jet de protection, ils ont une classe d’armure de 8 et infligent 40 % de leurs dégâts normaux.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Monstres demi-ombre",
+        "id": "zRjgdAjHkaeS13gL",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-monstres-demi-ombre.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-monstres-demi-ombre.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 8,
       "nom": "Porte des ombres",
+      "ecole": null,
       "niveau": 5,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, l’illusionniste crée l’illusion d’une porte. Cette illusion permet aussi de faire croire qu’il ouvre cette porte, en franchit le seuil et la referme derrière lui, disparaissant de la vue, alors qu’en fait, il est simplement devenu invisible et s’est ensuite poussé de côté. L’invisibilité n’est active que pour la durée du sort. Les créatures qui voient ceci et qui ouvrent et franchissent la «porte» croiront entrer dans une pièce vide de 3 m x 3 m. Seuls un sort de vision réelle, une gemme de vision ou un autre moyen similaire permettent de découvrir l’illusionniste.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Porte des ombres",
+        "id": "wDl7Rbi8fLQo907c",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-porte-des-ombres.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-porte-des-ombres.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     }
   ]
 }

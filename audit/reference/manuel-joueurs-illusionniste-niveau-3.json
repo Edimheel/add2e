@@ -6,103 +6,281 @@
     "niveau": 3,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_a_verifier_manuellement",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-3.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Corde enchantée",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est le même que le sort de niveau 2 de magicien corde enchantée (voir p.70).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Corde enchantée",
+        "id": "S1h2ue786",
+        "img": "systems/add2e/assets/icones/sorts/corde-enchantee.webp",
+        "onUse": "systems/add2e/scripts/sorts/corde-enchantee.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 2,
       "nom": "Dissipation des illusions",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, l’illusionniste peut annuler toute force fantasmagorique, renforcée ou non par un bruitage, lancée par un nonillusionniste. Il peut aussi dissiper tout sort d’illusion/fantasme lancé par un autre illusionniste, avec cette fois la même chance que pour une dissipation de la magie (voir p.46), c'est-à-dire une chance de base de 50 % ajustée de 2 % en moins ou 5 % en plus pour chaque niveau de différence inférieure ou supérieure de l’illusionniste qui lance la dissipation par rapport à l’illusionniste qui a créé l’illusion.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Dissipation des illusions",
+        "id": "OHO4xJXJxW5gygat",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-dissipation-des-illusions.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-dissipation-des-illusions.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 3,
       "nom": "Écriture illusoire",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po).",
+      "composants_materiels_objets": [
+        {
+          "nom": "une encre fabriquée à base de plomb par un alchimiste",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Écriture illusoire",
+        "id": "WweEfY9hLciMDbwM",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-ecriture-illusoire.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 4,
       "nom": "Effroi",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien effroi (voir p.77).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Effroi",
+        "id": "Soif3xut2",
+        "img": "systems/add2e/assets/icones/sorts/effroi.webp",
+        "onUse": "systems/add2e/scripts/sorts/effroi.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 5,
       "nom": "Force spectrale",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort crée une illusion dans laquelle les sons, les odeurs et même la température sont présents. Autrement, ce sort est similaire au sort de niveau 2 force fantasmagorique améliorée. Cette illusion persiste pendant 3 rounds après que l’illusionniste ait cessé de se concentrer.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Force spectrale",
+        "id": "3xDP7GlFKFXuADfj",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-force-spectrale.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-force-spectrale.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 6,
       "nom": "Invisibilité sur 3 m",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Invisibilité sur 3 m",
+        "id": "3iWgC8Mq0KHNLWHX",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-invisibilite-sur-3-m.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-invisibilite-sur-3-m.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 7,
       "nom": "Lumière éternelle",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc lumière éternelle (voir p.47). Note: sort non réversible.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Lumière éternelle",
+        "id": "Sjv8diap7",
+        "img": "systems/add2e/assets/icones/sorts/lumiere-eternelle.webp",
+        "onUse": "systems/add2e/scripts/sorts/lumiere-eternelle.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 8,
       "nom": "Non-détection",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "en lançant ce sort, l’illusionniste se rend indétectable aux effets des sorts de divination, comme par exemple les sorts de clairaudience, clairvoyance, les sorts de détection et le sort ESP. Il est aussi protégé des détections par boule de cristal et médaillon d’ESP. La composante matérielle est une pincée de poudre de diamant.",
+      "composants_materiels_objets": [
+        {
+          "nom": "une pincée de poudre de diamant",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Non-détection",
+        "id": "jMHf785AxLZXArOB",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-non-detection.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-non-detection.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 9,
       "nom": "Paralysie musculaire",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort permet à l’illusionniste de créer une paralysie musculaire illusoire chez les créatures dont les dés de vie n’excèdent pas le double du niveau du lanceur de sort. Si les créatures ratent leur jet de protection, elles sont paralysées et seul l’illusionniste peut mettre fin à cet état, ainsi que les sorts dissipation de la magie et dissipation des illusions.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Paralysie musculaire",
+        "id": "Pp7IjtyLnkBvooZ8",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-paralysie-musculaire.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-paralysie-musculaire.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 10,
       "nom": "Suggestion",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien suggestion (voir p.76).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Suggestion",
+        "id": "CTNAYVpDwWldT0PT",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-suggestion.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-suggestion.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 11,
       "nom": "Ténèbres éternelles",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Ténèbres éternelles",
+        "id": "9dKrtDMJTTb8uQ69",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-tenebres-eternelles.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-tenebres-eternelles.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     },
     {
       "ordre": 12,
       "nom": "Terrain hallucinatoire",
+      "ecole": null,
       "niveau": 3,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien terrain hallucinatoire (voir p.79).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Terrain hallucinatoire",
+        "id": "S98lx26ye",
+        "img": "systems/add2e/assets/icones/sorts/terrain-hallucinatoire.webp",
+        "onUse": "systems/add2e/scripts/sorts/terrain-hallucinatoire.js"
+      },
+      "status": "reference_a_verifier_manuellement"
     }
   ]
 }
