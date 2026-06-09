@@ -107,7 +107,7 @@ for (const [lotKey, names] of Object.entries(master.lots ?? {})) {
   if (lotKey === "clerc-niveau-2") continue;
   const target = path.join(referenceDir, `manuel-joueurs-${lotKey}.json`);
   const existing = fs.existsSync(target) ? JSON.parse(fs.readFileSync(target, "utf8")) : {};
-  const [, class, niveauText] = lotKey.match(/^(.*)-niveau-(\d+)$/);
+  const [, spellClass, niveauText] = lotKey.match(/^(.*)-niveau-(\d+)$/);
   const niveau = Number(niveauText);
   const spells = names.map((nom, index) => {
     const old = findByName(existing.spells ?? [], nom) ?? {};
@@ -122,7 +122,7 @@ for (const [lotKey, names] of Object.entries(master.lots ?? {})) {
       zone_effet: old.zone_effet ?? null,
       composantes: old.composantes ?? null,
       temps_incantation: old.temps_incantation ?? null,
-      jet_sauvegarde: old.jet_sauvegarde ?? null
+      jet_sauvegarde: old.jet_sauvegarde ??? null
     };
     for (const optional of ["inverse", "composants_materiels_source", "notes_regles"]) {
       if (old[optional] !== undefined) spell[optional] = old[optional];
@@ -147,7 +147,7 @@ for (const [lotKey, names] of Object.entries(master.lots ?? {})) {
     source: existing.source ?? {
       document: "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
       reference: "Manuel des joueurs AD&D 2e",
-      classe,
+      "classe": spellClass,
       niveau,
       note: "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
     },
@@ -182,9 +182,9 @@ if (process.env.GITHUB_WORKSPACE) {
     ["Complete illusionist spell reference files", Array.from({ length: 7 }, (_, index) => `illusionniste-niveau-${index + 1}`)]
   ];
 
-  execFileSync("git", ["fetch", "--depth=2", "origin", "agent-audit-sorts"], { cwd: repo, encoding: "utf8", stdio: "inherit" });
+  execFileSync("git", ["fetch", "--depth=3", "origin", "agent-audit-sorts"], { cwd: repo, encoding: "utf8", stdio: "inherit" });
   const setupCommit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim();
-  const setupParent = execFileSync("git", ["rev-parse", "HEAT^"], { cwd: repo, encoding: "utf8" }).trim();
+  const setupParent = "778698a11b119558de349211e1a15c5bd5888cc0";
   git("config", "user.name", "github-actions[bot]");
   git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com");
 
@@ -220,7 +220,7 @@ if (process.env.GITHUB_WORKSPACE) {
 - Fichiers complétés structurellement : 29
 - Fichier déjà finalisé e conservé : \`audit/reference/manuel-joueurs-clerc-niveau-2.json\`
 - Sorts traités : ${summary.totalSpells}
-- Sorts laisés a à vérifier : ${summary.manualSpells}
+- Sorts laisés à vérifier : ${summary.manualSpells}
 - Descriptions manquantes : ${summary.missingDescriptions.length}
 - Composants à vérifier : ${summary.componentsToVerify.length}
 - Correspondances Foundry absentes : ${summary.foundryMissing.length}
