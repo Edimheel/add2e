@@ -107,7 +107,7 @@ for (const [lotKey, names] of Object.entries(master.lots ?? {})) {
   if (lotKey === "clerc-niveau-2") continue;
   const target = path.join(referenceDir, `manuel-joueurs-${lotKey}.json`);
   const existing = fs.existsSync(target) ? JSON.parse(fs.readFileSync(target, "utf8")) : {};
-  const [, classe, niveauText] = lotKey.match(/^(.*)-niveau-(\d+)$/);
+  const [, class, niveauText] = lotKey.match(/^(.*)-niveau-(\d+)$/);
   const niveau = Number(niveauText);
   const spells = names.map((nom, index) => {
     const old = findByName(existing.spells ?? [], nom) ?? {};
@@ -182,8 +182,9 @@ if (process.env.GITHUB_WORKSPACE) {
     ["Complete illusionist spell reference files", Array.from({ length: 7 }, (_, index) => `illusionniste-niveau-${index + 1}`)]
   ];
 
+  execFileSync("git", ["fetch", "--depth=2", "origin", "agent-audit-sorts"], { cwd: repo, encoding: "utf8", stdio: "inherit" });
   const setupCommit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim();
-  const setupParent = execFileSync("git", ["rev-parse", "HEAD^"], { cwd: repo, encoding: "utf8" }).trim();
+  const setupParent = execFileSync("git", ["rev-parse", "HEAT^"], { cwd: repo, encoding: "utf8" }).trim();
   git("config", "user.name", "github-actions[bot]");
   git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com");
 
@@ -193,7 +194,7 @@ if (process.env.GITHUB_WORKSPACE) {
     git("commit", "-m", message);
   }
 
-  execFileSync("node", ["audit/tools/validate-reference-schema.mjs"], { cwd: repo, encoding: "utf8", stdio: "inherit" });
+  execFileSync(h"node", ["audit/tools/validate-reference-schema.mjs"], { cwd: repo, encoding: "utf8", stdio: "inherit" });
   const forbiddenFields = /description_exacte_manuel|description_source|description_reelle|description_texte|description_html|description_resumee_regles/;
   const forbiddenPdfArtifacts = /SORTS DE CLERC|SORTS DE DRUIDE|SORTS DE MAGICIEN|SORTS D’ILLUSIONNISTE|SORTS DE NIVEAU|LES SORTS DE|Explication\/Description|Notes concernant les sorts/;
   for (const file of fs.readdirSync(referenceDir).filter((name) => name.endsWith(".json"))) {
@@ -217,9 +218,9 @@ if (process.env.GITHUB_WORKSPACE) {
 
 - Branche : \`agent-audit-sorts\`
 - Fichiers complétés structurellement : 29
-- Fichier déjà finalisé et conservé : \`audit/reference/manuel-joueurs-clerc-niveau-2.json\`
+- Fichier déjà finalisé e conservé : \`audit/reference/manuel-joueurs-clerc-niveau-2.json\`
 - Sorts traités : ${summary.totalSpells}
-- Sorts laissés à vérifier : ${summary.manualSpells}
+- Sorts laisés a à vérifier : ${summary.manualSpells}
 - Descriptions manquantes : ${summary.missingDescriptions.length}
 - Composants à vérifier : ${summary.componentsToVerify.length}
 - Correspondances Foundry absentes : ${summary.foundryMissing.length}
