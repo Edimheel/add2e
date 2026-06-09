@@ -43,8 +43,6 @@ git("config", "user.name", "github-actions[bot]");
 git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com");
 git("add", "audit/source/reference-descriptions.json", "audit/rapports/REFERENCE-SPELLS-GENERATION.md");
 git("commit", "-m", "Complete missing spell descriptions source");
-git("add", "audit/tools/generate-reference-files.mjs");
-git("commit", "-m", "Restore reference generator after missing descriptions fix");
 const changed = execFileSync("git", ["diff", "--name-only", `${base}..HEAD`], { cwd: repo, encoding: "utf8" }).trim().split(/\r?\n/).filter(Boolean);
 const allowed = new Set(["audit/source/reference-descriptions.json", "audit/rapports/REFERENCE-SPELLS-GENERATION.md"]);
 const forbidden = changed.filter((file) => !allowed.has(file));
