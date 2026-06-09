@@ -36,8 +36,9 @@ fs.writeFileSync(reportPath, report, "utf8");
 
 git("checkout", base, "--", "audit/tools/generate-reference-files.mjs");
 run("node", ["audit/tools/generate-reference-files.mjs"]);
+git("restore", "audit/reference");
 run("node", ["audit/tools/validate-reference-schema.mjs"]);
-git("restore", "audit/reference", "scripts/sorts", "fvtt-spells-all.json", "audit/decoupage_fichier", "system.json");
+git("restore", "scripts/sorts", "fvtt-spells-all.json", "audit/decoupage_fichier", "system.json");
 git("config", "user.name", "github-actions[bot]");
 git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com");
 git("add", "audit/source/reference-descriptions.json", "audit/rapports/REFERENCE-SPELLS-GENERATION.md");
