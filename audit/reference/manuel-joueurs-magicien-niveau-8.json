@@ -30,7 +30,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -82,7 +82,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -113,7 +113,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -180,13 +180,22 @@
       "description": "grâce à ce sort, le magicien peut conférer une immunité virtuelle à certains sorts et attaques magiques. Pour chaque tranche de 4 niveaux, le magicien peut protéger une créature, mais la durée de la protection change avec le nombre de créatures affectées; exemple: un magicien de niveau 16 peut protéger une créature pendant 16 tours, 2 créatures pendant 8 tours ou 4 créatures pendant 4 tours. Le temps d’incantation est de 1 round par destinataire. Cette protection donne un bonus aux jets de protection contre les pouvoirs suivants: Charme, séduction, suggestion, oubli, hypnotisme, rayon d’affaiblissement +9 Effroi, injonction, paralysie, peur, antipathie/sympathie, confusion, suggestion de masse +7 Quête magique, quête religieuse, chaos, débilité mentale, danse irrésistible d’Otto +5 D’une façon générale, le sort fonctionne contre toutes les formes d’enchantement. Le sort autorise un jet de protection contre les formes de magie citées ci-dessus, même si aucun jet de protection n’est normalement permis. La composante matérielle est un diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille.",
       "composants_materiels_objets": [
         {
-          "nom": "un diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille",
+          "nom": "diamant réduit en poudre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Réduit en poudre et répandu."
+        },
+        {
+          "nom": "diamant intact",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Chaque destinataire doit en posséder un.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -322,7 +331,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -368,13 +377,22 @@
       "description": "ce sort crée des runes magiques affectant les créatures qui veulent contourner/toucher/lire/traverser un passage sur lequel est inscrit le symbole. Le magicien place le symbole sur la surface qu’il désire. De la même façon, il choisit le type de symbole qu’il veut inscrire: Désespoir Toutes les créatures sont affectées et tombent dans un désespoir et un pessimisme profonds, à moins qu’elles ne réussissent leur jet de protection contre les sorts. Les créatures qui le ratent se soumettront à toutes les demandes d’un adversaire: sortir, se rendre, etc. Le désespoir dure pendant 3d4 tours et pendant cette période, il y a 25 % de chances que les créatures ne fassent plus rien et 25 % de chances que celles qui font quelque chose fassent demi-tour ou se retirent du combat, selon la situation. Discorde Toutes les créatures sont affectées et commencent à se disputer. Il y a 50 % de chances que des créatures d’alignement différent se battent entre elles. La dispute dure 5d4 rounds. Les combats éventuels durent 2d4 rounds. Effroi Ce symbole agit comme un sort d’effroi (voir p.77) très puissant; les créatures lancent un jet de protection à –4; s’il est raté, elles sont prises de panique et fuient. Étourdissement Une ou plusieurs créatures dont le total de points de vie ne dépasse pas 160 sont étourdies et chancelantes pendant 3d4 rounds; elles laissent tomber tout ce qu’elles tiennent. Insanité Une ou plusieurs créatures dont le total de points de vie ne dépasse pas 120 deviennent folles et le restent, agissant alors comme si on leur avait lancé un sort de confusion (voir p.77), et ce jusqu’à ce qu’un sort de guérison, souhait majeur ou restauration les rendent normales. Mort Une ou plusieurs créatures dont le total de points de vie ne dépasse pas 80 sont tuées. Sommeil Toutes les créatures ayant moins de 8+1 dés de vie tombent immédiatement dans un état cataleptique et ne peuvent être réveillées pendant une période de 5 à 16 tours (1d12+4). Souffrance Toutes les créatures sont affectées et ressentent des douleurs vives, qui provoquent une perte de 2 points sur leur score de dextérité et de 4 points sur leur dé d’attaque, ceci pendant 2d10 tours. Le type de symbole choisi ne peut être reconnu sans être lu; la lecture libère les pouvoirs contenus dans les runes magiques. Les composantes matérielles sont un diamant et une opale noire réduits en poudre, d’une valeur minimale de 5.000 po chacun.",
       "composants_materiels_objets": [
         {
-          "nom": "un diamant et une opale noire réduits en poudre, d’une valeur minimale de 5",
+          "nom": "diamant réduit en poudre",
           "quantite": 1,
-          "consommation": "a_verifier",
-          "cout_po": null,
+          "consommation": "consomme",
+          "cout_po": 5000,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Réduit en poudre."
+        },
+        {
+          "nom": "opale noire réduite en poudre",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": 5000,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Réduite en poudre."
         }
       ],
       "foundry": {
@@ -405,7 +423,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {

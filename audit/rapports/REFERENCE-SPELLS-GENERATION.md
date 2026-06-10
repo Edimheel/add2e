@@ -8,7 +8,7 @@
 - Sorts traités : 401
 - Sorts laisés à vérifier : 401
 - Descriptions manquantes : 19
-- Composants à vérifier : 102
+- Composants à vérifier : 94
 - Correspondances Foundry absentes : 3
 
 Les descriptions présentes sont reprises strictement depuis `audit/source/reference-descriptions.json`. Aucun sort incomplet n'est marqué `reference_complete_description_normalisee`.
@@ -737,6 +737,137 @@ Les champs techniques absents des références existantes ne sont pas remplis de
 - magicien-niveau-9: Hétéromorphisme
 - magicien-niveau-9: Main broyante de Bigby
 - magicien-niveau-9: Stase temporelle
+- illusionniste-niveau-1: Détection des illusions
+- illusionniste-niveau-1: Jet de couleurs
+- illusionniste-niveau-1: Mur de brouillard
+- illusionniste-niveau-2: Surdité
+- illusionniste-niveau-3: Écriture illusoire
+- illusionniste-niveau-3: Non-détection
+- illusionniste-niveau-5: Invocation des ombres
+
+## Validations des lots de composants
+
+- JSON valides.
+- `node audit/tools/validate-reference-schema.mjs` exécuté après chaque lot.
+- `git status --short` et périmètre interdit vérifiés après chaque lot.
+- Aucun fichier Clerc, script, JSON Foundry, découpage, source de descriptions, système, AGENTS.md ou workflow modifié.
+
+
+## Composants druide résolus
+
+2 objets structurés sans consommation incertaine.
+
+## Composants druide encore à vérifier
+
+8 objets conservent `consommation: "a_verifier"`.
+
+## Composants magicien résolus
+
+65 objets structurés sans consommation incertaine.
+
+## Composants magicien encore à vérifier
+
+55 objets conservent `consommation: "a_verifier"`.
+
+## Composants illusionniste résolus
+
+0 objets structurés sans consommation incertaine.
+
+## Composants illusionniste encore à vérifier
+
+7 objets conservent `consommation: "a_verifier"`.
+
+## Sorts non finalisables à cause d’une description manquante
+
+- druide-niveau-1: Enchevêtrement
+- druide-niveau-4: Contrôle de la température sur 3 m
+- druide-niveau-4: Forêt hallucinatoire
+- druide-niveau-5: Contrôle des vents
+- druide-niveau-5: Mur de feu
+- druide-niveau-6: Répulsion du bois
+- druide-niveau-7: Animation de la roche
+- druide-niveau-7: Tempête de feu
+- magicien-niveau-3: Intermittence
+- magicien-niveau-3: Invisibilité sur 3 m
+- magicien-niveau-3: Invocation de monstres I
+- magicien-niveau-3: Protection contre le mal sur 3 m
+- magicien-niveau-4: Tempête de glace
+- magicien-niveau-6: Quête magique
+- magicien-niveau-7: Mot de pouvoir : « étourdissement »
+- magicien-niveau-8: Mot de pouvoir : « cécité »
+- magicien-niveau-8: Permanence
+- magicien-niveau-8: Protection d'esprit
+- magicien-niveau-9: Arrêt du temps
+- magicien-niveau-9: Mot de pouvoir : « mort »
+- illusionniste-niveau-3: Invisibilité sur 3 m
+- illusionniste-niveau-7: Vision
+- illusionniste-niveau-7: Sorts de niveau 1 de magicien
+
+## Sorts non finalisables à cause d’un composant incertain
+
+- druide-niveau-1: Amitié animale
+- druide-niveau-1: Invisibilité aux animaux
+- druide-niveau-1: Passage sans trace
+- druide-niveau-1: Shillelagh
+- druide-niveau-2: Catalepsie
+- druide-niveau-3: Arbre
+- druide-niveau-4: Invocation des créatures sylvestres
+- druide-niveau-4: Langage des plantes
+- magicien-niveau-1: Compréhension des langues
+- magicien-niveau-1: Disque flottant de Tenser
+- magicien-niveau-1: Serviteur invisible
+- magicien-niveau-2: Bouche magique
+- magicien-niveau-2: Corde enchantée
+- magicien-niveau-2: Force
+- magicien-niveau-2: Fracassement
+- magicien-niveau-2: Invisibilité
+- magicien-niveau-2: Peur
+- magicien-niveau-2: Toile d'araignée
+- magicien-niveau-3: Boule de feu
+- magicien-niveau-3: Clairvoyance
+- magicien-niveau-3: Force fantasmagorique
+- magicien-niveau-3: Foudre
+- magicien-niveau-3: Protection contre les projectiles normaux
+- magicien-niveau-3: Rafale de vent
+- magicien-niveau-3: Ralentissement
+- magicien-niveau-3: Rapidité
+- magicien-niveau-3: Respiration aquatique
+- magicien-niveau-3: Suggestion
+- magicien-niveau-3: Vol
+- magicien-niveau-4: Charme-monstres
+- magicien-niveau-4: Globe mineur d'invulnérabilité
+- magicien-niveau-4: Invocation de monstre II
+- magicien-niveau-4: Maladresse
+- magicien-niveau-4: Mur de feu
+- magicien-niveau-4: Mur de glace
+- magicien-niveau-4: Œil magique
+- magicien-niveau-4: Phytomorphose
+- magicien-niveau-4: Porte dimensionnelle
+- magicien-niveau-4: Terrain hallucinatoire
+- magicien-niveau-5: Chien fidèle de Mordenkainen
+- magicien-niveau-5: Débilité mentale
+- magicien-niveau-5: Distorsion des distances
+- magicien-niveau-5: Eau aérée
+- magicien-niveau-5: Mur de fer
+- magicien-niveau-5: Mur de force
+- magicien-niveau-5: Mur de roc
+- magicien-niveau-5: Paralysie des monstres
+- magicien-niveau-5: Passe-muraille
+- magicien-niveau-6: Abaissement des eaux
+- magicien-niveau-6: Désintégration
+- magicien-niveau-6: Glissement de terrain
+- magicien-niveau-6: Holographie
+- magicien-niveau-6: Réincarnation
+- magicien-niveau-6: Répulsion
+- magicien-niveau-6: Transmutation de pierre en chair
+- magicien-niveau-7: Charme-plantes
+- magicien-niveau-7: Inversion de la gravité
+- magicien-niveau-8: Antipathie/sympathie
+- magicien-niveau-8: Clone
+- magicien-niveau-8: Cristairain
+- magicien-niveau-8: Poing de Bigby
+- magicien-niveau-8: Transformation d'objets
+- magicien-niveau-9: Main broyante de Bigby
 - illusionniste-niveau-1: Détection des illusions
 - illusionniste-niveau-1: Jet de couleurs
 - illusionniste-niveau-1: Mur de brouillard

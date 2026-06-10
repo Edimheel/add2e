@@ -47,11 +47,11 @@
         {
           "nom": "cinq chandelles noires allumées, un brasero de charbons ardents dans lequel le magicien doit brûler du soufre, des fourrures de chauves-souris, du saindoux, de la suie, des cristaux d’acide mercuro-nitrique, une racine de mandragore, de l’alcool, un parchemin sur lequel est inscrit le nom du démon, sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation explicitement indiquée dans la description."
         }
       ],
       "foundry": {
@@ -82,7 +82,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -128,13 +128,22 @@
       "description": "ce sort réduit le nombre de dimensions du magicien à 2: hauteur et largeur, mais plus d’épaisseur. Il devient ainsi invisible lorsqu’il se met de profil; cette invisibilité ne peut être détectée que par un sort de vision réelle ou par des moyens similaires. Ce sort permet au magicien de passer par les espaces les plus restreints du moment que les deux dimensions restantes le permettent; il peut par exemple passer entre une porte et son encadrement. Le lanceur de sort peut agir comme à l’accoutumée; il peut se mettre de profil et devenir invisible, se déplacer dans cet état et réapparaître le round suivant et lancer un sort, disparaitre le round suivant. Quand le magicien est de profil, il ne peut être attaqué, quelque soit le moyen utilisé; par contre, visible, il subira le triple des dégâts s’il est attaqué, c.-à-d. qu’une dague infligera 3 à 12 points de dommages à un magicien en duo-dimension. De plus, une partie du magicien se trouve sur le plan astral où des créatures peuvent l’y repérer. Si c’est le cas et que cette créature astrale l'attaque, il y a alors 25% de chances que son corps en entier soit amené sur le plan astral. Les composantes matérielles sont une figurine plate et fine en ivoire représentant le magicien (de très belle facture, filigranée d’or, émaillée et sertie de gemmes, le tout pour une valeur de 5.000 à 10.000 po) et une bande de parchemin. Quand l’incantation est prononcée, le parchemin se courbe et les deux extrémités se rejoignent. La figurine est alors passée dans la bande de parchemin en forme de cylindre et les deux éléments disparaissent pour toujours.",
       "composants_materiels_objets": [
         {
-          "nom": "une figurine plate et fine en ivoire représentant le magicien (de très belle facture, filigranée d’or, émaillée et sertie de gemmes, le tout pour une valeur de 5",
+          "nom": "figurine en ivoire représentant le magicien",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
+          "cout_po": 5000,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Disparaît pour toujours."
+        },
+        {
+          "nom": "parchemin",
+          "quantite": 1,
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Disparaît pour toujours."
         }
       ],
       "foundry": {
@@ -159,13 +168,13 @@
       "description": "en lançant ce sort, le magicien crée un champ de force luisant en forme d’épée. Le magicien peut mentalement manœuvrer cette épée (il ne peut alors rien faire d’autre que se déplacer), pouvant ainsi la déplacer et la faire frapper comme si elle était utilisée par un guerrier. La probabilité de toucher avec cette épée est celle d’un guerrier ayant la moitié des niveaux du magicien: c'est-à-dire que si un magicien de niveau 14 lance le sort, il a la même probabilité de toucher qu’un guerrier de niveau 7. L’épée n’a pas de bonus magique pour toucher, mais elle peut toucher n’importe quel adversaire — même ceux uniquement touchés par des armes +3, les créatures éthérées, astrales ou hors de phase. L’épée touche automatiquement sur un score de 19 ou 20. Elle inflige de 5 à 20 (5d4) points sur des créatures de taille humaine ou plus petite et 5 à 30 (5d6) points sur des adversaires de taille plus grande qu’humaine. Elle peut être utilisée pour subjuguer. L’épée reste jusqu’à l’expiration du sort, jusqu’à ce qu’une dissipation de la magie soit réussie ou jusqu’à ce que le magicien arrête lui-même le sort. La composante matérielle est une épée miniature en platine avec une poignée et un pommeau en cuivre et en zinc, dont le prix de fabrication est de 500 po. L’épée miniature disparaît à la fin du sort.",
       "composants_materiels_objets": [
         {
-          "nom": "une épée miniature en platine avec une poignée et un pommeau en cuivre et en zinc, dont le prix de fabrication est de 500 po",
+          "nom": "épée miniature en platine avec poignée et pommeau en cuivre et zinc",
           "quantite": 1,
-          "consommation": "a_verifier",
-          "cout_po": null,
+          "consommation": "consomme",
+          "cout_po": 500,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Disparaît quand le sort est lancé."
         }
       ],
       "foundry": {
@@ -196,7 +205,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -307,11 +316,11 @@
         {
           "nom": "un gant en cuir",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
