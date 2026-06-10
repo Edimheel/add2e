@@ -25,15 +25,15 @@ Les descriptions présentes sont reprises strictement depuis `audit/source/refer
 | clerc-niveau-7 | 10 | 10 | 10 | reference_a_verifier_manuellement |
 | druide-niveau-1 | 12 | 11 | 12 | reference_a_verifier_manuellement |
 | druide-niveau-2 | 12 | 12 | 12 | reference_a_verifier_manuellement |
-| druide-niveau-3 | 12 | 12 | 12 | reference_a_verifier_manuellement |
-| druide-niveau-4 | 12 | 11 | 12 | reference_a_verifier_manuellement |
+| druide-niveau-3 | 12 | 11 | 12 | reference_a_verifier_manuellement |
+| druide-niveau-4 | 12 | 12 | 12 | reference_a_verifier_manuellement |
 | druide-niveau-5 | 10 | 8 | 10 | reference_a_verifier_manuellement |
 | druide-niveau-6 | 10 | 9 | 10 | reference_a_verifier_manuellement |
 | druide-niveau-7 | 10 | 8 | 10 | reference_a_verifier_manuellement |
 | magicien-niveau-1 | 30 | 30 | 30 | reference_a_verifier_manuellement |
 | magicien-niveau-2 | 24 | 24 | 24 | reference_a_verifier_manuellement |
-| magicien-niveau-3 | 24 | 23 | 24 | reference_a_verifier_manuellement |
-| magicien-niveau-4 | 24 | 23 | 24 | reference_a_verifier_manuellement |
+| magicien-niveau-3 | 24 | 22 | 24 | reference_a_verifier_manuellement |
+| magicien-niveau-4 | 24 | 24 | 24 | reference_a_verifier_manuellement |
 | magicien-niveau-5 | 24 | 24 | 24 | reference_a_verifier_manuellement |
 | magicien-niveau-6 | 24 | 23 | 24 | reference_a_verifier_manuellement |
 | magicien-niveau-7 | 16 | 15 | 16 | reference_a_verifier_manuellement |
@@ -47,20 +47,20 @@ Les descriptions présentes sont reprises strictement depuis `audit/source/refer
 | illusionniste-niveau-6 | 7 | 7 | 7 | reference_a_verifier_manuellement |
 | illusionniste-niveau-7 | 6 | 4 | 6 | reference_a_verifier_manuellement |
 
-## Descriptions manquantes
+## Descriptions réellement manquantes
 
-Le PDF du Manuel du joueur n'étant pas disponible dans l'environnement Codex, les descriptions suivantes restent absentes faute de confirmation possible depuis la source autorisée. Les sept faux manquants dus à une variante de clé ont été réalignés sans modifier leur texte extrait.
+Les descriptions suivantes restent absentes : aucun texte correct ne peut leur être attribué depuis la source disponible.
 
 - clerc-niveau-5: Quête religieuse
 - druide-niveau-1: Enchevêtrement
-- druide-niveau-4: Forêt hallucinatoire
+- druide-niveau-3: Piège Sylvestre
 - druide-niveau-5: Contrôle des vents
 - druide-niveau-5: Mur de feu
 - druide-niveau-6: Répulsion du bois
 - druide-niveau-7: Animation de la roche
 - druide-niveau-7: Tempête de feu
 - magicien-niveau-3: Intermittence
-- magicien-niveau-4: Tempête de glace
+- magicien-niveau-3: Infravision
 - magicien-niveau-6: Quête magique
 - magicien-niveau-7: Mot de pouvoir : « étourdissement »
 - magicien-niveau-8: Mot de pouvoir : « cécité »
@@ -70,6 +70,17 @@ Le PDF du Manuel du joueur n'étant pas disponible dans l'environnement Codex, l
 - magicien-niveau-9: Mot de pouvoir : « mort »
 - illusionniste-niveau-7: Vision
 - illusionniste-niveau-7: Sorts de niveau 1 de magicien
+
+## Descriptions corrigées par réalignement de clé
+
+- Chaîne druide : les textes de Contrôle de la température sur 3 m, Dissipation de la Magie, Embrasement et Forêt hallucinatoire ont été réalignés depuis les quatre clés décalées. Piège Sylvestre reste manquant.
+- Chaîne magicien : les textes de Langues à Tempête de glace ont été réalignés depuis les clés décalées de magicien-niveau-3 et magicien-niveau-4. Infravision reste manquant.
+- Dix en-têtes du sort suivant, collés à la fin d'une description complète, ont été retirés sans modifier le texte de la description.
+
+## Descriptions suspectes laissées à vérifier
+
+- clerc-niveau-7: Tremblement de Terre — suffixe sur les composants druidiques, non attribuable avec certitude depuis la source disponible.
+- magicien-niveau-9: Stase temporelle — suffixe introductif sur les sorts d'illusionniste, non attribuable avec certitude depuis la source disponible.
 
 ## Composants à vérifier
 
