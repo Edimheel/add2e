@@ -1,11 +1,11 @@
 // ============================================================
 // ADD2E — Spellcasting générique par lignes de sorts
-// Version : 2026-06-10-multiclass-class-specific-spell-levels-v1
+// Version : 2026-06-10-multiclass-class-specific-spell-levels-v2-global-prepared-counter
 // Supporte les classes simples et les multiclasses AD&D 2e.
 // Pour un multiclassé, chaque liste de sorts utilise le niveau propre
 // de la classe qui fournit cette liste.
 // ============================================================
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-10-multiclass-class-specific-spell-levels-v1";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-10-multiclass-class-specific-spell-levels-v2-global-prepared-counter";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -350,6 +350,7 @@ globalThis.add2eIsObjectMagicSpellForPreparation = add2eIsObjectMagicSpellForPre
 globalThis.add2eGetMemorizedCountForEntry = add2eGetMemorizedCountForEntry;
 globalThis.add2eSetMemorizedCountForEntry = add2eSetMemorizedCountForEntry;
 globalThis.add2eGetTotalMemorizedCount = add2eGetTotalMemorizedCount;
+globalThis.add2eCountPreparedForEntryLevel = add2eCountPreparedForEntryLevel;
 
 function evalFormuleValeur(valeur, niveau) {
   if (typeof valeur === "object" && typeof valeur.valeur !== "undefined") valeur = valeur.valeur;
