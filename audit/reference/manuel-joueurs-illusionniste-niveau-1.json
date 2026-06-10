@@ -87,13 +87,31 @@
       "description": "grâce à ce sort, l’illusionniste est capable de voir et de reconnaitre une illusion pour ce qu’elle est réellement. Ce sort peut être utilisé pour permettre à d’autres créatures de constater qu’il existe une illusion. L’illusionniste doit toucher de ses deux mains la créature pendant qu’elle regarde l’illusion. La composante matérielle est un morceau de cristal, de verre ou de mica, teinté en jaune.",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau de cristal, de verre ou de mica, teinté en jaune",
+          "nom": "morceau de cristal teinté en jaune",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative au verre ou au mica teinté en jaune.",
+          "notes": null
+        },
+        {
+          "nom": "morceau de verre teinté en jaune",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au cristal ou au mica teinté en jaune.",
+          "notes": null
+        },
+        {
+          "nom": "morceau de mica teinté en jaune",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au cristal ou au verre teinté en jaune.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -160,13 +178,22 @@
       "description": "en lançant ce sort, l’illusionniste crée un jet de lumière vive qui jaillit en éventail de ses mains. De 1 à 6 créatures (1d6) peuvent être affectées dans la zone d'effet. Les créatures visées tombent inconscientes pour 2d4 rounds si leur niveau/DV est inférieur ou égal à celui de l’illusionniste; elles sont aveuglées pour 1d4 rounds si elles ont 1 à 2 niveaux/DV de plus que l’illusionniste; elles sont étourdies pour 2d4 segments si elles ont 3 niveaux/DV ou plus au dessus du niveau de l’illusionniste. Les créatures ayant un niveau supérieur à celui de l’illusionniste et celles qui ont 6 niveaux/DV ou plus ont droit à un jet de protection. Les composantes matérielles sont une pincée de sable ou de poudre de chacune de ces trois couleurs: rouge, jaune et bleu.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée de sable ou de poudre de chacune de ces trois couleurs: rouge, jaune et bleu",
+          "nom": "pincée de sable",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative à la poudre rouge, jaune et bleue.",
+          "notes": null
+        },
+        {
+          "nom": "poudre rouge, jaune et bleue",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à la pincée de sable.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -234,7 +261,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {

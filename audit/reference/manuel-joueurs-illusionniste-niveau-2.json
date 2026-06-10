@@ -219,7 +219,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {

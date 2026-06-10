@@ -66,13 +66,13 @@
       "description": "ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po).",
       "composants_materiels_objets": [
         {
-          "nom": "une encre fabriquée à base de plomb par un alchimiste",
+          "nom": "encre fabriquée à base de plomb par un alchimiste",
           "quantite": 1,
           "consommation": "a_verifier",
-          "cout_po": null,
+          "cout_po": 100,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -181,13 +181,13 @@
       "description": "en lançant ce sort, l’illusionniste se rend indétectable aux effets des sorts de divination, comme par exemple les sorts de clairaudience, clairvoyance, les sorts de détection et le sort ESP. Il est aussi protégé des détections par boule de cristal et médaillon d’ESP. La composante matérielle est une pincée de poudre de diamant.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée de poudre de diamant",
+          "nom": "pincée de poudre de diamant",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Utilisée en poudre."
         }
       ],
       "foundry": {

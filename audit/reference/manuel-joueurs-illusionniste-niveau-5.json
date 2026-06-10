@@ -87,13 +87,13 @@
       "description": "quand ce sort est lancé, l’illusionniste invoque et fait venir une ombre (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Ombre) pour chaque tranche de 3 niveaux qu'il possède. Ces monstres sont sous son contrôle et attaqueront ses ennemis sur simple demande. Les ombres restent jusqu’à la fin du sort à moins qu’elles ne soient tuées ou repoussées (vade-retro). La composante matérielle est un morceau de quartz fumé.",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau de quartz fumé",
+          "nom": "morceau de quartz fumé",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
