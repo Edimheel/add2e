@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-10-multiclass-layer-v12-direct-field-binding
+// Version : 2026-06-10-multiclass-layer-v13-partial-level-sync
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,7 +7,7 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-10-multiclass-layer-v12-direct-field-binding";
+const VERSION = "2026-06-10-multiclass-layer-v13-partial-level-sync";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -224,36 +224,57 @@ function classTitleForLevel(classSystem, level) {
   return titles.find(t => Number(level) >= Number(t.minLevel ?? t.niveauMin ?? 0) && Number(level) <= Number(t.maxLevel ?? t.niveauMax ?? 999))?.title ?? "";
 }
 
+function mergedClassMap(actor, path, partial = null) {
+  return { ...(foundry.utils.deepClone(foundry.utils.getProperty(actor.system ?? {}, path) ?? {})), ...(partial ?? {}) };
+}
+
 function buildClassEntries(actor, extraClassDoc = null, xpByClass = null, levelByClass = null, raceDataOverride = null) {
   const docs = classItems(actor);
   if (extraClassDoc) docs.push(extraClassDoc);
   const raceData = raceDataOverride ?? systemRace(actor);
   const seen = new Set();
   const entries = [];
-  const oldXp = xpByClass ?? actor.system?.xp_par_classe ?? {};
-  const oldLevels = levelByClass ?? actor.system?.niveaux_par_classe ?? {};
-  const levelMode = !!levelByClass;
-  const xpMode = !!xpByClass && !levelMode;
+  const xpMap = mergedClassMap(actor, "xp_par_classe", xpByClass);
+  const levelOverrides = levelByClass && typeof levelByClass === "object" ? levelByClass : {};
+  const hasLevelOverrides = Object.keys(levelOverrides).length > 0;
 
   for (const doc of docs) {
     const slug = classSlug(doc);
     if (!slug || seen.has(slug)) continue;
     seen.add(slug);
     const sys = foundry.utils.deepClone(doc.system ?? {});
-    let xp = Math.max(0, Math.floor(num(oldXp?.[slug], 0)));
-    let level = Math.max(1, Math.floor(num(oldLevels?.[slug], levelForClassXp(sys, xp))));
-    if (levelMode && oldLevels?.[slug] !== undefined) {
-      level = Math.max(1, Math.floor(num(oldLevels[slug], 1)));
+    let xp = Math.max(0, Math.floor(num(xpMap?.[slug], 0)));
+    let level;
+
+    if (hasLevelOverrides && Object.prototype.hasOwnProperty.call(levelOverrides, slug)) {
+      level = Math.max(1, Math.floor(num(levelOverrides[slug], 1)));
       xp = minXpForClassLevel(sys, level);
-    } else if (xpMode && oldXp?.[slug] !== undefined) level = levelForClassXp(sys, xp);
-    else if (!oldXp?.[slug] && xp <= 0) xp = minXpForClassLevel(sys, level);
+    } else {
+      level = levelForClassXp(sys, xp);
+    }
+
     const maxLevel = classRaceMaxLevel(doc, raceData);
     if (maxLevel > 0 && level > maxLevel) {
       level = maxLevel;
       xp = minXpForClassLevel(sys, level);
     }
+
     const title = classTitleForLevel(sys, level);
-    entries.push({ id: doc.id ?? null, uuid: doc.uuid ?? null, name: doc.name ?? itemLabel(doc, "Classe"), slug, niveau: level, level, xp, titre: title, title, hitDie: sys.hitDie ?? sys.dv ?? null, spellcasting: sys.spellcasting ?? null, levelMaxRace: maxLevel, system: sys });
+    entries.push({
+      id: doc.id ?? null,
+      uuid: doc.uuid ?? null,
+      name: doc.name ?? itemLabel(doc, "Classe"),
+      slug,
+      niveau: level,
+      level,
+      xp,
+      titre: title,
+      title,
+      hitDie: sys.hitDie ?? sys.dv ?? null,
+      spellcasting: sys.spellcasting ?? null,
+      levelMaxRace: maxLevel,
+      system: sys
+    });
   }
   return entries;
 }
@@ -508,10 +529,6 @@ async function applyRaceForMulticlass(actor, raceData, sheet = null) {
   return true;
 }
 
-function mergeClassMap(actor, path, incoming = {}) {
-  return { ...(foundry.utils.deepClone(foundry.utils.getProperty(actor.system ?? {}, path) ?? {})), ...(incoming ?? {}) };
-}
-
 function mergeMulticlassChanges(actor, changes) {
   if (!actor || actor.type !== "personnage" || !multiclassEnabled(actor)) return;
   const flat = foundry.utils.flattenObject(changes ?? {});
@@ -521,8 +538,8 @@ function mergeMulticlassChanges(actor, changes) {
     if (path.startsWith("system.niveaux_par_classe.")) levelChanges[path.slice("system.niveaux_par_classe.".length)] = value;
     if (path.startsWith("system.xp_par_classe.")) xpClassChanges[path.slice("system.xp_par_classe.".length)] = value;
   }
-  if (Object.keys(levelChanges).length) payload = multiclassUpdatePayload(actor, null, null, mergeClassMap(actor, "niveaux_par_classe", levelChanges));
-  else if (Object.keys(xpClassChanges).length) payload = multiclassUpdatePayload(actor, null, mergeClassMap(actor, "xp_par_classe", xpClassChanges), null);
+  if (Object.keys(levelChanges).length) payload = multiclassUpdatePayload(actor, null, null, levelChanges);
+  else if (Object.keys(xpClassChanges).length) payload = multiclassUpdatePayload(actor, null, xpClassChanges, null);
   if (!payload) return;
   foundry.utils.mergeObject(changes, foundry.utils.expandObject(payload), { inplace: true });
 }
@@ -545,15 +562,11 @@ async function updateDirectMulticlassField(sheet, input) {
   if (name.startsWith("system.xp_par_classe.")) {
     const slug = name.slice("system.xp_par_classe.".length);
     if (!slug) return false;
-    const xpMap = foundry.utils.deepClone(actor.system?.xp_par_classe ?? {});
-    xpMap[slug] = value;
-    payload = multiclassUpdatePayload(actor, null, xpMap, null);
+    payload = multiclassUpdatePayload(actor, null, { [slug]: value }, null);
   } else if (name.startsWith("system.niveaux_par_classe.")) {
     const slug = name.slice("system.niveaux_par_classe.".length);
     if (!slug) return false;
-    const levelMap = foundry.utils.deepClone(actor.system?.niveaux_par_classe ?? {});
-    levelMap[slug] = Math.max(1, value);
-    payload = multiclassUpdatePayload(actor, null, null, levelMap);
+    payload = multiclassUpdatePayload(actor, null, null, { [slug]: Math.max(1, value) });
   }
 
   if (!payload) return false;
