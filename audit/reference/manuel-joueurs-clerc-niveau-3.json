@@ -26,13 +26,22 @@
       "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien catalepsie (voir p.73). À noter néanmoins que même un personnage de niveau supérieur à celui du clerc qui lance ce sort peut être affecté. Les composantes matérielles de ce sort sont une pincée de poussière d’un cimetière et le symbole sacré du clerc.",
       "composants_materiels_objets": [
         {
-          "nom": "pincée de poussière d’un cimetière et symbole sacré du clerc",
+          "nom": "pincée de poussière d’un cimetière",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -104,13 +113,22 @@
       "description": "un glyphe de garde est une inscription puissante tracée magiquement pour se garder des créatures hostiles, pour les empêcher de passer, d’entrer quelque part ou d’ouvrir quelque chose. Il peut être utilisé pour garder un petit pont, le pas d’une porte, un coffre, etc. Quand le sort est lancé, le clerc trace des lignes légèrement brillantes devant le lieu ou l’objet à protéger. Quand l’incantation est terminée, la marque devient invisible, mais toute créature touchant la zone gardée sans prononcer le nom du glyphe sera victime de la magie placée dans ce glyphe, magie qu’aura lui-même instaurée le clerc selon les pouvoirs qu’il possède. Un jet de protection réduit les effets de moitié ou les annule selon la magie placée dans le glyphe. Pour chaque portion de 30 cm x 30 cm de la zone à protéger, un segment est nécessaire pour tracer le glyphe, plus un segment initial pour préparer la zone. Une surface maximale de 1,5 x 1,5 mètre par niveau du clerc peut être protégée. Le clerc doit encenser l’endroit à protéger et, si cette zone excède 4,5 m², il doit également la saupoudrer avec la poudre d’un diamant d’une valeur d’au moins 2.000 po. Les glyphes les plus courants infligent une décharge électrique ou infligent des dégâts par le feu, causant la perte de 2 points de vie par niveau du clerc, ou rendent aveugles, paralysent ou même drainent un niveau d’énergie si le clerc est assez puissant.",
       "composants_materiels_objets": [
         {
-          "nom": "encens pour l’endroit à protéger ; si la zone excède 4,5 m², poudre de diamant d’au moins 2 000 po",
+          "nom": "encens",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "poudre d’un diamant d’au moins 2 000 po",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": 2000,
+          "source": "Manuel des joueurs",
+          "condition": "Requise si la zone à protéger excède 4,5 m².",
+          "notes": "La zone est saupoudrée avec cette poudre."
         }
       ],
       "foundry": {
@@ -186,11 +204,11 @@
         {
           "nom": "pierre aimantée",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
@@ -262,13 +280,40 @@
       "description": "à partir des os et des corps d’humains morts, ce sort crée les plus faibles des morts-vivants: des squelettes et des zombies. Le sort anime ces «restes» qui obéissent alors au clerc qui a lancé le sort. Les morts-vivants suivront le clerc ou défendront une place qu’il aura désignée (ou alors attaqueront une créature spécifique). Le sort animera les morts-vivants jusqu’à ce qu’ils soient détruits ou jusqu’à ce que la magie soit dissipée (voir le sort dissipation de la magie p.46). Le clerc peut animer un squelette ou un zombie pour chaque niveau d’expérience qu’il a atteint. Ainsi, un clerc de niveau 2 peut animer 2 de ces morts-vivants, un clerc de niveau 3 peut en animer 3, etc. L’acte d’animer des morts n’est pas bon en soi et doit être utilisé avec précaution par des clercs d’alignement bon. Comme composantes matérielles, ce sort demande une goutte de sang, un morceau de chair humaine et une pincée d’os en poudre ou une écharde d’os.",
       "composants_materiels_objets": [
         {
-          "nom": "goutte de sang, morceau de chair humaine et pincée d’os en poudre ou écharde d’os",
+          "nom": "goutte de sang",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "morceau de chair humaine",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "pincée d’os en poudre",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à une écharde d’os.",
+          "notes": null
+        },
+        {
+          "nom": "écharde d’os",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à une pincée d’os en poudre.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -295,13 +340,22 @@
       "description": "en lançant ce sort, le clerc peut poser plusieurs questions à une créature morte depuis une période de temps précise et recevoir des réponses en fonction des connaissances de la créature morte. Le clerc doit être capable de converser dans la langue de la créature morte. Le temps depuis lequel la créature est morte est un facteur à prendre en compte car seuls les clercs les plus puissants peuvent parler avec des créatures décédées depuis longtemps. De la même manière, le nombre de questions et la durée du sort dépendent aussi du niveau du clerc. Ce dernier a besoin de son symbole sacré; il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés. Niveau d'expérience Temps maximum écoulé depuis la mort Durée du sort Nombre de questions 6e et moins 1 semaine 1 round 2 7e-8e 1 mois 3 rounds 3 9e-12e 1 année 1 tour 4 13e-15e 10 ans 2 tours 5 16e-20e 100 ans 3 tours 6 21e et plus 1.000 ans 6 tours 7",
       "composants_materiels_objets": [
         {
-          "nom": "symbole sacré du clerc et encens brûlé au-dessus du corps, des restes ou de la partie concernés",
+          "nom": "symbole sacré du clerc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "encens",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Brûlé au-dessus du corps, des restes ou de la partie concernés."
         }
       ],
       "foundry": {
@@ -328,13 +382,31 @@
       "description": "ce sort a les mêmes effets que le sort cantique en ce qui concerne le bonus de +1 pour les amis et –1 pour les ennemis pour les probabilités de toucher, la détermination des dommages et les jets de protection. Cependant, le clerc peut entreprendre autre chose une fois que la prière est terminée (c'est-à-dire l’incantation). Le clerc a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation.",
       "composants_materiels_objets": [
         {
-          "nom": "symbole religieux en argent, chapelet de prière ou objet similaire",
+          "nom": "symbole religieux en argent",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative au chapelet de prière ou à un objet similaire.",
+          "notes": null
+        },
+        {
+          "nom": "chapelet de prière",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au symbole religieux en argent ou à un objet similaire.",
+          "notes": null
+        },
+        {
+          "nom": "objet similaire ayant la même utilisation",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au symbole religieux en argent ou au chapelet de prière.",
+          "notes": null
         }
       ],
       "foundry": {

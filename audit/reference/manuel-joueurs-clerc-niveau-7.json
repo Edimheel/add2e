@@ -24,13 +24,31 @@
       "description": "ce sort permet au clerc de changer le climat d’une zone dans laquelle il se trouve. Le temps d’incantation est de 1 tour mais il faut 1 à 4 tours pour que les effets du changement se fassent sentir. Ce sort affectera le climat pendant 4 à 48 heures (4d12) dans une zone de 10 à 40 km² (1d4). Ce sort ne permet pas de changer la température de façon importante. Les possibilités de changement de climat dépendent des conditions climatiques précédant le lancement du sort: TEMPS CLAIR TEMPS TRÈS CHAUD CALME Très clair Chaleur Calme plat Nuages clairsemés Canicule Brise très légère PARTIELLEMENT NUAGEUX TEMPS CHAUD VENT LÉGER Clair Forte chaleur Calme Nuageux Douceur Vent fort Brouillard/pluie légère/ TEMPS DOUX VENT FORT Grêle faible Chaleur Vent léger Givre/neige légère Fraicheur Vent très fort NUAGEUX TEMPS FRAIS VENT TRÈS FORT Partiellement nuageux Douceur Vent fort Nuages importants Très froid Tempête Brouillard épais TEMPÊTE Grosse pluie/ Vent très fort Grêle importante Ouragan — Neige abondante/ Typhon Givre épais Les 3 aspects du temps (ciel/précipitation, température et vent) peuvent être changés mais seulement d’une catégorie vers le haut ou le bas. Par exemple, un ciel clair, une température chaude, avec un vent léger pourront devenir un ciel partiellement nuageux, une température élevée et un calme plat. En aucun cas on ne pourra avoir de contradiction — un brouillard épais avec un vent très fort. Le clerc peut aussi contrôler le sens du vent. Plusieurs sorts de contrôle peuvent être lancés à la suite, mais pas en même temps. Évidemment, ce sort ne peut fonctionner que là où il y a des conditions climatiques appropriées. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles de ce sort sont le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire.",
       "composants_materiels_objets": [
         {
-          "nom": "le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire",
+          "nom": "symbole sacré du clerc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "chapelet de prière",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à un objet similaire.",
+          "notes": null
+        },
+        {
+          "nom": "objet similaire au chapelet de prière",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au chapelet de prière.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -99,13 +117,31 @@
       "description": "quand ce sort est lancé, les membres (doigts, orteils, pieds, mains, bras, jambes, queues ou même les têtes d’une créature multicéphale), les os et les organes se reforment. Le temps que prend la régénération est d’un round si le(s) membre(s) amputé(s) sont présents et en contact avec le corps, de 2 à 8 tours dans les autres cas. L’inverse du sort, flétrissement, fait que l’organe touché se flétrit et devient inutilisable en un round, se séparant ensuite du corps en 2 à 8 tours, tombant en poussière. Comme d’habitude, le clerc doit toucher sa victime. Les composantes matérielles de ce sort sont un objet de prière et de l’eau bénite/maudite.",
       "composants_materiels_objets": [
         {
-          "nom": "objet de prière et eau bénite/maudite",
+          "nom": "objet de prière",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour régénération ; alternative à l’eau maudite.",
+          "notes": null
+        },
+        {
+          "nom": "eau maudite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour flétrissement ; alternative à l’eau bénite.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -154,13 +190,31 @@
       "description": "avec ce sort, le clerc peut redonner vie et force à une personne morte. La créature peut être morte depuis 10 années par niveau du clerc: donc un clerc de niveau 19 peut ressusciter une créature décédée il y a 190 ans. Voir le sort rappel à la vie pour les limitations quant aux personnes pouvant être ressuscitées. L’inverse du sort, anéantissement, fait que la victime touchée par le clerc meurt immédiatement et tombe en poussière. Les composantes matérielles sont le symbole sacré du clerc et de l’eau bénite/ maudite. Le fait de lancer ce sort oblige le clerc à se reposer un nombre de jour égal aux niveaux ou dés de vie de la créature ressuscitée ou anéantie. Ce repos doit se faire au lit et doit être total. L’incantation de ces sorts vieillit le clerc de 3 ans.",
       "composants_materiels_objets": [
         {
-          "nom": "symbole sacré du clerc et eau bénite/maudite",
+          "nom": "symbole sacré du clerc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour résurrection ; alternative à l’eau maudite.",
+          "notes": null
+        },
+        {
+          "nom": "eau maudite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour anéantissement ; alternative à l’eau bénite.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -227,13 +281,22 @@
       "description": "le clerc qui lance ce sort dessine un symbole dans les airs ou sur n’importe quelle surface de son choix. Le symbole brille pendant 1 tour par niveau du clerc. Le symbole utilisé par le clerc peut être choisi au moment d’incanter le sort, parmi ces trois possibilités: Désespoir Toutes les créatures qui le voient sont affectées et tombent dans un désespoir et un pessimisme profonds, à moins qu’elles ne réussissent leur jet de protection contre les sorts. Les créatures qui le ratent se soumettront à toutes les demandes d’un adversaire: sortir, se rendre, etc. Le désespoir dure pendant 3d4 tours Souffrance Toutes les créatures qui ratent leur jet de protection sont affectées et ressentent des douleurs vives, qui provoquent une perte de 2 points sur leur score de dextérité et un malus de -4 sur leurs jets pour toucher, ceci pendant 2d10 tours. Persuasion Les créatures qui voient ce symbole deviennent du même alignement que le clerc et se montrent amicales à son égard pendant 1 à 20 tours (1d20) sauf bien sûr si leur jet de protection est réussi. Les composantes matérielles de ce sort sont du mercure et du phosphore (voir p.92 le sort de magicien de niveau 8 symbole).",
       "composants_materiels_objets": [
         {
-          "nom": "du mercure et du phosphore (voir p",
+          "nom": "mercure",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "phosphore",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -259,13 +322,31 @@
       "description": "quand ce sort est lancé, un tremblement de terre localisé de forte intensité secoue le sol. Ce tremblement affecte tous les types de terrains. La secousse se termine au bout d’un round. La végétation, les constructions et les créatures y vivant sont touchées par ce sort. La zone d’effet est circulaire et d’un diamètre de ½\" par niveau du clerc; donc un clerc de niveau 20 affectera une zone circulaire de 10\" de diamètre. Les effets sont les suivants: TERRAIN Grottes/souterrains Le plafond s’effondre Falaises La paroi s’effondre provoquant un glissement de terrain Sol Des crevasses se forment, les créatures y tombent et peuvent être tuées comme suit en fonction de leur catégorie de taille; P: 1 sur 4; M: 1 sur 6; G: 1 sur 8 Marais L’eau s’écoule hors des dépressions avec formation de boue sur les terrains alentours Tunnels S’écroulent Sous l’eau Provoque des ondes de choc qui étourdissent pendant 5-20 rounds ceux qui ratent leur jet de protection contre la mort magique VÉGÉTATION Petite taille Pas d’effet Arbres 1 sur 3 est déraciné et s’abat sur le sol CONSTRUCTIONS Toute structure Subissent de 5 à 60 (5d12) points de dégât structurels; celles qui subissent leurs dommages maximum tombent en ruine. Les constructions bâties très solidement dont les fondations atteignent le roc ne subissent que la moitié des dégâts. CRÉATURES Voir ci-dessus à TERRAIN Les composantes matérielles pour ce sort sont une pincée de poussière, un petit caillou et une motte de terre. Le symbole religieux des druides est le gui. Un autre symbole de moindre importance est le houx. Quelques pouvoirs magiques se trouvent dans les feuilles de chêne. Tous les sorts comportant une composante matérielle impliquent l'utilisation de gui, gui qui doit être cueilli par le druide de la manière décrite ci-dessous. Le gui secondaire, le houx et les feuilles de chêne réduisent l'efficacité des sorts comme suit: Symbole Portée du sort Durée du sort Zone d'effet Gui majeur 100 % 100 % 100 % Gui secondaire 100 % 75 %* 100 % Gui emprunté 75 %* 50 %** 100 % Houx 75 %* 50 %** 75 %* Feuilles de chêne 50 %** 50 %** 50 %** * ou +1 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable ** ou +2 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable Le gui majeur: c’est le gui qui est cueilli par le druide lui-même, la veille du solstice d’été. Il doit localiser son gui et le couper avec une serpe d’or ou d’argent et il doit le recueillir dans une coupe avant qu’il ne touche terre. Le gui secondaire: ce gui est cueilli par le druide mais sans respecter le rituel; soit il n’est pas cueilli la veille du solstice d’été, soit le druide ne le prélève pas de la bonne manière (en le cueillant directement avec la main, par exemple) Le gui emprunté: il s’agit de gui mais qui n’a pas été cueilli par le druide en personne. Le houx et les feuilles de chêne: ils doivent être cueillis par le druide luimême, mais la manière et le moment importent peu.",
       "composants_materiels_objets": [
         {
-          "nom": "pincée de poussière, petit caillou et motte de terre",
+          "nom": "pincée de poussière",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "petit caillou",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "motte de terre",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
