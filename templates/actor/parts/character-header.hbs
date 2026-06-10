@@ -34,9 +34,12 @@
           {{#if actor.system.multiclasse.enabled}}
             <div class="a2e-field a2e-multiclass-field">
               <label>Niveau</label>
-              <div class="a2e-multiclass-inline" style="display:flex;gap:4px;align-items:center;">
+              <div class="a2e-multiclass-rows" style="display:grid;gap:3px;">
                 {{#each actor.system.classes as |cls|}}
-                  <input type="number" name="system.niveaux_par_classe.{{cls.slug}}" value="{{cls.niveau}}" min="1" step="1" title="{{cls.name}}" style="min-width:0;">
+                  <div class="a2e-multiclass-row" style="display:grid;grid-template-columns:minmax(54px,.9fr) minmax(44px,1fr);gap:4px;align-items:center;">
+                    <span title="{{cls.name}}" style="font-size:.78em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{cls.name}}</span>
+                    <input type="number" name="system.niveaux_par_classe.{{cls.slug}}" value="{{lookup ../actor.system.niveaux_par_classe cls.slug}}" min="1" step="1" title="{{cls.name}} — niveau">
+                  </div>
                 {{/each}}
               </div>
             </div>
@@ -50,9 +53,12 @@
           {{#if actor.system.multiclasse.enabled}}
             <div class="a2e-field a2e-xp-field a2e-multiclass-field">
               <label>XP</label>
-              <div class="a2e-multiclass-inline" style="display:flex;gap:4px;align-items:center;">
+              <div class="a2e-multiclass-rows" style="display:grid;gap:3px;">
                 {{#each actor.system.classes as |cls|}}
-                  <input type="number" name="system.xp_par_classe.{{cls.slug}}" value="{{cls.xp}}" min="0" step="1" title="{{cls.name}} — XP" style="min-width:0;">
+                  <div class="a2e-multiclass-row" style="display:grid;grid-template-columns:minmax(54px,.9fr) minmax(70px,1fr);gap:4px;align-items:center;">
+                    <span title="{{cls.name}}" style="font-size:.78em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{cls.name}}</span>
+                    <input type="number" name="system.xp_par_classe.{{cls.slug}}" value="{{lookup ../actor.system.xp_par_classe cls.slug}}" min="0" step="1" title="{{cls.name}} — XP / prochain seuil : {{lookup ../actor.system.xp_next_par_classe cls.slug}}">
+                  </div>
                 {{/each}}
               </div>
             </div>
