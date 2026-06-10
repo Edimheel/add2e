@@ -1,11 +1,13 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-10-multiclass-layer-v10-strict-allowed-combinations
+// Version : 2026-06-10-multiclass-layer-v11-no-global-xp-duplication
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
 // Ne modifie pas les JSON de races.
+// L'XP globale est gérée par 17-movement-xp.mjs.
+// Ce fichier ne synchronise que l'XP/niveau par classe et les drops multiclasses.
 
-const VERSION = "2026-06-10-multiclass-layer-v10-strict-allowed-combinations";
+const VERSION = "2026-06-10-multiclass-layer-v11-no-global-xp-duplication";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -371,9 +373,7 @@ async function resolveDroppedItemData(event, data = null) {
   return null;
 }
 
-function currentRaceKey(actor) {
-  return norm(systemRace(actor)?.name ?? actor.system?.race ?? "");
-}
+function currentRaceKey(actor) { return norm(systemRace(actor)?.name ?? actor.system?.race ?? ""); }
 
 function multiclassOptionsForDroppedClass(actor, classData) {
   const slug = classSlug(classData);
@@ -512,28 +512,6 @@ function mergeClassMap(actor, path, incoming = {}) {
   return { ...(foundry.utils.deepClone(foundry.utils.getProperty(actor.system ?? {}, path) ?? {})), ...(incoming ?? {}) };
 }
 
-function splitXpDelta(actor, newTotalXp) {
-  const entries = buildClassEntries(actor);
-  if (entries.length <= 1) return null;
-  const oldTotal = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
-  const incomingTotal = Math.max(0, Math.floor(num(newTotalXp, oldTotal)));
-  const delta = incomingTotal - oldTotal;
-  const xpMap = foundry.utils.deepClone(actor.system?.xp_par_classe ?? {});
-  for (const entry of entries) xpMap[entry.slug] = Math.max(0, Math.floor(num(xpMap[entry.slug], 0)));
-  if (delta !== 0) {
-    const sign = delta >= 0 ? 1 : -1;
-    const remaining = Math.abs(delta);
-    const baseShare = Math.floor(remaining / entries.length);
-    let rest = remaining % entries.length;
-    for (const entry of entries) {
-      const add = baseShare + (rest > 0 ? 1 : 0);
-      if (rest > 0) rest -= 1;
-      xpMap[entry.slug] = Math.max(0, xpMap[entry.slug] + (add * sign));
-    }
-  }
-  return xpMap;
-}
-
 function mergeMulticlassChanges(actor, changes) {
   if (!actor || actor.type !== "personnage" || !multiclassEnabled(actor)) return;
   const flat = foundry.utils.flattenObject(changes ?? {});
@@ -545,10 +523,6 @@ function mergeMulticlassChanges(actor, changes) {
   }
   if (Object.keys(levelChanges).length) payload = multiclassUpdatePayload(actor, null, null, mergeClassMap(actor, "niveaux_par_classe", levelChanges));
   else if (Object.keys(xpClassChanges).length) payload = multiclassUpdatePayload(actor, null, mergeClassMap(actor, "xp_par_classe", xpClassChanges), null);
-  else if (foundry.utils.hasProperty(changes, "system.xp")) {
-    const xpMap = splitXpDelta(actor, foundry.utils.getProperty(changes, "system.xp"));
-    if (xpMap) payload = multiclassUpdatePayload(actor, null, xpMap, null);
-  }
   if (!payload) return;
   foundry.utils.mergeObject(changes, foundry.utils.expandObject(payload), { inplace: true });
 }
