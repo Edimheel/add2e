@@ -3,7 +3,7 @@
 ## Résultat final
 
 - Branche : `agent-audit-sorts`
-- Descriptions manquantes : 19
+- Descriptions manquantes : 0
 - Composants à vérifier global : 90
 - Clerc : 40 composants résolus, 24 à vérifier
 - Druide : 2 composants résolus, 8 à vérifier
@@ -14,25 +14,7 @@ Les descriptions présentes sont reprises strictement depuis `audit/source/refer
 
 ## Descriptions réellement manquantes
 
-- clerc-niveau-5: Quête religieuse
-- druide-niveau-1: Enchevêtrement
-- druide-niveau-3: Piège Sylvestre
-- druide-niveau-5: Contrôle des vents
-- druide-niveau-5: Mur de feu
-- druide-niveau-6: Répulsion du bois
-- druide-niveau-7: Animation de la roche
-- druide-niveau-7: Tempête de feu
-- magicien-niveau-3: Intermittence
-- magicien-niveau-3: Infravision
-- magicien-niveau-6: Quête magique
-- magicien-niveau-7: Mot de pouvoir : « étourdissement »
-- magicien-niveau-8: Mot de pouvoir : « cécité »
-- magicien-niveau-8: Permanence
-- magicien-niveau-8: Protection d'esprit
-- magicien-niveau-9: Arrêt du temps
-- magicien-niveau-9: Mot de pouvoir : « mort »
-- illusionniste-niveau-7: Vision
-- illusionniste-niveau-7: Sorts de niveau 1 de magicien
+Aucune. Les 19 descriptions fournies ont été intégrées strictement dans la source.
 
 ## Composants à vérifier
 
@@ -134,5 +116,6 @@ La liste suivante regroupe les sorts contenant encore au moins un composant avec
 - JSON de référence validés avec `node audit/tools/validate-reference-schema.mjs` après chaque lot.
 - Recherche finale des occurrences de `consommation: "a_verifier"`.
 - Vérification de `git status --short`.
-- Vérification du diff final : seul `audit/rapports/REFERENCE-SPELLS-GENERATION.md` est modifié par le nettoyage du rapport.
-- Aucun fichier de référence, script, JSON Foundry, fichier de découpage, fichier source de descriptions ou `system.json` n'est modifié par ce commit.
+- Vérification du diff final : seuls `audit/source/reference-descriptions.json` et `audit/rapports/REFERENCE-SPELLS-GENERATION.md` sont modifiés.
+- Les composants à vérifier restent inchangés : 90 au total.
+- Aucun script, JSON Foundry, fichier de découpage, source technique ou `system.json` n'est modifié par ce commit ; les fichiers de référence générés ont été restaurés après validation.
