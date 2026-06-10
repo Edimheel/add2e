@@ -47,11 +47,11 @@
         {
           "nom": "du carbone et du citron réduits en poudre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation explicitement indiquée dans la description."
         }
       ],
       "foundry": {
@@ -124,7 +124,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -170,13 +170,22 @@
       "description": "ce sort crée une sphère magique autour du magicien qui empêche les sorts de niveau 1, 2 et 3 de rentrer à l’intérieur. Même la zone d’effet de tels sorts ne pénètre pas dans la sphère. En revanche, le magicien peut lancer des sorts vers l’extérieur de la sphère sans qu’ils soient affectés par le globe. Les sorts de 4e niveau ou plus ne sont pas arrêtés par le globe. Les sorts de niveau 3 des objets magiques — boules de feu ou foudre, par exemple – ne pénètrent pas non plus dans le globe. Ce globe peut être détruit par une dissipation de la magie. Lorsqu’il se forme, le globe dégage un faible chatoiement. La composante matérielle est une perle de verre ou de cristal.",
       "composants_materiels_objets": [
         {
-          "nom": "une perle de verre ou de cristal",
+          "nom": "perle de verre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative à une perle de cristal.",
+          "notes": null
+        },
+        {
+          "nom": "perle de cristal",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à une perle de verre.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -201,13 +210,22 @@
       "description": "quand ce sort est lancé, le magicien envoie un rayon invisible qui plonge les créatures qui se trouvent dans la zone d’effet dans un état de panique et les fait fuir loin de lui. Il est possible que les créatures affectées laissent tomber tout ce qu’elles tiennent; les chances de base sont de 60 % au premier niveau (ou avec 1 dé de vie) et la probabilité baisse de 5 % pour chaque niveau (ou dé de vie) en plus; un 10e niveau n’aura donc que 15 % de chance de laisser tomber ce qu’il tenait et un niveau 13 n’a aucune chance que cela lui arrive. Les créatures affectées fuient au maximum de leur vitesse de déplacement, pendant un nombre de rounds égal au niveau du magicien. La panique prend effet le round suivant le lancement du sort, mais l’abandon des objets tenus est immédiat. Les créatures qui réussissent leur jet de protection ne sont pas affectées par le sort. La composante matérielle est soit un cœur de poule soit une plume blanche.",
       "composants_materiels_objets": [
         {
-          "nom": "soit un cœur de poule soit une plume blanche",
+          "nom": "cœur de poule",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative à une plume blanche.",
+          "notes": null
+        },
+        {
+          "nom": "plume blanche",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au cœur de poule.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -253,13 +271,22 @@
       "description": "ce sort permet au magicien de creuser 3,375 m³ de terre, sable ou boue par round. Le trou est un cube de 1,50 m d’arête. La matière dégagée se répartit uniformément autour du trou. Si le magicien continue à creuser plus profond que 1,50 m, il y a une chance pour que la fosse s’effondre: 15 % cumulatif par 1,50 m supplémentaire dans la terre, 35 % dans du sable et 55 % dans de la boue. Toute créature se tenant au bord du trou (à moins de 30 cm) doit faire un test de dextérité (d20 inférieur ou égal à dextérité = test réussi) pour éviter de tomber dedans. Toute créature se déplaçant rapidement en direction du trou doit réussir un jet de protection contre les sorts pour éviter d’y tomber. Toute créature se trouvant au centre de l’endroit où la fosse sera creusée y tombera. Ce sort inflige 5-20 points de dégât s’il est lancé sur un golem d’argile. Les composantes matérielles de ce sort sont une pelle miniature et un petit baquet que le magicien doit tenir pendant l’excavation.",
       "composants_materiels_objets": [
         {
-          "nom": "une pelle miniature et un petit baquet que le magicien doit tenir pendant l’excavation",
+          "nom": "pelle miniature",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "petit baquet",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -307,11 +334,11 @@
         {
           "nom": "un morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation explicitement indiquée dans la description."
         }
       ],
       "foundry": {
@@ -342,7 +369,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -373,7 +400,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -404,7 +431,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -456,7 +483,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -487,7 +514,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -518,7 +545,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -549,7 +576,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -601,7 +628,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -653,7 +680,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {

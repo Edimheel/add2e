@@ -30,7 +30,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -76,13 +76,22 @@
       "description": "quand ce sort est lancé, le magicien crée une zone de froid en forme de cône qui part de ses mains: le cône fait ½\" de long par niveau du lanceur de sort, avec un diamètre de ½\" à sa base pour 2\" à son extrémité. Il absorbe la chaleur et inflige 1d4+1 points de dégât par niveau du magicien. Un magicien de niveau 10 infligera donc 10d4+10 points de dégâts. La composante matérielle est un cône de verre ou de cristal de très petite taille.",
       "composants_materiels_objets": [
         {
-          "nom": "un cône de verre ou de cristal de très petite taille",
+          "nom": "petit cône de verre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative à un petit cône de cristal.",
+          "notes": null
+        },
+        {
+          "nom": "petit cône de cristal",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à un petit cône de verre.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -155,7 +164,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -186,7 +195,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -217,7 +226,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -305,13 +314,13 @@
       "description": "avec ce sort, le magicien peut donner une nouvelle forme à un volume de roche. Il peut également façonner une porte dans la roche, au cas où il aurait besoin de s’évader d’un endroit, à condition que le volume de pierre en question puisse être contenu dans la zone d’effet du sort. Bien que des coffres en pierre, des portes secrètes, etc., puissent être façonnés, la finesse des détails n’est pas grande. La composante matérielle est de l’argile grasse que le magicien doit façonner afin qu'elle ait vaguement la forme qu’il désire donner à la pierre, puis toucher celle-ci avec cette argile sculptée pendant l’incantation.",
       "composants_materiels_objets": [
         {
-          "nom": "de l’argile grasse que le magicien doit façonner afin qu'elle ait vaguement la forme qu’il désire donner à la pierre, puis toucher celle-ci avec cette argile sculptée pendant l’incantation",
+          "nom": "argile grasse façonnée",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Façonnée puis utilisée pour toucher la pierre."
         }
       ],
       "foundry": {
@@ -338,11 +347,11 @@
         {
           "nom": "un gant",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
@@ -367,13 +376,13 @@
       "description": "une métempsycose est un sort inhabituel. Il permet au magicien de prendre l’ascendant sur l’esprit de la victime et ainsi de contrôler son corps. Si le corps de la victime est humain ou humanoïde, le magicien peut même utiliser ses propres sorts. Le possesseur peut utiliser les connaissances rudimentaires du possédé, mais pas ses connaissances profondes. Par exemple, il ne pourra pas parler la langue du possédé s’il ne la connait pas, ni utiliser les sorts de ce dernier. Le magicien transfère sa force vitale dans un réceptacle spécial (une grosse gemme ou un cristal) et à partir de ce réceptacle magique, la force vitale peut sentir et attaquer toute créature se trouvant dans la portée du sort; mais le type de créature ne peut pas être deviné. Ce réceptacle doit se trouver dans la portée du sort par rapport au corps du magicien au moment du lancement du sort. La possession est réussie si la victime rate son jet de protection. Une possession ratée fait que la force vitale du magicien reste dans le réceptacle qu’il a choisi. Chaque tentative de possession demande 1 round et ne peut se faire que si la victime est dans la portée du sort par rapport au réceptacle. Si le corps du magicien est détruit, la force vitale dans le réceptacle n’est pas affectée. Par contre, si le réceptacle est détruit, la force vitale l’est aussi. Le retour vers le corps réel demande 1 round, et ne peut être effectué que si le réceptacle se trouve à portée de sort du corps. Le jet de protection contre une métempsycose est modifié en comparant l’intelligence et la sagesse combinées du magicien et de la victime (on ne compare que l’intelligence pour des créatures non humaines et non humanoïdes.): Différence (magicien — victime) Ajustement du jet de protection Fréquence des jets de protection –9 et moins +4 Tous les rounds de –8 à –6 +3 Tous les rounds de –5 à –3 +2 Tous les rounds de –2 à 0 +1 Tous les rounds de 1 à 4 0 Tous les rounds de 5 à 8 –1 Tous les tours de 9 à 12 –2 Tous les jours 13 et plus –3 Toutes les semaines Une différence négative signifie que le magicien a un score plus faible que sa victime, ce qui fait que cette dernière obtient un bonus sur son jet de protection. La composante matérielle est le réceptacle lui-même. Une créature possédée a le droit à un nouveau jet de protection à la fréquence indiquée dans le tableau ci-dessus pour voir si elle peut supplanter l’esprit du possesseur. Si la créature possédée reprend le contrôle de son esprit, le magicien est piégé jusqu’à ce qu’il puisse à son tour reprendre l’ascendant sur l’esprit de sa victime pour soit le contrôler à nouveau, soit pour s’échapper.",
       "composants_materiels_objets": [
         {
-          "nom": "le réceptacle lui-même",
+          "nom": "réceptacle",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
@@ -404,7 +413,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -435,7 +444,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -466,7 +475,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -539,7 +548,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -570,7 +579,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {

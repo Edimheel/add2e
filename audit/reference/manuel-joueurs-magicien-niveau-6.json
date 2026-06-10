@@ -30,7 +30,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -76,13 +76,22 @@
       "description": "ce sort permet de conjurer un chasseur invisible, originaire du plan élémentaire de l’air. Ce monstre à 8 dés de vie obéira au magicien et le servira. Cependant, la créature est obligée de le servir et ne le fait pas de son plein gré. Ainsi, le chasseur invisible s’offensera de missions prolongées ou de tâches compliquées et il essayera de détourner de leur but les instructions reçues. (Pour les détails complets, voir Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, chasseur invisible). La créature conjurée suivra les instructions, même à des milliers de kilomètres de distance. Les composantes matérielles sont de l’encens à faire brûler et un bout de corne taillé en forme de croissant.",
       "composants_materiels_objets": [
         {
-          "nom": "de l’encens à faire brûler et un bout de corne taillé en forme de croissant",
+          "nom": "encens",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Brûlé."
+        },
+        {
+          "nom": "bout de corne taillé en forme de croissant",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -134,7 +143,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -207,7 +216,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -259,7 +268,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -284,13 +293,13 @@
       "description": "une incantation mortelle tue instantanément les créatures dans la zone d’effet. Le nombre des victimes dépend de leurs dés de vie: Dés de vie des victimes Nombre maximum affecté Moins de 2 4-80 (4d20) de 2 à 4 3-30 (3d10) de 4+1 à 6+3 2-8 (2d4) de 6+4 à 8+3 1-4 (1d4) Si le groupe pris dans la zone d’effet est composé de créatures ayant des nombres différents de dés de vie, utilisez la table de conversion ci-dessous puis procédez comme indiqué ensuite. Correspond à des créatures avec des dés de vie de: Dés de vie des créatures Moins de 2 2 à 4 4+1 à 6+3 6+4 à 8+3 de 6+4 à 8+3 10 5 2 — de 4+1 à 6+3 8 3 — 1/2 de 2 à 4 4 — 1/8 1/20 Premièrement, lancez les dés pour savoir combien de créatures avec moins de 2 dés de vie sont affectées, éliminez les; puis utilisez la table de conversion pour éliminer tous les monstres avec de 2 à 4 dés de vie, etc. Si le chiffre restant n’est pas suffisant pour éliminer les créatures de niveau plus élevé, celles-ci restent en vie. Ce système peut être inversé en l’appliquant d’abord aux créatures les plus puissantes: exemple, les 4d20 sont lancés et donnent un résultat de 53. Sur ces 53, 20 sont utilisés pour éliminer une créature de 6+4 à 8+3 dés de vie (20 x 1/20 = 1); 16 sont utilisés pour tuer 2 créatures de 4+1 à 6+3 dés de vie (16 x 1/8 = 2); 12 sont utilisés pour éliminer 3 créatures de 2 à 4 dés de vie (3 x 4 = 12); 5 restent pour éliminer 5 créatures de moins de 2 dés de vie (5 x 1 = 5); donc 20 + 16 + 12 + 5 = 53. Les créatures de moins d’un dé de vie ne comptent que pour ½ créature de moins de 2 dés de vie. Si de telles créatures sont concernées par le sort, il faut les comptabiliser de cette manière, bien que le nombre total affecté ne puisse dépasser les 80 quoiqu’il arrive. Une incantation mortelle n’affecte pas les lycanthropes, les morts-vivants et les créatures qui ne sont pas du plan matériel primaire. La composante matérielle est une perle noire écrasée d’une valeur minimale de 1.000 po.",
       "composants_materiels_objets": [
         {
-          "nom": "une perle noire écrasée d’une valeur minimale de 1",
+          "nom": "perle noire écrasée",
           "quantite": 1,
-          "consommation": "a_verifier",
-          "cout_po": null,
+          "consommation": "consomme",
+          "cout_po": 1000,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Écrasée."
         }
       ],
       "foundry": {
@@ -338,11 +347,11 @@
         {
           "nom": "un gant",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
@@ -369,11 +378,11 @@
         {
           "nom": "de l’encens et des morceaux d’ivoire, placés en forme de rectangle; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation explicitement indiquée dans la description."
         }
       ],
       "foundry": {
@@ -446,7 +455,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -477,7 +486,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -544,13 +553,13 @@
       "description": "pour les personnes qui ne sont pas au courant du pouvoir de ce sort, ce qu’elles voient est stupéfiant. En effet, le magicien se transforme de façon saisissante. Sa taille et sa forme augmentent dans des proportions énormes. Il devient alors une véritable machine de combat, un guerrier berserk (enragé)! Les points de vie du magicien sont doublés et les dégâts qu’il subit sont d’abord ôtés de ces points supplémentaires. Donc, s’il ne subit pas plus de points de dégâts que le nombre de ses points de vie normaux, il n’en subit en fait aucun; par contre, chaque point subit au-delà des points virtuels compte double. La classe d’armure obtient un bonus de 4 (une CA 10 devient une CA 6, une CA 9 devient 5, etc.). Toutes les attaques sont faites sur la table des guerriers, au même niveau que le magicien (c'est-àdire que le magicien utilise la table normalement réservée aux guerriers). Bien que le magicien ne puisse utiliser qu’une dague, les attaques qu’il porte ont un bonus de +2 sur les dégâts qu’elles infligent et il peut attaquer 2 fois par round. Le sort ne peut être interrompu volontairement; il dure jusqu’à la fin de sa durée ou alors jusqu’à ce que tous les ennemis du magicien soient morts, que le magicien soit tué lui-même ou que le sort soit magiquement dissipé. La composante matérielle est une potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort.",
       "composants_materiels_objets": [
         {
-          "nom": "une potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort",
+          "nom": "potion d’héroïsme ou de super-héroïsme",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Bue pendant l’incantation."
         }
       ],
       "foundry": {
@@ -581,7 +590,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -606,13 +615,22 @@
       "description": "grâce à ce sort, le magicien peut rendre une section de métal, de pierre ou de bois transparente comme du verre. Normalement, il peut affecter une épaisseur de 10 cm de métal, 1,80 m de pierre, ou 6 mètres de bois. Le sort ne fonctionne pas avec le plomb, l’or et le platine. Le magicien peut choisir de rendre une paroi transparente uniquement à son regard. Il peut aussi créer une fenêtre dont la transparence ne fonctionne que pour une face (principe des glaces sans tain). Il peut affecter une surface de 0,90 m de large sur 0,60 m de haut. La résistance de la section rendue transparente reste la même que celle de la substance d’origine. La composante matérielle est un petit morceau de verre ou de cristal.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit morceau de verre ou de cristal",
+          "nom": "petit morceau de verre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative à un petit morceau de cristal.",
+          "notes": null
+        },
+        {
+          "nom": "petit morceau de cristal",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à un petit morceau de verre.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -639,11 +657,11 @@
         {
           "nom": "de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation explicitement indiquée dans la description."
         }
       ],
       "foundry": {
