@@ -1,16 +1,17 @@
 // ADD2E — XP + Mouvement
-// Version : 2026-06-10-move-xp-multiclass-safe-v2
+// Version : 2026-06-10-move-xp-multiclass-safe-v3-ignore-internal
 //
 // Principes :
 // - pas de patch de render()
 // - pas d'actor.update() depuis getData()
 // - ajustements XP/niveau mono-classe dans preUpdateActor
 // - pour les multiclassés : répartit l'XP globale entre les classes puis laisse 17b recalculer les niveaux
+// - ignore les updates internes du module multiclassage
 // - contrôle token sur la valeur affichée de mouvement en mètres
 // - MJ : jamais bloqué, mais échelle couleur visible
 // - Joueurs : blocage si dépassement, avec échelle couleur visible
 
-const VERSION = "2026-06-10-move-xp-multiclass-safe-v2";
+const VERSION = "2026-06-10-move-xp-multiclass-safe-v3-ignore-internal";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 
@@ -449,7 +450,7 @@ Hooks.once("ready", async () => {
 });
 
 Hooks.on("preUpdateActor", (actor, changes, options) => {
-  if (options?.[INTERNAL] || !actor || actor.type !== "personnage") return true;
+  if (options?.[INTERNAL] || options?.add2eInternal || !actor || actor.type !== "personnage") return true;
   const levelChanged = foundry.utils.hasProperty(changes, "system.niveau");
   const xpChanged = foundry.utils.hasProperty(changes, "system.xp");
   const movementChanged = ["system.force", "system.force_poids", "system.force_ex", "system.force_exceptionnelle", "system.mouvement.base", "system.vitesse_deplacement"].some(path => foundry.utils.hasProperty(changes, path));
