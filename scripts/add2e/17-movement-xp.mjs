@@ -1,15 +1,16 @@
 // ADD2E — XP + Mouvement
-// Version : 2026-05-21-clean-v2-gm-free-move-scale
+// Version : 2026-06-10-move-xp-multiclass-safe-v1
 //
 // Principes :
 // - pas de patch de render()
 // - pas d'actor.update() depuis getData()
-// - ajustements XP/niveau dans preUpdateActor pour éviter les rendus en cascade
+// - ajustements XP/niveau mono-classe dans preUpdateActor
+// - pour les multiclassés : ne pas écraser les champs XP/niveau/titre par une seule classe
 // - contrôle token sur la valeur affichée de mouvement en mètres
 // - MJ : jamais bloqué, mais échelle couleur visible
 // - Joueurs : blocage si dépassement, avec échelle couleur visible
 
-const VERSION = "2026-05-21-clean-v2-gm-free-move-scale";
+const VERSION = "2026-06-10-move-xp-multiclass-safe-v1";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 
@@ -56,6 +57,14 @@ function firstPositive(...values) {
 
 function classItem(actor) {
   return actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null;
+}
+
+function classItems(actor) {
+  return actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "classe") ?? [];
+}
+
+function isMulticlassActor(actor) {
+  return actor?.type === "personnage" && (actor.system?.multiclasse?.enabled === true || classItems(actor).length > 1);
 }
 
 function raceItem(actor) {
@@ -248,9 +257,38 @@ function computeMovement(actor) {
   };
 }
 
+function movementUpdates(actor) {
+  const movement = computeMovement(actor);
+  return {
+    updates: {
+      "system.mouvement": movement,
+      "system.movement": movement.actuel,
+      "system.vitesse_deplacement": movement.actuel
+    },
+    movement
+  };
+}
+
 function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
   const incomingLevel = incoming["system.niveau"] !== undefined ? Math.max(1, num(incoming["system.niveau"], 1)) : Math.max(1, num(actor?.system?.niveau, 1));
   const incomingXp = incoming["system.xp"] !== undefined ? Math.max(0, Math.floor(num(incoming["system.xp"], 0))) : Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
+
+  if (isMulticlassActor(actor)) {
+    const movementOnly = movementUpdates(actor);
+    const updates = { ...movementOnly.updates };
+    if (incoming["system.xp"] !== undefined) updates["system.xp"] = incomingXp;
+    return {
+      updates,
+      xp: {
+        xp: incomingXp,
+        level: actor.system?.niveau,
+        suggestedLevel: actor.system?.niveau_suggere ?? actor.system?.niveau,
+        progressionLabel: actor.system?.progression_xp ?? ""
+      },
+      movement: movementOnly.movement,
+      multiclass: true
+    };
+  }
 
   let level = incomingLevel;
   let xp = incomingXp;
@@ -283,14 +321,14 @@ function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
   };
 
   if (currentTitle) updates["system.titre"] = currentTitle;
-  return { updates, xp: meta, movement };
+  return { updates, xp: meta, movement, multiclass: false };
 }
 
 async function recalc(actor, { mode = "auto", notify = false } = {}) {
   if (!actor || actor.type !== "personnage") return null;
   const result = flatActorUpdates(actor, { mode });
   await actor.update(result.updates, { [INTERNAL]: true, add2eReason: `move-xp-recalc:${mode}`, render: false });
-  if (notify && mode === "level") ui.notifications.info(`${actor.name} : XP ajustée au niveau ${result.updates["system.niveau"]} (${result.updates["system.xp"].toLocaleString()} XP).`);
+  if (notify && mode === "level" && !result.multiclass) ui.notifications.info(`${actor.name} : XP ajustée au niveau ${result.updates["system.niveau"]} (${result.updates["system.xp"].toLocaleString()} XP).`);
   return result;
 }
 
@@ -305,35 +343,51 @@ async function awardXp(actor, amount, { reason = "Gain d'expérience", percentBo
 
   await actor.update(result.updates, { add2eReason: "move-xp-award" });
 
+  const displayedXp = Number(result.updates["system.xp"] ?? after) || after;
+  const displayedLevel = result.multiclass ? String(actor.system?.niveau ?? "-") : String(result.updates["system.niveau"] ?? actor.system?.niveau ?? "-");
+
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-xp-chat" style="border:1px solid #b88924;border-radius:10px;background:#fff8df;padding:.65em .8em;"><h3>Expérience — ${actor.name}</h3><div>${reason ? `<b>${reason}</b><br>` : ""}+${total.toLocaleString()} XP${bonus ? ` dont bonus ${bonus.toLocaleString()} XP` : ""}</div><div>${before.toLocaleString()} → <b>${result.updates["system.xp"].toLocaleString()}</b> XP</div><div>Niveau actuel : <b>${result.updates["system.niveau"]}</b></div></div>`
+    content: `<div class="add2e-xp-chat" style="border:1px solid #b88924;border-radius:10px;background:#fff8df;padding:.65em .8em;"><h3>Expérience — ${actor.name}</h3><div>${reason ? `<b>${reason}</b><br>` : ""}+${total.toLocaleString()} XP${bonus ? ` dont bonus ${bonus.toLocaleString()} XP` : ""}</div><div>${before.toLocaleString()} → <b>${displayedXp.toLocaleString()}</b> XP</div><div>Niveau actuel : <b>${displayedLevel}</b>${result.multiclass ? " — multiclassage recalculé séparément" : ""}</div></div>`
   });
 
-  return { before, after: result.updates["system.xp"], total, bonus, ...result };
+  return { before, after: displayedXp, total, bonus, ...result };
 }
 
-function promptXp(actor) {
+async function promptXp(actor) {
   if (!actor || actor.type !== "personnage") return;
-  new Dialog({
-    title: `Attribuer de l'XP — ${actor.name}`,
-    content: `<form>
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  const content = `<form>
       <div class="form-group"><label>XP à ajouter</label><input type="number" name="amount" value="0" step="1"></div>
       <div class="form-group"><label>Bonus %</label><input type="number" name="percentBonus" value="0" step="1"></div>
       <div class="form-group"><label>Motif</label><input type="text" name="reason" value="Récompense d'aventure"></div>
-    </form>`,
-    buttons: {
-      add: {
-        label: "Ajouter",
-        callback: async html => {
-          const form = (html[0] ?? html).querySelector("form");
-          await awardXp(actor, form.amount.value, { reason: form.reason.value, percentBonus: form.percentBonus.value });
-        }
-      },
-      cancel: { label: "Annuler" }
-    },
-    default: "add"
-  }).render(true);
+    </form>`;
+
+  if (DialogV2?.wait) {
+    const result = await DialogV2.wait({
+      window: { title: `Attribuer de l'XP — ${actor.name}` },
+      content,
+      buttons: [
+        {
+          action: "add",
+          label: "Ajouter",
+          default: true,
+          callback: (_event, _button, dialog) => {
+            const form = dialog?.element?.querySelector?.("form") ?? document.querySelector("form");
+            return { action: "add", amount: form?.amount?.value ?? 0, percentBonus: form?.percentBonus?.value ?? 0, reason: form?.reason?.value ?? "Récompense d'aventure" };
+          }
+        },
+        { action: "cancel", label: "Annuler", callback: () => ({ action: "cancel" }) }
+      ],
+      modal: true,
+      rejectClose: false,
+      close: () => ({ action: "cancel" })
+    });
+    if (result?.action === "add") await awardXp(actor, result.amount, { reason: result.reason, percentBonus: result.percentBonus });
+    return;
+  }
+
+  ui.notifications.warn("DialogV2 indisponible : attribution d'XP annulée.");
 }
 
 function rootEl(html) {
@@ -482,19 +536,7 @@ function validateTokenMovement(tokenDoc, changes, options = {}) {
   const result = computeTokenMovementScale(tokenDoc, changes);
   if (!result) return true;
 
-  const { delta, spent, next, max, status } = result;
-
-  log("[TOKEN][CHECK]", {
-    actor: actor.name,
-    token: tokenDoc.name,
-    delta,
-    spent,
-    next,
-    max,
-    status: status.key,
-    gm: game.user.isGM,
-    combat: !!game.combat
-  });
+  const { next, max, status } = result;
 
   if (game.user.isGM) {
     if (next > max + 0.01) ui.notifications.info(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m. Déplacement MJ autorisé.`);
@@ -562,7 +604,7 @@ Hooks.on("preUpdateActor", (actor, changes, options) => {
   const result = flatActorUpdates(actor, { mode, incoming });
   foundry.utils.mergeObject(changes, foundry.utils.expandObject(result.updates), { inplace: true });
   options.add2eReason = `move-xp-preupdate:${mode}`;
-  log("[ACTOR][PREUPDATE]", { actor: actor.name, mode, updates: result.updates });
+  log("[ACTOR][PREUPDATE]", { actor: actor.name, mode, multiclass: result.multiclass === true, updates: result.updates });
   return true;
 });
 
