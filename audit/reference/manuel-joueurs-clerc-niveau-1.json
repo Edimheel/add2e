@@ -47,13 +47,22 @@
       "description": "en lançant ce sort, le clerc peut créer 15 litres d’eau par niveau qu’il a atteint; soit 30 l au niveau 2, 45 l au niveau 3, etc. L’eau est claire et potable (elle ressemble à de l’eau de pluie). L’eau créée dure jusqu’à évaporation naturelle ou jusqu’à ce qu’elle soit utilisée. L’eau peut être créée dans un endroit qui pourra contenir jusqu’à 0,75 m³. On ne peut pas créer de l’eau à l’intérieur d’une chose vivante. L’inverse du sort, destruction d’eau, fait disparaitre l’eau sans aucune trace (comme de la vapeur), pour une même quantité par niveau du clerc. Le sort demande au moins une goutte d’eau ou une pincée de poussière comme composante matérielle: la goutte d’eau pour la création, la poussière pour la destruction.",
       "composants_materiels_objets": [
         {
-          "nom": "au moins une goutte d’eau ou une pincée de poussière",
+          "nom": "goutte d’eau",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Requise pour la création d’eau.",
+          "notes": "Alternative à une pincée de poussière."
+        },
+        {
+          "nom": "pincée de poussière",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour la destruction d’eau.",
+          "notes": "Alternative à une goutte d’eau."
         }
       ],
       "foundry": {
@@ -230,13 +239,13 @@
       "description": "quand ce sort est lancé sur une créature par un clerc, son corps est préservé du froid. Le bénéficiaire peut résister ainsi à des températures de –18°C, même nu. Les froids les plus intenses, comme ceux créés par une épée de froid, une tempête de glace, un bâtonnet de givre ou un souffle de dragon blanc, autorisent un jet de protection à +3, avec seulement la moitié des dommages subis si ce test est raté, et le quart si le jet de protection est réussi. La résistance dure 1 tour par niveau d’expérience du clerc. Ce sort nécessite une pincée de souffre comme composante matérielle.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée de souffre",
+          "nom": "pincée de souffre",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -261,13 +270,22 @@
       "description": "quand un clerc lance un sort sanctuaire, tout adversaire doit lancer un jet de protection contre les sorts. Si le jet de protection est raté, l’adversaire ignorera totalement le clerc et attaquera quelqu’un d’autre. Si le jet de protection est réussi, le clerc pourra être sujet aux attaques de cet adversaire. À noter que ce sort n’empêche pas les effets des sorts de zone (boule de feu, tempête de glace, etc.). Pendant la période de protection que donne ce sort, le clerc ne peut faire aucune action offensive, mais il peut utiliser des sorts non-violents, des sorts qui ne représentent pas une agression; il peut par exemple guérir les blessures de quelqu’un ou lancer une bénédiction, un augure, un cantique, une lumière pour éclairer (pas sur un adversaire!), etc. Ce sort peut être lancé sur une créature autre que le clerc lui-même. Les composantes matérielles de ce sort sont le symbole sacré du clerc et un petit miroir en argent.",
       "composants_materiels_objets": [
         {
-          "nom": "le symbole sacré du clerc et un petit miroir en argent",
+          "nom": "symbole sacré du clerc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "petit miroir en argent",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
