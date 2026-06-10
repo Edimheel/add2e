@@ -14,33 +14,69 @@
         </div>
 
         <div class="a2e-id-grid">
-          <div class="a2e-field">
-            <label>Classe</label>
-            <input type="text" name="system.classe" value="{{actor.system.classe}}">
-          </div>
+          {{#if actor.system.multiclasse.enabled}}
+            <div class="a2e-field a2e-multiclass-field">
+              <label>Classe</label>
+              <input type="text" name="system.classe" value="{{actor.system.classe}}" readonly title="{{actor.system.classe}}">
+            </div>
+          {{else}}
+            <div class="a2e-field">
+              <label>Classe</label>
+              <input type="text" name="system.classe" value="{{actor.system.classe}}">
+            </div>
+          {{/if}}
 
           <div class="a2e-field">
             <label>Race</label>
             <input type="text" name="system.race" value="{{actor.system.race}}">
           </div>
 
-          <div class="a2e-field">
-            <label>Niveau</label>
-            <input type="number" name="system.niveau" value="{{actor.system.niveau}}" min="1">
-          </div>
-
-          <div class="a2e-field a2e-xp-field">
-            <label>XP</label>
-            <div class="a2e-xp-inline">
-              <input type="number" name="system.xp" value="{{actor.system.xp}}" min="0" step="1" title="{{actor.system.progression_xp}}">
-              <button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP">+</button>
+          {{#if actor.system.multiclasse.enabled}}
+            <div class="a2e-field a2e-multiclass-field">
+              <label>Niveau</label>
+              <div class="a2e-multiclass-inline" style="display:flex;gap:4px;align-items:center;">
+                {{#each actor.system.classes as |cls|}}
+                  <input type="number" name="system.niveaux_par_classe.{{cls.slug}}" value="{{cls.niveau}}" min="1" step="1" title="{{cls.name}}" style="min-width:0;">
+                {{/each}}
+              </div>
             </div>
-          </div>
+          {{else}}
+            <div class="a2e-field">
+              <label>Niveau</label>
+              <input type="number" name="system.niveau" value="{{actor.system.niveau}}" min="1">
+            </div>
+          {{/if}}
 
-          <div class="a2e-field">
-            <label>Titre</label>
-            <input type="text" value="{{progressionCourante.title}}" readonly>
-          </div>
+          {{#if actor.system.multiclasse.enabled}}
+            <div class="a2e-field a2e-xp-field a2e-multiclass-field">
+              <label>XP</label>
+              <div class="a2e-multiclass-inline" style="display:flex;gap:4px;align-items:center;">
+                {{#each actor.system.classes as |cls|}}
+                  <input type="number" name="system.xp_par_classe.{{cls.slug}}" value="{{cls.xp}}" min="0" step="1" title="{{cls.name}} — XP" style="min-width:0;">
+                {{/each}}
+              </div>
+            </div>
+          {{else}}
+            <div class="a2e-field a2e-xp-field">
+              <label>XP</label>
+              <div class="a2e-xp-inline">
+                <input type="number" name="system.xp" value="{{actor.system.xp}}" min="0" step="1" title="{{actor.system.progression_xp}}">
+                <button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP">+</button>
+              </div>
+            </div>
+          {{/if}}
+
+          {{#if actor.system.multiclasse.enabled}}
+            <div class="a2e-field a2e-multiclass-field">
+              <label>Titre</label>
+              <input type="text" value="{{actor.system.titre}}" readonly title="{{actor.system.titre}}">
+            </div>
+          {{else}}
+            <div class="a2e-field">
+              <label>Titre</label>
+              <input type="text" value="{{progressionCourante.title}}" readonly>
+            </div>
+          {{/if}}
 
           <div class="a2e-field">
             <label>Alignement</label>
