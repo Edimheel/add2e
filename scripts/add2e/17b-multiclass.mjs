@@ -1,17 +1,15 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-10-multiclass-layer-v6-drop-payload-fix
+// Version : 2026-06-10-multiclass-layer-v7-race-change-offer
 //
-// Objectif :
-// - préserver le fonctionnement mono-classe existant ;
-// - proposer mono-classe ou multiclassage au drop d'une classe ;
-// - lire correctement les drops ApplicationV2/DialogV2 V13/V14/V15 ;
-// - gérer le cas d'une classe déjà présente sans retomber sur raw {} ;
-// - restaurer les garde-fous race/classe/niveau pour les drops multiclassés ;
-// - afficher Classe/Niveau/XP/Titre par classe dans l'en-tête ;
-// - synchroniser niveau <-> XP par classe ;
-// - ne pas modifier les JSON de races.
+// Module dédié au multiclassage.
+// - Ne modifie pas les JSON de races.
+// - Ne remplace pas le mono-classe historique.
+// - Intercepte le drop de classe sur personnage déjà classé.
+// - Propose mono-classe, multiclassage, resynchronisation ou annulation.
+// - Si la race actuelle bloque le multiclassage, propose une race compatible.
+// - Synchronise XP, niveau, titre et affichage par classe.
 
-const VERSION = "2026-06-10-multiclass-layer-v6-drop-payload-fix";
+const VERSION = "2026-06-10-multiclass-layer-v7-race-change-offer";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -139,22 +137,20 @@ function flattenRuleTokens(value) {
   return [norm(value)].filter(Boolean);
 }
 
-function looksLikeSingleComboArray(raw) {
-  return Array.isArray(raw)
-    && raw.length >= 2
-    && raw.every(entry => typeof entry === "string" && flattenRuleTokens(entry).length === 1);
-}
-
 function allowedCombosFromRace(raceData) {
   const raw = multiclassRawRules(raceData);
   if (!raw) return [];
+
   if (Array.isArray(raw)) {
-    if (looksLikeSingleComboArray(raw)) return [[...new Set(flattenRuleTokens(raw))]];
+    const singleCombo = raw.length >= 2 && raw.every(entry => typeof entry === "string" && flattenRuleTokens(entry).length === 1);
+    if (singleCombo) return [[...new Set(flattenRuleTokens(raw))]];
     return raw.map(entry => [...new Set(flattenRuleTokens(entry))]).filter(combo => combo.length >= 2);
   }
+
   if (typeof raw === "string") {
     return raw.split(/[;\n|]+/).map(entry => [...new Set(flattenRuleTokens(entry))]).filter(combo => combo.length >= 2);
   }
+
   if (typeof raw === "object") {
     const explicit = raw.combinaisons ?? raw.combinations ?? raw.combos ?? raw.classes ?? raw.allowed ?? raw.permis;
     if (explicit !== undefined) return allowedCombosFromRace({ system: { multiclassage: explicit } });
@@ -167,6 +163,7 @@ function allowedCombosFromRace(raceData) {
     }
     return combos;
   }
+
   return [];
 }
 
@@ -176,6 +173,14 @@ function raceAllowsClassSet(raceData, classNamesOrSlugs) {
   const combos = allowedCombosFromRace(raceData);
   if (!combos.length) return false;
   return combos.some(combo => wanted.every(c => combo.includes(c)));
+}
+
+function wantedClassNames(actor, classData = null) {
+  const existing = classItems(actor).map(c => c.name);
+  if (!classData) return existing;
+  const slug = classSlugFromData(classData);
+  if (classItems(actor).some(c => classSlugFromData(c) === slug)) return existing;
+  return [...existing, classLabelFromData(classData)];
 }
 
 function localRaceTagsFromData(raceData) {
@@ -222,7 +227,9 @@ function raceMatchesClassRulesSafe(raceData, classData) {
 function classPrerequisitesOk(actor, classData, raceData = null, { ignoreLevelMax = true } = {}) {
   try {
     if (typeof checkClassStatMin === "function") {
-      const alignment = typeof add2ePickClassAlignment === "function" ? add2ePickClassAlignment(actor, classData?.system ?? classData ?? {}) : actor?.system?.alignement;
+      const alignment = typeof add2ePickClassAlignment === "function"
+        ? add2ePickClassAlignment(actor, classData?.system ?? classData ?? {})
+        : actor?.system?.alignement;
       return checkClassStatMin(actor, classData, raceData, alignment, { silent: true, ignoreLevelMax }) === true;
     }
   } catch (err) { warn("[PREREQUIS][SKIP]", err); }
@@ -477,14 +484,23 @@ async function resolveDroppedItemData(event, data = null) {
   return null;
 }
 
+function currentRaceCompatibleForMulticlass(actor, classData) {
+  const race = systemRace(actor);
+  return raceAllowsClassSet(race, wantedClassNames(actor, classData))
+    && raceMatchesClassRulesSafe(race, classData)
+    && classPrerequisitesOk(actor, classData, race, { ignoreLevelMax: true });
+}
+
 function raceCandidatesForClass(actor, classData) {
   const currentRace = raceItem(actor);
   const candidates = [...(currentRace ? [itemObjectWithoutRuntime(currentRace)] : []), ...worldItemsByTypeSafe("race")].filter(Boolean);
+  const wanted = wantedClassNames(actor, classData);
   const seen = new Set();
   return candidates.filter(raceData => {
     const key = norm(raceData?.name ?? raceData?.system?.slug ?? raceData?.system?.label ?? "");
     if (!key || seen.has(key)) return false;
     seen.add(key);
+    if (!raceAllowsClassSet(raceData, wanted)) return false;
     if (!raceMatchesClassRulesSafe(raceData, classData)) return false;
     if (!classPrerequisitesOk(actor, classData, raceData, { ignoreLevelMax: true })) return false;
     return true;
@@ -496,7 +512,7 @@ async function showRaceChangeForClassDialog(actor, classData) {
   const className = classLabelFromData(classData);
   const candidates = raceCandidatesForClass(actor, classData);
   if (!candidates.length) {
-    await dialogAlert("ADD2E — Drop refusé", `<p>Aucune race compatible trouvée pour <b>${esc(className)}</b>.</p>`);
+    await dialogAlert("ADD2E — Drop refusé", `<p>Aucune race compatible trouvée pour la combinaison avec <b>${esc(className)}</b>.</p>`);
     return { action: "cancel" };
   }
   const options = candidates.map((raceData, index) => {
@@ -508,7 +524,7 @@ async function showRaceChangeForClassDialog(actor, classData) {
     title: "ADD2E — Race incompatible",
     content: `
       <form class="add2e-multiclass-race-choice" style="line-height:1.45;min-width:520px;">
-        <p><b>Race incompatible avec la classe multiclassée</b></p>
+        <p><b>Race incompatible avec le multiclassage demandé</b></p>
         <p>Classe à ajouter : <b>${esc(className)}</b></p>
         <p>Race actuelle : <b>${esc(currentRace)}</b></p>
         <div class="form-group"><label>Race compatible</label><select name="raceChoice">${options}</select></div>
@@ -532,7 +548,7 @@ async function showRaceChangeForClassDialog(actor, classData) {
 
 async function ensureRaceCompatibleForClass(actor, classData, sheet = null) {
   const race = systemRace(actor);
-  if (raceMatchesClassRulesSafe(race, classData) && classPrerequisitesOk(actor, classData, race, { ignoreLevelMax: true })) return { ok: true, raceData: race };
+  if (currentRaceCompatibleForMulticlass(actor, classData)) return { ok: true, raceData: race };
   const choice = await showRaceChangeForClassDialog(actor, classData);
   if (!choice || choice.action !== "change-race" || !choice.raceData) return { ok: false, raceData: race };
   if (typeof add2eApplyRaceItemDataToActor === "function") {
@@ -549,24 +565,32 @@ async function ensureRaceCompatibleForClass(actor, classData, sheet = null) {
 }
 
 function compatibleMulticlassClassCandidates(actor, preferredClassData = null) {
-  const race = systemRace(actor);
-  const existing = classItems(actor);
-  const existingSlugs = existing.map(classSlugFromData).filter(Boolean);
   const candidates = [preferredClassData, ...worldItemsByTypeSafe("classe")].filter(Boolean);
   const seen = new Set();
   const out = [];
+  const preferredSlug = preferredClassData ? classSlugFromData(preferredClassData) : "";
+
   for (const candidate of candidates) {
     const slug = classSlugFromData(candidate);
     if (!slug || seen.has(slug)) continue;
     seen.add(slug);
-    const alreadyPresent = existingSlugs.includes(slug);
-    const wanted = alreadyPresent ? existing.map(c => c.name) : [...existing.map(c => c.name), classLabelFromData(candidate)];
-    if (!raceAllowsClassSet(race, wanted)) continue;
-    if (!raceMatchesClassRulesSafe(race, candidate)) continue;
-    if (!classPrerequisitesOk(actor, candidate, race, { ignoreLevelMax: true })) continue;
+
+    const isPreferred = preferredSlug && slug === preferredSlug;
+    if (isPreferred) {
+      out.push(candidate);
+      continue;
+    }
+
+    if (!currentRaceCompatibleForMulticlass(actor, candidate)) continue;
     out.push(candidate);
   }
-  return out.sort((a, b) => classLabelFromData(a).localeCompare(classLabelFromData(b), game.i18n?.lang ?? "fr"));
+
+  return out.sort((a, b) => {
+    const aPreferred = classSlugFromData(a) === preferredSlug ? -1 : 0;
+    const bPreferred = classSlugFromData(b) === preferredSlug ? -1 : 0;
+    if (aPreferred !== bPreferred) return aPreferred - bPreferred;
+    return classLabelFromData(a).localeCompare(classLabelFromData(b), game.i18n?.lang ?? "fr");
+  });
 }
 
 async function showClassDropChoiceDialog(actor, droppedClassData) {
@@ -577,7 +601,8 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
   const selectOptions = candidates.map((candidate, index) => {
     const marker = classSlugFromData(candidate) === droppedSlug ? " — classe déposée" : "";
     const present = classItems(actor).some(c => classSlugFromData(c) === classSlugFromData(candidate)) ? " — déjà présente" : "";
-    return `<option value="${index}">${esc(classLabelFromData(candidate))}${esc(marker)}${esc(present)}</option>`;
+    const raceTxt = currentRaceCompatibleForMulticlass(actor, candidate) ? "" : " — changement de race requis";
+    return `<option value="${index}">${esc(classLabelFromData(candidate))}${esc(marker)}${esc(present)}${esc(raceTxt)}</option>`;
   }).join("");
 
   const content = `
@@ -585,8 +610,8 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
       <p><b>Drop d'une classe sur un personnage déjà classé</b></p>
       <p>Classe(s) actuelle(s) : <b>${esc(current)}</b></p>
       <p>Classe déposée : <b>${esc(classLabelFromData(droppedClassData))}</b>${alreadyPresent ? " <b>(déjà présente)</b>" : ""}</p>
-      ${candidates.length ? `<div class="form-group"><label>Classe concernée</label><select name="multiclassChoice">${selectOptions}</select></div>` : `<p style="color:#9b1c1c;font-weight:700;">Aucune classe compatible disponible pour le multiclassage avec cette race.</p>`}
-      <p style="font-size:0.9em;color:#6b5a2a;margin-bottom:0;">Le choix mono-classe remplace la classe existante. Si la classe est déjà présente, le choix multiclassage resynchronise l'acteur sans dupliquer la classe.</p>
+      ${candidates.length ? `<div class="form-group"><label>Classe concernée</label><select name="multiclassChoice">${selectOptions}</select></div>` : `<p style="color:#9b1c1c;font-weight:700;">Aucune classe disponible.</p>`}
+      <p style="font-size:0.9em;color:#6b5a2a;margin-bottom:0;">Si la race actuelle ne permet pas cette combinaison, le script proposera une race compatible ou annulera le drop.</p>
     </form>`;
 
   const buttons = [{ action: "monoclass", label: "Remplacer en mono-classe", default: false, callback: () => ({ action: "monoclass" }) }];
@@ -635,9 +660,8 @@ async function addClassAsMulticlass(actor, itemData, sheet = null) {
   const raceCheck = await ensureRaceCompatibleForClass(actor, itemData, sheet);
   if (!raceCheck.ok) return false;
   const race = systemRace(actor, raceCheck.raceData ?? null);
-  const wantedClasses = [...existing.map(c => c.name), itemData.name];
-  if (!raceAllowsClassSet(race, wantedClasses)) {
-    await dialogAlert("ADD2E — Multiclassage refusé", `<p>La race <b>${esc(race?.name ?? actor.system?.race ?? "actuelle")}</b> ne permet pas la combinaison :</p><p><b>${esc(wantedClasses.join(" / "))}</b></p>`);
+  if (!raceAllowsClassSet(race, wantedClassNames(actor, itemData))) {
+    await dialogAlert("ADD2E — Multiclassage refusé", `<p>La race <b>${esc(race?.name ?? actor.system?.race ?? "actuelle")}</b> ne permet pas cette combinaison.</p>`);
     return false;
   }
   if (!classPrerequisitesOk(actor, itemData, race, { ignoreLevelMax: true })) {
@@ -680,9 +704,8 @@ async function addClassAsMulticlass(actor, itemData, sheet = null) {
 async function applyRaceForMulticlass(actor, raceData, sheet = null) {
   const existing = classItems(actor);
   if (existing.length <= 1) return false;
-  const wantedClasses = existing.map(c => c.name);
-  if (!raceAllowsClassSet(raceData, wantedClasses)) {
-    await dialogAlert("ADD2E — Race incompatible", `<p>La race <b>${esc(raceData?.name ?? "déposée")}</b> ne permet pas la combinaison multiclassée actuelle :</p><p><b>${esc(wantedClasses.join(" / "))}</b></p>`);
+  if (!raceAllowsClassSet(raceData, existing.map(c => c.name))) {
+    await dialogAlert("ADD2E — Race incompatible", `<p>La race <b>${esc(raceData?.name ?? "déposée")}</b> ne permet pas la combinaison multiclassée actuelle.</p>`);
     return true;
   }
   for (const cls of existing) {
@@ -793,6 +816,8 @@ function installDropWrapper() {
   return true;
 }
 
+installGetDataPatch();
+
 Hooks.once("ready", () => {
   installGetDataPatch();
   setTimeout(() => {
@@ -839,5 +864,4 @@ globalThis.add2eMulticlassLevelForClassXp = levelForClassXp;
 globalThis.add2eMulticlassRaceCandidatesForClass = raceCandidatesForClass;
 globalThis.add2eMulticlassClassRaceMaxLevel = classRaceMaxLevel;
 
-installGetDataPatch();
 log("[LOADED]", { version: VERSION });
