@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-10-multiclass-layer-v1
+// Version : 2026-06-10-multiclass-layer-v2
 //
 // Objectif :
 // - préserver le fonctionnement mono-classe existant ;
@@ -8,9 +8,8 @@
 // - s'appuyer sur les données de race déjà corrigées pour déterminer les combinaisons autorisées ;
 // - rester compatible Foundry V13/V14/V15 avec ApplicationV2/DialogV2.
 
-const VERSION = "2026-06-10-multiclass-layer-v1";
+const VERSION = "2026-06-10-multiclass-layer-v2";
 const TAG = "[ADD2E][MULTICLASSE]";
-const SCOPE = "add2e";
 const INTERNAL = "add2eMulticlassInternal";
 
 globalThis.ADD2E_MULTICLASS_VERSION = VERSION;
@@ -125,11 +124,18 @@ function flattenRuleTokens(value) {
   return [norm(value)].filter(Boolean);
 }
 
+function looksLikeSingleComboArray(raw) {
+  return Array.isArray(raw)
+    && raw.length >= 2
+    && raw.every(entry => typeof entry === "string" && flattenRuleTokens(entry).length === 1);
+}
+
 function allowedCombosFromRace(raceData) {
   const raw = multiclassRawRules(raceData);
   if (!raw) return [];
 
   if (Array.isArray(raw)) {
+    if (looksLikeSingleComboArray(raw)) return [[...new Set(flattenRuleTokens(raw))]];
     return raw
       .map(entry => [...new Set(flattenRuleTokens(entry))])
       .filter(combo => combo.length >= 2);
@@ -487,8 +493,7 @@ async function applyRaceForMulticlass(actor, raceData, sheet = null) {
 
 function parseDropItemData(event) {
   try {
-    const raw = JSON.parse(event.dataTransfer?.getData("text/plain") || "{}");
-    return raw;
+    return JSON.parse(event.dataTransfer?.getData("text/plain") || "{}");
   } catch (_err) {
     return null;
   }
@@ -509,6 +514,16 @@ async function resolveDroppedItemData(raw) {
   return null;
 }
 
+function shouldOfferMulticlass(actor, itemData) {
+  const existing = classItems(actor);
+  if (existing.length < 1) return false;
+  const slug = classSlugFromData(itemData);
+  if (existing.some(c => classSlugFromData(c) === slug)) return true;
+  const race = systemRace(actor);
+  const wantedClasses = [...existing.map(c => c.name), itemData.name];
+  return raceAllowsClassSet(race, wantedClasses) || multiclassEnabled(actor);
+}
+
 function installDropWrapper() {
   const SheetClass = globalThis.Add2eActorSheet;
   if (!SheetClass?.prototype?._onDrop) return false;
@@ -523,11 +538,14 @@ function installDropWrapper() {
     const itemData = await resolveDroppedItemData(raw);
     if (!itemData || !["classe", "race"].includes(itemData.type)) return original.call(this, event);
 
-    if (itemData.type === "classe" && classItems(actor).length >= 1) {
+    if (itemData.type === "classe" && shouldOfferMulticlass(actor, itemData)) {
       const handled = await addClassAsMulticlass(actor, itemData, this);
-      event.preventDefault?.();
-      event.stopPropagation?.();
-      return false;
+      if (handled || multiclassEnabled(actor)) {
+        event.preventDefault?.();
+        event.stopPropagation?.();
+        return false;
+      }
+      return original.call(this, event);
     }
 
     if (itemData.type === "race" && classItems(actor).length > 1) {
@@ -560,7 +578,7 @@ function splitXpDelta(actor, newTotalXp) {
 
   if (delta !== 0) {
     const sign = delta >= 0 ? 1 : -1;
-    let remaining = Math.abs(delta);
+    const remaining = Math.abs(delta);
     const baseShare = Math.floor(remaining / entries.length);
     let rest = remaining % entries.length;
 
