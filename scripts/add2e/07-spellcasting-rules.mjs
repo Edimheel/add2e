@@ -1,11 +1,11 @@
 // ============================================================
 // ADD2E — Spellcasting générique par lignes de sorts
-// Version : 2026-06-10-multiclass-class-specific-spell-levels-v2-global-prepared-counter
+// Version : 2026-06-10-multiclass-class-specific-spell-levels-v3-global-sheet-api
 // Supporte les classes simples et les multiclasses AD&D 2e.
 // Pour un multiclassé, chaque liste de sorts utilise le niveau propre
 // de la classe qui fournit cette liste.
 // ============================================================
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-10-multiclass-class-specific-spell-levels-v2-global-prepared-counter";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-10-multiclass-class-specific-spell-levels-v3-global-sheet-api";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -345,6 +345,9 @@ globalThis.add2eSpellLabel = add2eSpellLabel;
 globalThis.add2eSpellClassLevel = add2eSpellClassLevel;
 globalThis.add2eGetSpellcastingEntries = add2eGetSpellcastingEntries;
 globalThis.add2eGetSpellSlotPoolsByLevel = add2eGetSpellSlotPoolsByLevel;
+globalThis.add2eGetSpellListsFromItem = add2eGetSpellListsFromItem;
+globalThis.add2eGetSlotsForEntryLevel = add2eGetSlotsForEntryLevel;
+globalThis.add2eGetSpellEntryForSpell = add2eGetSpellEntryForSpell;
 globalThis.add2eCanActorUseSpell = add2eCanActorUseSpell;
 globalThis.add2eIsObjectMagicSpellForPreparation = add2eIsObjectMagicSpellForPreparation;
 globalThis.add2eGetMemorizedCountForEntry = add2eGetMemorizedCountForEntry;
@@ -355,9 +358,7 @@ globalThis.add2eCountPreparedForEntryLevel = add2eCountPreparedForEntryLevel;
 function evalFormuleValeur(valeur, niveau) {
   if (typeof valeur === "object" && typeof valeur.valeur !== "undefined") valeur = valeur.valeur;
   if (typeof valeur !== "string") return valeur;
-  let expr = valeur.replace(/@niv(?![a-z])/gi, niveau).replace(/@niveau/gi, niveau);
-  try { return Function(`return (${expr});`)(); }
-  catch { return valeur; }
+  return valeur.replace(/@niv(?![a-z])/gi, String(niveau)).replace(/@niveau/gi, String(niveau));
 }
 
 const ADD2E_SPELL_FX_PRESETS = {
