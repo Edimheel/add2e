@@ -30,7 +30,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -55,13 +55,22 @@
       "description": "quand le magicien lance ce sort, il crée un volume sonore à la distance qu’il désire (dans la portée), qui semble s’éloigner, se rapprocher ou rester au même endroit. Le volume sonore créé dépend du niveau du magicien. Le bruit de base est calculé sur le niveau d’expérience minimum que doit avoir le magicien pour lancer ce sort, c'est-à-dire le niveau 3. Le bruit du bruitage, à ce niveau, est celui que peuvent faire 4 hommes au maximum. Chaque niveau d’expérience additionnel augmente le volume sonore dans les mêmes proportions: bruit de 8 hommes au niveau 4, etc. Ainsi on peut entendre des paroles, des chants, des cris, des bruits de pas. En fait, le magicien peut créer n’importe quel bruit, la seule restriction étant son niveau. Une horde de rats courant et couinant représente le volume sonore de 8 hommes courant et criant. Un lion qui rugit correspond au volume sonore de 16 hommes; le rugissement d’un dragon à celui de 24 hommes au moins. Si quelqu’un a un doute quant aux bruits qu’il entend (s’il n’y croit pas), il a le droit à un jet de protection qui, s’il est réussi, fait que cette personne n’entend plus rien ou alors un simple bruit très atténué. Ce sort est particulièrement efficace quand il est conjugué avec le sort force fantasmagorique (voir p.74). La composante matérielle est un morceau de laine ou un peu de cire.",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau de laine ou un peu de cire",
+          "nom": "morceau de laine",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative à la cire.",
+          "notes": null
+        },
+        {
+          "nom": "cire",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au morceau de laine.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -92,7 +101,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -117,13 +126,22 @@
       "description": "avec ce sort, le magicien est capable de voir les créatures et les objets invisibles, astraux, éthérés, cachés ou hors de phase. La détection se fait sur la ligne de vue du magicien, sur une largeur de 1\". Les composantes matérielles sont une pincée de talc et un peu de poudre d’argent qu’il faut répandre.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée de talc et un peu de poudre d’argent qu’il faut répandre",
+          "nom": "pincée de talc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Répandue."
+        },
+        {
+          "nom": "poudre d’argent",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Répandue."
         }
       ],
       "foundry": null,
@@ -166,11 +184,11 @@
         {
           "nom": "une pièce de cuivre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
@@ -201,7 +219,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -232,7 +250,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -284,7 +302,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -309,13 +327,22 @@
       "description": "avec ce sort, le magicien peut faire léviter la créature choisie, lui-même ou une autre personne. Le magicien est limité par le poids: il peut faire léviter jusqu’à 1.000 po (50 kg) par niveau; un magicien niveau 3 pourra donc agir sur 3.000 po (150 kg). Si le magicien lance le sort sur luimême, il peut bouger verticalement à la vitesse de 6 m par round. S’il est lancé sur une autre créature, le magicien la fera léviter à une vitesse verticale maximale de 3 m par round. Les mouvements horizontaux ne sont pas possibles avec ce sort, mais la créature affectée par le sort peut se pousser sur la paroi d’une falaise, par exemple, pour bouger latéralement. Le magicien peut annuler le sort quand il le désire. Si le destinataire du sort n’est pas consentant, il a le droit à un jet de protection, qui, s’il réussit, empêche les effets du sort. La composante matérielle est soit une boucle de cuir, soit un morceau de fil d’or courbé en forme d’hameçon.",
       "composants_materiels_objets": [
         {
-          "nom": "soit une boucle de cuir, soit un morceau de fil d’or courbé en forme d’hameçon",
+          "nom": "boucle de cuir",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative au fil d’or courbé en forme d’hameçon.",
+          "notes": null
+        },
+        {
+          "nom": "fil d’or courbé en forme d’hameçon",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à la boucle de cuir.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -382,13 +409,22 @@
       "description": "quand ce sort est lancé, le magicien crée un nuage de vapeurs nauséabondes à une distance maximale de 3\" de l’endroit où il se trouve. Toute créature prise dans ce nuage doit lancer un jet de protection contre le poison; si ce jet de protection est raté, elle sera sans défense à cause des nausées pendant 2 à 5 rounds (d4+1). Si le jet de protection est réussi, elle sera sans défense mais seulement pour le temps qu’elle restera dans le nuage et ensuite pendant un round après en être sortie, ceci à cause des effets irritants sur les organes visuels et olfactifs. Un sort de rafale de vent dissipera le nuage en 1 round après contact. Si le sort est lancé dans un endroit où il y a des courants d’airs importants, le nuage se déplacera dans la direction du courant d’air à une vitesse de 1\" à 6\" par round, en fonction de la vitesse du vent. Chaque 1\" d’un tel mouvement réduit la durée du nuage d’un round. La composante matérielle de ce sort est un œuf pourri ou quelques feuilles de symplocarpe fétide.",
       "composants_materiels_objets": [
         {
-          "nom": "un œuf pourri ou quelques feuilles de symplocarpe fétide",
+          "nom": "œuf pourri",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Alternative aux feuilles de symplocarpe fétide.",
+          "notes": null
+        },
+        {
+          "nom": "feuilles de symplocarpe fétide",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à l’œuf pourri.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -482,7 +518,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -509,11 +545,11 @@
         {
           "nom": "un morceau de fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à «piéger»",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
@@ -607,7 +643,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
