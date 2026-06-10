@@ -1,16 +1,17 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-10-multiclass-layer-v5-race-level-validation
+// Version : 2026-06-10-multiclass-layer-v6-drop-payload-fix
 //
 // Objectif :
 // - préserver le fonctionnement mono-classe existant ;
 // - proposer mono-classe ou multiclassage au drop d'une classe ;
+// - lire correctement les drops ApplicationV2/DialogV2 V13/V14/V15 ;
+// - gérer le cas d'une classe déjà présente sans retomber sur raw {} ;
 // - restaurer les garde-fous race/classe/niveau pour les drops multiclassés ;
 // - afficher Classe/Niveau/XP/Titre par classe dans l'en-tête ;
 // - synchroniser niveau <-> XP par classe ;
-// - ne pas modifier les JSON de races ;
-// - rester compatible Foundry V13/V14/V15 avec ApplicationV2/DialogV2.
+// - ne pas modifier les JSON de races.
 
-const VERSION = "2026-06-10-multiclass-layer-v5-race-level-validation";
+const VERSION = "2026-06-10-multiclass-layer-v6-drop-payload-fix";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -61,6 +62,14 @@ function toArray(value) {
   return [value];
 }
 
+function itemObjectWithoutRuntime(itemLike) {
+  const data = typeof itemLike?.toObject === "function" ? itemLike.toObject() : foundry.utils.deepClone(itemLike ?? {});
+  if (!data || typeof data !== "object") return null;
+  delete data._id;
+  delete data._stats;
+  return data;
+}
+
 function classSlugFromData(data) {
   const sys = data?.system ?? data ?? {};
   return norm(sys.slug ?? sys.label ?? sys.nom ?? sys.name ?? data?.name ?? "classe");
@@ -76,21 +85,13 @@ function raceLabelFromData(data) {
   return String(data?.name ?? sys.label ?? sys.nom ?? sys.name ?? "Race").trim() || "Race";
 }
 
-function itemObjectWithoutRuntime(itemLike) {
-  const data = typeof itemLike?.toObject === "function" ? itemLike.toObject() : foundry.utils.deepClone(itemLike ?? {});
-  if (!data || typeof data !== "object") return null;
-  delete data._id;
-  delete data._stats;
-  return data;
+function classItems(actor) {
+  return (actor?.items?.contents ?? Array.from(actor?.items ?? []))
+    .filter(i => String(i.type || "").toLowerCase() === "classe");
 }
 
 function raceItem(actor) {
   return actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "race") ?? null;
-}
-
-function classItems(actor) {
-  return (actor?.items?.contents ?? Array.from(actor?.items ?? []))
-    .filter(i => String(i.type || "").toLowerCase() === "classe");
 }
 
 function systemRace(actor, candidateRaceData = null) {
@@ -103,6 +104,10 @@ function systemRace(actor, candidateRaceData = null) {
     name: sys.race ?? sys.details_race?.label ?? sys.details_race?.name ?? "Race",
     system: sys.details_race ?? {}
   };
+}
+
+function multiclassEnabled(actor) {
+  return actor?.system?.multiclasse?.enabled === true || classItems(actor).length > 1;
 }
 
 function multiclassRawRules(raceData) {
@@ -155,13 +160,10 @@ function allowedCombosFromRace(raceData) {
     if (explicit !== undefined) return allowedCombosFromRace({ system: { multiclassage: explicit } });
     const combos = [];
     for (const [key, value] of Object.entries(raw)) {
-      if (value === true || value === "true" || value === 1) {
-        const combo = [...new Set(flattenRuleTokens(key))];
-        if (combo.length >= 2) combos.push(combo);
-      } else {
-        const combo = [...new Set(flattenRuleTokens(value))];
-        if (combo.length >= 2) combos.push(combo);
-      }
+      const combo = value === true || value === "true" || value === 1
+        ? [...new Set(flattenRuleTokens(key))]
+        : [...new Set(flattenRuleTokens(value))];
+      if (combo.length >= 2) combos.push(combo);
     }
     return combos;
   }
@@ -174,6 +176,67 @@ function raceAllowsClassSet(raceData, classNamesOrSlugs) {
   const combos = allowedCombosFromRace(raceData);
   if (!combos.length) return false;
   return combos.some(combo => wanted.every(c => combo.includes(c)));
+}
+
+function localRaceTagsFromData(raceData) {
+  const sys = raceData?.system ?? raceData ?? {};
+  const base = norm(raceData?.name ?? sys.slug ?? sys.label ?? sys.name ?? sys.nom ?? "");
+  return [...new Set([
+    ...toArray(sys.identityTags),
+    ...toArray(sys.raceTags),
+    ...toArray(sys.tags),
+    ...(base ? [`race:${base}`, base] : [])
+  ].map(norm).filter(Boolean))];
+}
+
+function classRaceMaxLevel(classData, raceData) {
+  const cls = classData?.system ?? classData ?? {};
+  const races = cls?.raceRestriction?.races ?? {};
+  if (!races || typeof races !== "object") return 0;
+  const raceTags = localRaceTagsFromData(raceData);
+  let max = 0;
+  for (const [tag, rule] of Object.entries(races)) {
+    if (!raceTags.includes(norm(tag))) continue;
+    const value = Number(rule?.maxLevel ?? rule?.niveauMax ?? rule?.max ?? 0);
+    if (Number.isFinite(value) && value > 0) max = max ? Math.min(max, value) : value;
+  }
+  return max;
+}
+
+function raceMatchesClassRulesSafe(raceData, classData) {
+  try {
+    if (typeof add2eRaceMatchesClassRules === "function") return add2eRaceMatchesClassRules(raceData, classData) === true;
+  } catch (err) { warn("[RACE_MATCH_GLOBAL_ERROR]", err); }
+
+  const cls = classData?.system ?? classData ?? {};
+  const races = cls?.raceRestriction?.races;
+  if (!races || typeof races !== "object" || !Object.keys(races).length) return true;
+  const raceTags = localRaceTagsFromData(raceData);
+  const normalizedRules = {};
+  for (const [tag, rule] of Object.entries(races)) normalizedRules[norm(tag)] = rule;
+  const matched = raceTags.find(t => Object.prototype.hasOwnProperty.call(normalizedRules, t));
+  if (!matched) return false;
+  return normalizedRules[matched]?.allowed === true;
+}
+
+function classPrerequisitesOk(actor, classData, raceData = null, { ignoreLevelMax = true } = {}) {
+  try {
+    if (typeof checkClassStatMin === "function") {
+      const alignment = typeof add2ePickClassAlignment === "function" ? add2ePickClassAlignment(actor, classData?.system ?? classData ?? {}) : actor?.system?.alignement;
+      return checkClassStatMin(actor, classData, raceData, alignment, { silent: true, ignoreLevelMax }) === true;
+    }
+  } catch (err) { warn("[PREREQUIS][SKIP]", err); }
+  return true;
+}
+
+function worldItemsByTypeSafe(type) {
+  try {
+    if (typeof add2eWorldItemsByType === "function") return add2eWorldItemsByType(type);
+  } catch (err) { warn("[WORLD_ITEMS_GLOBAL_ERROR]", err); }
+  return Array.from(game?.items ?? [])
+    .filter(i => String(i.type || "").toLowerCase() === String(type || "").toLowerCase())
+    .map(i => itemObjectWithoutRuntime(i))
+    .filter(Boolean);
 }
 
 function parseXpRange(raw) {
@@ -221,113 +284,6 @@ function classTitleForLevel(classSystem, level) {
   return titles.find(t => Number(level) >= Number(t.minLevel ?? t.niveauMin ?? 0) && Number(level) <= Number(t.maxLevel ?? t.niveauMax ?? 999))?.title ?? "";
 }
 
-function multiclassEnabled(actor) {
-  return actor?.system?.multiclasse?.enabled === true || classItems(actor).length > 1;
-}
-
-function localRaceTagsFromData(raceData) {
-  const sys = raceData?.system ?? raceData ?? {};
-  const base = norm(raceData?.name ?? sys.slug ?? sys.label ?? sys.name ?? sys.nom ?? "");
-  return [...new Set([
-    ...toArray(sys.identityTags),
-    ...toArray(sys.raceTags),
-    ...toArray(sys.tags),
-    ...(base ? [`race:${base}`, base] : [])
-  ].map(norm).filter(Boolean))];
-}
-
-function classRaceMaxLevel(classData, raceData) {
-  const cls = classData?.system ?? classData ?? {};
-  const races = cls?.raceRestriction?.races ?? {};
-  if (!races || typeof races !== "object") return 0;
-  const raceTags = localRaceTagsFromData(raceData);
-  let max = 0;
-  for (const [tag, rule] of Object.entries(races)) {
-    if (!raceTags.includes(norm(tag))) continue;
-    const n = Number(rule?.maxLevel ?? rule?.niveauMax ?? rule?.max ?? 0);
-    if (Number.isFinite(n) && n > 0) max = max ? Math.min(max, n) : n;
-  }
-  return max;
-}
-
-function raceMatchesClassRulesSafe(raceData, classData) {
-  try {
-    if (typeof add2eRaceMatchesClassRules === "function") return add2eRaceMatchesClassRules(raceData, classData) === true;
-  } catch (err) { warn("[RACE_MATCH_GLOBAL_ERROR]", err); }
-
-  const cls = classData?.system ?? classData ?? {};
-  const races = cls?.raceRestriction?.races;
-  if (!races || typeof races !== "object" || !Object.keys(races).length) return true;
-  const raceTags = localRaceTagsFromData(raceData);
-  const normalizedRules = {};
-  for (const [tag, rule] of Object.entries(races)) normalizedRules[norm(tag)] = rule;
-  const matched = raceTags.find(t => Object.prototype.hasOwnProperty.call(normalizedRules, t));
-  if (!matched) return false;
-  return normalizedRules[matched]?.allowed === true;
-}
-
-function classPrerequisitesOk(actor, classData, raceData = null, { ignoreLevelMax = true } = {}) {
-  try {
-    if (typeof checkClassStatMin === "function") {
-      const alignment = typeof add2ePickClassAlignment === "function" ? add2ePickClassAlignment(actor, classData?.system ?? classData ?? {}) : actor?.system?.alignement;
-      return checkClassStatMin(actor, classData, raceData, alignment, { silent: true, ignoreLevelMax }) === true;
-    }
-  } catch (err) { warn("[PREREQUIS][SKIP]", err); }
-  return true;
-}
-
-function worldItemsByTypeSafe(type) {
-  try {
-    if (typeof add2eWorldItemsByType === "function") return add2eWorldItemsByType(type);
-  } catch (err) { warn("[WORLD_ITEMS_GLOBAL_ERROR]", err); }
-  return Array.from(game?.items ?? [])
-    .filter(i => String(i.type || "").toLowerCase() === String(type || "").toLowerCase())
-    .map(i => itemObjectWithoutRuntime(i))
-    .filter(Boolean);
-}
-
-function worldClassCandidates() {
-  return worldItemsByTypeSafe("classe");
-}
-
-function raceCandidatesForClass(actor, classData) {
-  const currentRace = raceItem(actor);
-  const candidates = [...(currentRace ? [itemObjectWithoutRuntime(currentRace)] : []), ...worldItemsByTypeSafe("race")].filter(Boolean);
-  const seen = new Set();
-  return candidates.filter(raceData => {
-    const key = norm(raceData?.name ?? raceData?.system?.slug ?? raceData?.system?.label ?? "");
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    if (!raceMatchesClassRulesSafe(raceData, classData)) return false;
-    if (!classPrerequisitesOk(actor, classData, raceData, { ignoreLevelMax: true })) return false;
-    return true;
-  });
-}
-
-function compatibleMulticlassClassCandidates(actor, preferredClassData = null) {
-  const race = systemRace(actor);
-  const existing = classItems(actor);
-  const existingSlugs = existing.map(classSlugFromData).filter(Boolean);
-  const candidates = [preferredClassData, ...worldClassCandidates()].filter(Boolean);
-  const seen = new Set();
-  const out = [];
-  for (const candidate of candidates) {
-    const slug = classSlugFromData(candidate);
-    if (!slug || seen.has(slug) || existingSlugs.includes(slug)) continue;
-    seen.add(slug);
-    const wanted = [...existing.map(c => c.name), classLabelFromData(candidate)];
-    if (!raceAllowsClassSet(race, wanted)) continue;
-    if (!raceMatchesClassRulesSafe(race, candidate)) continue;
-    if (!classPrerequisitesOk(actor, candidate, race, { ignoreLevelMax: true })) continue;
-    out.push(candidate);
-  }
-  return out.sort((a, b) => classLabelFromData(a).localeCompare(classLabelFromData(b), game.i18n?.lang ?? "fr"));
-}
-
-function mergeClassMap(actor, path, incoming = {}) {
-  return { ...(foundry.utils.deepClone(foundry.utils.getProperty(actor.system ?? {}, path) ?? {})), ...(incoming ?? {}) };
-}
-
 function buildClassEntries(actor, extraClassDoc = null, xpByClass = null, levelByClass = null, raceDataOverride = null) {
   const docs = classItems(actor);
   if (extraClassDoc) docs.push(extraClassDoc);
@@ -352,9 +308,8 @@ function buildClassEntries(actor, extraClassDoc = null, xpByClass = null, levelB
       xp = minXpForClassLevel(sys, level);
     } else if (xpMode && oldXp?.[slug] !== undefined) {
       level = levelForClassXp(sys, xp);
-    } else {
-      level = Math.max(1, Math.floor(num(oldLevels?.[slug], levelForClassXp(sys, xp))));
-      if (!oldXp?.[slug] && xp <= 0) xp = minXpForClassLevel(sys, level);
+    } else if (!oldXp?.[slug] && xp <= 0) {
+      xp = minXpForClassLevel(sys, level);
     }
 
     const maxLevel = classRaceMaxLevel(doc, raceData);
@@ -490,34 +445,75 @@ async function dialogWait({ title, content, buttons }) {
   return DialogV2.wait({ window: { title }, content, buttons, modal: true, rejectClose: false, close: () => ({ action: "cancel" }) });
 }
 
+function readDropPayload(event, data = null) {
+  if (data && typeof data === "object" && Object.keys(data).length) return data;
+  const direct = event?.data ?? event?.dropData ?? event?.dragData;
+  if (direct && typeof direct === "object" && Object.keys(direct).length) return direct;
+  for (const type of ["text/plain", "application/json", "text/x-foundry-dragdrop"]) {
+    try {
+      const raw = event?.dataTransfer?.getData?.(type);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && Object.keys(parsed).length) return parsed;
+    } catch (_err) {}
+  }
+  return null;
+}
+
+async function resolveDroppedItemData(event, data = null) {
+  const raw = readDropPayload(event, data);
+  if (!raw) return null;
+  if (raw.system && ["classe", "race"].includes(raw.type)) return itemObjectWithoutRuntime(raw);
+  if (raw.data?.system && ["classe", "race"].includes(raw.data.type)) return itemObjectWithoutRuntime(raw.data);
+  if (raw.uuid) {
+    const doc = await fromUuid(raw.uuid).catch(() => null);
+    if (doc instanceof Item) return itemObjectWithoutRuntime(doc);
+  }
+  if (raw.pack && (raw.id || raw._id)) {
+    const pack = game.packs.get(raw.pack);
+    const doc = pack ? await pack.getDocument(raw.id ?? raw._id).catch(() => null) : null;
+    if (doc instanceof Item) return itemObjectWithoutRuntime(doc);
+  }
+  return null;
+}
+
+function raceCandidatesForClass(actor, classData) {
+  const currentRace = raceItem(actor);
+  const candidates = [...(currentRace ? [itemObjectWithoutRuntime(currentRace)] : []), ...worldItemsByTypeSafe("race")].filter(Boolean);
+  const seen = new Set();
+  return candidates.filter(raceData => {
+    const key = norm(raceData?.name ?? raceData?.system?.slug ?? raceData?.system?.label ?? "");
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    if (!raceMatchesClassRulesSafe(raceData, classData)) return false;
+    if (!classPrerequisitesOk(actor, classData, raceData, { ignoreLevelMax: true })) return false;
+    return true;
+  });
+}
+
 async function showRaceChangeForClassDialog(actor, classData) {
   const currentRace = raceLabelFromData(systemRace(actor));
   const className = classLabelFromData(classData);
   const candidates = raceCandidatesForClass(actor, classData);
+  if (!candidates.length) {
+    await dialogAlert("ADD2E — Drop refusé", `<p>Aucune race compatible trouvée pour <b>${esc(className)}</b>.</p>`);
+    return { action: "cancel" };
+  }
   const options = candidates.map((raceData, index) => {
     const max = classRaceMaxLevel(classData, raceData);
     const suffix = max ? ` — niveau max ${max}` : "";
     return `<option value="${index}">${esc(raceLabelFromData(raceData))}${esc(suffix)}</option>`;
   }).join("");
-
-  const content = `
-    <form class="add2e-multiclass-race-choice" style="line-height:1.45;min-width:520px;">
-      <p><b>Race incompatible avec la classe multiclassée</b></p>
-      <p>Classe à ajouter : <b>${esc(className)}</b></p>
-      <p>Race actuelle : <b>${esc(currentRace)}</b></p>
-      <p>Choisis une race compatible ou annule le drop.</p>
-      ${candidates.length ? `<div class="form-group"><label>Race compatible</label><select name="raceChoice">${options}</select></div>` : `<p style="color:#9b1c1c;font-weight:700;">Aucune race compatible trouvée dans les items monde.</p>`}
-      <p style="font-size:0.9em;color:#6b5a2a;margin-bottom:0;">Si la race choisie limite un niveau de classe, le niveau sera ramené au maximum autorisé et l'XP sera recalculée au seuil correspondant.</p>
-    </form>`;
-
-  if (!candidates.length) {
-    await dialogAlert("ADD2E — Drop refusé", content);
-    return { action: "cancel" };
-  }
-
   return dialogWait({
     title: "ADD2E — Race incompatible",
-    content,
+    content: `
+      <form class="add2e-multiclass-race-choice" style="line-height:1.45;min-width:520px;">
+        <p><b>Race incompatible avec la classe multiclassée</b></p>
+        <p>Classe à ajouter : <b>${esc(className)}</b></p>
+        <p>Race actuelle : <b>${esc(currentRace)}</b></p>
+        <div class="form-group"><label>Race compatible</label><select name="raceChoice">${options}</select></div>
+        <p style="font-size:0.9em;color:#6b5a2a;margin-bottom:0;">Si la race choisie limite un niveau de classe, le niveau sera ramené au maximum autorisé.</p>
+      </form>`,
     buttons: [
       {
         action: "change-race",
@@ -536,20 +532,11 @@ async function showRaceChangeForClassDialog(actor, classData) {
 
 async function ensureRaceCompatibleForClass(actor, classData, sheet = null) {
   const race = systemRace(actor);
-  if (raceMatchesClassRulesSafe(race, classData) && classPrerequisitesOk(actor, classData, race, { ignoreLevelMax: true })) {
-    return { ok: true, raceChanged: false, raceData: race };
-  }
-
+  if (raceMatchesClassRulesSafe(race, classData) && classPrerequisitesOk(actor, classData, race, { ignoreLevelMax: true })) return { ok: true, raceData: race };
   const choice = await showRaceChangeForClassDialog(actor, classData);
-  if (!choice || choice.action !== "change-race" || !choice.raceData) return { ok: false, raceChanged: false, raceData: race };
-
-  if (!raceMatchesClassRulesSafe(choice.raceData, classData) || !classPrerequisitesOk(actor, classData, choice.raceData, { ignoreLevelMax: true })) {
-    await dialogAlert("ADD2E — Drop refusé", `<p>La race choisie ne permet finalement pas <b>${esc(classLabelFromData(classData))}</b>.</p>`);
-    return { ok: false, raceChanged: false, raceData: race };
-  }
-
+  if (!choice || choice.action !== "change-race" || !choice.raceData) return { ok: false, raceData: race };
   if (typeof add2eApplyRaceItemDataToActor === "function") {
-    await add2eApplyRaceItemDataToActor(actor, choice.raceData, sheet, { notify: true });
+    await add2eApplyRaceItemDataToActor(actor, choice.raceData, sheet, { notify: true, reason: "multiclass-drop-race-compat" });
   } else {
     const data = itemObjectWithoutRuntime(choice.raceData);
     data.type = "race";
@@ -558,45 +545,56 @@ async function ensureRaceCompatibleForClass(actor, classData, sheet = null) {
     const [raceDoc] = await actor.createEmbeddedDocuments("Item", [data], { [INTERNAL]: true, add2eInternal: true });
     await actor.update({ "system.race": raceDoc.name, "system.details_race": { ...(raceDoc.system ?? {}), name: raceDoc.name, label: raceDoc.name }, "system.bonus_caracteristiques": foundry.utils.deepClone(raceDoc.system?.bonus_caracteristiques ?? {}) }, { [INTERNAL]: true, add2eInternal: true });
   }
+  return { ok: true, raceData: choice.raceData };
+}
 
-  return { ok: true, raceChanged: true, raceData: choice.raceData };
+function compatibleMulticlassClassCandidates(actor, preferredClassData = null) {
+  const race = systemRace(actor);
+  const existing = classItems(actor);
+  const existingSlugs = existing.map(classSlugFromData).filter(Boolean);
+  const candidates = [preferredClassData, ...worldItemsByTypeSafe("classe")].filter(Boolean);
+  const seen = new Set();
+  const out = [];
+  for (const candidate of candidates) {
+    const slug = classSlugFromData(candidate);
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+    const alreadyPresent = existingSlugs.includes(slug);
+    const wanted = alreadyPresent ? existing.map(c => c.name) : [...existing.map(c => c.name), classLabelFromData(candidate)];
+    if (!raceAllowsClassSet(race, wanted)) continue;
+    if (!raceMatchesClassRulesSafe(race, candidate)) continue;
+    if (!classPrerequisitesOk(actor, candidate, race, { ignoreLevelMax: true })) continue;
+    out.push(candidate);
+  }
+  return out.sort((a, b) => classLabelFromData(a).localeCompare(classLabelFromData(b), game.i18n?.lang ?? "fr"));
 }
 
 async function showClassDropChoiceDialog(actor, droppedClassData) {
   const current = classItems(actor).map(c => c.name).join(" / ") || actor.system?.classe || "Aucune";
-  const race = systemRace(actor);
   const candidates = compatibleMulticlassClassCandidates(actor, droppedClassData);
+  const alreadyPresent = classItems(actor).some(c => classSlugFromData(c) === classSlugFromData(droppedClassData));
   const droppedSlug = classSlugFromData(droppedClassData);
-  const droppedAlreadyListed = candidates.some(c => classSlugFromData(c) === droppedSlug);
-  if (!droppedAlreadyListed) {
-    const wanted = [...classItems(actor).map(c => c.name), classLabelFromData(droppedClassData)];
-    if (raceAllowsClassSet(race, wanted) && classPrerequisitesOk(actor, droppedClassData, race, { ignoreLevelMax: true })) candidates.unshift(droppedClassData);
-  }
-  const droppedIsCandidate = candidates.some(c => classSlugFromData(c) === droppedSlug);
   const selectOptions = candidates.map((candidate, index) => {
-    const label = classLabelFromData(candidate);
     const marker = classSlugFromData(candidate) === droppedSlug ? " — classe déposée" : "";
-    const raceOk = raceMatchesClassRulesSafe(race, candidate);
-    const raceTxt = raceOk ? "" : " — changement de race requis";
-    return `<option value="${index}">${esc(label)}${esc(marker)}${esc(raceTxt)}</option>`;
+    const present = classItems(actor).some(c => classSlugFromData(c) === classSlugFromData(candidate)) ? " — déjà présente" : "";
+    return `<option value="${index}">${esc(classLabelFromData(candidate))}${esc(marker)}${esc(present)}</option>`;
   }).join("");
 
   const content = `
     <form class="add2e-multiclass-choice" style="line-height:1.45;min-width:520px;">
       <p><b>Drop d'une classe sur un personnage déjà classé</b></p>
-      <p>Race actuelle : <b>${esc(race?.name ?? actor.system?.race ?? "Race inconnue")}</b></p>
       <p>Classe(s) actuelle(s) : <b>${esc(current)}</b></p>
-      <p>Classe déposée : <b>${esc(classLabelFromData(droppedClassData))}</b></p>
-      ${candidates.length ? `<div class="form-group"><label>Classe à ajouter en multiclassage</label><select name="multiclassChoice">${selectOptions}</select></div>` : `<p style="color:#9b1c1c;font-weight:700;">Aucune classe compatible disponible pour le multiclassage avec cette race.</p>`}
-      <p style="font-size:0.9em;color:#6b5a2a;margin-bottom:0;">Le choix mono-classe garde le comportement existant et relance la validation race/classe/niveau du drop classique.</p>
+      <p>Classe déposée : <b>${esc(classLabelFromData(droppedClassData))}</b>${alreadyPresent ? " <b>(déjà présente)</b>" : ""}</p>
+      ${candidates.length ? `<div class="form-group"><label>Classe concernée</label><select name="multiclassChoice">${selectOptions}</select></div>` : `<p style="color:#9b1c1c;font-weight:700;">Aucune classe compatible disponible pour le multiclassage avec cette race.</p>`}
+      <p style="font-size:0.9em;color:#6b5a2a;margin-bottom:0;">Le choix mono-classe remplace la classe existante. Si la classe est déjà présente, le choix multiclassage resynchronise l'acteur sans dupliquer la classe.</p>
     </form>`;
 
-  const buttons = [{ action: "monoclass", label: "Remplacer en mono-classe", default: !droppedIsCandidate, callback: () => ({ action: "monoclass" }) }];
+  const buttons = [{ action: "monoclass", label: "Remplacer en mono-classe", default: false, callback: () => ({ action: "monoclass" }) }];
   if (candidates.length) {
     buttons.push({
       action: "multiclass-selected",
-      label: droppedIsCandidate ? "Ajouter en multiclassage" : "Ajouter la classe choisie",
-      default: droppedIsCandidate,
+      label: alreadyPresent ? "Recalculer / resynchroniser" : "Ajouter en multiclassage",
+      default: true,
       callback: (_event, _button, dialog) => {
         const root = dialog?.element ?? document;
         const idx = Number(root.querySelector?.('[name="multiclassChoice"]')?.value ?? 0) || 0;
@@ -608,24 +606,42 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
   return dialogWait({ title: "ADD2E — Classe ou multiclassage", content, buttons });
 }
 
+async function applyClassAsMonoclass(actor, itemData, sheet = null) {
+  if (typeof add2eApplyClassItemDataToActor === "function") {
+    const alignment = typeof add2ePickClassAlignment === "function" ? add2ePickClassAlignment(actor, itemData.system ?? {}) : actor.system?.alignement;
+    return add2eApplyClassItemDataToActor(actor, itemData, sheet, { alignmentCandidate: alignment, notify: true, reason: "multiclass-choice-monoclass" });
+  }
+  ui.notifications.error("Remplacement mono-classe impossible : helper add2eApplyClassItemDataToActor introuvable.");
+  return false;
+}
+
 async function addClassAsMulticlass(actor, itemData, sheet = null) {
+  const existing = classItems(actor);
+  const slug = classSlugFromData(itemData);
+  const already = existing.find(c => classSlugFromData(c) === slug);
+
+  if (already) {
+    const payload = multiclassUpdatePayload(actor);
+    if (payload) await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-resync-existing-class" });
+    try {
+      if (typeof add2eSyncActorSpellsFromClass === "function") await add2eSyncActorSpellsFromClass(actor, already, { mode: "append", showWait: true });
+    } catch (err) { warn("[SPELL_SYNC][EXISTING_APPEND_ERROR]", err); }
+    sheet?._add2eRememberActiveTab?.();
+    sheet?.render?.(false);
+    ui.notifications.info(`${already.name} est déjà présente : acteur multiclassé recalculé.`);
+    return true;
+  }
+
   const raceCheck = await ensureRaceCompatibleForClass(actor, itemData, sheet);
   if (!raceCheck.ok) return false;
-
   const race = systemRace(actor, raceCheck.raceData ?? null);
-  const existing = classItems(actor);
   const wantedClasses = [...existing.map(c => c.name), itemData.name];
   if (!raceAllowsClassSet(race, wantedClasses)) {
-    await dialogAlert("ADD2E — Multiclassage refusé", `<p>La race <b>${esc(race?.name ?? actor.system?.race ?? "actuelle")}</b> ne permet pas la combinaison :</p><p><b>${esc(wantedClasses.join(" / "))}</b></p><p>Le JSON de race n'est pas modifié.</p>`);
-    return false;
-  }
-  const slug = classSlugFromData(itemData);
-  if (existing.some(c => classSlugFromData(c) === slug)) {
-    ui.notifications.info(`${itemData.name} est déjà une classe du personnage.`);
+    await dialogAlert("ADD2E — Multiclassage refusé", `<p>La race <b>${esc(race?.name ?? actor.system?.race ?? "actuelle")}</b> ne permet pas la combinaison :</p><p><b>${esc(wantedClasses.join(" / "))}</b></p>`);
     return false;
   }
   if (!classPrerequisitesOk(actor, itemData, race, { ignoreLevelMax: true })) {
-    await dialogAlert("ADD2E — Prérequis insuffisants", `<p>Les prérequis de <b>${esc(itemData.name)}</b> ne sont pas respectés pour ce personnage.</p>`);
+    await dialogAlert("ADD2E — Prérequis insuffisants", `<p>Les prérequis de <b>${esc(itemData.name)}</b> ne sont pas respectés.</p>`);
     return false;
   }
 
@@ -655,11 +671,9 @@ async function addClassAsMulticlass(actor, itemData, sheet = null) {
   try {
     if (typeof add2eSyncActorSpellsFromClass === "function") await add2eSyncActorSpellsFromClass(actor, classDoc, { mode: "append", showWait: true });
   } catch (err) { warn("[SPELL_SYNC][APPEND_ERROR]", err); }
-
   sheet?._add2eRememberActiveTab?.();
   sheet?.render?.(false);
   ui.notifications.info(`Classe multiclassée ajoutée : ${classDoc.name}.`);
-  log("[ADD_CLASS]", { actor: actor.name, class: classDoc.name, payload });
   return true;
 }
 
@@ -668,12 +682,12 @@ async function applyRaceForMulticlass(actor, raceData, sheet = null) {
   if (existing.length <= 1) return false;
   const wantedClasses = existing.map(c => c.name);
   if (!raceAllowsClassSet(raceData, wantedClasses)) {
-    await dialogAlert("ADD2E — Race incompatible", `<p>La race <b>${esc(raceData?.name ?? "déposée")}</b> ne permet pas la combinaison multiclassée actuelle :</p><p><b>${esc(wantedClasses.join(" / "))}</b></p><p>Le drop est annulé pour éviter de détruire les classes existantes.</p>`);
+    await dialogAlert("ADD2E — Race incompatible", `<p>La race <b>${esc(raceData?.name ?? "déposée")}</b> ne permet pas la combinaison multiclassée actuelle :</p><p><b>${esc(wantedClasses.join(" / "))}</b></p>`);
     return true;
   }
   for (const cls of existing) {
     if (!raceMatchesClassRulesSafe(raceData, cls) || !classPrerequisitesOk(actor, cls, raceData, { ignoreLevelMax: true })) {
-      await dialogAlert("ADD2E — Race incompatible", `<p>La race <b>${esc(raceLabelFromData(raceData))}</b> n'est pas compatible avec <b>${esc(cls.name)}</b>.</p><p>Le drop de race est annulé.</p>`);
+      await dialogAlert("ADD2E — Race incompatible", `<p>La race <b>${esc(raceLabelFromData(raceData))}</b> n'est pas compatible avec <b>${esc(cls.name)}</b>.</p>`);
       return true;
     }
   }
@@ -691,53 +705,8 @@ async function applyRaceForMulticlass(actor, raceData, sheet = null) {
   return true;
 }
 
-function parseDropItemData(event) { try { return JSON.parse(event.dataTransfer?.getData("text/plain") || "{}"); } catch (_err) { return null; } }
-async function resolveDroppedItemData(raw) {
-  if (!raw || raw.type !== "Item") return null;
-  if (raw.data) return raw.data;
-  if (raw.uuid) {
-    const doc = await fromUuid(raw.uuid).catch(() => null);
-    if (doc instanceof Item) return doc.toObject();
-  }
-  if (raw.pack && raw.id) {
-    const pack = game.packs.get(raw.pack);
-    const ent = pack && await pack.getDocument(raw.id);
-    if (ent instanceof Item) return ent.toObject();
-  }
-  return null;
-}
-
-function installDropWrapper() {
-  const SheetClass = globalThis.Add2eActorSheet;
-  if (!SheetClass?.prototype?._onDrop) return false;
-  if (SheetClass.prototype._add2eMulticlassWrapped) return true;
-  const original = SheetClass.prototype._onDrop;
-  SheetClass.prototype._onDrop = async function add2eMulticlassDropWrapped(event) {
-    const actor = this.actor;
-    if (!actor || actor.type !== "personnage") return original.call(this, event);
-    const raw = parseDropItemData(event);
-    const itemData = await resolveDroppedItemData(raw);
-    if (!itemData || !["classe", "race"].includes(itemData.type)) return original.call(this, event);
-
-    if (itemData.type === "classe" && classItems(actor).length >= 1) {
-      const choice = await showClassDropChoiceDialog(actor, itemData);
-      if (choice?.action === "monoclass") return original.call(this, event);
-      if (choice?.action === "multiclass" && choice.classData) {
-        const handled = await addClassAsMulticlass(actor, choice.classData, this);
-        if (handled) { event.preventDefault?.(); event.stopPropagation?.(); return false; }
-      }
-      event.preventDefault?.(); event.stopPropagation?.(); ui.notifications.info("Drop de classe annulé."); return false;
-    }
-
-    if (itemData.type === "race" && classItems(actor).length > 1) {
-      const handled = await applyRaceForMulticlass(actor, itemData, this);
-      if (handled) { event.preventDefault?.(); event.stopPropagation?.(); return false; }
-    }
-    return original.call(this, event);
-  };
-  SheetClass.prototype._add2eMulticlassWrapped = true;
-  log("[DROP_WRAPPER_INSTALLED]", { version: VERSION });
-  return true;
+function mergeClassMap(actor, path, incoming = {}) {
+  return { ...(foundry.utils.deepClone(foundry.utils.getProperty(actor.system ?? {}, path) ?? {})), ...(incoming ?? {}) };
 }
 
 function splitXpDelta(actor, newTotalXp) {
@@ -772,15 +741,10 @@ function mergeMulticlassChanges(actor, changes) {
     if (path.startsWith("system.niveaux_par_classe.")) levelChanges[path.slice("system.niveaux_par_classe.".length)] = value;
     if (path.startsWith("system.xp_par_classe.")) xpClassChanges[path.slice("system.xp_par_classe.".length)] = value;
   }
-  if (Object.keys(levelChanges).length) {
-    const levelMap = mergeClassMap(actor, "niveaux_par_classe", levelChanges);
-    payload = multiclassUpdatePayload(actor, null, null, levelMap);
-  } else if (Object.keys(xpClassChanges).length) {
-    const xpMap = mergeClassMap(actor, "xp_par_classe", xpClassChanges);
-    payload = multiclassUpdatePayload(actor, null, xpMap, null);
-  } else if (foundry.utils.hasProperty(changes, "system.xp")) {
-    const incomingTotal = foundry.utils.getProperty(changes, "system.xp");
-    const xpMap = splitXpDelta(actor, incomingTotal);
+  if (Object.keys(levelChanges).length) payload = multiclassUpdatePayload(actor, null, null, mergeClassMap(actor, "niveaux_par_classe", levelChanges));
+  else if (Object.keys(xpClassChanges).length) payload = multiclassUpdatePayload(actor, null, mergeClassMap(actor, "xp_par_classe", xpClassChanges), null);
+  else if (foundry.utils.hasProperty(changes, "system.xp")) {
+    const xpMap = splitXpDelta(actor, foundry.utils.getProperty(changes, "system.xp"));
     if (xpMap) payload = multiclassUpdatePayload(actor, null, xpMap, null);
   }
   if (!payload) return;
@@ -794,6 +758,39 @@ async function recalcActor(actor) {
   if (!payload) return null;
   await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-recalc" });
   return payload;
+}
+
+function installDropWrapper() {
+  const SheetClass = globalThis.Add2eActorSheet;
+  if (!SheetClass?.prototype?._onDrop) return false;
+  if (SheetClass.prototype._add2eMulticlassWrapped === VERSION) return true;
+  const original = SheetClass.prototype._onDrop;
+  SheetClass.prototype._onDrop = async function add2eMulticlassDropWrapped(event, data = null) {
+    const actor = this.actor;
+    if (!actor || actor.type !== "personnage") return original.call(this, event, data);
+    const itemData = await resolveDroppedItemData(event, data);
+    if (!itemData || !["classe", "race"].includes(itemData.type)) return original.call(this, event, data);
+
+    if (itemData.type === "classe" && classItems(actor).length >= 1) {
+      const choice = await showClassDropChoiceDialog(actor, itemData);
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      if (choice?.action === "monoclass") return applyClassAsMonoclass(actor, itemData, this);
+      if (choice?.action === "multiclass" && choice.classData) return addClassAsMulticlass(actor, choice.classData, this);
+      ui.notifications.info("Drop de classe annulé.");
+      return false;
+    }
+
+    if (itemData.type === "race" && classItems(actor).length > 1) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      return applyRaceForMulticlass(actor, itemData, this);
+    }
+    return original.call(this, event, data);
+  };
+  SheetClass.prototype._add2eMulticlassWrapped = VERSION;
+  log("[DROP_WRAPPER_INSTALLED]", { version: VERSION });
+  return true;
 }
 
 Hooks.once("ready", () => {
