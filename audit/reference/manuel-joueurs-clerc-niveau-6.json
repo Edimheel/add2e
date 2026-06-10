@@ -152,13 +152,13 @@
       "description": "grâce à ce sort, le clerc est capable de trouver la route la plus courte et la plus directe pour l’emmener là où il le désire, que ce soit pour entrer ou sortir d’un endroit. Cet endroit peut être à l’extérieur ou sous terre; ce peut même être un labyrinthe. Cette connaissance dure tant que le sort est actif, c'est-à-dire 1 tour par niveau du clerc. Ce sort permet au clerc et à ceux qui sont avec lui de sortir d’un sort de labyrinthe en un round. À noter qu’un lieu n’est pas un objet: le sort porte sur un endroit connu et identifié en tant que tel et non sur ce qu’il contient ou abrite. On peut ainsi trouver une forêt de frênes connue mais pas celle où habite le dragon vert ou qui contient tel trésor. La composante matérielle de ce sort est un jeu d’objets divinatoires de ceux appréciés par le clerc: en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées. L’inverse du sort, fausse route, fait que la créature touchée est incapable de trouver sa route pendant la durée du sort, bien qu’elle puisse être guidée.",
       "composants_materiels_objets": [
         {
-          "nom": "un jeu d’objets divinatoires de ceux appréciés par le clerc: en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées",
+          "nom": "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
@@ -207,11 +207,11 @@
         {
           "nom": "symbole sacré du clerc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
         }
       ],
       "foundry": {

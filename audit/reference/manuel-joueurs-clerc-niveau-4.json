@@ -25,13 +25,22 @@
       "description": "en lançant ce sort, le clerc provoque une dépression, un abaissement de l’eau ou d’un liquide similaire dans la zone d’effet. Cette baisse du niveau de l’eau est de 5 % par niveau du clerc, c'est-à-dire 40 % au niveau 8, 45 % au niveau 9, etc. La zone d’effet augmente aussi avec le niveau du clerc: 8\" x 8\" au niveau 8, 9\" x 9\" au niveau 9, etc. Les composantes matérielles de ce sort sont le symbole sacré du clerc et une pincée de poussière. L’inverse du sort, gonflement des eaux, annule les effets d’un abaissement et/ou fait monter le niveau de l’eau dans la zone d’effet de 30 cm par niveau du clerc. Ce sort ne peut pas être utilisé sous l’eau.",
       "composants_materiels_objets": [
         {
-          "nom": "le symbole sacré du clerc et une pincée de poussière",
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "pincée de poussière",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -57,13 +66,22 @@
       "description": "avec ce sort, le clerc est capable de transformer un bâton en serpent pour chaque niveau d’expérience atteint; c.-à-d. un clerc de niveau 9 pourra changer 9 bâtons en 9 serpents. Ces serpents attaquent sur ordre du clerc. Il doit bien sûr y avoir des bâtons ou des objets en bois similaires (torches, lances de fantassin, etc.) à transformer en serpents. Seuls les morceaux de bois qui sont dans la zone d’effet seront transformés. Les objets magiques comme les bâtons magiques ou les lances de fantassin magiques ne sont pas affectés. Il y a 5 % de chance par niveau du clerc que chaque serpent soit venimeux. Chaque bâton transformé en serpent par un clerc de niveau 11 aura 55 % de chance d’être venimeux. Les effets durent 2 rounds par niveau du clerc. Les composantes matérielles de ce sort sont un petit morceau d’écorce et plusieurs écailles de serpent. L’inverse, serpents à bâtons, a donc l’effet contraire, pour la même durée, ou permet d’annuler les effets de bâtons à serpents en tenant compte du niveau du clerc (c.-à-d. un clerc de niveau 10 lançant serpents à bâtons pourra transformer 10 serpents en bâtons).",
       "composants_materiels_objets": [
         {
-          "nom": "un petit morceau d’écorce et plusieurs écailles de serpent",
+          "nom": "petit morceau d’écorce",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "écailles de serpent",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -132,13 +150,49 @@
       "description": "similaire au sort d’augure, le sort divination est utilisé pour obtenir des informations sur une zone. Cette zone peut être un petit bois, une grande bâtisse ou une partie d’un niveau d’un donjon. Dans tous les cas, son emplacement doit être connu du clerc. Ce sort donne des informations sur la force relative des créatures qui s’y trouvent, sur l’importance des richesses et sur les chances éventuelles de s’attirer le courroux d’êtres surpuissants, surnaturels, bons ou mauvais, si la zone est envahie ou attaquée. Les chances de base pour réussir une divination sont de 60 % + 1 % par niveau du clerc (le MD peut appliquer des ajustements dans des cas particuliers). Si le tirage de pourcentage, effectué par le MD, échoue, le clerc obtiendra des informations erronées. Les composantes matérielles de ce sort sont le sacrifice d’une petite créature, de l’encens et le symbole sacré du clerc. Si une divination puissante est tentée, il faut faire des dons de pierres précieuses et même d’objets magiques.",
       "composants_materiels_objets": [
         {
-          "nom": "le sacrifice d’une petite créature, de l’encens et le symbole sacré du clerc",
+          "nom": "petite créature",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Sacrifiée pour lancer le sort."
+        },
+        {
+          "nom": "encens",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "pierres précieuses",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Dons requis si une divination puissante est tentée.",
+          "notes": null
+        },
+        {
+          "nom": "objets magiques",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Dons éventuellement requis si une divination puissante est tentée.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -184,13 +238,31 @@
       "description": "quand ce sort est lancé, le clerc est capable de converser, dans des termes très rudimentaires, avec toutes sortes de végétaux vivants. Ainsi, le clerc peut demander à des plantes si une créature est passée ou non, leur demander de faciliter un passage, leur demander d’enchevêtrer des créatures, etc. Ce sort n’autorise pas le clerc à faire bouger des plantes non mobiles. Tout végétal dans la zone d’effet est sous le contrôle du clerc. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes matérielles de ce sort sont une goutte d’eau, une pincée de bouse et une flamme.",
       "composants_materiels_objets": [
         {
-          "nom": "une goutte d’eau, une pincée de bouse et une flamme",
+          "nom": "goutte d’eau",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "pincée de bouse",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "flamme",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {

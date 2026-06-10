@@ -27,11 +27,11 @@
         {
           "nom": "petite baguette fourchue métallique, sorte de diapason",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Le type de métal et la taille déterminent le plan d’arrivée."
         }
       ],
       "foundry": {
@@ -57,13 +57,31 @@
       "description": "avec ce sort, le clerc peut entrer en contact avec son dieu, ou ses agents, et demander des informations sous la forme de questions auxquelles il ne sera répondu que par «oui» ou «non». Le clerc est autorisé à poser une question pour chacun de ses niveaux. Les réponses données seront correctes et si la divinité n’est pas omnisciente, elle pourra répondre «je ne sais pas». Il est cependant probable que le MD limitera le nombre de communions à une par aventure, une par semaine ou même une par mois, car les dieux n’apprécient pas les dérangements trop fréquents. Les composantes matérielles de ce sort sont le symbole sacré du clerc, de l’eau bénite et de l’encens.",
       "composants_materiels_objets": [
         {
-          "nom": "symbole sacré du clerc, eau bénite et encens",
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "eau bénite",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "encens",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -90,13 +108,31 @@
       "description": "le clerc, avec ce sort, oblige les créatures invoquées et/ou enchantées d’alignement mauvais ou commettant des actes mauvais à retourner sur leur plan d’existence. Voici des exemples de telles créatures: chasseurs invisibles, démons, diables, djinns, éfrits, élémentaux et serviteurs aériens. Ce sort dure 1 round/niveau et pendant que le sort est actif, toutes les créatures pouvant être affectées subissent un malus de –7 sur leurs jets pour toucher le clerc. L’inverse du sort, dissipation du bien, agit contre les créatures invoquées et/ou enchantées d’alignement bon ou envoyées pour aider la cause du bien. Les composantes matérielles de ce sort sont le symbole sacré du clerc et de l’eau bénite/maudite.",
       "composants_materiels_objets": [
         {
-          "nom": "symbole sacré du clerc et eau bénite/maudite",
+          "nom": "symbole sacré du clerc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour dissipation du mal ; alternative à l’eau maudite.",
+          "notes": null
+        },
+        {
+          "nom": "eau maudite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour dissipation du bien ; alternative à l’eau bénite.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -122,13 +158,40 @@
       "description": "ce sort est utilisé par le clerc pour ôter à une personne la responsabilité d’un acte ignoré ou involontaire. Il peut également annuler les effets d’un changement magique d’alignement. À moins que la personne concernée ne dispose pas de son libre arbitre, elle doit être sincèrement repentante. Éventuellement, la divinité pourra demander un sacrifice minime en échange de l’expiation (de quelques piécettes dans un tronc jusqu’à la quête d’une relique). Le MD prendra en compte tous les éléments qu’il jugera utiles pour la résolution de ce sort. Un méfait délibéré ou un acte commis en toute connaissance de cause et de plein gré ne peut être le sujet d’un sort d’expiation. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes matérielles de ce sort sont le symbole sacré du clerc, son chapelet ou son livre de prière et de l’encens à brûler.",
       "composants_materiels_objets": [
         {
-          "nom": "symbole sacré du clerc, chapelet ou livre de prière, encens à brûler",
+          "nom": "symbole sacré du clerc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "chapelet",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au livre de prière.",
+          "notes": null
+        },
+        {
+          "nom": "livre de prière",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au chapelet.",
+          "notes": null
+        },
+        {
+          "nom": "encens",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Encens à brûler."
         }
       ],
       "foundry": {
@@ -154,13 +217,31 @@
       "description": "quand ce sort est lancé par un clerc, une horde d’insectes rampants, sauteurs et volants se forme en un épais nuage. Ces insectes obscurcissent la vue, la limitant à 3\". Quel que soit leur classe d’armure, les créatures à l’intérieur de ce nuage subissent 1 point de dégât par round, à cause des piqûres et morsures multiples. Le MD fera un test de moral pour les créatures ayant moins de 5 dés de vie. Si le test échoue, elle fuiront le plus rapidement possible droit devant elles jusqu’à ce qu’elles soient à plus de 24\" du nuage d’insectes; notez que les créatures ayant 2 DV ou moins agiront automatiquement de la sorte (pas de test de moral). Une fumée épaisse et abondante éloignera les insectes. Le feu aura le même effet. Un mur de feu en forme d’anneau éloignera les insectes de son champ d’action et une boule de feu éparpillera simplement les insectes à l’endroit de l’explosion pendant 1 tour. La foudre, le froid ou la glace agissent de manières similaires. Le nuage persiste pendant 1 tour pour chaque niveau du clerc, puis il se disperse. Le nuage se forme à l’endroit où le clerc le désire, jusqu’à un maximum de 36\"; l’endroit que cible le clerc constitue le centre du nuage d’insectes. Ensuite, le nuage ne bouge plus; il ne sort pas de sa zone d’effet. Ce sort peut être contré par le sort dissipation de la magie lancé sur le centre du nuage. Un cube de force (un objet magique spécifique) peut éloigner les insectes d’une personne se trouvant au centre du nuage, mais l’invisibilité n’offre aucune protection. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles de ce sort sont quelques grains de sucre, des amandes et de la matière grasse.",
       "composants_materiels_objets": [
         {
-          "nom": "quelques grains de sucre, des amandes et de la matière grasse",
+          "nom": "grains de sucre",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "amandes",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+        },
+        {
+          "nom": "matière grasse",
+          "quantite": 1,
+          "consommation": "a_verifier",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -186,13 +267,13 @@
       "description": "quand le clerc lance ce sort, une colonne de feu se forme à l’endroit voulu par lui. Chaque créature se trouvant dans cette zone doit lancer un jet de protection. Si le jet de protection est raté, les créatures dans la zone d’effet subissent de 6 à 48 points de dommage (6d8). Si ce jet de protection est réussi, les dégâts subis ne sont que de 3 à 24 points de vie (3d8). Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une pincée de souffre. QUÊTE RELIGIEUSE (Enchantement/Charme) Niveau: 5 Composantes: V, S, M Portée: 6\" Temps d'incantation: 8 segments Durée: jusqu'à accomplissement Jet de protection: annule Zone d'effet: une créature",
       "composants_materiels_objets": [
         {
-          "nom": "pincée de soufre",
+          "nom": "pincée de souffre",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -216,17 +297,7 @@
       "jet_sauvegarde": "annule",
       "composants_materiels_source": "symbole sacré du clerc",
       "description": "",
-      "composants_materiels_objets": [
-        {
-          "nom": "symbole sacré du clerc",
-          "quantite": 1,
-          "consommation": "a_verifier",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
-        }
-      ],
+      "composants_materiels_objets": [],
       "foundry": {
         "nom": "Quête Religieuse",
         "id": "LEjrYHsqdLZt9u9z",
@@ -294,13 +365,22 @@
       "description": "quand le clerc lance ce sort, toute chose dans la zone d’effet apparaît comme ce qu’elle est vraiment. Les portes secrètes deviennent visibles pour le clerc, la place des choses déplacées devient évidente, les choses invisibles, éthérées et astrales deviennent également visibles. Les choses métamorphosées et transformées magiquement apparaissent sous leur vrai jour. Même une aura émise par des créatures devient visible, ainsi le clerc peut-il savoir si elles sont bonnes, mauvaises, ou entre les deux. Ce sort requiert une crème pour les yeux comme composante matérielle; cette crème est faite d’une poudre de champignons très rares, de safran et de graisse. L’inverse du sort, vision erronée, fait que la créature affectée voit les choses comme elles ne le sont pas réellement: ce qui est cher devient sans valeur, le rugueux devient lisse, la beauté devient laide, etc. La crème pour l’inverse du sort est faite d’huile, de poudre de pavot et d’essence d’orchidée rose. Pour les deux versions du sort, la crème doit être vieille de 1 à 6 mois.",
       "composants_materiels_objets": [
         {
-          "nom": "une crème pour les yeux",
+          "nom": "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "condition": "Requise pour vision réelle.",
+          "notes": "La crème doit être vieille de 1 à 6 mois."
+        },
+        {
+          "nom": "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour vision erronée.",
+          "notes": "La crème doit être vieille de 1 à 6 mois."
         }
       ],
       "foundry": {
