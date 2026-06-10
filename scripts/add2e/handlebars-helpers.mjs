@@ -1,5 +1,6 @@
 // scripts/add2e/handlebars-helpers.mjs
 // ADD2E — Helpers Handlebars partagés.
+// Version : 2026-06-10-multiclass-best-thaco-saves-v1
 
 // Helpers Handlebars
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.json) {
@@ -13,7 +14,6 @@ if (!Handlebars.helpers.add) Handlebars.registerHelper("add", (a, b) =>
 if (!Handlebars.helpers.gt)       Handlebars.registerHelper("gt", (a, b) => Number(a) > Number(b));
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.array) {
   Handlebars.registerHelper("array", function() {
-    // On retire le dernier argument (obj Handlebars)
     return Array.prototype.slice.call(arguments, 0, -1);
   });
 }
@@ -201,6 +201,65 @@ function add2eHbsNumeric(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function add2eHbsClassItems(actor) {
+  return add2eHbsAsArray(actor?.items?.contents ?? actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+}
+
+function add2eHbsClassSlug(cls) {
+  const sys = cls?.system ?? {};
+  return add2eHbsSlug(sys.slug ?? sys.label ?? sys.nom ?? sys.name ?? cls?.name ?? "classe");
+}
+
+function add2eHbsClassLevel(actor, cls) {
+  const slug = add2eHbsClassSlug(cls);
+  const map = actor?.system?.niveaux_par_classe ?? {};
+  return Math.max(1, add2eHbsNumeric(map[slug] ?? cls?.system?.niveau ?? cls?.system?.level ?? actor?.system?.niveau ?? 1));
+}
+
+function add2eHbsProgressionRowForClass(actor, cls) {
+  const level = add2eHbsClassLevel(actor, cls);
+  const progression = Array.isArray(cls?.system?.progression) ? cls.system.progression : [];
+  if (!progression.length) return null;
+  return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null;
+}
+
+function add2eHbsRowThaco(row) {
+  return add2eHbsNumeric(row?.thac0 ?? row?.thaco ?? row?.THAC0 ?? 20);
+}
+
+function add2eHbsBestThaco(actor, fallback = 20) {
+  const classes = add2eHbsClassItems(actor);
+  if (!classes.length || actor?.system?.multiclasse?.enabled !== true) return add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20);
+  const values = classes.map(cls => add2eHbsRowThaco(add2eHbsProgressionRowForClass(actor, cls))).filter(v => Number.isFinite(v) && v > 0);
+  return values.length ? Math.min(...values) : add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20);
+}
+
+function add2eHbsReadSave(row, idx) {
+  const s = row?.savingThrows ?? row?.saves ?? row?.jets_sauvegarde ?? row?.sauvegardes ?? null;
+  if (Array.isArray(s)) return add2eHbsNumeric(s[idx] ?? NaN);
+  if (s && typeof s === "object") {
+    const keys = [
+      ["paralysie", "poison", "mort", "death", "save0"],
+      ["petrification", "pétrification", "polymorphose", "polymorph", "save1"],
+      ["baguettes", "batons", "badines", "wand", "wands", "save2"],
+      ["souffles", "breath", "souffle", "save3"],
+      ["sorts", "sortileges", "sortilèges", "spell", "spells", "save4"]
+    ][Number(idx) || 0] ?? [];
+    for (const key of keys) if (s[key] !== undefined) return add2eHbsNumeric(s[key]);
+  }
+  return NaN;
+}
+
+function add2eHbsBestSave(actor, idx, fallbackRow = null) {
+  const classes = add2eHbsClassItems(actor);
+  if (!classes.length || actor?.system?.multiclasse?.enabled !== true) {
+    const v = add2eHbsReadSave(fallbackRow, idx);
+    return Number.isFinite(v) ? v : "—";
+  }
+  const values = classes.map(cls => add2eHbsReadSave(add2eHbsProgressionRowForClass(actor, cls), idx)).filter(v => Number.isFinite(v) && v > 0);
+  return values.length ? Math.min(...values) : "—";
+}
+
 function add2eHbsWeaponMagicBonus(arme, kind) {
   try {
     if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function") {
@@ -231,7 +290,7 @@ function add2eHbsWeaponAbilityBonuses(actor, arme) {
 
 function add2eHbsEquippedWeaponRows(actor, listeArmes, listeObjets, combatDefense) {
   const armes = add2eHbsAsArray(listeArmes).filter(arme => add2eHbsItemEquipped(arme));
-  const thacoBase = add2eHbsNumeric(combatDefense?.thaco ?? actor?.system?.thac0 ?? 20);
+  const thacoBase = add2eHbsBestThaco(actor, combatDefense?.thaco ?? actor?.system?.thac0 ?? 20);
   const otherHit = add2eHbsArmorOtherBonus(actor, "bonus_toucher");
   const otherDamage = add2eHbsArmorOtherBonus(actor, "bonus_degats");
 
@@ -271,28 +330,26 @@ function add2eHbsEquippedWeaponRows(actor, listeArmes, listeObjets, combatDefens
 }
 
 if (typeof Handlebars !== "undefined") {
-  // Capitalise la première lettre
+  Handlebars.registerHelper("add2eBestThaco", add2eHbsBestThaco);
+  Handlebars.registerHelper("add2eBestSave", add2eHbsBestSave);
+  Handlebars.registerHelper("add2eEquippedWeaponRows", add2eHbsEquippedWeaponRows);
+
   Handlebars.registerHelper("capitalize", str =>
     (str && typeof str === "string") ? str.charAt(0).toUpperCase() + str.slice(1) : str
   );
 
-  // Met en majuscule
   Handlebars.registerHelper("uppercase", str =>
     (str && typeof str === "string") ? str.toUpperCase() : str
   );
 
-  // Sous-chaîne (substr)
   Handlebars.registerHelper("substr", (str, start, len) =>
     (str && typeof str === "string") ? str.substr(start, len) : str
   );
 
-  // Concatène deux strings
   Handlebars.registerHelper("concat", function () {
-    // Prend tous les arguments sauf le dernier (qui est options)
     return Array.from(arguments).slice(0, -1).join('');
   });
 
-  // Crée un array (utile pour boucler sur une liste fixe dans le HBS)
   Handlebars.registerHelper("array", function () {
     return Array.prototype.slice.call(arguments, 0, -1);
   });
@@ -301,7 +358,6 @@ if (typeof Handlebars !== "undefined") {
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.getFlag) {
   Handlebars.registerHelper("getFlag", function(item, flag) {
     try {
-      // Pour éviter les crashs si getFlag n'est pas dispo (ex : preview)
       if (!item || typeof item.getFlag !== "function") return false;
       const [scope, key] = flag.split('.');
       return item.getFlag(scope, key);
@@ -312,15 +368,8 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.getFlag) {
 }
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.toSpecialArray) {
   Handlebars.registerHelper("toSpecialArray", function (val) {
-    // Si déjà un tableau, clone-le et filtre les vides/NEW
-    if (Array.isArray(val)) {
-      return val.filter(e => !!e && e !== "" && e !== "NEW");
-    }
-    // Si objet à clés numériques, convertis-le
-    if (typeof val === "object" && val !== null) {
-      return Object.values(val).filter(e => !!e && e !== "" && e !== "NEW");
-    }
-    // Rien à afficher
+    if (Array.isArray(val)) return val.filter(e => !!e && e !== "" && e !== "NEW");
+    if (typeof val === "object" && val !== null) return Object.values(val).filter(e => !!e && e !== "" && e !== "NEW");
     return [];
   });
 }
@@ -328,71 +377,5 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.length) {
   Handlebars.registerHelper('length', function(x) { return x ? x.length : 0; });
 }
 
-if (typeof Handlebars !== "undefined") {
-  Handlebars.registerHelper("joinLines", function(value, fallback) {
-    if (Array.isArray(value) && value.length) return value.filter(Boolean).join("\n");
-    if (typeof value === "string" && value.trim()) return value;
-    return typeof fallback === "string" ? fallback : "";
-  });
-
-  Handlebars.registerHelper("negativeNumber", function(value) {
-    const n = Number(value || 0);
-    return n === 0 ? 0 : -Math.abs(n);
-  });
-
-  Handlebars.registerHelper("signedNumber", function(value) {
-    return add2eHbsSigned(value);
-  });
-
-  Handlebars.registerHelper("add2eItemDisplayDamage", function(item) {
-    return add2eHbsDisplayDamageForItem(item);
-  });
-
-  Handlebars.registerHelper("add2eWeaponDisplayDamage", function(arme, listeObjets) {
-    if (add2eHbsWeaponRequiresProjectile(arme)) {
-      const projectile = add2eHbsFindEquippedProjectile(listeObjets);
-      if (projectile) return add2eHbsDisplayDamageForItem(projectile);
-    }
-    return add2eHbsDisplayDamageForItem(arme);
-  });
-
-  Handlebars.registerHelper("add2eEquippedWeaponRows", function(actor, listeArmes, listeObjets, combatDefense) {
-    return add2eHbsEquippedWeaponRows(actor, listeArmes, listeObjets, combatDefense);
-  });
-
-  Handlebars.registerHelper("magicSourceNames", function(value, fallback) {
-    if (!Array.isArray(value) || !value.length) return typeof fallback === "string" ? fallback : "";
-    return value
-      .filter(Boolean)
-      .map(source => String(source).replace(/:\s*[-+]?\d+\s*$/, ""))
-      .join("\n");
-  });
-
-  Handlebars.registerHelper("componentSpellNames", function(component, sortsParNiveau) {
-    const componentSlug = add2eHbsComponentSlug(component);
-    if (!componentSlug || !sortsParNiveau || typeof sortsParNiveau !== "object") return "—";
-
-    const spells = [];
-    for (const list of Object.values(sortsParNiveau)) {
-      for (const sort of add2eHbsAsArray(list)) {
-        const slugs = add2eHbsSpellMaterialSlugs(sort);
-        if (slugs.includes(componentSlug)) spells.push(String(sort?.name ?? "Sort"));
-      }
-    }
-
-    if (!spells.length) return "—";
-    const unique = [...new Set(spells)].sort((a, b) => a.localeCompare(b));
-    return unique.join(", ");
-  });
-
-  Handlebars.registerHelper("spellMaterialComponents", function(sort) {
-    const entries = add2eHbsSpellMaterialEntries(sort);
-    if (!entries.length) return "—";
-    const text = entries.map(entry => {
-      const qty = entry.quantite > 1 ? ` x${entry.quantite}` : "";
-      const state = entry.consomme ? "" : " (non consommé)";
-      return `${entry.nom}${qty}${state}`;
-    }).join(", ");
-    return text || "—";
-  });
-}
+globalThis.add2eHbsBestThaco = add2eHbsBestThaco;
+globalThis.add2eHbsBestSave = add2eHbsBestSave;
