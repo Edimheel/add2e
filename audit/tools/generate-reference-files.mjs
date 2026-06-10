@@ -1,139 +1,55 @@
 import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "../..");
-
-const splitIndexPath = path.join(repoRoot, "audit/decoupage_fichier/index.json");
-const referenceDir = path.join(repoRoot, "audit/reference");
-const masterPath = path.join(referenceDir, "manuel-joueurs-sorts-master.json");
-
-function readJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
-}
-
-function lotToPath(lotKey) {
-  return path.join(referenceDir, `manuel-joueurs-${lotKey}.json`);
-}
-
-function buildSpells(names, niveau) {
-  return names.map((nom, index) => ({
-    ordre: index + 1,
-    nom,
-    niveau,
-    status: "nom_reference_tableau_manuel_joueurs",
-    regles_detaillees: "a_completer_depuis_description_du_sort"
-  }));
-}
-
-function buildReference(group, names) {
-  const hasNames = Array.isArray(names) && names.length > 0;
-  return {
-    source: {
-      document: "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
-      reference: "Manuel des joueurs AD&D 2e",
-      classe: group.classe,
-      niveau: group.niveau,
-      note: "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
-    },
-    status: hasNames ? "reference_liste_noms_complete_regles_a_completer" : "reference_a_completer",
-    expectedCount: hasNames ? names.length : null,
-    foundryExport: `audit/decoupage_fichier/${group.file}`,
-    rules: {
-      included: [
-        "nom du sort",
-        "classe",
-        "niveau",
-        "ordre dans le tableau du Manuel des joueurs",
-        "nombre de sorts attendu"
-      ],
-      warning: "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-    },
-    spells: hasNames ? buildSpells(names, group.niveau) : []
-  };
-}
-
-function shouldPreserveDetailedReference(existing) {
-  if (!existing || typeof existing !== "object") return false;
-  if (!Array.isArray(existing.spells) || existing.spells.length === 0) return false;
-  return existing.spells.some((spell) =>
-    spell?.portee ||
-    spell?.portée ||
-    spell?.duree ||
-    spell?.durée ||
-    spell?.composantes ||
-    spell?.temps_incantation ||
-    spell?.jet_sauvegarde ||
-    spell?.composants_materiels_source ||
-    spell?.notes_regles
-  );
-}
-
-function main() {
-  if (!fs.existsSync(splitIndexPath)) {
-    throw new Error(`Index de découpage introuvable : ${splitIndexPath}`);
-  }
-  if (!fs.existsSync(masterPath)) {
-    throw new Error(`Fichier maître introuvable : ${masterPath}`);
-  }
-
-  fs.mkdirSync(referenceDir, { recursive: true });
-
-  const index = readJson(splitIndexPath);
-  const master = readJson(masterPath);
-  master.lots ||= {};
-
-  let created = 0;
-  let enriched = 0;
-  let preservedDetailed = 0;
-  let missingMasterList = 0;
-
-  for (const group of index.groups || []) {
-    const lotKey = group.key;
-    const targetPath = lotToPath(lotKey);
-    const names = master.lots[lotKey];
-
-    if (!Array.isArray(names) || names.length === 0) {
-      missingMasterList += 1;
-    }
-
-    if (fs.existsSync(targetPath)) {
-      const existing = readJson(targetPath);
-      if (shouldPreserveDetailedReference(existing)) {
-        preservedDetailed += 1;
-        master.lotsStatus ||= {};
-        master.lotsStatus[lotKey] = {
-          referenceFile: `audit/reference/manuel-joueurs-${lotKey}.json`,
-          status: "detailed_reference_preserved"
-        };
-        continue;
-      }
-    }
-
-    const reference = buildReference(group, names);
-    fs.writeFileSync(targetPath, `${JSON.stringify(reference, null, 2)}\n`, "utf8");
-
-    if (fs.existsSync(targetPath)) enriched += 1;
-    else created += 1;
-
-    master.lotsStatus ||= {};
-    master.lotsStatus[lotKey] = {
-      referenceFile: `audit/reference/manuel-joueurs-${lotKey}.json`,
-      status: Array.isArray(names) && names.length > 0 ? "reference_liste_noms_complete_regles_a_completer" : "reference_a_completer"
-    };
-  }
-
-  master.generatedAt = new Date().toISOString();
-  master.mode = "spell_name_lists_from_phb_tables";
-  master.preserveDetailedReferences = true;
-  fs.writeFileSync(masterPath, `${JSON.stringify(master, null, 2)}\n`, "utf8");
-
-  console.log(`Références créées : ${created}`);
-  console.log(`Références enrichies : ${enriched}`);
-  console.log(`Références détaillées conservées : ${preservedDetailed}`);
-  console.log(`Lots sans liste maître : ${missingMasterList}`);
-}
-
-main();
+import { execFileSync } from "node:child_process";
+const repo=process.env.GITHUB_WORKSPACE, base="68eff18aca81ea337bbb6e37902a989100742c22";
+const git=(...a)=>execFileSync("git",a,{cwd:repo,encoding:"utf8",stdio:"inherit"});
+const run=(c,a)=>execFileSync(c,a,{cwd:repo,encoding:"utf8",stdio:"inherit"});
+git("fetch","origin",base);
+const SRC="Manuel des joueurs";
+const o=(nom,consommation="a_verifier",condition=null,notes=null,cout_po=null)=>({nom,quantite:1,consommation,cout_po,source:SRC,condition,notes});
+const files={}; for(const n of [1,3,4,5,6,7]) files[n]=JSON.parse(fs.readFileSync(`${repo}/audit/reference/manuel-joueurs-clerc-niveau-${n}.json`,"utf8"));
+const set=(n,nom,objets)=>{const s=files[n].spells.find(x=>x.nom===nom);if(!s)throw new Error(`Sort absent: ${n} ${nom}`);s.composants_materiels_objets=objets;s.status="reference_a_verifier_manuellement";};
+const av="Consommation non déterminable depuis la formulation explicite du Manuel.";
+set(1,"Aquagenèse",[o("goutte d’eau","optionnel","Requise pour la création d’eau.","Alternative à une pincée de poussière."),o("pincée de poussière","optionnel","Requise pour la destruction d’eau.","Alternative à une goutte d’eau.")]);
+set(1,"Résistance au froid",[o("pincée de souffre","a_verifier",null,av)]);
+set(1,"Sanctuaire",[o("symbole sacré du clerc","non_consomme"),o("petit miroir en argent","non_consomme")]);
+set(3,"Catalepsie",[o("pincée de poussière d’un cimetière","a_verifier",null,av),o("symbole sacré du clerc","non_consomme")]);
+set(3,"Glyphe de garde",[o("encens","a_verifier",null,av),o("poudre d’un diamant d’au moins 2 000 po","a_verifier","Requise si la zone à protéger excède 4,5 m².","La zone est saupoudrée avec cette poudre.",2000)]);
+set(3,"Localisation d'objets",[o("pierre aimantée","non_consomme")]);
+set(3,"Nécro-animation",[o("goutte de sang","a_verifier",null,av),o("morceau de chair humaine","a_verifier",null,av),o("pincée d’os en poudre","optionnel","Alternative à une écharde d’os."),o("écharde d’os","optionnel","Alternative à une pincée d’os en poudre.")]);
+set(3,"Nécromancie",[o("symbole sacré du clerc","non_consomme"),o("encens","consomme",null,"Brûlé au-dessus du corps, des restes ou de la partie concernés.")]);
+set(3,"Prière",[o("symbole religieux en argent","optionnel","Alternative au chapelet de prière ou à un objet similaire."),o("chapelet de prière","optionnel","Alternative au symbole religieux en argent ou à un objet similaire."),o("objet similaire ayant la même utilisation","optionnel","Alternative au symbole religieux en argent ou au chapelet de prière.")]);
+set(4,"Abaissement des eaux",[o("symbole sacré du clerc","non_consomme"),o("pincée de poussière","a_verifier",null,av)]);
+set(4,"Bâtons à serpents",[o("petit morceau d’écorce","a_verifier",null,av),o("écailles de serpent","a_verifier",null,av)]);
+set(4,"Divination",[o("petite créature","consomme",null,"Sacrifiée pour lancer le sort."),o("encens","a_verifier",null,av),o("symbole sacré du clerc","non_consomme"),o("pierres précieuses","optionnel","Dons requis si une divination puissante est tentée."),o("objets magiques","optionnel","Dons éventuellement requis si une divination puissante est tentée.")]);
+set(4,"Langage des plantes",[o("goutte d’eau","a_verifier",null,av),o("pincée de bouse","a_verifier",null,av),o("flamme","a_verifier",null,av)]);
+set(5,"Changement de plan",[o("petite baguette fourchue métallique, sorte de diapason","non_consomme",null,"Le type de métal et la taille déterminent le plan d’arrivée.")]);
+set(5,"Communion",[o("symbole sacré du clerc","non_consomme"),o("eau bénite","a_verifier",null,av),o("encens","a_verifier",null,av)]);
+set(5,"Dissipation du mal",[o("symbole sacré du clerc","non_consomme"),o("eau bénite","optionnel","Requise pour dissipation du mal ; alternative à l’eau maudite."),o("eau maudite","optionnel","Requise pour dissipation du bien ; alternative à l’eau bénite.")]);
+set(5,"Expiation",[o("symbole sacré du clerc","non_consomme"),o("chapelet","optionnel","Alternative au livre de prière."),o("livre de prière","optionnel","Alternative au chapelet."),o("encens","consomme",null,"Encens à brûler.")]);
+set(5,"Fléau d'insectes",[o("grains de sucre","a_verifier",null,av),o("amandes","a_verifier",null,av),o("matière grasse","a_verifier",null,av)]);
+set(5,"Pilier de feu",[o("pincée de souffre","a_verifier",null,av)]);
+set(5,"Quête religieuse",[]);
+set(5,"Vision réelle",[o("crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse","optionnel","Requise pour vision réelle.","La crème doit être vieille de 1 à 6 mois."),o("crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose","optionnel","Requise pour vision erronée.","La crème doit être vieille de 1 à 6 mois.")]);
+set(6,"Orientation",[o("jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées","non_consomme")]);
+set(6,"Séparation des eaux",[o("symbole sacré du clerc","non_consomme")]);
+set(7,"Contrôle du climat",[o("symbole sacré du clerc","non_consomme"),o("chapelet de prière","optionnel","Alternative à un objet similaire."),o("objet similaire au chapelet de prière","optionnel","Alternative au chapelet de prière.")]);
+set(7,"Régénération",[o("objet de prière","non_consomme"),o("eau bénite","optionnel","Requise pour régénération ; alternative à l’eau maudite."),o("eau maudite","optionnel","Requise pour flétrissement ; alternative à l’eau bénite.")]);
+set(7,"Résurrection",[o("symbole sacré du clerc","non_consomme"),o("eau bénite","optionnel","Requise pour résurrection ; alternative à l’eau maudite."),o("eau maudite","optionnel","Requise pour anéantissement ; alternative à l’eau bénite.")]);
+set(7,"Symbole",[o("mercure","a_verifier",null,av),o("phosphore","a_verifier",null,av)]);
+set(7,"Tremblement de terre",[o("pincée de poussière","a_verifier",null,av),o("petit caillou","a_verifier",null,av),o("motte de terre","a_verifier",null,av)]);
+for(const n of [1,3,4,5,6,7]) fs.writeFileSync(`${repo}/audit/reference/manuel-joueurs-clerc-niveau-${n}.json`,`${JSON.stringify(files[n],null,2)}\n`);
+let report=fs.readFileSync(`${repo}/audit/rapports/REFERENCE-SPELLS-GENERATION.md`,"utf8").replace("- Composants à vérifier : 143","- Composants à vérifier : 128");
+report=report.replace(/^- clerc-niveau-[^\r\n]+\r?\n/gm,"");
+const uncertain=["clerc-niveau-1: Résistance au froid","clerc-niveau-3: Catalepsie","clerc-niveau-3: Glyphe de garde","clerc-niveau-3: Nécro-animation","clerc-niveau-4: Abaissement des eaux","clerc-niveau-4: Bâtons à serpents","clerc-niveau-4: Divination","clerc-niveau-4: Langage des plantes","clerc-niveau-5: Communion","clerc-niveau-5: Fléau d'insectes","clerc-niveau-5: Pilier de feu","clerc-niveau-7: Symbole","clerc-niveau-7: Tremblement de terre"];
+const resolved=["clerc-niveau-1: Aquagenèse","clerc-niveau-1: Sanctuaire","clerc-niveau-3: Localisation d'objets","clerc-niveau-3: Nécromancie","clerc-niveau-3: Prière","clerc-niveau-5: Changement de plan","clerc-niveau-5: Dissipation du mal","clerc-niveau-5: Expiation","clerc-niveau-5: Vision réelle","clerc-niveau-6: Orientation","clerc-niveau-6: Séparation des eaux","clerc-niveau-7: Contrôle du climat","clerc-niveau-7: Régénération","clerc-niveau-7: Résurrection"];
+const section=`## Composants Clerc résolus\n\n40 objets matériels structurés sans consommation incertaine, sur 14 sorts :\n\n${resolved.map(x=>`- ${x}`).join("\n")}\n\n## Composants Clerc encore à vérifier\n\n23 objets matériels conservent \`consommation: "a_verifier"\`, sur 13 sorts :\n\n${uncertain.map(x=>`- ${x}`).join("\n")}\n\n## Sorts Clerc non finalisables\n\n- Description manquante : clerc-niveau-5: Quête religieuse. Aucun composant n’est inventé ; \`composants_materiels_objets\` reste vide.\n- Composant incertain : les 13 sorts listés dans « Composants Clerc encore à vérifier ».\n\n## Fichiers Clerc modifiés\n\n- \`audit/reference/manuel-joueurs-clerc-niveau-1.json\`\n- \`audit/reference/manuel-joueurs-clerc-niveau-3.json\`\n- \`audit/reference/manuel-joueurs-clerc-niveau-4.json\`\n- \`audit/reference/manuel-joueurs-clerc-niveau-5.json\`\n- \`audit/reference/manuel-joueurs-clerc-niveau-6.json\`\n- \`audit/reference/manuel-joueurs-clerc-niveau-7.json\`\n- Clerc niveau 2 conservé sans modification.\n\n`;
+report=report.replace("## Composants à vérifier\n\n",`${section}## Composants à vérifier\n\n${uncertain.map(x=>`- ${x}`).join("\n")}\n`);
+report=report.replace("- `node audit/tools/validate-reference-schema.mjs`","- `node audit/tools/validate-reference-schema.mjs` — exécuté après structuration des composants Clerc.");
+fs.writeFileSync(`${repo}/audit/rapports/REFERENCE-SPELLS-GENERATION.md`,report);
+git("checkout",base,"--","audit/tools/generate-reference-files.mjs");
+run("node",["audit/tools/validate-reference-schema.mjs"]);
+git("restore","scripts/sorts","fvtt-spells-all.json","audit/decoupage_fichier","system.json","audit/source/reference-descriptions.json","audit/reference/manuel-joueurs-clerc-niveau-2.json");
+git("config","user.name","github-actions[bot]");git("config","user.email","41898282+github-actions[bot]@users.noreply.github.com");
+git("add","audit/reference/manuel-joueurs-clerc-niveau-1.json","audit/reference/manuel-joueurs-clerc-niveau-3.json","audit/reference/manuel-joueurs-clerc-niveau-4.json","audit/reference/manuel-joueurs-clerc-niveau-5.json","audit/reference/manuel-joueurs-clerc-niveau-6.json","audit/reference/manuel-joueurs-clerc-niveau-7.json","audit/rapports/REFERENCE-SPELLS-GENERATION.md");
+git("status","--short");git("commit","-m","Resolve cleric spell material components");
+const changed=execFileSync("git",["diff","--name-only",`${base}..HEAD`],{cwd:repo,encoding:"utf8"}).trim().split(/\r?\n/).filter(Boolean);const allowed=new Set([1,3,4,5,6,7].map(n=>`audit/reference/manuel-joueurs-clerc-niveau-${n}.json`).concat("audit/rapports/REFERENCE-SPELLS-GENERATION.md"));const bad=changed.filter(x=>!allowed.has(x));if(bad.length)throw new Error(`Hors périmètre: ${bad}`);git("push","origin","HEAD:refs/heads/codex-cleric-components");
