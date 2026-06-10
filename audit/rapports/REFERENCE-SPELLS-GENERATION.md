@@ -116,6 +116,7 @@ La liste suivante regroupe les sorts contenant encore au moins un composant avec
 - JSON de référence validés avec `node audit/tools/validate-reference-schema.mjs` après chaque lot.
 - Recherche finale des occurrences de `consommation: "a_verifier"`.
 - Vérification de `git status --short`.
-- Vérification du diff final : seuls `audit/source/reference-descriptions.json` et `audit/rapports/REFERENCE-SPELLS-GENERATION.md` sont modifiés.
+- Vérification du diff final : seuls `audit/reference/*.json` et `audit/rapports/REFERENCE-SPELLS-GENERATION.md` sont modifiés.
 - Les composants à vérifier restent inchangés : 90 au total.
-- Aucun script, JSON Foundry, fichier de découpage, source technique ou `system.json` n'est modifié par ce commit ; les fichiers de référence générés ont été restaurés après validation.
+- Les fichiers `audit/reference/*.json` ont été régénérés depuis `audit/source/reference-descriptions.json` ; les 19 descriptions auparavant manquantes ont été propagées sans reformulation.
+- Aucun script, JSON Foundry, fichier de découpage, fichier source ou `system.json` n'est modifié par ce commit.

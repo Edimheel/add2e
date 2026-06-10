@@ -84,7 +84,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "avec ce sort, le druide peut changer la force du vent dans la zone d’effet. Pour chaque niveau d’expérience, il peut augmenter ou baisser la vitesse du vent de 5 km/h. Les vents supérieurs à 48 km/h gênent les petites créatures volantes (celle de la taille d’un aigle et moins) et limitent sérieusement le jet de projectiles. Les vents supérieurs à 72 km/h repoussent les créatures volantes de taille humaine. Ceux supérieurs à 96 km/h déroutent toutes les créatures volantes de leur vol, déracinent les petits arbres, renversent les constructions en bois, arrachent les toits, etc. Les vents supérieurs à 120 km/h ont la force d’un ouragan et dévastent tout, sauf les constructions en pierre les plus résistantes. Un vent supérieur à 48 km/h rend la navigation difficile. Un vent supérieur à 72 km/h provoque des dégâts mineurs aux petits navires; supérieur à 96 km/h il met en danger tous les navires; supérieur à 120 km/h, il fait sombrer tous les bateaux. Il y a un «œil» de 4\" de rayon autour du druide dans lequel le vent est calme. Un druide de niveau supérieur peut utiliser ce sort pour contrer les effets du même sort lancé par un druide de niveau inférieur (voir contrôle du climat p.52). Le sort garde son pouvoir pendant un tour par niveau du druide. Une fois que le sort est lancé, le vent augmente sa vitesse de 5 km/h par round, jusqu’à ce que la vitesse maximale soit atteinte. Quand la durée du sort est achevée, le vent faiblit à la même vitesse. Si le sort est utilisé en intérieur, l’œil se rétrécira selon les dimensions du local dans lequel souffle le vent: si la zone d’effet est de 48\" et que le local ne permet qu’un rayon de 46\", l’œil aura 2\" de rayon et tout espace de 44\" ou moins n’autorisera pas la présence de l’œil, exposant le lanceur du sort aux effets du vent. Ce sort ne peut pas être utilisé sous l’eau.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Contrôle des vents",
@@ -168,7 +168,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "ce sort crée un rideau de feu magique de couleur chatoyante, vert-jaune ou ambre pour les druides. Ce mur de feu inflige de 4 à 16 (4d4) points de dégâts plus 1 point de vie par niveau du druide, à toute créature passant à travers. Les créatures à moins de 1\" du mur subissent de 2 à 8 points de dégâts, celles à moins de 2\", 1 à 4 points. Les créatures très sensibles au feu subissent des dégâts additionnels et les morts-vivants subissent toujours le double des dégâts. Seule la face du mur opposée au druide provoque des dommages. Ce mur opaque dure tant que le druide se concentre pour le maintenir ou alors 1 round par niveau si le druide ne se concentre pas. Le mur créé fait 2\" de côté par niveau du druide ou alors forme un anneau d’un rayon de ½\" maximum par niveau du druide et dans les deux cas fait une hauteur de 2\". Le mur est immobile, mais l’anneau se déplace avec le druide. Si le druide se déplace, il lui impossible de maintenir sa concentration sur le mur de feu. Ce sort ne peut pas être utilisé sous l’eau.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Mur de feu",

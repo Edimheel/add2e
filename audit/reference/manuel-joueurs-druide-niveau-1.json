@@ -115,7 +115,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "avec ce sort, le druide provoque une croissance importante et ultra-rapide des plantes dans la zone d’effet, afin d'enchevêtrer les créatures qui s’y trouvent. L’herbe, les mauvaises herbes, les buissons et même les arbres se développent, s’entremêlent et s’enroulent autour des créatures, les immobilisant ainsi pour la durée du sort. Si une créature réussit son jet de protection, elle est ralentie à 50 % pendant la durée du sort.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Enchevêtrement",

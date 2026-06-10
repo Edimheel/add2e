@@ -21,7 +21,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "en lançant ce sort, le magicien provoque un arrêt du temps dans la zone d’effet; vue de l’extérieur, la sphère semble luire un instant. Pendant la durée du sort, le magicien peut bouger et agir librement dans la zone d’effet, alors que les autres créatures sont immobilisées; le magicien ne connait pas la durée exacte du sort. Aucune créature ne peut entrer dans la sphère sans être immobilisée et si le magicien quitte cette sphère, le sort est immédiatement annulé. Quand le sort s’arrête, le magicien agit de nouveau dans le temps normal.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Arrêt du temps",
@@ -167,7 +167,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée du sort et dans la zone d’effet meurent. Ce sort tue 1 créature avec 60 points de vie maximum ou bien 2 créatures ou plus avec 10 points de vie maximum chacune pour un total de 120 points de vie. La décision d’affecter une ou plusieurs créatures doit être annoncée, ainsi que la portée choisie et l’endroit correspondant au centre de la zone d’effet.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Mot de pouvoir : « mort »",

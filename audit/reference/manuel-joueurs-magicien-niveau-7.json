@@ -290,7 +290,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "quand ce mot est prononcé, la créature, que le magicien a choisie comme victime, est étourdie, chancelante et incapable de penser ou d’agir de façon cohérente pendant un certain nombre de rounds. Le magicien doit faire face à sa victime et cette dernière doit être dans la portée du sort. Les créatures ayant de 1 à 30 points de vie sont étourdies pendant 4 à 16 rounds (4d4). Les créatures ayant de 31 à 60 points de vie sont étourdies pendant 2 à 8 rounds (2d4). Les créatures ayant de 61 à 90 points de vie sont étourdies pendant 1 à 4 rounds (1d4). Les créatures ayant plus de 90 points de vie ne sont pas affectées par le sort. À noter que les points de vie pris en compte sont ceux de la créature au moment où le sort est lancé et non pas ceux qu’elle possède quand elle n’est pas blessée.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Mot de pouvoir : « étourdissement »",

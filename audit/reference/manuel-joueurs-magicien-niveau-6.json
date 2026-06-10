@@ -425,7 +425,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "une quête magique est en fait un ordre que lance le magicien, généralement sur un humain ou un humanoïde, afin que ce dernier lui rende un service ou s’abstienne de commettre certaines actions. La créature doit être intelligente, consciente et être sous sa propre volonté. Une quête magique ne peut pas contraindre une personne à se tuer, ni à accomplir des actions potentiellement dangereuses, voire mortelles; mis à part ça, le magicien peut en fait ordonner pratiquement n’importe quoi. La personne affectée essaie d’accomplir sa quête jusqu’à ce qu’elle y arrive. Un échec fait que la créature tombe malade et meurt dans une période de 1 à 4 semaines. Si la personne dévie ou déforme les instructions du magicien, elle perd de 1 à 4 points de force par semaine, jusqu’à ce qu’elle cesse cette déviation. Une quête magique peut être annulée par un sort de souhait majeur, mais pas par une dissipation de la magie, ni par un désenvoûtement. Le Maître de Donjon donnera les détails supplémentaires concernant une quête magique, car sa formulation et son accomplissement sont délicats; une quête magique mal formulée est annulée immédiatement (voir souhait majeur p.93).",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Quête magique",

@@ -296,7 +296,7 @@
       "temps_incantation": "8 segments",
       "jet_sauvegarde": "annule",
       "composants_materiels_source": "symbole sacré du clerc",
-      "description": "",
+      "description": "ce sort permet au clerc de demander à la créature visée de lui rendre un service et de rapporter la preuve que l’action a bien été accomplie. Cela peut être, par exemple, la récupération d’un objet de valeur, le sauvetage ou la libération d’une personne connue, la libération d’une créature, la prise d’une place forte, l’élimination d’une personne, etc. Pour les créatures de la même religion que le clerc le jet de protection n’est pas autorisé si la quête est justifiée et méritée. Pour celles du même alignement que le clerc, le jet de protection se fait avec un malus de –4. Pour les autres, je jet de protection est normal. Si la quête religieuse n’est pas correctement accomplie parce que la créature affectée «traîne les pieds» ou y met de la mauvaise volonté, cette dernière perd 1 point sur ses jets de protection pour chaque jour d’inaction volontaire et ce malus dure tant que cette quête religieuse n’est pas accomplie ou que le clerc l’annule lui-même. Il existe certaines circonstances qui peuvent suspendre temporairement une quête religieuse et d’autres qui peuvent l’annuler: le MD donnera toutes les informations et détails nécessaires. La composante matérielle est le symbole sacré du clerc.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Quête Religieuse",

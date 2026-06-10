@@ -21,7 +21,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "avec ce sort, le druide peut faire bouger des objets en pierre (voir le sort de niveau 6 de clerc animation des objets p.51). Le morceau de pierre visé doit être séparé de tout bloc important. Il réagira selon les désirs du druide: attaquer, casser des objets, bloquer, ceci tant que dure le sort. Une pierre animée n’a ni intelligence ni volonté, mais elle suivra les instructions au pied de la lettre. Un seul ordre peut être donné pour chaque action (le tout doit être très simple et très bref, 12 mots maximum). Pour chaque niveau d’expérience, le druide peut animer 54 dm³ de pierre; donc un druide de niveau 12 pourra animer 648 dm³ de pierre environ.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Animation de la roche",
@@ -189,7 +189,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "quand ce sort est lancé, le druide crée des langues de feu rugissantes qui équivalent à un mur de feu (voir p.61) dans ses effets. Les créatures se trouvant dans la zone d’effet du feu et celles se trouvant à moins de 1\" du bord de la zone affectée subissent 2 à 16 points de dégâts plus des dégâts additionnels équivalents au niveau du druide, c'est-à-dire 13 points en plus si le druide est niveau 13. Si les créatures réussissent leur jet de protection, les dégâts sont divisés par 2. La zone d’effet occupe un volume de 54 m³ par niveau du druide, donc un druide de niveau 13 pourra créer une tempête de feu de 39 m x 6 m x 3 m. La hauteur de cette tempête étant toujours de 3 ou 6 mètres, le reste de la zone d’effet se répartira sur la longueur et la largeur. Ce sort ne peut pas être utilisé sous l’eau. L’inverse du sort, dissipation du feu, étouffe les feux dans une zone double de celle du sort normal (soit 108 m³/niveau); il y a 5 % de chance par niveau du lanceur d’éteindre les feux magiques (tels que les tempêtes de feu) mais seulement ceux situés dans une zone d’effet équivalente à celle du sort non inversé (54 m³/niveau). Une épée langue de feu peut être éteinte par une dissipation du feu si elle ne réussit pas un jet de protection contre un coup critique et elle perd alors ses propriétés magiques.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Tempête de feu",
