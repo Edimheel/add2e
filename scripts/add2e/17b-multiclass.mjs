@@ -1,13 +1,13 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-10-multiclass-layer-v11-no-global-xp-duplication
+// Version : 2026-06-10-multiclass-layer-v12-direct-field-binding
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
 // Ne modifie pas les JSON de races.
 // L'XP globale est gérée par 17-movement-xp.mjs.
-// Ce fichier ne synchronise que l'XP/niveau par classe et les drops multiclasses.
+// Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-10-multiclass-layer-v11-no-global-xp-duplication";
+const VERSION = "2026-06-10-multiclass-layer-v12-direct-field-binding";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -535,6 +535,51 @@ async function recalcActor(actor) {
   return payload;
 }
 
+async function updateDirectMulticlassField(sheet, input) {
+  const actor = sheet?.actor ?? sheet?.document;
+  if (!actor || actor.type !== "personnage" || !multiclassEnabled(actor) || !input?.name) return false;
+  const name = String(input.name);
+  const value = Math.max(0, Math.floor(num(input.value, 0)));
+  let payload = null;
+
+  if (name.startsWith("system.xp_par_classe.")) {
+    const slug = name.slice("system.xp_par_classe.".length);
+    if (!slug) return false;
+    const xpMap = foundry.utils.deepClone(actor.system?.xp_par_classe ?? {});
+    xpMap[slug] = value;
+    payload = multiclassUpdatePayload(actor, null, xpMap, null);
+  } else if (name.startsWith("system.niveaux_par_classe.")) {
+    const slug = name.slice("system.niveaux_par_classe.".length);
+    if (!slug) return false;
+    const levelMap = foundry.utils.deepClone(actor.system?.niveaux_par_classe ?? {});
+    levelMap[slug] = Math.max(1, value);
+    payload = multiclassUpdatePayload(actor, null, null, levelMap);
+  }
+
+  if (!payload) return false;
+  await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-direct-field" });
+  sheet?._add2eRememberActiveTab?.();
+  sheet?.render?.(false);
+  log("[DIRECT_FIELD_SYNC]", { actor: actor.name, field: name, value, payload });
+  return true;
+}
+
+function bindDirectMulticlassFields(sheet, html) {
+  const actor = sheet?.actor ?? sheet?.document;
+  if (!actor || actor.type !== "personnage") return;
+  const root = html?.jquery ? html[0] : html;
+  if (!root?.querySelector || root.dataset.add2eMulticlassDirectFields === VERSION) return;
+  root.dataset.add2eMulticlassDirectFields = VERSION;
+  root.addEventListener("change", ev => {
+    const input = ev.target?.closest?.('input[name^="system.xp_par_classe."], input[name^="system.niveaux_par_classe."]');
+    if (!input || !root.contains(input)) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    ev.stopImmediatePropagation?.();
+    updateDirectMulticlassField(sheet, input).catch(err => warn("[DIRECT_FIELD_SYNC_ERROR]", err));
+  }, true);
+}
+
 function installDropWrapper() {
   const SheetClass = globalThis.Add2eActorSheet;
   if (!SheetClass?.prototype?._onDrop) return false;
@@ -581,6 +626,9 @@ Hooks.once("ready", () => {
   }
 });
 
+Hooks.on("renderActorSheet", bindDirectMulticlassFields);
+Hooks.on("renderAdd2eActorSheet", bindDirectMulticlassFields);
+
 Hooks.on("preUpdateActor", (actor, changes, options) => {
   if (options?.[INTERNAL] || options?.add2eInternal) return true;
   mergeMulticlassChanges(actor, changes);
@@ -607,5 +655,6 @@ globalThis.add2eMulticlassMinXpForClassLevel = minXpForClassLevel;
 globalThis.add2eMulticlassLevelForClassXp = levelForClassXp;
 globalThis.add2eMulticlassRaceCandidatesForClass = raceCandidatesForClass;
 globalThis.add2eMulticlassClassRaceMaxLevel = classRaceMaxLevel;
+globalThis.add2eMulticlassDirectFieldSync = updateDirectMulticlassField;
 
 log("[LOADED]", { version: VERSION });
