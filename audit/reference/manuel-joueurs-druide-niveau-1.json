@@ -30,7 +30,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -145,7 +145,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -212,13 +212,22 @@
       "description": "quand ce sort est lancé, le destinataire peut marcher sur n’importe quel type de terrain (boue, neige, poussière, etc.) en ne laissant ni trace, ni odeur. Ainsi, le pistage d’une créature sous l’effet de ce sort est impossible. Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère. Note: la zone sur laquelle le destinataire du sort marche irradie une aura de magie, pendant 6 à 36 tours (6d6) après le passage de cette créature.",
       "composants_materiels_objets": [
         {
-          "nom": "une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère",
+          "nom": "feuille de gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Brûlée ; ses cendres sont éparpillées."
+        },
+        {
+          "nom": "aiguille de pin ou d’un autre conifère",
           "quantite": 1,
           "consommation": "a_verifier",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
@@ -291,7 +300,7 @@
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation à vérifier depuis la formulation exacte du Manuel."
+          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
         }
       ],
       "foundry": {
