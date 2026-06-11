@@ -89,14 +89,47 @@ function allClassFeatures(actor) {
   return out;
 }
 
+function normalizeThiefSkillRow(row) {
+  const value = Number(row?.finalValue ?? row?.value ?? row?.base ?? 0) || 0;
+  const label = String(row?.label ?? row?.shortLabel ?? row?.key ?? "Compétence");
+  const key = String(row?.key ?? label);
+  return {
+    ...row,
+    key,
+    label,
+    shortLabel: row?.shortLabel ?? label,
+    base: Number(row?.base ?? value) || 0,
+    value,
+    finalValue: value,
+    bonusTotal: Number(row?.bonusTotal ?? 0) || 0,
+    display: row?.display ?? `${value}%`,
+    baseDisplay: row?.baseDisplay ?? `${Number(row?.base ?? value) || 0}%`,
+    canRoll: row?.canRoll !== false
+  };
+}
+
 function getThiefSkills(actor) {
-  const fn = globalFn("add2eGetActorThiefSkills");
-  if (!fn) return [];
-  try { return fn(actor) ?? []; }
-  catch (e) {
-    console.warn("[ADD2E][CAPACITES][VOLEUR] Impossible de lire add2eGetActorThiefSkills", e);
-    return [];
+  const legacyFn = globalFn("add2eGetActorThiefSkills");
+  if (legacyFn) {
+    try {
+      const rows = legacyFn(actor) ?? [];
+      if (Array.isArray(rows) && rows.length) return rows.map(normalizeThiefSkillRow);
+    } catch (e) {
+      console.warn("[ADD2E][CAPACITES][VOLEUR] Impossible de lire add2eGetActorThiefSkills", e);
+    }
   }
+
+  const multiclassFn = globalFn("add2eGetActorThiefSkillTable");
+  if (multiclassFn) {
+    try {
+      const rows = multiclassFn(actor) ?? [];
+      if (Array.isArray(rows) && rows.length) return rows.map(normalizeThiefSkillRow);
+    } catch (e) {
+      console.warn("[ADD2E][CAPACITES][VOLEUR] Impossible de lire add2eGetActorThiefSkillTable", e);
+    }
+  }
+
+  return [];
 }
 
 function classSlug(actor) {
@@ -119,7 +152,7 @@ function thiefSkillPanelTitle(actor) {
   if (s.includes("moine")) return "Compétences spéciales du moine";
   if (s.includes("assassin")) return "Compétences de voleur / assassin";
   if (s.includes("voleur")) return "Compétences de voleur";
-  return "Compétences spéciales";
+  return "Compétences de voleur";
 }
 
 function isBackstabLike(value) {
