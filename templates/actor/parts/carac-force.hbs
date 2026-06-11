@@ -25,19 +25,6 @@
                       {{else}}
                         <span class="carac-ex-square carac-ex-badge carac-ex-square--readonly" style="position:absolute;right:-18px;bottom:-9px;display:inline-flex;align-items:center;justify-content:center;width:46px;height:22px;border:1px solid #b89436;border-radius:999px;background:#fff8d8;color:#2b2410;font-size:.72rem;font-weight:900;box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:3;">{{actor.system.force_ex}}</span>
                       {{/if}}
-                    {{else}}
-                      {{#if (eq (add actor.system.force_base actor.system.bonus_caracteristiques.force) 18)}}
-                        {{#if editable}}
-                          <select name="system.force_ex" class="carac-ex-square carac-ex-badge" data-current-force-ex="{{actor.system.force_ex}}" style="position:absolute;right:-18px;bottom:-9px;width:46px;height:22px;min-width:46px;margin:0;padding:0 2px;border:1px solid #b89436;border-radius:999px;background:#fff8d8;color:#2b2410;font-size:.72rem;font-weight:900;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:3;" title="Force exceptionnelle (18/xx)">
-                            <option value="0">--</option>
-                            {{#each forceExValues}}
-                              <option value="{{this.value}}">{{this.label}}</option>
-                            {{/each}}
-                          </select>
-                        {{else}}
-                          <span class="carac-ex-square carac-ex-badge carac-ex-square--readonly" style="position:absolute;right:-18px;bottom:-9px;display:inline-flex;align-items:center;justify-content:center;width:46px;height:22px;border:1px solid #b89436;border-radius:999px;background:#fff8d8;color:#2b2410;font-size:.72rem;font-weight:900;box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:3;">{{actor.system.force_ex}}</span>
-                        {{/if}}
-                      {{/if}}
                     {{/if}}
                   </div>
                   <button type="button" class="carac-btn plus" data-carac="force" tabindex="-1">+</button>
