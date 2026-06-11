@@ -6,89 +6,219 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-7.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Animation de la roche",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, le druide peut faire bouger des objets en pierre (voir le sort de niveau 6 de clerc animation des objets p.51). Le morceau de pierre visé doit être séparé de tout bloc important. Il réagira selon les désirs du druide: attaquer, casser des objets, bloquer, ceci tant que dure le sort. Une pierre animée n’a ni intelligence ni volonté, mais elle suivra les instructions au pied de la lettre. Un seul ordre peut être donné pour chaque action (le tout doit être très simple et très bref, 12 mots maximum). Pour chaque niveau d’expérience, le druide peut animer 54 dm³ de pierre; donc un druide de niveau 12 pourra animer 648 dm³ de pierre environ.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Animation de la roche",
+        "id": "ta6CWp0VMuC8z4oI",
+        "img": "systems/add2e/assets/icones/sorts/druide-animation-de-la-roche.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-animation-de-la-roche.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
       "nom": "Chariot de Sustarre",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand un druide lance ce sort, il fait venir une masse de 500 à 1.000 (d6+4) insectes, araignées et myriapodes venimeux qui mordent et piquent. Cette masse se forme en un essaim de 2\" x 2\" et, sur simple commande du druide, rampe à la vitesse de 1\" par round vers n’importe quelle «proie» se trouvant à 8\" maximum. La mort rampante tuera toute créature sujette aux attaques normales: chacune de ces petites horreurs inflige 1 point de dégât (et meurt ensuite), donc les dégâts maximaux sont de 1.000 points. Si l’essaim dépasse la distance de 8\" entre lui et le druide, il perd 50 bestioles par tranche de 1\" après les 8\" de distance de la zone d’effet, c.-à-d. qu’à 10\", l’essaim a diminué de 100. Il existe plusieurs moyens pour détruire l’essaim: ils sont souvent évidents. Ce sort ne peut pas être utilisé sous l’eau.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Chariot de Sustarre",
+        "id": "6lBtsrAE6tTEJDJI",
+        "img": "systems/add2e/assets/icones/sorts/druide-chariot-de-sustarre.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-chariot-de-sustarre.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
       "nom": "Confusion",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort provoque une confusion chez les créatures présentes dans la zone d’effet. Les créatures confuses réagiront comme suit: Résultat du d100 Action 01-10 Errance pendant 1 tour 11-60 Rester sur place confus pendant 1 round 61-80 Attaquer la créature la plus proche pendant 1 round 81-00 Attaquer le druide ou son groupe pendant 1 round Ce sort dure 1 round par niveau d’expérience du druide. Il peut affecter de 2 à 8 créatures, plus un nombre éventuel de créatures supplémentaires qu’on déterminera en retranchant le nombre de niveaux ou de dés de vie de la créature la plus forte située dans la zone d’effet de ceux du druide qui lance le sort. Si un nombre positif en résulte, il est ajouté au nombre donné par le jet de dé (2d4); on ne tient pas compte d’un nombre négatif. Les créatures affectées sont celles qui se trouvent le plus près du druide. Chacune d’elle lance un jet de protection à chaque round, à l’exception de celles qui «errent pendant 1 tour» et qui dans ce cas s’éloignent du druide aussi loin que possible durant 1 tour de déplacement normal, ceci tant que la situation le permet. Tous les jets de protection s’effectuent avec un malus de –2. Les créatures confuses agissent selon le tableau ci-dessus, mais les jets de protection et les actions possibles sont lancés au début de chaque round.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Confusion",
+        "id": "Siwmacb6r",
+        "img": "systems/add2e/assets/icones/sorts/confusion.webp",
+        "onUse": "systems/add2e/scripts/sorts/confusion.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
       "nom": "Contrôle du climat",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est plus puissant que le sort de niveau 7 de clerc contrôle du climat. Il peut changer le temps de 2 catégories par rapport aux conditions climatiques en vigueur si le druide utilise du gui majeur. Dans les autres cas, le sort est le même que le sort de niveau 7 de clerc contrôle du climat (voir p.52).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Contrôle du climat",
+        "id": "Szz8xxhao",
+        "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
+        "onUse": "systems/add2e/scripts/sorts/controle-du-climat.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
       "nom": "Doigt de mort",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort provoque un arrêt du cœur chez la victime. Le druide prononce l’incantation, pointe son doigt vers la créature qui, à moins qu’elle ne réussisse un jet de protection (auquel cas le sort est annulé), meurt instantanément.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Doigt de mort",
+        "id": "FLwWKlyZWASHf4dY",
+        "img": "systems/add2e/assets/icones/sorts/druide-doigt-de-mort.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-doigt-de-mort.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
       "nom": "Invocation d'un élémental de terre",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand un druide lance ce sort, il invoque un élémental de terre de 16 dés de vie. Le druide n’a qu’à le commander et il obtient ce qu’il désire car l’élémental ne considère pas le druide comme un ennemi. L’élémentaire reste jusqu’à ce qu’il soit détruit, dissipé ou renvoyé par l’inverse du sort (voir invocation d’un élémental du feu p.62). Un élémental de terre invoqué sous l’eau doit rester sur le fond de la mer ou du cours d’eau à partir duquel il a été créé et ne peut «nager» ou quitter le sol. Il peut en revanche s’attaquer à des créatures ou des constructions reposant sur le sol ou souterraines.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Invocation d'un élémental de terre",
+        "id": "FaufBhAcCD3n9phk",
+        "img": "systems/add2e/assets/icones/sorts/druide-invocation-d-un-elemental-de-terre.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-invocation-d-un-elemental-de-terre.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
       "nom": "Mort rampante",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, les druides possèdent le pouvoir de ramener les morts à la vie dans un autre corps, si la mort ne remonte pas à plus d’une semaine. La personne réincarnée se rappellera la majorité de ses souvenirs et de son ancienne vie, mais sa nouvelle classe, s’il y en a une, pourra être différente. Les habiletés et la langue sont aussi souvent changées. La table ci-dessous donne les réincarnations possibles: Résultat du d100 Réincarnation 01-03 Blaireau 04-08 Ours noir 09-12 Ours brun 13-16 Sanglier sauvage 17-19 Centaure 20-23 Dryade 24-28 Aigle 29-31 Elfe 32-34 Satyre 35-36 Renard 37-40 Gnome 41-44 Faucon 45-58 Humain 59-61 Lynx 62-54 Hibou 65-58 Pixie 69-70 Raton-laveur 71-75 Cerf 76-80 Loup 81-85 Glouton 86-00 Utiliser la table de réincarnation du magicien Toute sorte de Personnage Joueur peut être réincarnée. Si les dés désignent un elfe, un gnome ou un humain, le personnage doit être créé. Quand le cadavre est touché, la nouvelle incarnation apparait dans une période allant de 1 à 6 tours. (Voir le sort de niveau 6 de magicien réincarnation p.85). TEMPÊTE DE FEU (Évocation) Réversible",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Mort rampante",
+        "id": "QNM2PTjpOuOr5twS",
+        "img": "systems/add2e/assets/icones/sorts/druide-mort-rampante.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-mort-rampante.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
       "nom": "Réincarnation",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, le druide crée des langues de feu rugissantes qui équivalent à un mur de feu (voir p.61) dans ses effets. Les créatures se trouvant dans la zone d’effet du feu et celles se trouvant à moins de 1\" du bord de la zone affectée subissent 2 à 16 points de dégâts plus des dégâts additionnels équivalents au niveau du druide, c'est-à-dire 13 points en plus si le druide est niveau 13. Si les créatures réussissent leur jet de protection, les dégâts sont divisés par 2. La zone d’effet occupe un volume de 54 m³ par niveau du druide, donc un druide de niveau 13 pourra créer une tempête de feu de 39 m x 6 m x 3 m. La hauteur de cette tempête étant toujours de 3 ou 6 mètres, le reste de la zone d’effet se répartira sur la longueur et la largeur. Ce sort ne peut pas être utilisé sous l’eau. L’inverse du sort, dissipation du feu, étouffe les feux dans une zone double de celle du sort normal (soit 108 m³/niveau); il y a 5 % de chance par niveau du lanceur d’éteindre les feux magiques (tels que les tempêtes de feu) mais seulement ceux situés dans une zone d’effet équivalente à celle du sort non inversé (54 m³/niveau). Une épée langue de feu peut être éteinte par une dissipation du feu si elle ne réussit pas un jet de protection contre un coup critique et elle perd alors ses propriétés magiques.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Réincarnation",
+        "id": "ytUzMMlAcWovQf2A",
+        "img": "systems/add2e/assets/icones/sorts/druide-reincarnation.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-reincarnation.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
       "nom": "Tempête de feu",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, le druide crée des langues de feu rugissantes qui équivalent à un mur de feu (voir p.61) dans ses effets. Les créatures se trouvant dans la zone d’effet du feu et celles se trouvant à moins de 1\" du bord de la zone affectée subissent 2 à 16 points de dégâts plus des dégâts additionnels équivalents au niveau du druide, c'est-à-dire 13 points en plus si le druide est niveau 13. Si les créatures réussissent leur jet de protection, les dégâts sont divisés par 2. La zone d’effet occupe un volume de 54 m³ par niveau du druide, donc un druide de niveau 13 pourra créer une tempête de feu de 39 m x 6 m x 3 m. La hauteur de cette tempête étant toujours de 3 ou 6 mètres, le reste de la zone d’effet se répartira sur la longueur et la largeur. Ce sort ne peut pas être utilisé sous l’eau. L’inverse du sort, dissipation du feu, étouffe les feux dans une zone double de celle du sort normal (soit 108 m³/niveau); il y a 5 % de chance par niveau du lanceur d’éteindre les feux magiques (tels que les tempêtes de feu) mais seulement ceux situés dans une zone d’effet équivalente à celle du sort non inversé (54 m³/niveau). Une épée langue de feu peut être éteinte par une dissipation du feu si elle ne réussit pas un jet de protection contre un coup critique et elle perd alors ses propriétés magiques.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Tempête de feu",
+        "id": "IzJgixDIb7nrR1wQ",
+        "img": "systems/add2e/assets/icones/sorts/druide-tempete-de-feu.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-tempete-de-feu.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
       "nom": "Transmutation du métal en bois",
+      "ecole": null,
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort permet au druide de transformer un objet de métal en bois. Le volume transformable est égal à un maximum de 80 po en poids par niveau du druide. Les objets magiques en métal ont 10 % de chance d’être affectés par ce sort. Même le sort dissipation de la magie ne peut inverser les effets de ce sort. Donc, une porte de métal changée en bois restera toujours en bois. Les magiciens utilisent une plus grande variété de composantes matérielles que les autres classes de lanceurs de sorts, c'est-à-dire les clercs et les druides. Certaines composantes sont difficiles à trouver et/ou chères, mais il est toujours possible d'utiliser alors des sorts de substitution. Le temps d'incantation relativement court de certains sorts avec composante matérielle est explicable par le fait que le magicien a choisi le sort qu'il va lancer et que ses composantes matérielles sont à portée de la main, dans des poches ou des petits sacs. Si ce n'est pas le cas, il peut y avoir un délai supplémentaire, en rapport avec la situation. II est possible, pour le MD, de considérer le temps de jeu et le temps réel comme étant le même. Si le choix d'un sort prend 6 secondes, 1 segment de jeu se sera effectivement écoulé. Le fait de rechercher une composante dans des poches ou des sacs peut prendre 5 segments (30 secondes). Des composantes matérielles de remplacement peuvent être autorisées. La décision appartient au Maître de Donjon. Mais ceci peut entraîner une diminution de l'efficacité du sort: portée, durée, zone d'effet, etc. En général, les applications multiples ou réversibles d'un sort doivent être choisies par le magicien avant le début de l'aventure, pendant la mémorisation. Consultez le MD à ce sujet.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Transmutation du métal en bois",
+        "id": "TpsMHSV6jiYmiht6",
+        "img": "systems/add2e/assets/icones/sorts/druide-transmutation-du-metal-en-bois.webp",
+        "onUse": "systems/add2e/scripts/sorts/druide-transmutation-du-metal-en-bois.js"
+      },
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

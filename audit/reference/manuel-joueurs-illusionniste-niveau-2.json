@@ -6,103 +6,271 @@
     "niveau": 2,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-2.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Bouche magique",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est le même que le sort de niveau 2 de magicien bouche magique (voir p.69).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Bouche magique",
+        "id": "wBz84BLOyTmGed9y",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-bouche-magique.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-bouche-magique.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
       "nom": "Cécité",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort rend la créature affectée aveugle; elle ne voit plus que du gris. Les divers sorts de soins ne peuvent rien contre une cécité; seule une dissipation de la magie ou l’annulation par l’illusionniste en personne peuvent dissiper ce sort. Si la créature réussit son jet de protection, le sort n’a pas d’effet.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Cécité",
+        "id": "N6fR1IQH2M2CZHwV",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-cecite.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-cecite.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
       "nom": "Désinformation",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, l’illusionniste fausse les informations des sorts de détection: détection des charmes, détection du mal, détection de l’invisibilité, détection des mensonges, détection de la magie et détection des pièges sylvestres. L’utilisation d’un de ces sorts pendant une désinformation donnera des informations fausses ou inversera l’information dans le cas d’une détection du mal ou des mensonges. L’illusionniste dirige son sort sur la personne ou l’objet sujet à la détection et si le lanceur du sort de détection rate son jet de protection, le sort de désinformation est effectif.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Désinformation",
+        "id": "uqypjhvmid2zcZip",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-desinformation.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-desinformation.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
       "nom": "Détection de la magie",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est semblable au sort de niveau 1 de clerc détection de la magie (voir p.43).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Détection de la magie",
+        "id": "St2jkwm4x",
+        "img": "systems/add2e/assets/icones/sorts/detection-de-la-magie.webp",
+        "onUse": "systems/add2e/scripts/sorts/detection-de-la-magie.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
       "nom": "Force fantasmagorique améliorée",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus et les précisions ci-dessous, ce sort est le même que le sort de niveau 3 de magicien force fantasmagorique (voir p.74). L’illusionniste peut maintenir l’illusion avec un minimum de concentration; il peut se déplacer à la moitié de sa vitesse normale mais ne peut lancer aucun sort. Le lanceur de sort peut inclure des bruits mineurs à l’illusion, mais en aucun cas des paroles compréhensibles. Cette illusion persiste pendant 2 rounds après que l’illusionniste ait cessé de se concentrer.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Force fantasmagorique améliorée",
+        "id": "EsgoQh0nlj7f2bp6",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-force-fantasmagorique-amelioree.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-force-fantasmagorique-amelioree.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
       "nom": "Image miroir",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus et le fait que de 2 à 5 sosies (1d4+1) apparaissent, ce sort est le même que le sort de niveau 2 de magicien image miroir (voir p.71).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Image miroir",
+        "id": "Ssx6j4e18",
+        "img": "systems/add2e/assets/icones/sorts/image-miroir.webp",
+        "onUse": "systems/add2e/scripts/sorts/image-miroir.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
       "nom": "Invisibilité",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien invisibilité (voir p.71).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Invisibilité",
+        "id": "4VA5OcJS8DaXKyVw",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-invisibilite.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-invisibilite.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
       "nom": "Motif hypnotique",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand l’illusionniste lance ce sort, il crée un jeu de formes colorées, mouvantes et tournoyantes dans l’air. Les créatures qui regardent ces formes et qui ont raté leur jet de protection sont fascinées et continuent de fixer ce motif aussi longtemps que l’illusionniste le maintient dans l’air. Le lanceur du sort peut hypnotiser un maximum de 24 DV, c'est-à-dire 24 créatures avec 1 DV chacune, 12 créatures avec 2 DV chacune, etc. Toutes les créatures doivent se trouver dans la zone d’effet et chacune a droit à un jet de protection. L’illusionniste n’a pas besoin de parler, mais il doit faire des gestes appropriés en même temps qu’il doit tenir un bâtonnet d’encens allumé ou une baguette de cristal remplie de matières phosphorescentes.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Motif hypnotique",
+        "id": "ChKu6jVRMkzSxKhr",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-motif-hypnotique.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-motif-hypnotique.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
       "nom": "Nappe de brouillard",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "une nappe de brouillard est une masse mouvante de vapeurs brumeuses, similaire en apparence à un nuage létal (voir p.82), de couleur verdâtre. L’illusionniste peut faire bouger cette nappe de brouillard à la vitesse de 1\" par round. Malgré l’apparence dangereuse de cette nappe ressemblant à celle d’un nuage létal, elle ne fait qu’obstruer la vision, comme un mur de brouillard. Une nappe de brouillard est dissipée par une rafale de vent en un round.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Nappe de brouillard",
+        "id": "FYrBpsDerJsdUgz5",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-nappe-de-brouillard.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-nappe-de-brouillard.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
       "nom": "Surdité",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort provoque la surdité totale de la créature qui rate son jet de protection (cf. cécité). Cette surdité ne peut être dissipée que par une dissipation de la magie ou par le lanceur de sort en personne. La composante matérielle est de la cire d’abeille.",
+      "composants_materiels_objets": [
+        {
+          "nom": "de la cire d’abeille",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Surdité",
+        "id": "HeupZXq4vQjY3EK8",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-surdite.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-surdite.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
       "nom": "Trouble",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, la silhouette de l’illusionniste devient floue, mouvante et ondulante. Ce phénomène fait que les attaques par projectiles ainsi qu'en mêlée subissent un malus de –4 à la première attaque et de –2 sur les suivantes; d’autre part, l’illusionniste obtient un bonus de +1 sur ses jets de protection contre toute attaque magique directement dirigée contre lui.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Trouble",
+        "id": "zKAqiJZxs9A3MPtd",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-trouble.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-trouble.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
       "nom": "Ventriloquie",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 1 de magicien ventriloquie (voir p.69).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Ventriloquie",
+        "id": "eKltp2YyNCfdS6Qg",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-ventriloquie.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-ventriloquie.js"
+      },
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

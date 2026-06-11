@@ -6,36 +6,14 @@
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_blocs_techniques_complete_description_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-1.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "école",
-      "portée",
-      "durée",
-      "zone d'effet",
-      "composantes",
-      "temps d'incantation",
-      "jet de sauvegarde"
-    ],
-    "notIncludedYet": [
-      "description complète",
-      "composants matériels détaillés",
-      "stratégie onUse détaillée"
-    ],
-    "warning": "Ces références peuvent servir aux comparaisons techniques et aux patchs non destructifs. Les descriptions complètes et mécaniques automatisées restent à compléter depuis le texte du Manuel."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Apaisement",
       "ecole": "Abjuration",
-      "inverse": "Épouvante",
       "niveau": 1,
       "portee": "au toucher",
       "duree": "spéciale",
@@ -43,15 +21,21 @@
       "composantes": "V, S",
       "temps_incantation": "4 segments",
       "jet_sauvegarde": "aucun",
-      "source_page": 44,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "a_definir_depuis_description"
+      "inverse": "Épouvante",
+      "description": "en touchant la créature concernée, le clerc lui insuffle du courage, augmentant ainsi pendant 1 tour son jet de protection de +4 contre les attaques magiques provoquant la peur. Si la créature est déjà sujette à un sort de peur après avoir raté son jet de protection, le sort permet un autre jet de protection avec un bonus de +1 pour chaque niveau du clerc, c'est-à-dire +2 pour un clerc de niveau 2, +3 pour un clerc de niveau 3, etc. Une «probabilité de toucher» doit être réussie pour toucher les créatures non consentantes. L’inverse du sort, épouvante, fait fuir la victime touchée le plus vite possible et le plus loin possible du clerc, et ce, pendant 1 round par niveau du clerc. Un sort d’épouvante peut être annulé par son inverse, et vice-versa.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Apaisement",
+        "id": "XQgdghDowrDCCQ1b",
+        "img": "systems/add2e/assets/icones/sorts/apaisement.webp",
+        "onUse": "systems/add2e/scripts/sorts/apaisement.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
       "nom": "Aquagenèse",
       "ecole": "Altération",
-      "inverse": "Déshydratation",
       "niveau": 1,
       "portee": "1\"",
       "duree": "permanente",
@@ -59,15 +43,40 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "source_page": 44,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "a_definir_depuis_description"
+      "inverse": "Déshydratation",
+      "description": "en lançant ce sort, le clerc peut créer 15 litres d’eau par niveau qu’il a atteint; soit 30 l au niveau 2, 45 l au niveau 3, etc. L’eau est claire et potable (elle ressemble à de l’eau de pluie). L’eau créée dure jusqu’à évaporation naturelle ou jusqu’à ce qu’elle soit utilisée. L’eau peut être créée dans un endroit qui pourra contenir jusqu’à 0,75 m³. On ne peut pas créer de l’eau à l’intérieur d’une chose vivante. L’inverse du sort, destruction d’eau, fait disparaitre l’eau sans aucune trace (comme de la vapeur), pour une même quantité par niveau du clerc. Le sort demande au moins une goutte d’eau ou une pincée de poussière comme composante matérielle: la goutte d’eau pour la création, la poussière pour la destruction.",
+      "composants_materiels_objets": [
+        {
+          "nom": "goutte d’eau",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour la création d’eau.",
+          "notes": "Alternative à une pincée de poussière."
+        },
+        {
+          "nom": "pincée de poussière",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour la destruction d’eau.",
+          "notes": "Alternative à une goutte d’eau."
+        }
+      ],
+      "foundry": {
+        "nom": "Aquagenèse",
+        "id": "NxItV2LPH4Cbl5I2",
+        "img": "systems/add2e/assets/icones/sorts/creation-d-eau.webp",
+        "onUse": "systems/add2e/scripts/sorts/creation-d-eau.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
       "nom": "Bénédiction",
       "ecole": "Conjuration/Appel",
-      "inverse": "Malédiction",
       "niveau": 1,
       "portee": "6\"",
       "duree": "6 rounds de combat",
@@ -75,9 +84,16 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "source_page": 44,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "bonus_malus_temporaire_a_preciser"
+      "inverse": "Malédiction",
+      "description": "en lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs «probabilités de toucher» de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6\"), il affectera alors les créatures se trouvant dans une zone de 5\" x 5\". L’inverse du sort, malédiction, peut être lancé sur des ennemis; ceux-ci voient donc baisser leur moral et leur «probabilité de toucher» de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Bénédiction",
+        "id": "u1L6JpAXZ113qpVG",
+        "img": "systems/add2e/assets/icones/sorts/benediction.webp",
+        "onUse": "systems/add2e/scripts/sorts/benediction.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -90,15 +106,20 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "source_page": 44,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "detection_a_traiter_par_message_et_eventuel_effet_scene"
+      "description": "quand ce sort est lancé, le clerc détecte les émanations magiques sur une largeur de 1\" et une longueur de 3\" dans la direction qu’il regarde. Le clerc peut pivoter de 60° par round. Les murs de pierre épais de 30 cm et plus, une épaisseur de métal de 3 cm et plus ou une épaisseur de bois de 90 cm et plus empêchent le sort de fonctionner. Le clerc peut discerner si la magie est forte ou faible. Pour lancer ce sort, le clerc a besoin de son symbole sacré.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Détection de la magie",
+        "id": "Sxt9iofe7",
+        "img": "systems/add2e/assets/icones/sorts/detection-de-la-magie.webp",
+        "onUse": "systems/add2e/scripts/sorts/detection-de-la-magie.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
       "nom": "Détection du mal",
       "ecole": "Divination",
-      "inverse": "Détection du bien",
       "niveau": 1,
       "portee": "12\"",
       "duree": "1 tour + ½ tour par niveau",
@@ -106,9 +127,16 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "source_page": 45,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "detection_a_traiter_par_message_et_eventuel_effet_scene"
+      "inverse": "Détection du bien",
+      "description": "ce sort permet de découvrir les émanations du mal, ou du bien pour le sort inverse, de toute créature ou tout objet. Un alignement mauvais ou un objet maudit irradiera une aura maléfique, mais pas un piège ou une vipère. La durée du sort est de 1 tour + ½ tour par niveau; donc un clerc de niveau 1 pourra détecter le mal pendant 1 tour ½, un clerc de niveau 2 pendant 2 tours, etc. Le sort a une zone d’effet de 1\" de large et le clerc doit faire face à l’endroit, l’objet ou la créature qu’il examine. Seuls le degré de mal (faible, moyen, fort, extraordinaire) et sa nature générale (en attente, méchant, triomphant, etc.) sont révélés. Si le mal est extraordinaire, le clerc a 10 % de chance par niveau du clerc d’en déterminer la tendance (loyal, neutre ou chaotique). Pour lancer ce sort, le clerc a besoin de son symbole sacré, qu’il tient devant lui.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Détection du mal",
+        "id": "yAqsU5sPfwAfnzKI",
+        "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+        "onUse": "systems/add2e/scripts/sorts/detection-du-mal.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -121,15 +149,20 @@
       "composantes": "V",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "spécial",
-      "source_page": 45,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "jet_sauvegarde_et_effet_court_a_definir_depuis_description"
+      "description": "ce sort autorise le clerc à donner un ordre d’un seul mot. L’injonction doit être prononcée dans une langue que la créature peut comprendre. Cette dernière obéira du mieux qu’elle peut si l’ordre donné est clair et univoque. Par exemple: «suicide» sera considéré comme un nom et non comme un verbe et n’aura donc aucun effet. L’injonction «meurs» fera tomber la victime en catalepsie pour un round, mais elle se relèvera ensuite sans problème. Les injonctions typiques sont: arrête, reviens, fuis, donne, etc. Les morts-vivants ne sont pas affectés par ce sort. Les créatures ayant une intelligence de 13 ou plus, et les créatures ayant au moins 6 dés de vie (ou niveaux d’expérience), sont autorisées à lancer un jet de protection contre les sorts. (Les créatures avec 13 ou plus d’intelligence ET au moins 6 dés de vie n’ont PAS 2 jets de protection).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Injonction",
+        "id": "3U2YJApOJHhpPi36",
+        "img": "systems/add2e/assets/icones/sorts/injonction.webp",
+        "onUse": "systems/add2e/scripts/sorts/injonction.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
       "nom": "Lumière",
       "ecole": "Altération",
-      "inverse": "Ténèbres",
       "niveau": 1,
       "portee": "12\"",
       "duree": "6 tours + 1 tour/niveau",
@@ -137,15 +170,21 @@
       "composantes": "V, S",
       "temps_incantation": "4 segments",
       "jet_sauvegarde": "aucun",
-      "source_page": 45,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "effet_lumiere_ou_tenebres_a_definir"
+      "inverse": "Ténèbres",
+      "description": "ce sort provoque une excitation des molécules qui se mettent alors à briller. La lumière créée est semblable à celle d’une torche et éclaire dans une zone de 4\" de diamètre. La lumière dure 6 tours (1 heure) plus 1 tour/niveau du clerc, à moins que le clerc annule cette lumière d’un mot. Si le sort de lumière est lancé sur une créature, son éventuelle résistance à la magie s’applique et un jet de protection est autorisé. Un succès indique que la zone de lumière se crée derrière la créature visée, plutôt que sur elle. Dans tous les autres cas, le sort prend effet là où le clerc le désire, tant qu’il n’y a pas d’obstacles entre lui et la portée du sort. Le clerc peut lancer son sort dans les airs, sur une pierre, du métal, du bois, etc. Si ce sort est lancé sur le visage ou sur les yeux d’une créature, la lumière aura tendance à l’aveugler (comme si une très forte lumière était placée devant ses yeux). Ses attaques et ses jets de protection subissent alors –4 pour toucher et même sa classe d’armure subi ce malus. À noter que ce sort ne «bouge pas», bien qu’il puisse être lancé sur une créature ou un objet mobile. Ce sort est réversible, créant alors une zone de ténèbres dans les mêmes conditions, sauf en ce qui concerne la durée, qui est alors la moitié du sort normal.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Lumière",
+        "id": "Sdlz5sn18",
+        "img": "systems/add2e/assets/icones/sorts/lumiere.webp",
+        "onUse": "systems/add2e/scripts/sorts/lumiere.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
       "nom": "Protection contre le mal",
       "ecole": "Abjuration",
-      "inverse": "Protection contre le bien",
       "niveau": 1,
       "portee": "au toucher",
       "duree": "3 rounds/niveau",
@@ -153,15 +192,21 @@
       "composantes": "V, S, M",
       "temps_incantation": "4 segments",
       "jet_sauvegarde": "aucun",
-      "source_page": 45,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "active_effect_defensif_a_definir_depuis_description"
+      "inverse": "Protection contre le bien",
+      "description": "quand ce sort est lancé, il agit comme si une armure magique protégeait le destinataire. La protection entoure la créature touchée à 30 cm de distance, la protégeant des contacts corporels des créatures enchantées ou invoquées (neutres, bonnes ou mauvaises) qui utilisent des attaques naturelles (griffes, morsure, etc.), tels que les chasseurs invisibles, démons, diables, diablotins, djinns, élémentaux, éfrits, esprit des eaux, maître des vents, quasits, salamandres, serviteurs aériens, sorcières des ténèbres et xorns. Le destinataire est également protégé contre les animaux et les monstres invoqués (neutres, bons ou mauvais). De plus, toute attaque tentée par des créatures mauvaises subit un malus de –2 à «la probabilité de toucher» la créature protégée, et tout jet de protection éventuel se fait à +2. Ce sort peut être inversé pour devenir alors une protection contre le bien (mais il continue quand même de garder à distance les créatures enchantées mauvaises). Pour lancer le sort, le clerc doit tracer un cercle de 90 cm de diamètre sur le sol avec de l’eau bénite pour le sort de protection contre le mal et avec du sang pour la protection contre le bien, ou alors en utilisant de l’encens allumé ou des vapeurs de fumier, selon qu’il veut se protéger du mal ou du bien.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Protection contre le Mal",
+        "id": "TqhVMP92bVsGe1Ze",
+        "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
+        "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
       "nom": "Purification de l'eau et des aliments",
       "ecole": "Altération",
-      "inverse": "Putréfaction de l'eau et des aliments",
       "niveau": 1,
       "portee": "3\"",
       "duree": "permanente",
@@ -169,9 +214,16 @@
       "composantes": "V, S",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "source_page": 45,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "message_et_eventuelle_modification_objet_a_definir"
+      "inverse": "Putréfaction de l'eau et des aliments",
+      "description": "ce sort permet de purifier toute nourriture et toute eau polluée, moisie, pourrie, empoisonnée. L’inverse du sort, corruption de l’eau et des aliments, rend la nourriture impropre à la consommation et l’eau polluée et non potable; l’inverse profane même l’eau bénite. L’eau maudite est altérée par une purification de l’eau.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Purification de l'eau et des aliments",
+        "id": "Smrpqu7x2",
+        "img": "systems/add2e/assets/icones/sorts/purification-de-leau-et-des-aliments.webp",
+        "onUse": "systems/add2e/scripts/sorts/purification-de-leau-et-des-aliments.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -184,9 +236,25 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "source_page": 45,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "active_effect_resistance_froid_a_definir_depuis_description"
+      "description": "quand ce sort est lancé sur une créature par un clerc, son corps est préservé du froid. Le bénéficiaire peut résister ainsi à des températures de –18°C, même nu. Les froids les plus intenses, comme ceux créés par une épée de froid, une tempête de glace, un bâtonnet de givre ou un souffle de dragon blanc, autorisent un jet de protection à +3, avec seulement la moitié des dommages subis si ce test est raté, et le quart si le jet de protection est réussi. La résistance dure 1 tour par niveau d’expérience du clerc. Ce sort nécessite une pincée de souffre comme composante matérielle.",
+      "composants_materiels_objets": [
+        {
+          "nom": "pincée de souffre",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Résistance au Froid",
+        "id": "2eIiTt870xCg5cX2",
+        "img": "systems/add2e/assets/icones/sorts/resistance-au-froid.webp",
+        "onUse": "systems/add2e/scripts/sorts/resistance-au-froid.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -199,15 +267,39 @@
       "composantes": "V, S, M",
       "temps_incantation": "4 segments",
       "jet_sauvegarde": "annule",
-      "source_page": 45,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "active_effect_defensif_avec_jets_contre_attaquants_a_definir"
+      "description": "quand un clerc lance un sort sanctuaire, tout adversaire doit lancer un jet de protection contre les sorts. Si le jet de protection est raté, l’adversaire ignorera totalement le clerc et attaquera quelqu’un d’autre. Si le jet de protection est réussi, le clerc pourra être sujet aux attaques de cet adversaire. À noter que ce sort n’empêche pas les effets des sorts de zone (boule de feu, tempête de glace, etc.). Pendant la période de protection que donne ce sort, le clerc ne peut faire aucune action offensive, mais il peut utiliser des sorts non-violents, des sorts qui ne représentent pas une agression; il peut par exemple guérir les blessures de quelqu’un ou lancer une bénédiction, un augure, un cantique, une lumière pour éclairer (pas sur un adversaire!), etc. Ce sort peut être lancé sur une créature autre que le clerc lui-même. Les composantes matérielles de ce sort sont le symbole sacré du clerc et un petit miroir en argent.",
+      "composants_materiels_objets": [
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "petit miroir en argent",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Sanctuaire",
+        "id": "vKWHLf1xrjZNtMdr",
+        "img": "systems/add2e/assets/icones/sorts/sanctuaire.webp",
+        "onUse": "systems/add2e/scripts/sorts/sanctuaire.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
       "nom": "Soins mineurs",
       "ecole": "Nécromancie",
-      "inverse": "Blessures mineures",
       "niveau": 1,
       "portee": "au toucher",
       "duree": "permanente",
@@ -215,9 +307,16 @@
       "composantes": "V, S",
       "temps_incantation": "5 segments",
       "jet_sauvegarde": "aucun",
-      "source_page": 45,
-      "status": "reference_bloc_technique_complete_description_a_completer",
-      "onuse_strategy": "soin_1d8_ou_blessure_inverse_a_confirmer_depuis_description"
+      "inverse": "Blessures mineures",
+      "description": "en posant ses mains sur une créature blessée, le clerc peut lui redonner de 1 à 8 points de vie perdus (1d8). Ce sort ne peut pas soigner les créatures sans enveloppe corporelle, ni les morts-vivants, ni les créatures uniquement touchées par des armes en fer, en argent ou magiques. L’effet des soins mineurs est permanent tant que la personne guérie ne subit pas d’autres dommages. L’inverse de ce sort, blessures mineures, agit selon les mêmes principes mais cause de 1 à 8 points de dommages. Si une créature évite le contact des mains du clerc, celui-ci doit lancer une «probabilité de toucher» pour voir s’il a pu poser ses mains sur la victime pour infliger une blessure.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Soins mineurs",
+        "id": "Sxchr11u6",
+        "img": "systems/add2e/assets/icones/sorts/soins-mineurs.webp",
+        "onUse": "systems/add2e/scripts/sorts/soins-mineurs.js"
+      },
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

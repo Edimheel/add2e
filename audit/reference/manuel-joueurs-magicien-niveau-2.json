@@ -6,187 +6,674 @@
     "niveau": 2,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 24,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-2.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Bouche magique",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé le magicien fait apparaître sur l’objet de son choix une bouche enchantée qui prononce alors le message que le lanceur du sort a prévu; cette apparition se déclenche quand survient une situation précise. Le message prononcé peut comprendre jusqu’à 25 mots, dans une langue connue du magicien, et le temps imparti pour la prononciation ne doit pas dépasser un tour. Le magicien ne peut pas faire incanter un sort à la bouche magique. Les mouvements de la bouche correspondent aux syllabes prononcées; donc, si elle est placée sur une statue, on pourra croire que c’est effectivement la statue qui parle. Cette bouche magique peut être placée sur un arbre, un rocher, une porte ou tout autre objet, à l’exception des espèces intelligentes (animales ou végétales). Le sort réagit à une situation précise, selon l’ordre du magicien, par exemple «parle dès qu’une créature te touche» ou «parle dès qu’une créature passe à moins de 9 mètres». L’ordre peut être très général ou très particulier. Exemple: «Parle uniquement quand une femme octogénaire portant un grand bouquet de fleurs s’assiéra à moins de 30 centimètres en croisant les jambes». La portée de déclenchement des paroles de la bouche magique est de ½\" par niveau du magicien; donc un magicien de niveau 6 pourra ordonner à une bouche magique de parler à des créatures à une distance de 3\" maximum, par exemple: «Parle quand une créature ailée s’approche à moins de 9 mètres». Jusqu’à l’accomplissement du sort, la bouche magique reste effective, la durée du sort étant donc variable. Une bouche magique ne peut pas distinguer les créatures invisibles, ni les alignements, ni les niveaux et les dés de vie, ni les classes, sauf par des indices extérieurs. La composante matérielle est un petit morceau de rayon de miel.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un petit morceau de rayon de miel",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Bouche magique",
+        "id": "Sd3h2eywj",
+        "img": "systems/add2e/assets/icones/sorts/bouche-magique.webp",
+        "onUse": "systems/add2e/scripts/sorts/bouche-magique.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
       "nom": "Bruitage",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand le magicien lance ce sort, il crée un volume sonore à la distance qu’il désire (dans la portée), qui semble s’éloigner, se rapprocher ou rester au même endroit. Le volume sonore créé dépend du niveau du magicien. Le bruit de base est calculé sur le niveau d’expérience minimum que doit avoir le magicien pour lancer ce sort, c'est-à-dire le niveau 3. Le bruit du bruitage, à ce niveau, est celui que peuvent faire 4 hommes au maximum. Chaque niveau d’expérience additionnel augmente le volume sonore dans les mêmes proportions: bruit de 8 hommes au niveau 4, etc. Ainsi on peut entendre des paroles, des chants, des cris, des bruits de pas. En fait, le magicien peut créer n’importe quel bruit, la seule restriction étant son niveau. Une horde de rats courant et couinant représente le volume sonore de 8 hommes courant et criant. Un lion qui rugit correspond au volume sonore de 16 hommes; le rugissement d’un dragon à celui de 24 hommes au moins. Si quelqu’un a un doute quant aux bruits qu’il entend (s’il n’y croit pas), il a le droit à un jet de protection qui, s’il est réussi, fait que cette personne n’entend plus rien ou alors un simple bruit très atténué. Ce sort est particulièrement efficace quand il est conjugué avec le sort force fantasmagorique (voir p.74). La composante matérielle est un morceau de laine ou un peu de cire.",
+      "composants_materiels_objets": [
+        {
+          "nom": "morceau de laine",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à la cire.",
+          "notes": null
+        },
+        {
+          "nom": "cire",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au morceau de laine.",
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Bruitage",
+        "id": "Skwo3qibs",
+        "img": "systems/add2e/assets/icones/sorts/bruitage.webp",
+        "onUse": "systems/add2e/scripts/sorts/bruitage.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
       "nom": "Corde enchantée",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé sur une corde de 1,50 m à 9 m de longueur, un des bouts de la corde se dresse jusqu’à ce que la corde entière soit complètement verticale, perpendiculaire au sol, comme si elle était fixée au sommet. Le bout supérieur est, en fait, attaché dans un espace extradimensionnel. Le lanceur du sort, ainsi que 5 autres personnes au maximum, peuvent grimper jusqu’au sommet de la corde et disparaitre dans cet espace où aucune créature ne peut les trouver. Les personnes qui se trouvent à l’intérieur de l’espace extra-dimensionnel peuvent clairement voir à l’extérieur comme s’ils regardaient par une fenêtre d’environ 90 cm de large par 1,50 m de haut. Ceux qui sont à l’extérieur ne peuvent pas regarder à l’intérieur. La corde ne peut être remontée dans cet espace si 6 personnes y ont grimpé, mais peut y être tirée si moins de 6 personnes s’y trouvent. Si la corde n’est pas remontée, elle sera suspendue dans l’air et y restera jusqu’à ce qu’une créature ne l’enlève. Les personnes se trouvant dans cet espace extra-dimensionnel doivent en redescendre avant l’expiration du sort, sinon elles tomberont de la hauteur où elles étaient quand le sort a pris fin. Une seule personne à la fois peut grimper à la corde. Une corde enchantée peut permettre d’atteindre un endroit normal si elle n’est pas gravie jusqu’au bout. Les composantes matérielles sont de la poudre de blé et un parchemin torsadé en forme de boucle.",
+      "composants_materiels_objets": [
+        {
+          "nom": "de la poudre de blé et un parchemin torsadé en forme de boucle",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Corde enchantée",
+        "id": "lXUOJQPzhAffHVMC",
+        "img": "systems/add2e/assets/icones/sorts/magicien-corde-enchantee.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-corde-enchantee.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
       "nom": "Détection de l'invisibilité",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, le magicien est capable de voir les créatures et les objets invisibles, astraux, éthérés, cachés ou hors de phase. La détection se fait sur la ligne de vue du magicien, sur une largeur de 1\". Les composantes matérielles sont une pincée de talc et un peu de poudre d’argent qu’il faut répandre.",
+      "composants_materiels_objets": [
+        {
+          "nom": "pincée de talc",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Répandue."
+        },
+        {
+          "nom": "poudre d’argent",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Répandue."
+        }
+      ],
+      "foundry": null,
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
       "nom": "Détection du mal",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc détection du mal (voir p.44). À noter que le magicien ne détecte que l’intensité du mal, mais pas la tendance éthique comme le permet le sort de clerc.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Détection du mal",
+        "id": "S744pccyj",
+        "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+        "onUse": "systems/add2e/scripts/sorts/detection-du-mal.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
       "nom": "E.S.P.",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, le magicien est capable de détecter les pensées immédiates de toute créature dans la portée du sort, sauf les créatures sans esprit comme les morts-vivants. Un sort d’ESP est arrêté par 0,60 cm de roche, 5 cm ou plus de métal autre que le plomb, ou par une mince feuille de plomb. Le magicien est capable de sonder les pensées immédiates d’une créature par round, découvrant de simples pensées instinctives chez les créatures faibles d’esprit. L’examen peut continuer round après round sur la même créature. Le magicien peut employer ce sort, par exemple, pour deviner si une créature se tient derrière une porte, mais il ne saura pas quelle est la créature en question. La composante matérielle de ce sort est une pièce de cuivre.",
+      "composants_materiels_objets": [
+        {
+          "nom": "une pièce de cuivre",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "E.S.P.",
+        "id": "ySqQUdkEBf3Sav2Z",
+        "img": "systems/add2e/assets/icones/sorts/magicien-e-s-p.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-e-s-p.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
       "nom": "Force",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort augmente la force de la personne touchée d’un nombre de points (ou de dixièmes de points si la personne est de la classe des guerriers et a déjà 18 en force) dépendant de sa classe, et ce pendant toute la durée du sort. Cependant, les restrictions de force dues à la classe, race et sexe sont toujours à prendre en compte. Classe Points de force en plus Clerc, druide 1-6 (d6) Guerrier, paladin, ranger, barde 1-8 (d8) Magicien, illusionniste 1-4 (d4) Voleur, assassin 1-6 (d6) Moine 1-4 (d4 Si un guerrier (ou un paladin ou un ranger) a déjà 18 en force, le sort lui ajoutera de 10 % à 80 % de force exceptionnelle. Toute addition de force au dessus de 18 doit être traitée comme ceci: 1 = 10 %. La composante matérielle est quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc.",
+      "composants_materiels_objets": [
+        {
+          "nom": "quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Force",
+        "id": "Y6tsRuejC7qRqtCd",
+        "img": "systems/add2e/assets/icones/sorts/magicien-force.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-force.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
       "nom": "Fracassement",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "un sort de fracassement affecte les objets nonmagiques en cristal, verre, céramique ou porcelaine, comme les flacons, les bouteilles, les flasques, les pots, les vitres, les miroirs, etc. Ces objets se brisent en dizaines de morceaux. Les objets d’un poids de plus de 100 po (5 kg) par niveau du magicien ne sont pas affectés par le sort; mais tous les autres doivent réussir un jet de protection contre les «coups critiques» pour éviter le fracassement. La composante matérielle est un éclat de mica.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un éclat de mica",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Fracassement",
+        "id": "cGT3rT7VlCh7BuWd",
+        "img": "systems/add2e/assets/icones/sorts/magicien-fracassement.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-fracassement.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
       "nom": "Image miroir",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, le magicien fait apparaître 1 à 4 sosies de lui-même. Ces images font exactement ce que fait le magicien et, comme le sort provoque une légère distorsion visuelle, les ennemis du lanceur du sort ne peuvent discerner quel est le vrai magicien parmi les images créées. Quand un sosie est frappé par une arme, magique ou non, il disparaît, mais les autres subsistent jusqu’à ce qu’ils soient frappés à leur tour (ou que le sort expire). Les images se déplacent à chaque round, donc, si le vrai magicien est frappé à un round, l’ennemi ne saura pas le reconnaître le round suivant. Pour déterminer le nombre d’images qui apparaîtront, lancez un dé de pourcentage et ajouter 1 point par niveau du magicien: 01-25 = 1 sosie; 26-50 = 2 sosies; 51-75 = 3 sosies; 76-00 = 4 sosies. Quand la durée du sort se termine, les images disparaissent.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Image miroir",
+        "id": "0vUHIpvUNS4TA1XZ",
+        "img": "systems/add2e/assets/icones/sorts/magicien-image-miroir.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-image-miroir.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
       "nom": "Invisibilité",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort fait que la créature touchée devient invisible, indétectable à la vue normale et même à l’infravision. Bien que la créature soit invisible, elle fait cependant toujours autant de bruit car la magie n’affecte pas les sons. Le sort est actif tant qu’il n’est pas magiquement brisé ou dissipé, ou que la créature invisible ne l’annule pas ou n’attaque pas une créature. Ainsi la créature invisible peut ouvrir des portes, parler, manger, monter des marches, etc. Mais, à la moindre attaque, elle redeviendra visible immédiatement et cela lui permettra de frapper la première. Même les amis de la créature invisible ne peuvent la voir, non plus que son équipement, à moins qu’ils aient des moyens, magiques ou non, de détecter l’invisibilité. Les créatures hautement intelligentes avec 10 dés de vie ou plus, 10 niveaux d’expérience ou plus, ou l’équivalent, ont une chance de détecter automatiquement ce qui est invisible. Les composantes matérielles sont un cil mis dans de la gomme arabique.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un cil mis dans de la gomme arabique",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Invisibilité",
+        "id": "S3n5s30rh",
+        "img": "systems/add2e/assets/icones/sorts/detection-de-linvisibilite.webp",
+        "onUse": "systems/add2e/scripts/sorts/detection-de-linvisibilite.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
       "nom": "Lévitation",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, le magicien peut faire léviter la créature choisie, lui-même ou une autre personne. Le magicien est limité par le poids: il peut faire léviter jusqu’à 1.000 po (50 kg) par niveau; un magicien niveau 3 pourra donc agir sur 3.000 po (150 kg). Si le magicien lance le sort sur luimême, il peut bouger verticalement à la vitesse de 6 m par round. S’il est lancé sur une autre créature, le magicien la fera léviter à une vitesse verticale maximale de 3 m par round. Les mouvements horizontaux ne sont pas possibles avec ce sort, mais la créature affectée par le sort peut se pousser sur la paroi d’une falaise, par exemple, pour bouger latéralement. Le magicien peut annuler le sort quand il le désire. Si le destinataire du sort n’est pas consentant, il a le droit à un jet de protection, qui, s’il réussit, empêche les effets du sort. La composante matérielle est soit une boucle de cuir, soit un morceau de fil d’or courbé en forme d’hameçon.",
+      "composants_materiels_objets": [
+        {
+          "nom": "boucle de cuir",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au fil d’or courbé en forme d’hameçon.",
+          "notes": null
+        },
+        {
+          "nom": "fil d’or courbé en forme d’hameçon",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à la boucle de cuir.",
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Lévitation",
+        "id": "2sz9FJMkEg5Ljywr",
+        "img": "systems/add2e/assets/icones/sorts/magicien-levitation.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-levitation.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
       "nom": "Localisation d'objets",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc localisation d’objets (voir p.47).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Localisation d’objets",
+        "id": "FMsUijIK9egwdICC",
+        "img": "systems/add2e/assets/icones/sorts/magicien-localisation-d-objets.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-localisation-d-objets.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 13,
       "nom": "Lumière éternelle",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est le même que le sort de niveau 2 de clerc lumière éternelle, excepté le fait que la portée n’est que de 6\" au lieu de 12\" et que le magicien ne peut pas l’inverser.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Lumière éternelle",
+        "id": "Sejwb1zfk",
+        "img": "systems/add2e/assets/icones/sorts/lumiere-eternelle.webp",
+        "onUse": "systems/add2e/scripts/sorts/lumiere-eternelle.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 14,
       "nom": "Nuage puant",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, le magicien crée un nuage de vapeurs nauséabondes à une distance maximale de 3\" de l’endroit où il se trouve. Toute créature prise dans ce nuage doit lancer un jet de protection contre le poison; si ce jet de protection est raté, elle sera sans défense à cause des nausées pendant 2 à 5 rounds (d4+1). Si le jet de protection est réussi, elle sera sans défense mais seulement pour le temps qu’elle restera dans le nuage et ensuite pendant un round après en être sortie, ceci à cause des effets irritants sur les organes visuels et olfactifs. Un sort de rafale de vent dissipera le nuage en 1 round après contact. Si le sort est lancé dans un endroit où il y a des courants d’airs importants, le nuage se déplacera dans la direction du courant d’air à une vitesse de 1\" à 6\" par round, en fonction de la vitesse du vent. Chaque 1\" d’un tel mouvement réduit la durée du nuage d’un round. La composante matérielle de ce sort est un œuf pourri ou quelques feuilles de symplocarpe fétide.",
+      "composants_materiels_objets": [
+        {
+          "nom": "œuf pourri",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative aux feuilles de symplocarpe fétide.",
+          "notes": null
+        },
+        {
+          "nom": "feuilles de symplocarpe fétide",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à l’œuf pourri.",
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Nuage puant",
+        "id": "fnSR2CAHU3rU3WGm",
+        "img": "systems/add2e/assets/icones/sorts/magicien-nuage-puant.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-nuage-puant.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 15,
       "nom": "Or des fous",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "grâce à ce sort, les objets et pièces de cuivre peuvent être temporairement transformés en or — 27 dm³ représentent environ un volume de 4.000 po (200 kg). Toute créature voyant cet or des fous a droit à un jet de dé (d20) dont le résultat doit être égal ou inférieur à son intelligence pour découvrir le subterfuge. Mais pour chaque niveau du magicien, il faut ajouter 1 au tirage: ainsi, il y a peu de chances qu’un or des fous soit découvert s’il a été créé par un magicien de haut niveau. Si cet «or» est violemment frappé par un objet en fer forgé, il y a une petite chance que l’or se retransforme en cuivre. Cela dépend de la composante matérielle qui a servi au magicien pour lancer le sort: si une citrine de 50 po a été réduite en poudre et répartie sur le métal transformé, il y a 30 % de chances que le coup retransforme l’or en cuivre; avec une pierre d’ambre de 100 po, la chance est de 25 %; une topaze de 500 po: elle tombe à 10 %; et avec une topaze orientale (corindon) il n’y a que 1 % de chance.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Or des fous",
+        "id": "F1AYLNQxgPkbAKvP",
+        "img": "systems/add2e/assets/icones/sorts/magicien-or-des-fous.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-or-des-fous.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 16,
       "nom": "Oubli",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, les créatures dans la zone d’effet, qui ratent leur jet de protection, oublient les événements du round précédent. Pour chaque tranche de 3 niveaux du magicien, une autre minute précédente est oubliée. Naturellement, un oubli n’annule jamais un sort de charme, suggestion, quête religieuse ou magique ou tout autre sort similaire, mais il est possible de faire oublier à une créature charmée qui est la personne qui l’a charmée. De 1 à 4 créatures peuvent être affectées par le sort, au choix du magicien. S’il choisit de n’affecter qu’une seule créature, le jet de protection de cette dernière subit un malus de –2; si deux créatures sont visées, leur jet de protection est à –1; et si le magicien choisit 3 ou 4 créatures, le jet de protection est normal. Un sort de guérison ou restauration lancé spécialement dans ce but redonnera la mémoire perdue, de même qu'un sort de souhait majeur. Les autres moyens seront inefficaces.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Oubli",
+        "id": "6bFZjficFTtSOd3X",
+        "img": "systems/add2e/assets/icones/sorts/magicien-oubli.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-oubli.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 17,
       "nom": "Ouverture",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort ouvre les portes coincées, fermées magiquement (fermeture) ou verrouillées magiquement (verrou magique). Il ouvre également les portes barrées et fermées à clé ainsi que les portes secrètes, les coffres, les boîtes. Il fait s’ouvrir les chaînes et les fers de prisonniers. Si ce sort est utilisé pour ouvrir une porte fermée avec un verrou magique, l’ouverture n’annule pas le pouvoir du verrou magique mais le suspend pendant 1 tour. Dans tous les autres cas, l’ouverture est permanente (mais une autre fermeture est possible après). Ce sort ne tord pas les barreaux; il ne soulève pas non plus les herses. Un sort d’ouverture a deux fonctions sur une même porte, mais si cette porte est verrouillée, barrée et fermée magiquement, il faut 2 sorts d’ouverture pour pouvoir l’ouvrir.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Ouverture",
+        "id": "IiCnwcKzkfECzT5b",
+        "img": "systems/add2e/assets/icones/sorts/magicien-ouverture.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-ouverture.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 18,
       "nom": "Peur",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé sur une créature de moins de 6 dés de vie ou 6 niveaux d’expérience, elle doit réussir son jet de protection contre les sorts ou alors elle prend peur et se met à trembler de tout son corps. La créature effrayée ne laissera pas tomber ce qu’elle tient à moins qu’elle ne soit encombrée. Si elle est acculée dans un coin, la créature combattra, mais avec un malus de –1 sur ses probabilités de toucher et sur les dégâts qu’elle peut infliger. Ce malus de –1 s’applique aussi à tous les jets de protection qu’elle pourra lancer. Ce sort n’affecte pas les elfes, les demi-elfes, les morts-vivants (squelettes, zombies, goules, ombres, ghasts, nécrophages, âmes en peine), les larves, les lémures, les mânes et les clercs. La composante matérielle est un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie).",
+      "composants_materiels_objets": [
+        {
+          "nom": "un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie)",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Peur",
+        "id": "nEnY0rOhsUcIvGw9",
+        "img": "systems/add2e/assets/icones/sorts/magicien-peur.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-peur.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 19,
       "nom": "Piège de Léomund",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce faux piège est placé pour tromper les voleurs tentant de dérober les affaires du magicien. Le lanceur du sort peut affecter tout petit mécanisme tel qu’un verrou, une serrure, des gonds, des fermoirs, des engrenages, etc. Toute personne capable de détecter les pièges a 80 % de chance, moins 4 % par niveau qu’elle possède au-dessus du premier, de croire à ce piège. Si cette personne tente alors de désamorcer le faux piège, elle pensera avoir réussi à 20 % plus 4 % par niveau. Ce piège est une illusion, rien n’arrivera si on l’ignore. Son but est seulement d’effrayer les éventuels voleurs ou de leur faire perdre du temps. La composante matérielle est un morceau de fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à «piéger». Un seul piège de Léomund peut être placé dans une zone de 15 m x 15 m.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un morceau de fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à «piéger»",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Piège de Léomund",
+        "id": "XeoIbrIuWzQQeqhb",
+        "img": "systems/add2e/assets/icones/sorts/magicien-piege-de-leomund.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-piege-de-leomund.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 20,
       "nom": "Pyrotechnie",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de druide pyrotechnie (voir p.59).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Pyrotechnie",
+        "id": "HrKOTw0kqX1w6X3C",
+        "img": "systems/add2e/assets/icones/sorts/magicien-pyrotechnie.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-pyrotechnie.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 21,
       "nom": "Rayon d'affaiblissement",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort, le magicien peut affaiblir un ennemi en réduisant sa force, et donc sa capacité de combat, de 25 % ou plus. Pour chaque niveau du lanceur de sort au-dessus du 3e, le pourcentage augmente de 2 %; donc un magicien de niveau 4 réduira la force d’un adversaire de 27 %. La portée et la durée du sort dépendent aussi du niveau du magicien. Par exemple, si une créature est touchée par un rayon d’affaiblissement, elle perd le pourcentage approprié de dégâts qu’elle peut infliger par une attaque physique (projectile, coup porté avec une arme, morsure, coup de patte, coup de pied, étouffement, etc.). Le MD déterminera les autres réductions à appliquer. Si la créature visée réussit son jet de protection, le sort n’a aucun effet.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Rayon d’affaiblissement",
+        "id": "JdNLcU95SJeFJWf0",
+        "img": "systems/add2e/assets/icones/sorts/magicien-rayon-d-affaiblissement.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-rayon-d-affaiblissement.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 22,
       "nom": "Ténèbres sur 5 mètres",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort provoque une obscurité totale dans la zone d’effet. L’infravision et l’ultravision sont inefficaces. Aucune lumière normale ou magique n’éclairera dans ces ténèbres, sauf les sorts de lumière et de lumière éternelle. Dans ces cas, les ténèbres sont dissipées par cette lumière. De même, le sort de ténèbres sur 5 mètres dissipe un sort de lumière, mais se contente de suspendre temporairement les effets d’un sort de lumière éternelle (qui fonctionne encore après l’expiration des ténèbres). Les composantes matérielles de ce sort un peu de fourrure de chauve-souris et soit un morceau de charbon, soit une goutte de poix.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Ténèbres sur 5 mètres",
+        "id": "CvNVh364E6mHLbiC",
+        "img": "systems/add2e/assets/icones/sorts/magicien-tenebres-sur-5-metres.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-tenebres-sur-5-metres.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 23,
       "nom": "Toile d'araignée",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort crée une masse à plusieurs couches de filaments solides et épais comme ceux d’une toile d’araignée, mais beaucoup plus gros et résistants. Cette masse doit avoir au moins deux points d’attache diamétralement opposés (plancher et plafond, deux murs opposés, etc.). La toile occupe un volume de 216 m³ et doit avoir une épaisseur d’au moins 1\"; donc un magicien peut créer un volume de 4\" de haut sur 2\" de large sur 1\" d’épaisseur. Si le sort est lancé sans avoir deux points d’ancrage solides, la toile s’effondrera sur elle-même, annulant le sort. Les créatures prises dans la toile, ou qui la touchent simplement, sont collées aux fibres gluantes. Les créatures ayant moins de 13 en force ne peuvent rien faire jusqu’à ce qu’elles soient libérées par quelqu’un d’autre, ou jusqu’à ce que le sort prenne fin. Pour chaque tour entier pendant lequel elle est prise dans la toile, une créature à 5 % de chance cumulative de mourir étouffée. Les créatures ayant une force entre 13 et 17 peuvent briser 0,30 m de toile par tour. Les créatures avec 18 ou plus en force peuvent déchirer 0,30 m de toile par round. (NB: Les créatures de masse importante sont à considérer comme ayant une grande force pour déchirer la toile et des créatures de masse très importante ne s’apercevront même pas de la présence de la toile). Les créatures très fortes et géantes déchireront 0,30 m de toile par segment. Les filaments de la toile sont inflammables. Une épée langue de feu les coupera aussi facilement qu’une main écartant une vraie toile d’araignée. N’importe quel feu: torche, huile enflammée, épée enflammée, etc., brûlera une toile en un seul round. Toutes les créatures prises dans la toile subiront de 2 à 8 points de dégâts à cause du feu, mais celles qui s'en sont libérées ne subiront aucun dégâts. Le jet de protection est à –2. S’il est réussi, 2 choses peuvent se passer: si la créature a un endroit par lequel elle peut s’échapper, elle peut le faire sans problème; si elle n’en a pas, le pouvoir gluant de la toile d’araignée sera moitié moins fort. La composante matérielle de ce sort est un peu de toile d’araignée.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un peu de toile d’araignée",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Toile d’araignée",
+        "id": "orptvU3p8BkABXhH",
+        "img": "systems/add2e/assets/icones/sorts/magicien-toile-d-araignee.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-toile-d-araignee.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 24,
       "nom": "Verrou magique",
+      "ecole": null,
       "niveau": 2,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé sur une porte, un coffre ou un portail, il est fermé magiquement. L’objet ainsi verrouillé ne peut être ouvert qu’en le cassant, en utilisant les sorts dissipation de la magie ou ouverture, ou alors par un magicien supérieur d’au moins 4 niveaux à celui qui a lancé le sort de verrou magique. À noter que les deux dernières méthodes (ouverture et magicien) n’annulent pas définitivement le pouvoir du sort: elles le suspendent pendant un petit moment seulement. Les créatures de nature extra-dimensionnelle n’affectent pas un verrou magique comme elles peuvent le faire vis-à-vis d’une fermeture (voir p.67). Le magicien qui a lancé le sort peut toujours ouvrir librement la porte, le coffre ou le portail sur lesquels il a posé un verrou magique, un peu comme si le verrou n’existait pas pour lui.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Verrou magique",
+        "id": "YzA9lPZieNlGZn1V",
+        "img": "systems/add2e/assets/icones/sorts/magicien-verrou-magique.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-verrou-magique.js"
+      },
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

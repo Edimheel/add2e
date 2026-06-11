@@ -6,23 +6,242 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_champs_techniques_complete_description_a_importer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-6.json",
-  "rules": {
-    "descriptionField": "description",
-    "warning": "Tous les champs techniques sont remplis depuis les blocs du Manuel. Le champ description unique doit être importé via audit/tools/import-reference-descriptions.mjs."
-  },
   "spells": [
-    { "ordre": 1, "nom": "Animation des objets", "ecole": "Altération", "niveau": 6, "portee": "3\"", "duree": "1 round/niveau", "zone_effet": "27 dm3/niveau", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "animation_objets_mj" },
-    { "ordre": 2, "nom": "Barrière de lames", "ecole": "Évocation", "niveau": 6, "portee": "3\"", "duree": "3 rounds/niveau", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "zone_degats_lames_a_traiter" },
-    { "ordre": 3, "nom": "Guérison", "ecole": "Nécromancie", "niveau": 6, "portee": "au toucher", "duree": "permanente", "zone_effet": "créature touchée", "composantes": "V, S", "temps_incantation": "1 round", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Blessure", "onuse_strategy": "soin_total_ou_inverse_a_traiter" },
-    { "ordre": 4, "nom": "Invocation des animaux", "ecole": "Conjuration/Appel", "niveau": 6, "portee": "3\"", "duree": "2 rounds/niveau", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "invocation_mammiferes_mj" },
-    { "ordre": 5, "nom": "Langage des monstres", "ecole": "Altération", "niveau": 6, "portee": "3\" de rayon", "duree": "1 round/niveau", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "message_effet_communication" },
-    { "ordre": 6, "nom": "Lithomancie", "ecole": "Divination", "niveau": 6, "portee": "au toucher", "duree": "1 tour", "zone_effet": "0,75 m3 de pierre", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "divination_mj" },
-    { "ordre": 7, "nom": "Orientation", "ecole": "Divination", "niveau": 6, "portee": "au toucher", "duree": "1 tour/niveau", "zone_effet": "créature touchée", "composantes": "V, S, M", "temps_incantation": "3 rounds", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Désorientation", "onuse_strategy": "active_effect_orientation_a_definir" },
-    { "ordre": 8, "nom": "Rappel", "ecole": "Altération", "niveau": 6, "portee": "0", "duree": "spéciale", "zone_effet": "spéciale", "composantes": "V", "temps_incantation": "1 segment", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "teleportation_sanctuaire_mj" },
-    { "ordre": 9, "nom": "Séparation des eaux", "ecole": "Altération", "niveau": 6, "portee": "2\"/niveau", "duree": "1 tour/niveau", "zone_effet": "spéciale", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "composants_materiels_source": "symbole sacré du clerc", "onuse_strategy": "effet_scene_eau_mj" },
-    { "ordre": 10, "nom": "Serviteur aérien", "ecole": "Conjuration/Appel", "niveau": 6, "portee": "1\"", "duree": "1 jour/niveau", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "9 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "invocation_serviteur_mj" }
+    {
+      "ordre": 1,
+      "nom": "Animation des objets",
+      "ecole": "Altération",
+      "niveau": 6,
+      "portee": "3\"",
+      "duree": "1 round/niveau",
+      "zone_effet": "27 dm3/niveau",
+      "composantes": "V, S",
+      "temps_incantation": "9 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort puissant permet au clerc d’animer des objets avec un semblant de vie. L’objet (ou les objets) animé attaque alors tous ceux ou tout ce que le clerc désigne. L’objet animé peut être fait de n’importe quelle matière: bois, métal, cuir, pierre, céramique, verre, etc. La vitesse de déplacement de l’objet dépend de ses moyens de propulsion et de son poids. Une grande table en bois est lourde, mais ses pieds peuvent lui donner de la vitesse; un tapis peut simplement glisser et ramper; une jarre peut rouler. Ainsi, un grand piédestal en pierre bougera très lentement, une statue en pierre un peu plus vite, en bois encore plus et un objet léger ira très vite (le piédestal 1\"/round; la statue de pierre 4\"/round; une statue de bois 8\"/round; un objet léger en ivoire 12\"/round). Les mouvements glissants et rampants se font à une vitesse de 1\" à 2\" par round, alors que les objets qui peuvent rouler le font à la vitesse de 3\" à 6\" par round. Les dégâts causés par un objet animés dépendent de sa forme et de sa matière. Les objets légers et souples peuvent seulement gêner la vue, entraver les mouvements, lier, faire trébucher, étouffer, etc. Les objets légers et durs peuvent se laisser tomber ou frapper, causant de 1 à 2 points de dommage, ou alors gêner ou faire trébucher comme les objets légers et souples. Les objets durs de poids moyen peuvent écraser ou frapper pour des dégâts de 2 à 8 points de vie (2d4). Les grands objets lourds peuvent causer de 3 à 12, 4 à 16 ou même 5 à 20 points de dommage. Les dommages dépendent du type d’arme employé par l’objet et de ce qui est frappé. Une arme aiguisée et coupante est efficace contre le bois, le tissu, le cuir et les matières similaires; les armes lourdes et contondantes sont efficaces contre le bois, la pierre et le métal. La fréquence des attaques des objets dépend de leur mode de locomotion, de leurs appendices et de leur mode d’attaque. Elle va de 1 attaque par round à 1 attaque tous les 5 rounds. La classe d’armure des objets animés dépend de la matière dont ils sont constitués et de leur vitesse. Le MD déterminera tous ces facteurs, ainsi que les dommages que peuvent supporter les objets animés avant d’être détruits. Le clerc peut animer 27 dm³ par niveau d’expérience; ainsi, un clerc de niveau 14 pourra animer 378 dm³, c'est-à-dire une grande statue, deux petits tapis, trois chaises ou une douzaine de pots de taille moyenne.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Animation des objets",
+        "id": "YhKHovBxDFPT3zjD",
+        "img": "systems/add2e/assets/icones/sorts/animation-d-un-objet.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 2,
+      "nom": "Barrière de lames",
+      "ecole": "Évocation",
+      "niveau": 6,
+      "portee": "3\"",
+      "duree": "3 rounds/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S",
+      "temps_incantation": "9 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "le clerc, en lançant ce sort, crée un mur de lames tournoyantes, aiguisées comme des lames de rasoir. Ce mouvement continuel extrêmement rapide se fait autour d’un axe immobile. Toute créature qui tente de passer au travers de la barrière subit des dommages allant de 8 à 64 points de vie (8d8). La barrière reste pendant 3 rounds par niveau du clerc. Cette barrière de lames peut couvrir une surface allant de 2.25 m² (1.5 m x 1.5 m) à 2\" carré, c’est à dire 36 m² (6 m x 6 m) en intérieur et 324 m² (18 m x 18 m) à l’extérieur",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Barrière de Lames",
+        "id": "NfojDpSSWss8K7ox",
+        "img": "systems/add2e/assets/icones/sorts/barriere-de-lames.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 3,
+      "nom": "Guérison",
+      "ecole": "Nécromancie",
+      "niveau": 6,
+      "portee": "au toucher",
+      "duree": "permanente",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "inverse": "Blessure",
+      "description": "ce sort très puissant permet au clerc de guérir n’importe quelle maladie et les blessures qu’a pu subir quelqu’un (voir soins mineurs pour la liste des créatures pouvant être affectées). Il guérit les maladies sous toutes leurs formes. Il guérit aussi la cécité et redonne tous les points de vie perdus sauf 1d4. Il annule le sort de débilité mentale. Ce sort ne sera évidemment pas efficace contre des maladies ou des blessures ultérieures (il ne s’agit pas d’une immunité ou d’un vaccin). L’inverse du sort, traumatisme, inflige une maladie à la victime et lui fait perdre tous ses points de vie sauf 1d4. Pour traumatisme, le clerc doit réussir un jet pour toucher.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Guérison",
+        "id": "oSfALhtUqR6esjsF",
+        "img": "systems/add2e/assets/icones/sorts/guerison.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/guerison.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 4,
+      "nom": "Invocation des animaux",
+      "ecole": "Conjuration/Appel",
+      "niveau": 6,
+      "portee": "3\"",
+      "duree": "2 rounds/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S",
+      "temps_incantation": "9 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort permet au clerc d’invoquer un ou plusieurs mammifères à l’endroit où il se trouve, dans le but d’attaquer ses ennemis. Les animaux invoqués restent au service du clerc pendant 2 rounds par niveau du clerc ou jusqu’à ce qu’ils soient tués. Le clerc peut appeler un ou plusieurs mammifères dont le total de dés de vie ne dépassent pas le niveau du clerc; par exemple, un clerc de niveau 12 peut invoquer un mammifère de 12 DV ou 2 mammifères de 6 DV chacun, etc. Pour chaque +1 (point de vie) sur les dés de vie de la créature, compter ¼ de dé de vie; c'est-à-dire qu’une créature avec 4+3 DV est comptée comme ayant 4 ¾ DV. Les mammifères invoqués attaquent toujours les ennemis du clerc qui a lancé le sort.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Invocation des animaux",
+        "id": "Sh66nk11o",
+        "img": "systems/add2e/assets/icones/sorts/invocation-des-animaux.webp",
+        "onUse": "systems/add2e/scripts/sorts/invocation-des-animaux.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 5,
+      "nom": "Langage des monstres",
+      "ecole": "Altération",
+      "niveau": 6,
+      "portee": "3\" de rayon",
+      "duree": "1 round/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S",
+      "temps_incantation": "9 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "quand il est lancé, ce sort permet de parler avec tout type de créature ayant une forme quelconque de communication. La créature concernée comprendra l’intention du clerc dans ce qu’il dit. Le Maître de Donjon lancera un dé de réaction pour la créature concernée. Toutes les créatures du même type que celle que le clerc a choisi et qui se trouvent dans la portée du sort peuvent également comprendre le clerc. Le sort dure 1 round par niveau du clerc et tant que le sort est actif, la conversation peut durer, si le monstre le désire.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Langage des Monstres",
+        "id": "E3sn9oDE2jRcng5n",
+        "img": "systems/add2e/assets/icones/sorts/langage-des-monstres.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 6,
+      "nom": "Lithomancie",
+      "ecole": "Divination",
+      "niveau": 6,
+      "portee": "au toucher",
+      "duree": "1 tour",
+      "zone_effet": "0,75 m3 de pierre",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 tour",
+      "jet_sauvegarde": "aucun",
+      "description": "quand un clerc lance ce sort, il peut faire parler les pierres; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Lithomancie",
+        "id": "zZvMkZh0eT9iXbOV",
+        "img": "systems/add2e/assets/icones/sorts/pierres-parlantes.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 7,
+      "nom": "Orientation",
+      "ecole": "Divination",
+      "niveau": 6,
+      "portee": "au toucher",
+      "duree": "1 tour/niveau",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S, M",
+      "temps_incantation": "3 rounds",
+      "jet_sauvegarde": "aucun",
+      "inverse": "Désorientation",
+      "description": "grâce à ce sort, le clerc est capable de trouver la route la plus courte et la plus directe pour l’emmener là où il le désire, que ce soit pour entrer ou sortir d’un endroit. Cet endroit peut être à l’extérieur ou sous terre; ce peut même être un labyrinthe. Cette connaissance dure tant que le sort est actif, c'est-à-dire 1 tour par niveau du clerc. Ce sort permet au clerc et à ceux qui sont avec lui de sortir d’un sort de labyrinthe en un round. À noter qu’un lieu n’est pas un objet: le sort porte sur un endroit connu et identifié en tant que tel et non sur ce qu’il contient ou abrite. On peut ainsi trouver une forêt de frênes connue mais pas celle où habite le dragon vert ou qui contient tel trésor. La composante matérielle de ce sort est un jeu d’objets divinatoires de ceux appréciés par le clerc: en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées. L’inverse du sort, fausse route, fait que la créature touchée est incapable de trouver sa route pendant la durée du sort, bien qu’elle puisse être guidée.",
+      "composants_materiels_objets": [
+        {
+          "nom": "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Orientation",
+        "id": "lTY0W2UcSICDXAIu",
+        "img": "systems/add2e/assets/icones/sorts/orientation.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/orientation.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 8,
+      "nom": "Rappel",
+      "ecole": "Altération",
+      "niveau": 6,
+      "portee": "0",
+      "duree": "spéciale",
+      "zone_effet": "spéciale",
+      "composantes": "V",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort permet au clerc de revenir instantanément à son sanctuaire dès que le mot est prononcé. Le sanctuaire doit être précisé à l’avance par le clerc. Il peut être à n’importe quelle distance, mais l’endroit doit être connu, que ce soit sous terre ou sur terre. Le transport par rappel est absolument sûr. En plus de lui-même, le clerc peut transporter un poids de 250 po par niveau qu’il a atteint. Ainsi, un clerc de niveau 15 pourra transporter en plus 3.750 po (187 kg). Ce surplus peut être de l’équipement, un trésor ou de la matière vivante comme une autre personne.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Rappel",
+        "id": "ojEuPap5qVulUg4p",
+        "img": "systems/add2e/assets/icones/sorts/mot-de-rappel.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 9,
+      "nom": "Séparation des eaux",
+      "ecole": "Altération",
+      "niveau": 6,
+      "portee": "2\"/niveau",
+      "duree": "1 tour/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 tour",
+      "jet_sauvegarde": "aucun",
+      "composants_materiels_source": "symbole sacré du clerc",
+      "description": "en lançant ce sort, le clerc peut détourner une quantité d’eau ou tout autre liquide, qui formera ainsi une dépression. La longueur et la profondeur de la dépression dépendent du niveau du clerc; le clerc peut créer une dépression de 90 cm de profondeur, 30 cm de large sur 2\" de long par niveau qu’il a atteint. Ainsi, un clerc de niveau 12 créera un passage de 10,8 mètres de profondeur, 3,60 mètres de large sur 24\" de long (72 m ou 216 m) pendant toute la durée du sort, à moins que le clerc lui-même ne choisisse d’y mettre fin (voir p.46 dissipation de la magie). Utilisé sous l’eau, ce sort permet de créer un tunnel de 3 mètres de diamètre maximum. La composante matérielle de ce sort est le symbole sacré du clerc.",
+      "composants_materiels_objets": [
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Séparation des Eaux",
+        "id": "Ao2pXwVBoC7v1AcZ",
+        "img": "systems/add2e/assets/icones/sorts/separation-des-eaux.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 10,
+      "nom": "Serviteur aérien",
+      "ecole": "Conjuration/Appel",
+      "niveau": 6,
+      "portee": "1\"",
+      "duree": "1 jour/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S",
+      "temps_incantation": "9 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort invoque un serviteur aérien invisible (voir Règles AVANCÉES de DONJONS & DRAGONS, MANUEL DES MONSTRES), qui réalisera ce qu’a demandé le clerc dans son incantation. La créature ne combat pas mais obéit au clerc qui lui a demandé de retrouver et ramener l’objet ou la créature qu’il lui décrit. Bien sûr, l’objet ou la créature doit avoir une enveloppe physique pour pouvoir être ramené au clerc. Le clerc devra avoir toujours en tête les conséquences que pourraient avoir le fait d’empêcher un serviteur aérien d’accomplir sa tâche. Le sort et ses effets durent au maximum 1 jour par niveau du clerc. Le serviteur aérien retourne sur son plan quand le sort expire, quand la quête est achevée, quand le clerc meure ou annule sa requête. Le clerc doit se protéger avec une protection contre le mal ou alors se placer à l’intérieur d’un cercle magique, d’un triangle thaumaturgique ou d’un pentagramme quand il invoque un serviteur aérien; son symbole religieux peut aussi le protéger. Le risque encouru est que la créature invoquée tue le clerc qui a lancé le sort et retourne ensuite sur son plan d’existence. Un serviteur aérien attaque toujours par surprise quand il est en mission et obtient l’avantage de 4 rounds de combats pour lui, à moins que la créature recherchée ne soit capable de détecter l’invisibilité. Si c'est le cas, 1d6 est lancé: 1 = 1 round, 2 = 2 rounds, 3 = 3 rounds, 4 = 4 rounds, 5 et 6 indiquent que la créature n’est pas du tout surprise et que donc le serviteur aérien ne bénéficie pas de rounds de combat pour lui. À chaque round, le serviteur doit lancer un jet pour toucher et quand une de ces tentatives réussit, cela signifie que le serviteur aérien a agrippé sa victime ou attrapé l’objet qu’il recherche et qu’il doit ramener au clerc. Si c’est une créature qu’il doit ramener, la force du serviteur est comparée à celle de la créature visée. Si cette créature n’a pas de caractéristique de force, il faut alors comparer le nombre obtenu en lançant les DV de la créature et ceux du serviteur aérien. Le total le plus élevé indique lequel a la plus grande force.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Serviteur Aérien",
+        "id": "vq8X8DO5iO7LIWJx",
+        "img": "systems/add2e/assets/icones/sorts/serviteur-aerien.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    }
   ]
 }

@@ -6,131 +6,433 @@
     "niveau": 8,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 16,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-8.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Antipathie/sympathie",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort permet au magicien d’implanter certaines vibrations dans une zone ou sur un objet. Ces vibrations ont tendance à repousser ou attirer une créature vivante intelligente ou bien un personnage d’un alignement spécifique. Le magicien doit d’abord choisir quelle application du sort il désire utiliser car les composantes matérielles changent selon son choix. Le sort ne peut pas être lancé sur un être vivant. Antipathie: ce pouvoir magique provoque chez la créature ou la personne dont l’alignement est pris en compte, une irrésistible envie de quitter la zone affectée ou de ne pas toucher l’objet ensorcelé par ce sortilège. Si le jet de protection contre les sorts est réussi, la créature peut rester dans la zone ou toucher l’objet, mais elle se sent mal à l’aise et ressent une démangeaison persistante qui lui fait perdre 1 point de dextérité par round de présence dans la zone ou par round de contact avec l’objet, avec une perte maximale de 4 points. Un jet de protection raté force la créature à quitter la zone ou à laisser l’objet ensorcelé, refusant d’y retourner ou de le reprendre, jusqu’à ce que le sort soit annulé ou se termine. La composante matérielle est un morceau d’alun trempé dans du vinaigre. Sympathie: en choisissant cette application du sort, le magicien fait qu’une créature particulière, ou d’un d’alignement particulier, se sente bien et en confiance si elle reste dans la zone affectée ou si elle touche l’objet enchanté par le sort. Le désir de rester dans la zone ou de garder l’objet sera irrésistible. Si un jet de protection est réussi, la créature sera libérée des effets du sort, mais un autre jet de protection doit être lancé 1d6 tours plus tard et si celui-ci est raté, la créature retourne dans la zone ou vers l’objet. Les composantes matérielles sont des perles écrasées pour une valeur minimale de 1.000 po et une goutte de miel. La créature particulière que le magicien veut cibler doit être nommée précisément, c'est-à-dire: un dragon rouge, un géant des collines, un rat-garou, un vampire, etc. De la même façon, l’alignement d’un personnage doit être précisé exactement. Si ce sort est lancé sur une zone, cette zone sera cubique et fera 1\" d’arête par niveau du magicien. Un seul objet peut être affecté par ce sort; mais les créatures visées par les effets de ce sort lancent leur jet de protection avec un malus de –2.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un morceau d’alun trempé dans du vinaigre",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+        }
+      ],
+      "foundry": {
+        "nom": "Antipathie/sympathie",
+        "id": "BIkKCn2RR7NKs0KA",
+        "img": "systems/add2e/assets/icones/sorts/magicien-antipathie-sympathie.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-antipathie-sympathie.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
       "nom": "Charme-masse",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort affecte les personnes ou les monstres comme les sorts charme-monstres ou charme-personnes (voir p.77 et 66). Cependant, ce sort affectera un nombre de créatures dont la somme des dés de vie/niveau ne dépasse pas deux fois le niveau du magicien. Toutes les créatures doivent se trouver dans la portée du sort et dans une zone de 3\" x 3\" maximum. Les jets de protection des créatures ne sont pas ajustés selon le nombre de créatures, mais subissent un malus de –2, en raison de la puissance de ce sortilège.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Charme-masse",
+        "id": "mwPBqby6Itm7W7CW",
+        "img": "systems/add2e/assets/icones/sorts/magicien-charme-masse.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-charme-masse.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
       "nom": "Clone",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort crée un duplicata d’une personne. Ce clone est le sosie parfait de son modèle, avec le même niveau d’expérience, les mêmes souvenirs, etc. Cependant, le clone devient une véritable personne; si l’original et son double existent en même temps, chacun connait l’existence de l’autre et chacun désirera détruire l’autre car l’existence d’un tel alter-ego est insupportable pour les deux. Si aucun ne parvient à détruire l’autre, il y a alors 95% de chances que l’un des deux devienne fou (75% de chances que ce soit le clone) et se suicide. Il y a 5 % de chances que les deux deviennent fous et se suicident. Cette probabilité se produit dans une période d’une semaine d’existence commune. La composante matérielle de ce sort est un morceau de chair de l’original. Le clone deviendra et sera la personne telle qu’elle était au moment où le morceau de chair a été pris, et toutes les évolutions ultérieures de l’original ne se retrouveront donc pas chez le clone. De plus, le clone est une création physique; le matériel et l’équipement portés par l’original ne peuvent faire partie des possessions du clone. Le clone met de 2 à 8 mois (2d4) pour se former complètement; c’est après cette période que l’existence double est effective.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un morceau de chair de l’original",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Clone",
+        "id": "Jm1AM0ecAlL7BeiN",
+        "img": "systems/add2e/assets/icones/sorts/magicien-clone.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-clone.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
       "nom": "Cristairain",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort transforme le cristal ou le verre en une matière aussi dure et solide que l'acier (l’objet est alors considéré comme ayant une classe d’armure de 1). Le magicien ne peut affecter que 5 kg par niveau et ce doit être un seul et même objet. Les composantes matérielles sont un petit morceau de verre et un petit morceau d’acier.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un petit morceau de verre et un petit morceau d’acier",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Cristairain",
+        "id": "R9WN3By99pDgcg4Y",
+        "img": "systems/add2e/assets/icones/sorts/magicien-cristairain.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-cristairain.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
       "nom": "Danse irrésistible d'Otto",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce sort est lancé, la créature touchée par le magicien se met à danser, à remuer des pieds, à faire des claquettes. La victime ne peut absolument rien faire d’autre. Sa classe d’armure subit un malus de 4, elle ne peut plus lancer de jet de protection et ne peut plus utiliser de bouclier. Le magicien doit toucher sa victime (jet de toucher).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Danse irrésistible d’Otto",
+        "id": "MCJR3VlxLTfal1Uc",
+        "img": "systems/add2e/assets/icones/sorts/magicien-danse-irresistible-d-otto.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-danse-irresistible-d-otto.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
       "nom": "Emprisonnement de l'âme",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est similaire au sort de métempsycose, sauf qu’il assujettit la force vitale d’une créature (et son enveloppe matérielle s’il y a lieu) dans une prison spéciale, préparée magiquement par le magicien. Ce dernier doit voir la créature qu’il veut affecter et doit connaitre son nom véritable. Préalablement au temps d’incantation, le magicien doit préparer la prison de l’âme, une gemme de 1.000 po pour chaque dé de vie/niveau de la créature à emprisonner; donc une gemme de 10.000 po pour emprisonner une créature de 10 dés de vie ou de niveau 10. Le magicien doit lancer un enchantement sur cette gemme et y placer le sort labyrinthe, le tout formant donc la prison de l’âme. Il y a deux manières d’emprisonner l’âme de la victime. Le mot final de l’incantation peut être prononcé quand la créature se trouve dans la portée du sort, mais cela autorise la créature utiliser sa résistance à la magie (si elle en a une), puis aussi à lancer un jet de protection contre les sorts; si ce dernier est réussi, la gemme se brise. La seconde méthode est plus insidieuse car elle force la créature à accepter un objet sur lequel est inscrit le mot final du sort; cet objet sera le «détonateur» de l’emprisonnement. Le magicien doit nommer cet objet dans son incantation. Il est possible de placer un sort de sympathie (voir p.89) sur l’objet. Dès que la créature prend ou accepte l’objet, son âme est immédiatement transférée dans la gemme, où elle restera indéfiniment, à moins que la gemme soit brisée, provoquant la libération de l’âme et la reformation du corps matériel. Si la créature emprisonnée est une puissante créature d’un autre plan (cela peut vouloir dire que la victime est un personnage emprisonné par un résident d’un autre plan, quand ce personnage ne se trouve pas sur le plan matériel primaire), on peut lui demander de rendre un service immédiatement après qu’elle soit libérée. Autrement, la créature est totalement libre une fois la gemme brisée.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Emprisonnement de l’âme",
+        "id": "3qJwKB09NwuQPJ5T",
+        "img": "systems/add2e/assets/icones/sorts/magicien-emprisonnement-de-l-ame.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-emprisonnement-de-l-ame.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
       "nom": "Immunité magique de Serten",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "grâce à ce sort, le magicien peut conférer une immunité virtuelle à certains sorts et attaques magiques. Pour chaque tranche de 4 niveaux, le magicien peut protéger une créature, mais la durée de la protection change avec le nombre de créatures affectées; exemple: un magicien de niveau 16 peut protéger une créature pendant 16 tours, 2 créatures pendant 8 tours ou 4 créatures pendant 4 tours. Le temps d’incantation est de 1 round par destinataire. Cette protection donne un bonus aux jets de protection contre les pouvoirs suivants: Charme, séduction, suggestion, oubli, hypnotisme, rayon d’affaiblissement +9 Effroi, injonction, paralysie, peur, antipathie/sympathie, confusion, suggestion de masse +7 Quête magique, quête religieuse, chaos, débilité mentale, danse irrésistible d’Otto +5 D’une façon générale, le sort fonctionne contre toutes les formes d’enchantement. Le sort autorise un jet de protection contre les formes de magie citées ci-dessus, même si aucun jet de protection n’est normalement permis. La composante matérielle est un diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille.",
+      "composants_materiels_objets": [
+        {
+          "nom": "diamant réduit en poudre",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Réduit en poudre et répandu."
+        },
+        {
+          "nom": "diamant intact",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Chaque destinataire doit en posséder un.",
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Immunité magique de Serten",
+        "id": "XMCoIYELAPOZIT3n",
+        "img": "systems/add2e/assets/icones/sorts/magicien-immunite-magique-de-serten.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-immunite-magique-de-serten.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
       "nom": "Invocation de monstre VI",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort invoque 1 ou 2 monstres de niveau 6 apparaissant dans un délai de 1 à 3 rounds. Voir invocation de monstre I pour plus de détails.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Invocation de monstre VI",
+        "id": "QWjB3yW5ZTZsqP51",
+        "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-vi.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-vi.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
       "nom": "Labyrinthe",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand le magicien lance ce sort, il crée un espace extra-dimensionnel sous forme de labyrinthe. La créature affectée errera dans ce dédale pendant une période dépendant de son intelligence (les minotaures sont insensibles à ce sort). Intelligence de la créature affectée Durée d’errance Moins de 3 2d4 tours 3-5 1d4 tours 6-8 5d4 rounds 9-11 4d4 rounds 12-14 3d4 rounds 15-17 2d4 rounds 18 et plus 1d4 rounds MOT DE POUVOIR: «CÉCITÉ» (Conjuration/Appel) Niveau: 8 Composantes: V Portée: 1/2\"/niveau Temps d'incantation: 1 segment Durée: spéciale Jet de protection: aucun Zone d'effet: 3\" de diamètre",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Labyrinthe",
+        "id": "ORN3az8leSKqVf47",
+        "img": "systems/add2e/assets/icones/sorts/magicien-labyrinthe.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-labyrinthe.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
       "nom": "Mot de pouvoir : « cécité »",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée et la zone d’effet deviennent temporairement aveugles. Le sort affecte 100 points de vie maximum, mais sa durée dépend du nombre des points de vie des créatures affectées. Si le sort affecte 50 points de vie ou moins, le sort dure de 2 à 5 tours (1d4+1); s’il affecte 51 points de vie ou plus, la durée n’est que de 2 à 5 rounds. Le magicien doit indiquer quelle(s) créature(s) il veut rendre aveugle(s); il doit en désigner une qui représentera le centre de la zone d’effet, ceci avant de déterminer les résultats du sort. Les créatures avec plus de 100 points de vie ne sont pas affectées. Ce sort peut être annulé avec les sorts suivants: guérison de la cécité, dissipation de la magie.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Mot de pouvoir : « Cécité »",
+        "id": "6mTt7KT00qtGZmjU",
+        "img": "systems/add2e/assets/icones/sorts/magicien-mot-de-pouvoir-cecite.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-cecite.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
       "nom": "Nuage incendiaire",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort a les mêmes effets de fumée que le sort pyrotechnie (voir p.59), mais les dimensions du nuage sont de 3 m de haut sur 6 m de long et 6 m de large. Ce nuage dense ondoie et au 3e round, il s’enflamme et inflige ½ points de dégâts par niveau du magicien; au 4e round, il inflige 1 point de dégât par niveau et au 5e, il inflige à nouveau ½ point de dégât par niveau et les flammes s’éteignent. Pendant les rounds suivants, il ne subsistera que de la fumée inoffensive qui obstruera la vue. Les créatures à l’intérieur de ce nuage lancent un seul jet de protection s’il est réussit, mais se ce jet est raté, elles en relancent un nouveau au 4e puis au 5e round, si nécessaire, pour essayer de réduire les dégâts de moitié. Ce sort ne peut pas être utilisé sous l’eau. Pour lancer ce sort, le magicien doit avoir une source de feu (comme pour le sort pyrotechnie), des morceaux de fumier et une pincée de poussière. Niveau: 8 Composantes: V, S Portée: 3\" Temps d'incantation: 1 segment Durée: 1 jour Jet de protection: aucun Zone d'effet: une créature PERMANENCE (Altération) Niveau: 8 Composantes: V, S, M Portée: spéciale Temps d'incantation: 2 rounds Durée: permanente Jet de protection: aucun Zone d'effet: spéciale Compréhension des langues Langues Détection du mal Lecture de la magie Détection de l’invisibilité Protection contre le mal Détection de la magie Protection contre les projectiles normaux Infravision Serviteur invisible Le magicien lance le sort désiré, puis il lance ensuite le sort permanence. Chaque sort de permanence lancé baisse la constitution du magicien de 1 point. Si le sort est lancé sur un objet, il n’y a que 5 % de chance que le magicien perde 1 point de constitution. Cependant, si le sort de permanence est utilisé pour recharger un objet (comme un anneau d’accumulation de sorts) cette chance passe à 100 %. Il ne peut pas lancer les sorts de la liste ci-dessus sur d’autres créatures que lui-même pour les rendre permanents. En plus de l’usage personnel, la permanence peut aussi affecter les sorts suivants, lancés sur une créature, un objet ou une zone d’effet: Agrandissement Mur de force Bouche magique Nuage puant Effroi Rafale de vent Invisibilité Sphère prismatique Mur de feu Toile d’araignée La première application du sort ne peut être dissipée que par un magicien de niveau supérieur à celui qui a lancé le sort de permanence. La deuxième application autorise le magicien à lancer le sort de permanence en même temps que le sort dont il veut altérer la durée, à condition que la cible ne soit pas une créature vivante. Cette deuxième application du sort peut être dissipée normalement, ce qui annule l’association des deux sorts.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Nuage incendiaire",
+        "id": "RXlGxnjPaqWQmINd",
+        "img": "systems/add2e/assets/icones/sorts/magicien-nuage-incendiaire.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-nuage-incendiaire.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
       "nom": "Permanence",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort affecte la durée de certains sorts en la rendant permanente. Les sorts à usage personnel sur lesquels une permanence peut être lancée sont les suivants: Compréhension des langues Langues Détection du mal Lecture de la magie Détection de l’invisibilité Protection contre le mal Détection de la magie Protection contre les projectiles normaux Infravision Serviteur invisible Le magicien lance le sort désiré, puis il lance ensuite le sort permanence. Chaque sort de permanence lancé baisse la constitution du magicien de 1 point. Si le sort est lancé sur un objet, il n’y a que 5 % de chance que le magicien perde 1 point de constitution. Cependant, si le sort de permanence est utilisé pour recharger un objet (comme un anneau d’accumulation de sorts) cette chance passe à 100 %. Il ne peut pas lancer les sorts de la liste ci-dessus sur d’autres créatures que lui-même pour les rendre permanents. En plus de l’usage personnel, la permanence peut aussi affecter les sorts suivants, lancés sur une créature, un objet ou une zone d’effet: Agrandissement Mur de force Bouche magique Nuage puant Effroi Rafale de vent Invisibilité Sphère prismatique Mur de feu Toile d’araignée La première application du sort ne peut être dissipée que par un magicien de niveau supérieur à celui qui a lancé le sort de permanence. La deuxième application autorise le magicien à lancer le sort de permanence en même temps que le sort dont il veut altérer la durée, à condition que la cible ne soit pas une créature vivante. Cette deuxième application du sort peut être dissipée normalement, ce qui annule l’association des deux sorts.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Permanence",
+        "id": "BPaga50F4U0MdJmM",
+        "img": "systems/add2e/assets/icones/sorts/magicien-permanence.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-permanence.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 13,
       "nom": "Poing de Bigby",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort fait apparaître un énorme poing. Ce poing est sous le contrôle mental du magicien qui peut lui faire frapper un adversaire à chaque round. Le lanceur du sort ne peut entreprendre aucune autre activité magique, ni lancer des sortilèges pendant toute la durée du sort. Le poing ne rate jamais sa cible, mais son efficacité varie de round en round. Résultat sur 1d20 Effets 1-12 Coup faible: 1 à 6 points de dégâts 13-16 Coup solide: 2 à 12 points de dégâts 17-19 Coup violent: 3 à 18 points de dégâts, ennemi étourdi au round suivant 20 Coup critique: 4 à 24 points de dégâts, ennemi étourdi pour les 3 rounds suivants Note: le fait qu’un ennemi soit étourdi permet au magicien d’ajouter un bonus de +4 sur le d20 d’efficacité du poing, car l’adversaire n’est alors pas capable d’esquiver efficacement. Ce sort peut être utilisé avec n’importe quelle autre application du sort de l’archimage Bigby: main, poigne... Les composantes matérielles de ce sort sont un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de «I». L’objet est fait d’un alliage de cuivre et de zinc (cela ressemble à un poing américain). Le poing est détruit s’il subit autant de dégâts que le nombre de points de vie que possède le magicien.",
+      "composants_materiels_objets": [
+        {
+          "nom": "un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de «I»",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Objet durable ou focus utilisé sans destruction indiquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Poing de Bigby",
+        "id": "pNKBYV5nREzT4rbP",
+        "img": "systems/add2e/assets/icones/sorts/magicien-poing-de-bigby.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-poing-de-bigby.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 14,
       "nom": "Protection d'esprit",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "avec ce sort puissant, la créature affectée est complètement protégée de tous les objets et/ou sorts qui détectent, influencent ou lisent les pensées et/ou les émotions. Cette protection inclut: augure, charme, confusion, débilité mentale, divination, effroi, toutes les formes d’empathies, emprisonnement de l’âme, ESP, injonction, possession, suggestion, suggestion de masse, suzeraineté, télépathie, tueur fantasmagorique et autres à la discrétion du MD. Cette protection s’étend aussi à la prévention de détection/ information par des boules de cristal ou autres objets d’espionnage, clairaudience, clairvoyance, communion, contact d’autres plans et même aux détections ou attaques faites par souhait (souhait mineur, souhait majeur, altération de la réalité). Bien sûr, les pouvoirs divins puissants sont capables de pénétrer une telle protection. Ce sort protège aussi des pouvoirs psi de détection et/ ou d’influence: domination (ou domination de masse), hypnose, invisibilité (ce pouvoir psi est en rapport avec l’esprit), prémonition, plus les pouvoirs aux effets identiques à ceux des sorts déjà listés plus haut.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Protection d’esprit",
+        "id": "vrCUvwu6dEY2mQpa",
+        "img": "systems/add2e/assets/icones/sorts/magicien-protection-d-esprit.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-protection-d-esprit.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 15,
       "nom": "Symbole",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort crée des runes magiques affectant les créatures qui veulent contourner/toucher/lire/traverser un passage sur lequel est inscrit le symbole. Le magicien place le symbole sur la surface qu’il désire. De la même façon, il choisit le type de symbole qu’il veut inscrire: Désespoir Toutes les créatures sont affectées et tombent dans un désespoir et un pessimisme profonds, à moins qu’elles ne réussissent leur jet de protection contre les sorts. Les créatures qui le ratent se soumettront à toutes les demandes d’un adversaire: sortir, se rendre, etc. Le désespoir dure pendant 3d4 tours et pendant cette période, il y a 25 % de chances que les créatures ne fassent plus rien et 25 % de chances que celles qui font quelque chose fassent demi-tour ou se retirent du combat, selon la situation. Discorde Toutes les créatures sont affectées et commencent à se disputer. Il y a 50 % de chances que des créatures d’alignement différent se battent entre elles. La dispute dure 5d4 rounds. Les combats éventuels durent 2d4 rounds. Effroi Ce symbole agit comme un sort d’effroi (voir p.77) très puissant; les créatures lancent un jet de protection à –4; s’il est raté, elles sont prises de panique et fuient. Étourdissement Une ou plusieurs créatures dont le total de points de vie ne dépasse pas 160 sont étourdies et chancelantes pendant 3d4 rounds; elles laissent tomber tout ce qu’elles tiennent. Insanité Une ou plusieurs créatures dont le total de points de vie ne dépasse pas 120 deviennent folles et le restent, agissant alors comme si on leur avait lancé un sort de confusion (voir p.77), et ce jusqu’à ce qu’un sort de guérison, souhait majeur ou restauration les rendent normales. Mort Une ou plusieurs créatures dont le total de points de vie ne dépasse pas 80 sont tuées. Sommeil Toutes les créatures ayant moins de 8+1 dés de vie tombent immédiatement dans un état cataleptique et ne peuvent être réveillées pendant une période de 5 à 16 tours (1d12+4). Souffrance Toutes les créatures sont affectées et ressentent des douleurs vives, qui provoquent une perte de 2 points sur leur score de dextérité et de 4 points sur leur dé d’attaque, ceci pendant 2d10 tours. Le type de symbole choisi ne peut être reconnu sans être lu; la lecture libère les pouvoirs contenus dans les runes magiques. Les composantes matérielles sont un diamant et une opale noire réduits en poudre, d’une valeur minimale de 5.000 po chacun.",
+      "composants_materiels_objets": [
+        {
+          "nom": "diamant réduit en poudre",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": 5000,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Réduit en poudre."
+        },
+        {
+          "nom": "opale noire réduite en poudre",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": 5000,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Réduite en poudre."
+        }
+      ],
+      "foundry": {
+        "nom": "Symbole",
+        "id": "Sgvc3uuqk",
+        "img": "systems/add2e/assets/icones/sorts/symbole.webp",
+        "onUse": "systems/add2e/scripts/sorts/symbole.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 16,
       "nom": "Transformation d'objets",
+      "ecole": null,
       "niveau": 8,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort transforme une chose (vivante ou non) en une autre. Quand ce sort est utilisé dans le même but que le sort allométamorphose ou transmutation de pierre en chair, il suffit de le traiter comme une version plus puissante avec des malus de –4 sur les jets de protection. Quand il est lancé pour changer d’autres choses, la durée dépend du degré de transformation. Le Maître de Donjon jugera en comparant les facteurs suivants: Le genre: animal, végétal, minéral. La classe: mammifère, bipède, champignon, métal, sphère, etc. La relation: la branche et l’arbre, le sable et la dune, etc. La taille: plus petite, égale, plus grande. La forme: ressemblance approximative ou différence totale. L’intelligence: dans le cas d’un changement vers une forme plus intelligente. Des changements dans le genre donnent une durée en heures ou tours: heures s’il n’y a qu’un changement de genre, tours si les deux genres sont fondamentalement opposés. Les autres changements affecteront aussi la durée du sort, dans le même esprit. La transformation d’un lion en un androsphinx sera permanente. Transformer un navet en ver pourpre ne durera que quelques heures. La transformation d’une défense d’ivoire en éléphant sera permanente. Une brindille changée en épée ne le reste que quelques tours. Tous les objets transformés irradient une forte aura. Une dissipation de la magie fera retourner une chose transformée à son état premier. À noter que le sort transmutation de pierre en chair ou son inverse affectera les choses touchées par ce sort. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes matérielles sont du mercure, de la gomme arabique, et de la fumée. NB: une résistance aux traumatismes (voir CONSTITUTION) est applicable quand des créatures vivantes sont visées par ce sort; les restrictions notées aux sorts allométamorphose et transmutation de pierre en chair s’appliquent également. ARRÊT DU TEMPS (Altération) Niveau: 9 Composantes: V Portée: 0 Temps d'incantation: 9 segments Durée: ½ segment/niveau + 1d8 seg. Jet de protection: aucun Zone d'effet: sphère de 3\" de diamètre",
+      "composants_materiels_objets": [
+        {
+          "nom": "du mercure, de la gomme arabique, et de la fumée",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Transformation d’objets",
+        "id": "6SpRQBy7sR53Ptsm",
+        "img": "systems/add2e/assets/icones/sorts/magicien-transformation-d-objets.webp",
+        "onUse": "systems/add2e/scripts/sorts/magicien-transformation-d-objets.js"
+      },
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

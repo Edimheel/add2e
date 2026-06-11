@@ -6,23 +6,356 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_champs_techniques_complete_description_a_importer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-7.json",
-  "rules": {
-    "descriptionField": "description",
-    "warning": "Tous les champs techniques sont remplis depuis les blocs du Manuel. Le champ description unique doit être importé via audit/tools/import-reference-descriptions.mjs."
-  },
   "spells": [
-    { "ordre": 1, "nom": "Contrôle du climat", "ecole": "Évocation - Altération", "niveau": 7, "portee": "0", "duree": "4-48 heures", "zone_effet": "10 à 40 km2", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "controle_climat_mj" },
-    { "ordre": 2, "nom": "Marche des vents", "ecole": "Altération", "niveau": 7, "portee": "au toucher", "duree": "6 tours/niveau", "zone_effet": "spéciale", "composantes": "V, S, M", "temps_incantation": "1 round", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "active_effect_deplacement_vol_mj" },
-    { "ordre": 3, "nom": "Parole sacrée/maudite", "ecole": "Conjuration/Appel", "niveau": 7, "portee": "0", "duree": "spéciale", "zone_effet": "3\" de rayon", "composantes": "V", "temps_incantation": "1 segment", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "effet_zone_selon_dv_alignement" },
-    { "ordre": 4, "nom": "Régénération", "ecole": "Nécromancie", "niveau": 7, "portee": "au toucher", "duree": "permanente", "zone_effet": "créature touchée", "composantes": "V, S, M", "temps_incantation": "3 rounds", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Flétrissement", "composants_materiels_source": "objet de prière et eau bénite/maudite", "onuse_strategy": "restauration_membre_mj" },
-    { "ordre": 5, "nom": "Restauration", "ecole": "Nécromancie", "niveau": 7, "portee": "au toucher", "duree": "permanente", "zone_effet": "créature touchée", "composantes": "V, S", "temps_incantation": "3 rounds", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Perte d’énergie", "onuse_strategy": "restauration_niveau_energie_mj" },
-    { "ordre": 6, "nom": "Résurrection", "ecole": "Nécromancie", "niveau": 7, "portee": "au toucher", "duree": "permanente", "zone_effet": "personne touchée", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "inverse": "Anéantissement", "composants_materiels_source": "symbole sacré du clerc et eau bénite/maudite", "onuse_strategy": "resurrection_complete_mj" },
-    { "ordre": 7, "nom": "Seuil", "ecole": "Conjuration/Appel", "niveau": 7, "portee": "3\"", "duree": "spéciale", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "5 segments", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "appel_entite_planaire_mj" },
-    { "ordre": 8, "nom": "Sort astral", "ecole": "Altération", "niveau": 7, "portee": "au toucher", "duree": "spéciale", "zone_effet": "spéciale", "composantes": "V, S", "temps_incantation": "3 tours", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "onuse_strategy": "projection_astrale_mj" },
-    { "ordre": 9, "nom": "Symbole", "ecole": "Conjuration/Appel", "niveau": 7, "portee": "au toucher", "duree": "1 tour/niveau", "zone_effet": "spéciale", "composantes": "V, S, M", "temps_incantation": "3 segments", "jet_sauvegarde": "annule", "description": "", "status": "description_a_importer", "onuse_strategy": "symbole_choix_effet_dialogue_mj" },
-    { "ordre": 10, "nom": "Tremblement de terre", "ecole": "Altération", "niveau": 7, "portee": "12\"", "duree": "1 round", "zone_effet": "1/2\" de diamètre par niveau", "composantes": "V, S, M", "temps_incantation": "1 tour", "jet_sauvegarde": "aucun", "description": "", "status": "description_a_importer", "composants_materiels_source": "pincée de poussière, petit caillou et motte de terre", "onuse_strategy": "effet_zone_mj_selon_terrain" }
+    {
+      "ordre": 1,
+      "nom": "Contrôle du climat",
+      "ecole": "Évocation - Altération",
+      "niveau": 7,
+      "portee": "0",
+      "duree": "4-48 heures",
+      "zone_effet": "10 à 40 km2",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 tour",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort permet au clerc de changer le climat d’une zone dans laquelle il se trouve. Le temps d’incantation est de 1 tour mais il faut 1 à 4 tours pour que les effets du changement se fassent sentir. Ce sort affectera le climat pendant 4 à 48 heures (4d12) dans une zone de 10 à 40 km² (1d4). Ce sort ne permet pas de changer la température de façon importante. Les possibilités de changement de climat dépendent des conditions climatiques précédant le lancement du sort: TEMPS CLAIR TEMPS TRÈS CHAUD CALME Très clair Chaleur Calme plat Nuages clairsemés Canicule Brise très légère PARTIELLEMENT NUAGEUX TEMPS CHAUD VENT LÉGER Clair Forte chaleur Calme Nuageux Douceur Vent fort Brouillard/pluie légère/ TEMPS DOUX VENT FORT Grêle faible Chaleur Vent léger Givre/neige légère Fraicheur Vent très fort NUAGEUX TEMPS FRAIS VENT TRÈS FORT Partiellement nuageux Douceur Vent fort Nuages importants Très froid Tempête Brouillard épais TEMPÊTE Grosse pluie/ Vent très fort Grêle importante Ouragan — Neige abondante/ Typhon Givre épais Les 3 aspects du temps (ciel/précipitation, température et vent) peuvent être changés mais seulement d’une catégorie vers le haut ou le bas. Par exemple, un ciel clair, une température chaude, avec un vent léger pourront devenir un ciel partiellement nuageux, une température élevée et un calme plat. En aucun cas on ne pourra avoir de contradiction — un brouillard épais avec un vent très fort. Le clerc peut aussi contrôler le sens du vent. Plusieurs sorts de contrôle peuvent être lancés à la suite, mais pas en même temps. Évidemment, ce sort ne peut fonctionner que là où il y a des conditions climatiques appropriées. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles de ce sort sont le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire.",
+      "composants_materiels_objets": [
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "chapelet de prière",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à un objet similaire.",
+          "notes": null
+        },
+        {
+          "nom": "objet similaire au chapelet de prière",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au chapelet de prière.",
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Contrôle du Climat",
+        "id": "PSUPfcabfhbrxWG1",
+        "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/controle-du-climat.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 2,
+      "nom": "Marche des vents",
+      "ecole": "Altération",
+      "niveau": 7,
+      "portee": "au toucher",
+      "duree": "6 tours/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6\"/tour et 60\"/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Marche des vents",
+        "id": "0vew4Dsadk48WK8X",
+        "img": "systems/add2e/assets/icones/sorts/marche-sur-le-vent.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 3,
+      "nom": "Parole sacrée/maudite",
+      "ecole": "Conjuration/Appel",
+      "niveau": 7,
+      "portee": "0",
+      "duree": "spéciale",
+      "zone_effet": "3\" de rayon",
+      "composantes": "V",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "description": "la prononciation d’une parole sacrée (ou d’une parole maudite) a un pouvoir énorme. Elle éloigne les créatures mauvaises (ou bonnes) en les forçant à retourner sur leur plan d’existence, à condition que le lanceur du sort soit originaire du plan où il lance le sort. Les créatures ainsi chassées ne peuvent revenir avant une journée. Ce sort affecte aussi les autres créatures dont l’alignement diffère de celui du clerc, comme suit: Effets Dés de vie ou niveau de la créature Généraux Mouvement Probabilités de toucher Sorts Moins de 4 Mort — — — 4 à 7+ Paralysie (1d4 tours) — — — 8 à 11+ Ralentie (2d4 rounds) –50% –4 — 12 ou plus Surdité (1d4 rounds) –25% –2 50 % d’échec Les créatures affectées doivent se trouver dans la zone d’effet (6\" de diamètre) dont le centre est le clerc lui-même.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Parole sacrée/maudite",
+        "id": "faa1xkvCpaxj8mzy",
+        "img": "systems/add2e/assets/icones/sorts/parole-sacree.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/parole-sacree.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 4,
+      "nom": "Régénération",
+      "ecole": "Nécromancie",
+      "niveau": 7,
+      "portee": "au toucher",
+      "duree": "permanente",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S, M",
+      "temps_incantation": "3 rounds",
+      "jet_sauvegarde": "aucun",
+      "inverse": "Flétrissement",
+      "composants_materiels_source": "objet de prière et eau bénite/maudite",
+      "description": "quand ce sort est lancé, les membres (doigts, orteils, pieds, mains, bras, jambes, queues ou même les têtes d’une créature multicéphale), les os et les organes se reforment. Le temps que prend la régénération est d’un round si le(s) membre(s) amputé(s) sont présents et en contact avec le corps, de 2 à 8 tours dans les autres cas. L’inverse du sort, flétrissement, fait que l’organe touché se flétrit et devient inutilisable en un round, se séparant ensuite du corps en 2 à 8 tours, tombant en poussière. Comme d’habitude, le clerc doit toucher sa victime. Les composantes matérielles de ce sort sont un objet de prière et de l’eau bénite/maudite.",
+      "composants_materiels_objets": [
+        {
+          "nom": "objet de prière",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour régénération ; alternative à l’eau maudite.",
+          "notes": null
+        },
+        {
+          "nom": "eau maudite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour flétrissement ; alternative à l’eau bénite.",
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Régénération",
+        "id": "wTY2BA9kkcAc3IJu",
+        "img": "systems/add2e/assets/icones/sorts/regeneration.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/regeneration.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 5,
+      "nom": "Restauration",
+      "ecole": "Nécromancie",
+      "niveau": 7,
+      "portee": "au toucher",
+      "duree": "permanente",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S",
+      "temps_incantation": "3 rounds",
+      "jet_sauvegarde": "aucun",
+      "inverse": "Perte d’énergie",
+      "description": "quand le sort est lancé, le niveau d’énergie de vie de la créature touchée est augmenté de 1. Cela implique bien sûr que la créature ait auparavant perdu un niveau d’énergie à cause d’un monstre ou d’une force. Ainsi, si un personnage de niveau 10 a été touché par un nécrophage et est descendu au niveau 9, le sort de restauration peut le ramener au nombre de points d’expérience nécessaire pour atteindre le niveau 10 et lui redonner un dé de vie additionnel, ainsi que les capacités de ce niveau. Le sort n’est efficace que s’il est lancé dans la limite de 1 jour par niveau du clerc après que le niveau ait été perdu. Le sort de restauration redonne l’intelligence aux créatures affectées par une débilité mentale (voir p.62). Le sort de restauration guérit absolument toutes les maladies mentales. L’inverse du sort, perte d’énergie, retire un niveau d’énergie à la victime (voir les morts-vivants tels que les spectres, les vampires ou nécrophages). Il faut que le clerc touche sa victime pour lui ôter un niveau. L’incantation de ces sorts vieillit le clerc de 2 ans.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Restauration",
+        "id": "KV9j89SM2tko3iDL",
+        "img": "systems/add2e/assets/icones/sorts/restauration.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/restauration.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 6,
+      "nom": "Résurrection",
+      "ecole": "Nécromancie",
+      "niveau": 7,
+      "portee": "au toucher",
+      "duree": "permanente",
+      "zone_effet": "personne touchée",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 tour",
+      "jet_sauvegarde": "aucun",
+      "inverse": "Anéantissement",
+      "composants_materiels_source": "symbole sacré du clerc et eau bénite/maudite",
+      "description": "avec ce sort, le clerc peut redonner vie et force à une personne morte. La créature peut être morte depuis 10 années par niveau du clerc: donc un clerc de niveau 19 peut ressusciter une créature décédée il y a 190 ans. Voir le sort rappel à la vie pour les limitations quant aux personnes pouvant être ressuscitées. L’inverse du sort, anéantissement, fait que la victime touchée par le clerc meurt immédiatement et tombe en poussière. Les composantes matérielles sont le symbole sacré du clerc et de l’eau bénite/ maudite. Le fait de lancer ce sort oblige le clerc à se reposer un nombre de jour égal aux niveaux ou dés de vie de la créature ressuscitée ou anéantie. Ce repos doit se faire au lit et doit être total. L’incantation de ces sorts vieillit le clerc de 3 ans.",
+      "composants_materiels_objets": [
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour résurrection ; alternative à l’eau maudite.",
+          "notes": null
+        },
+        {
+          "nom": "eau maudite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requise pour anéantissement ; alternative à l’eau bénite.",
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Résurrection",
+        "id": "x3fOxKCADgNdvfyU",
+        "img": "systems/add2e/assets/icones/sorts/resurrection.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/resurrection.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 7,
+      "nom": "Seuil",
+      "ecole": "Conjuration/Appel",
+      "niveau": 7,
+      "portee": "3\"",
+      "duree": "spéciale",
+      "zone_effet": "spéciale",
+      "composantes": "V, S",
+      "temps_incantation": "5 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort a deux effets. Premièrement, il crée une connexion interdimensionnelle entre le plan d’existence sur lequel se trouve le clerc et le plan sur lequel réside un être spécifique d’un grand pouvoir, le résultat permettant à cet être de passer simplement par le passage créé de son plan à celui du clerc. Deuxièmement, l’incantation du sort attire l’attention de l’habitant de l’autre plan. Quand il lance ce sort, le clerc doit nommer le démon, diable, dieu, demi-dieu ou tout être similaire qu’il désire voir franchir le seuil du passage pour venir l’aider. Il y a 100 % de chance pour que quelque chose franchisse le seuil. Les actions de l’être qui vient dépendent de beaucoup de facteurs, incluant l’alignement du clerc, la nature de ceux qui l’accompagnent ou de ceux qui s’opposent à lui ou qui le menacent. Le Maître de Donjon décidera du résultat du sort en se basant sur la créature appelée, le désir du clerc et les circonstances du moment. La créature appelée peut retourner d’où elle vient immédiatement (peu probable) ou rester pour faire quelque chose. Lancer ce sort fait vieillir le lanceur de sort de 5 ans.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Seuil",
+        "id": "Shi1vnnug",
+        "img": "systems/add2e/assets/icones/sorts/seuil.webp",
+        "onUse": "systems/add2e/scripts/sorts/seuil.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 8,
+      "nom": "Sort astral",
+      "ecole": "Altération",
+      "niveau": 7,
+      "portee": "au toucher",
+      "duree": "spéciale",
+      "zone_effet": "spéciale",
+      "composantes": "V, S",
+      "temps_incantation": "3 tours",
+      "jet_sauvegarde": "aucun",
+      "description": "avec ce sort, le clerc peut projeter son corps astral dans le plan astral, quittant ainsi son enveloppe physique et ses possessions matérielles, en les laissant sur le plan matériel primaire (le plan sur lequel se trouvent l’univers entier et tous ses univers parallèles). Seuls certains objets magiques ayant une existence multi-plans peuvent être emportés dans le plan astral. Comme le plan astral touche les premiers niveaux des plans extérieurs, le clerc peut voyager astralement comme il le désire vers n’importe lequel de ces plans extérieurs. Le clerc quitte alors le plan astral et forme un corps sur le plan d’existence qu’il a choisi. Il est aussi possible de voyager astralement sur le plan matériel primaire avec ce sort, mais un second corps ne peut pas se former sur ce plan. En règle générale, une personne projetée astralement ne peut être vue que par des créatures qui se trouvent sur le plan astral. À tout moment, le corps astral est connecté au corps matériel par un cordon d’argent; si ce cordon est cassé, la personne meurt astralement et matériellement, mais généralement, seule une force psychique (le vent psychique) peut rompre ce cordon. Quand un second corps est formé le cordon reste invisiblement attaché à ce second corps. Si le second corps ou le corps astral est tué, le cordon retourne tout simplement au corps matériel resté sur le plan matériel primaire, le corps matériel sortant alors de son état d’animation suspendue. Bien que pouvant agir sur le plan astral, les personnes projetées ne peuvent pas affecter les créatures non-astrales. Le sort dure jusqu’à ce que le clerc y mette fin ou jusqu’à ce qu’il soit annulé par un autre moyen (dissipation de la magie ou destruction du corps matériel du clerc sur le plan matériel primaire, ce qui tue le clerc). Le clerc peut emmener avec lui jusqu’à 5 personnes, ces 5 personnes devant être reliées à lui en formant un cercle. Ces compagnons de voyage sont dépendants du clerc et peuvent se retrouver en rade si quelque chose arrive au clerc. Le voyage peut être lent ou rapide, selon le désir du clerc. Le clerc décide de sa destination finale. (Voir APPENDICE IV, LES PLANS D’EXISTENCE CONNUS pour plus d’informations sur le plan astral et la projection astrale).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Sort Astral",
+        "id": "4Aaby7ywbSbUbzLG",
+        "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/sort-astral.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 9,
+      "nom": "Symbole",
+      "ecole": "Conjuration/Appel",
+      "niveau": 7,
+      "portee": "au toucher",
+      "duree": "1 tour/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S, M",
+      "temps_incantation": "3 segments",
+      "jet_sauvegarde": "annule",
+      "description": "le clerc qui lance ce sort dessine un symbole dans les airs ou sur n’importe quelle surface de son choix. Le symbole brille pendant 1 tour par niveau du clerc. Le symbole utilisé par le clerc peut être choisi au moment d’incanter le sort, parmi ces trois possibilités: Désespoir Toutes les créatures qui le voient sont affectées et tombent dans un désespoir et un pessimisme profonds, à moins qu’elles ne réussissent leur jet de protection contre les sorts. Les créatures qui le ratent se soumettront à toutes les demandes d’un adversaire: sortir, se rendre, etc. Le désespoir dure pendant 3d4 tours Souffrance Toutes les créatures qui ratent leur jet de protection sont affectées et ressentent des douleurs vives, qui provoquent une perte de 2 points sur leur score de dextérité et un malus de -4 sur leurs jets pour toucher, ceci pendant 2d10 tours. Persuasion Les créatures qui voient ce symbole deviennent du même alignement que le clerc et se montrent amicales à son égard pendant 1 à 20 tours (1d20) sauf bien sûr si leur jet de protection est réussi. Les composantes matérielles de ce sort sont du mercure et du phosphore (voir p.92 le sort de magicien de niveau 8 symbole).",
+      "composants_materiels_objets": [
+        {
+          "nom": "mercure",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        },
+        {
+          "nom": "phosphore",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Symbole",
+        "id": "edocrNiNW6x6TWX1",
+        "img": "systems/add2e/assets/icones/sorts/symbole.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/symbole.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 10,
+      "nom": "Tremblement de terre",
+      "ecole": "Altération",
+      "niveau": 7,
+      "portee": "12\"",
+      "duree": "1 round",
+      "zone_effet": "1/2\" de diamètre par niveau",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 tour",
+      "jet_sauvegarde": "aucun",
+      "composants_materiels_source": "pincée de poussière, petit caillou et motte de terre",
+      "description": "quand ce sort est lancé, un tremblement de terre localisé de forte intensité secoue le sol. Ce tremblement affecte tous les types de terrains. La secousse se termine au bout d’un round. La végétation, les constructions et les créatures y vivant sont touchées par ce sort. La zone d’effet est circulaire et d’un diamètre de ½\" par niveau du clerc; donc un clerc de niveau 20 affectera une zone circulaire de 10\" de diamètre. Les effets sont les suivants: TERRAIN Grottes/souterrains Le plafond s’effondre Falaises La paroi s’effondre provoquant un glissement de terrain Sol Des crevasses se forment, les créatures y tombent et peuvent être tuées comme suit en fonction de leur catégorie de taille; P: 1 sur 4; M: 1 sur 6; G: 1 sur 8 Marais L’eau s’écoule hors des dépressions avec formation de boue sur les terrains alentours Tunnels S’écroulent Sous l’eau Provoque des ondes de choc qui étourdissent pendant 5-20 rounds ceux qui ratent leur jet de protection contre la mort magique VÉGÉTATION Petite taille Pas d’effet Arbres 1 sur 3 est déraciné et s’abat sur le sol CONSTRUCTIONS Toute structure Subissent de 5 à 60 (5d12) points de dégât structurels; celles qui subissent leurs dommages maximum tombent en ruine. Les constructions bâties très solidement dont les fondations atteignent le roc ne subissent que la moitié des dégâts. CRÉATURES Voir ci-dessus à TERRAIN Les composantes matérielles pour ce sort sont une pincée de poussière, un petit caillou et une motte de terre. Le symbole religieux des druides est le gui. Un autre symbole de moindre importance est le houx. Quelques pouvoirs magiques se trouvent dans les feuilles de chêne. Tous les sorts comportant une composante matérielle impliquent l'utilisation de gui, gui qui doit être cueilli par le druide de la manière décrite ci-dessous. Le gui secondaire, le houx et les feuilles de chêne réduisent l'efficacité des sorts comme suit: Symbole Portée du sort Durée du sort Zone d'effet Gui majeur 100 % 100 % 100 % Gui secondaire 100 % 75 %* 100 % Gui emprunté 75 %* 50 %** 100 % Houx 75 %* 50 %** 75 %* Feuilles de chêne 50 %** 50 %** 50 %** * ou +1 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable ** ou +2 au jet de protection, s’il y en a un, quand le pourcentage n’est pas applicable Le gui majeur: c’est le gui qui est cueilli par le druide lui-même, la veille du solstice d’été. Il doit localiser son gui et le couper avec une serpe d’or ou d’argent et il doit le recueillir dans une coupe avant qu’il ne touche terre. Le gui secondaire: ce gui est cueilli par le druide mais sans respecter le rituel; soit il n’est pas cueilli la veille du solstice d’été, soit le druide ne le prélève pas de la bonne manière (en le cueillant directement avec la main, par exemple) Le gui emprunté: il s’agit de gui mais qui n’a pas été cueilli par le druide en personne. Le houx et les feuilles de chêne: ils doivent être cueillis par le druide luimême, mais la manière et le moment importent peu.",
+      "composants_materiels_objets": [
+        {
+          "nom": "pincée de poussière",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        },
+        {
+          "nom": "petit caillou",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        },
+        {
+          "nom": "motte de terre",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Tremblement de Terre",
+        "id": "ruWwPBZl56IRcqt2",
+        "img": "systems/add2e/assets/icones/sorts/tremblement-de-terre.webp",
+        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/tremblement-de-terre.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    }
   ]
 }

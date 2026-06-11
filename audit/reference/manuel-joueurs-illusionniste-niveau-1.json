@@ -6,103 +6,313 @@
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-1.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Bruitage",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien bruitage (voir p.70).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Bruitage",
+        "id": "xuHjKxIJ94AhH610",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-bruitage.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-bruitage.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
       "nom": "Changement d’apparence",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort permet à l’illusionniste d’altérer son apparence ou sa forme, vêtements et équipement compris, ce qui lui donne la possibilité d’apparaître 30 cm plus grand ou plus petit, plus maigre ou plus gros, humain ou humanoïde ou toute autre créature bipède de forme humaine. La durée est de 2 rounds par niveau du lanceur du sort plus un nombre aléatoire de 2 à 12 rounds, ce qui fait que l’illusionniste ne connait pas la durée exacte du sort.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Changement d’apparence",
+        "id": "CTePPmPBPiUTyQ8x",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-changement-d-apparence.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-changement-d-apparence.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
       "nom": "Détection de l’invisibilité",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien détection de l’invisibilité (voir p.70).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Détection de l’invisibilité",
+        "id": "wtxFaRkEeY5m5vGW",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-detection-de-l-invisibilite.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-detection-de-l-invisibilite.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
       "nom": "Détection des illusions",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "grâce à ce sort, l’illusionniste est capable de voir et de reconnaitre une illusion pour ce qu’elle est réellement. Ce sort peut être utilisé pour permettre à d’autres créatures de constater qu’il existe une illusion. L’illusionniste doit toucher de ses deux mains la créature pendant qu’elle regarde l’illusion. La composante matérielle est un morceau de cristal, de verre ou de mica, teinté en jaune.",
+      "composants_materiels_objets": [
+        {
+          "nom": "morceau de cristal teinté en jaune",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au verre ou au mica teinté en jaune.",
+          "notes": null
+        },
+        {
+          "nom": "morceau de verre teinté en jaune",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au cristal ou au mica teinté en jaune.",
+          "notes": null
+        },
+        {
+          "nom": "morceau de mica teinté en jaune",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au cristal ou au verre teinté en jaune.",
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Détection des illusions",
+        "id": "RoPNQW1lonPdXpIL",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-detection-des-illusions.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-detection-des-illusions.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
       "nom": "Force fantasmagorique",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien force fantasmagorique (voir p.74).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Force fantasmagorique",
+        "id": "whLrq31uhuv0Vg2x",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-force-fantasmagorique.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-force-fantasmagorique.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
       "nom": "Hypnotisme",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "la gestuelle et les incantations de l’illusionniste font que les créatures affectées sont sujettes à une suggestion (voir le sort de niveau 3 de magicien p.76). Cette suggestion doit être faite après avoir lancé le sort hypnotisme; la réussite ou l’échec du sort (indiquée selon le résultat du jet de protection) n’est connue qu’après avoir fait la suggestion. À noter que dans ce cas, la suggestion n’est pas un sort mais plutôt une incitation à exécuter l’ordre demandé. Les créatures qui réussissent leur jet de protection ne sont pas hypnotisées.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Hypnotisme",
+        "id": "aJTNURTuGz0aElPr",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-hypnotisme.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-hypnotisme.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
       "nom": "Jet de couleurs",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "en lançant ce sort, l’illusionniste crée un jet de lumière vive qui jaillit en éventail de ses mains. De 1 à 6 créatures (1d6) peuvent être affectées dans la zone d'effet. Les créatures visées tombent inconscientes pour 2d4 rounds si leur niveau/DV est inférieur ou égal à celui de l’illusionniste; elles sont aveuglées pour 1d4 rounds si elles ont 1 à 2 niveaux/DV de plus que l’illusionniste; elles sont étourdies pour 2d4 segments si elles ont 3 niveaux/DV ou plus au dessus du niveau de l’illusionniste. Les créatures ayant un niveau supérieur à celui de l’illusionniste et celles qui ont 6 niveaux/DV ou plus ont droit à un jet de protection. Les composantes matérielles sont une pincée de sable ou de poudre de chacune de ces trois couleurs: rouge, jaune et bleu.",
+      "composants_materiels_objets": [
+        {
+          "nom": "pincée de sable",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à la poudre rouge, jaune et bleue.",
+          "notes": null
+        },
+        {
+          "nom": "poudre rouge, jaune et bleue",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à la pincée de sable.",
+          "notes": null
+        }
+      ],
+      "foundry": {
+        "nom": "Jet de couleurs",
+        "id": "PingWPeTX4P9EAag",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-jet-de-couleurs.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-jet-de-couleurs.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
       "nom": "Lumière",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc lumière (voir p.44).",
+      "composants_materiels_objets": [],
+      "foundry": null,
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
       "nom": "Lumières dansantes",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort est le même que le sort de niveau 1 de magicien lumières dansantes (voir p.68).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Lumières dansantes",
+        "id": "lnB96ugHg2ZeHjzf",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-lumiere.webp",
+        "onUse": "systems/add2e/scripts/sorts/lumiere.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
       "nom": "Mur de brouillard",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "en lançant ce sort, l’illusionniste crée un mur de vapeurs épaisses là où il le désire, dans les limites de la portée du sort. Ce mur de brouillard restreint la vision (même l’infravision) à 60 cm. La zone d’effet est une forme cubique de 2\" d’arête par niveau du lanceur de sort. La fumée persiste pendant 3 rounds ou plus, sauf si elle est dissipée par un vent puissant (cf. rafale de vent). Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est de la poudre de poix séchés.",
+      "composants_materiels_objets": [
+        {
+          "nom": "de la poudre de poix séchés",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+        }
+      ],
+      "foundry": {
+        "nom": "Mur de brouillard",
+        "id": "ActWRo5tz4Wab8sh",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-mur-de-brouillard.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-mur-de-brouillard.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
       "nom": "Réflexion des regards",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "ce sort crée une surface semblable à un miroir devant l’illusionniste. Toute attaque par regard (méduse, basilic, etc.) sera réfléchie sur la créature si cette dernière regarde le lanceur de sort. La créature a droit à un jet de protection pour éviter les effets de son attaque réfléchie.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Réflexion des regards",
+        "id": "WCOEjYv79WQ8VYqY",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-reflexion-des-regards.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-reflexion-des-regards.js"
+      },
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
       "nom": "Ténèbres",
+      "ecole": null,
       "niveau": 1,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": null,
+      "duree": null,
+      "zone_effet": null,
+      "composantes": null,
+      "temps_incantation": null,
+      "jet_sauvegarde": null,
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien ténèbres sur 5 mètres (voir p.72).",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Ténèbres",
+        "id": "yE4kzcw7UIok8p8Y",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-tenebres.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-tenebres.js"
+      },
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }
