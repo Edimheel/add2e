@@ -7,7 +7,7 @@
 // - anciens alias conservés : capacitesClasse, classFeaturesDebloquees
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-05-19-thief-skills-table-v3";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-11-multiclass-class-abilities-v1";
 globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION;
 console.log("[ADD2E][CAPACITES][VERSION]", ADD2E_CLASS_ACTIVE_ABILITIES_VERSION);
 
@@ -58,22 +58,69 @@ function add2eFeatureKey(feature) {
     .replace(/[_\s-]+/g, "_");
 }
 
-function add2ePushClassFeatures(out, value, source = "unknown") {
+function add2eClassSlugFromSystem(system, name = "") {
+  return add2eFeatureKey({ id: system?.slug ?? system?.label ?? system?.nom ?? system?.name ?? name });
+}
+
+function add2eClassLevelForSlug(actor, slug, fallback = 1) {
+  const key = add2eFeatureKey({ id: slug });
+  const map = actor?.system?.niveaux_par_classe ?? {};
+  if (key && map[key] !== undefined) return Math.max(1, Number(map[key]) || 1);
+  return Math.max(1, Number(fallback ?? actor?.system?.niveau ?? 1) || 1);
+}
+
+function add2eClassSystemEntry(system, { name = "", slug = "", level = 1, itemId = null } = {}) {
+  if (!system || typeof system !== "object") return null;
+  return {
+    ...system,
+    _add2eClassSlug: slug || add2eClassSlugFromSystem(system, name),
+    _add2eClassName: name || system.label || system.nom || system.name || "Classe",
+    _add2eClassLevel: Math.max(1, Number(level) || 1),
+    _add2eClassItemId: itemId
+  };
+}
+
+function add2ePushClassFeatures(out, value, source = "unknown", classSystem = null) {
   for (const feature of add2eToClassFeatureArray(value)) {
     out.push({
       ...feature,
-      _add2eFeatureSource: feature?._add2eFeatureSource ?? source
+      _add2eFeatureSource: feature?._add2eFeatureSource ?? source,
+      _add2eClassSlug: feature?._add2eClassSlug ?? classSystem?._add2eClassSlug ?? null,
+      _add2eClassName: feature?._add2eClassName ?? classSystem?._add2eClassName ?? null,
+      _add2eClassLevel: feature?._add2eClassLevel ?? classSystem?._add2eClassLevel ?? null
     });
   }
 }
 
 function add2eGetActorClassSystems(actor) {
   const sys = actor?.system ?? {};
-  const details = sys.details_classe && typeof sys.details_classe === "object" ? sys.details_classe : null;
-  const classItem = actor?.items?.find?.(i => String(i?.type || "").toLowerCase() === "classe") ?? null;
-  const itemSystem = classItem?.system ?? null;
+  const classItems = actor?.items?.filter?.(i => String(i?.type || "").toLowerCase() === "classe") ?? [];
+  const isMulticlass = sys.multiclasse?.enabled === true || classItems.length > 1;
 
-  return [details, itemSystem, sys].filter(s => s && typeof s === "object");
+  if (isMulticlass && classItems.length) {
+    return classItems
+      .map(item => {
+        const slug = add2eClassSlugFromSystem(item.system ?? {}, item.name);
+        return add2eClassSystemEntry(item.system ?? {}, {
+          name: item.name,
+          slug,
+          level: add2eClassLevelForSlug(actor, slug, item.system?.niveau ?? item.system?.level ?? sys.niveau ?? 1),
+          itemId: item.id
+        });
+      })
+      .filter(Boolean);
+  }
+
+  const details = sys.details_classe && typeof sys.details_classe === "object" ? sys.details_classe : null;
+  const classItem = classItems[0] ?? null;
+  const itemSystem = classItem?.system ?? null;
+  const monoLevel = Number(sys.niveau ?? 1) || 1;
+
+  return [
+    add2eClassSystemEntry(details, { name: details?.label ?? details?.name ?? sys.classe ?? "Classe", slug: add2eClassSlugFromSystem(details, sys.classe), level: monoLevel }),
+    add2eClassSystemEntry(itemSystem, { name: classItem?.name ?? sys.classe ?? "Classe", slug: add2eClassSlugFromSystem(itemSystem, classItem?.name ?? sys.classe), level: monoLevel, itemId: classItem?.id ?? null }),
+    add2eClassSystemEntry(sys, { name: sys.classe ?? "Acteur", slug: add2eClassSlugFromSystem(sys, sys.classe), level: monoLevel })
+  ].filter(s => s && typeof s === "object");
 }
 
 function add2eGetActorClassFeatures(actor) {
@@ -82,28 +129,29 @@ function add2eGetActorClassFeatures(actor) {
 
   for (const system of add2eGetActorClassSystems(actor)) {
     // Nouveau format : boutons utilisables séparés.
-    add2ePushClassFeatures(features, system.activeClassFeatures, "activeClassFeatures");
-    add2ePushClassFeatures(features, system.activableClassFeatures, "activableClassFeatures");
-    add2ePushClassFeatures(features, system.classFeaturesActives, "classFeaturesActives");
-    add2ePushClassFeatures(features, system.capacitesActives, "capacitesActives");
-    add2ePushClassFeatures(features, system.capacitesActivables, "capacitesActivables");
+    add2ePushClassFeatures(features, system.activeClassFeatures, "activeClassFeatures", system);
+    add2ePushClassFeatures(features, system.activableClassFeatures, "activableClassFeatures", system);
+    add2ePushClassFeatures(features, system.classFeaturesActives, "classFeaturesActives", system);
+    add2ePushClassFeatures(features, system.capacitesActives, "capacitesActives", system);
+    add2ePushClassFeatures(features, system.capacitesActivables, "capacitesActivables", system);
 
     // Format commun / ancien : peut contenir du passif et de l'activable.
-    add2ePushClassFeatures(features, system.classFeatures, "classFeatures");
-    add2ePushClassFeatures(features, system.classFeaturesDebloquees, "classFeaturesDebloquees");
-    add2ePushClassFeatures(features, system.capacitesClasse, "capacitesClasse");
+    add2ePushClassFeatures(features, system.classFeatures, "classFeatures", system);
+    add2ePushClassFeatures(features, system.classFeaturesDebloquees, "classFeaturesDebloquees", system);
+    add2ePushClassFeatures(features, system.capacitesClasse, "capacitesClasse", system);
 
     // Passifs séparés : utiles pour l'affichage/diagnostic, filtrés ensuite si on ne veut que les activables.
-    add2ePushClassFeatures(features, system.passiveClassFeatures, "passiveClassFeatures");
-    add2ePushClassFeatures(features, system.passiveFeatures, "passiveFeatures");
-    add2ePushClassFeatures(features, system.capacitesPassives, "capacitesPassives");
+    add2ePushClassFeatures(features, system.passiveClassFeatures, "passiveClassFeatures", system);
+    add2ePushClassFeatures(features, system.passiveFeatures, "passiveFeatures", system);
+    add2ePushClassFeatures(features, system.capacitesPassives, "capacitesPassives", system);
   }
 
   return features.filter(feature => {
     const key = add2eFeatureKey(feature);
     const onUse = add2eFeatureOnUse(feature);
     const source = String(feature?._add2eFeatureSource ?? "");
-    const unique = `${key}|${onUse}|${source}`;
+    const classSlug = String(feature?._add2eClassSlug ?? "");
+    const unique = `${classSlug}|${key}|${onUse}|${source}`;
     if (!key && !onUse) return false;
     if (seen.has(unique)) return false;
     seen.add(unique);
@@ -120,20 +168,26 @@ function add2eIsFeatureActivable(feature) {
   return false;
 }
 
+function add2eFeatureActorLevel(actor, feature = null) {
+  const slug = add2eFeatureKey({ id: feature?._add2eClassSlug ?? feature?.classSlug ?? feature?.sourceClassSlug ?? "" });
+  if (slug && actor?.system?.niveaux_par_classe?.[slug] !== undefined) return Math.max(1, Number(actor.system.niveaux_par_classe[slug]) || 1);
+  return Math.max(1, Number(feature?._add2eClassLevel ?? actor?.system?.niveau ?? 1) || 1);
+}
+
 function add2eGetActorActivableClassFeatures(actor, { includeLocked = true } = {}) {
-  const level = Number(actor?.system?.niveau ?? 1) || 1;
   return add2eGetActorClassFeatures(actor).filter(f => {
     if (!add2eIsFeatureActivable(f)) return false;
     if (includeLocked) return true;
+    const level = add2eFeatureActorLevel(actor, f);
     return level >= add2eFeatureMinLevel(f) && level <= add2eFeatureMaxLevel(f);
   });
 }
 
 function add2eGetActorPassiveClassFeatures(actor, { includeLocked = true } = {}) {
-  const level = Number(actor?.system?.niveau ?? 1) || 1;
   return add2eGetActorClassFeatures(actor).filter(f => {
     if (add2eIsFeatureActivable(f)) return false;
     if (includeLocked) return true;
+    const level = add2eFeatureActorLevel(actor, f);
     return level >= add2eFeatureMinLevel(f) && level <= add2eFeatureMaxLevel(f);
   });
 }
@@ -234,7 +288,7 @@ async function add2eExecuteClassFeatureOnUse(actor, feature, sheet = null) {
     return false;
   }
 
-  const level = Number(actor.system?.niveau ?? 1) || 1;
+  const level = add2eFeatureActorLevel(actor, feature);
   const min = add2eFeatureMinLevel(feature);
   const max = add2eFeatureMaxLevel(feature);
   const name = add2eFeatureName(feature) || "Capacité";
@@ -277,6 +331,8 @@ async function add2eExecuteClassFeatureOnUse(actor, feature, sheet = null) {
       actor: actor.name,
       feature: name,
       source: feature._add2eFeatureSource ?? null,
+      classSlug: feature._add2eClassSlug ?? null,
+      classLevel: level,
       skillKey: feature.skillKey ?? null,
       onUse,
       result
@@ -362,9 +418,15 @@ function add2eNormalizeThiefSkillKeyLocal(value) {
   return ADD2E_THIEF_SKILL_ALIASES[raw] ?? raw;
 }
 
-function add2eGetActorClassProgression(actor) {
-  const level = Math.max(1, Number(actor?.system?.niveau ?? 1) || 1);
-  for (const system of add2eGetActorClassSystems(actor)) {
+function add2eGetActorClassProgression(actor, classSlug = null) {
+  const wanted = add2eFeatureKey({ id: classSlug ?? "" });
+  const systems = add2eGetActorClassSystems(actor);
+  const ordered = wanted
+    ? systems.filter(s => s._add2eClassSlug === wanted || add2eFeatureKey({ id: s._add2eClassName }) === wanted).concat(systems.filter(s => s._add2eClassSlug !== wanted && add2eFeatureKey({ id: s._add2eClassName }) !== wanted))
+    : systems;
+
+  for (const system of ordered) {
+    const level = add2eClassLevelForSlug(actor, system._add2eClassSlug, system._add2eClassLevel ?? actor?.system?.niveau ?? 1);
     const progression = system?.progression;
     if (!Array.isArray(progression)) continue;
     const byLevel = progression.find(p => Number(p?.level ?? p?.niveau ?? 0) === level);
@@ -374,8 +436,28 @@ function add2eGetActorClassProgression(actor) {
   return null;
 }
 
+function add2eIsThiefClassSystem(system) {
+  const values = [
+    system?._add2eClassSlug,
+    system?._add2eClassName,
+    system?.slug,
+    system?.label,
+    system?.nom,
+    system?.name,
+    ...(Array.isArray(system?.tags) ? system.tags : []),
+    ...(Array.isArray(system?.effectTags) ? system.effectTags : [])
+  ].map(v => add2eFeatureKey({ id: v })).filter(Boolean);
+  return values.some(v => v === "voleur" || v.includes("voleur"));
+}
+
+function add2eGetActorThiefProgression(actor) {
+  const thiefSystem = add2eGetActorClassSystems(actor).find(add2eIsThiefClassSystem);
+  if (!thiefSystem) return add2eGetActorClassProgression(actor, "voleur");
+  return add2eGetActorClassProgression(actor, thiefSystem._add2eClassSlug || "voleur");
+}
+
 function add2eGetActorThiefSkillTable(actor) {
-  const progression = add2eGetActorClassProgression(actor);
+  const progression = add2eGetActorThiefProgression(actor);
   const raw = progression?.thiefSkills ?? progression?.voleurSkills ?? progression?.competencesVoleur ?? null;
   const output = {};
 
@@ -516,6 +598,7 @@ try { globalThis.add2eFeatureName = add2eFeatureName; } catch (_e) {}
 try { globalThis.add2eFeatureOnUse = add2eFeatureOnUse; } catch (_e) {}
 try { globalThis.add2eFeatureKey = add2eFeatureKey; } catch (_e) {}
 try { globalThis.add2eIsFeatureActivable = add2eIsFeatureActivable; } catch (_e) {}
+try { globalThis.add2eFeatureActorLevel = add2eFeatureActorLevel; } catch (_e) {}
 try { globalThis.add2eGetActorClassSystems = add2eGetActorClassSystems; } catch (_e) {}
 try { globalThis.add2eGetActorClassFeatures = add2eGetActorClassFeatures; } catch (_e) {}
 try { globalThis.add2eGetActorActivableClassFeatures = add2eGetActorActivableClassFeatures; } catch (_e) {}
