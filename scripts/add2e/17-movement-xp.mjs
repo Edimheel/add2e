@@ -1,5 +1,5 @@
 // ADD2E — XP + Mouvement
-// Version : 2026-06-10-move-xp-multiclass-safe-v3-ignore-internal
+// Version : 2026-06-10-move-xp-multiclass-safe-v4-hide-global-xp
 //
 // Principes :
 // - pas de patch de render()
@@ -7,11 +7,12 @@
 // - ajustements XP/niveau mono-classe dans preUpdateActor
 // - pour les multiclassés : répartit l'XP globale entre les classes puis laisse 17b recalculer les niveaux
 // - ignore les updates internes du module multiclassage
+// - n'injecte pas le champ XP global sur les feuilles multiclassées
 // - contrôle token sur la valeur affichée de mouvement en mètres
 // - MJ : jamais bloqué, mais échelle couleur visible
 // - Joueurs : blocage si dépassement, avec échelle couleur visible
 
-const VERSION = "2026-06-10-move-xp-multiclass-safe-v3-ignore-internal";
+const VERSION = "2026-06-10-move-xp-multiclass-safe-v4-hide-global-xp";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 
@@ -349,6 +350,7 @@ function findField(root, label) { const wanted = norm(label); return [...root.qu
 function ensureXpField(sheet, html) {
   const actor = sheet?.actor;
   if (!actor || actor.type !== "personnage") return;
+  if (isMulticlassActor(actor)) return;
   const root = rootEl(html);
   if (!root?.querySelector) return;
   if (root.querySelector("input[name='system.xp']")) return;
@@ -362,7 +364,7 @@ function ensureXpField(sheet, html) {
 
 function bindXpButton(sheet, html) {
   const actor = sheet?.actor;
-  if (!actor || actor.type !== "personnage") return;
+  if (!actor || actor.type !== "personnage" || isMulticlassActor(actor)) return;
   html.find?.("[data-add2e-mx='xp']")?.off("click.add2eXp").on("click.add2eXp", ev => { ev.preventDefault(); ev.stopPropagation(); promptXp(actor); });
 }
 
