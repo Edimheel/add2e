@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-10-multiclass-layer-v13-partial-level-sync
+// Version : 2026-06-10-multiclass-layer-v14-clean-monoclass-replace
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,7 +7,7 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-10-multiclass-layer-v13-partial-level-sync";
+const VERSION = "2026-06-10-multiclass-layer-v14-clean-monoclass-replace";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -260,21 +260,7 @@ function buildClassEntries(actor, extraClassDoc = null, xpByClass = null, levelB
     }
 
     const title = classTitleForLevel(sys, level);
-    entries.push({
-      id: doc.id ?? null,
-      uuid: doc.uuid ?? null,
-      name: doc.name ?? itemLabel(doc, "Classe"),
-      slug,
-      niveau: level,
-      level,
-      xp,
-      titre: title,
-      title,
-      hitDie: sys.hitDie ?? sys.dv ?? null,
-      spellcasting: sys.spellcasting ?? null,
-      levelMaxRace: maxLevel,
-      system: sys
-    });
+    entries.push({ id: doc.id ?? null, uuid: doc.uuid ?? null, name: doc.name ?? itemLabel(doc, "Classe"), slug, niveau: level, level, xp, titre: title, title, hitDie: sys.hitDie ?? sys.dv ?? null, spellcasting: sys.spellcasting ?? null, levelMaxRace: maxLevel, system: sys });
   }
   return entries;
 }
@@ -324,6 +310,38 @@ function multiclassUpdatePayload(actor, extraClassDoc = null, xpByClass = null, 
     "system.xp_percent": 0,
     "system.spellcasting": combinedSpellcasting(entries)
   };
+}
+
+function monoClassCleanupPayload() {
+  return {
+    "system.multiclasse": { enabled: false, mode: "mono", xpSplit: "none", classes: [], label: "" },
+    "system.classes": [],
+    "system.details_classes": [],
+    "system.xp_par_classe": {},
+    "system.niveaux_par_classe": {},
+    "system.titres_par_classe": {},
+    "system.xp_next_par_classe": {},
+    "system.niveau_max_par_classe": {}
+  };
+}
+
+async function cleanupAfterMonoclassReplace(actor, itemData, sheet = null) {
+  if (!actor || actor.type !== "personnage") return false;
+  const wantedSlug = classSlug(itemData);
+  const docs = classItems(actor);
+  let keep = docs.find(doc => classSlug(doc) === wantedSlug) ?? docs.at(-1) ?? null;
+  const toDelete = docs.filter(doc => doc.id !== keep?.id);
+  if (toDelete.length) await actor.deleteEmbeddedDocuments("Item", toDelete.map(doc => doc.id), { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-monoclass-clean-items" });
+  const payload = monoClassCleanupPayload();
+  if (keep) {
+    payload["system.details_classe"] = { ...(keep.system ?? {}), name: keep.name, label: keep.name, slug: classSlug(keep), sourceItemId: keep.id, sourceItemUuid: keep.uuid };
+    payload["system.classe"] = keep.name;
+  }
+  await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-monoclass-clean-system" });
+  sheet?._add2eRememberActiveTab?.();
+  sheet?.render?.(false);
+  log("[MONOCLASS_CLEANUP]", { actor: actor.name, keep: keep?.name ?? null, deleted: toDelete.map(doc => doc.name) });
+  return true;
 }
 
 function applyPayloadToSheetData(data, payload) {
@@ -474,7 +492,9 @@ async function applyRaceData(actor, raceData, sheet = null) {
 async function applyClassAsMonoclass(actor, itemData, sheet = null) {
   if (typeof add2eApplyClassItemDataToActor === "function") {
     const alignment = typeof add2ePickClassAlignment === "function" ? add2ePickClassAlignment(actor, itemData.system ?? {}) : actor.system?.alignement;
-    return add2eApplyClassItemDataToActor(actor, itemData, sheet, { alignmentCandidate: alignment, notify: true, reason: "multiclass-choice-monoclass" });
+    const result = await add2eApplyClassItemDataToActor(actor, itemData, sheet, { alignmentCandidate: alignment, notify: true, reason: "multiclass-choice-monoclass" });
+    await cleanupAfterMonoclassReplace(actor, itemData, sheet);
+    return result;
   }
   ui.notifications.error("Remplacement mono-classe impossible : helper add2eApplyClassItemDataToActor introuvable.");
   return false;
@@ -669,5 +689,6 @@ globalThis.add2eMulticlassLevelForClassXp = levelForClassXp;
 globalThis.add2eMulticlassRaceCandidatesForClass = raceCandidatesForClass;
 globalThis.add2eMulticlassClassRaceMaxLevel = classRaceMaxLevel;
 globalThis.add2eMulticlassDirectFieldSync = updateDirectMulticlassField;
+globalThis.add2eCleanMonoclassAfterReplace = cleanupAfterMonoclassReplace;
 
 log("[LOADED]", { version: VERSION });
