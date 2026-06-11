@@ -1,15 +1,16 @@
 // ADD2E — Pont mécanique multiclassage
-// Version : 2026-06-10-multiclass-mechanics-v1
+// Version : 2026-06-11-multiclass-mechanics-v2-grouped-spell-lists
 //
 // Rôle : adapter les mécaniques historiques mono-classe au multiclassage sans réécrire
-// les modules sources. Ce fichier est chargé après 17b-multiclass.mjs.
+// les modules sources. Les sorts sont regroupés par liste réelle : clerc, druide,
+// magicien, illusionniste. Les niveaux de sorts affichables sont bornés par les
+// emplacements réellement disponibles au niveau courant de chaque classe.
 
-const VERSION = "2026-06-10-multiclass-mechanics-v1";
+const VERSION = "2026-06-11-multiclass-mechanics-v2-grouped-spell-lists";
 const TAG = "[ADD2E][MULTICLASSE][MECA]";
 
 globalThis.ADD2E_MULTICLASS_MECHANICS_VERSION = VERSION;
 
-function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
 function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
 
 function n(value, fallback = 0) {
@@ -26,6 +27,14 @@ function norm(value) {
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
+}
+
+function spellKey(value) {
+  return typeof globalThis.add2eNormalizeSpellKey === "function" ? globalThis.add2eNormalizeSpellKey(value) : norm(value);
+}
+
+function spellLabel(value) {
+  return typeof globalThis.add2eSpellLabel === "function" ? globalThis.add2eSpellLabel(value) : String(value ?? "");
 }
 
 function arr(value) {
@@ -71,9 +80,7 @@ function rowValue(row, keys, fallback = null) {
 }
 
 function bestThac0(entries) {
-  const values = entries
-    .map(e => n(rowValue(e.row, ["thac0", "thaco", "tac0", "taco"], NaN), NaN))
-    .filter(Number.isFinite);
+  const values = entries.map(e => n(rowValue(e.row, ["thac0", "thaco", "tac0", "taco"], NaN), NaN)).filter(Number.isFinite);
   return values.length ? Math.min(...values) : null;
 }
 
@@ -97,96 +104,28 @@ function add2eMulticlassProgressionRow(actor, classEntryOrKey = null) {
   const entries = multiclassEntries(actor);
   const wanted = norm(classEntryOrKey?.key ?? classEntryOrKey?.slug ?? classEntryOrKey?.classSlug ?? classEntryOrKey ?? "");
   if (wanted) {
-    const entry = entries.find(e => e.slug === wanted || norm(e.name) === wanted || norm(e.system?.spellcasting?.key) === wanted || arr(e.system?.spellcasting?.lists).map(norm).includes(wanted));
+    const entry = entries.find(e => e.slug === wanted || norm(e.name) === wanted || spellcastingEntriesForClass(e).some(se => se.key === wanted || se.classSlug === wanted));
     if (entry) return entry.row ?? {};
   }
-  return {
-    thac0: bestThac0(entries) ?? actor.system?.thaco ?? 20,
-    savingThrows: bestSavingThrows(entries) ?? actor.system?.sauvegardes ?? [],
-    _add2eMulticlassComposite: true
-  };
-}
-
-function spellcastingEntriesForClass(entry) {
-  const casting = entry.system?.spellcasting;
-  if (!casting || typeof casting !== "object" || casting.enabled === false) return [];
-  const rawEntries = Array.isArray(casting.entries) ? casting.entries : Array.isArray(casting.pools) ? casting.pools : null;
-  const sourceKey = entry.slug;
-  if (rawEntries) {
-    return rawEntries.map((e, index) => {
-      const rawKey = e.key ?? e.list ?? e.liste ?? e.name ?? e.label ?? e.type;
-      const key = typeof add2eNormalizeSpellKey === "function" ? add2eNormalizeSpellKey(rawKey) : norm(rawKey);
-      return {
-        ...e,
-        index,
-        key,
-        label: e.label || (typeof add2eSpellLabel === "function" ? add2eSpellLabel(key) : key),
-        startsAt: n(e.startsAt ?? e.startLevel ?? e.niveauDepart ?? casting.startsAt ?? 1, 1),
-        maxSpellLevel: n(e.maxSpellLevel ?? e.maxLevel ?? e.maxNiveauSort ?? casting.maxSpellLevel ?? 0, 0),
-        slotsField: e.slotsField || e.slotField || e.progressionField || null,
-        classSlug: sourceKey,
-        className: entry.name,
-        classLevel: entry.level
-      };
-    }).filter(e => e.key);
-  }
-
-  const lists = arr(casting.lists).map(v => typeof add2eNormalizeSpellKey === "function" ? add2eNormalizeSpellKey(v) : norm(v)).filter(Boolean);
-  return [...new Set(lists)].map((key, index) => ({
-    index,
-    key,
-    label: typeof add2eSpellLabel === "function" ? add2eSpellLabel(key) : key,
-    startsAt: n(casting.startsAt ?? 1, 1),
-    maxSpellLevel: n(casting.maxSpellLevel ?? 0, 0),
-    slotsField: null,
-    notes: casting.notes || "",
-    classSlug: sourceKey,
-    className: entry.name,
-    classLevel: entry.level
-  }));
-}
-
-function add2eMulticlassSpellcastingEntries(actor) {
-  if (!isMulticlassActor(actor)) {
-    if (typeof globalThis.__add2eOriginalGetSpellcastingEntries === "function") return globalThis.__add2eOriginalGetSpellcastingEntries(actor);
-    return [];
-  }
-  const seen = new Set();
-  const out = [];
-  for (const entry of multiclassEntries(actor)) {
-    for (const spellEntry of spellcastingEntriesForClass(entry)) {
-      const unique = `${spellEntry.classSlug}|${spellEntry.key}`;
-      if (seen.has(unique)) continue;
-      seen.add(unique);
-      out.push(spellEntry);
-    }
-  }
-  return out;
+  return { thac0: bestThac0(entries) ?? actor.system?.thaco ?? 20, savingThrows: bestSavingThrows(entries) ?? actor.system?.sauvegardes ?? [], _add2eMulticlassComposite: true };
 }
 
 function slotValue(raw, spellLevel, key) {
-  if (typeof add2eSpellSyncReadSlotValue === "function") return add2eSpellSyncReadSlotValue(raw, spellLevel, key);
+  if (typeof globalThis.add2eSpellSyncReadSlotValue === "function") return globalThis.add2eSpellSyncReadSlotValue(raw, spellLevel, key);
   if (Array.isArray(raw)) return n(raw[spellLevel - 1], 0);
   if (raw && typeof raw === "object") return n(raw[spellLevel] ?? raw[String(spellLevel)] ?? raw[`niveau${spellLevel}`], 0);
   return null;
 }
 
-function add2eMulticlassSlotsForEntryLevel(actor, spellEntry, spellLevel) {
-  if (!isMulticlassActor(actor)) {
-    if (typeof globalThis.__add2eOriginalGetSlotsForEntryLevel === "function") return globalThis.__add2eOriginalGetSlotsForEntryLevel(actor, spellEntry, spellLevel);
-    return 0;
-  }
-  const key = typeof add2eNormalizeSpellKey === "function" ? add2eNormalizeSpellKey(spellEntry?.key) : norm(spellEntry?.key);
-  const entry = multiclassEntries(actor).find(e => e.slug === spellEntry?.classSlug) ?? multiclassEntries(actor).find(e => spellcastingEntriesForClass(e).some(se => se.key === key)) ?? null;
-  const row = entry?.row ?? {};
-  const label = spellEntry?.label || (typeof add2eSpellLabel === "function" ? add2eSpellLabel(key) : key);
+function slotsFromRow(row, spellEntry, spellLevel) {
+  const key = spellKey(spellEntry?.key);
+  const label = spellEntry?.label || spellLabel(key);
 
   for (const containerName of ["spellSlotsByList", "spellsByList", "spellsPerLevelByList", "sortsParListe"]) {
     const c = row?.[containerName];
     if (!c || typeof c !== "object") continue;
     for (const [rawContainerKey, value] of Object.entries(c)) {
-      const normalized = typeof add2eNormalizeSpellKey === "function" ? add2eNormalizeSpellKey(rawContainerKey) : norm(rawContainerKey);
-      if (normalized !== key) continue;
+      if (spellKey(rawContainerKey) !== key) continue;
       const v = slotValue(value, Number(spellLevel), key);
       if (v !== null) return v;
     }
@@ -212,22 +151,116 @@ function add2eMulticlassSlotsForEntryLevel(actor, spellEntry, spellLevel) {
   return v ?? 0;
 }
 
+function currentMaxSpellLevelForSource(entry, spellEntry) {
+  const startsAt = n(spellEntry.startsAt, 1);
+  if (entry.level < startsAt) return 0;
+  const declaredMax = n(spellEntry.maxSpellLevel, 0) || 9;
+  let max = 0;
+  for (let lvl = 1; lvl <= declaredMax; lvl++) {
+    if (slotsFromRow(entry.row, spellEntry, lvl) > 0) max = lvl;
+  }
+  return max;
+}
+
+function spellcastingEntriesForClass(entry) {
+  const casting = entry.system?.spellcasting;
+  if (!casting || typeof casting !== "object" || casting.enabled === false) return [];
+  const rawEntries = Array.isArray(casting.entries) ? casting.entries : Array.isArray(casting.pools) ? casting.pools : null;
+  const sourceKey = entry.slug;
+  const makeEntry = (raw, index) => {
+    const rawKey = raw?.key ?? raw?.list ?? raw?.liste ?? raw?.name ?? raw?.label ?? raw?.type;
+    const key = spellKey(rawKey);
+    const out = {
+      ...(raw ?? {}),
+      index,
+      key,
+      label: raw?.label || spellLabel(key),
+      startsAt: n(raw?.startsAt ?? raw?.startLevel ?? raw?.niveauDepart ?? casting.startsAt ?? 1, 1),
+      maxSpellLevel: n(raw?.maxSpellLevel ?? raw?.maxLevel ?? raw?.maxNiveauSort ?? casting.maxSpellLevel ?? 0, 0),
+      slotsField: raw?.slotsField || raw?.slotField || raw?.progressionField || null,
+      classSlug: sourceKey,
+      className: entry.name,
+      classLevel: entry.level
+    };
+    out.currentMaxSpellLevel = currentMaxSpellLevelForSource(entry, out);
+    return out;
+  };
+
+  if (rawEntries) return rawEntries.map(makeEntry).filter(e => e.key);
+
+  const lists = arr(casting.lists).map(spellKey).filter(Boolean);
+  return [...new Set(lists)].map((key, index) => makeEntry({ key, label: spellLabel(key), startsAt: casting.startsAt, maxSpellLevel: casting.maxSpellLevel }, index));
+}
+
+function mergeSpellEntriesByList(entries) {
+  const byKey = new Map();
+  for (const source of entries) {
+    const key = spellKey(source.key);
+    if (!key) continue;
+    if (!byKey.has(key)) {
+      byKey.set(key, {
+        ...source,
+        key,
+        poolKey: key,
+        label: spellLabel(key),
+        classSlug: null,
+        className: null,
+        classLevel: 0,
+        startsAt: 999,
+        maxSpellLevel: 0,
+        currentMaxSpellLevel: 0,
+        sources: []
+      });
+    }
+    const merged = byKey.get(key);
+    merged.sources.push(source);
+    merged.classLevel = Math.max(n(merged.classLevel, 0), n(source.classLevel, 0));
+    merged.startsAt = Math.min(n(merged.startsAt, 999), n(source.startsAt, 1));
+    merged.maxSpellLevel = Math.max(n(merged.maxSpellLevel, 0), n(source.currentMaxSpellLevel, 0));
+    merged.currentMaxSpellLevel = merged.maxSpellLevel;
+  }
+  return [...byKey.values()].filter(e => e.maxSpellLevel > 0 || e.sources.some(s => n(s.classLevel, 1) >= n(s.startsAt, 1)));
+}
+
+function add2eMulticlassSpellcastingEntries(actor) {
+  if (!isMulticlassActor(actor)) {
+    if (typeof globalThis.__add2eOriginalGetSpellcastingEntries === "function") return globalThis.__add2eOriginalGetSpellcastingEntries(actor);
+    return [];
+  }
+  const sources = [];
+  for (const entry of multiclassEntries(actor)) sources.push(...spellcastingEntriesForClass(entry));
+  return mergeSpellEntriesByList(sources);
+}
+
+function add2eMulticlassSlotsForEntryLevel(actor, spellEntry, spellLevel) {
+  if (!isMulticlassActor(actor)) {
+    if (typeof globalThis.__add2eOriginalGetSlotsForEntryLevel === "function") return globalThis.__add2eOriginalGetSlotsForEntryLevel(actor, spellEntry, spellLevel);
+    return 0;
+  }
+  const sources = Array.isArray(spellEntry?.sources) && spellEntry.sources.length ? spellEntry.sources : [spellEntry];
+  let total = 0;
+  for (const source of sources) {
+    const entry = multiclassEntries(actor).find(e => e.slug === source?.classSlug) ?? null;
+    if (!entry) continue;
+    if (entry.level < n(source.startsAt, 1)) continue;
+    const declaredMax = n(source.maxSpellLevel, 0) || 9;
+    if (declaredMax && Number(spellLevel) > declaredMax) continue;
+    total += slotsFromRow(entry.row, source, Number(spellLevel));
+  }
+  return total;
+}
+
 function add2eMulticlassSpellSlotPoolsByLevel(actor) {
   if (!isMulticlassActor(actor)) {
     if (typeof globalThis.__add2eOriginalGetSpellSlotPoolsByLevel === "function") return globalThis.__add2eOriginalGetSpellSlotPoolsByLevel(actor);
     return {};
   }
-  const entries = add2eMulticlassSpellcastingEntries(actor);
   const pools = {};
-  for (const entry of entries) {
+  for (const entry of add2eMulticlassSpellcastingEntries(actor)) {
     const slotsByLevel = {};
-    const maxSpellLevel = n(entry.maxSpellLevel, 9) || 9;
-    const actorLevel = n(entry.classLevel, 1);
-    for (let lvl = 1; lvl <= maxSpellLevel; lvl++) {
-      slotsByLevel[lvl] = actorLevel >= n(entry.startsAt, 1) ? add2eMulticlassSlotsForEntryLevel(actor, entry, lvl) : 0;
-    }
-    const poolKey = `${entry.classSlug}:${entry.key}`;
-    pools[poolKey] = { ...entry, poolKey, slotsByLevel };
+    const maxSpellLevel = n(entry.maxSpellLevel, 0);
+    for (let lvl = 1; lvl <= maxSpellLevel; lvl++) slotsByLevel[lvl] = add2eMulticlassSlotsForEntryLevel(actor, entry, lvl);
+    pools[entry.key] = { ...entry, poolKey: entry.key, slotsByLevel };
   }
   return pools;
 }
@@ -237,12 +270,12 @@ function add2eMulticlassSpellEntryForSpell(actor, sort) {
     if (typeof globalThis.__add2eOriginalGetSpellEntryForSpell === "function") return globalThis.__add2eOriginalGetSpellEntryForSpell(actor, sort);
     return null;
   }
-  if (typeof add2eIsObjectMagicSpellForPreparation === "function" && add2eIsObjectMagicSpellForPreparation(sort)) return null;
+  if (typeof globalThis.add2eIsObjectMagicSpellForPreparation === "function" && globalThis.add2eIsObjectMagicSpellForPreparation(sort)) return null;
   const spellLevel = n(sort?.system?.niveau ?? sort?.system?.level, 0);
-  const sortLists = typeof add2eGetSpellListsFromItem === "function" ? add2eGetSpellListsFromItem(sort) : arr(sort?.system?.spellLists).map(norm);
+  const sortLists = typeof globalThis.add2eGetSpellListsFromItem === "function" ? globalThis.add2eGetSpellListsFromItem(sort) : arr(sort?.system?.spellLists).map(spellKey);
   const matches = add2eMulticlassSpellcastingEntries(actor).filter(e => sortLists.includes(e.key));
   if (!matches.length) return null;
-  return matches.find(e => n(e.classLevel, 1) >= n(e.startsAt, 1) && (!n(e.maxSpellLevel, 0) || spellLevel <= n(e.maxSpellLevel, 0))) ?? matches[0] ?? null;
+  return matches.find(e => add2eMulticlassSlotsForEntryLevel(actor, e, spellLevel) > 0 && (!n(e.maxSpellLevel, 0) || spellLevel <= n(e.maxSpellLevel, 0))) ?? matches[0] ?? null;
 }
 
 function add2eMulticlassCanUseSpell(actor, sort) {
@@ -250,15 +283,15 @@ function add2eMulticlassCanUseSpell(actor, sort) {
     if (typeof globalThis.__add2eOriginalCanActorUseSpell === "function") return globalThis.__add2eOriginalCanActorUseSpell(actor, sort);
     return { ok: false, reason: "missing-original" };
   }
-  if (typeof add2eIsObjectMagicSpellForPreparation === "function" && add2eIsObjectMagicSpellForPreparation(sort)) return { ok: false, reason: "object-power", sortLists: [], entries: add2eMulticlassSpellcastingEntries(actor), entry: null };
+  if (typeof globalThis.add2eIsObjectMagicSpellForPreparation === "function" && globalThis.add2eIsObjectMagicSpellForPreparation(sort)) return { ok: false, reason: "object-power", sortLists: [], entries: add2eMulticlassSpellcastingEntries(actor), entry: null };
   const spellLevel = n(sort?.system?.niveau ?? sort?.system?.level, 0);
-  const sortLists = typeof add2eGetSpellListsFromItem === "function" ? add2eGetSpellListsFromItem(sort) : arr(sort?.system?.spellLists).map(norm);
+  const sortLists = typeof globalThis.add2eGetSpellListsFromItem === "function" ? globalThis.add2eGetSpellListsFromItem(sort) : arr(sort?.system?.spellLists).map(spellKey);
   const entries = add2eMulticlassSpellcastingEntries(actor);
   const matching = entries.filter(e => sortLists.includes(e.key));
   if (!matching.length) return { ok: false, reason: "list", sortLists, entries, entry: null };
   for (const entry of matching) {
-    if (n(entry.classLevel, 1) < n(entry.startsAt, 1)) continue;
     if (n(entry.maxSpellLevel, 0) && spellLevel > n(entry.maxSpellLevel, 0)) continue;
+    if (add2eMulticlassSlotsForEntryLevel(actor, entry, spellLevel) <= 0) continue;
     return { ok: true, reason: "ok", sortLists, entries, entry, actorLevel: entry.classLevel, classLevel: entry.classLevel, spellLevel };
   }
   return { ok: false, reason: "level", sortLists, entries, entry: matching[0] ?? null, spellLevel };
@@ -273,7 +306,7 @@ function featureLevel(feature, actor) {
 function sourceFeaturesFromSystem(system, source) {
   const out = [];
   const push = value => {
-    const list = typeof add2eToClassFeatureArray === "function" ? add2eToClassFeatureArray(value) : arr(value).filter(v => v && typeof v === "object");
+    const list = typeof globalThis.add2eToClassFeatureArray === "function" ? globalThis.add2eToClassFeatureArray(value) : arr(value).filter(v => v && typeof v === "object");
     for (const feature of list) out.push({ ...feature, _add2eFeatureSource: feature?._add2eFeatureSource ?? source });
   };
   push(system?.activeClassFeatures);
@@ -299,8 +332,8 @@ function add2eMulticlassActorClassFeatures(actor) {
   const seen = new Set();
   for (const entry of multiclassEntries(actor)) {
     for (const feature of sourceFeaturesFromSystem(entry.system, entry.name)) {
-      const key = typeof add2eFeatureKey === "function" ? add2eFeatureKey(feature) : norm(feature?.key ?? feature?.name);
-      const onUse = typeof add2eFeatureOnUse === "function" ? add2eFeatureOnUse(feature) : String(feature?.on_use ?? feature?.onUse ?? "");
+      const key = typeof globalThis.add2eFeatureKey === "function" ? globalThis.add2eFeatureKey(feature) : norm(feature?.key ?? feature?.name);
+      const onUse = typeof globalThis.add2eFeatureOnUse === "function" ? globalThis.add2eFeatureOnUse(feature) : String(feature?.on_use ?? feature?.onUse ?? "");
       const unique = `${entry.slug}|${key}|${onUse}`;
       if (!key && !onUse) continue;
       if (seen.has(unique)) continue;
@@ -313,34 +346,26 @@ function add2eMulticlassActorClassFeatures(actor) {
 
 function add2eMulticlassActivableClassFeatures(actor, { includeLocked = true } = {}) {
   return add2eMulticlassActorClassFeatures(actor).filter(f => {
-    const activable = typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(f) : !!f.activable;
+    const activable = typeof globalThis.add2eIsFeatureActivable === "function" ? globalThis.add2eIsFeatureActivable(f) : !!f.activable;
     if (!activable) return false;
     if (includeLocked) return true;
     const level = featureLevel(f, actor);
-    const min = typeof add2eFeatureMinLevel === "function" ? add2eFeatureMinLevel(f) : n(f.minLevel ?? f.niveauMin ?? 1, 1);
-    const max = typeof add2eFeatureMaxLevel === "function" ? add2eFeatureMaxLevel(f) : n(f.maxLevel ?? f.niveauMax ?? 999, 999);
+    const min = typeof globalThis.add2eFeatureMinLevel === "function" ? globalThis.add2eFeatureMinLevel(f) : n(f.minLevel ?? f.niveauMin ?? 1, 1);
+    const max = typeof globalThis.add2eFeatureMaxLevel === "function" ? globalThis.add2eFeatureMaxLevel(f) : n(f.maxLevel ?? f.niveauMax ?? 999, 999);
     return level >= min && level <= max;
   });
 }
 
 function add2eMulticlassPassiveClassFeatures(actor, { includeLocked = true } = {}) {
   return add2eMulticlassActorClassFeatures(actor).filter(f => {
-    const activable = typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(f) : !!f.activable;
+    const activable = typeof globalThis.add2eIsFeatureActivable === "function" ? globalThis.add2eIsFeatureActivable(f) : !!f.activable;
     if (activable) return false;
     if (includeLocked) return true;
     const level = featureLevel(f, actor);
-    const min = typeof add2eFeatureMinLevel === "function" ? add2eFeatureMinLevel(f) : n(f.minLevel ?? f.niveauMin ?? 1, 1);
-    const max = typeof add2eFeatureMaxLevel === "function" ? add2eFeatureMaxLevel(f) : n(f.maxLevel ?? f.niveauMax ?? 999, 999);
+    const min = typeof globalThis.add2eFeatureMinLevel === "function" ? globalThis.add2eFeatureMinLevel(f) : n(f.minLevel ?? f.niveauMin ?? 1, 1);
+    const max = typeof globalThis.add2eFeatureMaxLevel === "function" ? globalThis.add2eFeatureMaxLevel(f) : n(f.maxLevel ?? f.niveauMax ?? 999, 999);
     return level >= min && level <= max;
   });
-}
-
-function mergeRestrictions(base, added) {
-  const out = foundry.utils.deepClone(base ?? {});
-  out.allowedTags = [...new Set([...arr(out.allowedTags), ...arr(added?.allowedTags)].map(v => typeof add2eNormalizeEquipTag === "function" ? add2eNormalizeEquipTag(v) : norm(v)).filter(Boolean))];
-  out.forbiddenTags = [...new Set([...arr(out.forbiddenTags), ...arr(added?.forbiddenTags)].map(v => typeof add2eNormalizeEquipTag === "function" ? add2eNormalizeEquipTag(v) : norm(v)).filter(Boolean))];
-  out.overrideForbiddenTags = [...new Set([...arr(out.overrideForbiddenTags), ...arr(added?.overrideForbiddenTags), ...arr(added?.exceptionTags), ...arr(added?.alwaysAllowedTags)].map(v => typeof add2eNormalizeEquipTag === "function" ? add2eNormalizeEquipTag(v) : norm(v)).filter(Boolean))];
-  return out;
 }
 
 function multiclassEquipmentAllowed(actor, item, kind) {
@@ -351,12 +376,9 @@ function multiclassEquipmentAllowed(actor, item, kind) {
   const checks = [];
   for (const entry of multiclassEntries(actor)) {
     const fakeActor = { ...actor, system: { ...(actor.system ?? {}), classe: entry.name, details_classe: entry.system } };
-    let check = null;
-    if (typeof globalThis.__add2eOriginalCheckEquipmentAllowedForClass === "function") check = globalThis.__add2eOriginalCheckEquipmentAllowedForClass(fakeActor, item, kind);
-    else check = { ok: true, reason: "no-original" };
+    const check = typeof globalThis.__add2eOriginalCheckEquipmentAllowedForClass === "function" ? globalThis.__add2eOriginalCheckEquipmentAllowedForClass(fakeActor, item, kind) : { ok: true, reason: "no-original" };
     checks.push({ ...check, classSlug: entry.slug, classeLabel: entry.name });
   }
-
   const okChecks = checks.filter(c => c.ok);
   return okChecks.length
     ? { ...okChecks[0], ok: true, reason: "multiclass-any-class", checks, classeLabel: okChecks.map(c => c.classeLabel).join(" / ") }
@@ -385,8 +407,6 @@ function installGlobalPatches() {
   globalThis.add2eGetActorActivableClassFeatures = add2eMulticlassActivableClassFeatures;
   globalThis.add2eGetActorPassiveClassFeatures = add2eMulticlassPassiveClassFeatures;
   globalThis.add2eCheckEquipmentAllowedForClass = multiclassEquipmentAllowed;
-
-  log("[GLOBAL_PATCHES_INSTALLED]", { version: VERSION });
 }
 
 function installSheetPatch() {
@@ -442,38 +462,26 @@ function installSheetPatch() {
       data.combatDefense = data.combatDefense ?? {};
       if (thaco !== null) data.combatDefense.thaco = thaco;
       if (saves) data.actor.system.sauvegardes = saves;
-
-      const levelForFeature = feature => featureLevel(feature, actor);
-      const allFeatures = add2eMulticlassActorClassFeatures(actor).map((feature, index) => ({ ...feature, __featureIndex: index }));
-      const inLevel = feature => {
-        const level = levelForFeature(feature);
-        const min = typeof add2eFeatureMinLevel === "function" ? add2eFeatureMinLevel(feature) : n(feature.minLevel ?? feature.niveauMin ?? 1, 1);
-        const max = typeof add2eFeatureMaxLevel === "function" ? add2eFeatureMaxLevel(feature) : n(feature.maxLevel ?? feature.niveauMax ?? 999, 999);
-        return level >= min && level <= max;
-      };
-      data.activeClassFeatures = allFeatures.filter(feature => (typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(feature) : !!feature.activable) && inLevel(feature));
-      data.passiveClassFeatures = allFeatures.filter(feature => !(typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(feature) : !!feature.activable) && inLevel(feature));
-      data.progressionCourante = { ...(data.progressionCourante ?? {}), thac0: thaco ?? data.progressionCourante?.thac0, savingThrows: saves ?? data.progressionCourante?.savingThrows, title: actor.system?.titre ?? data.progressionCourante?.title ?? "" };
-      data.spellcastingEntries = add2eMulticlassSpellcastingEntries(actor);
-      data.spellSlotsByPool = add2eMulticlassSpellSlotPoolsByLevel(actor);
+      const allFeatures = add2eMulticlassActorClassFeatures(actor);
+      data.activeClassFeatures = allFeatures.filter(f => {
+        const activable = typeof globalThis.add2eIsFeatureActivable === "function" ? globalThis.add2eIsFeatureActivable(f) : !!f.activable;
+        if (!activable) return false;
+        return featureLevel(f, actor) >= (typeof globalThis.add2eFeatureMinLevel === "function" ? globalThis.add2eFeatureMinLevel(f) : n(f.minLevel ?? f.niveauMin ?? 1, 1));
+      });
+      data.passiveClassFeatures = allFeatures.filter(f => !(typeof globalThis.add2eIsFeatureActivable === "function" ? globalThis.add2eIsFeatureActivable(f) : !!f.activable));
       return data;
     };
   }
 
   proto.__add2eMulticlassMechanicsPatch = VERSION;
-  log("[SHEET_PATCH_INSTALLED]", { version: VERSION });
   return true;
 }
 
-installGlobalPatches();
-installSheetPatch();
-Hooks.once("ready", () => {
+function installWhenReady() {
   installGlobalPatches();
   installSheetPatch();
-});
+}
 
-try { globalThis.add2eMulticlassEntries = multiclassEntries; } catch (_e) {}
-try { globalThis.add2eMulticlassBestThac0 = actor => bestThac0(multiclassEntries(actor)); } catch (_e) {}
-try { globalThis.add2eMulticlassBestSavingThrows = actor => bestSavingThrows(multiclassEntries(actor)); } catch (_e) {}
-
-log("[LOADED]", { version: VERSION });
+Hooks.once("ready", installWhenReady);
+Hooks.on("init", installWhenReady);
+setTimeout(installWhenReady, 0);
