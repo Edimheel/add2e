@@ -43,7 +43,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort permet à l’illusionniste de créer un objet non-vivant, de nature végétale: corde, bois, etc. Le volume maximum est de 27 dm³ par niveau du lanceur de sort. (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Djinn). Le lanceur de sort doit posséder un tout petit morceau de la même matière que l’objet à créer.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "tout petit morceau de la même matière que l’objet à créer",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Création mineure",
         "id": "XdIvmjAtSNZAr6OD",

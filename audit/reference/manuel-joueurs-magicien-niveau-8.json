@@ -24,13 +24,13 @@
       "description": "ce sort permet au magicien d’implanter certaines vibrations dans une zone ou sur un objet. Ces vibrations ont tendance à repousser ou attirer une créature vivante intelligente ou bien un personnage d’un alignement spécifique. Le magicien doit d’abord choisir quelle application du sort il désire utiliser car les composantes matérielles changent selon son choix. Le sort ne peut pas être lancé sur un être vivant. Antipathie: ce pouvoir magique provoque chez la créature ou la personne dont l’alignement est pris en compte, une irrésistible envie de quitter la zone affectée ou de ne pas toucher l’objet ensorcelé par ce sortilège. Si le jet de protection contre les sorts est réussi, la créature peut rester dans la zone ou toucher l’objet, mais elle se sent mal à l’aise et ressent une démangeaison persistante qui lui fait perdre 1 point de dextérité par round de présence dans la zone ou par round de contact avec l’objet, avec une perte maximale de 4 points. Un jet de protection raté force la créature à quitter la zone ou à laisser l’objet ensorcelé, refusant d’y retourner ou de le reprendre, jusqu’à ce que le sort soit annulé ou se termine. La composante matérielle est un morceau d’alun trempé dans du vinaigre. Sympathie: en choisissant cette application du sort, le magicien fait qu’une créature particulière, ou d’un d’alignement particulier, se sente bien et en confiance si elle reste dans la zone affectée ou si elle touche l’objet enchanté par le sort. Le désir de rester dans la zone ou de garder l’objet sera irrésistible. Si un jet de protection est réussi, la créature sera libérée des effets du sort, mais un autre jet de protection doit être lancé 1d6 tours plus tard et si celui-ci est raté, la créature retourne dans la zone ou vers l’objet. Les composantes matérielles sont des perles écrasées pour une valeur minimale de 1.000 po et une goutte de miel. La créature particulière que le magicien veut cibler doit être nommée précisément, c'est-à-dire: un dragon rouge, un géant des collines, un rat-garou, un vampire, etc. De la même façon, l’alignement d’un personnage doit être précisé exactement. Si ce sort est lancé sur une zone, cette zone sera cubique et fera 1\" d’arête par niveau du magicien. Un seul objet peut être affecté par ce sort; mais les créatures visées par les effets de ce sort lancent leur jet de protection avec un malus de –2.",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau d’alun trempé dans du vinaigre",
+          "nom": "morceau d’alun trempé dans du vinaigre",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « un morceau d’alun trempé dans du vinaigre »."
         }
       ],
       "foundry": {
@@ -76,13 +76,13 @@
       "description": "ce sort crée un duplicata d’une personne. Ce clone est le sosie parfait de son modèle, avec le même niveau d’expérience, les mêmes souvenirs, etc. Cependant, le clone devient une véritable personne; si l’original et son double existent en même temps, chacun connait l’existence de l’autre et chacun désirera détruire l’autre car l’existence d’un tel alter-ego est insupportable pour les deux. Si aucun ne parvient à détruire l’autre, il y a alors 95% de chances que l’un des deux devienne fou (75% de chances que ce soit le clone) et se suicide. Il y a 5 % de chances que les deux deviennent fous et se suicident. Cette probabilité se produit dans une période d’une semaine d’existence commune. La composante matérielle de ce sort est un morceau de chair de l’original. Le clone deviendra et sera la personne telle qu’elle était au moment où le morceau de chair a été pris, et toutes les évolutions ultérieures de l’original ne se retrouveront donc pas chez le clone. De plus, le clone est une création physique; le matériel et l’équipement portés par l’original ne peuvent faire partie des possessions du clone. Le clone met de 2 à 8 mois (2d4) pour se former complètement; c’est après cette période que l’existence double est effective.",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau de chair de l’original",
+          "nom": "morceau de chair de l’original",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un morceau de chair de l’original »."
         }
       ],
       "foundry": {
@@ -107,13 +107,13 @@
       "description": "ce sort transforme le cristal ou le verre en une matière aussi dure et solide que l'acier (l’objet est alors considéré comme ayant une classe d’armure de 1). Le magicien ne peut affecter que 5 kg par niveau et ce doit être un seul et même objet. Les composantes matérielles sont un petit morceau de verre et un petit morceau d’acier.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit morceau de verre et un petit morceau d’acier",
+          "nom": "morceau de verre et un petit morceau d’acier",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit morceau de verre et un petit morceau d’acier »."
         }
       ],
       "foundry": {
@@ -325,13 +325,13 @@
       "description": "ce sort fait apparaître un énorme poing. Ce poing est sous le contrôle mental du magicien qui peut lui faire frapper un adversaire à chaque round. Le lanceur du sort ne peut entreprendre aucune autre activité magique, ni lancer des sortilèges pendant toute la durée du sort. Le poing ne rate jamais sa cible, mais son efficacité varie de round en round. Résultat sur 1d20 Effets 1-12 Coup faible: 1 à 6 points de dégâts 13-16 Coup solide: 2 à 12 points de dégâts 17-19 Coup violent: 3 à 18 points de dégâts, ennemi étourdi au round suivant 20 Coup critique: 4 à 24 points de dégâts, ennemi étourdi pour les 3 rounds suivants Note: le fait qu’un ennemi soit étourdi permet au magicien d’ajouter un bonus de +4 sur le d20 d’efficacité du poing, car l’adversaire n’est alors pas capable d’esquiver efficacement. Ce sort peut être utilisé avec n’importe quelle autre application du sort de l’archimage Bigby: main, poigne... Les composantes matérielles de ce sort sont un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de «I». L’objet est fait d’un alliage de cuivre et de zinc (cela ressemble à un poing américain). Le poing est détruit s’il subit autant de dégâts que le nombre de points de vie que possède le magicien.",
       "composants_materiels_objets": [
         {
-          "nom": "un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de «I»",
+          "nom": "gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de «I»",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Objet durable ou focus utilisé sans destruction indiquée."
+          "notes": "Objet durable ou focus utilisé sans destruction indiquée. Formulation source du Manuel : « un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de «I» »."
         }
       ],
       "foundry": {
@@ -417,13 +417,13 @@
       "description": "ce sort transforme une chose (vivante ou non) en une autre. Quand ce sort est utilisé dans le même but que le sort allométamorphose ou transmutation de pierre en chair, il suffit de le traiter comme une version plus puissante avec des malus de –4 sur les jets de protection. Quand il est lancé pour changer d’autres choses, la durée dépend du degré de transformation. Le Maître de Donjon jugera en comparant les facteurs suivants: Le genre: animal, végétal, minéral. La classe: mammifère, bipède, champignon, métal, sphère, etc. La relation: la branche et l’arbre, le sable et la dune, etc. La taille: plus petite, égale, plus grande. La forme: ressemblance approximative ou différence totale. L’intelligence: dans le cas d’un changement vers une forme plus intelligente. Des changements dans le genre donnent une durée en heures ou tours: heures s’il n’y a qu’un changement de genre, tours si les deux genres sont fondamentalement opposés. Les autres changements affecteront aussi la durée du sort, dans le même esprit. La transformation d’un lion en un androsphinx sera permanente. Transformer un navet en ver pourpre ne durera que quelques heures. La transformation d’une défense d’ivoire en éléphant sera permanente. Une brindille changée en épée ne le reste que quelques tours. Tous les objets transformés irradient une forte aura. Une dissipation de la magie fera retourner une chose transformée à son état premier. À noter que le sort transmutation de pierre en chair ou son inverse affectera les choses touchées par ce sort. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes matérielles sont du mercure, de la gomme arabique, et de la fumée. NB: une résistance aux traumatismes (voir CONSTITUTION) est applicable quand des créatures vivantes sont visées par ce sort; les restrictions notées aux sorts allométamorphose et transmutation de pierre en chair s’appliquent également. ARRÊT DU TEMPS (Altération) Niveau: 9 Composantes: V Portée: 0 Temps d'incantation: 9 segments Durée: ½ segment/niveau + 1d8 seg. Jet de protection: aucun Zone d'effet: sphère de 3\" de diamètre",
       "composants_materiels_objets": [
         {
-          "nom": "du mercure, de la gomme arabique, et de la fumée",
+          "nom": "mercure, de la gomme arabique, et de la fumée",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du mercure, de la gomme arabique, et de la fumée »."
         }
       ],
       "foundry": {

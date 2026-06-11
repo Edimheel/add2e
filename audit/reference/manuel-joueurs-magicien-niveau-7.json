@@ -76,13 +76,13 @@
       "description": "ce sort permet au magicien de mettre sous ses ordres des formes de vie végétales et de communiquer avec elles. Les plantes obéiront au mieux de leurs possibilités. La zone d’effet est de 3\" x 1\". Le sort ne donne pas de nouveaux pouvoirs ni de nouvelles habilités aux plantes mais elles utiliseront tous leurs moyens, même ceux qui sont inhabituels, pour répondre aux ordres du lanceur de sort. Le jet de protection s’applique uniquement aux plantes intelligentes et subit un malus de –4 sur le dé. Les composantes matérielles sont une pincée d’humus, une goutte d’eau et une feuille ou une brindille.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée d’humus, une goutte d’eau et une feuille ou une brindille",
+          "nom": "pincée d’humus, une goutte d’eau et une feuille ou une brindille",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée d’humus, une goutte d’eau et une feuille ou une brindille »."
         }
       ],
       "foundry": {
@@ -323,13 +323,13 @@
       "description": "la poigne de Bigby est une version supérieure au sort de niveau 6 main de force de Bigby (voir p.85). La poigne peut maintenir immobile une créature de 500 kg maximum ou retenir un objet de même poids. Elle peut aussi faire se déplacer des créatures deux fois plus vite que la main de force de Bigby. La composante matérielle est un gant en cuir.",
       "composants_materiels_objets": [
         {
-          "nom": "un gant en cuir",
+          "nom": "gant en cuir",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « un gant en cuir »."
         }
       ],
       "foundry": {
@@ -373,7 +373,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "avec ce sort, le magicien peut créer le duplicata de n’importe quelle créature. Ce duplicata ressemble exactement à l’original. Les seules différences sont les suivantes: le simulacre n’aura que 51 à 60 % (50 % + 1d10 %) des points de vie de l’original; il y aura des différences de personnalité et des domaines de connaissance que le double n’aura pas. Une détection de la magie révélera immédiatement ce qu’est vraiment le simulacre, ainsi qu’une vision réelle. Le duplicata reste sous le contrôle permanent du magicien, bien qu’il n’existe aucun lien télépathique spécial; les ordres doivent donc être donnés de façon ordinaire. Ce sort reproduit exactement la forme d’une créature, mais cette forme est en fait une sorte de zombie. Pour donner une force vitale au simulacre, il faut employer une réincarnation, et un souhait mineur est indispensable pour accorder au duplicata de 40 % à 65 % (35 % + 5d6 %) des connaissances et personnalité de la vraie créature. Le niveau du double, si niveau il y a, sera de 20 % à 50 % de celui de la vraie créature. Le duplicata est formé à partir de glace ou de neige. Le sort est lancé sur cette forme grossière en neige ou en glace, dans laquelle un morceau de l’original doit être placé. Comme composante matérielle supplémentaire, le sort demande de la poudre de rubis. Le simulacre n’a aucun moyen d’augmenter sa puissance: c'est-à-dire qu’il ne peut monter en niveau ni augmenter ses capacités.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "morceau de l’original",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "poudre de rubis",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Simulacre",
         "id": "TH7LxMtCxwD0LXBC",
@@ -415,7 +434,44 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "quand ce sort est lancé, la créature touchée (ou le magicien lui-même) ainsi que tout son équipement semblent être transformés en pierre. La transmutation initiale de la chair en pierre prend un round entier après le temps d’incantation. Ensuite, même une inspection minutieuse ne révélera rien, bien qu’une détection de la magie mette en évidence une faible aura irradiant de la statue. La créature pétrifiée peut voir, entendre et sentir normalement. Les sensations ressenties sont celles que peut ressentir du granit, c'est-à-dire qu’un éclat correspond à une légère blessure, mais attention aux coups puissants qui peuvent casser un morceau entier. La créature affectée peut redevenir normale en 1 seconde (1/6e de segment), puis se retransformer en pierre si elle le veut, à la même vitesse, ceci tant que dure le sort. Pendant la transformation initiale de la chair en pierre, la créature affectée doit réussir un tirage de pourcentage de 82 % ou moins, avec –1 % sur le dé pour chaque point de constitution qu’elle a; avec une constitution de 18, il n’y a donc aucun danger. Si ce tirage de pourcentage est raté, la créature subit un violent traumatisme et meurt. Les composantes matérielles sont: de la chaud, du sable et une goutte d’eau, le tout mélangé par une tige en fer (pointe ou clou par exemple).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "chaux",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "sable",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "goutte d’eau",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "tige en fer",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Statue",
         "id": "RasgmaIC4muPvU6s",

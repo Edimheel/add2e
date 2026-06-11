@@ -22,7 +22,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "disque de bronze",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Formulation source du Manuel : « petit disque de bronze »."
+        },
+        {
+          "nom": "tige de fer",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Formulation source du Manuel : « petite tige de fer »."
+        }
+      ],
       "foundry": {
         "nom": "Chaos",
         "id": "h3w9xJRIMFBZSPQK",

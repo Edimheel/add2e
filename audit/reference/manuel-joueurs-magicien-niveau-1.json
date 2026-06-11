@@ -22,7 +22,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort provoque l’augmentation immédiate d’une créature ou d’un objet. L’agrandissement se fait au niveau de la taille et du poids. Il ne peut être lancé que sur un seul objet ou une seule créature. La portée du sort est de ½\" par niveau du magicien. L’agrandissement sur un être vivant est de 20 % par niveau du lanceur de sort, avec une augmentation maximale de 200 %. L’agrandissement sur un objet est de 10 % par niveau jusqu'à un maximum de 100 %. La créature, ou l’objet, doit être vue pour que le sort soit effectif. Le volume maximum que le magicien peut affecter est de 270 dm³ pour les matières vivantes et de 135 dm³ pour les matières non-vivantes, par niveau du magicien. Les pouvoirs magiques n’augmentent pas avec le sort; une épée +1, par exemple, restera toujours une épée +1, même si elle est plus grande; un bâtonnet magique allongé à la taille d’un bâton ne pourra qu’accomplir ses fonctions normales; une potion de grande taille requerra simplement l’absorption d’une plus grande quantité de liquide pour que ses effets magiques soient effectifs. En revanche, le poids, la taille et la force sont augmentée. Ainsi, une table bloquant une porte sera plus efficace, une pierre lancée sera plus lourde et sans doute plus dangereuse, des chaînes seront plus massives, des portes plus épaisses, une ficelle pourra devenir une corde et ainsi de suite. De la même façon, une personne de 3,60 m de haut pourra être comparée à un ogre; une personne de 5,40 mètres sera semblable à un géant. L’inverse du sort, rétrécissement, annulera les effets d’un sort d’agrandissement ou réduira la taille des objets ou êtres vivants aux mêmes ratios que le sort normal. Les victimes non-consentantes du sort ou de son inverse ont droit à un jet de protection qui, s’il est réussi, indique que les pouvoirs du sort n’ont eu aucun effet. La composante de ce sort est une pincée de poudre de fer.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "pincée de poudre de fer",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Agrandissement",
         "id": "Ql44mewOhfw0CGSS",
@@ -87,13 +97,13 @@
       "description": "avec ce sort, tout objet d’un poids maximum de 50 po (2.5 kg) par niveau du magicien peut être entouré d’une aura magique qui fera croire à toute personne faisant une détection de la magie que cet objet est magique. Cependant, si la personne qui effectue la détection tient l’objet, elle a le droit à un jet de protection contre les sorts. Si ce jet est réussi la personne découvre la supercherie. Autrement, l’aura est simplement magique, mais aucun test ne pourra révéler le type de magie. La composante matérielle de ce sort est un petit morceau de soie que le magicien doit passer sur l’objet affecté.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit morceau de soie que le magicien doit passer sur l’objet affecté",
+          "nom": "morceau de soie que le magicien doit passer sur l’objet affecté",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « un petit morceau de soie que le magicien doit passer sur l’objet affecté »."
         }
       ],
       "foundry": {
@@ -160,13 +170,13 @@
       "description": "quand ce sort est lancé, ce qui peut être affecté — créature(s) ou objet(s) — devient aussi léger qu’une plume. La vitesse de chute est alors instantanément changée et n’est plus que de 60 cm par seconde, ou 3,60 m par segment, et aucun dégât n’est subi à l’arrivée au sol. Cependant, quand la durée du sort s’achève, le poids redevient normal et la chute aussi si elle n’est pas terminée. Le sort peut être lancé sur le magicien lui-même, sur une autre créature ou sur un objet se trouvant à une distance de 1\" maximum par niveau du lanceur de sort. Le sort dure 1 segment par niveau du magicien. Le sort affecte un volume de 27 m³ et un poids maximum de 2.000 po (100 kg) de base, plus 2.000 po par niveau. Exemple: un magicien de niveau 2 pourra lancer son sort avec une portée maximale de 2\" et le poids autorisé sera de 6.000 po (300 kg). Le sort n’est efficace que pour les chutes libres; il ne peut affecter un coup d’épée ou la charge d’une créature; il peut par contre affecter un projectile propulsé. La composante matérielle est une petite plume ou un peu de duvet que le magicien doit avoir quelque part sur lui.",
       "composants_materiels_objets": [
         {
-          "nom": "petite plume",
+          "nom": "plume",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Alternative à un peu de duvet ; le magicien doit l’avoir sur lui.",
-          "notes": null
+          "notes": "Formulation source du Manuel : « petite plume »."
         },
         {
           "nom": "duvet",
@@ -200,13 +210,13 @@
       "description": "quand ce sort est lancé, le magicien est capable de lire un message écrit, normalement incompréhensible pour lui, tel qu’une carte aux trésors (sauf les écrits magiques qu’il reconnaîtra comme magiques) ou de comprendre les paroles d’une créature. Dans les deux cas, le magicien doit toucher l’objet à lire ou la créature à comprendre. Le sort n’autorise pas le magicien à écrire ou parler la langue concernée. Les composantes matérielles de ce sort sont une pincée de suie et quelques grains de sel. L’inverse du sort, confusion des langues, empêche toute compréhension ou annule le sort compréhension des langues.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée de suie et quelques grains de sel",
+          "nom": "pincée de suie et quelques grains de sel",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une pincée de suie et quelques grains de sel »."
         }
       ],
       "foundry": {
@@ -231,13 +241,13 @@
       "description": "avec ce sort, le magicien crée une surface invisible et circulaire de gravité nulle, connue sous le nom de disque flottant de tenser, d’après le fameux sorcier du même nom (dont la capacité à localiser les trésors et l’avidité pour toute pièce trouvée sont proverbiales). Le disque est concave et fait 90 cm de diamètre; il peut porter un poids maximum de 1.000 po (50 kg) par niveau du magicien. Le disque flotte à environ 1 m du sol et reste de lui-même à cette hauteur. Il maintient une distante constante de 1,80 m environ entre lui et le magicien, à moins que celui-ci ne le fasse se déplacer, à la vitesse de 6\", selon les ordres qu’il donne. Si le magicien fait s’éloigner le disque hors de portée ou si le sort prend fin, le disque s’évanouit et tout ce qu’il portait tombe à terre. Le magicien ne peut pas monter sur le disque: le disque reste toujours à côté du magicien. La composante matérielle est une goutte de mercure.",
       "composants_materiels_objets": [
         {
-          "nom": "une goutte de mercure",
+          "nom": "goutte de mercure",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une goutte de mercure »."
         }
       ],
       "foundry": {
@@ -281,7 +291,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "avec ce sort, le magicien est capable d’inscrire un sort qu’il ne peut comprendre à cet instant (soit à cause de son niveau, soit à cause d’un manque d’intelligence) sur son livre ou sur un autre objet qu’il utilise pour inscrire les sorts qu’il connait. Le magicien doit lancer un jet de protection contre les sorts pour essayer la transcription; ce jet de protection obtient un bonus de +2 si le sort à transcrire est supérieur de seulement 1 niveau à ceux qu’il peut utiliser; si le sort est supérieur de 2 niveaux, le jet de protection est normal et il y a un malus de –1 pour chaque niveau supérieur à partir de 3 niveaux au-dessus. Si ce jet de protection est raté, le magicien subit 1d4 points de dégâts pour chaque niveau du sort qu’il tente de transcrire; de plus il tombe inconscient pour un nombre égal de tours. Ces dégâts, s’ils n’ont pas été fatals, ne peuvent être soignés qu’au rythme de 1 à 4 points de vie par jour, car ce sont des dégâts corporels et mentaux. La transcription du sort prend une heure par niveau du sort et pendant cette période, le magicien est en état de transe et peut toujours se faire surprendre par un ennemi. En plus de la surface d’écriture, le magicien doit utiliser une encre fine faite de substances rares (coût minimum 200 po par flacon, si le magicien ne l’a pas fabriquée lui-même).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "encre fine faite de substances rares",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": 200,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Écriture",
         "id": "0xDSJQMk6eczXt8X",
@@ -384,7 +404,53 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "quand ce sort est lancé, le magicien peut tenter de découvrir le pouvoir d’un objet. Pour ce faire, il doit porter l’objet en question selon sa fonction (par exemple, un bracelet au poignet, un casque sur la tête, des bottes aux pieds, une dague dans la main, etc.). Il est à noter que le magicien subit pleinement toute conséquence de l’utilisation de l’objet, bien qu’un jet de protection normalement autorisé soit encore un privilège accordé au magicien. Pour chaque segment de la durée du sort, il y a 15 % de chance plus 5 % par niveau du magicien qu’une propriété de l’objet soit découverte — il est possible que l’objet n’ait aucune propriété et soit seulement un leurre (la présence d’une aura magique de Nystul ou d’une bouche magique étant détectée). À chaque fois qu’une propriété est découverte, le MD lance secrètement un jet de protection contre les sorts pour le magicien. S’il est réussi, la propriété est révélée au magicien; s’il est raté de 1 point, un faux pouvoir sera révélé au magicien; s’il est raté de plus d’1 point, le magicien ne découvre rien. Un objet ne révélera jamais ses bonus au toucher et au dégât, bien qu’on puisse découvrir s’ils sont élevés ou pas. Si c’est un objet à charges, il ne révélera pas son nombre de charges exactes; il pourra donner une fourchette de + ou – 25 % par rapport au nombre de charges actuelles, c.-à-d. qu’un bâtonnet ayant 40 charges pourra être considéré comme ayant 30 ou 50 charges, ou entre les deux. Le magicien dispose de 1 heure par niveau d’expérience après la découverte de l’objet pour l’identifier ou alors toutes les impressions détectables se seront mélangées avec celles du personnage qui l’a détenu. Après avoir lancé ce sort, le magicien perd 8 points de constitution; il doit se reposer pendant une heure par point perdu pour pouvoir les récupérer. Si, après la perte de 8 points, sa constitution descend au-dessous de 3, le magicien tombe inconscient. Il ne reprendra conscience qu’après avoir retrouvé toute sa constitution, 24 heures plus tard. Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin. Il faut ensuite boire l’infusion et avaler une carpe miniature vivante, le tout avant de lancer le sort. Si une pierre porte-bonheur est réduite en poudre et ajoutée à l’infusion, la chance de succès augmente de 25 % et tous les jets de protection obtiennent un bonus +4.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "perle",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": 100,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "plume de hibou trempée dans du vin",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "vin",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "carpe miniature vivante",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "pierre porte-bonheur réduite en poudre",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Option permettant d’augmenter la chance de succès.",
+          "notes": "Réduite en poudre et ajoutée à l’infusion."
+        }
+      ],
       "foundry": {
         "nom": "Identification",
         "id": "j4mcEDMWWZDmHxVc",
@@ -536,13 +602,13 @@
       "description": "quand ce sort est lancé, le magicien peut murmurer un message et, secrètement ou ouvertement, pointer son doigt en même temps; le message murmuré ira en ligne droite jusqu’à la créature désignée et lui sera audible. Le message doit tenir dans la durée du sort et, s'il reste du temps, la créature qui a reçu le message peut envoyer une réponse qui sera entendue par le magicien. Il doit y avoir un espace vide entre le magicien et la personne concernée. La composante matérielle est une petite pièce de cuivre, finement ciselée.",
       "composants_materiels_objets": [
         {
-          "nom": "petite pièce de cuivre finement ciselée",
+          "nom": "pièce de cuivre finement ciselée",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « petite pièce de cuivre finement ciselée »."
         }
       ],
       "foundry": {
@@ -588,13 +654,13 @@
       "description": "en prononçant les syllabes de ce sort, le magicien crée une force invisible qui frappe l’objectif qu’il montre du doigt. La force de la poussée n’est pas grande, 1 pied-livre par niveau du magicien (1 pied-livre étant la force nécessaire qu’il faut exercer pour déplacer un objet de 0,5 kg de 0,30 m), mais elle peut faire bouger de petits objets sur 0,30 m maximum dans la direction opposée au magicien, faire tomber un objet ou faire perdre l’équilibre à une créature. Exemple pour ce dernier cas: la force peut faire perdre l’équilibre à une créature qui attaque: si la créature rate son jet de protection, elle ne pourra pas frapper ce round ci. Bien sûr la masse de la créature qui attaque ne doit pas dépasser 50 fois la force de poussée, c'est-à-dire qu’un magicien de niveau 1 ne pourra pas affecter une créature pesant plus de 25 kg (50 x 0,5 kg). Une poussée employée sur un objet tenu par une créature fait que la force en pied-livre (1/niveau) sera soustraite de la probabilité de toucher de l’adversaire si ce dernier a raté son jet de protection. La composante matérielle de ce sort est une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé",
+          "nom": "pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description."
+          "notes": "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé »."
         }
       ],
       "foundry": {
@@ -638,7 +704,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "excepté ci-dessus et le fait que les composantes matérielles soient de la poudre de fer et d’argent pour tracer le cercle de protection, ce sort est le même que le sort de niveau 1 de clerc protection contre le mal (voir p.44).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "poudre de fer",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "poudre d’argent",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Protection contre le mal",
         "id": "S3owai0q7",
@@ -701,13 +786,13 @@
       "description": "quand ce sort est lancé, le destinataire du sort obtient le pouvoir de sauter jusqu’à 9 mètres en avant, 3 mètres en arrière ou 3 mètres en hauteur. Les sauts horizontaux, en avant et en arrière se font sur un arc faible, à peu près les 2/10 de la distance parcourue. Le sort n’assure aucune protection au moment de la réception du saut. Pour chaque tranche de 3 niveaux après le premier, le magicien obtient un saut supplémentaire, donc 2 sauts à partir du niveau 4, 3 au 7e, 4 au 10e, etc. Tous les sauts doivent être effectués dans une période de 1 tour après le lancement du sort. Passé ce délai, le sort n’est plus actif. La composante matérielle est une patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué.",
       "composants_materiels_objets": [
         {
-          "nom": "une patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué",
+          "nom": "patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description."
+          "notes": "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué »."
         }
       ],
       "foundry": {
@@ -732,13 +817,13 @@
       "description": "un serviteur invisible est un valet non-visible créé pour rendre service au magicien: ouvrir les portes, nettoyer, porter quelque chose, faire le lit, etc. Ce valet est en fait une force, peu puissante, mais qui obéit aux ordres du magicien. Ce serviteur peut porter 200 pièces d’or (10 kg) au maximum et deux fois plus en tirant sur une surface relativement lisse. Il peut ouvrir seulement les portes, tiroirs, couvercles, etc., normaux. La force créée n’a pas de forme et ne peut donc pas être «habillée». Un serviteur invisible ne combat jamais et ne peut pas être tué car c’est une force plus qu’une créature. Il peut être magiquement dissipé ou éliminé quand il subit 6 points de vie de dégâts magiques. Les composantes matérielles de ce sort sont un bout de ficelle et un morceau de bois.",
       "composants_materiels_objets": [
         {
-          "nom": "un bout de ficelle et un morceau de bois",
+          "nom": "bout de ficelle et un morceau de bois",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un bout de ficelle et un morceau de bois »."
         }
       ],
       "foundry": {
@@ -812,13 +897,13 @@
       "description": "ce sort permet au magicien de créer des bruits ou de reproduire une voix à l’endroit qu’il désire; par exemple, sur une statue, sur une autre créature, derrière une porte, en bas d’un passage, etc. Le magicien est capable d’imiter une créature en train de parler ou d’émettre des sons; bien sûr il faut que ce soit dans une langue qu’il connait s’il s’agit de paroles, ou alors un bruit qu’il peut faire lui-même s’il s’agit d’un bruit. Chaque auditeur a 10 % de chances par point d’intelligence au-dessus de 12 de découvrir la supercherie. La composante matérielle est un petit parchemin mis en cône.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit parchemin mis en cône",
+          "nom": "parchemin mis en cône",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « un petit parchemin mis en cône »."
         }
       ],
       "foundry": {

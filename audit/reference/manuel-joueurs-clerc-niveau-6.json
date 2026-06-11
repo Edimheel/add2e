@@ -128,7 +128,26 @@
       "temps_incantation": "1 tour",
       "jet_sauvegarde": "aucun",
       "description": "quand un clerc lance ce sort, il peut faire parler les pierres; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "goutte de mercure",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "argile",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Lithomancie",
         "id": "zZvMkZh0eT9iXbOV",

@@ -1,48 +1,35 @@
-# Génération des références de sorts — état final
+# Génération des références de sorts — normalisation des composants matériels
 
 ## Résumé final
 
-- Descriptions manquantes : **0**
-- Composants résolus dans ce lot : **10 cas ambigus**
-- Composants résolus global : **227 objets techniques**
-- Composants restant à vérifier : **0**
-- Clerc : **0 à vérifier**
-- Druide : **0 à vérifier**
-- Magicien : **0 à vérifier**
-- Illusionniste : **0 à vérifier**
+- Références PHB parcourues : **411 sorts**.
+- Noms techniques de composants renommés : **95**.
+- Descriptions modifiées : **0**.
+- Consommations modifiées : **0**.
+- Composants ajoutés ou supprimés : **0**.
+- Composants avec `consommation: "a_verifier"` : **0**.
 
-## Corrections effectuées
+## Exemples avant/après
 
-Les huit composants composites demandés ont été séparés entre focus durables, contenants et ingrédients consommables. Les deux cas suspects de magicien niveau 4 ont été résolus, ainsi que le décalage confirmé autour des huit sorts audités :
+- `petit miroir en argent` → `miroir en argent`
+- `feuilles d’infusion encore humides` → `feuille d’infusion encore humides`
+- `petite tige de métal droite et rigide` → `tige de métal droite et rigide`
+- `petit morceau d’écorce` → `morceau d’écorce`
+- `petite créature` → `créature`
+- `petite baguette fourchue métallique, sorte de diapason` → `baguette fourchue métallique, sorte de diapason`
+- `grains de sucre` → `grain de sucre`
+- `petit caillou` → `caillou`
+- `du gui et un peu de nourriture appréciée par l’animal` → `gui et un peu de nourriture appréciée par l’animal`
+- `du houx avec lequel le druide doit se frotter` → `houx avec lequel le druide doit se frotter`
+- `une feuille morte de chêne et du gui` → `feuille morte de chêne et du gui`
+- `baies de houx` → `baie de houx`
 
-- **Désenvoûtement** : description source exacte rétablie; les perles mal rattachées ont été retirées.
-- **Globe mineur d'invulnérabilité** : description source exacte et perles de verre ou de cristal rétablies.
-- **Invocation de monstre II** : description source exacte rétablie; le faux composant « la même; il y a également 1 à 4 rounds de délai » a été supprimé.
-- **Maladresse** : description source exacte et composant de lait solidifié rétablis.
-- **Moyen mnémonique de Rary** : description source exacte rétablie; ficelle, ivoire et deux alternatives d’encre structurés séparément.
-- **Piège à feu** : description source exacte rétablie.
-- **Porte dimensionnelle** : description source exacte rétablie après confirmation du décalage adjacent.
-- **Tempête de glace** : description source exacte rétablie après confirmation du décalage adjacent.
+La formulation source retirée du nom technique a été ajoutée ou conservée dans `notes`. Les matières et précisions utiles ont été conservées.
 
-Les descriptions n’ont été modifiées que pour corriger ces rattachements manifestement erronés, à partir de `audit/source/reference-descriptions.json`. Aucun chemin ou champ `foundry` n’a été modifié.
+## Validation
 
-## Fichiers modifiés
-
-- `audit/reference/manuel-joueurs-druide-niveau-1.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-4.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-5.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-6.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-7.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-9.json`
-- `audit/rapports/REFERENCE-SPELLS-GENERATION.md`
-
-## Validations exécutées
-
-- JSON valide pour tous les fichiers de référence modifiés.
-- `node audit/tools/validate-reference-schema.mjs`
-- `grep -R '"consommation": "a_verifier"' audit/reference/manuel-joueurs-druide-niveau-1.json audit/reference/manuel-joueurs-magicien-niveau-4.json audit/reference/manuel-joueurs-magicien-niveau-5.json audit/reference/manuel-joueurs-magicien-niveau-6.json audit/reference/manuel-joueurs-magicien-niveau-7.json audit/reference/manuel-joueurs-magicien-niveau-9.json || true` : aucune occurrence.
-- `git status --short` contrôlé avant commit.
-
-## Périmètre confirmé
-
-Aucun script, JSON Foundry, découpage, fichier source, `system.json`, `AGENTS.md`, workflow, fichier Clerc, fichier Illusionniste ou autre fichier Druide/Magicien hors périmètre n’a été modifié.
+- Tous les JSON modifiés sont valides.
+- `node audit/tools/validate-reference-schema.mjs` exécuté avec succès.
+- Total Foundry conservé : **411 Items**.
+- `Asile` n’a pas été réintroduit.
+- Aucun script, découpage, fichier source, `system.json`, `AGENTS.md` ou workflow modifié.

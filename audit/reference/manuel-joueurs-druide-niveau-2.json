@@ -45,13 +45,13 @@
       "description": "excepté ci-dessus, ce sort est le même que celui de niveau 3 de magicien catalepsie (voir p.73). Les composantes matérielles de ce sort sont une feuille morte de chêne et du gui.",
       "composants_materiels_objets": [
         {
-          "nom": "une feuille morte de chêne et du gui",
+          "nom": "feuille morte de chêne et du gui",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui »."
         }
       ],
       "foundry": {
@@ -221,7 +221,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "quand le druide lance ce sort sur une créature, cette créature obtient un bonus de 1 sur sa classe d’armure, la peau devenant aussi dure que de l’écorce. En plus, le bonus de 1 s’applique aussi aux jets de protection contre toutes les formes d’attaque, sauf la magie. Ce sort peut être lancé sur le druide lui-même ou sur un autre personnage. En plus du gui, le druide doit avoir une poignée d’écorce de chêne comme composante matérielle.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "poignée d’écorce de chêne",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Peau d'écorce",
         "id": "RA3FoJdMhOl9lLSY",
@@ -242,7 +261,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort est le même que le sort de niveau 4 de magicien piège à feu (voir p.79) excepté ci-dessus, et en ce qui concerne les composantes matérielles: des baies de houx et un morceau de charbon avec lequel le druide doit surligner la fermeture. Le piège à feu peut être ôté/annulé par un sort de dissipation de la magie.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "baie de houx",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Formulation source du Manuel : « baies de houx »."
+        },
+        {
+          "nom": "morceau de charbon",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Piège à feu",
         "id": "Slo4ivq91",

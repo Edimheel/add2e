@@ -66,13 +66,13 @@
       "description": "grâce à ce sort, le magicien peut prendre la forme de n’importe quelle créature, sauf celle d’un demi-dieu, d’un diable majeur, d’un prince-démon, d’un démon majeur ou d’un dragon unique. Le magicien devient la créature qu’il désire et possède toutes ses habilités, sauf celles en rapport avec l’intelligence car l’esprit de la créature est celui du magicien. Il peut par exemple se transformer en griffon, puis en éfrit et ensuite en titan, etc. Quelque soit la forme qu’il prend, le lanceur de sort conserve ses propres points de vie. Chaque changement demande 1 segment. Aucun test de résistance aux traumatismes n’est nécessaire. Exemple: un archimage, en combat, prend la forme d’un feu follet et, quand cette forme ne lui sert plus à rien, il se transforme en golem de pierre et s’enfuit. Poursuivi, le magicien sous forme de golem se transforme en puce qui se cache sur un cheval, jusqu’à ce qu’il le délaisse et se transforme en buisson. Si le magicien est détecté sous cette forme, il peut prendre celle d’un dragon, d’une mare ou de n’importe quoi d’autre. La composante matérielle est une petite couronne de jade d’une valeur minimale de 5.000 po, qui se brisera à la fin du sort. Pendant la durée du sort, cette couronne reste à l’endroit où a eu lieu d’incantation; si elle est brisée avant la fin du sort, ce dernier est annulé.",
       "composants_materiels_objets": [
         {
-          "nom": "petite couronne de jade",
+          "nom": "couronne de jade",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": 5000,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Se brise pendant l’incantation."
+          "notes": "Se brise pendant l’incantation. Formulation source du Manuel : « petite couronne de jade »."
         }
       ],
       "foundry": {

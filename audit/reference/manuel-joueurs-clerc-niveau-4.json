@@ -66,13 +66,13 @@
       "description": "avec ce sort, le clerc est capable de transformer un bâton en serpent pour chaque niveau d’expérience atteint; c.-à-d. un clerc de niveau 9 pourra changer 9 bâtons en 9 serpents. Ces serpents attaquent sur ordre du clerc. Il doit bien sûr y avoir des bâtons ou des objets en bois similaires (torches, lances de fantassin, etc.) à transformer en serpents. Seuls les morceaux de bois qui sont dans la zone d’effet seront transformés. Les objets magiques comme les bâtons magiques ou les lances de fantassin magiques ne sont pas affectés. Il y a 5 % de chance par niveau du clerc que chaque serpent soit venimeux. Chaque bâton transformé en serpent par un clerc de niveau 11 aura 55 % de chance d’être venimeux. Les effets durent 2 rounds par niveau du clerc. Les composantes matérielles de ce sort sont un petit morceau d’écorce et plusieurs écailles de serpent. L’inverse, serpents à bâtons, a donc l’effet contraire, pour la même durée, ou permet d’annuler les effets de bâtons à serpents en tenant compte du niveau du clerc (c.-à-d. un clerc de niveau 10 lançant serpents à bâtons pourra transformer 10 serpents en bâtons).",
       "composants_materiels_objets": [
         {
-          "nom": "petit morceau d’écorce",
+          "nom": "morceau d’écorce",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
         },
         {
           "nom": "écailles de serpent",
@@ -127,7 +127,17 @@
       "jet_sauvegarde": "aucun",
       "inverse": "Indétection des mensonges",
       "description": "quand le clerc lance ce sort, le bénéficiaire est immédiatement capable de savoir si la vérité a été dite. Le sort ne révèle pas la vérité, ni les non-dits, ni les faux-fuyants: il ne fait que détecter les mensonges. Le sort dure un round par niveau du clerc. De la poussière d’or est nécessaire pour lancer détection des mensonges. L’inverse du sort, dissimulation des mensonges, fait que les mensonges paraissent crédibles ou annule simplement les effets d’une détection des mensonges. La composante matérielle de dissimulation des mensonges est de la poussière de laiton.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "poussière de laiton",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Sort inversé : dissimulation des mensonges.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Détection des Mensonges",
         "id": "dgAqjED194Zh2Fsx",
@@ -150,13 +160,13 @@
       "description": "similaire au sort d’augure, le sort divination est utilisé pour obtenir des informations sur une zone. Cette zone peut être un petit bois, une grande bâtisse ou une partie d’un niveau d’un donjon. Dans tous les cas, son emplacement doit être connu du clerc. Ce sort donne des informations sur la force relative des créatures qui s’y trouvent, sur l’importance des richesses et sur les chances éventuelles de s’attirer le courroux d’êtres surpuissants, surnaturels, bons ou mauvais, si la zone est envahie ou attaquée. Les chances de base pour réussir une divination sont de 60 % + 1 % par niveau du clerc (le MD peut appliquer des ajustements dans des cas particuliers). Si le tirage de pourcentage, effectué par le MD, échoue, le clerc obtiendra des informations erronées. Les composantes matérielles de ce sort sont le sacrifice d’une petite créature, de l’encens et le symbole sacré du clerc. Si une divination puissante est tentée, il faut faire des dons de pierres précieuses et même d’objets magiques.",
       "composants_materiels_objets": [
         {
-          "nom": "petite créature",
+          "nom": "créature",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Sacrifiée pour lancer le sort."
+          "notes": "Sacrifiée pour lancer le sort. Formulation source du Manuel : « petite créature »."
         },
         {
           "nom": "encens",
@@ -215,7 +225,35 @@
       "temps_incantation": "1-100+ tours",
       "jet_sauvegarde": "aucun",
       "description": "ce sort annule toute possession d’un objet ou d’une créature par une forme extérieure ou surnaturelle. Cela inclut le contrôle d’une créature par une force contenue dans un objet, la possession par le sort métempsycose, la possession démoniaque, les envoûtements et même les charmes; ce sort est en fait basé sur le même principe que le sort dissipation de la magie. Si un objet envoûté subit un exorcisme, la force vitale de la créature concernée retourne complètement dans son enveloppe matérielle (voir Manuel des Monstres, Démon). Une fois commencé, l’exorcisme ne doit pas être interrompu, sinon ses effets sont annulés. La chance de base de succès est déterminée par le jet d’un d100, donnant donc une base entre 1 % et 100 %. La chance de base est diminuée de 1 % par niveau de la force à exorciser et augmentée de 1 % par niveau du clerc exorcisant, le résultat donnant la chance d’exorciser Le MD peut ajuster cette chance d’exorciser selon des cas particulier, s’il y a lieu. À chaque tour de l’exorcisme, un d100 est lancé et si le résultat est inférieur ou égal à la chance d’exorciser, le sort est réussi. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais). Une relique ou un objet sacré puissant peut augmenter la chance de réussite de 1 à 50 %, selon la puissance de l’objet.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Clerc non mauvais.",
+          "notes": "Liquide consommé."
+        },
+        {
+          "nom": "eau maudite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Clerc mauvais.",
+          "notes": "Liquide consommé."
+        }
+      ],
       "foundry": {
         "nom": "Exorcisme",
         "id": "VzYlAqxdcGsXjLUx",

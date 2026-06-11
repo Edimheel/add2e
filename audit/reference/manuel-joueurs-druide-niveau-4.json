@@ -129,13 +129,13 @@
       "description": "avec ce sort, le druide est capable d’invoquer certaines créatures sylvestres. Naturellement, ce sort ne fonctionne qu’en extérieur, mais pas uniquement dans des zones forestières. Le druide commence l’incantation et la continue sans interruption jusqu’à ce qu’une créature apparaisse ou que deux tours se soient écoulés (la verbalisation et les gestes sont faciles et ne sont donc pas fatiguant pour le lanceur du sort). Un seul type des créatures ci-dessous peut être invoqué: les créatures viendront seulement si elles sont dans la portée du sort: 1-4 centaures 2-8 lutins 1-4 dryades 1-8 pixies 1-6 esprits follets 1-4 satyres 1 licorne 1 sylvanien (Le MD consultera sa carte de la région ou déterminera la probabilité de présence des types de créatures citées dans les limites de la portée du sort au moment où il est lancé). Les (ou la) créatures appelées ont droit à un jet de protection pour échapper à l’invocation, mais avec un malus de –4. Toute créature sylvestre invoquée sera favorablement disposée envers le druide et apportera toute l’aide qu’elle peut. Cependant, si le lanceur de sort ou un de ses compagnons est d’alignement mauvais, les créatures invoquées ont droit à un autre jet de protection, mais cette fois avec un bonus de +4, ceci quand elles arrivent à moins de 1\" de la personne mauvaise. Si le jet de protection est réussi, les créatures chercheront immédiatement à s’enfuir. Dans tous les cas, si le druide demande aux créatures de combattre pour lui, elles lanceront un dé de pourcentage de réaction à la loyauté basée sur le charisme du druide et sur les rapports que le druide a eu avec ces créatures. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont une pomme de pin et 8 baies de houx.",
       "composants_materiels_objets": [
         {
-          "nom": "une pomme de pin et 8 baies de houx",
+          "nom": "pomme de pin et 8 baies de houx",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une pomme de pin et 8 baies de houx »."
         }
       ],
       "foundry": {
@@ -254,13 +254,13 @@
       "description": "quand ce sort est lancé, le druide crée une barrière invisible qui fait que tout insecte normal ne peut s’approcher à moins de 3 m du lanceur de sort. Les insectes avec 2 dés de vie ou plus, s’ils réussissent leur jet de protection contre les sorts, peuvent tout de même passer, mais ils subiront alors de 1 à 6 points de dégâts. Ce sort n’a aucun pouvoir sur les arachnides, les myriapodes et autres créatures similaires; il affecte seulement les vrais insectes. Les composantes matérielles sont du gui et l’un des éléments suivants: plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.",
       "composants_materiels_objets": [
         {
-          "nom": "du gui et l’un des éléments suivants: plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre",
+          "nom": "gui et l’un des éléments suivants: plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description."
+          "notes": "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « du gui et l’un des éléments suivants: plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre »."
         }
       ],
       "foundry": {
@@ -283,7 +283,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort est le même que le sort de niveau 4 de clerc, soins majeurs (voir p.49), mais le druide doit utiliser du gui, de n’importe quelle sorte, comme composante matérielle.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Soins majeurs",
         "id": "Sz67vrc8p",

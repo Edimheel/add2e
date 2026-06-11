@@ -1,23 +1,32 @@
 # Mise à jour globale des sorts Foundry
 
-## Alignement PHB final
+## Normalisation des noms techniques de composants
 
-- `Asile` a été supprimé définitivement du périmètre PHB, car il est absent des 130 pages du Manuel des joueurs AD&D 2e fourni.
-- La description générique précédente « Asile ouvre une voie de déplacement magique… » a été retirée du JSON Foundry et de la référence Clerc niveau 7.
-- `Voile illusoire` est conservé dans le JSON Foundry, les références et les sources.
-
-## Totaux
-
-- `fvtt-spells-all.json` : **411 Items**.
-- Références validées : **411 identifiants Foundry uniques**.
-- Items Foundry hors références : **0**.
-- Descriptions manquantes : **0**.
+- Noms techniques renommés dans les références puis réinjectés par `foundry.id` / `_id` : **95**.
+- Total `fvtt-spells-all.json` après injection : **411 Items**.
+- Descriptions modifiées : **0**.
+- Consommations, conditions et coûts modifiés : **0**.
+- Composants ajoutés ou supprimés : **0**.
 - Composants avec `consommation: "a_verifier"` : **0**.
-- Clerc niveau 7 : **10** sorts, ordres 1 à 10, statut complet conservé.
+- `Asile` n’a pas été réintroduit.
 
-## Validation et périmètre
+## Exemples avant/après
 
-- Tous les JSON modifiés sont valides.
-- `node audit/tools/validate-reference-schema.mjs` exécuté avec succès.
-- `Asile` ne subsiste que dans ce rapport comme trace historique explicative.
-- Aucun script, découpage, `system.json`, `AGENTS.md` ou workflow modifié.
+- `petit miroir en argent` → `miroir en argent`
+- `feuilles d’infusion encore humides` → `feuille d’infusion encore humides`
+- `petite tige de métal droite et rigide` → `tige de métal droite et rigide`
+- `petit morceau d’écorce` → `morceau d’écorce`
+- `petite créature` → `créature`
+- `petite baguette fourchue métallique, sorte de diapason` → `baguette fourchue métallique, sorte de diapason`
+- `grains de sucre` → `grain de sucre`
+- `petit caillou` → `caillou`
+- `du gui et un peu de nourriture appréciée par l’animal` → `gui et un peu de nourriture appréciée par l’animal`
+- `du houx avec lequel le druide doit se frotter` → `houx avec lequel le druide doit se frotter`
+- `une feuille morte de chêne et du gui` → `feuille morte de chêne et du gui`
+- `baies de houx` → `baie de houx`
+
+Seul `system.composants_materiels_objets[].nom` a été normalisé ; `notes` conserve la formulation source lorsque nécessaire. Aucun Item complet n’a été remplacé.
+
+## Périmètre confirmé
+
+Aucun script, découpage, fichier source, `system.json`, `AGENTS.md` ou workflow n’a été modifié.

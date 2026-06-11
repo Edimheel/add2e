@@ -64,7 +64,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort crée des projectiles spéciaux ou des foyers incendiaires qui brûlent en dégageant énormément de chaleur. Le druide peut lancer ces graines jusqu’à 4\" (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer où frappe la graine) ou les placer à un endroit puis les enflammer avec un mot de commande. Les glands servent de projectiles, alors que les baies de houx sont utilisées comme foyers incendiaires. Le sort crée jusqu’à 4 glands-graines de feu ou 8 baies de houx-graines de feu. Les glands s’enflamment en frappant la cible, causant 2 à 16 (2d8) points de dégât et enflammant les matières inflammables, dans un diamètre de 1\" autour du point d’impact. Les baies de houx sont trop légères pour en faire des projectiles; elles peuvent être placées ou lancées jusqu’à 1,80 m et elles s’enflamment à la prononciation d’un mot de commande. Les baies causent de 1 à 8 points de dégâts à toute créature se trouvant au maximum à ½\" du foyer et les matières inflammables prennent feu. La portée du mot de commande pour les baies est de 4\". Toutes les graines de feu perdent leur pouvoir après une période de 1 tour par niveau du druide; c'est-à-dire qu’un druide de niveau 13 peut utiliser des graines de feu qui resteront efficaces pendant 13 tours maximum. Les cibles des glands doivent être touchées par eux. Si le jet de protection est réussi, les créatures se trouvant dans la zone d’effet ne subissent que la moitié des dégâts, mais les créatures directement touchées subissent les dégâts sans jet de protection. Ce sort ne peut pas être utilisé sous l’eau. À noter que les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "glands de chêne",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Application utilisant des glands de chêne ; combinable avec les baies de houx.",
+          "notes": null
+        },
+        {
+          "nom": "baie de houx",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Application utilisant des baies de houx ; combinable avec les glands de chêne.",
+          "notes": "Formulation source du Manuel : « baies de houx »."
+        }
+      ],
       "foundry": {
         "nom": "Graines de feu",
         "id": "xVtsnh3iA6UMGbDy",
@@ -190,7 +209,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort est le même que le sort de niveau 5 de clerc, soin ultime (voir p.50), mais le druide doit utiliser du gui de n’importe quelle sorte comme composante matérielle.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Soin ultime",
         "id": "2HXdutkNuMd7wEme",

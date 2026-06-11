@@ -24,13 +24,13 @@
       "description": "avec ce sort, le druide est capable de convaincre tout animal qui a au moins une intelligence «animale» (mais pas plus d’une semi-intelligence) qu’il est disposé à être son ami. Si l’animal rate son jet de protection contre les sorts dès que le druide commence son incantation, il attend tranquillement que celui-ci ait fini. Ensuite, il suivra le druide; il est capable d’apprendre 3 «ordres» par point d’intelligence qu’il possède (ces ordres sont ceux que l’on peut apprendre à un chien ou à un autre animal familier du même type, c'est-à-dire qu’ils ne doivent pas être compliqués). L’apprentissage d’un tel ordre doit être achevé en une semaine, l’ensemble des ordres devant être appris en moins de 3 mois après avoir trouvé l’animal. Pendant la période d’apprentissage, l’animal ne blessera pas le druide, mais s’il est laissé seul pendant plus de 3 jours, il reviendra à la vie sauvage et se comportera en conséquence. Le druide peut lancer ce sort pour attirer jusqu’à 2 dés de vie maximum par niveau d’expérience qu’il possède. Cela veut donc dire que le druide ne peut attirer plus de 2 fois son niveau en dés de vie d’animaux. Seuls les animaux d’alignement neutre peuvent être attirés, amadoués et entraînés. Ce sort ne fonctionne que si le druide désire vraiment devenir l’ami de l’animal. Si ses motifs sont autres, l’animal le sent toujours. Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.",
       "composants_materiels_objets": [
         {
-          "nom": "du gui et un peu de nourriture appréciée par l’animal",
+          "nom": "gui et un peu de nourriture appréciée par l’animal",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et un peu de nourriture appréciée par l’animal »."
         }
       ],
       "foundry": {
@@ -139,13 +139,13 @@
       "description": "quand ce sort est lancé, la créature touchée devient totalement indétectable aux yeux des animaux normaux ayant une intelligence inférieure à 6. Les animaux normaux incluent les variétés géantes, mais excluent ceux possédant des habilités ou pouvoirs magiques. La créature affectée par ce sort est capable de marcher parmi les animaux ou de passer entre eux comme s’il n’existait pas. Par exemple, il peut se tenir à côté de lions affamés ou d’un tyrannosaure rex sans qu’il soit remarqué. Par contre, un palefroi de la nuit, un molosse satanique ou un loup des glaces remarquera certainement la créature. La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.",
       "composants_materiels_objets": [
         {
-          "nom": "du houx avec lequel le druide doit se frotter",
+          "nom": "houx avec lequel le druide doit se frotter",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du houx avec lequel le druide doit se frotter »."
         }
       ],
       "foundry": {

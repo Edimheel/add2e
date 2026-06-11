@@ -106,7 +106,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés; un objet extrêmement précieux ajoutera +2 au tirage; enfin, un objet sans prix, quasiment unique, ajoutera +3.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "sacrifice de quelque chose ayant de la valeur",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Sacrifice déterminé selon la valeur accordée par le lanceur et le pouvoir invoqué."
+        }
+      ],
       "foundry": {
         "nom": "Vision",
         "id": "1FDkJAlbuzYtOUON",

@@ -252,7 +252,35 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "fourrure de chauve-souris",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "morceau de charbon",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à une goutte de poix.",
+          "notes": null
+        },
+        {
+          "nom": "goutte de poix",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à un morceau de charbon.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Ténèbres éternelles",
         "id": "9dKrtDMJTTb8uQ69",

@@ -25,13 +25,13 @@
       "description": "quand ce sort est lancé, le clerc se déplace ou envoie une autre personne sur un autre plan d’existence. Le destinataire du sort reste sur ce nouveau plan jusqu’à ce qu’il en parte par un moyen similaire. Si plusieurs personnes (7 personnes maximum) forment un cercle en se tenant par la main, elles peuvent ainsi changer de plan en même temps. La composante matérielle de ce sort est une petite baguette fourchue métallique, sorte de diapason, dont le type de métal et la taille déterminent sur quel plan la ou les personnes concernées vont aller. (Le MD déterminera les détails concernant le plan d’arrivée). Une créature non consentante doit être touchée par le clerc et a le droit à un jet de protection, qui, s’il est réussi, annule les effets du sort.",
       "composants_materiels_objets": [
         {
-          "nom": "petite baguette fourchue métallique, sorte de diapason",
+          "nom": "baguette fourchue métallique, sorte de diapason",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Le type de métal et la taille déterminent le plan d’arrivée."
+          "notes": "Le type de métal et la taille déterminent le plan d’arrivée. Formulation source du Manuel : « petite baguette fourchue métallique, sorte de diapason »."
         }
       ],
       "foundry": {
@@ -217,13 +217,13 @@
       "description": "quand ce sort est lancé par un clerc, une horde d’insectes rampants, sauteurs et volants se forme en un épais nuage. Ces insectes obscurcissent la vue, la limitant à 3\". Quel que soit leur classe d’armure, les créatures à l’intérieur de ce nuage subissent 1 point de dégât par round, à cause des piqûres et morsures multiples. Le MD fera un test de moral pour les créatures ayant moins de 5 dés de vie. Si le test échoue, elle fuiront le plus rapidement possible droit devant elles jusqu’à ce qu’elles soient à plus de 24\" du nuage d’insectes; notez que les créatures ayant 2 DV ou moins agiront automatiquement de la sorte (pas de test de moral). Une fumée épaisse et abondante éloignera les insectes. Le feu aura le même effet. Un mur de feu en forme d’anneau éloignera les insectes de son champ d’action et une boule de feu éparpillera simplement les insectes à l’endroit de l’explosion pendant 1 tour. La foudre, le froid ou la glace agissent de manières similaires. Le nuage persiste pendant 1 tour pour chaque niveau du clerc, puis il se disperse. Le nuage se forme à l’endroit où le clerc le désire, jusqu’à un maximum de 36\"; l’endroit que cible le clerc constitue le centre du nuage d’insectes. Ensuite, le nuage ne bouge plus; il ne sort pas de sa zone d’effet. Ce sort peut être contré par le sort dissipation de la magie lancé sur le centre du nuage. Un cube de force (un objet magique spécifique) peut éloigner les insectes d’une personne se trouvant au centre du nuage, mais l’invisibilité n’offre aucune protection. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles de ce sort sont quelques grains de sucre, des amandes et de la matière grasse.",
       "composants_materiels_objets": [
         {
-          "nom": "grains de sucre",
+          "nom": "grain de sucre",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « grains de sucre »."
         },
         {
           "nom": "amandes",
@@ -297,7 +297,17 @@
       "jet_sauvegarde": "annule",
       "composants_materiels_source": "symbole sacré du clerc",
       "description": "ce sort permet au clerc de demander à la créature visée de lui rendre un service et de rapporter la preuve que l’action a bien été accomplie. Cela peut être, par exemple, la récupération d’un objet de valeur, le sauvetage ou la libération d’une personne connue, la libération d’une créature, la prise d’une place forte, l’élimination d’une personne, etc. Pour les créatures de la même religion que le clerc le jet de protection n’est pas autorisé si la quête est justifiée et méritée. Pour celles du même alignement que le clerc, le jet de protection se fait avec un malus de –4. Pour les autres, je jet de protection est normal. Si la quête religieuse n’est pas correctement accomplie parce que la créature affectée «traîne les pieds» ou y met de la mauvaise volonté, cette dernière perd 1 point sur ses jets de protection pour chaque jour d’inaction volontaire et ce malus dure tant que cette quête religieuse n’est pas accomplie ou que le clerc l’annule lui-même. Il existe certaines circonstances qui peuvent suspendre temporairement une quête religieuse et d’autres qui peuvent l’annuler: le MD donnera toutes les informations et détails nécessaires. La composante matérielle est le symbole sacré du clerc.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Quête Religieuse",
         "id": "LEjrYHsqdLZt9u9z",
