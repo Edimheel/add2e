@@ -1,22 +1,26 @@
 # Mise à jour globale des sorts Foundry
 
-## État final d’alignement
+## État de la source globale
 
-- `fvtt-spells-all.json` contrôlé en lecture seule : **412** Items.
-- Identifiants Foundry uniques dans les références : **412**.
-- Items Foundry hors références : **0**.
-- Composants avec `consommation: "a_verifier"` : **0**.
+- `audit/source/reference-descriptions.json` contient **414** descriptions validables.
+- Descriptions manquantes : **1** (`clerc-niveau-7 / Asile`).
+- `illusionniste-niveau-6` : **8** descriptions, dont `Voile illusoire` renseigné avec le texte exact du Manuel.
+- `clerc-niveau-7` : **10** descriptions ; le compteur ne passe pas à 11 tant qu’une description exacte d’`Asile` n’est pas retrouvée.
 
-## Références ajoutées
+## Voile illusoire
 
-| Lot | Sort | foundry.id | Décision |
-|---|---|---|---|
-| Clerc niveau 7 | Asile | `MjfD1BtI6Zbmcbkn` | Ajouté ordre 1 ; `expectedCount` = 11. |
-| Illusionniste niveau 6 | Voile illusoire | `U5UsRJv9W5WnI5Uc` | Ajouté ordre 8 ; `expectedCount` = 8. |
+La clé globale est normalisée en `Voile illusoire` et sa description correspond au texte du Manuel fourni, page PDF 101. Les données Foundry et l’absence de composant matériel sont suivies dans `audit/source/reference-extra-phb-spells.json`.
 
-Les deux sorts ne sont plus hors références. Aucun doublon historique n’a été réintroduit.
+## Asile
+
+Aucune occurrence d’`Asile` n’a été trouvée dans les 130 pages du PDF fourni. `audit/source/reference-descriptions.json` ne contient donc aucune description validée pour ce sort.
+
+La description présente dans `audit/decoupage_fichier/clerc-niveau-7.json` et `fvtt-spells-all.json` commence par « Asile ouvre une voie de déplacement magique… ». Elle est générique/résumée et ne constitue pas une description exacte du Manuel. L’entrée actuelle dans `audit/reference/manuel-joueurs-clerc-niveau-7.json` ne doit pas être considérée comme `reference_complete_description_normalisee` tant qu’une source exacte n’est pas retrouvée. Sa correction est recommandée lors d’une tâche ultérieure autorisant la modification des références.
+
+Le cas et ses composants techniques à vérifier sont suivis dans `audit/source/reference-extra-phb-spells.json`.
 
 ## Validation et périmètre
 
-- JSON valides et `node audit/tools/validate-reference-schema.mjs` exécuté avec succès.
-- Aucun script, JSON Foundry, découpage, source, `system.json`, `AGENTS.md` ou workflow modifié.
+- JSON valides.
+- `node audit/tools/validate-reference-schema.mjs` exécuté avec succès.
+- Aucun fichier `audit/reference/*.json`, JSON Foundry, script, découpage, `system.json`, `AGENTS.md` ou workflow modifié.

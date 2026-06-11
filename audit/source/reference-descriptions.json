@@ -42,7 +42,7 @@
       "Les descriptions sont normalisées seulement pour supprimer retours ligne PDF et césures.",
       "Les lots absents ou incomplets doivent rester non finalisés jusqu'à vérification manuelle."
     ],
-    "missing_descriptions": 0
+    "missing_descriptions": 1
   },
   "clerc-niveau-1": {
     "status": "source_descriptions_extraites_a_verifier",
@@ -594,7 +594,7 @@
       "Ombres": "ce sort repose sur les mêmes principes que les sorts monstres des ombres et monstres demi-ombre, mais les monstres créés ont 60 % des points de vie potentiels. Pour les adversaires ayant réussi leur jet de protection, ils ont une classe d’armure de 6 et infligent 60 % de leurs dégâts normaux.",
       "Suggestion de Masse": "ce sort est le même que le sort de niveau 3 suggestion, excepté le fait que l’illusionniste peut le lancer sur plusieurs créatures, tant que ces créatures se trouvent dans la portée du sort. Une créature par niveau du lanceur du sort peut être affectée. Si une seule créature se trouve dans la portée, son jet de protection est à –2. La suggestion doit être la même pour toutes les personnes qui l’entendent.",
       "Vision réelle": "ce sort ressemble beaucoup au sort de niveau 5 de clerc vision réelle (voir p.50). Cependant, il ne permet pas de déterminer les alignements.",
-      "Voile Illusoire": "ce sort permet à l’illusionniste de changer instantanément l’apparence de son environnement et/ou de son groupe ou de créer un terrain hallucinatoire (voir p.79); même les créatures les plus ingénieuses ne pourront déceler la vérité, sauf avec le sort vision réelle, une gemme de vision ou un moyen similaire. Le voile peut transformer une pièce somptueuse en un taudis délabré et même le toucher confirmera l’illusion; il en est de même pour le terrain hallucinatoire, créé par le sort de voile illusoire, concernant le toucher."
+      "Voile illusoire": "ce sort permet à l’illusionniste de changer instantanément l’apparence de son environnement et/ou de son groupe ou de créer un terrain hallucinatoire (voir p.79) ; même les créatures les plus ingénieuses ne pourront déceler la vérité, sauf avec le sort vision réelle, une gemme de vision ou un moyen similaire. Le voile peut transformer une pièce somptueuse en un taudis délabré et même le toucher confirmera l’illusion ; il en est de même pour le terrain hallucinatoire, créé par le sort de voile illusoire, concernant le toucher."
     }
   },
   "illusionniste-niveau-7": {
