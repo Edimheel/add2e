@@ -1,5 +1,6 @@
 // ADD2E — Actor sheet getData ApplicationV2
 // Full V2 : aucun appel ActorSheet.prototype.
+// Version : 2026-06-11-capabilities-data-v14-thief-rows
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
@@ -114,16 +115,20 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
 
   data.progressionCourante = progressionCourante;
 
-  const classFeaturesForDisplay = add2eGetActorClassFeatures(this.actor)
+  const classFeaturesForDisplay = (typeof add2eGetActorClassFeatures === "function" ? add2eGetActorClassFeatures(this.actor) : [])
     .map((feature, index) => ({ ...feature, __featureIndex: index }))
-    .filter(feature => niveau >= add2eFeatureMinLevel(feature) && niveau <= add2eFeatureMaxLevel(feature));
+    .filter(feature => {
+      const featureLevel = typeof add2eFeatureActorLevel === "function" ? add2eFeatureActorLevel(this.actor, feature) : niveau;
+      return featureLevel >= add2eFeatureMinLevel(feature) && featureLevel <= add2eFeatureMaxLevel(feature);
+    });
 
-  data.activeClassFeatures = classFeaturesForDisplay.filter(feature => feature.activable === true);
-  data.passiveClassFeatures = classFeaturesForDisplay.filter(feature => feature.activable !== true);
+  data.activeClassFeatures = classFeaturesForDisplay.filter(feature => typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(feature) : feature.activable === true);
+  data.passiveClassFeatures = classFeaturesForDisplay.filter(feature => !(typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(feature) : feature.activable === true));
+  data.thiefSkillRows = typeof add2eGetActorThiefSkillTable === "function" ? add2eGetActorThiefSkillTable(this.actor) : [];
 
   data.listeArmes = items.filter(item => item.type === "arme");
   data.listeArmures = items.filter(item => item.type === "armure");
-  data.thiefSkills = add2eGetActorThiefSkills(this.actor, progressionCourante);
+  data.thiefSkills = data.thiefSkillRows;
   data.listeObjets = items.filter(i => i.type === "objet");
 
   let poidsTotal = 0;
