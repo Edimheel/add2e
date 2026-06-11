@@ -7,7 +7,7 @@
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
   "status": "reference_complete_description_normalisee",
-  "expectedCount": 7,
+  "expectedCount": 8,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-6.json",
   "spells": [
     {
@@ -154,6 +154,27 @@
         "id": "MkQfB6H23z1EPyXq",
         "img": "systems/add2e/assets/icones/sorts/illusionniste-vision-reelle.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-vision-reelle.js"
+      },
+      "status": "reference_complete_description_normalisee"
+    },
+    {
+      "ordre": 8,
+      "nom": "Voile illusoire",
+      "ecole": "Illusion/Fantasme",
+      "niveau": 6,
+      "portee": "spéciale",
+      "duree": "spéciale",
+      "zone_effet": "selon description",
+      "composantes": "V, S",
+      "temps_incantation": "spécial",
+      "jet_sauvegarde": "Spécial",
+      "description": "Ce sort permet à l’illusionniste de changer instantanément l’apparence de son environnement et/ou de son groupe ou de créer un terrain hallucinatoire (voir p.79) ; même les créatures les plus ingénieuses ne pourront déceler la vérité, sauf avec le sort vision réelle, une gemme de vision ou un moyen similaire. Le voile peut transformer une pièce somptueuse en un taudis délabré et même le toucher confirmera l’illusion ; il en est de même pour le terrain hallucinatoire, créé par le sort de voile illusoire, concernant le toucher.",
+      "composants_materiels_objets": [],
+      "foundry": {
+        "nom": "Voile illusoire",
+        "id": "U5UsRJv9W5WnI5Uc",
+        "img": "systems/add2e/assets/icones/sorts/illusionniste-voile-illusoire.webp",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-voile-illusoire.js"
       },
       "status": "reference_complete_description_normalisee"
     }
