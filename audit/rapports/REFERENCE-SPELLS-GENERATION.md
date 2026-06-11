@@ -1,48 +1,68 @@
-# Génération des références de sorts — état final
+# Génération des références de sorts — audit des composants matériels
 
 ## Résumé final
 
-- Descriptions manquantes : **0**
-- Composants résolus dans ce lot : **10 cas ambigus**
-- Composants résolus global : **227 objets techniques**
-- Composants restant à vérifier : **0**
-- Clerc : **0 à vérifier**
-- Druide : **0 à vérifier**
-- Magicien : **0 à vérifier**
-- Illusionniste : **0 à vérifier**
+- Sorts PHB audités contre les descriptions issues du Manuel : **411**.
+- Sorts corrigés : **41**.
+- Composants avec `consommation: "a_verifier"` : **0**.
+- Descriptions modifiées : **0**.
 
-## Corrections effectuées
+## Sorts corrigés
 
-Les huit composants composites demandés ont été séparés entre focus durables, contenants et ingrédients consommables. Les deux cas suspects de magicien niveau 4 ont été résolus, ainsi que le décalage confirmé autour des huit sorts audités :
+- `Agrandissement`
+- `Bâtons à serpents`
+- `Bénédiction`
+- `Bouclier de feu`
+- `Chaos`
+- `Contrôle du climat`
+- `Création mineure`
+- `Croissance animale`
+- `Détection des mensonges`
+- `Écriture`
+- `Exorcisme`
+- `Fléau d’insectes`
+- `Flèche de feu`
+- `Graines de feu`
+- `Identification`
+- `Infravision`
+- `Invocation d'élémental`
+- `Invocation d'insectes`
+- `Lithomancie`
+- `Lithomorphose`
+- `Marche des vents`
+- `Motif hypnotique`
+- `Or des fous`
+- `Peau d'écorce`
+- `Piège à feu`
+- `Piège à feu`
+- `Piège sylvestre`
+- `Porte dimensionnelle`
+- `Protection contre le mal`
+- `Quête religieuse`
+- `Séparation des eaux`
+- `Simulacre`
+- `Soin ultime`
+- `Soins majeurs`
+- `Sphère glaciale d'Otiluke`
+- `Statue`
+- `Tempête de glace`
+- `Ténèbres éternelles`
+- `Ténèbres sur 5 mètres`
+- `Transmutation de pierre en boue`
+- `Vision`
 
-- **Désenvoûtement** : description source exacte rétablie; les perles mal rattachées ont été retirées.
-- **Globe mineur d'invulnérabilité** : description source exacte et perles de verre ou de cristal rétablies.
-- **Invocation de monstre II** : description source exacte rétablie; le faux composant « la même; il y a également 1 à 4 rounds de délai » a été supprimé.
-- **Maladresse** : description source exacte et composant de lait solidifié rétablis.
-- **Moyen mnémonique de Rary** : description source exacte rétablie; ficelle, ivoire et deux alternatives d’encre structurés séparément.
-- **Piège à feu** : description source exacte rétablie.
-- **Porte dimensionnelle** : description source exacte rétablie après confirmation du décalage adjacent.
-- **Tempête de glace** : description source exacte rétablie après confirmation du décalage adjacent.
+## Cas explicitement vérifiés
 
-Les descriptions n’ont été modifiées que pour corriger ces rattachements manifestement erronés, à partir de `audit/source/reference-descriptions.json`. Aucun chemin ou champ `foundry` n’a été modifié.
+- **Motif hypnotique** contient désormais le bâtonnet d’encens allumé, la baguette de cristal et les matières phosphorescentes, avec leurs alternatives et conditions.
+- **Surdité** conserve uniquement la cire d’abeille ; aucun de ses composants n’est rattaché à Motif hypnotique.
+- **Porte dimensionnelle** ne porte plus les composants de Tempête de glace.
+- **Infravision** ne porte plus la statuette de ziggourat sans rapport avec sa description.
+- **Enchantement** reste sans tableau fixe : le Manuel indique explicitement que les composants varient et sont décidés par le MD.
 
-## Fichiers modifiés
+## Validation
 
-- `audit/reference/manuel-joueurs-druide-niveau-1.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-4.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-5.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-6.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-7.json`
-- `audit/reference/manuel-joueurs-magicien-niveau-9.json`
-- `audit/rapports/REFERENCE-SPELLS-GENERATION.md`
-
-## Validations exécutées
-
-- JSON valide pour tous les fichiers de référence modifiés.
-- `node audit/tools/validate-reference-schema.mjs`
-- `grep -R '"consommation": "a_verifier"' audit/reference/manuel-joueurs-druide-niveau-1.json audit/reference/manuel-joueurs-magicien-niveau-4.json audit/reference/manuel-joueurs-magicien-niveau-5.json audit/reference/manuel-joueurs-magicien-niveau-6.json audit/reference/manuel-joueurs-magicien-niveau-7.json audit/reference/manuel-joueurs-magicien-niveau-9.json || true` : aucune occurrence.
-- `git status --short` contrôlé avant commit.
-
-## Périmètre confirmé
-
-Aucun script, JSON Foundry, découpage, fichier source, `system.json`, `AGENTS.md`, workflow, fichier Clerc, fichier Illusionniste ou autre fichier Druide/Magicien hors périmètre n’a été modifié.
+- Tous les JSON modifiés sont valides.
+- `node audit/tools/validate-reference-schema.mjs` exécuté avec succès.
+- Total Foundry conservé : **411 Items**.
+- Aucun `a_verifier` restant.
+- Aucun script, découpage, source, `system.json`, `AGENTS.md` ou workflow modifié.

@@ -137,7 +137,44 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "quand ce sort est lancé, le druide attire des insectes (70 % de chances que ce soient des insectes volants). Les insectes invoqués sont des mouches, des abeilles, des bourdons ou des guêpes si ce sont des insectes volants; des fourmis ou des coléoptères (scarabées) si ce sont des insectes rampants. Un nuage d'insectes volants, ou un essaim de rampants, apparaîtra après le lancement du sort. Ils attaqueront toute créature que désignera le druide. La créature attaquée subira 2 points de dégâts par round de combat et elle ne peut rien faire d'autre que d'essayer de s'éloigner des insectes pendant le temps où elle se fait attaquer. Les insectes peuvent ensuite attaquer une autre créature mais il se passe 1 round entre le moment où ils laissent la première victime pour attaquer la deuxième; les insectes rampants ne se déplacent que de 3,60 m par round (vitesse maximum sur un sol lisse). En intérieur et sous-sol, le druide a 30 % de chances d'invoquer de 1 à 4 fourmis géantes, à moins que des fourmis géantes soient proches. Les composantes matérielles pour ce sort sont du gui, un pétale de fleur et un peu de boue ou d'argile humide. Zone d'effet: 81 dm3 + 27 dm3/niveau",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "pétale de fleur",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "boue",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à l’argile humide.",
+          "notes": null
+        },
+        {
+          "nom": "argile humide",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à la boue.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Invocation d'insectes",
         "id": "dnVcLvdXrySEeWge",
@@ -158,7 +195,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort est exactement le même que le sort de niveau 5 de magicien, lithomorphose (voir p.81), excepté ci-dessus et le fait que le druide a besoin de gui comme composante matérielle supplémentaire.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Lithomorphose",
         "id": "qDrkAocsXPPoz6ym",
@@ -200,7 +247,35 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort permet au druide de fabriquer un collet, à 90 % indétectable sans moyen magique. Le collet peut être fait avec une liane ou son équivalent, une courroie ou une corde. Quand le sort est lancé sur cet objet, il se confond avec l’endroit où il se trouve. Un des bouts du collet se termine en nœud coulant qui pourra se resserrer autour d’un ou plusieurs membres de la créature marchant à l’intérieur de la zone d’effet. (La tête d’un ver ou d’un serpent peut ainsi être piégée). Si un arbre résistant et flexible est proche, le collet y sera attaché et le pouvoir magique du sort fera que l’arbre se courbera puis se raidira quand la boucle sera resserrée, causant ainsi 1 à 6 points de dégâts à la créature piégée; cette dernière se trouvera suspendue par le membre attrapé (ou étranglée si c’est la tête ou le cou qui est pris). Si aucun arbre n’est à proximité, la corde s’enroulera autour du corps de la créature, ne lui causant aucun dégât mais l’immobilisant. Le collet est magique; ainsi pendant une heure, il ne peut être cassé que par une force très importante, celle d’un géant des tempêtes ou plus (23); à chaque heure suivante, la magie perd de sa puissance, ce qui fait qu’une force moindre devient suffisante pour briser le collet — 22 après 2 heures, 21 après 3 heures, 20 après 4 heures — jusqu’à ce que 6 heures se soient écoulées; à ce moment, une force de 18 pourra briser le collet. Après une période de 12 heures, le collet perd ses propriétés magiques, le nœud s’ouvre, libérant ce qu’il tenait. Le matériau du nœud coulant peut toutefois être tranché par n’importe quelle lame magique ou par n’importe quelle arme tranchante maniée avec un bonus de +2 au toucher. En plus du gui, le druide doit posséder une peau de serpent et un morceau d’une créature forte qu’il intégrera au collet.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "peau de serpent",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "morceau d’une créature forte",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Piège sylvestre",
         "id": "ILCNplGHyXKdpH4I",

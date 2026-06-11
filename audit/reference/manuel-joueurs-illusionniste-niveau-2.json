@@ -169,7 +169,35 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "quand l’illusionniste lance ce sort, il crée un jeu de formes colorées, mouvantes et tournoyantes dans l’air. Les créatures qui regardent ces formes et qui ont raté leur jet de protection sont fascinées et continuent de fixer ce motif aussi longtemps que l’illusionniste le maintient dans l’air. Le lanceur du sort peut hypnotiser un maximum de 24 DV, c'est-à-dire 24 créatures avec 1 DV chacune, 12 créatures avec 2 DV chacune, etc. Toutes les créatures doivent se trouver dans la zone d’effet et chacune a droit à un jet de protection. L’illusionniste n’a pas besoin de parler, mais il doit faire des gestes appropriés en même temps qu’il doit tenir un bâtonnet d’encens allumé ou une baguette de cristal remplie de matières phosphorescentes.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "bâtonnet d’encens allumé",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à la baguette de cristal.",
+          "notes": "Encens consommé pendant l’incantation."
+        },
+        {
+          "nom": "baguette de cristal",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au bâtonnet d’encens allumé.",
+          "notes": "Focus durable, non détruit."
+        },
+        {
+          "nom": "matières phosphorescentes",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Requises lorsque la baguette de cristal est utilisée.",
+          "notes": "Contenu consommé de la baguette."
+        }
+      ],
       "foundry": {
         "nom": "Motif hypnotique",
         "id": "ChKu6jVRMkzSxKhr",

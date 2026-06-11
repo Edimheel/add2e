@@ -188,7 +188,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "une fois que le magicien a lancé ce sort, il peut toucher à chaque segment une flèche ou un carreau qui devient alors magique, bien qu’il n’ait aucun bonus pour toucher les adversaires. Chaque projectile touché doit être envoyé moins d’un round plus tard car après cette période les flammes le consument entièrement et la magie est perdue. Ces projectiles enflammés auront une chance normale d’enflammer ce qu'ils touchent et toute créature sujette à des dégâts supplémentaires dus au feu subira 1 point de dégât en plus pour chaque flèche de feu la touchant. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes sont une goutte d’huile et un petit morceau de silex.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "goutte d’huile",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "petit morceau de silex",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Flèche de feu",
         "id": "cdoLylDIdTX30880",
@@ -280,17 +299,7 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6\". De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des «ombres» comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8: 1 = devant à droite; 2 = à droite; 3 = derrière à droite; 4 = derrière; 5 = derrière à gauche; 6 = à gauche; 7 = devant à gauche; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c'est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C'est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.",
-      "composants_materiels_objets": [
-        {
-          "nom": "une petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description."
-        }
-      ],
+      "composants_materiels_objets": [],
       "foundry": {
         "nom": "Infravision",
         "id": "TVQDVtYjgIIl4Qwp",

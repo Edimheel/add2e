@@ -86,7 +86,26 @@
       "jet_sauvegarde": "aucun",
       "inverse": "Malédiction",
       "description": "en lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs «probabilités de toucher» de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6\"), il affectera alors les créatures se trouvant dans une zone de 5\" x 5\". L’inverse du sort, malédiction, peut être lancé sur des ennemis; ceux-ci voient donc baisser leur moral et leur «probabilité de toucher» de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Sort normal.",
+          "notes": "Liquide consommé."
+        },
+        {
+          "nom": "eau maudite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Sort inversé : malédiction.",
+          "notes": "Liquide consommé."
+        }
+      ],
       "foundry": {
         "nom": "Bénédiction",
         "id": "u1L6JpAXZ113qpVG",

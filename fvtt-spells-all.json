@@ -1101,7 +1101,18 @@
         "composants_materiels": [],
         "composants_materiels_a_renseigner": false,
         "description_source": "Manuel des joueurs AD&D 2e",
-        "composants_materiels_source": "La composante de ce sort est une pincée de poudre de fer."
+        "composants_materiels_source": "La composante de ce sort est une pincée de poudre de fer.",
+        "composants_materiels_objets": [
+          {
+            "nom": "pincée de poudre de fer",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -4763,7 +4774,18 @@
         "description_html": "<p>Excepté ci-dessus et le fait que le druide doive utiliser du gui comme composante matérielle, ce sort est le même que le sort de niveau 4 de clerc bâtons à serpents (voir p.48). SORTS DE DRUIDE (NIVEAU 5)</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "gui druidique",
-        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
+        "composants_materiels_objets": [
+          {
+            "nom": "gui",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -4910,7 +4932,27 @@
         "description_texte": "En lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs « probabilités de toucher » de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6\"), il affectera alors les créatures se trouvant dans une zone de 5\" x 5\". L’inverse du sort, malédiction, peut être lancé sur des ennemis ; ceux-ci voient donc baisser leur moral et leur « probabilité de toucher » de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.",
         "description_html": "<p>En lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs « probabilités de toucher » de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6&quot;), il affectera alors les créatures se trouvant dans une zone de 5&quot; x 5&quot;. L’inverse du sort, malédiction, peut être lancé sur des ennemis ; ceux-ci voient donc baisser leur moral et leur « probabilité de toucher » de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.</p>",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
+        "composants_materiels_objets": [
+          {
+            "nom": "eau bénite",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Sort normal.",
+            "notes": "Liquide consommé."
+          },
+          {
+            "nom": "eau maudite",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Sort inversé : malédiction.",
+            "notes": "Liquide consommé."
+          }
+        ]
       },
       "folder": "RV9v89HxrYvQpcPU",
       "effects": [
@@ -5801,7 +5843,36 @@
         "description_html": "<p>En lançant ce sort, le magicien semble s’immoler par le feu, alors qu’en fait les flammes sont fines et le feu prend la forme de flammèches, créant une lumière égale à la moitié de l’éclairage d’une torche normale (4,50 m de rayon d’une lumière pâle) ; ces flammes sont bleues ou vertes dans le premier cas (A), bleues ou violettes dans le second cas (B). Toute créature frappant le magicien avec une arme naturelle ou une arme de mêlée lui infligera des dégâts normaux mais subira elle-même le double de ces dégâts. Les autres pouvoirs du sort dépendent de la variation choisie par le magicien : A) Les flammes sont chaudes et toute attaque basée sur le froid autorise un jet de protection à +2, avec la moitié des dégâts si le jet de protection est raté et aucun s’il est réussi. Les attaques basées sur le feu infligent des dégâts normaux, mais si le magicien rate son jet de protection (s’il y en a un) il subit le double des dégâts. Cette version du sort ne peut normalement pas être utilisée sous l’eau, mais elle peut être incantée et fonctionner à l’intérieur des limites d’un sort d’eau aérée. La composante matérielle pour cette version du sort est un peu de phosphore. B) Les flammes sont froides et toute attaque basée sur le feu autorise un jet de protection à +2, avec la moitié des dégâts si le jet de protection est raté et aucun s’il est réussi. Les attaques basées sur le froid infligent des dégâts normaux, mais si le magicien rate son jet de protection (s’il y en a un) il subit le double des dégâts. La composante matérielle pour cette version du sort est une luciole ou un vert luisant vivant ou 4 queues de ces créatures mortes.</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "phosphore pour la version chaude, phosphore ou luciole/ver luisant pour la version froide selon arbitrage MD",
-        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée"
+        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
+        "composants_materiels_objets": [
+          {
+            "nom": "luciole vivante",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative au vert luisant vivant ou aux quatre queues.",
+            "notes": null
+          },
+          {
+            "nom": "vert luisant vivant",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à la luciole vivante ou aux quatre queues.",
+            "notes": null
+          },
+          {
+            "nom": "queues de lucioles ou de verts luisants morts",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative aux créatures vivantes. Quantité : 4.",
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -7802,7 +7873,27 @@
         "composants_materiels_verification_recommandee": true,
         "description_reelle": "Ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
         "description_texte": "Ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
-        "description_html": "<p>Ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.</p>"
+        "description_html": "<p>Ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "petit disque de bronze",
+            "quantite": 1,
+            "consommation": "non_consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "petite tige de fer",
+            "quantite": 1,
+            "consommation": "non_consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -12354,7 +12445,18 @@
         "description_reelle": "Ce sort permet à l’illusionniste de créer un objet non-vivant, de nature végétale : corde, bois, etc. Le volume maximum est de 27 dm³ par niveau du lanceur de sort. (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Djinn). Le lanceur de sort doit posséder un tout petit morceau de la même matière que l’objet à créer.",
         "description_texte": "Ce sort permet à l’illusionniste de créer un objet non-vivant, de nature végétale : corde, bois, etc. Le volume maximum est de 27 dm³ par niveau du lanceur de sort. (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Djinn). Le lanceur de sort doit posséder un tout petit morceau de la même matière que l’objet à créer.",
         "description_html": "<p>Ce sort permet à l’illusionniste de créer un objet non-vivant, de nature végétale : corde, bois, etc. Le volume maximum est de 27 dm³ par niveau du lanceur de sort. (cf. Règles AVANCÉES DE DONJONS &amp; DRAGONS, MANUEL DES MONSTRES, Djinn). Le lanceur de sort doit posséder un tout petit morceau de la même matière que l’objet à créer.</p>",
-        "composants_materiels_verification_recommandee": true
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_objets": [
+          {
+            "nom": "tout petit morceau de la même matière que l’objet à créer",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -12803,7 +12905,18 @@
         "description_html": "<p>Excepté ci-dessus et le fait que la composante matérielle soit une pincée de poudre d’os, ce sort est le même que le sort de niveau 5 de druide croissance animale (voir p.61).</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "pincée de poudre d’os",
-        "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs"
+        "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
+        "composants_materiels_objets": [
+          {
+            "nom": "pincée de poudre d’os",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -14668,7 +14781,18 @@
         "composants_materiels_source": "La composante matérielle de dissimulation des mensonges est de la poussière de laiton. | De la poussière d’or est nécessaire pour lancer",
         "description_reelle": "Quand le clerc lance ce sort, le bénéficiaire est immédiatement capable de savoir si la vérité a été dite. Le sort ne révèle pas la vérité, ni les non-dits, ni les faux-fuyants : il ne fait que détecter les mensonges. Le sort dure un round par niveau du clerc. De la poussière d’or est nécessaire pour lancer détection des mensonges. L’inverse du sort, dissimulation des mensonges, fait que les mensonges paraissent crédibles ou annule simplement les effets d’une détection des mensonges. La composante matérielle de dissimulation des mensonges est de la poussière de laiton.",
         "description_texte": "Quand le clerc lance ce sort, le bénéficiaire est immédiatement capable de savoir si la vérité a été dite. Le sort ne révèle pas la vérité, ni les non-dits, ni les faux-fuyants : il ne fait que détecter les mensonges. Le sort dure un round par niveau du clerc. De la poussière d’or est nécessaire pour lancer détection des mensonges. L’inverse du sort, dissimulation des mensonges, fait que les mensonges paraissent crédibles ou annule simplement les effets d’une détection des mensonges. La composante matérielle de dissimulation des mensonges est de la poussière de laiton.",
-        "description_html": "<p>Quand le clerc lance ce sort, le bénéficiaire est immédiatement capable de savoir si la vérité a été dite. Le sort ne révèle pas la vérité, ni les non-dits, ni les faux-fuyants : il ne fait que détecter les mensonges. Le sort dure un round par niveau du clerc. De la poussière d’or est nécessaire pour lancer détection des mensonges. L’inverse du sort, dissimulation des mensonges, fait que les mensonges paraissent crédibles ou annule simplement les effets d’une détection des mensonges. La composante matérielle de dissimulation des mensonges est de la poussière de laiton.</p>"
+        "description_html": "<p>Quand le clerc lance ce sort, le bénéficiaire est immédiatement capable de savoir si la vérité a été dite. Le sort ne révèle pas la vérité, ni les non-dits, ni les faux-fuyants : il ne fait que détecter les mensonges. Le sort dure un round par niveau du clerc. De la poussière d’or est nécessaire pour lancer détection des mensonges. L’inverse du sort, dissimulation des mensonges, fait que les mensonges paraissent crédibles ou annule simplement les effets d’une détection des mensonges. La composante matérielle de dissimulation des mensonges est de la poussière de laiton.</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "poussière de laiton",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Sort inversé : dissimulation des mensonges.",
+            "notes": null
+          }
+        ]
       },
       "folder": "41AdT8ZCezqGIOKy",
       "effects": [
@@ -18044,7 +18168,18 @@
         "description_html": "<p>Avec ce sort, le magicien est capable d’inscrire un sort qu’il ne peut comprendre à cet instant (soit à cause de son niveau, soit à cause d’un manque d’intelligence) sur son livre ou sur un autre objet qu’il utilise pour inscrire les sorts qu’il connait. Le magicien doit lancer un jet de protection contre les sorts pour essayer la transcription ; ce jet de protection obtient un bonus de +2 si le sort à transcrire est supérieur de seulement 1 niveau à ceux qu’il peut utiliser ; si le sort est supérieur de 2 niveaux, le jet de protection est normal et il y a un malus de –1 pour chaque niveau supérieur à partir de 3 niveaux au-dessus. Si ce jet de protection est raté, le magicien subit 1d4 points de dégâts pour chaque niveau du sort qu’il tente de transcrire ; de plus il tombe inconscient pour un nombre égal de tours. Ces dégâts, s’ils n’ont pas été fatals, ne peuvent être soignés qu’au rythme de 1 à 4 points de vie par jour, car ce sont des dégâts corporels et mentaux. La transcription du sort prend une heure par niveau du sort et pendant cette période, le magicien est en état de transe et peut toujours se faire surprendre par un ennemi. En plus de la surface d’écriture, le magicien doit utiliser une encre fine faite de substances rares (coût minimum 200 po par flacon, si le magicien ne l’a pas fabriquée lui-même).</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "surface d’écriture et encre fine faite de substances rares, coût minimum 200 po par flacon",
-        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée"
+        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
+        "composants_materiels_objets": [
+          {
+            "nom": "encre fine faite de substances rares",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": 200,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -20149,7 +20284,36 @@
         "composants_materiels_verification_recommandee": true,
         "description_reelle": "Ce sort annule toute possession d’un objet ou d’une créature par une forme extérieure ou surnaturelle. Cela inclut le contrôle d’une créature par une force contenue dans un objet, la possession par le sort métempsycose, la possession démoniaque, les envoûtements et même les charmes ; ce sort est en fait basé sur le même principe que le sort dissipation de la magie. Si un objet envoûté subit un exorcisme, la force vitale de la créature concernée retourne complètement dans son enveloppe matérielle (voir Manuel des Monstres, Démon). Une fois commencé, l’exorcisme ne doit pas être interrompu, sinon ses effets sont annulés. La chance de base de succès est déterminée par le jet d’un d100, donnant donc une base entre 1 % et 100 %. La chance de base est diminuée de 1 % par niveau de la force à exorciser et augmentée de 1 % par niveau du clerc exorcisant, le résultat donnant la chance d’exorciser Le MD peut ajuster cette chance d’exorciser selon des cas particulier, s’il y a lieu. À chaque tour de l’exorcisme, un d100 est lancé et si le résultat est inférieur ou égal à la chance d’exorciser, le sort est réussi. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais). Une relique ou un objet sacré puissant peut augmenter la chance de réussite de 1 à 50 %, selon la puissance de l’objet.",
         "description_texte": "Ce sort annule toute possession d’un objet ou d’une créature par une forme extérieure ou surnaturelle. Cela inclut le contrôle d’une créature par une force contenue dans un objet, la possession par le sort métempsycose, la possession démoniaque, les envoûtements et même les charmes ; ce sort est en fait basé sur le même principe que le sort dissipation de la magie. Si un objet envoûté subit un exorcisme, la force vitale de la créature concernée retourne complètement dans son enveloppe matérielle (voir Manuel des Monstres, Démon). Une fois commencé, l’exorcisme ne doit pas être interrompu, sinon ses effets sont annulés. La chance de base de succès est déterminée par le jet d’un d100, donnant donc une base entre 1 % et 100 %. La chance de base est diminuée de 1 % par niveau de la force à exorciser et augmentée de 1 % par niveau du clerc exorcisant, le résultat donnant la chance d’exorciser Le MD peut ajuster cette chance d’exorciser selon des cas particulier, s’il y a lieu. À chaque tour de l’exorcisme, un d100 est lancé et si le résultat est inférieur ou égal à la chance d’exorciser, le sort est réussi. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais). Une relique ou un objet sacré puissant peut augmenter la chance de réussite de 1 à 50 %, selon la puissance de l’objet.",
-        "description_html": "<p>Ce sort annule toute possession d’un objet ou d’une créature par une forme extérieure ou surnaturelle. Cela inclut le contrôle d’une créature par une force contenue dans un objet, la possession par le sort métempsycose, la possession démoniaque, les envoûtements et même les charmes ; ce sort est en fait basé sur le même principe que le sort dissipation de la magie. Si un objet envoûté subit un exorcisme, la force vitale de la créature concernée retourne complètement dans son enveloppe matérielle (voir Manuel des Monstres, Démon). Une fois commencé, l’exorcisme ne doit pas être interrompu, sinon ses effets sont annulés. La chance de base de succès est déterminée par le jet d’un d100, donnant donc une base entre 1 % et 100 %. La chance de base est diminuée de 1 % par niveau de la force à exorciser et augmentée de 1 % par niveau du clerc exorcisant, le résultat donnant la chance d’exorciser Le MD peut ajuster cette chance d’exorciser selon des cas particulier, s’il y a lieu. À chaque tour de l’exorcisme, un d100 est lancé et si le résultat est inférieur ou égal à la chance d’exorciser, le sort est réussi. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais). Une relique ou un objet sacré puissant peut augmenter la chance de réussite de 1 à 50 %, selon la puissance de l’objet.</p>"
+        "description_html": "<p>Ce sort annule toute possession d’un objet ou d’une créature par une forme extérieure ou surnaturelle. Cela inclut le contrôle d’une créature par une force contenue dans un objet, la possession par le sort métempsycose, la possession démoniaque, les envoûtements et même les charmes ; ce sort est en fait basé sur le même principe que le sort dissipation de la magie. Si un objet envoûté subit un exorcisme, la force vitale de la créature concernée retourne complètement dans son enveloppe matérielle (voir Manuel des Monstres, Démon). Une fois commencé, l’exorcisme ne doit pas être interrompu, sinon ses effets sont annulés. La chance de base de succès est déterminée par le jet d’un d100, donnant donc une base entre 1 % et 100 %. La chance de base est diminuée de 1 % par niveau de la force à exorciser et augmentée de 1 % par niveau du clerc exorcisant, le résultat donnant la chance d’exorciser Le MD peut ajuster cette chance d’exorciser selon des cas particulier, s’il y a lieu. À chaque tour de l’exorcisme, un d100 est lancé et si le résultat est inférieur ou égal à la chance d’exorciser, le sort est réussi. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais). Une relique ou un objet sacré puissant peut augmenter la chance de réussite de 1 à 50 %, selon la puissance de l’objet.</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "symbole sacré du clerc",
+            "quantite": 1,
+            "consommation": "non_consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "eau bénite",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Clerc non mauvais.",
+            "notes": "Liquide consommé."
+          },
+          {
+            "nom": "eau maudite",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Clerc mauvais.",
+            "notes": "Liquide consommé."
+          }
+        ]
       },
       "effects": [
         {
@@ -21745,7 +21909,27 @@
         "description_html": "<p>Une fois que le magicien a lancé ce sort, il peut toucher à chaque segment une flèche ou un carreau qui devient alors magique, bien qu’il n’ait aucun bonus pour toucher les adversaires. Chaque projectile touché doit être envoyé moins d’un round plus tard car après cette période les flammes le consument entièrement et la magie est perdue. Ces projectiles enflammés auront une chance normale d’enflammer ce qu&#x27;ils touchent et toute créature sujette à des dégâts supplémentaires dus au feu subira 1 point de dégât en plus pour chaque flèche de feu la touchant. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes sont une goutte d’huile et un petit morceau de silex.</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "poudre de feu ou composant pyrotechnique du projectile selon la version du sort",
-        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée"
+        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
+        "composants_materiels_objets": [
+          {
+            "nom": "goutte d’huile",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "petit morceau de silex",
+            "quantite": 1,
+            "consommation": "non_consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -23697,7 +23881,27 @@
         "composants_materiels_verification_recommandee": true,
         "description_reelle": "Ce sort crée des projectiles spéciaux ou des foyers incendiaires qui brûlent en dégageant énormément de chaleur. Le druide peut lancer ces graines jusqu’à 4\" (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer où frappe la graine) ou les placer à un endroit puis les enflammer avec un mot de commande. Les glands servent de projectiles, alors que les baies de houx sont utilisées comme foyers incendiaires. Le sort crée jusqu’à 4 glands-graines de feu ou 8 baies de houx-graines de feu. Les glands s’enflamment en frappant la cible, causant 2 à 16 (2d8) points de dégât et enflammant les matières inflammables, dans un diamètre de 1\" autour du point d’impact. Les baies de houx sont trop légères pour en faire des projectiles ; elles peuvent être placées ou lancées jusqu’à 1,80 m et elles s’enflamment à la prononciation d’un mot de commande. Les baies causent de 1 à 8 points de dégâts à toute créature se trouvant au maximum à ½\" du foyer et les matières inflammables prennent feu. La portée du mot de commande pour les baies est de 4\". Toutes les graines de feu perdent leur pouvoir après une période de 1 tour par niveau du druide ; c'est-à-dire qu’un druide de niveau 13 peut utiliser des graines de feu qui resteront efficaces pendant 13 tours maximum. Les cibles des glands doivent être touchées par eux. Si le jet de protection est réussi, les créatures se trouvant dans la zone d’effet ne subissent que la moitié des dégâts, mais les créatures directement touchées subissent les dégâts sans jet de protection. Ce sort ne peut pas être utilisé sous l’eau. À noter que les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.",
         "description_texte": "Ce sort crée des projectiles spéciaux ou des foyers incendiaires qui brûlent en dégageant énormément de chaleur. Le druide peut lancer ces graines jusqu’à 4\" (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer où frappe la graine) ou les placer à un endroit puis les enflammer avec un mot de commande. Les glands servent de projectiles, alors que les baies de houx sont utilisées comme foyers incendiaires. Le sort crée jusqu’à 4 glands-graines de feu ou 8 baies de houx-graines de feu. Les glands s’enflamment en frappant la cible, causant 2 à 16 (2d8) points de dégât et enflammant les matières inflammables, dans un diamètre de 1\" autour du point d’impact. Les baies de houx sont trop légères pour en faire des projectiles ; elles peuvent être placées ou lancées jusqu’à 1,80 m et elles s’enflamment à la prononciation d’un mot de commande. Les baies causent de 1 à 8 points de dégâts à toute créature se trouvant au maximum à ½\" du foyer et les matières inflammables prennent feu. La portée du mot de commande pour les baies est de 4\". Toutes les graines de feu perdent leur pouvoir après une période de 1 tour par niveau du druide ; c'est-à-dire qu’un druide de niveau 13 peut utiliser des graines de feu qui resteront efficaces pendant 13 tours maximum. Les cibles des glands doivent être touchées par eux. Si le jet de protection est réussi, les créatures se trouvant dans la zone d’effet ne subissent que la moitié des dégâts, mais les créatures directement touchées subissent les dégâts sans jet de protection. Ce sort ne peut pas être utilisé sous l’eau. À noter que les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.",
-        "description_html": "<p>Ce sort crée des projectiles spéciaux ou des foyers incendiaires qui brûlent en dégageant énormément de chaleur. Le druide peut lancer ces graines jusqu’à 4&quot; (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer où frappe la graine) ou les placer à un endroit puis les enflammer avec un mot de commande. Les glands servent de projectiles, alors que les baies de houx sont utilisées comme foyers incendiaires. Le sort crée jusqu’à 4 glands-graines de feu ou 8 baies de houx-graines de feu. Les glands s’enflamment en frappant la cible, causant 2 à 16 (2d8) points de dégât et enflammant les matières inflammables, dans un diamètre de 1&quot; autour du point d’impact. Les baies de houx sont trop légères pour en faire des projectiles ; elles peuvent être placées ou lancées jusqu’à 1,80 m et elles s’enflamment à la prononciation d’un mot de commande. Les baies causent de 1 à 8 points de dégâts à toute créature se trouvant au maximum à ½&quot; du foyer et les matières inflammables prennent feu. La portée du mot de commande pour les baies est de 4&quot;. Toutes les graines de feu perdent leur pouvoir après une période de 1 tour par niveau du druide ; c&#x27;est-à-dire qu’un druide de niveau 13 peut utiliser des graines de feu qui resteront efficaces pendant 13 tours maximum. Les cibles des glands doivent être touchées par eux. Si le jet de protection est réussi, les créatures se trouvant dans la zone d’effet ne subissent que la moitié des dégâts, mais les créatures directement touchées subissent les dégâts sans jet de protection. Ce sort ne peut pas être utilisé sous l’eau. À noter que les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.</p>"
+        "description_html": "<p>Ce sort crée des projectiles spéciaux ou des foyers incendiaires qui brûlent en dégageant énormément de chaleur. Le druide peut lancer ces graines jusqu’à 4&quot; (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer où frappe la graine) ou les placer à un endroit puis les enflammer avec un mot de commande. Les glands servent de projectiles, alors que les baies de houx sont utilisées comme foyers incendiaires. Le sort crée jusqu’à 4 glands-graines de feu ou 8 baies de houx-graines de feu. Les glands s’enflamment en frappant la cible, causant 2 à 16 (2d8) points de dégât et enflammant les matières inflammables, dans un diamètre de 1&quot; autour du point d’impact. Les baies de houx sont trop légères pour en faire des projectiles ; elles peuvent être placées ou lancées jusqu’à 1,80 m et elles s’enflamment à la prononciation d’un mot de commande. Les baies causent de 1 à 8 points de dégâts à toute créature se trouvant au maximum à ½&quot; du foyer et les matières inflammables prennent feu. La portée du mot de commande pour les baies est de 4&quot;. Toutes les graines de feu perdent leur pouvoir après une période de 1 tour par niveau du druide ; c&#x27;est-à-dire qu’un druide de niveau 13 peut utiliser des graines de feu qui resteront efficaces pendant 13 tours maximum. Les cibles des glands doivent être touchées par eux. Si le jet de protection est réussi, les créatures se trouvant dans la zone d’effet ne subissent que la moitié des dégâts, mais les créatures directement touchées subissent les dégâts sans jet de protection. Ce sort ne peut pas être utilisé sous l’eau. À noter que les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "glands de chêne",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Application utilisant des glands de chêne ; combinable avec les baies de houx.",
+            "notes": null
+          },
+          {
+            "nom": "baies de houx",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Application utilisant des baies de houx ; combinable avec les glands de chêne.",
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -25028,7 +25232,54 @@
         "composants_materiels_source": "Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin.",
         "description_reelle": "Quand ce sort est lancé, le magicien peut tenter de découvrir le pouvoir d’un objet. Pour ce faire, il doit porter l’objet en question selon sa fonction (par exemple, un bracelet au poignet, un casque sur la tête, des bottes aux pieds, une dague dans la main, etc.). Il est à noter que le magicien subit pleinement toute conséquence de l’utilisation de l’objet, bien qu’un jet de protection normalement autorisé soit encore un privilège accordé au magicien. Pour chaque segment de la durée du sort, il y a 15 % de chance plus 5 % par niveau du magicien qu’une propriété de l’objet soit découverte — il est possible que l’objet n’ait aucune propriété et soit seulement un leurre (la présence d’une aura magique de Nystul ou d’une bouche magique étant détectée). À chaque fois qu’une propriété est découverte, le MD lance secrètement un jet de protection contre les sorts pour le magicien. S’il est réussi, la propriété est révélée au magicien ; s’il est raté de 1 point, un faux pouvoir sera révélé au magicien ; s’il est raté de plus d’1 point, le magicien ne découvre rien. Un objet ne révélera jamais ses bonus au toucher et au dégât, bien qu’on puisse découvrir s’ils sont élevés ou pas. Si c’est un objet à charges, il ne révélera pas son nombre de charges exactes ; il pourra donner une fourchette de + ou – 25 % par rapport au nombre de charges actuelles, c.-à-d. qu’un bâtonnet ayant 40 charges pourra être considéré comme ayant 30 ou 50 charges, ou entre les deux. Le magicien dispose de 1 heure par niveau d’expérience après la découverte de l’objet pour l’identifier ou alors toutes les impressions détectables se seront mélangées avec celles du personnage qui l’a détenu. Après avoir lancé ce sort, le magicien perd 8 points de constitution ; il doit se reposer pendant une heure par point perdu pour pouvoir les récupérer. Si, après la perte de 8 points, sa constitution descend au-dessous de 3, le magicien tombe inconscient. Il ne reprendra conscience qu’après avoir retrouvé toute sa constitution, 24 heures plus tard. Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin. Il faut ensuite boire l’infusion et avaler une carpe miniature vivante, le tout avant de lancer le sort. Si une pierre porte-bonheur est réduite en poudre et ajoutée à l’infusion, la chance de succès augmente de 25 % et tous les jets de protection obtiennent un bonus +4.",
         "description_texte": "Quand ce sort est lancé, le magicien peut tenter de découvrir le pouvoir d’un objet. Pour ce faire, il doit porter l’objet en question selon sa fonction (par exemple, un bracelet au poignet, un casque sur la tête, des bottes aux pieds, une dague dans la main, etc.). Il est à noter que le magicien subit pleinement toute conséquence de l’utilisation de l’objet, bien qu’un jet de protection normalement autorisé soit encore un privilège accordé au magicien. Pour chaque segment de la durée du sort, il y a 15 % de chance plus 5 % par niveau du magicien qu’une propriété de l’objet soit découverte — il est possible que l’objet n’ait aucune propriété et soit seulement un leurre (la présence d’une aura magique de Nystul ou d’une bouche magique étant détectée). À chaque fois qu’une propriété est découverte, le MD lance secrètement un jet de protection contre les sorts pour le magicien. S’il est réussi, la propriété est révélée au magicien ; s’il est raté de 1 point, un faux pouvoir sera révélé au magicien ; s’il est raté de plus d’1 point, le magicien ne découvre rien. Un objet ne révélera jamais ses bonus au toucher et au dégât, bien qu’on puisse découvrir s’ils sont élevés ou pas. Si c’est un objet à charges, il ne révélera pas son nombre de charges exactes ; il pourra donner une fourchette de + ou – 25 % par rapport au nombre de charges actuelles, c.-à-d. qu’un bâtonnet ayant 40 charges pourra être considéré comme ayant 30 ou 50 charges, ou entre les deux. Le magicien dispose de 1 heure par niveau d’expérience après la découverte de l’objet pour l’identifier ou alors toutes les impressions détectables se seront mélangées avec celles du personnage qui l’a détenu. Après avoir lancé ce sort, le magicien perd 8 points de constitution ; il doit se reposer pendant une heure par point perdu pour pouvoir les récupérer. Si, après la perte de 8 points, sa constitution descend au-dessous de 3, le magicien tombe inconscient. Il ne reprendra conscience qu’après avoir retrouvé toute sa constitution, 24 heures plus tard. Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin. Il faut ensuite boire l’infusion et avaler une carpe miniature vivante, le tout avant de lancer le sort. Si une pierre porte-bonheur est réduite en poudre et ajoutée à l’infusion, la chance de succès augmente de 25 % et tous les jets de protection obtiennent un bonus +4.",
-        "description_html": "<p>Quand ce sort est lancé, le magicien peut tenter de découvrir le pouvoir d’un objet. Pour ce faire, il doit porter l’objet en question selon sa fonction (par exemple, un bracelet au poignet, un casque sur la tête, des bottes aux pieds, une dague dans la main, etc.). Il est à noter que le magicien subit pleinement toute conséquence de l’utilisation de l’objet, bien qu’un jet de protection normalement autorisé soit encore un privilège accordé au magicien. Pour chaque segment de la durée du sort, il y a 15 % de chance plus 5 % par niveau du magicien qu’une propriété de l’objet soit découverte — il est possible que l’objet n’ait aucune propriété et soit seulement un leurre (la présence d’une aura magique de Nystul ou d’une bouche magique étant détectée). À chaque fois qu’une propriété est découverte, le MD lance secrètement un jet de protection contre les sorts pour le magicien. S’il est réussi, la propriété est révélée au magicien ; s’il est raté de 1 point, un faux pouvoir sera révélé au magicien ; s’il est raté de plus d’1 point, le magicien ne découvre rien. Un objet ne révélera jamais ses bonus au toucher et au dégât, bien qu’on puisse découvrir s’ils sont élevés ou pas. Si c’est un objet à charges, il ne révélera pas son nombre de charges exactes ; il pourra donner une fourchette de + ou – 25 % par rapport au nombre de charges actuelles, c.-à-d. qu’un bâtonnet ayant 40 charges pourra être considéré comme ayant 30 ou 50 charges, ou entre les deux. Le magicien dispose de 1 heure par niveau d’expérience après la découverte de l’objet pour l’identifier ou alors toutes les impressions détectables se seront mélangées avec celles du personnage qui l’a détenu. Après avoir lancé ce sort, le magicien perd 8 points de constitution ; il doit se reposer pendant une heure par point perdu pour pouvoir les récupérer. Si, après la perte de 8 points, sa constitution descend au-dessous de 3, le magicien tombe inconscient. Il ne reprendra conscience qu’après avoir retrouvé toute sa constitution, 24 heures plus tard. Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin. Il faut ensuite boire l’infusion et avaler une carpe miniature vivante, le tout avant de lancer le sort. Si une pierre porte-bonheur est réduite en poudre et ajoutée à l’infusion, la chance de succès augmente de 25 % et tous les jets de protection obtiennent un bonus +4.</p>"
+        "description_html": "<p>Quand ce sort est lancé, le magicien peut tenter de découvrir le pouvoir d’un objet. Pour ce faire, il doit porter l’objet en question selon sa fonction (par exemple, un bracelet au poignet, un casque sur la tête, des bottes aux pieds, une dague dans la main, etc.). Il est à noter que le magicien subit pleinement toute conséquence de l’utilisation de l’objet, bien qu’un jet de protection normalement autorisé soit encore un privilège accordé au magicien. Pour chaque segment de la durée du sort, il y a 15 % de chance plus 5 % par niveau du magicien qu’une propriété de l’objet soit découverte — il est possible que l’objet n’ait aucune propriété et soit seulement un leurre (la présence d’une aura magique de Nystul ou d’une bouche magique étant détectée). À chaque fois qu’une propriété est découverte, le MD lance secrètement un jet de protection contre les sorts pour le magicien. S’il est réussi, la propriété est révélée au magicien ; s’il est raté de 1 point, un faux pouvoir sera révélé au magicien ; s’il est raté de plus d’1 point, le magicien ne découvre rien. Un objet ne révélera jamais ses bonus au toucher et au dégât, bien qu’on puisse découvrir s’ils sont élevés ou pas. Si c’est un objet à charges, il ne révélera pas son nombre de charges exactes ; il pourra donner une fourchette de + ou – 25 % par rapport au nombre de charges actuelles, c.-à-d. qu’un bâtonnet ayant 40 charges pourra être considéré comme ayant 30 ou 50 charges, ou entre les deux. Le magicien dispose de 1 heure par niveau d’expérience après la découverte de l’objet pour l’identifier ou alors toutes les impressions détectables se seront mélangées avec celles du personnage qui l’a détenu. Après avoir lancé ce sort, le magicien perd 8 points de constitution ; il doit se reposer pendant une heure par point perdu pour pouvoir les récupérer. Si, après la perte de 8 points, sa constitution descend au-dessous de 3, le magicien tombe inconscient. Il ne reprendra conscience qu’après avoir retrouvé toute sa constitution, 24 heures plus tard. Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin. Il faut ensuite boire l’infusion et avaler une carpe miniature vivante, le tout avant de lancer le sort. Si une pierre porte-bonheur est réduite en poudre et ajoutée à l’infusion, la chance de succès augmente de 25 % et tous les jets de protection obtiennent un bonus +4.</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "perle",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": 100,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "plume de hibou trempée dans du vin",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "vin",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "carpe miniature vivante",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "pierre porte-bonheur réduite en poudre",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Option permettant d’augmenter la chance de succès.",
+            "notes": "Réduite en poudre et ajoutée à l’infusion."
+          }
+        ]
       },
       "effects": [
         {
@@ -25932,7 +26183,8 @@
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate.",
         "description_reelle": "Avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6\". De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des « ombres » comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. Niveau : 3 Composantes : V, S Portée : 0 Temps d'incantation : 1 segment Durée : 1 round/niveau Jet de protection : aucun Zone d'effet : personnelle Explication/Description : grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8 : 1 = devant à droite ; 2 = à droite ; 3 = derrière à droite ; 4 = derrière ; 5 = derrière à gauche ; 6 = à gauche ; 7 = devant à gauche ; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c'est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C'est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.",
         "description_texte": "Avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6\". De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des « ombres » comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. Niveau : 3 Composantes : V, S Portée : 0 Temps d'incantation : 1 segment Durée : 1 round/niveau Jet de protection : aucun Zone d'effet : personnelle Explication/Description : grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8 : 1 = devant à droite ; 2 = à droite ; 3 = derrière à droite ; 4 = derrière ; 5 = derrière à gauche ; 6 = à gauche ; 7 = devant à gauche ; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c'est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C'est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.",
-        "description_html": "<p>Avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6&quot;. De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des « ombres » comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. Niveau : 3 Composantes : V, S Portée : 0 Temps d&#x27;incantation : 1 segment Durée : 1 round/niveau Jet de protection : aucun Zone d&#x27;effet : personnelle Explication/Description : grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8 : 1 = devant à droite ; 2 = à droite ; 3 = derrière à droite ; 4 = derrière ; 5 = derrière à gauche ; 6 = à gauche ; 7 = devant à gauche ; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c&#x27;est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C&#x27;est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.</p>"
+        "description_html": "<p>Avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6&quot;. De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des « ombres » comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. Niveau : 3 Composantes : V, S Portée : 0 Temps d&#x27;incantation : 1 segment Durée : 1 round/niveau Jet de protection : aucun Zone d&#x27;effet : personnelle Explication/Description : grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8 : 1 = devant à droite ; 2 = à droite ; 3 = derrière à droite ; 4 = derrière ; 5 = derrière à gauche ; 6 = à gauche ; 7 = devant à gauche ; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c&#x27;est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C&#x27;est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.</p>",
+        "composants_materiels_objets": []
       },
       "effects": [
         {
@@ -27804,7 +28056,63 @@
         "description_reelle": "Il y a en fait 4 sorts en un dans ce sort de conjuration. Le magicien peut invoquer un élémental de l’air, de l’eau, de terre ou du feu, à condition qu’il possède les composantes matérielles appropriées. Pour invoquer l’élémental du feu, une grande source de feu doit se trouver dans la portée du sort. Pour celui de l’eau, il faut une grande quantité de ce liquide dans la portée. Les élémentaux conjurés sont très puissants — cf. règles AVANCÉES de DONJONS & DRAGONS, MANUEL DES MONSTRES — ils ont généralement 16 dés de vie (16d8). Il est possible d’invoquer plusieurs élémentaux différents à la suite si le magicien a mémorisé plusieurs fois le sort. Le type d’élémental invoqué devra être choisi avant la mémorisation du sort. L’élémental conjuré doit être contrôlé par le magicien, c.-à-d. que le lanceur de sort doit se concentrer sur les faits et gestes de l’élémental ou bien celui-ci se retournera contre le magicien pour l’attaquer. Cependant, si l’élémental est déjà engagé dans un combat, il ne cessera pas de combattre pour aller l’attaquer ; mais sinon, il évitera ses adversaires pour rechercher le contact avec son invocateur. Si le magicien est blessé ou physiquement immobilisé, sa concentration est rompue. Il existe tout de même une probabilité de 5 % que l’élémental se retourne malgré tout contre son invocateur, même ci celui-ci se concentre : ce jet se fait à la fin du deuxième round et à chaque round suivant. Un magicien peut contrôler un élémental jusqu’à 3\" de distance par niveau. L’élémental reste jusqu’à l’expiration du sort ou jusqu’à ce que sa forme matérielle ait subi assez de dégâts pour qu’il soit détruit. Un élémental de l’eau sera détruit s’il s’éloigne à plus de 6\" d’une étendue d’eau. Les composantes de ce sort, mis à par la quantité d’éléments à portée de main, sont : Élémental de l’air : encens à faire brûler Élémental de l’eau : eau et sable Élémental du feu : souffre et phosphore Élémental de terre : argile",
         "description_texte": "Il y a en fait 4 sorts en un dans ce sort de conjuration. Le magicien peut invoquer un élémental de l’air, de l’eau, de terre ou du feu, à condition qu’il possède les composantes matérielles appropriées. Pour invoquer l’élémental du feu, une grande source de feu doit se trouver dans la portée du sort. Pour celui de l’eau, il faut une grande quantité de ce liquide dans la portée. Les élémentaux conjurés sont très puissants — cf. règles AVANCÉES de DONJONS & DRAGONS, MANUEL DES MONSTRES — ils ont généralement 16 dés de vie (16d8). Il est possible d’invoquer plusieurs élémentaux différents à la suite si le magicien a mémorisé plusieurs fois le sort. Le type d’élémental invoqué devra être choisi avant la mémorisation du sort. L’élémental conjuré doit être contrôlé par le magicien, c.-à-d. que le lanceur de sort doit se concentrer sur les faits et gestes de l’élémental ou bien celui-ci se retournera contre le magicien pour l’attaquer. Cependant, si l’élémental est déjà engagé dans un combat, il ne cessera pas de combattre pour aller l’attaquer ; mais sinon, il évitera ses adversaires pour rechercher le contact avec son invocateur. Si le magicien est blessé ou physiquement immobilisé, sa concentration est rompue. Il existe tout de même une probabilité de 5 % que l’élémental se retourne malgré tout contre son invocateur, même ci celui-ci se concentre : ce jet se fait à la fin du deuxième round et à chaque round suivant. Un magicien peut contrôler un élémental jusqu’à 3\" de distance par niveau. L’élémental reste jusqu’à l’expiration du sort ou jusqu’à ce que sa forme matérielle ait subi assez de dégâts pour qu’il soit détruit. Un élémental de l’eau sera détruit s’il s’éloigne à plus de 6\" d’une étendue d’eau. Les composantes de ce sort, mis à par la quantité d’éléments à portée de main, sont : Élémental de l’air : encens à faire brûler Élémental de l’eau : eau et sable Élémental du feu : souffre et phosphore Élémental de terre : argile",
         "description_html": "<p>Il y a en fait 4 sorts en un dans ce sort de conjuration. Le magicien peut invoquer un élémental de l’air, de l’eau, de terre ou du feu, à condition qu’il possède les composantes matérielles appropriées. Pour invoquer l’élémental du feu, une grande source de feu doit se trouver dans la portée du sort. Pour celui de l’eau, il faut une grande quantité de ce liquide dans la portée. Les élémentaux conjurés sont très puissants — cf. règles AVANCÉES de DONJONS &amp; DRAGONS, MANUEL DES MONSTRES — ils ont généralement 16 dés de vie (16d8). Il est possible d’invoquer plusieurs élémentaux différents à la suite si le magicien a mémorisé plusieurs fois le sort. Le type d’élémental invoqué devra être choisi avant la mémorisation du sort. L’élémental conjuré doit être contrôlé par le magicien, c.-à-d. que le lanceur de sort doit se concentrer sur les faits et gestes de l’élémental ou bien celui-ci se retournera contre le magicien pour l’attaquer. Cependant, si l’élémental est déjà engagé dans un combat, il ne cessera pas de combattre pour aller l’attaquer ; mais sinon, il évitera ses adversaires pour rechercher le contact avec son invocateur. Si le magicien est blessé ou physiquement immobilisé, sa concentration est rompue. Il existe tout de même une probabilité de 5 % que l’élémental se retourne malgré tout contre son invocateur, même ci celui-ci se concentre : ce jet se fait à la fin du deuxième round et à chaque round suivant. Un magicien peut contrôler un élémental jusqu’à 3&quot; de distance par niveau. L’élémental reste jusqu’à l’expiration du sort ou jusqu’à ce que sa forme matérielle ait subi assez de dégâts pour qu’il soit détruit. Un élémental de l’eau sera détruit s’il s’éloigne à plus de 6&quot; d’une étendue d’eau. Les composantes de ce sort, mis à par la quantité d’éléments à portée de main, sont : Élémental de l’air : encens à faire brûler Élémental de l’eau : eau et sable Élémental du feu : souffre et phosphore Élémental de terre : argile</p>",
-        "composants_materiels_verification_recommandee": true
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_objets": [
+          {
+            "nom": "encens à faire brûler",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Invocation d’un élémental de l’air.",
+            "notes": null
+          },
+          {
+            "nom": "eau",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Invocation d’un élémental de l’eau.",
+            "notes": null
+          },
+          {
+            "nom": "sable",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Invocation d’un élémental de l’eau.",
+            "notes": null
+          },
+          {
+            "nom": "soufre",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Invocation d’un élémental du feu.",
+            "notes": null
+          },
+          {
+            "nom": "phosphore",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Invocation d’un élémental du feu.",
+            "notes": null
+          },
+          {
+            "nom": "argile",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Invocation d’un élémental de terre.",
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -27950,7 +28258,45 @@
         "composants_materiels_verification_recommandee": true,
         "description_reelle": "Quand ce sort est lancé, le druide attire des insectes (70 % de chances que ce soient des insectes volants). Les insectes invoqués sont des mouches, des abeilles, des bourdons ou des guêpes si ce sont des insectes volants ; des fourmis ou des coléoptères (scarabées) si ce sont des insectes rampants. Un nuage d'insectes volants, ou un essaim de rampants, apparaîtra après le lancement du sort. Ils attaqueront toute créature que désignera le druide. La créature attaquée subira 2 points de dégâts par round de combat et elle ne peut rien faire d'autre que d'essayer de s'éloigner des insectes pendant le temps où elle se fait attaquer. Les insectes peuvent ensuite attaquer une autre créature mais il se passe 1 round entre le moment où ils laissent la première victime pour attaquer la deuxième ; les insectes rampants ne se déplacent que de 3,60 m par round (vitesse maximum sur un sol lisse). En intérieur et sous-sol, le druide a 30 % de chances d'invoquer de 1 à 4 fourmis géantes, à moins que des fourmis géantes soient proches. Les composantes matérielles pour ce sort sont du gui, un pétale de fleur et un peu de boue ou d'argile humide.",
         "description_texte": "Quand ce sort est lancé, le druide attire des insectes (70 % de chances que ce soient des insectes volants). Les insectes invoqués sont des mouches, des abeilles, des bourdons ou des guêpes si ce sont des insectes volants ; des fourmis ou des coléoptères (scarabées) si ce sont des insectes rampants. Un nuage d'insectes volants, ou un essaim de rampants, apparaîtra après le lancement du sort. Ils attaqueront toute créature que désignera le druide. La créature attaquée subira 2 points de dégâts par round de combat et elle ne peut rien faire d'autre que d'essayer de s'éloigner des insectes pendant le temps où elle se fait attaquer. Les insectes peuvent ensuite attaquer une autre créature mais il se passe 1 round entre le moment où ils laissent la première victime pour attaquer la deuxième ; les insectes rampants ne se déplacent que de 3,60 m par round (vitesse maximum sur un sol lisse). En intérieur et sous-sol, le druide a 30 % de chances d'invoquer de 1 à 4 fourmis géantes, à moins que des fourmis géantes soient proches. Les composantes matérielles pour ce sort sont du gui, un pétale de fleur et un peu de boue ou d'argile humide.",
-        "description_html": "<p>Quand ce sort est lancé, le druide attire des insectes (70 % de chances que ce soient des insectes volants). Les insectes invoqués sont des mouches, des abeilles, des bourdons ou des guêpes si ce sont des insectes volants ; des fourmis ou des coléoptères (scarabées) si ce sont des insectes rampants. Un nuage d&#x27;insectes volants, ou un essaim de rampants, apparaîtra après le lancement du sort. Ils attaqueront toute créature que désignera le druide. La créature attaquée subira 2 points de dégâts par round de combat et elle ne peut rien faire d&#x27;autre que d&#x27;essayer de s&#x27;éloigner des insectes pendant le temps où elle se fait attaquer. Les insectes peuvent ensuite attaquer une autre créature mais il se passe 1 round entre le moment où ils laissent la première victime pour attaquer la deuxième ; les insectes rampants ne se déplacent que de 3,60 m par round (vitesse maximum sur un sol lisse). En intérieur et sous-sol, le druide a 30 % de chances d&#x27;invoquer de 1 à 4 fourmis géantes, à moins que des fourmis géantes soient proches. Les composantes matérielles pour ce sort sont du gui, un pétale de fleur et un peu de boue ou d&#x27;argile humide.</p>"
+        "description_html": "<p>Quand ce sort est lancé, le druide attire des insectes (70 % de chances que ce soient des insectes volants). Les insectes invoqués sont des mouches, des abeilles, des bourdons ou des guêpes si ce sont des insectes volants ; des fourmis ou des coléoptères (scarabées) si ce sont des insectes rampants. Un nuage d&#x27;insectes volants, ou un essaim de rampants, apparaîtra après le lancement du sort. Ils attaqueront toute créature que désignera le druide. La créature attaquée subira 2 points de dégâts par round de combat et elle ne peut rien faire d&#x27;autre que d&#x27;essayer de s&#x27;éloigner des insectes pendant le temps où elle se fait attaquer. Les insectes peuvent ensuite attaquer une autre créature mais il se passe 1 round entre le moment où ils laissent la première victime pour attaquer la deuxième ; les insectes rampants ne se déplacent que de 3,60 m par round (vitesse maximum sur un sol lisse). En intérieur et sous-sol, le druide a 30 % de chances d&#x27;invoquer de 1 à 4 fourmis géantes, à moins que des fourmis géantes soient proches. Les composantes matérielles pour ce sort sont du gui, un pétale de fleur et un peu de boue ou d&#x27;argile humide.</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "gui",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "pétale de fleur",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "boue",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à l’argile humide.",
+            "notes": null
+          },
+          {
+            "nom": "argile humide",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à la boue.",
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -32417,7 +32763,27 @@
         "composants_materiels_verification_recommandee": true,
         "description_reelle": "Quand un clerc lance ce sort, il peut faire parler les pierres ; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.",
         "description_texte": "Quand un clerc lance ce sort, il peut faire parler les pierres ; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.",
-        "description_html": "<p>Quand un clerc lance ce sort, il peut faire parler les pierres ; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.</p>"
+        "description_html": "<p>Quand un clerc lance ce sort, il peut faire parler les pierres ; celles-ci lui racontent qui ou quoi les a touchées, ce qu’elles cachent ou ce qu’il y a derrière l’endroit où elles se trouvent. Les pierres feront des descriptions complètes si on le leur demande. Les composantes matérielles pour ce sort sont une goutte de mercure et un peu d’argile.</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "goutte de mercure",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "argile",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -32664,7 +33030,18 @@
         "description_texte": "Ce sort est exactement le même que le sort de niveau 5 de magicien, lithomorphose (voir p.81), excepté ci-dessus et le fait que le druide a besoin de gui comme composante matérielle supplémentaire.",
         "description_html": "<p>Ce sort est exactement le même que le sort de niveau 5 de magicien, lithomorphose (voir p.81), excepté ci-dessus et le fait que le druide a besoin de gui comme composante matérielle supplémentaire.</p>",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
+        "composants_materiels_objets": [
+          {
+            "nom": "gui",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -35116,7 +35493,36 @@
         "description_texte": "Ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6\"/tour et 60\"/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite. PAROLE SACRÉE/MAUDITE (Conjuration/Appel) Niveau : 7 Composantes : V Portée : 0 Temps d'incantation : 1 segment Durée : spéciale Jet de protection : aucun Zone d'effet : 3\" de rayon Explication/Description : la prononciation d’une parole sacrée (ou d’une parole maudite) a un pouvoir énorme. Elle éloigne les créatures mauvaises (ou bonnes) en les forçant à retourner sur leur plan d’existence, à condition que le lanceur du sort soit originaire du plan où il lance le sort. Les créatures ainsi chassées ne peuvent revenir avant une journée. Ce sort affecte aussi les autres créatures dont l’alignement diffère de celui du clerc, comme suit : Effets Dés de vie ou niveau de la créature Généraux Mouvement Probabilités de toucher Sorts Moins de 4 Mort — — — 4 à 7+ Paralysie (1d4 tours) — — — 8 à 11+ Ralentie (2d4 rounds) –50% –4 — 12 ou plus Surdité (1d4 rounds) –25% –2 50 % d’échec Les créatures affectées doivent se trouver dans la zone d’effet (6\" de diamètre) dont le centre est le clerc lui-même.",
         "description_html": "<p>Ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6&quot;/tour et 60&quot;/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite. PAROLE SACRÉE/MAUDITE (Conjuration/Appel) Niveau : 7 Composantes : V Portée : 0 Temps d&#x27;incantation : 1 segment Durée : spéciale Jet de protection : aucun Zone d&#x27;effet : 3&quot; de rayon Explication/Description : la prononciation d’une parole sacrée (ou d’une parole maudite) a un pouvoir énorme. Elle éloigne les créatures mauvaises (ou bonnes) en les forçant à retourner sur leur plan d’existence, à condition que le lanceur du sort soit originaire du plan où il lance le sort. Les créatures ainsi chassées ne peuvent revenir avant une journée. Ce sort affecte aussi les autres créatures dont l’alignement diffère de celui du clerc, comme suit : Effets Dés de vie ou niveau de la créature Généraux Mouvement Probabilités de toucher Sorts Moins de 4 Mort — — — 4 à 7+ Paralysie (1d4 tours) — — — 8 à 11+ Ralentie (2d4 rounds) –50% –4 — 12 ou plus Surdité (1d4 rounds) –25% –2 50 % d’échec Les créatures affectées doivent se trouver dans la zone d’effet (6&quot; de diamètre) dont le centre est le clerc lui-même.</p>",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
+        "composants_materiels_objets": [
+          {
+            "nom": "feu",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "eau bénite",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Clerc non mauvais.",
+            "notes": "Liquide consommé."
+          },
+          {
+            "nom": "eau maudite",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Clerc mauvais.",
+            "notes": "Liquide consommé."
+          }
+        ]
       },
       "effects": [
         {
@@ -37101,7 +37507,36 @@
         "description_html": "<p>Quand l’illusionniste lance ce sort, il crée un jeu de formes colorées, mouvantes et tournoyantes dans l’air. Les créatures qui regardent ces formes et qui ont raté leur jet de protection sont fascinées et continuent de fixer ce motif aussi longtemps que l’illusionniste le maintient dans l’air. Le lanceur du sort peut hypnotiser un maximum de 24 DV, c&#x27;est-à-dire 24 créatures avec 1 DV chacune, 12 créatures avec 2 DV chacune, etc. Toutes les créatures doivent se trouver dans la zone d’effet et chacune a droit à un jet de protection. L’illusionniste n’a pas besoin de parler, mais il doit faire des gestes appropriés en même temps qu’il doit tenir un bâtonnet d’encens allumé ou une baguette de cristal remplie de matières phosphorescentes.</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "cire d’abeille",
-        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée"
+        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
+        "composants_materiels_objets": [
+          {
+            "nom": "bâtonnet d’encens allumé",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à la baguette de cristal.",
+            "notes": "Encens consommé pendant l’incantation."
+          },
+          {
+            "nom": "baguette de cristal",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative au bâtonnet d’encens allumé.",
+            "notes": "Focus durable, non détruit."
+          },
+          {
+            "nom": "matières phosphorescentes",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Requises lorsque la baguette de cristal est utilisée.",
+            "notes": "Contenu consommé de la baguette."
+          }
+        ]
       },
       "effects": [
         {
@@ -40837,7 +41272,45 @@
         "description_reelle": "Grâce à ce sort, les objets et pièces de cuivre peuvent être temporairement transformés en or — 27 dm³ représentent environ un volume de 4.000 po (200 kg). Toute créature voyant cet or des fous a droit à un jet de dé (d20) dont le résultat doit être égal ou inférieur à son intelligence pour découvrir le subterfuge. Mais pour chaque niveau du magicien, il faut ajouter 1 au tirage : ainsi, il y a peu de chances qu’un or des fous soit découvert s’il a été créé par un magicien de haut niveau. Si cet « or » est violemment frappé par un objet en fer forgé, il y a une petite chance que l’or se retransforme en cuivre. Cela dépend de la composante matérielle qui a servi au magicien pour lancer le sort : si une citrine de 50 po a été réduite en poudre et répartie sur le métal transformé, il y a 30 % de chances que le coup retransforme l’or en cuivre ; avec une pierre d’ambre de 100 po, la chance est de 25 % ; une topaze de 500 po : elle tombe à 10 % ; et avec une topaze orientale (corindon) il n’y a que 1 % de chance.",
         "description_texte": "Grâce à ce sort, les objets et pièces de cuivre peuvent être temporairement transformés en or — 27 dm³ représentent environ un volume de 4.000 po (200 kg). Toute créature voyant cet or des fous a droit à un jet de dé (d20) dont le résultat doit être égal ou inférieur à son intelligence pour découvrir le subterfuge. Mais pour chaque niveau du magicien, il faut ajouter 1 au tirage : ainsi, il y a peu de chances qu’un or des fous soit découvert s’il a été créé par un magicien de haut niveau. Si cet « or » est violemment frappé par un objet en fer forgé, il y a une petite chance que l’or se retransforme en cuivre. Cela dépend de la composante matérielle qui a servi au magicien pour lancer le sort : si une citrine de 50 po a été réduite en poudre et répartie sur le métal transformé, il y a 30 % de chances que le coup retransforme l’or en cuivre ; avec une pierre d’ambre de 100 po, la chance est de 25 % ; une topaze de 500 po : elle tombe à 10 % ; et avec une topaze orientale (corindon) il n’y a que 1 % de chance.",
         "description_html": "<p>Grâce à ce sort, les objets et pièces de cuivre peuvent être temporairement transformés en or — 27 dm³ représentent environ un volume de 4.000 po (200 kg). Toute créature voyant cet or des fous a droit à un jet de dé (d20) dont le résultat doit être égal ou inférieur à son intelligence pour découvrir le subterfuge. Mais pour chaque niveau du magicien, il faut ajouter 1 au tirage : ainsi, il y a peu de chances qu’un or des fous soit découvert s’il a été créé par un magicien de haut niveau. Si cet « or » est violemment frappé par un objet en fer forgé, il y a une petite chance que l’or se retransforme en cuivre. Cela dépend de la composante matérielle qui a servi au magicien pour lancer le sort : si une citrine de 50 po a été réduite en poudre et répartie sur le métal transformé, il y a 30 % de chances que le coup retransforme l’or en cuivre ; avec une pierre d’ambre de 100 po, la chance est de 25 % ; une topaze de 500 po : elle tombe à 10 % ; et avec une topaze orientale (corindon) il n’y a que 1 % de chance.</p>",
-        "composants_materiels_verification_recommandee": true
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_objets": [
+          {
+            "nom": "citrine réduite en poudre",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": 50,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative de 50 po donnant 30 % de chance de rupture.",
+            "notes": "Réduite en poudre et répartie sur le métal."
+          },
+          {
+            "nom": "pierre d’ambre",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": 100,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative de 100 po donnant 25 % de chance de rupture.",
+            "notes": "Gemme non détruite."
+          },
+          {
+            "nom": "topaze",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": 500,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative de 500 po donnant 10 % de chance de rupture.",
+            "notes": "Gemme non détruite."
+          },
+          {
+            "nom": "topaze orientale (corindon)",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative donnant 1 % de chance de rupture.",
+            "notes": "Gemme non détruite."
+          }
+        ]
       },
       "effects": [
         {
@@ -42980,7 +43453,27 @@
         "description_html": "<p>Quand le druide lance ce sort sur une créature, cette créature obtient un bonus de 1 sur sa classe d’armure, la peau devenant aussi dure que de l’écorce. En plus, le bonus de 1 s’applique aussi aux jets de protection contre toutes les formes d’attaque, sauf la magie. Ce sort peut être lancé sur le druide lui-même ou sur un autre personnage. En plus du gui, le druide doit avoir une poignée d’écorce de chêne comme composante matérielle.</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "poignée d’écorce de chêne",
-        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
+        "composants_materiels_objets": [
+          {
+            "nom": "gui",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "poignée d’écorce de chêne",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -43972,7 +44465,27 @@
         "description_html": "<p>Un piège à feu peut affecter tout objet qu’on peut fermer (livre, boîte, bouteille, coffre, malle, cercueil, porte, tiroir, etc.). Mais dès que ce sort est lancé sur l’objet, le magicien ne peut en lancer un autre dessus, tel qu’un sort de fermeture ou un verrou magique, sauf pour ce qui suit : si on tente de placer un piège à feu et une fermeture, seul le 1er sera effectif, l’autre sera annulé (si les 2 sont lancés en même temps, ils s’annulent tous les 2) ; si un piège à feu est lancé après un verrou magique, le 1er est annulé (si les deux sont lancés en même temps, ils s’annulent tous les 2) ; si un verrou magique est lancé après un piège à feu, il y a 50 % de chance que les deux soient annulés. Un sort d’ouverture n’a aucun pouvoir sur un piège à feu : dès que quelqu’un touche l&#x27;objet, le piège se déclenche. Le magicien peut utiliser l’objet piégé sans déclencher le sort. Quand le piège fonctionne, il se produit une explosion de 1,50 m de rayon et toutes les créatures dans cette zone d’effet subissent 1d4 points de dégâts plus 1 par niveau du magicien, la moitié seulement si elles réussissent leur jet de protection contre les sorts. L’objet piégé n’est PAS endommagé par l’explosion. Il y a seulement 50 % de chances de détecter un piège à feu et un échec à la tentative de désamorçage fait immédiatement exploser le piège. Le sort peut être annulé/dissipé par une dissipation de la magie. Ce sort ne peut pas être utilisé sous l’eau. Pour lancer ce sort, le magicien doit surligner le système de fermeture avec du souffre ou du salpêtre.</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "poudre de feu ou composant inflammable du sceau",
-        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée"
+        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
+        "composants_materiels_objets": [
+          {
+            "nom": "soufre",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative au salpêtre.",
+            "notes": null
+          },
+          {
+            "nom": "salpêtre",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative au soufre.",
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -44274,7 +44787,36 @@
         "description_html": "<p>Ce sort permet au druide de fabriquer un collet, à 90 % indétectable sans moyen magique. Le collet peut être fait avec une liane ou son équivalent, une courroie ou une corde. Quand le sort est lancé sur cet objet, il se confond avec l’endroit où il se trouve. Un des bouts du collet se termine en nœud coulant qui pourra se resserrer autour d’un ou plusieurs membres de la créature marchant à l’intérieur de la zone d’effet. (La tête d’un ver ou d’un serpent peut ainsi être piégée). Si un arbre résistant et flexible est proche, le collet y sera attaché et le pouvoir magique du sort fera que l’arbre se courbera puis se raidira quand la boucle sera resserrée, causant ainsi 1 à 6 points de dégâts à la créature piégée ; cette dernière se trouvera suspendue par le membre attrapé (ou étranglée si c’est la tête ou le cou qui est pris). Si aucun arbre n’est à proximité, la corde s’enroulera autour du corps de la créature, ne lui causant aucun dégât mais l’immobilisant. Le collet est magique ; ainsi pendant une heure, il ne peut être cassé que par une force très importante, celle d’un géant des tempêtes ou plus (23) ; à chaque heure suivante, la magie perd de sa puissance, ce qui fait qu’une force moindre devient suffisante pour briser le collet — 22 après 2 heures, 21 après 3 heures, 20 après 4 heures — jusqu’à ce que 6 heures se soient écoulées ; à ce moment, une force de 18 pourra briser le collet. Après une période de 12 heures, le collet perd ses propriétés magiques, le nœud s’ouvre, libérant ce qu’il tenait. Le matériau du nœud coulant peut toutefois être tranché par n’importe quelle lame magique ou par n’importe quelle arme tranchante maniée avec un bonus de +2 au toucher. En plus du gui, le druide doit posséder une peau de serpent et un morceau d’une créature forte qu’il intégrera au collet.</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "gui druidique",
-        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui"
+        "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
+        "composants_materiels_objets": [
+          {
+            "nom": "gui",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "peau de serpent",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "morceau d’une créature forte",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -45424,7 +45966,8 @@
         "description_source": "Manuel des joueurs AD&D 2e",
         "description_reelle": "Avec ce sort, le magicien se déplace instantanément de 3\" maximum par niveau qu’il a atteint. Cette forme spéciale de téléportation est sûre, il n’y a pas d’erreur possible et le magicien arrive toujours exactement à l’endroit désiré, soit en visualisant simplement l’endroit, soit en énonçant la distance et la direction (Exemple : 30\" vers le bas en ligne droite ; direction nord-ouest, vers le haut à 45°, à 42\"). S’il arrive à un endroit déjà occupé par un corps solide, il reste sur le plan astral jusqu’à ce qu’il soit localisé par quelque créature charitable qui consente à lancer sur lui une dissipation de la magie, car le magicien y demeure étourdi et ne peut lancer aucun sort lui-même. Si le magicien arrive à un endroit sans aucun support, il tombera et subira les dégâts en conséquence, à moins qu’il n’ait un moyen magique de l’éviter. Le magicien peut transporter avec lui un maximum de 5.000 po (250 kg) de matière non vivante, la moitié s’il s’agit de matière vivante. Le fait de lancer ce sort requiert ensuite un temps de récupération d’une durée de 7 segments.",
         "description_texte": "Avec ce sort, le magicien se déplace instantanément de 3\" maximum par niveau qu’il a atteint. Cette forme spéciale de téléportation est sûre, il n’y a pas d’erreur possible et le magicien arrive toujours exactement à l’endroit désiré, soit en visualisant simplement l’endroit, soit en énonçant la distance et la direction (Exemple : 30\" vers le bas en ligne droite ; direction nord-ouest, vers le haut à 45°, à 42\"). S’il arrive à un endroit déjà occupé par un corps solide, il reste sur le plan astral jusqu’à ce qu’il soit localisé par quelque créature charitable qui consente à lancer sur lui une dissipation de la magie, car le magicien y demeure étourdi et ne peut lancer aucun sort lui-même. Si le magicien arrive à un endroit sans aucun support, il tombera et subira les dégâts en conséquence, à moins qu’il n’ait un moyen magique de l’éviter. Le magicien peut transporter avec lui un maximum de 5.000 po (250 kg) de matière non vivante, la moitié s’il s’agit de matière vivante. Le fait de lancer ce sort requiert ensuite un temps de récupération d’une durée de 7 segments.",
-        "description_html": "<p>Avec ce sort, le magicien se déplace instantanément de 3&quot; maximum par niveau qu’il a atteint. Cette forme spéciale de téléportation est sûre, il n’y a pas d’erreur possible et le magicien arrive toujours exactement à l’endroit désiré, soit en visualisant simplement l’endroit, soit en énonçant la distance et la direction (Exemple : 30&quot; vers le bas en ligne droite ; direction nord-ouest, vers le haut à 45°, à 42&quot;). S’il arrive à un endroit déjà occupé par un corps solide, il reste sur le plan astral jusqu’à ce qu’il soit localisé par quelque créature charitable qui consente à lancer sur lui une dissipation de la magie, car le magicien y demeure étourdi et ne peut lancer aucun sort lui-même. Si le magicien arrive à un endroit sans aucun support, il tombera et subira les dégâts en conséquence, à moins qu’il n’ait un moyen magique de l’éviter. Le magicien peut transporter avec lui un maximum de 5.000 po (250 kg) de matière non vivante, la moitié s’il s’agit de matière vivante. Le fait de lancer ce sort requiert ensuite un temps de récupération d’une durée de 7 segments.</p>"
+        "description_html": "<p>Avec ce sort, le magicien se déplace instantanément de 3&quot; maximum par niveau qu’il a atteint. Cette forme spéciale de téléportation est sûre, il n’y a pas d’erreur possible et le magicien arrive toujours exactement à l’endroit désiré, soit en visualisant simplement l’endroit, soit en énonçant la distance et la direction (Exemple : 30&quot; vers le bas en ligne droite ; direction nord-ouest, vers le haut à 45°, à 42&quot;). S’il arrive à un endroit déjà occupé par un corps solide, il reste sur le plan astral jusqu’à ce qu’il soit localisé par quelque créature charitable qui consente à lancer sur lui une dissipation de la magie, car le magicien y demeure étourdi et ne peut lancer aucun sort lui-même. Si le magicien arrive à un endroit sans aucun support, il tombera et subira les dégâts en conséquence, à moins qu’il n’ait un moyen magique de l’éviter. Le magicien peut transporter avec lui un maximum de 5.000 po (250 kg) de matière non vivante, la moitié s’il s’agit de matière vivante. Le fait de lancer ce sort requiert ensuite un temps de récupération d’une durée de 7 segments.</p>",
+        "composants_materiels_objets": []
       },
       "effects": [
         {
@@ -47957,7 +48500,18 @@
         "composants_materiels_source": "La composante matérielle est le symbole sacré du clerc.",
         "description_reelle": "Ce sort permet au clerc de demander à la créature visée de lui rendre un service et de rapporter la preuve que l’action a bien été accomplie. Cela peut être, par exemple, la récupération d’un objet de valeur, le sauvetage ou la libération d’une personne connue, la libération d’une créature, la prise d’une place forte, l’élimination d’une personne, etc. Pour les créatures de la même religion que le clerc le jet de protection n’est pas autorisé si la quête est justifiée et méritée. Pour celles du même alignement que le clerc, le jet de protection se fait avec un malus de –4. Pour les autres, je jet de protection est normal. Si la quête religieuse n’est pas correctement accomplie parce que la créature affectée « traîne les pieds » ou y met de la mauvaise volonté, cette dernière perd 1 point sur ses jets de protection pour chaque jour d’inaction volontaire et ce malus dure tant que cette quête religieuse n’est pas accomplie ou que le clerc l’annule lui-même. Il existe certaines circonstances qui peuvent suspendre temporairement une quête religieuse et d’autres qui peuvent l’annuler : le MD donnera toutes les informations et détails nécessaires. La composante matérielle est le symbole sacré du clerc.",
         "description_texte": "Ce sort permet au clerc de demander à la créature visée de lui rendre un service et de rapporter la preuve que l’action a bien été accomplie. Cela peut être, par exemple, la récupération d’un objet de valeur, le sauvetage ou la libération d’une personne connue, la libération d’une créature, la prise d’une place forte, l’élimination d’une personne, etc. Pour les créatures de la même religion que le clerc le jet de protection n’est pas autorisé si la quête est justifiée et méritée. Pour celles du même alignement que le clerc, le jet de protection se fait avec un malus de –4. Pour les autres, je jet de protection est normal. Si la quête religieuse n’est pas correctement accomplie parce que la créature affectée « traîne les pieds » ou y met de la mauvaise volonté, cette dernière perd 1 point sur ses jets de protection pour chaque jour d’inaction volontaire et ce malus dure tant que cette quête religieuse n’est pas accomplie ou que le clerc l’annule lui-même. Il existe certaines circonstances qui peuvent suspendre temporairement une quête religieuse et d’autres qui peuvent l’annuler : le MD donnera toutes les informations et détails nécessaires. La composante matérielle est le symbole sacré du clerc.",
-        "description_html": "<p>Ce sort permet au clerc de demander à la créature visée de lui rendre un service et de rapporter la preuve que l’action a bien été accomplie. Cela peut être, par exemple, la récupération d’un objet de valeur, le sauvetage ou la libération d’une personne connue, la libération d’une créature, la prise d’une place forte, l’élimination d’une personne, etc. Pour les créatures de la même religion que le clerc le jet de protection n’est pas autorisé si la quête est justifiée et méritée. Pour celles du même alignement que le clerc, le jet de protection se fait avec un malus de –4. Pour les autres, je jet de protection est normal. Si la quête religieuse n’est pas correctement accomplie parce que la créature affectée « traîne les pieds » ou y met de la mauvaise volonté, cette dernière perd 1 point sur ses jets de protection pour chaque jour d’inaction volontaire et ce malus dure tant que cette quête religieuse n’est pas accomplie ou que le clerc l’annule lui-même. Il existe certaines circonstances qui peuvent suspendre temporairement une quête religieuse et d’autres qui peuvent l’annuler : le MD donnera toutes les informations et détails nécessaires. La composante matérielle est le symbole sacré du clerc.</p>"
+        "description_html": "<p>Ce sort permet au clerc de demander à la créature visée de lui rendre un service et de rapporter la preuve que l’action a bien été accomplie. Cela peut être, par exemple, la récupération d’un objet de valeur, le sauvetage ou la libération d’une personne connue, la libération d’une créature, la prise d’une place forte, l’élimination d’une personne, etc. Pour les créatures de la même religion que le clerc le jet de protection n’est pas autorisé si la quête est justifiée et méritée. Pour celles du même alignement que le clerc, le jet de protection se fait avec un malus de –4. Pour les autres, je jet de protection est normal. Si la quête religieuse n’est pas correctement accomplie parce que la créature affectée « traîne les pieds » ou y met de la mauvaise volonté, cette dernière perd 1 point sur ses jets de protection pour chaque jour d’inaction volontaire et ce malus dure tant que cette quête religieuse n’est pas accomplie ou que le clerc l’annule lui-même. Il existe certaines circonstances qui peuvent suspendre temporairement une quête religieuse et d’autres qui peuvent l’annuler : le MD donnera toutes les informations et détails nécessaires. La composante matérielle est le symbole sacré du clerc.</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "symbole sacré du clerc",
+            "quantite": 1,
+            "consommation": "non_consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -54208,7 +54762,27 @@
         "description_reelle": "Avec ce sort, le magicien peut créer le duplicata de n’importe quelle créature. Ce duplicata ressemble exactement à l’original. Les seules différences sont les suivantes : le simulacre n’aura que 51 à 60 % (50 % + 1d10 %) des points de vie de l’original ; il y aura des différences de personnalité et des domaines de connaissance que le double n’aura pas. Une détection de la magie révélera immédiatement ce qu’est vraiment le simulacre, ainsi qu’une vision réelle. Le duplicata reste sous le contrôle permanent du magicien, bien qu’il n’existe aucun lien télépathique spécial ; les ordres doivent donc être donnés de façon ordinaire. Ce sort reproduit exactement la forme d’une créature, mais cette forme est en fait une sorte de zombie. Pour donner une force vitale au simulacre, il faut employer une réincarnation, et un souhait mineur est indispensable pour accorder au duplicata de 40 % à 65 % (35 % + 5d6 %) des connaissances et personnalité de la vraie créature. Le niveau du double, si niveau il y a, sera de 20 % à 50 % de celui de la vraie créature. Le duplicata est formé à partir de glace ou de neige. Le sort est lancé sur cette forme grossière en neige ou en glace, dans laquelle un morceau de l’original doit être placé. Comme composante matérielle supplémentaire, le sort demande de la poudre de rubis. Le simulacre n’a aucun moyen d’augmenter sa puissance : c'est-à-dire qu’il ne peut monter en niveau ni augmenter ses capacités.",
         "description_texte": "Avec ce sort, le magicien peut créer le duplicata de n’importe quelle créature. Ce duplicata ressemble exactement à l’original. Les seules différences sont les suivantes : le simulacre n’aura que 51 à 60 % (50 % + 1d10 %) des points de vie de l’original ; il y aura des différences de personnalité et des domaines de connaissance que le double n’aura pas. Une détection de la magie révélera immédiatement ce qu’est vraiment le simulacre, ainsi qu’une vision réelle. Le duplicata reste sous le contrôle permanent du magicien, bien qu’il n’existe aucun lien télépathique spécial ; les ordres doivent donc être donnés de façon ordinaire. Ce sort reproduit exactement la forme d’une créature, mais cette forme est en fait une sorte de zombie. Pour donner une force vitale au simulacre, il faut employer une réincarnation, et un souhait mineur est indispensable pour accorder au duplicata de 40 % à 65 % (35 % + 5d6 %) des connaissances et personnalité de la vraie créature. Le niveau du double, si niveau il y a, sera de 20 % à 50 % de celui de la vraie créature. Le duplicata est formé à partir de glace ou de neige. Le sort est lancé sur cette forme grossière en neige ou en glace, dans laquelle un morceau de l’original doit être placé. Comme composante matérielle supplémentaire, le sort demande de la poudre de rubis. Le simulacre n’a aucun moyen d’augmenter sa puissance : c'est-à-dire qu’il ne peut monter en niveau ni augmenter ses capacités.",
         "description_html": "<p>Avec ce sort, le magicien peut créer le duplicata de n’importe quelle créature. Ce duplicata ressemble exactement à l’original. Les seules différences sont les suivantes : le simulacre n’aura que 51 à 60 % (50 % + 1d10 %) des points de vie de l’original ; il y aura des différences de personnalité et des domaines de connaissance que le double n’aura pas. Une détection de la magie révélera immédiatement ce qu’est vraiment le simulacre, ainsi qu’une vision réelle. Le duplicata reste sous le contrôle permanent du magicien, bien qu’il n’existe aucun lien télépathique spécial ; les ordres doivent donc être donnés de façon ordinaire. Ce sort reproduit exactement la forme d’une créature, mais cette forme est en fait une sorte de zombie. Pour donner une force vitale au simulacre, il faut employer une réincarnation, et un souhait mineur est indispensable pour accorder au duplicata de 40 % à 65 % (35 % + 5d6 %) des connaissances et personnalité de la vraie créature. Le niveau du double, si niveau il y a, sera de 20 % à 50 % de celui de la vraie créature. Le duplicata est formé à partir de glace ou de neige. Le sort est lancé sur cette forme grossière en neige ou en glace, dans laquelle un morceau de l’original doit être placé. Comme composante matérielle supplémentaire, le sort demande de la poudre de rubis. Le simulacre n’a aucun moyen d’augmenter sa puissance : c&#x27;est-à-dire qu’il ne peut monter en niveau ni augmenter ses capacités.</p>",
-        "composants_materiels_verification_recommandee": true
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_objets": [
+          {
+            "nom": "morceau de l’original",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "poudre de rubis",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -54354,7 +54928,18 @@
         "description_html": "<p>Ce sort est le même que le sort de niveau 5 de clerc, soin ultime (voir p.50), mais le druide doit utiliser du gui de n’importe quelle sorte comme composante matérielle.</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "gui de n’importe quelle sorte",
-        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs"
+        "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
+        "composants_materiels_objets": [
+          {
+            "nom": "gui",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -55742,7 +56327,36 @@
         "description_reelle": "Ce sort aux pouvoirs puissants, offre plusieurs possibilités au magicien. Il peut créer un globe de matière d’une température de 0 absolu, température qui se diffuse au contact de l’eau ou d’un liquide principalement composé d’eau : le liquide gèle alors sur une épaisseur de 0,15 m et sur une surface de 9 m² par niveau du lanceur de sort. La glace reste pendant 1 round par niveau. Le magicien peut aussi faire jaillir de sa main un très fin rayon de froid, sur une distance de 1\" par niveau : ce rayon inflige 4 points de dégâts par niveau du lanceur de sort à la créature touchée, mais si elle réussit son jet de protection contre les sorts, elle ne subit aucun dégât (le rayon est si étroit qu’un jet de protection indique qu’il a manqué sa cible). Mais le rayon va jusqu’au bout de la distance autorisée et tout ce qu’il rencontre doit réussir un jet de protection (s’il y a lieu) ou subir des dégâts. Enfin, le magicien peut créer un petit globe de la taille d’une bille de fronde, fraiche au toucher mais pas dangereuse. Cette boule peut être lancée. Elle se brisera au contact en infligeant 4d6 points de dégâts aux créatures se trouvant dans un rayon de 3 m (la moitié si un jet de protection est réussi). Si la boule n’est pas lancée, à la main ou à la fronde, dans un délai de 1 round par niveau du magicien, elle explosera et infligera les dégâts prévus. Cette période de temps peut être utilisée pour se défaire de poursuivants, bien que cela puisse être dangereux pour le magicien et les gens qui l’accompagnent. La portée de cette bille est de 4\" si elle est lancée à la main ou identique à celle d’une fronde sinon. Les composantes matérielles dépendent du choix de l’utilisation du sort. Pour la première application, il faut une fine feuille de cristal de 6 cm² ; pour la deuxième, il faut un saphir blanc d’une valeur minimale de 1.000 po ; pour la troisième, le magicien a besoin d’un diamant de 1.000 po minimum. Toutes les composantes sont consommées et inutilisables après le lancement du sort. Si ce sort est utilisé sous l’eau, il est extrêmement dangereux dans sa première version. Le globe de matière au zéro absolu congèle instantanément l’eau qui entoure le magicien en un bloc de glace d’un volume de 1,3 m³ par niveau et pour une durée de 1 round par niveau. Si les secours ne sont pas immédiats, le magicien meurt asphyxié. Le bloc, bien entendu, flotte jusqu’à la surface dès sa formation.",
         "description_texte": "Ce sort aux pouvoirs puissants, offre plusieurs possibilités au magicien. Il peut créer un globe de matière d’une température de 0 absolu, température qui se diffuse au contact de l’eau ou d’un liquide principalement composé d’eau : le liquide gèle alors sur une épaisseur de 0,15 m et sur une surface de 9 m² par niveau du lanceur de sort. La glace reste pendant 1 round par niveau. Le magicien peut aussi faire jaillir de sa main un très fin rayon de froid, sur une distance de 1\" par niveau : ce rayon inflige 4 points de dégâts par niveau du lanceur de sort à la créature touchée, mais si elle réussit son jet de protection contre les sorts, elle ne subit aucun dégât (le rayon est si étroit qu’un jet de protection indique qu’il a manqué sa cible). Mais le rayon va jusqu’au bout de la distance autorisée et tout ce qu’il rencontre doit réussir un jet de protection (s’il y a lieu) ou subir des dégâts. Enfin, le magicien peut créer un petit globe de la taille d’une bille de fronde, fraiche au toucher mais pas dangereuse. Cette boule peut être lancée. Elle se brisera au contact en infligeant 4d6 points de dégâts aux créatures se trouvant dans un rayon de 3 m (la moitié si un jet de protection est réussi). Si la boule n’est pas lancée, à la main ou à la fronde, dans un délai de 1 round par niveau du magicien, elle explosera et infligera les dégâts prévus. Cette période de temps peut être utilisée pour se défaire de poursuivants, bien que cela puisse être dangereux pour le magicien et les gens qui l’accompagnent. La portée de cette bille est de 4\" si elle est lancée à la main ou identique à celle d’une fronde sinon. Les composantes matérielles dépendent du choix de l’utilisation du sort. Pour la première application, il faut une fine feuille de cristal de 6 cm² ; pour la deuxième, il faut un saphir blanc d’une valeur minimale de 1.000 po ; pour la troisième, le magicien a besoin d’un diamant de 1.000 po minimum. Toutes les composantes sont consommées et inutilisables après le lancement du sort. Si ce sort est utilisé sous l’eau, il est extrêmement dangereux dans sa première version. Le globe de matière au zéro absolu congèle instantanément l’eau qui entoure le magicien en un bloc de glace d’un volume de 1,3 m³ par niveau et pour une durée de 1 round par niveau. Si les secours ne sont pas immédiats, le magicien meurt asphyxié. Le bloc, bien entendu, flotte jusqu’à la surface dès sa formation.",
         "description_html": "<p>Ce sort aux pouvoirs puissants, offre plusieurs possibilités au magicien. Il peut créer un globe de matière d’une température de 0 absolu, température qui se diffuse au contact de l’eau ou d’un liquide principalement composé d’eau : le liquide gèle alors sur une épaisseur de 0,15 m et sur une surface de 9 m² par niveau du lanceur de sort. La glace reste pendant 1 round par niveau. Le magicien peut aussi faire jaillir de sa main un très fin rayon de froid, sur une distance de 1&quot; par niveau : ce rayon inflige 4 points de dégâts par niveau du lanceur de sort à la créature touchée, mais si elle réussit son jet de protection contre les sorts, elle ne subit aucun dégât (le rayon est si étroit qu’un jet de protection indique qu’il a manqué sa cible). Mais le rayon va jusqu’au bout de la distance autorisée et tout ce qu’il rencontre doit réussir un jet de protection (s’il y a lieu) ou subir des dégâts. Enfin, le magicien peut créer un petit globe de la taille d’une bille de fronde, fraiche au toucher mais pas dangereuse. Cette boule peut être lancée. Elle se brisera au contact en infligeant 4d6 points de dégâts aux créatures se trouvant dans un rayon de 3 m (la moitié si un jet de protection est réussi). Si la boule n’est pas lancée, à la main ou à la fronde, dans un délai de 1 round par niveau du magicien, elle explosera et infligera les dégâts prévus. Cette période de temps peut être utilisée pour se défaire de poursuivants, bien que cela puisse être dangereux pour le magicien et les gens qui l’accompagnent. La portée de cette bille est de 4&quot; si elle est lancée à la main ou identique à celle d’une fronde sinon. Les composantes matérielles dépendent du choix de l’utilisation du sort. Pour la première application, il faut une fine feuille de cristal de 6 cm² ; pour la deuxième, il faut un saphir blanc d’une valeur minimale de 1.000 po ; pour la troisième, le magicien a besoin d’un diamant de 1.000 po minimum. Toutes les composantes sont consommées et inutilisables après le lancement du sort. Si ce sort est utilisé sous l’eau, il est extrêmement dangereux dans sa première version. Le globe de matière au zéro absolu congèle instantanément l’eau qui entoure le magicien en un bloc de glace d’un volume de 1,3 m³ par niveau et pour une durée de 1 round par niveau. Si les secours ne sont pas immédiats, le magicien meurt asphyxié. Le bloc, bien entendu, flotte jusqu’à la surface dès sa formation.</p>",
-        "composants_materiels_verification_recommandee": true
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_objets": [
+          {
+            "nom": "fine feuille de cristal de 6 cm²",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Première application.",
+            "notes": "Consommée après le lancement."
+          },
+          {
+            "nom": "saphir blanc",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": 1000,
+            "source": "Manuel des joueurs",
+            "condition": "Deuxième application. Consommé après le lancement.",
+            "notes": null
+          },
+          {
+            "nom": "diamant",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": 1000,
+            "source": "Manuel des joueurs",
+            "condition": "Troisième application. Consommé après le lancement.",
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -56176,7 +56790,45 @@
         "composants_materiels_verification_recommandee": true,
         "description_reelle": "Quand ce sort est lancé, la créature touchée (ou le magicien lui-même) ainsi que tout son équipement semblent être transformés en pierre. La transmutation initiale de la chair en pierre prend un round entier après le temps d’incantation. Ensuite, même une inspection minutieuse ne révélera rien, bien qu’une détection de la magie mette en évidence une faible aura irradiant de la statue. La créature pétrifiée peut voir, entendre et sentir normalement. Les sensations ressenties sont celles que peut ressentir du granit, c'est-à-dire qu’un éclat correspond à une légère blessure, mais attention aux coups puissants qui peuvent casser un morceau entier. La créature affectée peut redevenir normale en 1 seconde (1/6e de segment), puis se retransformer en pierre si elle le veut, à la même vitesse, ceci tant que dure le sort. Pendant la transformation initiale de la chair en pierre, la créature affectée doit réussir un tirage de pourcentage de 82 % ou moins, avec –1 % sur le dé pour chaque point de constitution qu’elle a ; avec une constitution de 18, il n’y a donc aucun danger. Si ce tirage de pourcentage est raté, la créature subit un violent traumatisme et meurt. Les composantes matérielles sont : de la chaud, du sable et une goutte d’eau, le tout mélangé par une tige en fer (pointe ou clou par exemple). SORTS DE NIVEAU 8",
         "description_texte": "Quand ce sort est lancé, la créature touchée (ou le magicien lui-même) ainsi que tout son équipement semblent être transformés en pierre. La transmutation initiale de la chair en pierre prend un round entier après le temps d’incantation. Ensuite, même une inspection minutieuse ne révélera rien, bien qu’une détection de la magie mette en évidence une faible aura irradiant de la statue. La créature pétrifiée peut voir, entendre et sentir normalement. Les sensations ressenties sont celles que peut ressentir du granit, c'est-à-dire qu’un éclat correspond à une légère blessure, mais attention aux coups puissants qui peuvent casser un morceau entier. La créature affectée peut redevenir normale en 1 seconde (1/6e de segment), puis se retransformer en pierre si elle le veut, à la même vitesse, ceci tant que dure le sort. Pendant la transformation initiale de la chair en pierre, la créature affectée doit réussir un tirage de pourcentage de 82 % ou moins, avec –1 % sur le dé pour chaque point de constitution qu’elle a ; avec une constitution de 18, il n’y a donc aucun danger. Si ce tirage de pourcentage est raté, la créature subit un violent traumatisme et meurt. Les composantes matérielles sont : de la chaud, du sable et une goutte d’eau, le tout mélangé par une tige en fer (pointe ou clou par exemple). SORTS DE NIVEAU 8",
-        "description_html": "<p>Quand ce sort est lancé, la créature touchée (ou le magicien lui-même) ainsi que tout son équipement semblent être transformés en pierre. La transmutation initiale de la chair en pierre prend un round entier après le temps d’incantation. Ensuite, même une inspection minutieuse ne révélera rien, bien qu’une détection de la magie mette en évidence une faible aura irradiant de la statue. La créature pétrifiée peut voir, entendre et sentir normalement. Les sensations ressenties sont celles que peut ressentir du granit, c&#x27;est-à-dire qu’un éclat correspond à une légère blessure, mais attention aux coups puissants qui peuvent casser un morceau entier. La créature affectée peut redevenir normale en 1 seconde (1/6e de segment), puis se retransformer en pierre si elle le veut, à la même vitesse, ceci tant que dure le sort. Pendant la transformation initiale de la chair en pierre, la créature affectée doit réussir un tirage de pourcentage de 82 % ou moins, avec –1 % sur le dé pour chaque point de constitution qu’elle a ; avec une constitution de 18, il n’y a donc aucun danger. Si ce tirage de pourcentage est raté, la créature subit un violent traumatisme et meurt. Les composantes matérielles sont : de la chaud, du sable et une goutte d’eau, le tout mélangé par une tige en fer (pointe ou clou par exemple). SORTS DE NIVEAU 8</p>"
+        "description_html": "<p>Quand ce sort est lancé, la créature touchée (ou le magicien lui-même) ainsi que tout son équipement semblent être transformés en pierre. La transmutation initiale de la chair en pierre prend un round entier après le temps d’incantation. Ensuite, même une inspection minutieuse ne révélera rien, bien qu’une détection de la magie mette en évidence une faible aura irradiant de la statue. La créature pétrifiée peut voir, entendre et sentir normalement. Les sensations ressenties sont celles que peut ressentir du granit, c&#x27;est-à-dire qu’un éclat correspond à une légère blessure, mais attention aux coups puissants qui peuvent casser un morceau entier. La créature affectée peut redevenir normale en 1 seconde (1/6e de segment), puis se retransformer en pierre si elle le veut, à la même vitesse, ceci tant que dure le sort. Pendant la transformation initiale de la chair en pierre, la créature affectée doit réussir un tirage de pourcentage de 82 % ou moins, avec –1 % sur le dé pour chaque point de constitution qu’elle a ; avec une constitution de 18, il n’y a donc aucun danger. Si ce tirage de pourcentage est raté, la créature subit un violent traumatisme et meurt. Les composantes matérielles sont : de la chaud, du sable et une goutte d’eau, le tout mélangé par une tige en fer (pointe ou clou par exemple). SORTS DE NIVEAU 8</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "chaux",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "sable",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "goutte d’eau",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "tige en fer",
+            "quantite": 1,
+            "consommation": "non_consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -57467,7 +58119,27 @@
         "composants_materiels_source": "Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau.",
         "description_reelle": "Quand ce sort est lancé, le magicien crée soit une averse de grêlons dans une zone de 4\" de diamètre, infligeant de 3 à 30 points de dégâts (3d10), soit une chute de neige fondue sur une zone de 8\" de diamètre, qui aveugle les créatures pendant la durée du sort et qui gèle le sol ralentissant ainsi lesdites créatures à 50 % et leur donnant 50 % de chances de tomber si elles essayent de bouger. Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau. Ce sort annule les effets du sort métal brûlant (voir p.57) mais sa première application (l’averse de grêlons) infligera tout de même les dégâts. Lancé sous l’eau, les grêlons seront plus faibles en puissance, n’infligeant que 1d10 points de dommages avant de remonter à la surface ; la chute de neige n’a quant à elle aucun effet sous l’eau.",
         "description_texte": "Quand ce sort est lancé, le magicien crée soit une averse de grêlons dans une zone de 4\" de diamètre, infligeant de 3 à 30 points de dégâts (3d10), soit une chute de neige fondue sur une zone de 8\" de diamètre, qui aveugle les créatures pendant la durée du sort et qui gèle le sol ralentissant ainsi lesdites créatures à 50 % et leur donnant 50 % de chances de tomber si elles essayent de bouger. Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau. Ce sort annule les effets du sort métal brûlant (voir p.57) mais sa première application (l’averse de grêlons) infligera tout de même les dégâts. Lancé sous l’eau, les grêlons seront plus faibles en puissance, n’infligeant que 1d10 points de dommages avant de remonter à la surface ; la chute de neige n’a quant à elle aucun effet sous l’eau.",
-        "description_html": "<p>Quand ce sort est lancé, le magicien crée soit une averse de grêlons dans une zone de 4&quot; de diamètre, infligeant de 3 à 30 points de dégâts (3d10), soit une chute de neige fondue sur une zone de 8&quot; de diamètre, qui aveugle les créatures pendant la durée du sort et qui gèle le sol ralentissant ainsi lesdites créatures à 50 % et leur donnant 50 % de chances de tomber si elles essayent de bouger. Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau. Ce sort annule les effets du sort métal brûlant (voir p.57) mais sa première application (l’averse de grêlons) infligera tout de même les dégâts. Lancé sous l’eau, les grêlons seront plus faibles en puissance, n’infligeant que 1d10 points de dommages avant de remonter à la surface ; la chute de neige n’a quant à elle aucun effet sous l’eau.</p>"
+        "description_html": "<p>Quand ce sort est lancé, le magicien crée soit une averse de grêlons dans une zone de 4&quot; de diamètre, infligeant de 3 à 30 points de dégâts (3d10), soit une chute de neige fondue sur une zone de 8&quot; de diamètre, qui aveugle les créatures pendant la durée du sort et qui gèle le sol ralentissant ainsi lesdites créatures à 50 % et leur donnant 50 % de chances de tomber si elles essayent de bouger. Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau. Ce sort annule les effets du sort métal brûlant (voir p.57) mais sa première application (l’averse de grêlons) infligera tout de même les dégâts. Lancé sous l’eau, les grêlons seront plus faibles en puissance, n’infligeant que 1d10 points de dommages avant de remonter à la surface ; la chute de neige n’a quant à elle aucun effet sous l’eau.</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "pincée de poussière",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "quelques gouttes d’eau",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -57755,7 +58427,36 @@
         "description_reelle": "Quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.",
         "description_texte": "Quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.",
         "description_html": "<p>Quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.</p>",
-        "composants_materiels_verification_recommandee": true
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_objets": [
+          {
+            "nom": "fourrure de chauve-souris",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "morceau de charbon",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à une goutte de poix.",
+            "notes": null
+          },
+          {
+            "nom": "goutte de poix",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à un morceau de charbon.",
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -57902,7 +58603,36 @@
         "description_html": "<p>Ce sort provoque une obscurité totale dans la zone d’effet. L’infravision et l’ultravision sont inefficaces. Aucune lumière normale ou magique n’éclairera dans ces ténèbres, sauf les sorts de lumière et de lumière éternelle. Dans ces cas, les ténèbres sont dissipées par cette lumière. De même, le sort de ténèbres sur 5 mètres dissipe un sort de lumière, mais se contente de suspendre temporairement les effets d’un sort de lumière éternelle (qui fonctionne encore après l’expiration des ténèbres). Les composantes matérielles de ce sort un peu de fourrure de chauve-souris et soit un morceau de charbon, soit une goutte de poix.</p>",
         "composants_materiels_verification_recommandee": true,
         "composants_materiels_source": "un peu de fourrure de chauve-souris et soit un morceau de charbon, soit une goutte de poix",
-        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée"
+        "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
+        "composants_materiels_objets": [
+          {
+            "nom": "fourrure de chauve-souris",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "morceau de charbon",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à une goutte de poix.",
+            "notes": null
+          },
+          {
+            "nom": "goutte de poix",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à un morceau de charbon.",
+            "notes": null
+          }
+        ]
       },
       "effects": [
         {
@@ -60429,7 +61159,18 @@
         "composants_materiels_source": "La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué.",
         "description_reelle": "Quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante ; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés ; un objet extrêmement précieux ajoutera +2 au tirage ; enfin, un objet sans prix, quasiment unique, ajoutera +3. SORTS DE NIVEAU 1 DE MAGICIEN Niveau : 7 Composantes : * Portée : * Temps d'incantation : * Durée : * Jet de protection : * Zone d'effet : * * fonction du sort approprié Explication/Description : l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7. LANCER LES SORTS Vous trouverez dans les chapitres suivants tous les renseignements concernant les lancers de sort, aussi bien en intérieur qu'en extérieur. Chaque personnage lanceur de sorts ne peut apprendre, pour un niveau donné, qu'un certain nombre de sorts (des moyens magiques peuvent faire augmenter ce nombre). Une fois lancé, un sort est totalement rayé de la mémoire, oublié ; mais il est possible que le personnage se rappelle encore d'autres sorts de même type : le personnage peut avoir mémorisé plusieurs fois le même sort, dans la limite du nombre de sorts autorisé par niveau. II est possible de lancer la plupart des sorts en un seul round bien que certains sorts — en particulier ceux de hauts niveaux — demandent plus de temps. Le fait de lancer des sorts demande certaines actions bien précises et si ces actions sont interrompues, il n'est pas possible de lancer le sort mais celui-ci est quand même effacé de la mémoire du personnage. Exemple : un magicien, au moment de lancer une boule de feu, est frappé d'une flèche alors qu'il n'en est qu'à la moitié du temps d'incantation du sort. Un silence magique, ou le fait de bâillonner le personnage, empêche de prononcer les composantes verbales (V). Une immobilisation magique empêche de lancer des sorts. Le fait de maîtriser un personnage l'empêche de lancer des sorts à composantes somatiques (S), car les gestes du lanceur de sorts doivent 101 L'AVENTURE être effectués avec précision. Mis à part ces restrictions, il est certain que les sorts sont des moyens d'attaque et de défense tout à fait valables, à condition que le personnage n'hésite pas : il doit savoir au début du round quel sort il va lancer. À mesure qu'il lance ses sorts, le personnage les raye de la liste de ceux qu'il a mémorisés. Il en va de même pour les composantes matérielles. Les sorts sur parchemins : On lance les sorts sur parchemins de la même façon que les autres sorts (mémorisés). Une fois lu et déclenché, l'écriture s'efface du parchemin car leurs propriétés et les énergies magiques sont contenues dans les caractères, runes, signes et autres mots écrits pour le sort en question, Étant écrits, les sorts sur parchemin ne nécessitent ni composantes matérielles ni somatiques. Le temps nécessaire pour lancer (lire) un sort sur parchemin est le même que pour le sort mémorisé. Ceci dans le cas où le parchemin est à portée de main et prêt à être lu. En général, les parchemins sont utilisés comme si un personnage de 12e niveau lançait le sort. Ceci peut entrainer des modifications de portée, de durée et de zone d'effet du sort ainsi que sur la puissance de certains sorts (projectile magique, boule de feu, foudre, etc.) Votre Maître de Donjon vous donnera d'autres informations concernant les parchemins le moment venu. L'AVENTURE Lorsque vous partirez en aventure, vous, et probablement plusieurs autres personnages, irez explorer un labyrinthe souterrain (un donjon) ou une région (en extérieur donc). Votre Maître de Donjon aura préparé une carte des lieux que vous visiterez ; cette carte contiendra toutes les informations nécessaires. Il vous donnera certains renseignements avant le départ de l'aventure — vous aurez peut-être à questionner la population ou bien vous entendrez des rumeurs ou des légendes — afin que votre groupe puisse s'équiper du mieux possible pour l'expédition, engager éventuellement des hommes d'armes, acheter des chevaux ou quoi que ce soit qui vous semble utile ou qui puisse vous aider à réussir votre aventure aussi bien en extérieur qu'en donjon. Bien entendu, le fait de s'aventurer dans une cité ou dans une ville peut être aussi très intéressant, plein d'enseignements et dangereux, et il est aussi possible de faire des aventures dans ce troisième espace : la cité ou la ville. Ces trois types d'aventures ont chacun des éléments en commun et des différences, chacun d'entre eux sera décrit dans les chapitres suivants. Votre MD dispose de toutes les informations possibles et nécessaires pour vous faire jouer dans chacun de ces endroits. Expéditions en donjons : Les aventures en labyrinthes souterrains sont les plus répandues. Le groupe s'équipe et entre dans les souterrains d'un château, d'un temple ou quoi que ce soit d'autre. Le groupe aura intérêt à s'équiper de sources de lumière, de perches pour sonder le terrain, de cordes, de pitons, etc. De plus, aucun des membres du groupe ne connaissant le parcours du donjon, il faudra faire une carte au fur et à mesure de la progression. Ainsi, vous pourrez trouver sans problème le chemin du retour. Comme votre groupe explorera et dressera sa carte, sa progression sera assez lente et il sera bon de prévoir une avantgarde et une arrière-garde musclées. Dans le donjon, vous trouverez des pièces — vides ou habitées —, des trappes pour engloutir les téméraires, des pièges pour attraper les imprudents, des monstres prêts à dévorer n'importe qui. En contrepartie, les récompenses seront grandes : de l'or, des gemmes et des objets magiques. Ces récompenses vous permettront de vous préparer encore mieux pour d'autres expéditions, de devenir plus habile dans votre profession, plus puissant. Pour cela, il suffit d'entrer et de ressortir après avoir tué les gardiens des trésors et empoché le magot... Explorations en extérieur : Les aventures dans des pays inconnus ou déserts sont extrêmement périlleuses car on y rencontre souvent des bandes d'hommes très nombreux, voire pire. C'est le domaine des monstres et des étendues sans fin et sans piste. Ces expéditions sont donc habituellement entreprises par des personnages de hauts niveaux, mais même des personnages débutants peuvent s'y aventurer pour une durée limitée ; votre Maître de Donjon pourra vous suggérer d'entreprendre une exploration — peut-être pour trouver une ruine, site du donjon, ou bien pour rechercher un clan de nains allié, etc. II est nécessaire d'avoir des chevaux ainsi que des rations, des armes de jet et tout le matériel nécessaire pour faire une carte. Dans les régions inconnues, la progression sera lente car votre groupe devra explorer, chercher des ennemis à défaire et des lieux tels que des temples, des donjons, etc. Si l’expédition dure plusieurs jours, le groupe devra peut-être chasser pour assurer sa subsistance à moins qu'il ne trouve un lieu habité — un village ou un hameau — dans lequel il lui arrivera peut-être d'autres types d'aventures. DÉPLACEMENTS L'AVENTURE Aventures citadines : Les cités, les villes et même les gros villages offrent un cadre parfait pour toute une série d'affaires et d'incidents toujours intéressant et rapportant souvent des informations tout en étant assez dangereux. Pour devenir un joueur actif dans une campagne, il faut aussi se mêler à la population, se choisir une habitation, acheter des vivres et de l'équipement, chercher des renseignements. Ces mêmes activités dans une ville étrangère demandent du doigté et de l'astuce. II faut faire attention à ce que l’on dit et fait. Des questions sur le rang d'un personnage, sa profession, son dieu ou son alignement sont à éviter et le fait de parler en langue d'alignement est tout à fait déplacé. On aura affaire à des mendiants, des bandits, des ivrognes, des marchands avares et roublards, des informateurs, des officiels ou des gardes qui poseront des questions auxquelles il vaudra mieux répondre. Les tavernes sont pleines de personnages utiles mais elles regorgent aussi d'adversaires rusés et dangereux. Et ne parlons pas des ruelles sombres la nuit... Et que trouve-t-on dans les ruines d'une ancienne cité ? Le pain et le vin des joueurs des Règles AVANCÉES de DONJONS & DRAGONS. La préparation de ces types d'aventures est très importante. Voici les données de base nécessaires pour vous préparer à une longue carrière. ENCOMBREMENT L'équipement que vous avez choisi d'emporter est à la fois lourd et volumineux. II est bon de s'équiper au maximum mais sans prendre trop de choses. Votre personnage ne pourra se déplacer normalement que s'il ne dépasse pas certaines limites d'encombrement. (Notez bien que le volume d'un objet peut être aussi encombrant que son poids : 10 kilos de plumes prennent une place considérable). Afin de pouvoir se servir de son équipement, le personnage doit avoir chaque objet à portée de la main, c'est là encore une considération à prendre en compte. Enfin le but des aventuriers étant de ramener des trésors, il est bon de prévoir des sacs et de la place pour pouvoir porter tout cet or. Le tableau ci-dessous vous donne une approximation du poids porté et de l’encombrement du personnage selon ses déplacements. Encombrement Déplacement Réaction et initiative Équipement normal — environ 18 kg et encombrement faible 12\" — le personnage peut courir vite",
         "description_texte": "Quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante ; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés ; un objet extrêmement précieux ajoutera +2 au tirage ; enfin, un objet sans prix, quasiment unique, ajoutera +3. SORTS DE NIVEAU 1 DE MAGICIEN Niveau : 7 Composantes : * Portée : * Temps d'incantation : * Durée : * Jet de protection : * Zone d'effet : * * fonction du sort approprié Explication/Description : l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7. LANCER LES SORTS Vous trouverez dans les chapitres suivants tous les renseignements concernant les lancers de sort, aussi bien en intérieur qu'en extérieur. Chaque personnage lanceur de sorts ne peut apprendre, pour un niveau donné, qu'un certain nombre de sorts (des moyens magiques peuvent faire augmenter ce nombre). Une fois lancé, un sort est totalement rayé de la mémoire, oublié ; mais il est possible que le personnage se rappelle encore d'autres sorts de même type : le personnage peut avoir mémorisé plusieurs fois le même sort, dans la limite du nombre de sorts autorisé par niveau. II est possible de lancer la plupart des sorts en un seul round bien que certains sorts — en particulier ceux de hauts niveaux — demandent plus de temps. Le fait de lancer des sorts demande certaines actions bien précises et si ces actions sont interrompues, il n'est pas possible de lancer le sort mais celui-ci est quand même effacé de la mémoire du personnage. Exemple : un magicien, au moment de lancer une boule de feu, est frappé d'une flèche alors qu'il n'en est qu'à la moitié du temps d'incantation du sort. Un silence magique, ou le fait de bâillonner le personnage, empêche de prononcer les composantes verbales (V). Une immobilisation magique empêche de lancer des sorts. Le fait de maîtriser un personnage l'empêche de lancer des sorts à composantes somatiques (S), car les gestes du lanceur de sorts doivent 101 L'AVENTURE être effectués avec précision. Mis à part ces restrictions, il est certain que les sorts sont des moyens d'attaque et de défense tout à fait valables, à condition que le personnage n'hésite pas : il doit savoir au début du round quel sort il va lancer. À mesure qu'il lance ses sorts, le personnage les raye de la liste de ceux qu'il a mémorisés. Il en va de même pour les composantes matérielles. Les sorts sur parchemins : On lance les sorts sur parchemins de la même façon que les autres sorts (mémorisés). Une fois lu et déclenché, l'écriture s'efface du parchemin car leurs propriétés et les énergies magiques sont contenues dans les caractères, runes, signes et autres mots écrits pour le sort en question, Étant écrits, les sorts sur parchemin ne nécessitent ni composantes matérielles ni somatiques. Le temps nécessaire pour lancer (lire) un sort sur parchemin est le même que pour le sort mémorisé. Ceci dans le cas où le parchemin est à portée de main et prêt à être lu. En général, les parchemins sont utilisés comme si un personnage de 12e niveau lançait le sort. Ceci peut entrainer des modifications de portée, de durée et de zone d'effet du sort ainsi que sur la puissance de certains sorts (projectile magique, boule de feu, foudre, etc.) Votre Maître de Donjon vous donnera d'autres informations concernant les parchemins le moment venu. L'AVENTURE Lorsque vous partirez en aventure, vous, et probablement plusieurs autres personnages, irez explorer un labyrinthe souterrain (un donjon) ou une région (en extérieur donc). Votre Maître de Donjon aura préparé une carte des lieux que vous visiterez ; cette carte contiendra toutes les informations nécessaires. Il vous donnera certains renseignements avant le départ de l'aventure — vous aurez peut-être à questionner la population ou bien vous entendrez des rumeurs ou des légendes — afin que votre groupe puisse s'équiper du mieux possible pour l'expédition, engager éventuellement des hommes d'armes, acheter des chevaux ou quoi que ce soit qui vous semble utile ou qui puisse vous aider à réussir votre aventure aussi bien en extérieur qu'en donjon. Bien entendu, le fait de s'aventurer dans une cité ou dans une ville peut être aussi très intéressant, plein d'enseignements et dangereux, et il est aussi possible de faire des aventures dans ce troisième espace : la cité ou la ville. Ces trois types d'aventures ont chacun des éléments en commun et des différences, chacun d'entre eux sera décrit dans les chapitres suivants. Votre MD dispose de toutes les informations possibles et nécessaires pour vous faire jouer dans chacun de ces endroits. Expéditions en donjons : Les aventures en labyrinthes souterrains sont les plus répandues. Le groupe s'équipe et entre dans les souterrains d'un château, d'un temple ou quoi que ce soit d'autre. Le groupe aura intérêt à s'équiper de sources de lumière, de perches pour sonder le terrain, de cordes, de pitons, etc. De plus, aucun des membres du groupe ne connaissant le parcours du donjon, il faudra faire une carte au fur et à mesure de la progression. Ainsi, vous pourrez trouver sans problème le chemin du retour. Comme votre groupe explorera et dressera sa carte, sa progression sera assez lente et il sera bon de prévoir une avantgarde et une arrière-garde musclées. Dans le donjon, vous trouverez des pièces — vides ou habitées —, des trappes pour engloutir les téméraires, des pièges pour attraper les imprudents, des monstres prêts à dévorer n'importe qui. En contrepartie, les récompenses seront grandes : de l'or, des gemmes et des objets magiques. Ces récompenses vous permettront de vous préparer encore mieux pour d'autres expéditions, de devenir plus habile dans votre profession, plus puissant. Pour cela, il suffit d'entrer et de ressortir après avoir tué les gardiens des trésors et empoché le magot... Explorations en extérieur : Les aventures dans des pays inconnus ou déserts sont extrêmement périlleuses car on y rencontre souvent des bandes d'hommes très nombreux, voire pire. C'est le domaine des monstres et des étendues sans fin et sans piste. Ces expéditions sont donc habituellement entreprises par des personnages de hauts niveaux, mais même des personnages débutants peuvent s'y aventurer pour une durée limitée ; votre Maître de Donjon pourra vous suggérer d'entreprendre une exploration — peut-être pour trouver une ruine, site du donjon, ou bien pour rechercher un clan de nains allié, etc. II est nécessaire d'avoir des chevaux ainsi que des rations, des armes de jet et tout le matériel nécessaire pour faire une carte. Dans les régions inconnues, la progression sera lente car votre groupe devra explorer, chercher des ennemis à défaire et des lieux tels que des temples, des donjons, etc. Si l’expédition dure plusieurs jours, le groupe devra peut-être chasser pour assurer sa subsistance à moins qu'il ne trouve un lieu habité — un village ou un hameau — dans lequel il lui arrivera peut-être d'autres types d'aventures. DÉPLACEMENTS L'AVENTURE Aventures citadines : Les cités, les villes et même les gros villages offrent un cadre parfait pour toute une série d'affaires et d'incidents toujours intéressant et rapportant souvent des informations tout en étant assez dangereux. Pour devenir un joueur actif dans une campagne, il faut aussi se mêler à la population, se choisir une habitation, acheter des vivres et de l'équipement, chercher des renseignements. Ces mêmes activités dans une ville étrangère demandent du doigté et de l'astuce. II faut faire attention à ce que l’on dit et fait. Des questions sur le rang d'un personnage, sa profession, son dieu ou son alignement sont à éviter et le fait de parler en langue d'alignement est tout à fait déplacé. On aura affaire à des mendiants, des bandits, des ivrognes, des marchands avares et roublards, des informateurs, des officiels ou des gardes qui poseront des questions auxquelles il vaudra mieux répondre. Les tavernes sont pleines de personnages utiles mais elles regorgent aussi d'adversaires rusés et dangereux. Et ne parlons pas des ruelles sombres la nuit... Et que trouve-t-on dans les ruines d'une ancienne cité ? Le pain et le vin des joueurs des Règles AVANCÉES de DONJONS & DRAGONS. La préparation de ces types d'aventures est très importante. Voici les données de base nécessaires pour vous préparer à une longue carrière. ENCOMBREMENT L'équipement que vous avez choisi d'emporter est à la fois lourd et volumineux. II est bon de s'équiper au maximum mais sans prendre trop de choses. Votre personnage ne pourra se déplacer normalement que s'il ne dépasse pas certaines limites d'encombrement. (Notez bien que le volume d'un objet peut être aussi encombrant que son poids : 10 kilos de plumes prennent une place considérable). Afin de pouvoir se servir de son équipement, le personnage doit avoir chaque objet à portée de la main, c'est là encore une considération à prendre en compte. Enfin le but des aventuriers étant de ramener des trésors, il est bon de prévoir des sacs et de la place pour pouvoir porter tout cet or. Le tableau ci-dessous vous donne une approximation du poids porté et de l’encombrement du personnage selon ses déplacements. Encombrement Déplacement Réaction et initiative Équipement normal — environ 18 kg et encombrement faible 12\" — le personnage peut courir vite",
-        "description_html": "<p>Quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante ; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés ; un objet extrêmement précieux ajoutera +2 au tirage ; enfin, un objet sans prix, quasiment unique, ajoutera +3. SORTS DE NIVEAU 1 DE MAGICIEN Niveau : 7 Composantes : * Portée : * Temps d&#x27;incantation : * Durée : * Jet de protection : * Zone d&#x27;effet : * * fonction du sort approprié Explication/Description : l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7. LANCER LES SORTS Vous trouverez dans les chapitres suivants tous les renseignements concernant les lancers de sort, aussi bien en intérieur qu&#x27;en extérieur. Chaque personnage lanceur de sorts ne peut apprendre, pour un niveau donné, qu&#x27;un certain nombre de sorts (des moyens magiques peuvent faire augmenter ce nombre). Une fois lancé, un sort est totalement rayé de la mémoire, oublié ; mais il est possible que le personnage se rappelle encore d&#x27;autres sorts de même type : le personnage peut avoir mémorisé plusieurs fois le même sort, dans la limite du nombre de sorts autorisé par niveau. II est possible de lancer la plupart des sorts en un seul round bien que certains sorts — en particulier ceux de hauts niveaux — demandent plus de temps. Le fait de lancer des sorts demande certaines actions bien précises et si ces actions sont interrompues, il n&#x27;est pas possible de lancer le sort mais celui-ci est quand même effacé de la mémoire du personnage. Exemple : un magicien, au moment de lancer une boule de feu, est frappé d&#x27;une flèche alors qu&#x27;il n&#x27;en est qu&#x27;à la moitié du temps d&#x27;incantation du sort. Un silence magique, ou le fait de bâillonner le personnage, empêche de prononcer les composantes verbales (V). Une immobilisation magique empêche de lancer des sorts. Le fait de maîtriser un personnage l&#x27;empêche de lancer des sorts à composantes somatiques (S), car les gestes du lanceur de sorts doivent 101 L&#x27;AVENTURE être effectués avec précision. Mis à part ces restrictions, il est certain que les sorts sont des moyens d&#x27;attaque et de défense tout à fait valables, à condition que le personnage n&#x27;hésite pas : il doit savoir au début du round quel sort il va lancer. À mesure qu&#x27;il lance ses sorts, le personnage les raye de la liste de ceux qu&#x27;il a mémorisés. Il en va de même pour les composantes matérielles. Les sorts sur parchemins : On lance les sorts sur parchemins de la même façon que les autres sorts (mémorisés). Une fois lu et déclenché, l&#x27;écriture s&#x27;efface du parchemin car leurs propriétés et les énergies magiques sont contenues dans les caractères, runes, signes et autres mots écrits pour le sort en question, Étant écrits, les sorts sur parchemin ne nécessitent ni composantes matérielles ni somatiques. Le temps nécessaire pour lancer (lire) un sort sur parchemin est le même que pour le sort mémorisé. Ceci dans le cas où le parchemin est à portée de main et prêt à être lu. En général, les parchemins sont utilisés comme si un personnage de 12e niveau lançait le sort. Ceci peut entrainer des modifications de portée, de durée et de zone d&#x27;effet du sort ainsi que sur la puissance de certains sorts (projectile magique, boule de feu, foudre, etc.) Votre Maître de Donjon vous donnera d&#x27;autres informations concernant les parchemins le moment venu. L&#x27;AVENTURE Lorsque vous partirez en aventure, vous, et probablement plusieurs autres personnages, irez explorer un labyrinthe souterrain (un donjon) ou une région (en extérieur donc). Votre Maître de Donjon aura préparé une carte des lieux que vous visiterez ; cette carte contiendra toutes les informations nécessaires. Il vous donnera certains renseignements avant le départ de l&#x27;aventure — vous aurez peut-être à questionner la population ou bien vous entendrez des rumeurs ou des légendes — afin que votre groupe puisse s&#x27;équiper du mieux possible pour l&#x27;expédition, engager éventuellement des hommes d&#x27;armes, acheter des chevaux ou quoi que ce soit qui vous semble utile ou qui puisse vous aider à réussir votre aventure aussi bien en extérieur qu&#x27;en donjon. Bien entendu, le fait de s&#x27;aventurer dans une cité ou dans une ville peut être aussi très intéressant, plein d&#x27;enseignements et dangereux, et il est aussi possible de faire des aventures dans ce troisième espace : la cité ou la ville. Ces trois types d&#x27;aventures ont chacun des éléments en commun et des différences, chacun d&#x27;entre eux sera décrit dans les chapitres suivants. Votre MD dispose de toutes les informations possibles et nécessaires pour vous faire jouer dans chacun de ces endroits. Expéditions en donjons : Les aventures en labyrinthes souterrains sont les plus répandues. Le groupe s&#x27;équipe et entre dans les souterrains d&#x27;un château, d&#x27;un temple ou quoi que ce soit d&#x27;autre. Le groupe aura intérêt à s&#x27;équiper de sources de lumière, de perches pour sonder le terrain, de cordes, de pitons, etc. De plus, aucun des membres du groupe ne connaissant le parcours du donjon, il faudra faire une carte au fur et à mesure de la progression. Ainsi, vous pourrez trouver sans problème le chemin du retour. Comme votre groupe explorera et dressera sa carte, sa progression sera assez lente et il sera bon de prévoir une avantgarde et une arrière-garde musclées. Dans le donjon, vous trouverez des pièces — vides ou habitées —, des trappes pour engloutir les téméraires, des pièges pour attraper les imprudents, des monstres prêts à dévorer n&#x27;importe qui. En contrepartie, les récompenses seront grandes : de l&#x27;or, des gemmes et des objets magiques. Ces récompenses vous permettront de vous préparer encore mieux pour d&#x27;autres expéditions, de devenir plus habile dans votre profession, plus puissant. Pour cela, il suffit d&#x27;entrer et de ressortir après avoir tué les gardiens des trésors et empoché le magot... Explorations en extérieur : Les aventures dans des pays inconnus ou déserts sont extrêmement périlleuses car on y rencontre souvent des bandes d&#x27;hommes très nombreux, voire pire. C&#x27;est le domaine des monstres et des étendues sans fin et sans piste. Ces expéditions sont donc habituellement entreprises par des personnages de hauts niveaux, mais même des personnages débutants peuvent s&#x27;y aventurer pour une durée limitée ; votre Maître de Donjon pourra vous suggérer d&#x27;entreprendre une exploration — peut-être pour trouver une ruine, site du donjon, ou bien pour rechercher un clan de nains allié, etc. II est nécessaire d&#x27;avoir des chevaux ainsi que des rations, des armes de jet et tout le matériel nécessaire pour faire une carte. Dans les régions inconnues, la progression sera lente car votre groupe devra explorer, chercher des ennemis à défaire et des lieux tels que des temples, des donjons, etc. Si l’expédition dure plusieurs jours, le groupe devra peut-être chasser pour assurer sa subsistance à moins qu&#x27;il ne trouve un lieu habité — un village ou un hameau — dans lequel il lui arrivera peut-être d&#x27;autres types d&#x27;aventures. DÉPLACEMENTS L&#x27;AVENTURE Aventures citadines : Les cités, les villes et même les gros villages offrent un cadre parfait pour toute une série d&#x27;affaires et d&#x27;incidents toujours intéressant et rapportant souvent des informations tout en étant assez dangereux. Pour devenir un joueur actif dans une campagne, il faut aussi se mêler à la population, se choisir une habitation, acheter des vivres et de l&#x27;équipement, chercher des renseignements. Ces mêmes activités dans une ville étrangère demandent du doigté et de l&#x27;astuce. II faut faire attention à ce que l’on dit et fait. Des questions sur le rang d&#x27;un personnage, sa profession, son dieu ou son alignement sont à éviter et le fait de parler en langue d&#x27;alignement est tout à fait déplacé. On aura affaire à des mendiants, des bandits, des ivrognes, des marchands avares et roublards, des informateurs, des officiels ou des gardes qui poseront des questions auxquelles il vaudra mieux répondre. Les tavernes sont pleines de personnages utiles mais elles regorgent aussi d&#x27;adversaires rusés et dangereux. Et ne parlons pas des ruelles sombres la nuit... Et que trouve-t-on dans les ruines d&#x27;une ancienne cité ? Le pain et le vin des joueurs des Règles AVANCÉES de DONJONS &amp; DRAGONS. La préparation de ces types d&#x27;aventures est très importante. Voici les données de base nécessaires pour vous préparer à une longue carrière. ENCOMBREMENT L&#x27;équipement que vous avez choisi d&#x27;emporter est à la fois lourd et volumineux. II est bon de s&#x27;équiper au maximum mais sans prendre trop de choses. Votre personnage ne pourra se déplacer normalement que s&#x27;il ne dépasse pas certaines limites d&#x27;encombrement. (Notez bien que le volume d&#x27;un objet peut être aussi encombrant que son poids : 10 kilos de plumes prennent une place considérable). Afin de pouvoir se servir de son équipement, le personnage doit avoir chaque objet à portée de la main, c&#x27;est là encore une considération à prendre en compte. Enfin le but des aventuriers étant de ramener des trésors, il est bon de prévoir des sacs et de la place pour pouvoir porter tout cet or. Le tableau ci-dessous vous donne une approximation du poids porté et de l’encombrement du personnage selon ses déplacements. Encombrement Déplacement Réaction et initiative Équipement normal — environ 18 kg et encombrement faible 12&quot; — le personnage peut courir vite</p>"
+        "description_html": "<p>Quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante ; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés ; un objet extrêmement précieux ajoutera +2 au tirage ; enfin, un objet sans prix, quasiment unique, ajoutera +3. SORTS DE NIVEAU 1 DE MAGICIEN Niveau : 7 Composantes : * Portée : * Temps d&#x27;incantation : * Durée : * Jet de protection : * Zone d&#x27;effet : * * fonction du sort approprié Explication/Description : l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7. LANCER LES SORTS Vous trouverez dans les chapitres suivants tous les renseignements concernant les lancers de sort, aussi bien en intérieur qu&#x27;en extérieur. Chaque personnage lanceur de sorts ne peut apprendre, pour un niveau donné, qu&#x27;un certain nombre de sorts (des moyens magiques peuvent faire augmenter ce nombre). Une fois lancé, un sort est totalement rayé de la mémoire, oublié ; mais il est possible que le personnage se rappelle encore d&#x27;autres sorts de même type : le personnage peut avoir mémorisé plusieurs fois le même sort, dans la limite du nombre de sorts autorisé par niveau. II est possible de lancer la plupart des sorts en un seul round bien que certains sorts — en particulier ceux de hauts niveaux — demandent plus de temps. Le fait de lancer des sorts demande certaines actions bien précises et si ces actions sont interrompues, il n&#x27;est pas possible de lancer le sort mais celui-ci est quand même effacé de la mémoire du personnage. Exemple : un magicien, au moment de lancer une boule de feu, est frappé d&#x27;une flèche alors qu&#x27;il n&#x27;en est qu&#x27;à la moitié du temps d&#x27;incantation du sort. Un silence magique, ou le fait de bâillonner le personnage, empêche de prononcer les composantes verbales (V). Une immobilisation magique empêche de lancer des sorts. Le fait de maîtriser un personnage l&#x27;empêche de lancer des sorts à composantes somatiques (S), car les gestes du lanceur de sorts doivent 101 L&#x27;AVENTURE être effectués avec précision. Mis à part ces restrictions, il est certain que les sorts sont des moyens d&#x27;attaque et de défense tout à fait valables, à condition que le personnage n&#x27;hésite pas : il doit savoir au début du round quel sort il va lancer. À mesure qu&#x27;il lance ses sorts, le personnage les raye de la liste de ceux qu&#x27;il a mémorisés. Il en va de même pour les composantes matérielles. Les sorts sur parchemins : On lance les sorts sur parchemins de la même façon que les autres sorts (mémorisés). Une fois lu et déclenché, l&#x27;écriture s&#x27;efface du parchemin car leurs propriétés et les énergies magiques sont contenues dans les caractères, runes, signes et autres mots écrits pour le sort en question, Étant écrits, les sorts sur parchemin ne nécessitent ni composantes matérielles ni somatiques. Le temps nécessaire pour lancer (lire) un sort sur parchemin est le même que pour le sort mémorisé. Ceci dans le cas où le parchemin est à portée de main et prêt à être lu. En général, les parchemins sont utilisés comme si un personnage de 12e niveau lançait le sort. Ceci peut entrainer des modifications de portée, de durée et de zone d&#x27;effet du sort ainsi que sur la puissance de certains sorts (projectile magique, boule de feu, foudre, etc.) Votre Maître de Donjon vous donnera d&#x27;autres informations concernant les parchemins le moment venu. L&#x27;AVENTURE Lorsque vous partirez en aventure, vous, et probablement plusieurs autres personnages, irez explorer un labyrinthe souterrain (un donjon) ou une région (en extérieur donc). Votre Maître de Donjon aura préparé une carte des lieux que vous visiterez ; cette carte contiendra toutes les informations nécessaires. Il vous donnera certains renseignements avant le départ de l&#x27;aventure — vous aurez peut-être à questionner la population ou bien vous entendrez des rumeurs ou des légendes — afin que votre groupe puisse s&#x27;équiper du mieux possible pour l&#x27;expédition, engager éventuellement des hommes d&#x27;armes, acheter des chevaux ou quoi que ce soit qui vous semble utile ou qui puisse vous aider à réussir votre aventure aussi bien en extérieur qu&#x27;en donjon. Bien entendu, le fait de s&#x27;aventurer dans une cité ou dans une ville peut être aussi très intéressant, plein d&#x27;enseignements et dangereux, et il est aussi possible de faire des aventures dans ce troisième espace : la cité ou la ville. Ces trois types d&#x27;aventures ont chacun des éléments en commun et des différences, chacun d&#x27;entre eux sera décrit dans les chapitres suivants. Votre MD dispose de toutes les informations possibles et nécessaires pour vous faire jouer dans chacun de ces endroits. Expéditions en donjons : Les aventures en labyrinthes souterrains sont les plus répandues. Le groupe s&#x27;équipe et entre dans les souterrains d&#x27;un château, d&#x27;un temple ou quoi que ce soit d&#x27;autre. Le groupe aura intérêt à s&#x27;équiper de sources de lumière, de perches pour sonder le terrain, de cordes, de pitons, etc. De plus, aucun des membres du groupe ne connaissant le parcours du donjon, il faudra faire une carte au fur et à mesure de la progression. Ainsi, vous pourrez trouver sans problème le chemin du retour. Comme votre groupe explorera et dressera sa carte, sa progression sera assez lente et il sera bon de prévoir une avantgarde et une arrière-garde musclées. Dans le donjon, vous trouverez des pièces — vides ou habitées —, des trappes pour engloutir les téméraires, des pièges pour attraper les imprudents, des monstres prêts à dévorer n&#x27;importe qui. En contrepartie, les récompenses seront grandes : de l&#x27;or, des gemmes et des objets magiques. Ces récompenses vous permettront de vous préparer encore mieux pour d&#x27;autres expéditions, de devenir plus habile dans votre profession, plus puissant. Pour cela, il suffit d&#x27;entrer et de ressortir après avoir tué les gardiens des trésors et empoché le magot... Explorations en extérieur : Les aventures dans des pays inconnus ou déserts sont extrêmement périlleuses car on y rencontre souvent des bandes d&#x27;hommes très nombreux, voire pire. C&#x27;est le domaine des monstres et des étendues sans fin et sans piste. Ces expéditions sont donc habituellement entreprises par des personnages de hauts niveaux, mais même des personnages débutants peuvent s&#x27;y aventurer pour une durée limitée ; votre Maître de Donjon pourra vous suggérer d&#x27;entreprendre une exploration — peut-être pour trouver une ruine, site du donjon, ou bien pour rechercher un clan de nains allié, etc. II est nécessaire d&#x27;avoir des chevaux ainsi que des rations, des armes de jet et tout le matériel nécessaire pour faire une carte. Dans les régions inconnues, la progression sera lente car votre groupe devra explorer, chercher des ennemis à défaire et des lieux tels que des temples, des donjons, etc. Si l’expédition dure plusieurs jours, le groupe devra peut-être chasser pour assurer sa subsistance à moins qu&#x27;il ne trouve un lieu habité — un village ou un hameau — dans lequel il lui arrivera peut-être d&#x27;autres types d&#x27;aventures. DÉPLACEMENTS L&#x27;AVENTURE Aventures citadines : Les cités, les villes et même les gros villages offrent un cadre parfait pour toute une série d&#x27;affaires et d&#x27;incidents toujours intéressant et rapportant souvent des informations tout en étant assez dangereux. Pour devenir un joueur actif dans une campagne, il faut aussi se mêler à la population, se choisir une habitation, acheter des vivres et de l&#x27;équipement, chercher des renseignements. Ces mêmes activités dans une ville étrangère demandent du doigté et de l&#x27;astuce. II faut faire attention à ce que l’on dit et fait. Des questions sur le rang d&#x27;un personnage, sa profession, son dieu ou son alignement sont à éviter et le fait de parler en langue d&#x27;alignement est tout à fait déplacé. On aura affaire à des mendiants, des bandits, des ivrognes, des marchands avares et roublards, des informateurs, des officiels ou des gardes qui poseront des questions auxquelles il vaudra mieux répondre. Les tavernes sont pleines de personnages utiles mais elles regorgent aussi d&#x27;adversaires rusés et dangereux. Et ne parlons pas des ruelles sombres la nuit... Et que trouve-t-on dans les ruines d&#x27;une ancienne cité ? Le pain et le vin des joueurs des Règles AVANCÉES de DONJONS &amp; DRAGONS. La préparation de ces types d&#x27;aventures est très importante. Voici les données de base nécessaires pour vous préparer à une longue carrière. ENCOMBREMENT L&#x27;équipement que vous avez choisi d&#x27;emporter est à la fois lourd et volumineux. II est bon de s&#x27;équiper au maximum mais sans prendre trop de choses. Votre personnage ne pourra se déplacer normalement que s&#x27;il ne dépasse pas certaines limites d&#x27;encombrement. (Notez bien que le volume d&#x27;un objet peut être aussi encombrant que son poids : 10 kilos de plumes prennent une place considérable). Afin de pouvoir se servir de son équipement, le personnage doit avoir chaque objet à portée de la main, c&#x27;est là encore une considération à prendre en compte. Enfin le but des aventuriers étant de ramener des trésors, il est bon de prévoir des sacs et de la place pour pouvoir porter tout cet or. Le tableau ci-dessous vous donne une approximation du poids porté et de l’encombrement du personnage selon ses déplacements. Encombrement Déplacement Réaction et initiative Équipement normal — environ 18 kg et encombrement faible 12&quot; — le personnage peut courir vite</p>",
+        "composants_materiels_objets": [
+          {
+            "nom": "sacrifice de quelque chose ayant de la valeur",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": "Sacrifice déterminé selon la valeur accordée par le lanceur et le pouvoir invoqué."
+          }
+        ]
       },
       "effects": [
         {
@@ -61961,6 +62702,26 @@
         ],
         "effectTags": [
           "sort:piege-a-feu"
+        ],
+        "composants_materiels_objets": [
+          {
+            "nom": "baies de houx",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "morceau de charbon",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
         ]
       },
       "folder": "mZXXpnKpZQA0isV8",
@@ -62301,6 +63062,17 @@
         ],
         "effectTags": [
           "sort:soins-majeurs"
+        ],
+        "composants_materiels_objets": [
+          {
+            "nom": "gui",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
         ]
       },
       "folder": "9solxAv5JcMQWwRA",
@@ -62411,6 +63183,35 @@
         ],
         "effectTags": [
           "sort:fleau-dinsectes"
+        ],
+        "composants_materiels_objets": [
+          {
+            "nom": "gui",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Composant principal ou alternative au houx et aux feuilles de chêne.",
+            "notes": null
+          },
+          {
+            "nom": "houx",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Substitut au gui.",
+            "notes": null
+          },
+          {
+            "nom": "feuilles de chêne",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Substitut au gui.",
+            "notes": null
+          }
         ]
       },
       "folder": "2qvjyq2vOUvgASEL",
@@ -63236,6 +64037,26 @@
         ],
         "effectTags": [
           "sort:protection-contre-le-mal"
+        ],
+        "composants_materiels_objets": [
+          {
+            "nom": "poudre de fer",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "poudre d’argent",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
         ]
       },
       "folder": "i73MGKcOPWcOk5kn",
@@ -64363,6 +65184,35 @@
         ],
         "effectTags": [
           "sort:transmutation-de-pierre-en-boue"
+        ],
+        "composants_materiels_objets": [
+          {
+            "nom": "eau",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Sort normal ou inversé.",
+            "notes": null
+          },
+          {
+            "nom": "argile",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Sort normal.",
+            "notes": null
+          },
+          {
+            "nom": "sable",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Sort inversé.",
+            "notes": null
+          }
         ]
       },
       "folder": "mLf6ZlGc1Eo25tkp",
@@ -64492,6 +65342,26 @@
         ],
         "effectTags": [
           "sort:controle-du-climat"
+        ],
+        "composants_materiels_objets": [
+          {
+            "nom": "encens à brûler",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          },
+          {
+            "nom": "mélange de terre, de bois et d’eau",
+            "quantite": 1,
+            "consommation": "consomme",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": null,
+            "notes": null
+          }
         ]
       },
       "folder": "3ncQM5L1dORmBNy8",
@@ -64686,6 +65556,26 @@
         ],
         "effectTags": [
           "sort:separation-des-eaux"
+        ],
+        "composants_materiels_objets": [
+          {
+            "nom": "deux feuilles de verre",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à deux feuilles de cristal.",
+            "notes": "Objet utilisé sans destruction indiquée."
+          },
+          {
+            "nom": "deux feuilles de cristal",
+            "quantite": 1,
+            "consommation": "optionnel",
+            "cout_po": null,
+            "source": "Manuel des joueurs",
+            "condition": "Alternative à deux feuilles de verre.",
+            "notes": "Objet utilisé sans destruction indiquée."
+          }
         ]
       },
       "folder": "3ncQM5L1dORmBNy8",

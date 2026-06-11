@@ -71,7 +71,35 @@
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
       "description": "ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6\"/tour et 60\"/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "feu",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Clerc non mauvais.",
+          "notes": "Liquide consommé."
+        },
+        {
+          "nom": "eau maudite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Clerc mauvais.",
+          "notes": "Liquide consommé."
+        }
+      ],
       "foundry": {
         "nom": "Marche des vents",
         "id": "0vew4Dsadk48WK8X",

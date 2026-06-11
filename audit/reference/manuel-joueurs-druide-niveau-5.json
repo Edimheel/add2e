@@ -22,7 +22,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "excepté ci-dessus et le fait que le druide doive utiliser du gui comme composante matérielle, ce sort est le même que le sort de niveau 4 de clerc bâtons à serpents (voir p.48).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Bâtons à serpents",
         "id": "tLb7xw1oUqTWIBSP",
@@ -127,7 +137,35 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "excepté ci-dessus et le fait que la composante matérielle soit du gui ou son substitut, le houx ou les feuilles de chêne, ce sort est le même que le sort de niveau 5 de clerc fléau d’insectes (voir p.50).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Composant principal ou alternative au houx et aux feuilles de chêne.",
+          "notes": null
+        },
+        {
+          "nom": "houx",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Substitut au gui.",
+          "notes": null
+        },
+        {
+          "nom": "feuilles de chêne",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Substitut au gui.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Fléau d’insectes",
         "id": "Sl13yrvj2",

@@ -153,7 +153,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "excepté ci-dessus et le fait que la composante matérielle soit une pincée de poudre d’os, ce sort est le même que le sort de niveau 5 de druide croissance animale (voir p.61).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "pincée de poudre d’os",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Croissance animale",
         "id": "f2k3BWjZABrQKWZW",
@@ -288,7 +298,62 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "il y a en fait 4 sorts en un dans ce sort de conjuration. Le magicien peut invoquer un élémental de l’air, de l’eau, de terre ou du feu, à condition qu’il possède les composantes matérielles appropriées. Pour invoquer l’élémental du feu, une grande source de feu doit se trouver dans la portée du sort. Pour celui de l’eau, il faut une grande quantité de ce liquide dans la portée. Les élémentaux conjurés sont très puissants — cf. règles AVANCÉES de DONJONS & DRAGONS, MANUEL DES MONSTRES — ils ont généralement 16 dés de vie (16d8). Il est possible d’invoquer plusieurs élémentaux différents à la suite si le magicien a mémorisé plusieurs fois le sort. Le type d’élémental invoqué devra être choisi avant la mémorisation du sort. L’élémental conjuré doit être contrôlé par le magicien, c.-à-d. que le lanceur de sort doit se concentrer sur les faits et gestes de l’élémental ou bien celui-ci se retournera contre le magicien pour l’attaquer. Cependant, si l’élémental est déjà engagé dans un combat, il ne cessera pas de combattre pour aller l’attaquer; mais sinon, il évitera ses adversaires pour rechercher le contact avec son invocateur. Si le magicien est blessé ou physiquement immobilisé, sa concentration est rompue. Il existe tout de même une probabilité de 5 % que l’élémental se retourne malgré tout contre son invocateur, même ci celui-ci se concentre: ce jet se fait à la fin du deuxième round et à chaque round suivant. Un magicien peut contrôler un élémental jusqu’à 3\" de distance par niveau. L’élémental reste jusqu’à l’expiration du sort ou jusqu’à ce que sa forme matérielle ait subi assez de dégâts pour qu’il soit détruit. Un élémental de l’eau sera détruit s’il s’éloigne à plus de 6\" d’une étendue d’eau. Les composantes de ce sort, mis à par la quantité d’éléments à portée de main, sont: Élémental de l’air: encens à faire brûler Élémental de l’eau: eau et sable Élémental du feu: souffre et phosphore Élémental de terre: argile",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "encens à faire brûler",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Invocation d’un élémental de l’air.",
+          "notes": null
+        },
+        {
+          "nom": "eau",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Invocation d’un élémental de l’eau.",
+          "notes": null
+        },
+        {
+          "nom": "sable",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Invocation d’un élémental de l’eau.",
+          "notes": null
+        },
+        {
+          "nom": "soufre",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Invocation d’un élémental du feu.",
+          "notes": null
+        },
+        {
+          "nom": "phosphore",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Invocation d’un élémental du feu.",
+          "notes": null
+        },
+        {
+          "nom": "argile",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Invocation d’un élémental de terre.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Invocation d’élémental",
         "id": "naBatu3eatZHd1ZQ",
@@ -662,7 +727,35 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "excepté ci-dessus, et le fait que les composantes matérielles soient de l’eau et de l’argile (eau et sable pour l’inverse), ce sort est le même que le sort de niveau 5 de druide transmutation de pierre en boue (voir p.62).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "eau",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Sort normal ou inversé.",
+          "notes": null
+        },
+        {
+          "nom": "argile",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Sort normal.",
+          "notes": null
+        },
+        {
+          "nom": "sable",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Sort inversé.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Transmutation de pierre en boue",
         "id": "Sd3li1719",

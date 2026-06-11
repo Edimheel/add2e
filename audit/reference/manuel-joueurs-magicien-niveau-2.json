@@ -447,7 +447,44 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "grâce à ce sort, les objets et pièces de cuivre peuvent être temporairement transformés en or — 27 dm³ représentent environ un volume de 4.000 po (200 kg). Toute créature voyant cet or des fous a droit à un jet de dé (d20) dont le résultat doit être égal ou inférieur à son intelligence pour découvrir le subterfuge. Mais pour chaque niveau du magicien, il faut ajouter 1 au tirage: ainsi, il y a peu de chances qu’un or des fous soit découvert s’il a été créé par un magicien de haut niveau. Si cet «or» est violemment frappé par un objet en fer forgé, il y a une petite chance que l’or se retransforme en cuivre. Cela dépend de la composante matérielle qui a servi au magicien pour lancer le sort: si une citrine de 50 po a été réduite en poudre et répartie sur le métal transformé, il y a 30 % de chances que le coup retransforme l’or en cuivre; avec une pierre d’ambre de 100 po, la chance est de 25 %; une topaze de 500 po: elle tombe à 10 %; et avec une topaze orientale (corindon) il n’y a que 1 % de chance.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "citrine réduite en poudre",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": 50,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative de 50 po donnant 30 % de chance de rupture.",
+          "notes": "Réduite en poudre et répartie sur le métal."
+        },
+        {
+          "nom": "pierre d’ambre",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": 100,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative de 100 po donnant 25 % de chance de rupture.",
+          "notes": "Gemme non détruite."
+        },
+        {
+          "nom": "topaze",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": 500,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative de 500 po donnant 10 % de chance de rupture.",
+          "notes": "Gemme non détruite."
+        },
+        {
+          "nom": "topaze orientale (corindon)",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative donnant 1 % de chance de rupture.",
+          "notes": "Gemme non détruite."
+        }
+      ],
       "foundry": {
         "nom": "Or des fous",
         "id": "F1AYLNQxgPkbAKvP",
@@ -614,7 +651,35 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort provoque une obscurité totale dans la zone d’effet. L’infravision et l’ultravision sont inefficaces. Aucune lumière normale ou magique n’éclairera dans ces ténèbres, sauf les sorts de lumière et de lumière éternelle. Dans ces cas, les ténèbres sont dissipées par cette lumière. De même, le sort de ténèbres sur 5 mètres dissipe un sort de lumière, mais se contente de suspendre temporairement les effets d’un sort de lumière éternelle (qui fonctionne encore après l’expiration des ténèbres). Les composantes matérielles de ce sort un peu de fourrure de chauve-souris et soit un morceau de charbon, soit une goutte de poix.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "fourrure de chauve-souris",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "morceau de charbon",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à une goutte de poix.",
+          "notes": null
+        },
+        {
+          "nom": "goutte de poix",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à un morceau de charbon.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Ténèbres sur 5 mètres",
         "id": "CvNVh364E6mHLbiC",

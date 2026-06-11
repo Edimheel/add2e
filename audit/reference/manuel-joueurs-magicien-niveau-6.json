@@ -123,7 +123,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "excepté ci-dessus et le fait que les composantes matérielles soient de l’encens à brûler et un mélange de terre, de bois et d’eau, ce sort est le même que le sort de niveau 7 de clerc contrôle du climat (voir p.52).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "encens à brûler",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "mélange de terre, de bois et d’eau",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Contrôle du climat",
         "id": "S4cpb203e",
@@ -554,7 +573,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "excepté ci-dessus, et le fait que les composantes matérielles soient 2 feuilles de verre ou de cristal, ce sort est le même que le sort de niveau 6 de clerc séparation des eaux (voir p.52).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "deux feuilles de verre",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à deux feuilles de cristal.",
+          "notes": "Objet utilisé sans destruction indiquée."
+        },
+        {
+          "nom": "deux feuilles de cristal",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à deux feuilles de verre.",
+          "notes": "Objet utilisé sans destruction indiquée."
+        }
+      ],
       "foundry": {
         "nom": "Séparation des eaux",
         "id": "Sg4dt4buk",
@@ -575,7 +613,35 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort aux pouvoirs puissants, offre plusieurs possibilités au magicien. Il peut créer un globe de matière d’une température de 0 absolu, température qui se diffuse au contact de l’eau ou d’un liquide principalement composé d’eau: le liquide gèle alors sur une épaisseur de 0,15 m et sur une surface de 9 m² par niveau du lanceur de sort. La glace reste pendant 1 round par niveau. Le magicien peut aussi faire jaillir de sa main un très fin rayon de froid, sur une distance de 1\" par niveau: ce rayon inflige 4 points de dégâts par niveau du lanceur de sort à la créature touchée, mais si elle réussit son jet de protection contre les sorts, elle ne subit aucun dégât (le rayon est si étroit qu’un jet de protection indique qu’il a manqué sa cible). Mais le rayon va jusqu’au bout de la distance autorisée et tout ce qu’il rencontre doit réussir un jet de protection (s’il y a lieu) ou subir des dégâts. Enfin, le magicien peut créer un petit globe de la taille d’une bille de fronde, fraiche au toucher mais pas dangereuse. Cette boule peut être lancée. Elle se brisera au contact en infligeant 4d6 points de dégâts aux créatures se trouvant dans un rayon de 3 m (la moitié si un jet de protection est réussi). Si la boule n’est pas lancée, à la main ou à la fronde, dans un délai de 1 round par niveau du magicien, elle explosera et infligera les dégâts prévus. Cette période de temps peut être utilisée pour se défaire de poursuivants, bien que cela puisse être dangereux pour le magicien et les gens qui l’accompagnent. La portée de cette bille est de 4\" si elle est lancée à la main ou identique à celle d’une fronde sinon. Les composantes matérielles dépendent du choix de l’utilisation du sort. Pour la première application, il faut une fine feuille de cristal de 6 cm²; pour la deuxième, il faut un saphir blanc d’une valeur minimale de 1.000 po; pour la troisième, le magicien a besoin d’un diamant de 1.000 po minimum. Toutes les composantes sont consommées et inutilisables après le lancement du sort. Si ce sort est utilisé sous l’eau, il est extrêmement dangereux dans sa première version. Le globe de matière au zéro absolu congèle instantanément l’eau qui entoure le magicien en un bloc de glace d’un volume de 1,3 m³ par niveau et pour une durée de 1 round par niveau. Si les secours ne sont pas immédiats, le magicien meurt asphyxié. Le bloc, bien entendu, flotte jusqu’à la surface dès sa formation.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "fine feuille de cristal de 6 cm²",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Première application.",
+          "notes": "Consommée après le lancement."
+        },
+        {
+          "nom": "saphir blanc",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": 1000,
+          "source": "Manuel des joueurs",
+          "condition": "Deuxième application. Consommé après le lancement.",
+          "notes": null
+        },
+        {
+          "nom": "diamant",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": 1000,
+          "source": "Manuel des joueurs",
+          "condition": "Troisième application. Consommé après le lancement.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Sphère glaciale d’Otiluke",
         "id": "3VZ2hwpNHAeU7JRp",

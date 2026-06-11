@@ -283,7 +283,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort est le même que le sort de niveau 4 de clerc, soins majeurs (voir p.49), mais le druide doit utiliser du gui, de n’importe quelle sorte, comme composante matérielle.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Soins majeurs",
         "id": "Sz67vrc8p",

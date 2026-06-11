@@ -1,23 +1,60 @@
 # Mise à jour globale des sorts Foundry
 
-## Alignement PHB final
+## Audit des composants matériels PHB
 
-- `Asile` a été supprimé définitivement du périmètre PHB, car il est absent des 130 pages du Manuel des joueurs AD&D 2e fourni.
-- La description générique précédente « Asile ouvre une voie de déplacement magique… » a été retirée du JSON Foundry et de la référence Clerc niveau 7.
-- `Voile illusoire` est conservé dans le JSON Foundry, les références et les sources.
-
-## Totaux
-
-- `fvtt-spells-all.json` : **411 Items**.
-- Références validées : **411 identifiants Foundry uniques**.
-- Items Foundry hors références : **0**.
-- Descriptions manquantes : **0**.
+- Sorts PHB audités : **411**.
+- Sorts dont les composants structurés ont été corrigés puis réinjectés par `foundry.id` / `_id` : **41**.
+- Total `fvtt-spells-all.json` après injection : **411 Items**.
 - Composants avec `consommation: "a_verifier"` : **0**.
-- Clerc niveau 7 : **10** sorts, ordres 1 à 10, statut complet conservé.
+- Aucun Item complet remplacé ; seuls les tableaux `system.composants_materiels_objets` ciblés ont été réinjectés.
+- `Motif hypnotique` est corrigé.
+- `Surdité` conserve uniquement la cire d’abeille.
+- `Asile` n’a pas été réintroduit.
 
-## Validation et périmètre
+## Sorts corrigés
 
-- Tous les JSON modifiés sont valides.
-- `node audit/tools/validate-reference-schema.mjs` exécuté avec succès.
-- `Asile` ne subsiste que dans ce rapport comme trace historique explicative.
-- Aucun script, découpage, `system.json`, `AGENTS.md` ou workflow modifié.
+- `Agrandissement`
+- `Bâtons à serpents`
+- `Bénédiction`
+- `Bouclier de feu`
+- `Chaos`
+- `Contrôle du climat`
+- `Création mineure`
+- `Croissance animale`
+- `Détection des mensonges`
+- `Écriture`
+- `Exorcisme`
+- `Fléau d’insectes`
+- `Flèche de feu`
+- `Graines de feu`
+- `Identification`
+- `Infravision`
+- `Invocation d'élémental`
+- `Invocation d'insectes`
+- `Lithomancie`
+- `Lithomorphose`
+- `Marche des vents`
+- `Motif hypnotique`
+- `Or des fous`
+- `Peau d'écorce`
+- `Piège à feu`
+- `Piège à feu`
+- `Piège sylvestre`
+- `Porte dimensionnelle`
+- `Protection contre le mal`
+- `Quête religieuse`
+- `Séparation des eaux`
+- `Simulacre`
+- `Soin ultime`
+- `Soins majeurs`
+- `Sphère glaciale d'Otiluke`
+- `Statue`
+- `Tempête de glace`
+- `Ténèbres éternelles`
+- `Ténèbres sur 5 mètres`
+- `Transmutation de pierre en boue`
+- `Vision`
+
+## Périmètre confirmé
+
+Aucun script, découpage, fichier source, `system.json`, `AGENTS.md` ou workflow n’a été modifié.

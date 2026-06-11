@@ -127,7 +127,17 @@
       "jet_sauvegarde": "aucun",
       "inverse": "Indétection des mensonges",
       "description": "quand le clerc lance ce sort, le bénéficiaire est immédiatement capable de savoir si la vérité a été dite. Le sort ne révèle pas la vérité, ni les non-dits, ni les faux-fuyants: il ne fait que détecter les mensonges. Le sort dure un round par niveau du clerc. De la poussière d’or est nécessaire pour lancer détection des mensonges. L’inverse du sort, dissimulation des mensonges, fait que les mensonges paraissent crédibles ou annule simplement les effets d’une détection des mensonges. La composante matérielle de dissimulation des mensonges est de la poussière de laiton.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "poussière de laiton",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Sort inversé : dissimulation des mensonges.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Détection des Mensonges",
         "id": "dgAqjED194Zh2Fsx",
@@ -215,7 +225,35 @@
       "temps_incantation": "1-100+ tours",
       "jet_sauvegarde": "aucun",
       "description": "ce sort annule toute possession d’un objet ou d’une créature par une forme extérieure ou surnaturelle. Cela inclut le contrôle d’une créature par une force contenue dans un objet, la possession par le sort métempsycose, la possession démoniaque, les envoûtements et même les charmes; ce sort est en fait basé sur le même principe que le sort dissipation de la magie. Si un objet envoûté subit un exorcisme, la force vitale de la créature concernée retourne complètement dans son enveloppe matérielle (voir Manuel des Monstres, Démon). Une fois commencé, l’exorcisme ne doit pas être interrompu, sinon ses effets sont annulés. La chance de base de succès est déterminée par le jet d’un d100, donnant donc une base entre 1 % et 100 %. La chance de base est diminuée de 1 % par niveau de la force à exorciser et augmentée de 1 % par niveau du clerc exorcisant, le résultat donnant la chance d’exorciser Le MD peut ajuster cette chance d’exorciser selon des cas particulier, s’il y a lieu. À chaque tour de l’exorcisme, un d100 est lancé et si le résultat est inférieur ou égal à la chance d’exorciser, le sort est réussi. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais). Une relique ou un objet sacré puissant peut augmenter la chance de réussite de 1 à 50 %, selon la puissance de l’objet.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Clerc non mauvais.",
+          "notes": "Liquide consommé."
+        },
+        {
+          "nom": "eau maudite",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Clerc mauvais.",
+          "notes": "Liquide consommé."
+        }
+      ],
       "foundry": {
         "nom": "Exorcisme",
         "id": "VzYlAqxdcGsXjLUx",

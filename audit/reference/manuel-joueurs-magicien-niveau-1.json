@@ -22,7 +22,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "ce sort provoque l’augmentation immédiate d’une créature ou d’un objet. L’agrandissement se fait au niveau de la taille et du poids. Il ne peut être lancé que sur un seul objet ou une seule créature. La portée du sort est de ½\" par niveau du magicien. L’agrandissement sur un être vivant est de 20 % par niveau du lanceur de sort, avec une augmentation maximale de 200 %. L’agrandissement sur un objet est de 10 % par niveau jusqu'à un maximum de 100 %. La créature, ou l’objet, doit être vue pour que le sort soit effectif. Le volume maximum que le magicien peut affecter est de 270 dm³ pour les matières vivantes et de 135 dm³ pour les matières non-vivantes, par niveau du magicien. Les pouvoirs magiques n’augmentent pas avec le sort; une épée +1, par exemple, restera toujours une épée +1, même si elle est plus grande; un bâtonnet magique allongé à la taille d’un bâton ne pourra qu’accomplir ses fonctions normales; une potion de grande taille requerra simplement l’absorption d’une plus grande quantité de liquide pour que ses effets magiques soient effectifs. En revanche, le poids, la taille et la force sont augmentée. Ainsi, une table bloquant une porte sera plus efficace, une pierre lancée sera plus lourde et sans doute plus dangereuse, des chaînes seront plus massives, des portes plus épaisses, une ficelle pourra devenir une corde et ainsi de suite. De la même façon, une personne de 3,60 m de haut pourra être comparée à un ogre; une personne de 5,40 mètres sera semblable à un géant. L’inverse du sort, rétrécissement, annulera les effets d’un sort d’agrandissement ou réduira la taille des objets ou êtres vivants aux mêmes ratios que le sort normal. Les victimes non-consentantes du sort ou de son inverse ont droit à un jet de protection qui, s’il est réussi, indique que les pouvoirs du sort n’ont eu aucun effet. La composante de ce sort est une pincée de poudre de fer.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "pincée de poudre de fer",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Agrandissement",
         "id": "Ql44mewOhfw0CGSS",
@@ -281,7 +291,17 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "avec ce sort, le magicien est capable d’inscrire un sort qu’il ne peut comprendre à cet instant (soit à cause de son niveau, soit à cause d’un manque d’intelligence) sur son livre ou sur un autre objet qu’il utilise pour inscrire les sorts qu’il connait. Le magicien doit lancer un jet de protection contre les sorts pour essayer la transcription; ce jet de protection obtient un bonus de +2 si le sort à transcrire est supérieur de seulement 1 niveau à ceux qu’il peut utiliser; si le sort est supérieur de 2 niveaux, le jet de protection est normal et il y a un malus de –1 pour chaque niveau supérieur à partir de 3 niveaux au-dessus. Si ce jet de protection est raté, le magicien subit 1d4 points de dégâts pour chaque niveau du sort qu’il tente de transcrire; de plus il tombe inconscient pour un nombre égal de tours. Ces dégâts, s’ils n’ont pas été fatals, ne peuvent être soignés qu’au rythme de 1 à 4 points de vie par jour, car ce sont des dégâts corporels et mentaux. La transcription du sort prend une heure par niveau du sort et pendant cette période, le magicien est en état de transe et peut toujours se faire surprendre par un ennemi. En plus de la surface d’écriture, le magicien doit utiliser une encre fine faite de substances rares (coût minimum 200 po par flacon, si le magicien ne l’a pas fabriquée lui-même).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "encre fine faite de substances rares",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": 200,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Écriture",
         "id": "0xDSJQMk6eczXt8X",
@@ -384,7 +404,53 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "quand ce sort est lancé, le magicien peut tenter de découvrir le pouvoir d’un objet. Pour ce faire, il doit porter l’objet en question selon sa fonction (par exemple, un bracelet au poignet, un casque sur la tête, des bottes aux pieds, une dague dans la main, etc.). Il est à noter que le magicien subit pleinement toute conséquence de l’utilisation de l’objet, bien qu’un jet de protection normalement autorisé soit encore un privilège accordé au magicien. Pour chaque segment de la durée du sort, il y a 15 % de chance plus 5 % par niveau du magicien qu’une propriété de l’objet soit découverte — il est possible que l’objet n’ait aucune propriété et soit seulement un leurre (la présence d’une aura magique de Nystul ou d’une bouche magique étant détectée). À chaque fois qu’une propriété est découverte, le MD lance secrètement un jet de protection contre les sorts pour le magicien. S’il est réussi, la propriété est révélée au magicien; s’il est raté de 1 point, un faux pouvoir sera révélé au magicien; s’il est raté de plus d’1 point, le magicien ne découvre rien. Un objet ne révélera jamais ses bonus au toucher et au dégât, bien qu’on puisse découvrir s’ils sont élevés ou pas. Si c’est un objet à charges, il ne révélera pas son nombre de charges exactes; il pourra donner une fourchette de + ou – 25 % par rapport au nombre de charges actuelles, c.-à-d. qu’un bâtonnet ayant 40 charges pourra être considéré comme ayant 30 ou 50 charges, ou entre les deux. Le magicien dispose de 1 heure par niveau d’expérience après la découverte de l’objet pour l’identifier ou alors toutes les impressions détectables se seront mélangées avec celles du personnage qui l’a détenu. Après avoir lancé ce sort, le magicien perd 8 points de constitution; il doit se reposer pendant une heure par point perdu pour pouvoir les récupérer. Si, après la perte de 8 points, sa constitution descend au-dessous de 3, le magicien tombe inconscient. Il ne reprendra conscience qu’après avoir retrouvé toute sa constitution, 24 heures plus tard. Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin. Il faut ensuite boire l’infusion et avaler une carpe miniature vivante, le tout avant de lancer le sort. Si une pierre porte-bonheur est réduite en poudre et ajoutée à l’infusion, la chance de succès augmente de 25 % et tous les jets de protection obtiennent un bonus +4.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "perle",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": 100,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "plume de hibou trempée dans du vin",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "vin",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "carpe miniature vivante",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "pierre porte-bonheur réduite en poudre",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Option permettant d’augmenter la chance de succès.",
+          "notes": "Réduite en poudre et ajoutée à l’infusion."
+        }
+      ],
       "foundry": {
         "nom": "Identification",
         "id": "j4mcEDMWWZDmHxVc",
@@ -638,7 +704,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "excepté ci-dessus et le fait que les composantes matérielles soient de la poudre de fer et d’argent pour tracer le cercle de protection, ce sort est le même que le sort de niveau 1 de clerc protection contre le mal (voir p.44).",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "poudre de fer",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "poudre d’argent",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Protection contre le mal",
         "id": "S3owai0q7",

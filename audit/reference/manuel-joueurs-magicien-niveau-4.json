@@ -95,7 +95,35 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "en lançant ce sort, le magicien semble s’immoler par le feu, alors qu’en fait les flammes sont fines et le feu prend la forme de flammèches, créant une lumière égale à la moitié de l’éclairage d’une torche normale (4,50 m de rayon d’une lumière pâle); ces flammes sont bleues ou vertes dans le premier cas (A), bleues ou violettes dans le second cas (B). Toute créature frappant le magicien avec une arme naturelle ou une arme de mêlée lui infligera des dégâts normaux mais subira elle-même le double de ces dégâts. Les autres pouvoirs du sort dépendent de la variation choisie par le magicien: A) Les flammes sont chaudes et toute attaque basée sur le froid autorise un jet de protection à +2, avec la moitié des dégâts si le jet de protection est raté et aucun s’il est réussi. Les attaques basées sur le feu infligent des dégâts normaux, mais si le magicien rate son jet de protection (s’il y en a un) il subit le double des dégâts. Cette version du sort ne peut normalement pas être utilisée sous l’eau, mais elle peut être incantée et fonctionner à l’intérieur des limites d’un sort d’eau aérée. La composante matérielle pour cette version du sort est un peu de phosphore. B) Les flammes sont froides et toute attaque basée sur le feu autorise un jet de protection à +2, avec la moitié des dégâts si le jet de protection est raté et aucun s’il est réussi. Les attaques basées sur le froid infligent des dégâts normaux, mais si le magicien rate son jet de protection (s’il y en a un) il subit le double des dégâts. La composante matérielle pour cette version du sort est une luciole ou un vert luisant vivant ou 4 queues de ces créatures mortes.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "luciole vivante",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au vert luisant vivant ou aux quatre queues.",
+          "notes": null
+        },
+        {
+          "nom": "vert luisant vivant",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à la luciole vivante ou aux quatre queues.",
+          "notes": null
+        },
+        {
+          "nom": "queues de lucioles ou de verts luisants morts",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative aux créatures vivantes. Quantité : 4.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Bouclier de feu",
         "id": "EjNM7yMhVXwwaOc4",
@@ -616,7 +644,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "un piège à feu peut affecter tout objet qu’on peut fermer (livre, boîte, bouteille, coffre, malle, cercueil, porte, tiroir, etc.). Mais dès que ce sort est lancé sur l’objet, le magicien ne peut en lancer un autre dessus, tel qu’un sort de fermeture ou un verrou magique, sauf pour ce qui suit: si on tente de placer un piège à feu et une fermeture, seul le 1er sera effectif, l’autre sera annulé (si les 2 sont lancés en même temps, ils s’annulent tous les 2); si un piège à feu est lancé après un verrou magique, le 1er est annulé (si les deux sont lancés en même temps, ils s’annulent tous les 2); si un verrou magique est lancé après un piège à feu, il y a 50 % de chance que les deux soient annulés. Un sort d’ouverture n’a aucun pouvoir sur un piège à feu: dès que quelqu’un touche l'objet, le piège se déclenche. Le magicien peut utiliser l’objet piégé sans déclencher le sort. Quand le piège fonctionne, il se produit une explosion de 1,50 m de rayon et toutes les créatures dans cette zone d’effet subissent 1d4 points de dégâts plus 1 par niveau du magicien, la moitié seulement si elles réussissent leur jet de protection contre les sorts. L’objet piégé n’est PAS endommagé par l’explosion. Il y a seulement 50 % de chances de détecter un piège à feu et un échec à la tentative de désamorçage fait immédiatement exploser le piège. Le sort peut être annulé/dissipé par une dissipation de la magie. Ce sort ne peut pas être utilisé sous l’eau. Pour lancer ce sort, le magicien doit surligner le système de fermeture avec du souffre ou du salpêtre.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "soufre",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au salpêtre.",
+          "notes": null
+        },
+        {
+          "nom": "salpêtre",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative au soufre.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Piège à feu",
         "id": "p9jlQvfec03qUS4e",
@@ -637,17 +684,7 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "avec ce sort, le magicien se déplace instantanément de 3\" maximum par niveau qu’il a atteint. Cette forme spéciale de téléportation est sûre, il n’y a pas d’erreur possible et le magicien arrive toujours exactement à l’endroit désiré, soit en visualisant simplement l’endroit, soit en énonçant la distance et la direction (Exemple: 30\" vers le bas en ligne droite; direction nord-ouest, vers le haut à 45°, à 42\"). S’il arrive à un endroit déjà occupé par un corps solide, il reste sur le plan astral jusqu’à ce qu’il soit localisé par quelque créature charitable qui consente à lancer sur lui une dissipation de la magie, car le magicien y demeure étourdi et ne peut lancer aucun sort lui-même. Si le magicien arrive à un endroit sans aucun support, il tombera et subira les dégâts en conséquence, à moins qu’il n’ait un moyen magique de l’éviter. Le magicien peut transporter avec lui un maximum de 5.000 po (250 kg) de matière non vivante, la moitié s’il s’agit de matière vivante. Le fait de lancer ce sort requiert ensuite un temps de récupération d’une durée de 7 segments. TEMPÊTE DE GLACE (Évocation)",
-      "composants_materiels_objets": [
-        {
-          "nom": "une pincée de poussière et quelques gouttes d’eau",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
-        }
-      ],
+      "composants_materiels_objets": [],
       "foundry": {
         "nom": "Porte dimensionnelle",
         "id": "9xooSY6MIFWhmC0h",
@@ -668,7 +705,26 @@
       "temps_incantation": null,
       "jet_sauvegarde": null,
       "description": "quand ce sort est lancé, le magicien crée soit une averse de grêlons dans une zone de 4\" de diamètre, infligeant de 3 à 30 points de dégâts (3d10), soit une chute de neige fondue sur une zone de 8\" de diamètre, qui aveugle les créatures pendant la durée du sort et qui gèle le sol ralentissant ainsi lesdites créatures à 50 % et leur donnant 50 % de chances de tomber si elles essayent de bouger. Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau. Ce sort annule les effets du sort métal brûlant (voir p.57) mais sa première application (l’averse de grêlons) infligera tout de même les dégâts. Lancé sous l’eau, les grêlons seront plus faibles en puissance, n’infligeant que 1d10 points de dommages avant de remonter à la surface; la chute de neige n’a quant à elle aucun effet sous l’eau.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "pincée de poussière",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "quelques gouttes d’eau",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Tempête de glace",
         "id": "zPQP5olmpPjaRgmf",
