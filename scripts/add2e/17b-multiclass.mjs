@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-10-multiclass-layer-v14-clean-monoclass-replace
+// Version : 2026-06-11-multiclass-layer-v15-replace-choice
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,7 +7,7 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-10-multiclass-layer-v14-clean-monoclass-replace";
+const VERSION = "2026-06-11-multiclass-layer-v15-replace-choice";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -427,6 +427,51 @@ function multiclassOptionsForDroppedClass(actor, classData) {
   }));
 }
 
+function replacementClassNames(actor, droppedClassData, replaceSlug) {
+  const droppedSlug = classSlug(droppedClassData);
+  return classItems(actor)
+    .filter(cls => classSlug(cls) !== replaceSlug)
+    .map(cls => cls.name)
+    .concat(itemLabel(droppedClassData, "Classe"))
+    .filter((name, index, arr) => arr.findIndex(other => norm(other) === norm(name)) === index && norm(name) !== droppedSlug ? true : true);
+}
+
+function raceCompatibleForReplacement(actor, droppedClassData, replaceSlug, raceData) {
+  const names = replacementClassNames(actor, droppedClassData, replaceSlug);
+  if (names.map(norm).filter(Boolean).length <= 1) return true;
+  return raceAllowsClassSet(raceData, names) && raceMatchesClassRules(raceData, droppedClassData) && classPrerequisitesOk(actor, droppedClassData, raceData);
+}
+
+function replacementOptionsForDroppedClass(actor, droppedClassData) {
+  const droppedSlug = classSlug(droppedClassData);
+  const existing = classItems(actor).filter(cls => classSlug(cls) !== droppedSlug);
+  if (!existing.length) return [];
+  const races = [systemRace(actor), ...worldItemsByType("race")].filter(Boolean);
+  const out = [];
+  const seen = new Set();
+  for (const replacedClass of existing) {
+    const replaceSlug = classSlug(replacedClass);
+    for (const raceData of races) {
+      const raceKey = norm(itemLabel(raceData, "Race"));
+      const key = `${replaceSlug}|${droppedSlug}|${raceKey}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!raceCompatibleForReplacement(actor, droppedClassData, replaceSlug, raceData)) continue;
+      out.push({
+        action: "replace-class",
+        classData: droppedClassData,
+        replacedClassId: replacedClass.id,
+        replacedClassName: replacedClass.name,
+        replacedClassSlug: replaceSlug,
+        raceData,
+        needsRaceChange: raceKey !== currentRaceKey(actor),
+        label: `Remplacer ${replacedClass.name} par ${itemLabel(droppedClassData, "Classe")} avec ${itemLabel(raceData, "Race")}`
+      });
+    }
+  }
+  return out;
+}
+
 function compatibleMulticlassClassCandidates(actor, preferredClassData = null) {
   const out = [];
   const seen = new Set();
@@ -447,16 +492,19 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
     const key = `${classSlug(opt.classData)}|${norm(itemLabel(opt.raceData, "Race"))}`;
     if (!seen.has(key)) { seen.add(key); options.push(opt); }
   }
+  const replacementOptions = classItems(actor).length > 1 ? replacementOptionsForDroppedClass(actor, droppedClassData) : [];
   const optionHtml = options.map((opt, index) => `<option value="${index}">${esc(opt.label)}${opt.needsRaceChange ? " — changement de race" : ""}</option>`).join("");
+  const replacementHtml = replacementOptions.map((opt, index) => `<option value="${index}">${esc(opt.label)}${opt.needsRaceChange ? " — changement de race" : ""}</option>`).join("");
   const content = `
     <form class="add2e-multiclass-choice" style="line-height:1.45;min-width:560px;">
       <p><b>Drop d'une classe sur un personnage déjà classé</b></p>
       <p>Classe(s) actuelle(s) : <b>${esc(current)}</b></p>
       <p>Classe déposée : <b>${esc(itemLabel(droppedClassData, "Classe"))}</b></p>
-      ${options.length ? `<div class="form-group"><label>Multiclassage disponible</label><select name="multiclassChoice">${optionHtml}</select></div>` : `<p style="color:#9b1c1c;font-weight:700;">Aucune combinaison classe + race disponible.</p>`}
+      ${options.length ? `<div class="form-group"><label>Multiclassage disponible</label><select name="multiclassChoice">${optionHtml}</select></div>` : `<p style="color:#9b1c1c;font-weight:700;">Aucune combinaison d'ajout direct disponible avec cette race.</p>`}
+      ${replacementOptions.length ? `<div class="form-group"><label>Modifier une classe du multiclassage</label><select name="replacementChoice">${replacementHtml}</select></div>` : ``}
       <p style="font-size:0.9em;color:#6b5a2a;margin-bottom:0;">Les combinaisons viennent uniquement du champ <b>system.multiclassing.allowedCombinations</b> des races.</p>
     </form>`;
-  const buttons = [{ action: "monoclass", label: "Remplacer en mono-classe", default: !options.length, callback: () => ({ action: "monoclass" }) }];
+  const buttons = [{ action: "monoclass", label: "Remplacer en mono-classe", default: !options.length && !replacementOptions.length, callback: () => ({ action: "monoclass" }) }];
   if (options.length) {
     buttons.push({
       action: "multiclass-selected",
@@ -466,6 +514,18 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
         const root = dialog?.element ?? document;
         const idx = Number(root.querySelector?.('[name="multiclassChoice"]')?.value ?? 0) || 0;
         return { action: "multiclass", option: options[idx] ?? null };
+      }
+    });
+  }
+  if (replacementOptions.length) {
+    buttons.push({
+      action: "replace-class-selected",
+      label: "Remplacer la classe sélectionnée",
+      default: !options.length,
+      callback: (_event, _button, dialog) => {
+        const root = dialog?.element ?? document;
+        const idx = Number(root.querySelector?.('[name="replacementChoice"]')?.value ?? 0) || 0;
+        return { action: "replace-class", option: replacementOptions[idx] ?? null };
       }
     });
   }
@@ -531,6 +591,30 @@ async function addClassAsMulticlass(actor, option, sheet = null) {
   sheet?._add2eRememberActiveTab?.();
   sheet?.render?.(false);
   ui.notifications.info(`Multiclassage appliqué : ${classDoc.name} avec ${itemLabel(option.raceData, "Race")}.`);
+  return true;
+}
+
+async function replaceClassInMulticlass(actor, option, sheet = null) {
+  const itemData = option?.classData;
+  if (!itemData || !option?.replacedClassId) return false;
+  const replaced = classItems(actor).find(cls => cls.id === option.replacedClassId || classSlug(cls) === option.replacedClassSlug);
+  if (!replaced) { ui.notifications.error("Classe à remplacer introuvable dans l'acteur."); return false; }
+  await applyRaceData(actor, option.raceData, sheet);
+  await actor.deleteEmbeddedDocuments("Item", [replaced.id], { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-replace-class-delete" });
+  const data = cloneItemData(itemData);
+  data.type = "classe";
+  const [classDoc] = await actor.createEmbeddedDocuments("Item", [data], { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-replace-class-create" });
+  if (!classDoc) return false;
+  const xpMap = foundry.utils.deepClone(actor.system?.xp_par_classe ?? {});
+  delete xpMap[option.replacedClassSlug];
+  xpMap[classSlug(classDoc)] ??= minXpForClassLevel(classDoc.system ?? {}, 1);
+  const payload = multiclassUpdatePayload(actor, null, xpMap, null, systemRace(actor));
+  if (payload) await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-replace-class" });
+  try { if (typeof add2eSyncActorSpellsFromClass === "function") await add2eSyncActorSpellsFromClass(actor, classDoc, { mode: "append", showWait: true }); }
+  catch (err) { warn("[SPELL_SYNC][REPLACE_ERROR]", err); }
+  sheet?._add2eRememberActiveTab?.();
+  sheet?.render?.(false);
+  ui.notifications.info(`Classe remplacée : ${option.replacedClassName} → ${classDoc.name}.`);
   return true;
 }
 
@@ -629,6 +713,7 @@ function installDropWrapper() {
       event?.stopPropagation?.();
       if (choice?.action === "monoclass") return applyClassAsMonoclass(actor, itemData, this);
       if (choice?.action === "multiclass" && choice.option) return addClassAsMulticlass(actor, choice.option, this);
+      if (choice?.action === "replace-class" && choice.option) return replaceClassInMulticlass(actor, choice.option, this);
       ui.notifications.info("Drop de classe annulé.");
       return false;
     }
@@ -690,5 +775,6 @@ globalThis.add2eMulticlassRaceCandidatesForClass = raceCandidatesForClass;
 globalThis.add2eMulticlassClassRaceMaxLevel = classRaceMaxLevel;
 globalThis.add2eMulticlassDirectFieldSync = updateDirectMulticlassField;
 globalThis.add2eCleanMonoclassAfterReplace = cleanupAfterMonoclassReplace;
+globalThis.add2eReplaceClassInMulticlass = replaceClassInMulticlass;
 
 log("[LOADED]", { version: VERSION });
