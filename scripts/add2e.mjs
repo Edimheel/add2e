@@ -218,237 +218,188 @@ async function add2eVendorRecordProjectileSpent(payload = {}) {
 
   const entry = current[payload.actorId].items[key];
   entry.itemId = payload.itemId ?? entry.itemId ?? null;
-  entry.itemName = payload.itemName ?? "Projectile";
+  entry.itemName = payload.itemName ?? entry.itemName ?? "Projectile";
   entry.img = payload.img ?? entry.img ?? null;
-  entry.spent = Math.max(0, Math.floor(Number(entry.spent) || 0)) + Math.max(1, Math.floor(Number(payload.quantity) || 1));
+  entry.spent = Number(entry.spent ?? 0) + Math.max(1, Math.floor(Number(payload.quantity) || 1));
 
   await combat.setFlag("add2e", "projectilesDepensesCombat", current);
-  if (requestId) seen.add(requestId);
-
-  console.log("[ADD2E][GM-RELAY][vendorRecordProjectileSpent]", {
-    combat: combat.id,
-    actorId: payload.actorId,
-    item: entry.itemName,
-    spent: entry.spent,
-    requestId
-  });
   return true;
 }
 
-function add2eRegisterVendorProjectileGmRelay() {
-  if (globalThis.__ADD2E_VENDOR_PROJECTILE_GM_RELAY_REGISTERED) return;
-  globalThis.__ADD2E_VENDOR_PROJECTILE_GM_RELAY_REGISTERED = true;
-
-  game.socket?.on?.("system.add2e", data => {
-    if (!data || data.type !== "ADD2E_GM_OPERATION") return;
-    if (data.operation === "vendorRecordProjectileSpent") {
-      add2eVendorRecordProjectileSpent(data.payload ?? {}).catch(err => console.warn("[ADD2E][GM-RELAY][vendorRecordProjectileSpent][ERROR]", err));
-      return;
-    }
-    if (data.operation === "consumeProjectile") {
-      add2eGmRelayConsumeProjectile(data.payload ?? {}).catch(err => console.warn("[ADD2E][GM-RELAY][consumeProjectile][ERROR]", err));
-      return;
-    }
-  });
-
-  game.add2e = game.add2e ?? {};
-  game.add2e.vendorProjectileGmRelayVersion = ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION;
-  game.add2e.projectileGmConsumeFixVersion = ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION;
-  globalThis.add2eGmRelayVendorRecordProjectileSpent = add2eVendorRecordProjectileSpent;
-  globalThis.add2eGmRelayConsumeProjectile = add2eGmRelayConsumeProjectile;
-  globalThis.add2eProjectileActorUsesInventory = add2eProjectileActorUsesInventory;
-  console.log("[ADD2E][GM-RELAY][VENDOR_PROJECTILES]", ADD2E_VENDOR_PROJECTILE_GM_RELAY_VERSION);
-  console.log("[ADD2E][GM-RELAY][CONSUME_PROJECTILE]", ADD2E_PROJECTILE_GM_CONSUME_FIX_VERSION);
-}
-
-function add2eInstallProjectilePlayerUpdateRelay() {
-  if (globalThis.__ADD2E_PROJECTILE_PLAYER_UPDATE_RELAY_INSTALLED) return;
-  const ItemCls = globalThis.Item;
-  if (!ItemCls?.prototype?.update) return;
-  globalThis.__ADD2E_PROJECTILE_PLAYER_UPDATE_RELAY_INSTALLED = true;
-
-  const originalUpdate = ItemCls.prototype.update;
-  ItemCls.prototype.update = async function add2eProjectileUpdateRelay(updateData = {}, options = {}, ...rest) {
-    const reason = String(options?.add2eReason ?? "");
-    if (!game.user?.isGM && reason === "consume-projectile" && this.parent?.documentName === "Actor") {
-      const actor = this.parent;
-      if (!add2eProjectileActorUsesInventory(actor)) return originalUpdate.call(this, updateData, options, ...rest);
-      const current = add2eProjectileFixQuantity(this);
-      const incoming = Number(foundry.utils.getProperty(updateData, "system.quantite") ?? updateData?.system?.quantite ?? current);
-      const quantity = Math.max(1, Math.floor(current - incoming) || 1);
-      game.socket?.emit?.("system.add2e", {
-        type: "ADD2E_GM_OPERATION",
-        operation: "consumeProjectile",
-        payload: {
-          actorId: actor.id,
-          actorUuid: actor.uuid,
-          actorType: actor.type,
-          itemId: this.id,
-          itemName: this.name,
-          quantity,
-          fromUserId: game.user.id,
-          requestId: foundry.utils.randomID()
-        }
-      });
-      console.log("[ADD2E][PROJECTILES][JOUEUR->GM][consumeProjectile]", {
-        actor: actor.name,
-        projectile: this.name,
-        current,
-        incoming,
-        quantity
-      });
-      return this;
-    }
-    return originalUpdate.call(this, updateData, options, ...rest);
-  };
-}
-
-Hooks.once("init", () => add2eInstallProjectilePlayerUpdateRelay());
-
-const ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION = "2026-05-28-monster-document-sheet-v2-recovery-v2";
-globalThis.ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION = ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION;
-
-function add2eMonsterSheetRecoveryGetBase() {
-  const api = foundry?.applications?.api ?? {};
-  const sheets = foundry?.applications?.sheets ?? {};
-  const mixin = api.HandlebarsApplicationMixin;
-  const base = sheets.ActorSheetV2 ?? sheets.DocumentSheetV2 ?? api.DocumentSheetV2;
-  if (!mixin || !base) return null;
-  return mixin(base);
-}
-
-function add2eMonsterSheetRecoveryMethod(name) {
-  const method = globalThis.Add2eMonsterSheet?.prototype?.[name];
-  return typeof method === "function" ? method : null;
-}
-
-function add2eMonsterSheetRecoveryElement(element) {
-  return element?.jquery ? element[0] : element;
-}
-
-function add2eRegisterMonsterSheetDocumentV2Recovery() {
-  if (globalThis.__ADD2E_MONSTER_SHEET_V2_RECOVERY_REGISTERED === ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION) return true;
-  if (!globalThis.Add2eMonsterSheet?.prototype) return false;
-
-  const Base = add2eMonsterSheetRecoveryGetBase();
-  if (!Base) {
-    console.warn("[ADD2E][MONSTER_SHEET][V2_RECOVERY] ActorSheetV2/DocumentSheetV2 indisponible.");
+Hooks.once("ready", () => {
+  const handler = async payload => {
+    if (payload?.type === "ADD2E_GM_OPERATION" && payload.operation === "vendorConsumeProjectile") return add2eGmRelayConsumeProjectile(payload.payload ?? {});
+    if (payload?.type === "ADD2E_GM_OPERATION" && payload.operation === "vendorRecordProjectileSpent") return add2eVendorRecordProjectileSpent(payload.payload ?? {});
     return false;
-  }
+  };
+  game.socket?.on?.("system.add2e", handler);
+});
 
-  class Add2eMonsterSheetDocumentV2 extends Base {
-    static DEFAULT_OPTIONS = {
-      id: "add2e-monster-sheet-{id}",
-      classes: ["add2e", "sheet", "actor", "monster", "add2e-monster-document-v2"],
-      tag: "section",
-      window: { title: "ADD2e Descartes (FR) - Monstre", resizable: true },
-      position: { width: 920, height: 900 },
-      actions: {}
-    };
+const ADD2E_MULTICLASS_PLAYER_DIALOG_VERSION = "2026-06-11-v1-player-tiles";
+globalThis.ADD2E_MULTICLASS_PLAYER_DIALOG_VERSION = ADD2E_MULTICLASS_PLAYER_DIALOG_VERSION;
 
-    static PARTS = {
-      main: { template: "systems/add2e/templates/actor/monster-sheet.hbs" }
-    };
-
-    get actor() { return this.document; }
-    get object() { return this.document; }
-    get title() { return this.actor?.name ?? super.title; }
-    get editable() { return this.actor?.isOwner === true || game.user?.isGM === true; }
-    get isEditable() { return this.editable; }
-
-    async getData(...args) {
-      const method = add2eMonsterSheetRecoveryMethod("getData");
-      if (method) return method.apply(this, args);
-      return {
-        actor: this.actor,
-        object: this.actor,
-        document: this.actor,
-        system: this.actor?.system ?? {},
-        items: this.actor?.items ?? [],
-        effects: this.actor?.effects ?? [],
-        editable: this.editable,
-        owner: this.actor?.isOwner ?? false,
-        limited: this.actor?.limited ?? false,
-        options: this.options ?? {}
-      };
-    }
-
-    async _prepareContext(options = {}) {
-      const context = await this.getData(options);
-      context.actor = this.actor;
-      context.object = this.actor;
-      context.document = this.actor;
-      context.system = this.actor?.system ?? {};
-      context.items = this.actor?.items ?? [];
-      context.effects = this.actor?.effects ?? [];
-      context.editable = this.editable;
-      context.owner = this.actor?.isOwner ?? false;
-      context.limited = this.actor?.limited ?? false;
-      context.options = this.options ?? {};
-      return context;
-    }
-
-    async _preparePartContext(_partId, context, _options = {}) { return context; }
-
-    async _onRender(context, options = {}) {
-      await super._onRender?.(context, options);
-      try { globalThis.add2eEnsureTokenHeaderControl?.(this); } catch (err) { console.warn("[ADD2E][MONSTER_SHEET][TOKEN_HEADER]", err); }
-      try { globalThis.add2eBindApplicationV2Close?.(this); } catch (err) { console.warn("[ADD2E][MONSTER_SHEET][CLOSE]", err); }
-      const root = add2eMonsterSheetRecoveryElement(this.element);
-      const sheetRoot = root?.querySelector?.(".add2e-monster-readable-sheet") ?? root;
-      if (sheetRoot) this.activateListeners(sheetRoot);
-    }
-
-    activateListeners(content) {
-      const method = add2eMonsterSheetRecoveryMethod("activateListeners");
-      if (method) return method.call(this, content);
-    }
-
-    _activateAutoSubmit(root) {
-      const method = add2eMonsterSheetRecoveryMethod("_activateAutoSubmit");
-      if (method) return method.call(this, root);
-    }
-
-    async _updateObject(event, formData) {
-      const method = add2eMonsterSheetRecoveryMethod("_updateObject");
-      if (method) return method.call(this, event, formData);
-      const updateData = foundry.utils.flattenObject(formData ?? {});
-      if (!updateData.name || String(updateData.name).trim() === "") updateData.name = this.actor?.name ?? "Monstre";
-      return this.actor?.update?.(updateData);
-    }
-
-    _injectLayoutFix() {
-      const method = add2eMonsterSheetRecoveryMethod("_injectLayoutFix");
-      if (method) return method.call(this);
-    }
-
-    async _onEquipItem(item) {
-      const method = add2eMonsterSheetRecoveryMethod("_onEquipItem");
-      if (method) return method.call(this, item);
-    }
-
-    async _recalculerCA() {
-      const method = add2eMonsterSheetRecoveryMethod("_recalculerCA");
-      if (method) return method.call(this);
-    }
-
-    render(options = {}) {
-      if (typeof options === "boolean") return super.render({ force: options });
-      return super.render(options);
-    }
-  }
-
-  foundry.documents.collections.Actors.registerSheet("add2e", Add2eMonsterSheetDocumentV2, {
-    types: ["monster"],
-    makeDefault: true,
-    label: "ADD2e Descartes (FR) - Monstre V2"
-  });
-
-  globalThis.Add2eMonsterSheetDocumentV2 = Add2eMonsterSheetDocumentV2;
-  globalThis.__ADD2E_MONSTER_SHEET_V2_RECOVERY_REGISTERED = ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION;
-  console.log("[ADD2E][MONSTER_SHEET][V2_RECOVERY]", ADD2E_MONSTER_SHEET_V2_RECOVERY_VERSION);
-  return true;
+function add2eMulticlassPlayerDialogButton(appRoot, action) {
+  const buttons = Array.from(appRoot?.querySelectorAll?.("button") ?? []);
+  const test = (button, words) => {
+    const text = String(button.textContent ?? "").trim().toLowerCase();
+    const data = String(button.dataset?.action ?? button.dataset?.button ?? button.getAttribute("data-action") ?? "").toLowerCase();
+    return words.some(word => text.includes(word) || data.includes(word));
+  };
+  if (action === "multiclass") return buttons.find(button => test(button, ["multiclass", "appliquer", "actualiser", "resynchroniser", "recalculer"]));
+  if (action === "replace") return buttons.find(button => test(button, ["replace-class", "remplacer la classe", "classe sélectionnée", "selectionnee"]));
+  if (action === "mono") return buttons.find(button => test(button, ["monoclass", "mono-classe", "mono"]));
+  return buttons.find(button => test(button, ["cancel", "annuler"]));
 }
 
-Hooks.once("init", () => add2eRegisterMonsterSheetDocumentV2Recovery());
-Hooks.once("ready", () => add2eRegisterMonsterSheetDocumentV2Recovery());
+function add2eStyleMulticlassDialogElement(element, styles = {}) {
+  if (!element) return;
+  Object.assign(element.style, styles);
+}
+
+function add2eBuildMulticlassTile({ title, subtitle, note, tone, onChoose }) {
+  const palette = {
+    add: { bg: "linear-gradient(135deg,#f6e7a8,#d7a94d)", border: "#8a611d", icon: "✦", color: "#2b1c0d" },
+    replace: { bg: "linear-gradient(135deg,#f3d4a0,#b66b2f)", border: "#8f4a18", icon: "↻", color: "#2b1c0d" },
+    mono: { bg: "linear-gradient(135deg,#ded1ad,#9b8561)", border: "#5f4927", icon: "◆", color: "#24190c" },
+    cancel: { bg: "linear-gradient(135deg,#ead0c7,#a64536)", border: "#7a251d", icon: "×", color: "#2b0f0b" }
+  }[tone] ?? { bg: "#f6e7a8", border: "#8a611d", icon: "•", color: "#2b1c0d" };
+  const tile = document.createElement("button");
+  tile.type = "button";
+  tile.innerHTML = `
+    <span style="font-size:1.7rem;line-height:1;">${palette.icon}</span>
+    <span style="display:grid;gap:3px;text-align:left;">
+      <strong style="font-size:1.05rem;">${title}</strong>
+      <span style="font-size:.9rem;line-height:1.25;">${subtitle}</span>
+      ${note ? `<span style="font-size:.78rem;opacity:.82;line-height:1.2;">${note}</span>` : ""}
+    </span>`;
+  add2eStyleMulticlassDialogElement(tile, {
+    display: "grid",
+    gridTemplateColumns: "38px 1fr",
+    gap: "10px",
+    width: "100%",
+    minHeight: "86px",
+    padding: "12px",
+    border: `2px solid ${palette.border}`,
+    borderRadius: "14px",
+    background: palette.bg,
+    color: palette.color,
+    cursor: "pointer",
+    boxShadow: "0 2px 8px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.45)",
+    fontWeight: "700",
+    whiteSpace: "normal"
+  });
+  tile.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    onChoose?.();
+  });
+  return tile;
+}
+
+function add2eEnhanceMulticlassChoiceDialog(root = document) {
+  const base = root?.querySelector?.(".add2e-multiclass-choice") ?? null;
+  if (!base || base.dataset.add2ePlayerDialogVersion === ADD2E_MULTICLASS_PLAYER_DIALOG_VERSION) return;
+  base.dataset.add2ePlayerDialogVersion = ADD2E_MULTICLASS_PLAYER_DIALOG_VERSION;
+
+  const appRoot = base.closest(".application,.window-app,.app,.dialog") ?? base.parentElement;
+  const contentRoot = base.closest(".window-content,.dialog-content") ?? base.parentElement;
+  const multiclassSelect = base.querySelector('[name="multiclassChoice"]');
+  const replacementSelect = base.querySelector('[name="replacementChoice"]');
+
+  add2eStyleMulticlassDialogElement(appRoot, { minWidth: "720px", maxWidth: "860px" });
+  add2eStyleMulticlassDialogElement(contentRoot, { background: "linear-gradient(180deg,#fff8df,#ead9af)", padding: "14px" });
+  add2eStyleMulticlassDialogElement(base, { display: "grid", gap: "12px", minWidth: "620px", color: "#2b1c0d" });
+
+  const title = base.querySelector(".a2e-mc-title");
+  if (title) {
+    title.innerHTML = `<h2 style="margin:0;color:#f9df9a;font-size:1.16rem;text-transform:uppercase;letter-spacing:.03em;">Choisis ton évolution</h2><p style="margin:4px 0 0;color:#e8c978;">Sélectionne une option claire pour cette nouvelle classe.</p>`;
+    add2eStyleMulticlassDialogElement(title, { border: "1px solid #5c3b12", borderRadius: "14px", background: "linear-gradient(180deg,#3b2612,#1c1208)", padding: "12px 14px", boxShadow: "inset 0 0 0 1px rgba(255,221,145,.16),0 2px 8px rgba(0,0,0,.25)" });
+  }
+
+  const cards = Array.from(base.querySelectorAll(".a2e-mc-card"));
+  const labels = ["Classe actuelle", "Classe déposée", "Race actuelle"];
+  cards.forEach((card, index) => {
+    const label = card.querySelector("label");
+    const value = card.querySelector("b");
+    if (label) label.textContent = labels[index] ?? label.textContent;
+    add2eStyleMulticlassDialogElement(card, { border: "1px solid #b48a37", borderRadius: "12px", background: "linear-gradient(180deg,#fff7df,#ead7a7)", padding: "10px", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.5)" });
+    add2eStyleMulticlassDialogElement(label, { display: "block", marginBottom: "4px", color: "#65420f", fontSize: ".74rem", fontWeight: "900", textTransform: "uppercase", letterSpacing: ".06em" });
+    add2eStyleMulticlassDialogElement(value, { display: "block", color: "#2b1c0d", fontSize: "1.04rem" });
+  });
+  const grid = base.querySelector(".a2e-mc-grid");
+  add2eStyleMulticlassDialogElement(grid, { display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "8px" });
+
+  base.querySelector(".a2e-mc-note")?.remove();
+  base.querySelectorAll(".a2e-mc-panel").forEach(panel => panel.style.display = "none");
+  base.querySelectorAll(".a2e-mc-warning,.a2e-mc-info").forEach(block => block.remove());
+
+  const tileWrap = document.createElement("div");
+  add2eStyleMulticlassDialogElement(tileWrap, { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: "10px" });
+
+  const choose = (action, index = null) => {
+    if (action === "multiclass" && multiclassSelect && index !== null) multiclassSelect.value = String(index);
+    if (action === "replace" && replacementSelect && index !== null) replacementSelect.value = String(index);
+    const button = add2eMulticlassPlayerDialogButton(appRoot, action);
+    button?.click?.();
+  };
+
+  if (multiclassSelect?.options?.length) {
+    Array.from(multiclassSelect.options).forEach((option, index) => {
+      const already = String(option.textContent ?? "").toLowerCase().includes("déjà présente");
+      tileWrap.appendChild(add2eBuildMulticlassTile({
+        title: already ? "Actualiser le multiclassage" : "Ajouter cette classe",
+        subtitle: String(option.textContent ?? "").replace(/—/g, "•"),
+        note: already ? "Remet les niveaux, titres et sorts en cohérence." : "Ajoute la classe sans perdre les autres.",
+        tone: "add",
+        onChoose: () => choose("multiclass", index)
+      }));
+    });
+  }
+
+  if (replacementSelect?.options?.length) {
+    Array.from(replacementSelect.options).forEach((option, index) => {
+      tileWrap.appendChild(add2eBuildMulticlassTile({
+        title: "Remplacer une classe",
+        subtitle: String(option.textContent ?? "").replace(/—/g, "•"),
+        note: "Garde le personnage multiclassé avec une autre combinaison.",
+        tone: "replace",
+        onChoose: () => choose("replace", index)
+      }));
+    });
+  }
+
+  tileWrap.appendChild(add2eBuildMulticlassTile({
+    title: "Garder une seule classe",
+    subtitle: "Remplacer tout le parcours actuel par la classe déposée.",
+    note: "À utiliser pour repartir sur une classe unique.",
+    tone: "mono",
+    onChoose: () => choose("mono")
+  }));
+
+  const intro = document.createElement("div");
+  intro.textContent = "Choisis une tuile : l'action s'applique immédiatement.";
+  add2eStyleMulticlassDialogElement(intro, { padding: "9px 11px", borderRadius: "10px", background: "#f2e1b5", borderLeft: "5px solid #c99a3a", color: "#5d451b", fontWeight: "800" });
+  base.appendChild(intro);
+  base.appendChild(tileWrap);
+
+  const buttonBar = appRoot?.querySelector?.(".dialog-buttons,.form-footer,footer") ?? null;
+  if (buttonBar) {
+    add2eStyleMulticlassDialogElement(buttonBar, { display: "flex", justifyContent: "flex-end", gap: "10px", padding: "0 14px 14px" });
+    Array.from(buttonBar.querySelectorAll("button")).forEach(button => {
+      const text = String(button.textContent ?? "").toLowerCase();
+      const isCancel = text.includes("annuler") || String(button.dataset?.action ?? "").includes("cancel");
+      if (!isCancel) button.style.display = "none";
+      else {
+        button.textContent = "Fermer";
+        add2eStyleMulticlassDialogElement(button, { minHeight: "36px", minWidth: "140px", borderRadius: "10px", border: "1px solid #7a251d", background: "linear-gradient(180deg,#a64536,#6d1c16)", color: "#fff1e8", fontWeight: "900" });
+      }
+    });
+  }
+}
+
+Hooks.on("renderApplication", (app, html) => {
+  const root = html?.[0] ?? html ?? app?.element?.[0] ?? app?.element ?? document;
+  add2eEnhanceMulticlassChoiceDialog(root);
+  setTimeout(() => add2eEnhanceMulticlassChoiceDialog(app?.element?.[0] ?? app?.element ?? document), 0);
+  setTimeout(() => add2eEnhanceMulticlassChoiceDialog(document), 50);
+});
