@@ -24,13 +24,13 @@
       "description": "en lançant ce sort, le magicien invoque un chien de garde fantomatique que lui seul peut voir. Il peut alors lui ordonner de garder une porte, un passage, une pièce ou tout autre lieu similaire. Le chien aboiera immédiatement avec force si une créature plus grosse qu’un chat s’approche de l’endroit qu’il garde. Il peut détecter les créatures invisibles, astrales, éthérées, hors de phase, à deux dimensions ou non-visibles; c’est un excellent gardien! De plus, si la créature (ou les créatures) intruse tourne le dos au chien, ce dernier portera une attaque brutale comme s’il possédait 10 dés de vie et infligera 3 à 18 (3d6) points de dégâts. Le chien peut attaquer n’importe quelle créature, même celles qui ne peuvent être touchées que par des armes magiques +3 ou plus. Le chien ne peut pas être attaqué mais on peut le dissiper. Le magicien ne doit jamais se trouver à plus de 3\" de l’endroit que garde le chien ou le sort est annulé. Les composantes matérielles sont un petit sifflet en argent, un morceau d’os et un fil.",
       "composants_materiels_objets": [
         {
-          "nom": "petit sifflet en argent",
+          "nom": "sifflet en argent",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit sifflet en argent »."
         },
         {
           "nom": "morceau d’os",
@@ -94,22 +94,22 @@
       "description": "quand ce sort est lancé, le magicien crée une zone de froid en forme de cône qui part de ses mains: le cône fait ½\" de long par niveau du lanceur de sort, avec un diamètre de ½\" à sa base pour 2\" à son extrémité. Il absorbe la chaleur et inflige 1d4+1 points de dégât par niveau du magicien. Un magicien de niveau 10 infligera donc 10d4+10 points de dégâts. La composante matérielle est un cône de verre ou de cristal de très petite taille.",
       "composants_materiels_objets": [
         {
-          "nom": "petit cône de verre",
+          "nom": "cône de verre",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Alternative à un petit cône de cristal.",
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit cône de verre »."
         },
         {
-          "nom": "petit cône de cristal",
+          "nom": "cône de cristal",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Alternative à un petit cône de verre.",
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit cône de cristal »."
         }
       ],
       "foundry": {
@@ -186,13 +186,13 @@
       "description": "excepté ci-dessus ce sort est le même que le sort de niveau 6 de druide débilité mentale (voir p.62). La composante matérielle est une poignée de petites sphères d’argile, de cristal, de verre ou minérales.",
       "composants_materiels_objets": [
         {
-          "nom": "une poignée de petites sphères d’argile, de cristal, de verre ou minérales",
+          "nom": "poignée de petites sphères d’argile, de cristal, de verre ou minérales",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une poignée de petites sphères d’argile, de cristal, de verre ou minérales »."
         }
       ],
       "foundry": {
@@ -217,13 +217,13 @@
       "description": "ce sort ne peut être lancé que si le magicien a auparavant conjuré un élémentaire de terre. Ce dernier ne réagira pas hostilement quand le jeteur de sort lui annoncera qu’il compte lancer une distorsion des distances. Le magicien place l’élémentaire de terre dans la zone d’effet; ce dernier peut distordre les distances de deux manières. Soit il réduit les distances de 50 %, soit il les agrandit de 100 %. Ainsi, un couloir de 3 m x 30 m semblera ne faire que 1.50 m x 15 m ou alors 6 m x 60 m. Quand le sort touche à sa fin, l’élémentaire retourne sur son plan. Il est impossible pour les créatures passant dans la zone touchée par ce sort de s’apercevoir de quelque chose, bien que la zone en question irradie une faible aura de magie. Un sort de vision réelle révélera la présence d’un élémentaire de terre dans la zone d’effet. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est un peu d’argile grasse.",
       "composants_materiels_objets": [
         {
-          "nom": "un peu d’argile grasse",
+          "nom": "peu d’argile grasse",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un peu d’argile grasse »."
         }
       ],
       "foundry": {
@@ -248,13 +248,13 @@
       "description": "ce sort transforme l’eau et les liquides à base d’eau en une substance respirable. Si le magicien désire entrer dans un lieu sousmarin, il s’avance dans l’eau, lance le sort et s’enfonce dans une sphère remplie de bulles, dans laquelle lui et les personnes qui l’accompagnent peuvent se déplacer et respirer comme s’ils étaient à l’air libre. Le globe se déplace avec le magicien. Les créatures aquatiques fuiront cette sphère d’eau aérée, bien que celles qui sont intelligentes puissent y entrer si elles ont d’autres moyens de locomotion que la nage; aucune créature respirant sous l’eau ne pourra respirer dans cette sphère (ou hémisphère). Le magicien n’a besoin de prononcer qu’un seul mot pour que le sort soit effectif et la composante matérielle est une petite poignée de sels alcalins ou de bromure.",
       "composants_materiels_objets": [
         {
-          "nom": "une petite poignée de sels alcalins ou de bromure",
+          "nom": "poignée de sels alcalins ou de bromure",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une petite poignée de sels alcalins ou de bromure »."
         }
       ],
       "foundry": {
@@ -428,13 +428,13 @@
       "description": "la main d’interposition de Bigby est une grande main magique qui apparait et se place d’elle-même entre le magicien et l’ennemi qu’il désigne. Cette main reste entre les deux, sans s’occuper de ce que fait le magicien ou de comment s’y prend l’adversaire pour essayer de la contourner. Le magicien décide de la taille de la main; elle peut aller de celle d'un humain jusqu'à celle d'un titan. Pour la détruire, il faut lui infliger avec des armes magiques autant de points de dégâts que le magicien possède de points de vie (sa CA est la même que celle du magicien). Toute créature pesant moins de 1.000 kg et essayant de pousser la main sera ralentie à 50 %. La composante matérielle est un gant.",
       "composants_materiels_objets": [
         {
-          "nom": "un gant",
+          "nom": "gant",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « un gant »."
         }
       ],
       "foundry": {
@@ -490,13 +490,13 @@
       "description": "quand ce sort est lancé, le magicien crée un mur de fer vertical. Ce mur est généralement utilisé pour cacher une entrée ou colmater une brèche, car il s’insère de lui-même dans la matière environnante, si sa zone d’effet le permet. Ce mur de fer a une épaisseur de 6 mm par niveau du magicien et sa surface est de 1,35 m² par niveau. Ainsi, un magicien de niveau 12 pourra créer un mur de 7 cm d’épaisseur environ et de 16 m² environ. Si le magicien se concentre dans ce but, il pourra doubler la surface du mur en diminuant de moitié son épaisseur. Si le mur est créé dans un endroit où il n’est pas maintenu, il tombera en écrasant les créatures qui peuvent se trouver dessous: le mur a 50 % de chance de tomber d’un côté ou de l’autre; il faudra au moins 30 points de force et 200 kg de masse pour modifier cette probabilité, et encore, de seulement 1 % par tranche de 0,5 kg au-dessus de 150 ou par point de force au-dessus de 30. Le mur est permanent, à moins qu’il ne soit sujet à une dissipation de la magie ou alors à des altérations normales (rouille, perforation, etc.). La composante matérielle est un petit morceau de plaque de fer.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit morceau de plaque de fer",
+          "nom": "morceau de plaque de fer",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Objet durable ou focus utilisé sans destruction indiquée."
+          "notes": "Objet durable ou focus utilisé sans destruction indiquée. Formulation source du Manuel : « un petit morceau de plaque de fer »."
         }
       ],
       "foundry": {
@@ -521,13 +521,13 @@
       "description": "un mur de force est une barrière invisible que le magicien crée à l’endroit où il le désire, dans la portée du sort. Ce mur immobile est totalement insensible aux autres sorts (même à une dissipation de la magie) à l’exception du sort de désintégration qui le détruit immédiatement. Une baguette d’annulation abattra le mur de force mais sera totalement consommée au cours de l’opération. Une sphère d’annihilation abattra aussi le mur de force mais le vortex créé lors de l’opération aspirera tous les petits objets (ceux qui pèsent moins de 100 po et à moins de 1\" de la sphère). De la même façon, un mur de force n’est pas affecté par les coups, les projectiles, le froid, la chaleur, l’électricité et les autres phénomènes similaires. Les attaques par souffle ne passeront pas au travers. Le magicien peut donner à cette barrière une forme sphérique ou hémisphérique dont la surface sera de 1,80 m² par niveau. La composante matérielle est une pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10.000 po.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10",
+          "nom": "pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10 »."
         }
       ],
       "foundry": {
@@ -552,13 +552,13 @@
       "description": "ce sort crée un mur de granit qui s’unit aux formations rocheuses si l’endroit le permet. Il est généralement employé pour obstruer des passages et des brèches afin d’empêcher des ennemis de passer. Le mur de roc fait 7,5 cm d’épaisseur par niveau du magicien; sa surface est de 1,80 m² par niveau; un magicien de niveau 12 pourra créer un mur de 90 cm d’épaisseur et de 21,6 m² de surface (soit par exemple 3,60 m de large sur 6 m de haut pour complètement obstruer un passage de 3 m sur 4,80 m). Le mur ne sera pas forcément vertical. Il n’a pas non plus besoin de fondations fermes, tant qu’il y a des rochers autour auxquels il peut se joindre (voir mur de fer). Il peut servir de pont au-dessus d’un précipice. Si le mur est utilisé pour former un pont, ce dernier doit être arqué et étayé: cela requiert 50 % du volume total du mur. Ainsi, un magicien de niveau 20 peut normalement créer un mur de 36 m² de surface et de 1,50 m d’épaisseur; pour l’utiliser sous forme de pont, seulement 18 m² doivent être pris en compte, permettant de faire un pont de 1,5 m de large et de 12 m de long (en supposant que le précipice ne mesure pas plus de 11,40 m de large dans ce cas précis). Les ponts sans supports s’effondreront automatiquement sous leur propre poids s’ils dépassent les 6 mètres. Le mur est permanent, à moins d’une dissipation de la magie, d’une désintégration ou d’altérations normales (casser, creuser, etc.). La composante matérielle est un petit bloc de granit.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit bloc de granit",
+          "nom": "bloc de granit",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit bloc de granit »."
         }
       ],
       "foundry": {
@@ -625,13 +625,13 @@
       "description": "ce sort immobilise 1 à 4 créatures de n’importe quel type se trouvant dans la portée du sort et dans le champ de vision du magicien. Si celui-ci décide de paralyser 3 ou 4 monstres, leur jet de protection sera normal. Si 2 créatures sont visées, leur jet de protection subira un malus de –1. Si un seul monstre est visé, son jet de protection sera à –3. Si le jet de protection est réussi, le sort agit comme un sort de ralentissement. La composante matérielle est une petite barre de métal, une pour chaque monstre visé. Cette barre peut être de la taille d’un clou.",
       "composants_materiels_objets": [
         {
-          "nom": "une petite barre de métal, une pour chaque monstre visé",
+          "nom": "barre de métal, une pour chaque monstre visé",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Objet durable ou focus utilisé sans destruction indiquée."
+          "notes": "Objet durable ou focus utilisé sans destruction indiquée. Formulation source du Manuel : « une petite barre de métal, une pour chaque monstre visé »."
         }
       ],
       "foundry": {
@@ -656,13 +656,13 @@
       "description": "le sort de passe-muraille permet au magicien d’ouvrir un passage à travers les murs de bois, de plâtre ou de pierre; lui et ses compagnons peuvent donc passer à travers. L’ouverture est de 1,50 m de large, 2,40 m de haut et 3 m de profondeur. Plusieurs sorts de ce type lancés à la suite permettent de former un passage continu. Ainsi, le magicien peut traverser des murs très épais. La composante matérielle est une pincée de graines de sésame.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée de graines de sésame",
+          "nom": "pincée de graines de sésame",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une pincée de graines de sésame »."
         }
       ],
       "foundry": {

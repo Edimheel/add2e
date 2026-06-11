@@ -45,13 +45,13 @@
       "description": "excepté ci-dessus, ce sort est le même que celui de niveau 3 de magicien catalepsie (voir p.73). Les composantes matérielles de ce sort sont une feuille morte de chêne et du gui.",
       "composants_materiels_objets": [
         {
-          "nom": "une feuille morte de chêne et du gui",
+          "nom": "feuille morte de chêne et du gui",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui »."
         }
       ],
       "foundry": {
@@ -263,13 +263,13 @@
       "description": "ce sort est le même que le sort de niveau 4 de magicien piège à feu (voir p.79) excepté ci-dessus, et en ce qui concerne les composantes matérielles: des baies de houx et un morceau de charbon avec lequel le druide doit surligner la fermeture. Le piège à feu peut être ôté/annulé par un sort de dissipation de la magie.",
       "composants_materiels_objets": [
         {
-          "nom": "baies de houx",
+          "nom": "baie de houx",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « baies de houx »."
         },
         {
           "nom": "morceau de charbon",

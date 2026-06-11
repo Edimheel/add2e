@@ -24,22 +24,22 @@
       "description": "excepté ci-dessus, et le fait que l’inverse élève le niveau des eaux de 15 cm par niveau seulement, ce sort est le même que le sort de niveau 4 de clerc abaissement des eaux (voir p.48). Les composantes matérielles sont une petite fiole d’eau et une petite fiole de poussière.",
       "composants_materiels_objets": [
         {
-          "nom": "petite fiole d’eau",
+          "nom": "fiole d’eau",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "La fiole est le contenant réutilisable; son contenu est consommé."
+          "notes": "La fiole est le contenant réutilisable; son contenu est consommé. Formulation source du Manuel : « petite fiole d’eau »."
         },
         {
-          "nom": "petite fiole de poussière",
+          "nom": "fiole de poussière",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "La fiole est le contenant réutilisable; son contenu est consommé."
+          "notes": "La fiole est le contenant réutilisable; son contenu est consommé. Formulation source du Manuel : « petite fiole de poussière »."
         }
       ],
       "foundry": {
@@ -256,13 +256,13 @@
           "notes": null
         },
         {
-          "nom": "petit sac",
+          "nom": "sac",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit sac »."
         },
         {
           "nom": "lame en fer",
@@ -317,13 +317,13 @@
       "description": "avec ce sort, le magicien crée un sosie immatériel de lui-même et peut le projeter, là où il le désire, dans la portée du sort autorisée. Cette image fait exactement ce que fait le magicien — parler, marcher, lancer des sorts — comme il le désire. Un lien spécial existe entre l’image et le magicien, ainsi les sorts partent de l’endroit où se trouve le sosie. L’image peut être uniquement annulée par une dissipation de la magie, à moins que le magicien ne l’annule lui-même; elle n’est pas sensible aux attaques. L’image doit être dans le champ de vision du magicien pendant toute la durée du sort et si ce champ de vision est coupé, le sort est annulé. La composante matérielle est une petite réplique (poupée) du magicien.",
       "composants_materiels_objets": [
         {
-          "nom": "une petite réplique (poupée) du magicien",
+          "nom": "réplique (poupée) du magicien",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Objet durable ou focus utilisé sans destruction indiquée."
+          "notes": "Objet durable ou focus utilisé sans destruction indiquée. Formulation source du Manuel : « une petite réplique (poupée) du magicien »."
         }
       ],
       "foundry": {
@@ -400,13 +400,13 @@
       "description": "ce sort est une version plus puissante du sort main d’interposition de Bigby (voir p.81). La main créée exerce une force en plus de s’interposer; cette force est suffisante pour repousser une créature loin du magicien. La main de force de Bigby peut repousser un poids maximum de 250 kg; elle peut ralentir à la vitesse de 1\" une créature de 251 à 1.000 kg; elle ralentit à 50 % des créatures de 1.001kg à 4.000 kg. La main peut subir autant de dégâts que le nombre de points de vie du magicien (il faut des armes magiques pour la toucher et sa CA est la même que celle du magicien). La composante matérielle est un gant.",
       "composants_materiels_objets": [
         {
-          "nom": "un gant",
+          "nom": "gant",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « un gant »."
         }
       ],
       "foundry": {
@@ -504,13 +504,13 @@
       "description": "ce sort est similaire au sort de niveau 7 de druide réincarnation (voir p.64). Il n’y a aucun jet de protection concernant la résistance aux traumatismes ou à la résurrection. Le magicien touche le cadavre et la nouvelle incarnation de la personne apparait dans un délai de 1 à 6 tours, à condition que la personne ne soit pas morte depuis plus d’un jour par niveau du lanceur du sort. La nouvelle incarnation est: 1d100 Incarnation 01-05 Goblours 06-11 Nain 12-18 Elfe 19-23 Gnoll 24-28 Gnome 29-33 Gobelin 34-40 Demi-elfe 41-47 Petite-gens 48-54 Demi-orque 55-59 Hobgobelin 60-73 Humain 74-79 Kobold 80-85 Orque 86-90 Ogre 91-95 Ogre mage 96-00 Troll Note: les personnes très bonnes ou très mauvaises ne peuvent être réincarnées en des créatures dont l’alignement est opposé. Les composantes matérielles sont un petit tambour et une goutte de sang.",
       "composants_materiels_objets": [
         {
-          "nom": "petit tambour",
+          "nom": "tambour",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit tambour »."
         },
         {
           "nom": "goutte de sang",
@@ -544,13 +544,13 @@
       "description": "quand ce sort est lancé, le magicien fait que les créatures qui se trouvent dans la zone d’effet s’éloignent de lui. La fuite de ces créatures se fait à la vitesse de 3\" par round ou à la même vitesse qu’elles avaient quand elles se dirigeaient vers le magicien. Les créatures repoussées continuent à s’éloigner pendant la durée d’un mouvement complet, même si elles sortent de la portée du sort. Les composantes matérielles sont une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène.",
       "composants_materiels_objets": [
         {
-          "nom": "une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène",
+          "nom": "paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Focus durable réutilisable, sans destruction indiquée par le Manuel."
+          "notes": "Focus durable réutilisable, sans destruction indiquée par le Manuel. Formulation source du Manuel : « une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène »."
         }
       ],
       "foundry": {
@@ -695,13 +695,13 @@
       "description": "ce sort transforme tout type de pierre en chair (si l’objet de pierre était auparavant vivant, il revient à la vie, quelle que soit sa taille, avec son matériel, bien qu’il lui faille lancer un dé de pourcentage pour tester sa résistance aux traumatismes). De la pierre ordinaire est transformable en chair, avec un volume maximum de 0.25 m³ par niveau du magicien. En lançant le sort sur un bloc de pierre, le magicien peut choisir d’affecter une zone d’effet cylindrique de diamètre compris entre 30 et 90 cm; un passage peut ainsi être fait. L’inverse transforme n’importe quelle chair en pierre, avec les mêmes modalités que le sort non-inversé. Le sort inversé autorise la créature à lancer un jet de protection. Les composantes matérielles sont une pincée de terre et une goutte de sang; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée de terre et une goutte de sang; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse",
+          "nom": "pincée de terre et une goutte de sang; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée de terre et une goutte de sang; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse »."
         }
       ],
       "foundry": {
@@ -726,22 +726,22 @@
       "description": "grâce à ce sort, le magicien peut rendre une section de métal, de pierre ou de bois transparente comme du verre. Normalement, il peut affecter une épaisseur de 10 cm de métal, 1,80 m de pierre, ou 6 mètres de bois. Le sort ne fonctionne pas avec le plomb, l’or et le platine. Le magicien peut choisir de rendre une paroi transparente uniquement à son regard. Il peut aussi créer une fenêtre dont la transparence ne fonctionne que pour une face (principe des glaces sans tain). Il peut affecter une surface de 0,90 m de large sur 0,60 m de haut. La résistance de la section rendue transparente reste la même que celle de la substance d’origine. La composante matérielle est un petit morceau de verre ou de cristal.",
       "composants_materiels_objets": [
         {
-          "nom": "petit morceau de verre",
+          "nom": "morceau de verre",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Alternative à un petit morceau de cristal.",
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit morceau de verre »."
         },
         {
-          "nom": "petit morceau de cristal",
+          "nom": "morceau de cristal",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Alternative à un petit morceau de verre.",
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit morceau de cristal »."
         }
       ],
       "foundry": {

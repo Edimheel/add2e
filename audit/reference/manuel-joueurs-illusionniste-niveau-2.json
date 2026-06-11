@@ -171,13 +171,13 @@
       "description": "quand l’illusionniste lance ce sort, il crée un jeu de formes colorées, mouvantes et tournoyantes dans l’air. Les créatures qui regardent ces formes et qui ont raté leur jet de protection sont fascinées et continuent de fixer ce motif aussi longtemps que l’illusionniste le maintient dans l’air. Le lanceur du sort peut hypnotiser un maximum de 24 DV, c'est-à-dire 24 créatures avec 1 DV chacune, 12 créatures avec 2 DV chacune, etc. Toutes les créatures doivent se trouver dans la zone d’effet et chacune a droit à un jet de protection. L’illusionniste n’a pas besoin de parler, mais il doit faire des gestes appropriés en même temps qu’il doit tenir un bâtonnet d’encens allumé ou une baguette de cristal remplie de matières phosphorescentes.",
       "composants_materiels_objets": [
         {
-          "nom": "bâtonnet d’encens allumé",
+          "nom": "bâtonnet d’encens",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Alternative à la baguette de cristal.",
-          "notes": "Encens consommé pendant l’incantation."
+          "notes": "Encens consommé pendant l’incantation. Formulation source du Manuel : « bâtonnet d’encens allumé »."
         },
         {
           "nom": "baguette de cristal",
@@ -241,13 +241,13 @@
       "description": "ce sort provoque la surdité totale de la créature qui rate son jet de protection (cf. cécité). Cette surdité ne peut être dissipée que par une dissipation de la magie ou par le lanceur de sort en personne. La composante matérielle est de la cire d’abeille.",
       "composants_materiels_objets": [
         {
-          "nom": "de la cire d’abeille",
+          "nom": "cire d’abeille",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « de la cire d’abeille »."
         }
       ],
       "foundry": {

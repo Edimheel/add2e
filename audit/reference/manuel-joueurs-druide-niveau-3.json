@@ -24,13 +24,13 @@
       "description": "avec ce sort, le druide est capable de prendre l’apparence d’un petit arbre ou arbuste vivant, d’un buisson ou d’un gros tronc mort avec quelques branches. Bien que l’inspection la plus minutieuse ne révèle rien, le druide peut observer tout ce qui se passe autour de lui, comme le ferait un homme normal. Le lanceur du sort peut annuler ce pouvoir magique à n’importe quel moment, se transformant instantanément d’arbre en homme et possédant toutes ses capacités pour entreprendre des actions. Tous les vêtements et l’équipement portés par le druide se transforment avec lui. La classe d’armure et les points de vie de la plante en question sont ceux du druide. Les composantes matérielles de ce sort sont du gui et une petite branche d’arbre.",
       "composants_materiels_objets": [
         {
-          "nom": "du gui et une petite branche d’arbre",
+          "nom": "gui et une petite branche d’arbre",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et une petite branche d’arbre »."
         }
       ],
       "foundry": {

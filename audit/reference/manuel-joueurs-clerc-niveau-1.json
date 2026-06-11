@@ -298,13 +298,13 @@
           "notes": null
         },
         {
-          "nom": "petit miroir en argent",
+          "nom": "miroir en argent",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit miroir en argent »."
         }
       ],
       "foundry": {

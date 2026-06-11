@@ -359,13 +359,13 @@
           "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
-          "nom": "petit caillou",
+          "nom": "caillou",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit caillou »."
         },
         {
           "nom": "motte de terre",

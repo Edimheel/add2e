@@ -157,13 +157,13 @@
           "notes": null
         },
         {
-          "nom": "feuilles de chêne",
+          "nom": "feuille de chêne",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Substitut au gui.",
-          "notes": null
+          "notes": "Formulation source du Manuel : « feuilles de chêne »."
         }
       ],
       "foundry": {

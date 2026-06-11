@@ -76,13 +76,13 @@
       "description": "ce sort permet au magicien de mettre sous ses ordres des formes de vie végétales et de communiquer avec elles. Les plantes obéiront au mieux de leurs possibilités. La zone d’effet est de 3\" x 1\". Le sort ne donne pas de nouveaux pouvoirs ni de nouvelles habilités aux plantes mais elles utiliseront tous leurs moyens, même ceux qui sont inhabituels, pour répondre aux ordres du lanceur de sort. Le jet de protection s’applique uniquement aux plantes intelligentes et subit un malus de –4 sur le dé. Les composantes matérielles sont une pincée d’humus, une goutte d’eau et une feuille ou une brindille.",
       "composants_materiels_objets": [
         {
-          "nom": "une pincée d’humus, une goutte d’eau et une feuille ou une brindille",
+          "nom": "pincée d’humus, une goutte d’eau et une feuille ou une brindille",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée d’humus, une goutte d’eau et une feuille ou une brindille »."
         }
       ],
       "foundry": {
@@ -323,13 +323,13 @@
       "description": "la poigne de Bigby est une version supérieure au sort de niveau 6 main de force de Bigby (voir p.85). La poigne peut maintenir immobile une créature de 500 kg maximum ou retenir un objet de même poids. Elle peut aussi faire se déplacer des créatures deux fois plus vite que la main de force de Bigby. La composante matérielle est un gant en cuir.",
       "composants_materiels_objets": [
         {
-          "nom": "un gant en cuir",
+          "nom": "gant en cuir",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « un gant en cuir »."
         }
       ],
       "foundry": {

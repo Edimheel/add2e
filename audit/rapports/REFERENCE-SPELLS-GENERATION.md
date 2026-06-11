@@ -1,68 +1,35 @@
-# Génération des références de sorts — audit des composants matériels
+# Génération des références de sorts — normalisation des composants matériels
 
 ## Résumé final
 
-- Sorts PHB audités contre les descriptions issues du Manuel : **411**.
-- Sorts corrigés : **41**.
-- Composants avec `consommation: "a_verifier"` : **0**.
+- Références PHB parcourues : **411 sorts**.
+- Noms techniques de composants renommés : **95**.
 - Descriptions modifiées : **0**.
+- Consommations modifiées : **0**.
+- Composants ajoutés ou supprimés : **0**.
+- Composants avec `consommation: "a_verifier"` : **0**.
 
-## Sorts corrigés
+## Exemples avant/après
 
-- `Agrandissement`
-- `Bâtons à serpents`
-- `Bénédiction`
-- `Bouclier de feu`
-- `Chaos`
-- `Contrôle du climat`
-- `Création mineure`
-- `Croissance animale`
-- `Détection des mensonges`
-- `Écriture`
-- `Exorcisme`
-- `Fléau d’insectes`
-- `Flèche de feu`
-- `Graines de feu`
-- `Identification`
-- `Infravision`
-- `Invocation d'élémental`
-- `Invocation d'insectes`
-- `Lithomancie`
-- `Lithomorphose`
-- `Marche des vents`
-- `Motif hypnotique`
-- `Or des fous`
-- `Peau d'écorce`
-- `Piège à feu`
-- `Piège à feu`
-- `Piège sylvestre`
-- `Porte dimensionnelle`
-- `Protection contre le mal`
-- `Quête religieuse`
-- `Séparation des eaux`
-- `Simulacre`
-- `Soin ultime`
-- `Soins majeurs`
-- `Sphère glaciale d'Otiluke`
-- `Statue`
-- `Tempête de glace`
-- `Ténèbres éternelles`
-- `Ténèbres sur 5 mètres`
-- `Transmutation de pierre en boue`
-- `Vision`
+- `petit miroir en argent` → `miroir en argent`
+- `feuilles d’infusion encore humides` → `feuille d’infusion encore humides`
+- `petite tige de métal droite et rigide` → `tige de métal droite et rigide`
+- `petit morceau d’écorce` → `morceau d’écorce`
+- `petite créature` → `créature`
+- `petite baguette fourchue métallique, sorte de diapason` → `baguette fourchue métallique, sorte de diapason`
+- `grains de sucre` → `grain de sucre`
+- `petit caillou` → `caillou`
+- `du gui et un peu de nourriture appréciée par l’animal` → `gui et un peu de nourriture appréciée par l’animal`
+- `du houx avec lequel le druide doit se frotter` → `houx avec lequel le druide doit se frotter`
+- `une feuille morte de chêne et du gui` → `feuille morte de chêne et du gui`
+- `baies de houx` → `baie de houx`
 
-## Cas explicitement vérifiés
-
-- **Motif hypnotique** contient désormais le bâtonnet d’encens allumé, la baguette de cristal et les matières phosphorescentes, avec leurs alternatives et conditions.
-- **Surdité** conserve uniquement la cire d’abeille ; aucun de ses composants n’est rattaché à Motif hypnotique.
-- **Porte dimensionnelle** ne porte plus les composants de Tempête de glace.
-- **Infravision** ne porte plus la statuette de ziggourat sans rapport avec sa description.
-- **Enchantement** reste sans tableau fixe : le Manuel indique explicitement que les composants varient et sont décidés par le MD.
+La formulation source retirée du nom technique a été ajoutée ou conservée dans `notes`. Les matières et précisions utiles ont été conservées.
 
 ## Validation
 
 - Tous les JSON modifiés sont valides.
 - `node audit/tools/validate-reference-schema.mjs` exécuté avec succès.
 - Total Foundry conservé : **411 Items**.
-- Aucun `a_verifier` restant.
-- Aucun script, découpage, source, `system.json`, `AGENTS.md` ou workflow modifié.
+- `Asile` n’a pas été réintroduit.
+- Aucun script, découpage, fichier source, `system.json`, `AGENTS.md` ou workflow modifié.

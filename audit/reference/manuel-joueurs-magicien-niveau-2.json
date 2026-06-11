@@ -24,13 +24,13 @@
       "description": "quand ce sort est lancé le magicien fait apparaître sur l’objet de son choix une bouche enchantée qui prononce alors le message que le lanceur du sort a prévu; cette apparition se déclenche quand survient une situation précise. Le message prononcé peut comprendre jusqu’à 25 mots, dans une langue connue du magicien, et le temps imparti pour la prononciation ne doit pas dépasser un tour. Le magicien ne peut pas faire incanter un sort à la bouche magique. Les mouvements de la bouche correspondent aux syllabes prononcées; donc, si elle est placée sur une statue, on pourra croire que c’est effectivement la statue qui parle. Cette bouche magique peut être placée sur un arbre, un rocher, une porte ou tout autre objet, à l’exception des espèces intelligentes (animales ou végétales). Le sort réagit à une situation précise, selon l’ordre du magicien, par exemple «parle dès qu’une créature te touche» ou «parle dès qu’une créature passe à moins de 9 mètres». L’ordre peut être très général ou très particulier. Exemple: «Parle uniquement quand une femme octogénaire portant un grand bouquet de fleurs s’assiéra à moins de 30 centimètres en croisant les jambes». La portée de déclenchement des paroles de la bouche magique est de ½\" par niveau du magicien; donc un magicien de niveau 6 pourra ordonner à une bouche magique de parler à des créatures à une distance de 3\" maximum, par exemple: «Parle quand une créature ailée s’approche à moins de 9 mètres». Jusqu’à l’accomplissement du sort, la bouche magique reste effective, la durée du sort étant donc variable. Une bouche magique ne peut pas distinguer les créatures invisibles, ni les alignements, ni les niveaux et les dés de vie, ni les classes, sauf par des indices extérieurs. La composante matérielle est un petit morceau de rayon de miel.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit morceau de rayon de miel",
+          "nom": "morceau de rayon de miel",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit morceau de rayon de miel »."
         }
       ],
       "foundry": {
@@ -95,13 +95,13 @@
       "description": "quand ce sort est lancé sur une corde de 1,50 m à 9 m de longueur, un des bouts de la corde se dresse jusqu’à ce que la corde entière soit complètement verticale, perpendiculaire au sol, comme si elle était fixée au sommet. Le bout supérieur est, en fait, attaché dans un espace extradimensionnel. Le lanceur du sort, ainsi que 5 autres personnes au maximum, peuvent grimper jusqu’au sommet de la corde et disparaitre dans cet espace où aucune créature ne peut les trouver. Les personnes qui se trouvent à l’intérieur de l’espace extra-dimensionnel peuvent clairement voir à l’extérieur comme s’ils regardaient par une fenêtre d’environ 90 cm de large par 1,50 m de haut. Ceux qui sont à l’extérieur ne peuvent pas regarder à l’intérieur. La corde ne peut être remontée dans cet espace si 6 personnes y ont grimpé, mais peut y être tirée si moins de 6 personnes s’y trouvent. Si la corde n’est pas remontée, elle sera suspendue dans l’air et y restera jusqu’à ce qu’une créature ne l’enlève. Les personnes se trouvant dans cet espace extra-dimensionnel doivent en redescendre avant l’expiration du sort, sinon elles tomberont de la hauteur où elles étaient quand le sort a pris fin. Une seule personne à la fois peut grimper à la corde. Une corde enchantée peut permettre d’atteindre un endroit normal si elle n’est pas gravie jusqu’au bout. Les composantes matérielles sont de la poudre de blé et un parchemin torsadé en forme de boucle.",
       "composants_materiels_objets": [
         {
-          "nom": "de la poudre de blé et un parchemin torsadé en forme de boucle",
+          "nom": "poudre de blé et un parchemin torsadé en forme de boucle",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « de la poudre de blé et un parchemin torsadé en forme de boucle »."
         }
       ],
       "foundry": {
@@ -182,13 +182,13 @@
       "description": "quand ce sort est lancé, le magicien est capable de détecter les pensées immédiates de toute créature dans la portée du sort, sauf les créatures sans esprit comme les morts-vivants. Un sort d’ESP est arrêté par 0,60 cm de roche, 5 cm ou plus de métal autre que le plomb, ou par une mince feuille de plomb. Le magicien est capable de sonder les pensées immédiates d’une créature par round, découvrant de simples pensées instinctives chez les créatures faibles d’esprit. L’examen peut continuer round après round sur la même créature. Le magicien peut employer ce sort, par exemple, pour deviner si une créature se tient derrière une porte, mais il ne saura pas quelle est la créature en question. La composante matérielle de ce sort est une pièce de cuivre.",
       "composants_materiels_objets": [
         {
-          "nom": "une pièce de cuivre",
+          "nom": "pièce de cuivre",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « une pièce de cuivre »."
         }
       ],
       "foundry": {
@@ -213,13 +213,13 @@
       "description": "ce sort augmente la force de la personne touchée d’un nombre de points (ou de dixièmes de points si la personne est de la classe des guerriers et a déjà 18 en force) dépendant de sa classe, et ce pendant toute la durée du sort. Cependant, les restrictions de force dues à la classe, race et sexe sont toujours à prendre en compte. Classe Points de force en plus Clerc, druide 1-6 (d6) Guerrier, paladin, ranger, barde 1-8 (d8) Magicien, illusionniste 1-4 (d4) Voleur, assassin 1-6 (d6) Moine 1-4 (d4 Si un guerrier (ou un paladin ou un ranger) a déjà 18 en force, le sort lui ajoutera de 10 % à 80 % de force exceptionnelle. Toute addition de force au dessus de 18 doit être traitée comme ceci: 1 = 10 %. La composante matérielle est quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc.",
       "composants_materiels_objets": [
         {
-          "nom": "quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc",
+          "nom": "cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc »."
         }
       ],
       "foundry": {
@@ -244,13 +244,13 @@
       "description": "un sort de fracassement affecte les objets nonmagiques en cristal, verre, céramique ou porcelaine, comme les flacons, les bouteilles, les flasques, les pots, les vitres, les miroirs, etc. Ces objets se brisent en dizaines de morceaux. Les objets d’un poids de plus de 100 po (5 kg) par niveau du magicien ne sont pas affectés par le sort; mais tous les autres doivent réussir un jet de protection contre les «coups critiques» pour éviter le fracassement. La composante matérielle est un éclat de mica.",
       "composants_materiels_objets": [
         {
-          "nom": "un éclat de mica",
+          "nom": "éclat de mica",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un éclat de mica »."
         }
       ],
       "foundry": {
@@ -296,13 +296,13 @@
       "description": "ce sort fait que la créature touchée devient invisible, indétectable à la vue normale et même à l’infravision. Bien que la créature soit invisible, elle fait cependant toujours autant de bruit car la magie n’affecte pas les sons. Le sort est actif tant qu’il n’est pas magiquement brisé ou dissipé, ou que la créature invisible ne l’annule pas ou n’attaque pas une créature. Ainsi la créature invisible peut ouvrir des portes, parler, manger, monter des marches, etc. Mais, à la moindre attaque, elle redeviendra visible immédiatement et cela lui permettra de frapper la première. Même les amis de la créature invisible ne peuvent la voir, non plus que son équipement, à moins qu’ils aient des moyens, magiques ou non, de détecter l’invisibilité. Les créatures hautement intelligentes avec 10 dés de vie ou plus, 10 niveaux d’expérience ou plus, ou l’équivalent, ont une chance de détecter automatiquement ce qui est invisible. Les composantes matérielles sont un cil mis dans de la gomme arabique.",
       "composants_materiels_objets": [
         {
-          "nom": "un cil mis dans de la gomme arabique",
+          "nom": "cil mis dans de la gomme arabique",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un cil mis dans de la gomme arabique »."
         }
       ],
       "foundry": {
@@ -418,13 +418,13 @@
           "notes": null
         },
         {
-          "nom": "feuilles de symplocarpe fétide",
+          "nom": "feuille de symplocarpe fétide",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Alternative à l’œuf pourri.",
-          "notes": null
+          "notes": "Formulation source du Manuel : « feuilles de symplocarpe fétide »."
         }
       ],
       "foundry": {
@@ -549,13 +549,13 @@
       "description": "quand ce sort est lancé sur une créature de moins de 6 dés de vie ou 6 niveaux d’expérience, elle doit réussir son jet de protection contre les sorts ou alors elle prend peur et se met à trembler de tout son corps. La créature effrayée ne laissera pas tomber ce qu’elle tient à moins qu’elle ne soit encombrée. Si elle est acculée dans un coin, la créature combattra, mais avec un malus de –1 sur ses probabilités de toucher et sur les dégâts qu’elle peut infliger. Ce malus de –1 s’applique aussi à tous les jets de protection qu’elle pourra lancer. Ce sort n’affecte pas les elfes, les demi-elfes, les morts-vivants (squelettes, zombies, goules, ombres, ghasts, nécrophages, âmes en peine), les larves, les lémures, les mânes et les clercs. La composante matérielle est un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie).",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie)",
+          "nom": "morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie)",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie) »."
         }
       ],
       "foundry": {
@@ -580,13 +580,13 @@
       "description": "ce faux piège est placé pour tromper les voleurs tentant de dérober les affaires du magicien. Le lanceur du sort peut affecter tout petit mécanisme tel qu’un verrou, une serrure, des gonds, des fermoirs, des engrenages, etc. Toute personne capable de détecter les pièges a 80 % de chance, moins 4 % par niveau qu’elle possède au-dessus du premier, de croire à ce piège. Si cette personne tente alors de désamorcer le faux piège, elle pensera avoir réussi à 20 % plus 4 % par niveau. Ce piège est une illusion, rien n’arrivera si on l’ignore. Son but est seulement d’effrayer les éventuels voleurs ou de leur faire perdre du temps. La composante matérielle est un morceau de fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à «piéger». Un seul piège de Léomund peut être placé dans une zone de 15 m x 15 m.",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau de fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à «piéger»",
+          "nom": "morceau de fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à «piéger»",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « un morceau de fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à «piéger» »."
         }
       ],
       "foundry": {
@@ -702,13 +702,13 @@
       "description": "ce sort crée une masse à plusieurs couches de filaments solides et épais comme ceux d’une toile d’araignée, mais beaucoup plus gros et résistants. Cette masse doit avoir au moins deux points d’attache diamétralement opposés (plancher et plafond, deux murs opposés, etc.). La toile occupe un volume de 216 m³ et doit avoir une épaisseur d’au moins 1\"; donc un magicien peut créer un volume de 4\" de haut sur 2\" de large sur 1\" d’épaisseur. Si le sort est lancé sans avoir deux points d’ancrage solides, la toile s’effondrera sur elle-même, annulant le sort. Les créatures prises dans la toile, ou qui la touchent simplement, sont collées aux fibres gluantes. Les créatures ayant moins de 13 en force ne peuvent rien faire jusqu’à ce qu’elles soient libérées par quelqu’un d’autre, ou jusqu’à ce que le sort prenne fin. Pour chaque tour entier pendant lequel elle est prise dans la toile, une créature à 5 % de chance cumulative de mourir étouffée. Les créatures ayant une force entre 13 et 17 peuvent briser 0,30 m de toile par tour. Les créatures avec 18 ou plus en force peuvent déchirer 0,30 m de toile par round. (NB: Les créatures de masse importante sont à considérer comme ayant une grande force pour déchirer la toile et des créatures de masse très importante ne s’apercevront même pas de la présence de la toile). Les créatures très fortes et géantes déchireront 0,30 m de toile par segment. Les filaments de la toile sont inflammables. Une épée langue de feu les coupera aussi facilement qu’une main écartant une vraie toile d’araignée. N’importe quel feu: torche, huile enflammée, épée enflammée, etc., brûlera une toile en un seul round. Toutes les créatures prises dans la toile subiront de 2 à 8 points de dégâts à cause du feu, mais celles qui s'en sont libérées ne subiront aucun dégâts. Le jet de protection est à –2. S’il est réussi, 2 choses peuvent se passer: si la créature a un endroit par lequel elle peut s’échapper, elle peut le faire sans problème; si elle n’en a pas, le pouvoir gluant de la toile d’araignée sera moitié moins fort. La composante matérielle de ce sort est un peu de toile d’araignée.",
       "composants_materiels_objets": [
         {
-          "nom": "un peu de toile d’araignée",
+          "nom": "peu de toile d’araignée",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un peu de toile d’araignée »."
         }
       ],
       "foundry": {

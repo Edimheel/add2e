@@ -255,13 +255,13 @@
       "description": "en lançant ce sort, l’illusionniste crée un mur de vapeurs épaisses là où il le désire, dans les limites de la portée du sort. Ce mur de brouillard restreint la vision (même l’infravision) à 60 cm. La zone d’effet est une forme cubique de 2\" d’arête par niveau du lanceur de sort. La fumée persiste pendant 3 rounds ou plus, sauf si elle est dissipée par un vent puissant (cf. rafale de vent). Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est de la poudre de poix séchés.",
       "composants_materiels_objets": [
         {
-          "nom": "de la poudre de poix séchés",
+          "nom": "poudre de poix séchés",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « de la poudre de poix séchés »."
         }
       ],
       "foundry": {

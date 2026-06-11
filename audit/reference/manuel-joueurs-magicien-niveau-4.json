@@ -45,13 +45,13 @@
       "description": "ce sort transforme une arme normale en une arme magique. Cette arme est équivalente à une arme +1, mais n’a en fait aucun bonus. Les arcs, carreaux, dagues, épées, flèches, haches, lances de fantassin, marteaux, masses d’arme, etc. peuvent être enchantés. Le sort peut affecter 2 petites armes (carreaux, dagues, flèches, etc.) ou une grande (arcs, haches, marteaux, masses d’arme, etc.). Une attaque réussie avec un projectile enchanté par ce sort en annule les effets: dans tous les autres cas, l’enchantement dure jusqu’à l’expiration du sort (par exemple, 40 rounds pour un magicien de niveau 8). Les composantes matérielles de ce sort sont du carbone et du citron réduits en poudre.",
       "composants_materiels_objets": [
         {
-          "nom": "du carbone et du citron réduits en poudre",
+          "nom": "carbone et du citron réduits en poudre",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description."
+          "notes": "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « du carbone et du citron réduits en poudre »."
         }
       ],
       "foundry": {
@@ -115,13 +115,13 @@
           "notes": null
         },
         {
-          "nom": "queues de lucioles ou de verts luisants morts",
+          "nom": "queue de lucioles ou de verts luisants morts",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Alternative aux créatures vivantes. Quantité : 4.",
-          "notes": null
+          "notes": "Formulation source du Manuel : « queues de lucioles ou de verts luisants morts »."
         }
       ],
       "foundry": {
@@ -146,13 +146,13 @@
       "description": "excepté ci-dessus, ce sort est identique au sort de niveau 7 de druide confusion (voir p.64). Cependant, il affecte une base de 2 à 16 créatures. La composante matérielle est un jeu de 3 coquilles de noisettes.",
       "composants_materiels_objets": [
         {
-          "nom": "un jeu de 3 coquilles de noisettes",
+          "nom": "jeu de 3 coquilles de noisettes",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un jeu de 3 coquilles de noisettes »."
         }
       ],
       "foundry": {
@@ -289,13 +289,13 @@
           "notes": null
         },
         {
-          "nom": "petit baquet",
+          "nom": "baquet",
           "quantite": 1,
           "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit baquet »."
         }
       ],
       "foundry": {
@@ -341,13 +341,13 @@
       "description": "avec ce sort, le magicien transforme un feu normal tel qu’un brasero, flambeau, feu de joie, en un feu de création magique; autour de ce feu, à 1,50 mètre de distance, apparait un voile de flammèches multicolores. Toute créature regardant le feu ou le cercle de flammes dansantes doit lancer un jet de protection contre les sorts; si ce jet de protection est raté, la créature est charmée et reste immobile, le regard fixé sur les flammes. Toutes les créatures ainsi charmées sont alors sujettes à un sort de suggestion, de 12 mots maximum, dont le jet de protection s'effectue avec un malus de –3. Un feu charmeur est annulé par une attaque physique sur la créature charmée ou si un objet est placé entre la créature et le feu, obstruant ainsi la vue, ou si le sort arrive à son terme. Le voile de flammes n’est pas un feu magique et passer au travers causera des dégâts, égaux à ceux qu’on peut subir si on passe au travers de la source de feu. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est un morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu.",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu",
+          "nom": "morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description."
+          "notes": "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « un morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu »."
         }
       ],
       "foundry": {
@@ -433,13 +433,13 @@
       "description": "grâce à ce sort le magicien rend la créature affectée maladroite et gauche. Les créatures qui courent trébucheront et tomberont, celles qui prennent un objet le laisseront tomber, celles qui utilisent des armes feront de même. Se relever ou récupérer un objet prendra tout le round suivant. Les objets fragiles peuvent être endommagés dans leur chute. Si la victime réussit son jet de protection, le sort aura seulement le même effet que le sort de ralentissement (voir p.75). La composante matérielle est un petit morceau de lait solidifié (crème épaisse ou beurre).",
       "composants_materiels_objets": [
         {
-          "nom": "petit morceau de lait solidifié (crème épaisse ou beurre)",
+          "nom": "morceau de lait solidifié (crème épaisse ou beurre)",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « petit morceau de lait solidifié (crème épaisse ou beurre) »."
         }
       ],
       "foundry": {
@@ -522,13 +522,13 @@
       "description": "ce sort diffère du sort de niveau 5 de druide mur de feu (voir p.61) par ce qui est indiqué ci-dessus et par ce qui suit: les flammes sont soit violettes, soit bleu-rouge; les dégâts de base sont de 2 à 12 points (2d6) plus 1 point de dégât par niveau; le rayon du mur de feu en forme d’anneau est de 1\" + ¼\"/niveau; la composante matérielle est du phosphore. Ce sort ne peut pas être utilisé sous l’eau.",
       "composants_materiels_objets": [
         {
-          "nom": "du phosphore",
+          "nom": "phosphore",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du phosphore »."
         }
       ],
       "foundry": {
@@ -553,13 +553,13 @@
       "description": "quand ce sort est lancé, une paroi de glace solide et flexible apparait. La fonction principale de ce mur est défensive, il arrête les poursuivants. Le mur fait 2,5 cm d’épaisseur pour chaque niveau du magicien; il couvre une surface de 1\" carré par niveau, donc un magicien de niveau 10 pourra créer un mur de 10\" de long sur 1\" de haut, ou de 5\" de long sur 2\" de haut et ainsi de suite. Toute créature essayant de défoncer le mur subira 2 points de dégât par tranche de 2,5 cm d’épaisseur de ce mur; les créatures utilisant le feu subiront 3 points de dégât par tranche de 2,5 cm et les créatures utilisant le froid n’en subiront que 1 par tranche de 2,5 cm. Si ce mur est créé horizontalement, pour tomber sur des ennemis, il a le même effet qu’une tempête de glace (voir p.79) sur la zone où il tombe. Des feux magiques, comme les boules de feu ou un souffle brûlant de dragon, feront fondre un mur de glace en un round mais ils créeront un grand nuage d’épaisse vapeur qui durera 1 tour; des feux normaux ou des petits feux magiques ne pourront pas accélérer la fonte de la glace. Un mur de glace peut être créé sous l’eau mais il remonte immédiatement et flotte comme une banquise. La composante matérielle est un petit morceau de quartz ou une pierre cristalline de même type.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit morceau de quartz ou une pierre cristalline de même type",
+          "nom": "morceau de quartz ou une pierre cristalline de même type",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « un petit morceau de quartz ou une pierre cristalline de même type »."
         }
       ],
       "foundry": {
@@ -584,13 +584,13 @@
       "description": "avec ce sort, le magicien crée un organe sensoriel invisible qui lui donne des informations visuelles. Cet œil magique se déplace à la vitesse de 3\" par round en visualisant une zone devant lui comme un humain le ferait ou à la vitesse de 1\" par round en examinant les plafonds, les murs et le sol devant lui. L’œil possède l’infravision sur 3 m; dans un lieu brillamment éclairé, il «voit» jusqu’à 18 m. L’œil se déplace dans n’importe quelle direction, tant que dure le sort. La composante matérielle est un morceau de fourrure de chauve-souris.",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau de fourrure de chauve-souris",
+          "nom": "morceau de fourrure de chauve-souris",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un morceau de fourrure de chauve-souris »."
         }
       ],
       "foundry": {
@@ -615,13 +615,13 @@
       "description": "lorsque ce sort est lancé sur des créatures consentantes et de taille humaine ou moins, le magicien peut donner l’apparence d’arbres à 10 d’entre elles maximum par niveau d’expérience qu’il possède. Les arbres sont des arbres normaux de n'importe quelle sorte. De plus, on peut passer à côté des créatures transformées, on peut même les toucher, sans découvrir quoi que ce soit. Cependant, si des coups sont portés à ces faux arbres, leur vraie nature sera révélée car il y aura une perte de sang et des dégâts auront été subis. Les créatures transformées doivent se trouver dans la zone d'effet. Les créatures non-consentantes ne seront pas affectées par le sort. Le sort dure tant que le magicien ne l'arrête pas de lui-même ou qu'une dissipation de la magie n'est pas lancée. La composante matérielle est une poignée de morceaux d'écorce.",
       "composants_materiels_objets": [
         {
-          "nom": "une poignée de morceaux d'écorce",
+          "nom": "poignée de morceaux d'écorce",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une poignée de morceaux d'écorce »."
         }
       ],
       "foundry": {
@@ -716,13 +716,13 @@
           "notes": null
         },
         {
-          "nom": "quelques gouttes d’eau",
+          "nom": "goutte d’eau",
           "quantite": 1,
           "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": null
+          "notes": "Formulation source du Manuel : « quelques gouttes d’eau »."
         }
       ],
       "foundry": {
@@ -747,13 +747,13 @@
       "description": "grâce à ce sort, le magicien crée une illusion qui cache le véritable terrain dans la zone d’effet. Ainsi, il peut faire apparaître un champ ou une route comme étant une colline, une crevasse, un marais ou tout autre obstacle infranchissable. De même peut-il faire passer un marais pour une prairie herbeuse, un précipice pour une pente douce, un petit ravin creusé dans le roc pour une route large et uniforme. L’illusion persiste jusqu’à ce que quelqu’un lance une dissipation de la magie ou qu’une créature intelligente s’en aperçoive. Chaque niveau d’expérience du magicien lui permet d’affecter une zone plus grande; au 10e niveau, un magicien pourra créer un terrain hallucinatoire de 10\" sur 10\"; 12\" sur 12\" au niveau 12, etc. Les composantes matérielles sont une pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe.",
       "composants_materiels_objets": [
         {
-          "nom": "une pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe",
+          "nom": "pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe »."
         }
       ],
       "foundry": {

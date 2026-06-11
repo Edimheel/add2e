@@ -75,13 +75,13 @@
           "notes": null
         },
         {
-          "nom": "baies de houx",
+          "nom": "baie de houx",
           "quantite": 1,
           "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": "Application utilisant des baies de houx ; combinable avec les glands de chêne.",
-          "notes": null
+          "notes": "Formulation source du Manuel : « baies de houx »."
         }
       ],
       "foundry": {
