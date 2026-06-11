@@ -1,6 +1,6 @@
 // scripts/add2e/handlebars-helpers.mjs
 // ADD2E — Helpers Handlebars partagés.
-// Version : 2026-06-11-thief-skills-template-helper-v1
+// Version : 2026-06-11-remove-thief-skills-template-helper-v1
 
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.json) {
   Handlebars.registerHelper("json", ctx => JSON.stringify(ctx, null, 2));
@@ -322,21 +322,10 @@ function add2eHbsEquippedWeaponRows(actor, listeArmes, listeObjets, combatDefens
   });
 }
 
-function add2eHbsThiefSkillsTable(actor) {
-  try {
-    if (typeof globalThis.add2eRenderThiefSkillsTable !== "function") return "";
-    return globalThis.add2eRenderThiefSkillsTable(actor) || "";
-  } catch (err) {
-    console.warn("[ADD2E][HBS][VOLEUR][TABLE_ERROR]", err);
-    return "";
-  }
-}
-
 if (typeof Handlebars !== "undefined") {
   Handlebars.registerHelper("add2eBestThaco", add2eHbsBestThaco);
   Handlebars.registerHelper("add2eBestSave", add2eHbsBestSave);
   Handlebars.registerHelper("add2eEquippedWeaponRows", add2eHbsEquippedWeaponRows);
-  Handlebars.registerHelper("add2eThiefSkillsTable", add2eHbsThiefSkillsTable);
 
   Handlebars.registerHelper("capitalize", str => (str && typeof str === "string") ? str.charAt(0).toUpperCase() + str.slice(1) : str);
   Handlebars.registerHelper("uppercase", str => (str && typeof str === "string") ? str.toUpperCase() : str);
@@ -420,4 +409,3 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.length) {
 
 globalThis.add2eHbsBestThaco = add2eHbsBestThaco;
 globalThis.add2eHbsBestSave = add2eHbsBestSave;
-globalThis.add2eHbsThiefSkillsTable = add2eHbsThiefSkillsTable;
