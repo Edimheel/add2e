@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-11-multiclass-layer-v17-dialog-v2-theme-in-head
+// Version : 2026-06-11-multiclass-layer-v18-player-tiles-dialog-v2
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,13 +7,12 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-11-multiclass-layer-v17-dialog-v2-theme-in-head";
+const VERSION = "2026-06-11-multiclass-layer-v18-player-tiles-dialog-v2";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
 globalThis.ADD2E_MULTICLASS_VERSION = VERSION;
 
-function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
 function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
 
 function num(value, fallback = 0) {
@@ -340,7 +339,6 @@ async function cleanupAfterMonoclassReplace(actor, itemData, sheet = null) {
   await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-monoclass-clean-system" });
   sheet?._add2eRememberActiveTab?.();
   sheet?.render?.(false);
-  log("[MONOCLASS_CLEANUP]", { actor: actor.name, keep: keep?.name ?? null, deleted: toDelete.map(doc => doc.name) });
   return true;
 }
 
@@ -371,47 +369,12 @@ async function dialogAlert(title, content) {
   return false;
 }
 
-function installMulticlassDialogTheme() {
-  if (document.getElementById("add2e-multiclass-dialog-theme")) return;
-  const style = document.createElement("style");
-  style.id = "add2e-multiclass-dialog-theme";
-  style.textContent = `
-.application.add2e-multiclass-dialog,
-.application:has(.add2e-multiclass-choice) { min-width: 720px !important; max-width: 860px !important; }
-.application.add2e-multiclass-dialog .window-content,
-.application:has(.add2e-multiclass-choice) .window-content { padding: 12px !important; background: linear-gradient(180deg, #fff8df, #f1deb0) !important; color: #2b1c0d !important; }
-.application.add2e-multiclass-dialog .dialog-content,
-.application:has(.add2e-multiclass-choice) .dialog-content { padding: 0 !important; }
-.add2e-multiclass-choice { display: grid !important; gap: 12px !important; min-width: 620px !important; max-width: 820px !important; color: #2b1c0d !important; font-family: var(--font-primary, Signika, sans-serif) !important; }
-.add2e-multiclass-choice .a2e-mc-title { border: 1px solid #5c3b12 !important; border-radius: 12px !important; background: linear-gradient(180deg, #3b2612, #1c1208) !important; color: #f9df9a !important; padding: 11px 14px !important; box-shadow: inset 0 0 0 1px rgba(255,221,145,.16), 0 2px 8px rgba(0,0,0,.25) !important; }
-.add2e-multiclass-choice .a2e-mc-title h2 { margin: 0 !important; font-size: 1.15rem !important; text-transform: uppercase !important; letter-spacing: .03em !important; color: #f9df9a !important; border: 0 !important; }
-.add2e-multiclass-choice .a2e-mc-title p { margin: 4px 0 0 !important; color: #e8c978 !important; font-size: .92rem !important; }
-.add2e-multiclass-choice .a2e-mc-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 8px !important; }
-.add2e-multiclass-choice .a2e-mc-card { border: 1px solid #b48a37 !important; border-radius: 10px !important; background: linear-gradient(180deg, #fff7df, #ead7a7) !important; padding: 9px 10px !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,.5) !important; }
-.add2e-multiclass-choice .a2e-mc-card label { display: block !important; color: #65420f !important; font-size: .75rem !important; font-weight: 900 !important; text-transform: uppercase !important; letter-spacing: .06em !important; margin: 0 0 4px 0 !important; }
-.add2e-multiclass-choice .a2e-mc-card b { display: block !important; color: #2b1c0d !important; font-size: 1.02rem !important; }
-.add2e-multiclass-choice .a2e-mc-warning { border: 1px solid #8f2a20 !important; border-left: 5px solid #8f2a20 !important; border-radius: 10px !important; background: linear-gradient(180deg, #f6dfcf, #e7bea8) !important; padding: 10px 12px !important; color: #7a1c16 !important; }
-.add2e-multiclass-choice .a2e-mc-info { border: 1px solid #7c8a35 !important; border-left: 5px solid #7c8a35 !important; border-radius: 10px !important; background: linear-gradient(180deg, #eef2ce, #d9dfa3) !important; padding: 10px 12px !important; color: #44520f !important; }
-.add2e-multiclass-choice .a2e-mc-warning b,
-.add2e-multiclass-choice .a2e-mc-info b { display: block !important; margin-bottom: 2px !important; font-weight: 900 !important; }
-.add2e-multiclass-choice .a2e-mc-panel { display: grid !important; gap: 7px !important; border: 1px solid #8a611d !important; border-radius: 12px !important; background: linear-gradient(180deg, #fff8e8, #f1e0b8) !important; padding: 10px !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,.45), 0 2px 5px rgba(0,0,0,.12) !important; }
-.add2e-multiclass-choice .a2e-mc-panel label { color: #4d310e !important; font-weight: 900 !important; text-transform: uppercase !important; font-size: .78rem !important; letter-spacing: .06em !important; margin: 0 !important; }
-.add2e-multiclass-choice .a2e-mc-panel select { width: 100% !important; min-height: 38px !important; padding: 6px 10px !important; border: 1px solid #7c541a !important; border-radius: 8px !important; background: #fffaf0 !important; color: #2b1c0d !important; font-weight: 800 !important; box-shadow: inset 0 1px 2px rgba(0,0,0,.18) !important; }
-.add2e-multiclass-choice .a2e-mc-note { padding: 8px 10px !important; border-left: 4px solid #c99a3a !important; border-radius: 8px !important; background: #f2e1b5 !important; color: #6f5a32 !important; font-size: .9rem !important; }
-.add2e-multiclass-choice code { padding: 1px 5px !important; border-radius: 5px !important; background: #2b1c0d !important; color: #f9df9a !important; }
-.application:has(.add2e-multiclass-choice) .dialog-buttons { padding: 0 12px 12px 12px !important; gap: 10px !important; }
-.application:has(.add2e-multiclass-choice) .dialog-buttons button { min-height: 36px !important; border-radius: 9px !important; font-weight: 900 !important; }
-`;
-  document.head.appendChild(style);
-}
-
 async function dialogWait({ title, content, buttons, classes = [] }) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.wait) {
     await dialogAlert(title, `${content}<p><b>DialogV2.wait indisponible : action annulée.</b></p>`);
     return { action: "cancel" };
   }
-  installMulticlassDialogTheme();
   return DialogV2.wait({ classes, window: { title }, content, buttons, modal: true, rejectClose: false, close: () => ({ action: "cancel" }) });
 }
 
@@ -463,12 +426,11 @@ function multiclassOptionsForDroppedClass(actor, classData) {
 }
 
 function replacementClassNames(actor, droppedClassData, replaceSlug) {
-  const droppedSlug = classSlug(droppedClassData);
   return classItems(actor)
     .filter(cls => classSlug(cls) !== replaceSlug)
     .map(cls => cls.name)
     .concat(itemLabel(droppedClassData, "Classe"))
-    .filter((name, index, arr) => arr.findIndex(other => norm(other) === norm(name)) === index && norm(name) !== droppedSlug ? true : true);
+    .filter((name, index, arr) => arr.findIndex(other => norm(other) === norm(name)) === index);
 }
 
 function raceCompatibleForReplacement(actor, droppedClassData, replaceSlug, raceData) {
@@ -519,6 +481,26 @@ function compatibleMulticlassClassCandidates(actor, preferredClassData = null) {
   return out.sort((a, b) => itemLabel(a, "Classe").localeCompare(itemLabel(b, "Classe"), game.i18n?.lang ?? "fr"));
 }
 
+function tileHtml({ value, title, text, note = "", tone = "gold", checked = false }) {
+  const palettes = {
+    gold: ["#3b2612", "#f6e7a8", "#d7a94d", "#8a611d", "✦"],
+    amber: ["#3b2612", "#f3d4a0", "#b66b2f", "#8f4a18", "↻"],
+    bronze: ["#24190c", "#ded1ad", "#9b8561", "#5f4927", "◆"],
+    red: ["#2b0f0b", "#ead0c7", "#a64536", "#7a251d", "×"]
+  };
+  const [color, bg1, bg2, border, icon] = palettes[tone] ?? palettes.gold;
+  return `
+    <label style="display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:center;min-height:88px;padding:12px;border:2px solid ${border};border-radius:14px;background:linear-gradient(135deg,${bg1},${bg2});color:${color};box-shadow:0 2px 8px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.45);cursor:pointer;">
+      <input type="radio" name="add2eChoice" value="${esc(value)}" ${checked ? "checked" : ""} style="position:absolute;opacity:0;pointer-events:none;">
+      <span style="font-size:1.8rem;line-height:1;text-align:center;">${icon}</span>
+      <span style="display:grid;gap:3px;text-align:left;">
+        <strong style="font-size:1.04rem;line-height:1.15;">${esc(title)}</strong>
+        <span style="font-size:.9rem;line-height:1.25;">${esc(text)}</span>
+        ${note ? `<span style="font-size:.78rem;line-height:1.2;opacity:.82;">${esc(note)}</span>` : ""}
+      </span>
+    </label>`;
+}
+
 async function showClassDropChoiceDialog(actor, droppedClassData) {
   const current = classItems(actor).map(c => c.name).join(" / ") || actor.system?.classe || "Aucune";
   const raceName = itemLabel(systemRace(actor), "Race");
@@ -530,54 +512,83 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
     if (!seen.has(key)) { seen.add(key); options.push(opt); }
   }
   const replacementOptions = classItems(actor).length > 1 ? replacementOptionsForDroppedClass(actor, droppedClassData) : [];
-  const optionHtml = options.map((opt, index) => `<option value="${index}">${esc(opt.label)}${opt.needsRaceChange ? " — changement de race" : ""}</option>`).join("");
-  const replacementHtml = replacementOptions.map((opt, index) => `<option value="${index}">${esc(opt.label)}${opt.needsRaceChange ? " — changement de race" : ""}</option>`).join("");
-  const statusMessage = options.length
-    ? `<div class="a2e-mc-info"><b>Multiclassage disponible.</b><span>Choisis la combinaison exacte à appliquer.</span></div>`
-    : `<div class="a2e-mc-warning"><b>Aucune combinaison d'ajout direct disponible avec cette race.</b><span>Tu peux remplacer la classe existante, annuler, ou choisir une option de remplacement si l'acteur est déjà multiclassé.</span></div>`;
+
+  const tiles = [];
+  for (let i = 0; i < options.length; i++) {
+    const opt = options[i];
+    tiles.push(tileHtml({
+      value: `multiclass:${i}`,
+      title: opt.already ? "Actualiser le multiclassage" : "Ajouter cette classe",
+      text: opt.label.replace(/—/g, "•"),
+      note: opt.already ? "Remet les niveaux, titres et sorts en cohérence." : "Ajoute la classe sans perdre le parcours actuel.",
+      tone: "gold",
+      checked: i === 0
+    }));
+  }
+  for (let i = 0; i < replacementOptions.length; i++) {
+    const opt = replacementOptions[i];
+    tiles.push(tileHtml({
+      value: `replace:${i}`,
+      title: "Remplacer une classe",
+      text: opt.label.replace(/—/g, "•"),
+      note: "Garde un personnage multiclassé avec une autre combinaison.",
+      tone: "amber",
+      checked: !tiles.length && i === 0
+    }));
+  }
+  tiles.push(tileHtml({
+    value: "monoclass",
+    title: "Garder une seule classe",
+    text: `Remplacer le parcours actuel par ${droppedName}.`,
+    note: "À utiliser pour repartir sur une classe unique.",
+    tone: "bronze",
+    checked: !tiles.length
+  }));
+
+  const helperText = options.length
+    ? "Cette classe peut rejoindre le personnage. Choisis la tuile qui correspond à ton intention."
+    : replacementOptions.length
+      ? "Cette classe ne peut pas être ajoutée directement avec la race actuelle, mais tu peux modifier une classe existante."
+      : "Cette classe ne peut pas être ajoutée directement avec la race actuelle. Tu peux la garder seule ou annuler.";
+
   const content = `
-    <form class="add2e-multiclass-choice">
-      <div class="a2e-mc-title">
-        <h2>Choix de classe ou multiclassage</h2>
-        <p>Drop d'une classe sur un personnage déjà classé.</p>
+    <div class="add2e-multiclass-choice" style="display:grid;gap:12px;min-width:640px;max-width:820px;color:#2b1c0d;font-family:var(--font-primary, Signika, sans-serif);">
+      <div style="border:1px solid #5c3b12;border-radius:14px;background:linear-gradient(180deg,#3b2612,#1c1208);padding:12px 14px;box-shadow:inset 0 0 0 1px rgba(255,221,145,.16),0 2px 8px rgba(0,0,0,.25);">
+        <h2 style="margin:0;color:#f9df9a;font-size:1.18rem;text-transform:uppercase;letter-spacing:.03em;border:0;">Choisis ton évolution</h2>
+        <p style="margin:4px 0 0;color:#e8c978;font-size:.92rem;">${esc(helperText)}</p>
       </div>
-      <div class="a2e-mc-grid">
-        <div class="a2e-mc-card"><label>Classe(s) actuelle(s)</label><b>${esc(current)}</b></div>
-        <div class="a2e-mc-card"><label>Classe déposée</label><b>${esc(droppedName)}</b></div>
-        <div class="a2e-mc-card"><label>Race actuelle</label><b>${esc(raceName)}</b></div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+        <div style="border:1px solid #b48a37;border-radius:12px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.74rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Classe actuelle</span><b>${esc(current)}</b></div>
+        <div style="border:1px solid #b48a37;border-radius:12px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.74rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Classe déposée</span><b>${esc(droppedName)}</b></div>
+        <div style="border:1px solid #b48a37;border-radius:12px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.74rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Race actuelle</span><b>${esc(raceName)}</b></div>
       </div>
-      ${statusMessage}
-      ${options.length ? `<div class="a2e-mc-panel"><label>Multiclassage disponible</label><select name="multiclassChoice">${optionHtml}</select></div>` : ``}
-      ${replacementOptions.length ? `<div class="a2e-mc-panel"><label>Modifier une classe du multiclassage</label><select name="replacementChoice">${replacementHtml}</select></div>` : ``}
-      <div class="a2e-mc-note">Les combinaisons viennent uniquement du champ <code>system.multiclassing.allowedCombinations</code> des races.</div>
-    </form>`;
-  const buttons = [{ action: "monoclass", label: "Remplacer en mono-classe", default: !options.length && !replacementOptions.length, callback: () => ({ action: "monoclass" }) }];
-  if (options.length) {
-    buttons.push({
-      action: "multiclass-selected",
-      label: options[0]?.already ? "Recalculer / resynchroniser" : "Appliquer ce multiclassage",
-      default: true,
-      callback: (_event, _button, dialog) => {
-        const root = dialog?.element ?? document;
-        const idx = Number(root.querySelector?.('[name="multiclassChoice"]')?.value ?? 0) || 0;
-        return { action: "multiclass", option: options[idx] ?? null };
-      }
-    });
-  }
-  if (replacementOptions.length) {
-    buttons.push({
-      action: "replace-class-selected",
-      label: "Remplacer la classe sélectionnée",
-      default: !options.length,
-      callback: (_event, _button, dialog) => {
-        const root = dialog?.element ?? document;
-        const idx = Number(root.querySelector?.('[name="replacementChoice"]')?.value ?? 0) || 0;
-        return { action: "replace-class", option: replacementOptions[idx] ?? null };
-      }
-    });
-  }
-  buttons.push({ action: "cancel", label: "Annuler", callback: () => ({ action: "cancel" }) });
-  return dialogWait({ title: "ADD2E — Classe ou multiclassage", content, buttons, classes: ["add2e-multiclass-dialog"] });
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+        ${tiles.join("\n")}
+      </div>
+      <p style="margin:0;padding:8px 10px;border-left:5px solid #c99a3a;border-radius:8px;background:#f2e1b5;color:#5d451b;font-weight:800;">Sélectionne une tuile, puis valide ton choix.</p>
+    </div>`;
+
+  const readChoice = (_event, button, dialog) => {
+    const form = button?.form ?? dialog?.element?.querySelector?.("form") ?? document.querySelector?.(".add2e-multiclass-choice")?.closest?.("form");
+    const raw = form?.elements?.add2eChoice?.value
+      ?? dialog?.element?.querySelector?.('input[name="add2eChoice"]:checked')?.value
+      ?? document.querySelector?.('input[name="add2eChoice"]:checked')?.value
+      ?? "cancel";
+    if (raw === "monoclass") return { action: "monoclass" };
+    if (raw.startsWith("multiclass:")) return { action: "multiclass", option: options[Number(raw.split(":")[1]) || 0] ?? null };
+    if (raw.startsWith("replace:")) return { action: "replace-class", option: replacementOptions[Number(raw.split(":")[1]) || 0] ?? null };
+    return { action: "cancel" };
+  };
+
+  return dialogWait({
+    title: "ADD2E — Classe ou multiclassage",
+    content,
+    classes: ["add2e-multiclass-dialog"],
+    buttons: [
+      { action: "validate", label: "Valider ce choix", default: true, callback: readChoice },
+      { action: "cancel", label: "Annuler", callback: () => ({ action: "cancel" }) }
+    ]
+  });
 }
 
 async function applyRaceData(actor, raceData, sheet = null) {
@@ -724,7 +735,6 @@ async function updateDirectMulticlassField(sheet, input) {
   await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-direct-field" });
   sheet?._add2eRememberActiveTab?.();
   sheet?.render?.(false);
-  log("[DIRECT_FIELD_SYNC]", { actor: actor.name, field: name, value, payload });
   return true;
 }
 
@@ -772,7 +782,6 @@ function installDropWrapper() {
     return original.call(this, event, data);
   };
   SheetClass.prototype._add2eMulticlassWrapped = VERSION;
-  log("[DROP_WRAPPER_INSTALLED]", { version: VERSION });
   return true;
 }
 
@@ -780,7 +789,6 @@ installGetDataPatch();
 
 Hooks.once("ready", () => {
   installGetDataPatch();
-  installMulticlassDialogTheme();
   setTimeout(() => {
     if (!installDropWrapper()) {
       setTimeout(installDropWrapper, 500);
@@ -824,5 +832,3 @@ globalThis.add2eMulticlassClassRaceMaxLevel = classRaceMaxLevel;
 globalThis.add2eMulticlassDirectFieldSync = updateDirectMulticlassField;
 globalThis.add2eCleanMonoclassAfterReplace = cleanupAfterMonoclassReplace;
 globalThis.add2eReplaceClassInMulticlass = replaceClassInMulticlass;
-
-log("[LOADED]", { version: VERSION });
