@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-11-multiclass-layer-v15-replace-choice
+// Version : 2026-06-11-multiclass-layer-v16-inline-dialog-theme
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,7 +7,7 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-11-multiclass-layer-v15-replace-choice";
+const VERSION = "2026-06-11-multiclass-layer-v16-inline-dialog-theme";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -486,6 +486,8 @@ function compatibleMulticlassClassCandidates(actor, preferredClassData = null) {
 
 async function showClassDropChoiceDialog(actor, droppedClassData) {
   const current = classItems(actor).map(c => c.name).join(" / ") || actor.system?.classe || "Aucune";
+  const raceName = itemLabel(systemRace(actor), "Race");
+  const droppedName = itemLabel(droppedClassData, "Classe");
   const options = [];
   const seen = new Set();
   for (const opt of multiclassOptionsForDroppedClass(actor, droppedClassData)) {
@@ -495,14 +497,42 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
   const replacementOptions = classItems(actor).length > 1 ? replacementOptionsForDroppedClass(actor, droppedClassData) : [];
   const optionHtml = options.map((opt, index) => `<option value="${index}">${esc(opt.label)}${opt.needsRaceChange ? " — changement de race" : ""}</option>`).join("");
   const replacementHtml = replacementOptions.map((opt, index) => `<option value="${index}">${esc(opt.label)}${opt.needsRaceChange ? " — changement de race" : ""}</option>`).join("");
+  const statusMessage = options.length
+    ? `<div class="a2e-mc-info"><b>Multiclassage disponible.</b><span>Choisis la combinaison exacte à appliquer.</span></div>`
+    : `<div class="a2e-mc-warning"><b>Aucune combinaison d'ajout direct disponible avec cette race.</b><span>Tu peux remplacer la classe existante, annuler, ou choisir une option de remplacement si l'acteur est déjà multiclassé.</span></div>`;
   const content = `
-    <form class="add2e-multiclass-choice" style="line-height:1.45;min-width:560px;">
-      <p><b>Drop d'une classe sur un personnage déjà classé</b></p>
-      <p>Classe(s) actuelle(s) : <b>${esc(current)}</b></p>
-      <p>Classe déposée : <b>${esc(itemLabel(droppedClassData, "Classe"))}</b></p>
-      ${options.length ? `<div class="form-group"><label>Multiclassage disponible</label><select name="multiclassChoice">${optionHtml}</select></div>` : `<p style="color:#9b1c1c;font-weight:700;">Aucune combinaison d'ajout direct disponible avec cette race.</p>`}
-      ${replacementOptions.length ? `<div class="form-group"><label>Modifier une classe du multiclassage</label><select name="replacementChoice">${replacementHtml}</select></div>` : ``}
-      <p style="font-size:0.9em;color:#6b5a2a;margin-bottom:0;">Les combinaisons viennent uniquement du champ <b>system.multiclassing.allowedCombinations</b> des races.</p>
+    <form class="add2e-multiclass-choice" style="line-height:1.45;min-width:580px;max-width:760px;color:#2b1c0d;">
+      <style>
+        .add2e-multiclass-choice{display:grid;gap:12px;padding:2px 2px 0;font-family:var(--font-primary,Signika,sans-serif)}
+        .add2e-multiclass-choice .a2e-mc-title{border:1px solid #5c3b12;border-radius:12px;background:linear-gradient(180deg,#3b2612,#1c1208);color:#f9df9a;padding:11px 14px;box-shadow:inset 0 0 0 1px rgba(255,221,145,.16),0 2px 8px rgba(0,0,0,.25)}
+        .add2e-multiclass-choice .a2e-mc-title h2{margin:0;font-size:1.15rem;text-transform:uppercase;letter-spacing:.03em;color:#f9df9a;border:0}
+        .add2e-multiclass-choice .a2e-mc-title p{margin:4px 0 0;color:#e8c978;font-size:.92rem}
+        .add2e-multiclass-choice .a2e-mc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+        .add2e-multiclass-choice .a2e-mc-card{border:1px solid #b48a37;border-radius:10px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:9px 10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
+        .add2e-multiclass-choice .a2e-mc-card label{display:block;color:#65420f;font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+        .add2e-multiclass-choice .a2e-mc-card b{display:block;color:#2b1c0d;font-size:1.02rem}
+        .add2e-multiclass-choice .a2e-mc-warning{border:1px solid #8f2a20;border-left:5px solid #8f2a20;border-radius:10px;background:linear-gradient(180deg,#f6dfcf,#e7bea8);padding:10px 12px;color:#7a1c16}
+        .add2e-multiclass-choice .a2e-mc-info{border:1px solid #7c8a35;border-left:5px solid #7c8a35;border-radius:10px;background:linear-gradient(180deg,#eef2ce,#d9dfa3);padding:10px 12px;color:#44520f}
+        .add2e-multiclass-choice .a2e-mc-warning b,.add2e-multiclass-choice .a2e-mc-info b{display:block;margin-bottom:2px;font-weight:900}
+        .add2e-multiclass-choice .a2e-mc-panel{display:grid;gap:7px;border:1px solid #8a611d;border-radius:12px;background:linear-gradient(180deg,#fff8e8,#f1e0b8);padding:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45),0 2px 5px rgba(0,0,0,.12)}
+        .add2e-multiclass-choice .a2e-mc-panel label{color:#4d310e;font-weight:900;text-transform:uppercase;font-size:.78rem;letter-spacing:.06em}
+        .add2e-multiclass-choice .a2e-mc-panel select{width:100%;min-height:38px;padding:6px 10px;border:1px solid #7c541a;border-radius:8px;background:#fffaf0;color:#2b1c0d;font-weight:800;box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}
+        .add2e-multiclass-choice .a2e-mc-note{padding:8px 10px;border-left:4px solid #c99a3a;border-radius:8px;background:#f2e1b5;color:#6f5a32;font-size:.9rem}
+        .add2e-multiclass-choice code{padding:1px 5px;border-radius:5px;background:#2b1c0d;color:#f9df9a}
+      </style>
+      <div class="a2e-mc-title">
+        <h2>Choix de classe ou multiclassage</h2>
+        <p>Drop d'une classe sur un personnage déjà classé.</p>
+      </div>
+      <div class="a2e-mc-grid">
+        <div class="a2e-mc-card"><label>Classe(s) actuelle(s)</label><b>${esc(current)}</b></div>
+        <div class="a2e-mc-card"><label>Classe déposée</label><b>${esc(droppedName)}</b></div>
+        <div class="a2e-mc-card"><label>Race actuelle</label><b>${esc(raceName)}</b></div>
+      </div>
+      ${statusMessage}
+      ${options.length ? `<div class="a2e-mc-panel"><label>Multiclassage disponible</label><select name="multiclassChoice">${optionHtml}</select></div>` : ``}
+      ${replacementOptions.length ? `<div class="a2e-mc-panel"><label>Modifier une classe du multiclassage</label><select name="replacementChoice">${replacementHtml}</select></div>` : ``}
+      <div class="a2e-mc-note">Les combinaisons viennent uniquement du champ <code>system.multiclassing.allowedCombinations</code> des races.</div>
     </form>`;
   const buttons = [{ action: "monoclass", label: "Remplacer en mono-classe", default: !options.length && !replacementOptions.length, callback: () => ({ action: "monoclass" }) }];
   if (options.length) {
