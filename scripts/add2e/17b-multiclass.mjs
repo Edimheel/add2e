@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-11-multiclass-layer-v21-delegate-mono-prereqs
+// Version : 2026-06-11-multiclass-layer-v22-single-drop-dialog
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,7 +7,7 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-11-multiclass-layer-v21-delegate-mono-prereqs";
+const VERSION = "2026-06-11-multiclass-layer-v22-single-drop-dialog";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -159,19 +159,6 @@ function classPrerequisitesOk(actor, classData, raceData = null, options = {}) {
   return raceMatchesClassRules(raceData ?? systemRace(actor), classData);
 }
 
-async function delegateMonoClassCompatibility(actor, itemData, sheet = null) {
-  try {
-    if (typeof add2eResolveDropCompatibilityWithPopup !== "function") return { handled: false, ok: true };
-    const result = await add2eResolveDropCompatibilityWithPopup(actor, itemData, sheet);
-    if (!result?.ok) return { handled: true, ok: false };
-    if (result?.handled) return { handled: true, ok: true };
-    return { handled: false, ok: true };
-  } catch (err) {
-    warn("[MONOCLASS_DELEGATE_ERROR]", err);
-    return { handled: false, ok: true };
-  }
-}
-
 function worldItemsByType(type) {
   try {
     if (typeof add2eWorldItemsByType === "function") return add2eWorldItemsByType(type);
@@ -182,6 +169,19 @@ function worldItemsByType(type) {
     .filter(Boolean);
 }
 
+function uniqueRaces(actor) {
+  const current = raceItem(actor);
+  const seen = new Set();
+  return [...(current ? [cloneItemData(current)] : []), ...worldItemsByType("race")]
+    .filter(Boolean)
+    .filter(race => {
+      const key = norm(itemLabel(race, "Race"));
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 function raceCompatibleForMulticlass(actor, classData, raceData) {
   return raceAllowsClassSet(raceData, wantedClassNames(actor, classData))
     && raceMatchesClassRules(raceData, classData)
@@ -189,15 +189,13 @@ function raceCompatibleForMulticlass(actor, classData, raceData) {
 }
 
 function raceCandidatesForClass(actor, classData) {
-  const current = raceItem(actor);
-  const races = [...(current ? [cloneItemData(current)] : []), ...worldItemsByType("race")].filter(Boolean);
-  const seen = new Set();
-  return races.filter(race => {
-    const key = norm(itemLabel(race, "Race"));
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return raceCompatibleForMulticlass(actor, classData, race);
-  });
+  return uniqueRaces(actor).filter(race => raceCompatibleForMulticlass(actor, classData, race));
+}
+
+function monoClassOptionsForDroppedClass(actor, classData) {
+  return uniqueRaces(actor)
+    .filter(race => raceMatchesClassRules(race, classData) && classPrerequisitesOk(actor, classData, race, { notify: false }))
+    .map(raceData => ({ action: "monoclass", classData, raceData }));
 }
 
 function parseXpRange(raw) {
@@ -349,7 +347,7 @@ async function cleanupAfterMonoclassReplace(actor, itemData, sheet = null) {
   if (!actor || actor.type !== "personnage") return false;
   const wantedSlug = classSlug(itemData);
   const docs = classItems(actor);
-  let keep = docs.find(doc => classSlug(doc) === wantedSlug) ?? docs.at(-1) ?? null;
+  const keep = docs.find(doc => classSlug(doc) === wantedSlug) ?? docs.at(-1) ?? null;
   const toDelete = docs.filter(doc => doc.id !== keep?.id);
   if (toDelete.length) await actor.deleteEmbeddedDocuments("Item", toDelete.map(doc => doc.id), { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-monoclass-clean-items" });
   const payload = monoClassCleanupPayload();
@@ -391,9 +389,9 @@ async function dialogAlert(title, content) {
 }
 
 function installDialogButtonTheme() {
-  if (document.getElementById("add2e-multiclass-button-theme-v21")) return;
+  if (document.getElementById("add2e-multiclass-button-theme-v22")) return;
   const style = document.createElement("style");
-  style.id = "add2e-multiclass-button-theme-v21";
+  style.id = "add2e-multiclass-button-theme-v22";
   style.textContent = `
 .application.add2e-multiclass-dialog button[data-action="validate"],
 .application:has(.add2e-multiclass-choice) button[data-action="validate"] {
@@ -411,8 +409,7 @@ function installDialogButtonTheme() {
   color: #fff3ea !important;
   font-weight: 900 !important;
   border-radius: 10px !important;
-}
-`;
+}`;
   document.head.appendChild(style);
 }
 
@@ -491,12 +488,11 @@ function replacementOptionsForDroppedClass(actor, droppedClassData) {
   const droppedSlug = classSlug(droppedClassData);
   const existing = classItems(actor).filter(cls => classSlug(cls) !== droppedSlug);
   if (!existing.length) return [];
-  const races = [systemRace(actor), ...worldItemsByType("race")].filter(Boolean);
   const out = [];
   const seen = new Set();
   for (const replacedClass of existing) {
     const replaceSlug = classSlug(replacedClass);
-    for (const raceData of races) {
+    for (const raceData of uniqueRaces(actor)) {
       const raceKey = norm(itemLabel(raceData, "Race"));
       const key = `${replaceSlug}|${droppedSlug}|${raceKey}`;
       if (seen.has(key)) continue;
@@ -581,38 +577,26 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
     if (!seen.has(key)) { seen.add(key); options.push(opt); }
   }
   const replacementOptions = classItems(actor).length > 1 ? replacementOptionsForDroppedClass(actor, droppedClassData) : [];
+  const monoOptions = monoClassOptionsForDroppedClass(actor, droppedClassData);
 
   const tiles = [];
   for (let i = 0; i < options.length; i++) {
     const opt = options[i];
     const race = itemLabel(opt.raceData, "Race");
-    tiles.push(tileHtml({
-      value: `multiclass:${i}`,
-      classesText: finalClassTextForAdd(actor, opt.classData),
-      raceText: race,
-      toneRace: race,
-      checked: i === 0
-    }));
+    tiles.push(tileHtml({ value: `multiclass:${i}`, classesText: finalClassTextForAdd(actor, opt.classData), raceText: race, toneRace: race, checked: i === 0 }));
   }
   for (let i = 0; i < replacementOptions.length; i++) {
     const opt = replacementOptions[i];
     const race = itemLabel(opt.raceData, "Race");
-    tiles.push(tileHtml({
-      value: `replace:${i}`,
-      classesText: finalClassTextForReplace(actor, opt),
-      raceText: race,
-      toneRace: race,
-      checked: !tiles.length && i === 0
-    }));
+    tiles.push(tileHtml({ value: `replace:${i}`, classesText: finalClassTextForReplace(actor, opt), raceText: race, toneRace: race, checked: !tiles.length && i === 0 }));
   }
-  tiles.push(tileHtml({
-    value: "monoclass",
-    classesText: droppedName,
-    raceText: raceName,
-    toneRace: raceName,
-    checked: !tiles.length
-  }));
+  for (let i = 0; i < monoOptions.length; i++) {
+    const opt = monoOptions[i];
+    const race = itemLabel(opt.raceData, "Race");
+    tiles.push(tileHtml({ value: `monoclass:${i}`, classesText: droppedName, raceText: race, toneRace: race, checked: !tiles.length && i === 0 }));
+  }
 
+  const body = tiles.length ? tiles.join("\n") : `<div style="padding:12px;border:1px solid #8f2a20;border-radius:10px;background:#f0c6b4;color:#6b1b12;font-weight:900;">Aucune option valide pour cette classe.</div>`;
   const content = `
     <div class="add2e-multiclass-choice" style="display:grid;gap:8px;min-width:580px;max-width:720px;color:#2b1c0d;font-family:var(--font-primary, Signika, sans-serif);">
       <div style="border:1px solid #5c3b12;border-radius:12px;background:linear-gradient(180deg,#3b2612,#1c1208);padding:8px 11px;box-shadow:inset 0 0 0 1px rgba(255,221,145,.16),0 2px 8px rgba(0,0,0,.25);">
@@ -623,9 +607,7 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
         <div style="border:1px solid #b48a37;border-radius:10px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:7px 8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Classe déposée</span><b style="font-size:.9rem;">${esc(droppedName)}</b></div>
         <div style="border:1px solid #b48a37;border-radius:10px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:7px 8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Race actuelle</span><b style="font-size:.9rem;">${esc(raceName)}</b></div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:7px;">
-        ${tiles.join("\n")}
-      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:7px;">${body}</div>
     </div>`;
 
   const readChoice = (_event, button, dialog) => {
@@ -634,7 +616,7 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
       ?? dialog?.element?.querySelector?.('input[name="add2eChoice"]:checked')?.value
       ?? document.querySelector?.('input[name="add2eChoice"]:checked')?.value
       ?? "cancel";
-    if (raw === "monoclass") return { action: "monoclass" };
+    if (raw.startsWith("monoclass:")) return { action: "monoclass", option: monoOptions[Number(raw.split(":")[1]) || 0] ?? null };
     if (raw.startsWith("multiclass:")) return { action: "multiclass", option: options[Number(raw.split(":")[1]) || 0] ?? null };
     if (raw.startsWith("replace:")) return { action: "replace-class", option: replacementOptions[Number(raw.split(":")[1]) || 0] ?? null };
     return { action: "cancel" };
@@ -667,11 +649,11 @@ async function applyRaceData(actor, raceData, sheet = null) {
   return true;
 }
 
-async function applyClassAsMonoclass(actor, itemData, sheet = null) {
-  const delegated = await delegateMonoClassCompatibility(actor, itemData, sheet);
-  if (!delegated.ok) return false;
-  if (delegated.handled) return true;
-  if (!classPrerequisitesOk(actor, itemData, null, { notify: true })) return false;
+async function applyClassAsMonoclass(actor, optionOrItemData, sheet = null) {
+  const itemData = optionOrItemData?.classData ?? optionOrItemData;
+  const raceData = optionOrItemData?.raceData ?? systemRace(actor);
+  if (!itemData || !classPrerequisitesOk(actor, itemData, raceData, { notify: true })) return false;
+  await applyRaceData(actor, raceData, sheet);
   if (typeof add2eApplyClassItemDataToActor === "function") {
     const alignment = pickClassAlignment(actor, itemData);
     const result = await add2eApplyClassItemDataToActor(actor, itemData, sheet, { alignmentCandidate: alignment, notify: true, reason: "multiclass-choice-monoclass" });
@@ -782,7 +764,6 @@ async function updateDirectMulticlassField(sheet, input) {
   const name = String(input.name);
   const value = Math.max(0, Math.floor(num(input.value, 0)));
   let payload = null;
-
   if (name.startsWith("system.xp_par_classe.")) {
     const slug = name.slice("system.xp_par_classe.".length);
     if (!slug) return false;
@@ -792,7 +773,6 @@ async function updateDirectMulticlassField(sheet, input) {
     if (!slug) return false;
     payload = multiclassUpdatePayload(actor, null, null, { [slug]: Math.max(1, value) });
   }
-
   if (!payload) return false;
   await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-direct-field" });
   sheet?._add2eRememberActiveTab?.();
@@ -830,7 +810,7 @@ function installDropWrapper() {
       const choice = await showClassDropChoiceDialog(actor, itemData);
       event?.preventDefault?.();
       event?.stopPropagation?.();
-      if (choice?.action === "monoclass") return applyClassAsMonoclass(actor, itemData, this);
+      if (choice?.action === "monoclass" && choice.option) return applyClassAsMonoclass(actor, choice.option, this);
       if (choice?.action === "multiclass" && choice.option) return addClassAsMulticlass(actor, choice.option, this);
       if (choice?.action === "replace-class" && choice.option) return replaceClassInMulticlass(actor, choice.option, this);
       ui.notifications.info("Drop de classe annulé.");
