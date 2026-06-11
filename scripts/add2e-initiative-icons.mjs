@@ -1,7 +1,7 @@
 // scripts/add2e-initiative-icons.mjs
 // ADD2E — icône D6 du bouton de jet d'initiative dans le tracker.
 
-import { ADD2E_INITIATIVE_D6_ICON, TAG } from "./add2e-initiative-constants.mjs";
+import { ADD2E_INITIATIVE_D6_ICON } from "./add2e-initiative-constants.mjs";
 
 const INITIATIVE_ROLL_BUTTON_SELECTOR = [
   ".token-initiative button.combatant-control.roll",
@@ -49,14 +49,10 @@ export function patchInitiativeIcons(root = document) {
     const scope = rootElement(root);
     if (!scope?.querySelectorAll) return;
 
-    let patched = 0;
     for (const button of scope.querySelectorAll(INITIATIVE_ROLL_BUTTON_SELECTOR)) {
-      if (patchRollButton(button)) patched += 1;
+      patchRollButton(button);
     }
-    if (patched) console.debug(`${TAG}[D6_ICON][PATCHED_CSS_VARS]`, { patched, icon: INITIATIVE_ICON });
-  } catch (err) {
-    console.warn(`${TAG}[D6_ICON][ERROR]`, err);
-  }
+  } catch (_err) {}
 }
 
 function combatTrackerClass() {
