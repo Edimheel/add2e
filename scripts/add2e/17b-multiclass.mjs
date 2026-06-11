@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-11-multiclass-layer-v20-race-colored-short-tiles
+// Version : 2026-06-11-multiclass-layer-v21-delegate-mono-prereqs
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,7 +7,7 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-11-multiclass-layer-v20-race-colored-short-tiles";
+const VERSION = "2026-06-11-multiclass-layer-v21-delegate-mono-prereqs";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -141,14 +141,35 @@ function raceMatchesClassRules(raceData, classData) {
   return rule?.allowed === true;
 }
 
-function classPrerequisitesOk(actor, classData, raceData = null) {
+function pickClassAlignment(actor, classData) {
+  try {
+    if (typeof add2ePickClassAlignment === "function") return add2ePickClassAlignment(actor, classData?.system ?? classData ?? {});
+  } catch (err) { warn("[ALIGNMENT_PICK_ERROR]", err); }
+  return actor?.system?.alignement ?? "";
+}
+
+function classPrerequisitesOk(actor, classData, raceData = null, options = {}) {
+  const notify = options?.notify === true;
   try {
     if (typeof checkClassStatMin === "function") {
-      const alignment = typeof add2ePickClassAlignment === "function" ? add2ePickClassAlignment(actor, classData?.system ?? {}) : actor.system?.alignement;
-      return checkClassStatMin(actor, classData, raceData, alignment, { silent: true, ignoreLevelMax: true }) === true;
+      const alignment = pickClassAlignment(actor, classData);
+      return checkClassStatMin(actor, classData, raceData, alignment, { silent: !notify, ignoreLevelMax: true }) === true;
     }
-  } catch (err) { warn("[PREREQUIS][SKIP]", err); }
-  return true;
+  } catch (err) { warn("[PREREQUIS][ERROR]", err); }
+  return raceMatchesClassRules(raceData ?? systemRace(actor), classData);
+}
+
+async function delegateMonoClassCompatibility(actor, itemData, sheet = null) {
+  try {
+    if (typeof add2eResolveDropCompatibilityWithPopup !== "function") return { handled: false, ok: true };
+    const result = await add2eResolveDropCompatibilityWithPopup(actor, itemData, sheet);
+    if (!result?.ok) return { handled: true, ok: false };
+    if (result?.handled) return { handled: true, ok: true };
+    return { handled: false, ok: true };
+  } catch (err) {
+    warn("[MONOCLASS_DELEGATE_ERROR]", err);
+    return { handled: false, ok: true };
+  }
 }
 
 function worldItemsByType(type) {
@@ -164,7 +185,7 @@ function worldItemsByType(type) {
 function raceCompatibleForMulticlass(actor, classData, raceData) {
   return raceAllowsClassSet(raceData, wantedClassNames(actor, classData))
     && raceMatchesClassRules(raceData, classData)
-    && classPrerequisitesOk(actor, classData, raceData);
+    && classPrerequisitesOk(actor, classData, raceData, { notify: false });
 }
 
 function raceCandidatesForClass(actor, classData) {
@@ -370,9 +391,9 @@ async function dialogAlert(title, content) {
 }
 
 function installDialogButtonTheme() {
-  if (document.getElementById("add2e-multiclass-button-theme-v20")) return;
+  if (document.getElementById("add2e-multiclass-button-theme-v21")) return;
   const style = document.createElement("style");
-  style.id = "add2e-multiclass-button-theme-v20";
+  style.id = "add2e-multiclass-button-theme-v21";
   style.textContent = `
 .application.add2e-multiclass-dialog button[data-action="validate"],
 .application:has(.add2e-multiclass-choice) button[data-action="validate"] {
@@ -463,7 +484,7 @@ function replacementClassNames(actor, droppedClassData, replaceSlug) {
 function raceCompatibleForReplacement(actor, droppedClassData, replaceSlug, raceData) {
   const names = replacementClassNames(actor, droppedClassData, replaceSlug);
   if (names.map(norm).filter(Boolean).length <= 1) return true;
-  return raceAllowsClassSet(raceData, names) && raceMatchesClassRules(raceData, droppedClassData) && classPrerequisitesOk(actor, droppedClassData, raceData);
+  return raceAllowsClassSet(raceData, names) && raceMatchesClassRules(raceData, droppedClassData) && classPrerequisitesOk(actor, droppedClassData, raceData, { notify: false });
 }
 
 function replacementOptionsForDroppedClass(actor, droppedClassData) {
@@ -647,8 +668,12 @@ async function applyRaceData(actor, raceData, sheet = null) {
 }
 
 async function applyClassAsMonoclass(actor, itemData, sheet = null) {
+  const delegated = await delegateMonoClassCompatibility(actor, itemData, sheet);
+  if (!delegated.ok) return false;
+  if (delegated.handled) return true;
+  if (!classPrerequisitesOk(actor, itemData, null, { notify: true })) return false;
   if (typeof add2eApplyClassItemDataToActor === "function") {
-    const alignment = typeof add2ePickClassAlignment === "function" ? add2ePickClassAlignment(actor, itemData.system ?? {}) : actor.system?.alignement;
+    const alignment = pickClassAlignment(actor, itemData);
     const result = await add2eApplyClassItemDataToActor(actor, itemData, sheet, { alignmentCandidate: alignment, notify: true, reason: "multiclass-choice-monoclass" });
     await cleanupAfterMonoclassReplace(actor, itemData, sheet);
     return result;
@@ -660,6 +685,7 @@ async function applyClassAsMonoclass(actor, itemData, sheet = null) {
 async function addClassAsMulticlass(actor, option, sheet = null) {
   const itemData = option?.classData;
   if (!itemData) return false;
+  if (!raceCompatibleForMulticlass(actor, itemData, option.raceData) || !classPrerequisitesOk(actor, itemData, option.raceData, { notify: true })) return false;
   const slug = classSlug(itemData);
   const already = classItems(actor).find(c => classSlug(c) === slug);
   if (already) {
@@ -669,10 +695,6 @@ async function addClassAsMulticlass(actor, option, sheet = null) {
     sheet?.render?.(false);
     ui.notifications.info(`${already.name} est déjà présente : acteur multiclassé recalculé.`);
     return true;
-  }
-  if (!raceCompatibleForMulticlass(actor, itemData, option.raceData)) {
-    await dialogAlert("ADD2E — Multiclassage refusé", `<p>La combinaison <b>${esc(itemLabel(itemData, "Classe"))} avec ${esc(itemLabel(option.raceData, "Race"))}</b> n'est pas valide.</p>`);
-    return false;
   }
   await applyRaceData(actor, option.raceData, sheet);
   const data = cloneItemData(itemData);
@@ -694,6 +716,7 @@ async function addClassAsMulticlass(actor, option, sheet = null) {
 async function replaceClassInMulticlass(actor, option, sheet = null) {
   const itemData = option?.classData;
   if (!itemData || !option?.replacedClassId) return false;
+  if (!raceCompatibleForReplacement(actor, itemData, option.replacedClassSlug, option.raceData) || !classPrerequisitesOk(actor, itemData, option.raceData, { notify: true })) return false;
   const replaced = classItems(actor).find(cls => cls.id === option.replacedClassId || classSlug(cls) === option.replacedClassSlug);
   if (!replaced) { ui.notifications.error("Classe à remplacer introuvable dans l'acteur."); return false; }
   await applyRaceData(actor, option.raceData, sheet);
