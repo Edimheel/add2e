@@ -26,11 +26,11 @@
         {
           "nom": "du gui et un peu de nourriture appréciée par l’animal",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -39,7 +39,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-amitie-animale.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-amitie-animale.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -60,7 +60,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-aura-feerique.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-aura-feerique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -81,7 +81,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-detection-de-la-magie.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-detection-de-la-magie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -102,7 +102,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-detection-des-pieges-sylvestres.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-detection-des-pieges-sylvestres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -123,7 +123,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-enchevetrement.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-enchevetrement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -141,11 +141,11 @@
         {
           "nom": "du houx avec lequel le druide doit se frotter",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -154,7 +154,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invisibilite-aux-animaux.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invisibilite-aux-animaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -175,7 +175,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-langage-animal.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-langage-animal.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -196,7 +196,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-localisation-des-animaux.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-localisation-des-animaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -223,11 +223,11 @@
         {
           "nom": "aiguille de pin ou d’un autre conifère",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -236,7 +236,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-passage-sans-trace.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-passage-sans-trace.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -257,7 +257,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-prevision-du-temps.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-prevision-du-temps.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -278,7 +278,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-purification-de-l-eau.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-purification-de-l-eau.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,

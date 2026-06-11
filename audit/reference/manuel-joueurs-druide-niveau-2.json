@@ -6,7 +6,7 @@
     "niveau": 2,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-2.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/aquagenese.webp",
         "onUse": "systems/add2e/scripts/sorts/aquagenese.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -47,11 +47,11 @@
         {
           "nom": "une feuille morte de chêne et du gui",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -60,7 +60,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-catalepsie.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-catalepsie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -81,7 +81,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-charme-personnes-ou-mammiferes.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-charme-personnes-ou-mammiferes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -102,7 +102,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-croc-en-jambe.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-croc-en-jambe.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -123,7 +123,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-distorsion-du-bois.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-distorsion-du-bois.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -144,7 +144,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-flamme.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-flamme.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -165,7 +165,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-localisation-des-plantes.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-localisation-des-plantes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -186,7 +186,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-metal-brulant.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-metal-brulant.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -207,7 +207,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-obscurcissement.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-obscurcissement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -228,7 +228,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-peau-d-ecorce.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-peau-d-ecorce.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -249,7 +249,7 @@
         "img": "systems/add2e/assets/icones/sorts/piege-a-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/piege-a-feu.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -270,7 +270,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-soins-mineurs.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-soins-mineurs.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

@@ -6,7 +6,7 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 6,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-7.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-alteration-de-la-realite.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-alteration-de-la-realite.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-jet-prismatique.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-jet-prismatique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -71,7 +71,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-mur-prismatique.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-mur-prismatique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -92,7 +92,7 @@
         "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
         "onUse": "systems/add2e/scripts/sorts/sort-astral.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -113,7 +113,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-vision.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-vision.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -134,7 +134,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-sorts-de-niveau-1-de-magicien.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-sorts-de-niveau-1-de-magicien.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

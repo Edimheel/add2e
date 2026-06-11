@@ -6,7 +6,7 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-6.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-bouclier-anti-animal.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-bouclier-anti-animal.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/debilite-mentale.webp",
         "onUse": "systems/add2e/scripts/sorts/debilite-mentale.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -71,7 +71,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-graines-de-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-graines-de-feu.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -92,7 +92,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invocation-animale-iii.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-iii.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -113,7 +113,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invocation-d-un-elemental-du-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-d-un-elemental-du-feu.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -134,7 +134,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invocation-du-temps.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-du-temps.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -155,7 +155,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-mur-d-epines.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-mur-d-epines.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -176,7 +176,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-repulsion-du-bois.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-repulsion-du-bois.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -197,7 +197,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-soin-ultime.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-soin-ultime.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -218,7 +218,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-transit-vegetal.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-transit-vegetal.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

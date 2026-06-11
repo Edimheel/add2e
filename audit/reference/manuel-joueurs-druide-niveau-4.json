@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/dissipation-de-la-magie.webp",
         "onUse": "systems/add2e/scripts/sorts/dissipation-de-la-magie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -71,7 +71,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-embrasement.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-embrasement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -113,7 +113,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invocation-animale-i.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-i.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -131,11 +131,11 @@
         {
           "nom": "une pomme de pin et 8 baies de houx",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -144,7 +144,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invocation-des-creatures-sylvestres.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-des-creatures-sylvestres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -162,11 +162,11 @@
         {
           "nom": "typiquement druidique (à savoir du gui), ce sort est le même que le sort de niveau 4 de clerc langage des plantes",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -175,7 +175,7 @@
         "img": "systems/add2e/assets/icones/sorts/langage-des-plantes.webp",
         "onUse": "systems/add2e/scripts/sorts/langage-des-plantes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -196,7 +196,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-paralysie-vegetale.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-paralysie-vegetale.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -217,7 +217,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-porte-vegetale.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-porte-vegetale.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -238,7 +238,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-protection-contre-la-foudre.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-protection-contre-la-foudre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -269,7 +269,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-repulsion-des-insectes.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-repulsion-des-insectes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -290,7 +290,7 @@
         "img": "systems/add2e/assets/icones/sorts/soins-majeurs.webp",
         "onUse": "systems/add2e/scripts/sorts/soins-majeurs.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

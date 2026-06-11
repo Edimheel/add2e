@@ -60,7 +60,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-coffre-secret-de-leomund.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-coffre-secret-de-leomund.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -100,7 +100,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-cone-de-froid.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-cone-de-froid.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -121,7 +121,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-contact-d-autres-plans.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-contact-d-autres-plans.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -142,7 +142,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-croissance-animale.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-croissance-animale.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -160,11 +160,11 @@
         {
           "nom": "une poignée de petites sphères d’argile, de cristal, de verre ou minérales",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -173,7 +173,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-debilite-mentale.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-debilite-mentale.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -191,11 +191,11 @@
         {
           "nom": "un peu d’argile grasse",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -204,7 +204,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-distorsion-des-distances.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-distorsion-des-distances.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -222,11 +222,11 @@
         {
           "nom": "une petite poignée de sels alcalins ou de bromure",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -235,7 +235,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-eau-aeree.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-eau-aeree.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -256,7 +256,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-extension-ii.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-extension-ii.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -277,7 +277,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-invocation-d-elemental.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-d-elemental.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -298,7 +298,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-iii.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-iii.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -329,7 +329,7 @@
         "img": "systems/add2e/assets/icones/sorts/lithomorphose.webp",
         "onUse": "systems/add2e/scripts/sorts/lithomorphose.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 13,
@@ -360,7 +360,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-main-d-interposition-de-bigby.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-main-d-interposition-de-bigby.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 14,
@@ -391,7 +391,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-metempsycose.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-metempsycose.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 15,
@@ -422,7 +422,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-mur-de-fer.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-mur-de-fer.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 16,
@@ -440,11 +440,11 @@
         {
           "nom": "une pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -453,7 +453,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-mur-de-force.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-mur-de-force.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 17,
@@ -471,11 +471,11 @@
         {
           "nom": "un petit bloc de granit",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -484,7 +484,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-mur-de-roc.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-mur-de-roc.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 18,
@@ -505,7 +505,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-necro-animation.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-necro-animation.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 19,
@@ -526,7 +526,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-nuage-letal.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-nuage-letal.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 20,
@@ -557,7 +557,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-paralysie-des-monstres.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-paralysie-des-monstres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 21,
@@ -575,11 +575,11 @@
         {
           "nom": "une pincée de graines de sésame",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -588,7 +588,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-passe-muraille.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-passe-muraille.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 22,
@@ -609,7 +609,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-telekinesie.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-telekinesie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 23,
@@ -630,7 +630,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-teleportation.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-teleportation.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 24,
@@ -651,7 +651,7 @@
         "img": "systems/add2e/assets/icones/sorts/transmutation-de-pierre-en-boue.webp",
         "onUse": "systems/add2e/scripts/sorts/transmutation-de-pierre-en-boue.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

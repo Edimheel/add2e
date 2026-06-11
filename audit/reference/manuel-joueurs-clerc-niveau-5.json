@@ -6,7 +6,7 @@
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-5.json",
   "spells": [
@@ -40,7 +40,7 @@
         "img": "systems/add2e/assets/icones/sorts/changement-de-plan.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/changement-de-plan.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -68,20 +68,20 @@
         {
           "nom": "eau bénite",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "encens",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -90,7 +90,7 @@
         "img": "systems/add2e/assets/icones/sorts/communion.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/communion.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -141,7 +141,7 @@
         "img": "systems/add2e/assets/icones/sorts/dissipation-du-mal.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/dissipation-du-mal.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -200,7 +200,7 @@
         "img": "systems/add2e/assets/icones/sorts/penitence.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/penitence.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -219,29 +219,29 @@
         {
           "nom": "grains de sucre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "amandes",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "matière grasse",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -250,7 +250,7 @@
         "img": "systems/add2e/assets/icones/sorts/fleau-d-insectes.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/fleau-d-insectes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -269,11 +269,11 @@
         {
           "nom": "pincée de souffre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -282,7 +282,7 @@
         "img": "systems/add2e/assets/icones/sorts/colonne-de-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/colonne-de-feu.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -304,7 +304,7 @@
         "img": "systems/add2e/assets/icones/sorts/quete-religieuse.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/quete-religieuse.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -326,7 +326,7 @@
         "img": "systems/add2e/assets/icones/sorts/rappel-a-la-vie.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/rappel-a-la-vie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -348,7 +348,7 @@
         "img": "systems/add2e/assets/icones/sorts/soin-ultime.webp",
         "onUse": "systems/add2e/scripts/sorts/soin-ultime.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -389,7 +389,7 @@
         "img": "systems/add2e/assets/icones/sorts/vision-reelle.webp",
         "onUse": "systems/add2e/scripts/sorts/vision-reelle.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

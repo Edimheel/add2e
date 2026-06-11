@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-boule-de-feu-a-retardement.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-boule-de-feu-a-retardement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -60,7 +60,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-cacodemon.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-cacodemon.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -78,11 +78,11 @@
         {
           "nom": "une pincée d’humus, une goutte d’eau et une feuille ou une brindille",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -91,7 +91,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-charme-plantes.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-charme-plantes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -112,7 +112,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-disparition.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-disparition.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -152,7 +152,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-duo-dimension.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-duo-dimension.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -183,7 +183,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-epee-de-mordenkainen.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-epee-de-mordenkainen.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -235,7 +235,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-invisibilite-de-masse.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-invisibilite-de-masse.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -256,7 +256,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-v.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-v.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -277,7 +277,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-invocation-instantanee-de-drawmij.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-instantanee-de-drawmij.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -298,7 +298,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-mot-de-pouvoir-etourdissement.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-etourdissement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -329,7 +329,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-poigne-de-bigby.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-poigne-de-bigby.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 13,
@@ -350,7 +350,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-porte-de-phase.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-porte-de-phase.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 14,
@@ -371,7 +371,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-simulacre.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-simulacre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 15,
@@ -392,7 +392,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-souhait-mineur.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-souhait-mineur.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 16,
@@ -413,7 +413,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-statue.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-statue.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

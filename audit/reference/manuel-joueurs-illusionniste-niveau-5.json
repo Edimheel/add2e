@@ -6,7 +6,7 @@
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 8,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-5.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-chaos.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-chaos.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-creation-majeure.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-creation-majeure.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -71,7 +71,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-holographie.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-holographie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -102,7 +102,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-invocation-des-ombres.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-invocation-des-ombres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -123,7 +123,7 @@
         "img": "systems/add2e/assets/icones/sorts/labyrinthe.webp",
         "onUse": "systems/add2e/scripts/sorts/labyrinthe.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -144,7 +144,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-magie-des-ombres.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-magie-des-ombres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -165,7 +165,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-monstres-demi-ombre.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-monstres-demi-ombre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -186,7 +186,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-porte-des-ombres.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-porte-des-ombres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

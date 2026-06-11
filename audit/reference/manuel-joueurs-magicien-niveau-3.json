@@ -26,11 +26,11 @@
         {
           "nom": "une petite boule composée de fiente de chauve-souris et de souffre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -39,7 +39,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-boule-de-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-boule-de-feu.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -60,7 +60,7 @@
         "img": "systems/add2e/assets/icones/sorts/catalepsie.webp",
         "onUse": "systems/add2e/scripts/sorts/catalepsie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -91,7 +91,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-chaumiere-de-leomund.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-chaumiere-de-leomund.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -122,7 +122,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-clairaudience.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-clairaudience.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -140,11 +140,11 @@
         {
           "nom": "une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -153,7 +153,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-clairvoyance.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-clairvoyance.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -174,7 +174,7 @@
         "img": "systems/add2e/assets/icones/sorts/dissipation-de-la-magie.webp",
         "onUse": "systems/add2e/scripts/sorts/dissipation-de-la-magie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -195,7 +195,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-fleche-de-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-fleche-de-feu.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -213,11 +213,11 @@
         {
           "nom": "un morceau de toison de mouton",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -226,7 +226,7 @@
         "img": "systems/add2e/assets/icones/sorts/force-fantasmagorique.webp",
         "onUse": "systems/add2e/scripts/sorts/force-fantasmagorique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -244,11 +244,11 @@
         {
           "nom": "fourrure",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "baguette de verre, de cristal ou d’ambre",
@@ -266,7 +266,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-foudre.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-foudre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -297,7 +297,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-infravision.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-infravision.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -318,7 +318,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-intermittence.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-intermittence.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -381,7 +381,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-langues.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-langues.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 15,
@@ -402,7 +402,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-paralysie.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-paralysie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 16,
@@ -441,11 +441,11 @@
         {
           "nom": "une graine de légume",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -454,7 +454,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-protection-contre-les-projectiles-normaux.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-protection-contre-les-projectiles-normaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 18,
@@ -472,11 +472,11 @@
         {
           "nom": "langue de serpent",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "miel",
@@ -503,7 +503,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-rafale-de-vent.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-rafale-de-vent.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 19,
@@ -521,11 +521,11 @@
         {
           "nom": "une goutte de mélasse",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -534,7 +534,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-ralentissement.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-ralentissement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 20,
@@ -552,11 +552,11 @@
         {
           "nom": "un fragment de racine de réglisse",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -565,7 +565,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-rapidite.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-rapidite.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 21,
@@ -583,11 +583,11 @@
         {
           "nom": "un petit roseau ou un brin de paille",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -596,7 +596,7 @@
         "img": "systems/add2e/assets/icones/sorts/respiration-aquatique.webp",
         "onUse": "systems/add2e/scripts/sorts/respiration-aquatique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 22,
@@ -617,7 +617,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-runes-explosives.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-runes-explosives.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 23,
@@ -635,11 +635,11 @@
         {
           "nom": "une plume d’aile d’oiseau",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -648,7 +648,7 @@
         "img": "systems/add2e/assets/icones/sorts/suggestion.webp",
         "onUse": "systems/add2e/scripts/sorts/suggestion.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 24,
@@ -666,11 +666,11 @@
         {
           "nom": "un cocon de chenille",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -679,7 +679,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-vol.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-vol.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

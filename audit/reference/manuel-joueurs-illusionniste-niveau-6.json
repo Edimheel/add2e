@@ -6,7 +6,7 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 7,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-6.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-illusion-permanente.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-illusion-permanente.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-illusion-programmee.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-illusion-programmee.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -71,7 +71,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-invocation-des-animaux.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-invocation-des-animaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -92,7 +92,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-magie-demi-ombre.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-magie-demi-ombre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -113,7 +113,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-ombres.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-ombres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -134,7 +134,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-suggestion-de-masse.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-suggestion-de-masse.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -155,7 +155,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-vision-reelle.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-vision-reelle.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

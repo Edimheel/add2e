@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/corde-enchantee.webp",
         "onUse": "systems/add2e/scripts/sorts/corde-enchantee.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-dissipation-des-illusions.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-dissipation-des-illusions.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -68,11 +68,11 @@
         {
           "nom": "encre fabriquée à base de plomb par un alchimiste",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": 100,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -81,7 +81,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-ecriture-illusoire.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -102,7 +102,7 @@
         "img": "systems/add2e/assets/icones/sorts/effroi.webp",
         "onUse": "systems/add2e/scripts/sorts/effroi.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -123,7 +123,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-force-spectrale.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-force-spectrale.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -165,7 +165,7 @@
         "img": "systems/add2e/assets/icones/sorts/lumiere-eternelle.webp",
         "onUse": "systems/add2e/scripts/sorts/lumiere-eternelle.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -196,7 +196,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-non-detection.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-non-detection.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -217,7 +217,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-paralysie-musculaire.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-paralysie-musculaire.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -238,7 +238,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-suggestion.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-suggestion.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -259,7 +259,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-tenebres-eternelles.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-tenebres-eternelles.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -280,7 +280,7 @@
         "img": "systems/add2e/assets/icones/sorts/terrain-hallucinatoire.webp",
         "onUse": "systems/add2e/scripts/sorts/terrain-hallucinatoire.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

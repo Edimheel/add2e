@@ -6,7 +6,7 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-7.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-animation-de-la-roche.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-animation-de-la-roche.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-chariot-de-sustarre.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-chariot-de-sustarre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -71,7 +71,7 @@
         "img": "systems/add2e/assets/icones/sorts/confusion.webp",
         "onUse": "systems/add2e/scripts/sorts/confusion.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -92,7 +92,7 @@
         "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
         "onUse": "systems/add2e/scripts/sorts/controle-du-climat.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -113,7 +113,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-doigt-de-mort.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-doigt-de-mort.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -134,7 +134,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invocation-d-un-elemental-de-terre.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-d-un-elemental-de-terre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -155,7 +155,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-mort-rampante.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-mort-rampante.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -176,7 +176,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-reincarnation.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-reincarnation.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -197,7 +197,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-tempete-de-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-tempete-de-feu.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -218,7 +218,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-transmutation-du-metal-en-bois.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-transmutation-du-metal-en-bois.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

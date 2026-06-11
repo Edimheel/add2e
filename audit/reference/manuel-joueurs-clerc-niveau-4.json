@@ -36,11 +36,11 @@
         {
           "nom": "pincée de poussière",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -49,7 +49,7 @@
         "img": "systems/add2e/assets/icones/sorts/abaissement-des-eaux.webp",
         "onUse": "systems/add2e/scripts/sorts/abaissement-des-eaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -68,20 +68,20 @@
         {
           "nom": "petit morceau d’écorce",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "écailles de serpent",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -90,7 +90,7 @@
         "img": "systems/add2e/assets/icones/sorts/batons-a-serpents.webp",
         "onUse": "systems/add2e/scripts/sorts/batons-a-serpents.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -112,7 +112,7 @@
         "img": "systems/add2e/assets/icones/sorts/contre-poison.webp",
         "onUse": "systems/add2e/scripts/sorts/contre-poison.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -134,7 +134,7 @@
         "img": "systems/add2e/assets/icones/sorts/detection-des-mensonges.webp",
         "onUse": "systems/add2e/scripts/sorts/detection-des-mensonges.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -161,11 +161,11 @@
         {
           "nom": "encens",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "symbole sacré du clerc",
@@ -201,7 +201,7 @@
         "img": "systems/add2e/assets/icones/sorts/divination.webp",
         "onUse": "systems/add2e/scripts/sorts/divination.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -222,7 +222,7 @@
         "img": "systems/add2e/assets/icones/sorts/exorcisme.webp",
         "onUse": "systems/add2e/scripts/sorts/exorcisme.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -240,29 +240,29 @@
         {
           "nom": "goutte d’eau",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "pincée de bouse",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "flamme",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -271,7 +271,7 @@
         "img": "systems/add2e/assets/icones/sorts/langage-des-plantes.webp",
         "onUse": "systems/add2e/scripts/sorts/langage-des-plantes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -336,7 +336,7 @@
         "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-graves.webp",
         "onUse": "systems/add2e/scripts/sorts/soins-des-blessures-graves.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

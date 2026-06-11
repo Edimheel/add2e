@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-arret-du-temps.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-arret-du-temps.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-emprisonnement.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-emprisonnement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -81,7 +81,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-heteromorphisme.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-heteromorphisme.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -102,7 +102,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-vii.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-vii.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -154,7 +154,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-nuee-de-meteores.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-nuee-de-meteores.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -175,7 +175,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-mot-de-pouvoir-mort.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-mort.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -196,7 +196,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-seuil.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-seuil.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -217,7 +217,7 @@
         "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
         "onUse": "systems/add2e/scripts/sorts/sort-astral.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -238,7 +238,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-souhait-majeur.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-souhait-majeur.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -259,7 +259,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-sphere-prismatique.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-sphere-prismatique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -280,7 +280,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-stase-temporelle.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-stase-temporelle.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

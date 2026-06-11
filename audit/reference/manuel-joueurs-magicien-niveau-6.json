@@ -60,7 +60,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-bulle-anti-magique.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-bulle-anti-magique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -100,7 +100,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-chasseur-invisible.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-chasseur-invisible.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -121,7 +121,7 @@
         "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
         "onUse": "systems/add2e/scripts/sorts/controle-du-climat.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -173,7 +173,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-enchantement.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-enchantement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -194,7 +194,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-extension-iii.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-extension-iii.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -246,7 +246,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-globe-d-invulnerabilite.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-globe-d-invulnerabilite.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -277,7 +277,7 @@
         "img": "systems/add2e/assets/icones/sorts/holographie.webp",
         "onUse": "systems/add2e/scripts/sorts/holographie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -308,7 +308,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-incantation-mortelle.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-incantation-mortelle.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -329,7 +329,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-iv.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-iv.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 13,
@@ -360,7 +360,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-main-de-force-de-bigby.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-main-de-force-de-bigby.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 14,
@@ -391,7 +391,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-mythomancie.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-mythomancie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 15,
@@ -412,7 +412,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-punition-spirituelle.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-punition-spirituelle.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 16,
@@ -433,7 +433,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-quete-magique.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-quete-magique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 17,
@@ -482,11 +482,11 @@
         {
           "nom": "une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Focus durable réutilisable, sans destruction indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -495,7 +495,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-repulsion.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-repulsion.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 19,
@@ -516,7 +516,7 @@
         "img": "systems/add2e/assets/icones/sorts/separation-des-eaux.webp",
         "onUse": "systems/add2e/scripts/sorts/separation-des-eaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 20,
@@ -537,7 +537,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-sphere-glaciale-d-otiluke.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-sphere-glaciale-d-otiluke.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 21,
@@ -568,7 +568,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-transformation-de-tenser.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-transformation-de-tenser.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 22,
@@ -586,11 +586,11 @@
         {
           "nom": "une pincée de terre et une goutte de sang; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -599,7 +599,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-transmutation-de-pierre-en-chair.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-transmutation-de-pierre-en-chair.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 23,
@@ -639,7 +639,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-transvision.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-transvision.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 24,
@@ -670,7 +670,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-vigiles-et-sentinelles.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-vigiles-et-sentinelles.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

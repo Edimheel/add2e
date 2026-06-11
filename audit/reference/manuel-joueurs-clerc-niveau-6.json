@@ -6,7 +6,7 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-6.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/animation-d-un-objet.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/barriere-de-lames.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -72,7 +72,7 @@
         "img": "systems/add2e/assets/icones/sorts/guerison.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/guerison.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -93,7 +93,7 @@
         "img": "systems/add2e/assets/icones/sorts/invocation-des-animaux.webp",
         "onUse": "systems/add2e/scripts/sorts/invocation-des-animaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -114,7 +114,7 @@
         "img": "systems/add2e/assets/icones/sorts/langage-des-monstres.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -135,7 +135,7 @@
         "img": "systems/add2e/assets/icones/sorts/pierres-parlantes.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -167,7 +167,7 @@
         "img": "systems/add2e/assets/icones/sorts/orientation.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/orientation.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -188,7 +188,7 @@
         "img": "systems/add2e/assets/icones/sorts/mot-de-rappel.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -220,7 +220,7 @@
         "img": "systems/add2e/assets/icones/sorts/separation-des-eaux.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -241,7 +241,7 @@
         "img": "systems/add2e/assets/icones/sorts/serviteur-aerien.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

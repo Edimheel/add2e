@@ -6,7 +6,7 @@
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-5.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-batons-a-serpents.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-batons-a-serpents.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-bouclier-anti-plantes.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-bouclier-anti-plantes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -71,7 +71,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-communion-avec-la-nature.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-communion-avec-la-nature.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -92,7 +92,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-controle-des-vents.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-controle-des-vents.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -113,7 +113,7 @@
         "img": "systems/add2e/assets/icones/sorts/croissance-animale.webp",
         "onUse": "systems/add2e/scripts/sorts/croissance-animale.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -134,7 +134,7 @@
         "img": "systems/add2e/assets/icones/sorts/fleau-dinsectes.webp",
         "onUse": "systems/add2e/scripts/sorts/fleau-dinsectes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -155,7 +155,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invocation-animale-ii.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-ii.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -176,7 +176,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-mur-de-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-mur-de-feu.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -197,7 +197,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-passe-plantes.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-passe-plantes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -218,7 +218,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-transmutation-de-pierre-en-boue.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-transmutation-de-pierre-en-boue.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

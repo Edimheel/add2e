@@ -6,7 +6,7 @@
     "niveau": 3,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-3.json",
   "spells": [
@@ -26,11 +26,11 @@
         {
           "nom": "du gui et une petite branche d’arbre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -39,7 +39,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-arbre.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-arbre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -60,7 +60,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-contre-poison.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-contre-poison.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -81,7 +81,7 @@
         "img": "systems/add2e/assets/icones/sorts/embroussaillement.webp",
         "onUse": "systems/add2e/scripts/sorts/embroussaillement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -102,7 +102,7 @@
         "img": "systems/add2e/assets/icones/sorts/guerison-des-maladies.webp",
         "onUse": "systems/add2e/scripts/sorts/guerison-des-maladies.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -123,7 +123,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invocation-de-la-foudre.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-de-la-foudre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -144,7 +144,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-invocation-d-insectes.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-d-insectes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -165,7 +165,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-lithomorphose.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-lithomorphose.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -186,7 +186,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-paralysie-animale.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-paralysie-animale.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -207,7 +207,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-piege-sylvestre.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-piege-sylvestre.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -228,7 +228,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-protection-contre-le-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-protection-contre-le-feu.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -249,7 +249,7 @@
         "img": "systems/add2e/assets/icones/sorts/pyrotechnie.webp",
         "onUse": "systems/add2e/scripts/sorts/pyrotechnie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -270,7 +270,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-respiration-aquatique.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-respiration-aquatique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

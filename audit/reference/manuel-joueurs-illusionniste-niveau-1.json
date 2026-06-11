@@ -6,7 +6,7 @@
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-1.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-bruitage.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-bruitage.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-changement-d-apparence.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-changement-d-apparence.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -71,7 +71,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-detection-de-l-invisibilite.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-detection-de-l-invisibilite.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -120,7 +120,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-detection-des-illusions.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-detection-des-illusions.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -141,7 +141,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-force-fantasmagorique.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-force-fantasmagorique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -162,7 +162,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-hypnotisme.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-hypnotisme.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -202,7 +202,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-jet-de-couleurs.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-jet-de-couleurs.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -218,7 +218,7 @@
       "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc lumière (voir p.44).",
       "composants_materiels_objets": [],
       "foundry": null,
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -239,7 +239,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-lumiere.webp",
         "onUse": "systems/add2e/scripts/sorts/lumiere.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -257,11 +257,11 @@
         {
           "nom": "de la poudre de poix séchés",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -270,7 +270,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-mur-de-brouillard.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-mur-de-brouillard.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -291,7 +291,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-reflexion-des-regards.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-reflexion-des-regards.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -312,7 +312,7 @@
         "img": "systems/add2e/assets/icones/sorts/illusionniste-tenebres.webp",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-tenebres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

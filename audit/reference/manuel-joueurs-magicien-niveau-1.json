@@ -6,7 +6,7 @@
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 30,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-1.json",
   "spells": [
@@ -29,7 +29,7 @@
         "img": "systems/add2e/assets/icones/sorts/agrandissement.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-agrandissement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/alteration_feux_normaux.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-alteration-des-feux-normaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -71,7 +71,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-amitie.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-amitie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -102,7 +102,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-aura-magique-de-nystul.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-aura-magique-de-nystul.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -123,7 +123,7 @@
         "img": "systems/add2e/assets/icones/sorts/bouclier.webp",
         "onUse": "systems/add2e/scripts/sorts/bouclier.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -144,7 +144,7 @@
         "img": "systems/add2e/assets/icones/sorts/charme_personne.webp",
         "onUse": "systems/add2e/scripts/sorts/charme_personne.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -184,7 +184,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-chute-de-plume.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-chute-de-plume.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -202,11 +202,11 @@
         {
           "nom": "une pincée de suie et quelques grains de sel",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -215,7 +215,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-comprehension-des-langues.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-comprehension-des-langues.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -233,11 +233,11 @@
         {
           "nom": "une goutte de mercure",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -246,7 +246,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-disque-flottant-de-tenser.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-disque-flottant-de-tenser.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -267,7 +267,7 @@
         "img": "systems/add2e/assets/icones/sorts/detection-de-la-magie.webp",
         "onUse": "systems/add2e/scripts/sorts/detection-de-la-magie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -288,7 +288,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-ecriture.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-ecriture.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -309,7 +309,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-effacement.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-effacement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 13,
@@ -349,7 +349,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-escalade-d-araignee.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-escalade-d-araignee.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 14,
@@ -370,7 +370,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-fermeture.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-fermeture.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 15,
@@ -391,7 +391,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-identification.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-identification.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 16,
@@ -412,7 +412,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-invocation-d-un-familier.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-d-un-familier.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 17,
@@ -443,7 +443,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-lecture-de-la-magie.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-lecture-de-la-magie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 18,
@@ -459,7 +459,7 @@
       "description": "excepté ci-dessus et le fait qu’il ne soit pas réversible, ce sort est le même que le sort de niveau 1 de clerc lumière (voir p.44)",
       "composants_materiels_objets": [],
       "foundry": null,
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 19,
@@ -499,7 +499,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-lumieres-dansantes.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-lumieres-dansantes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 20,
@@ -520,7 +520,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-mains-brulantes.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-mains-brulantes.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 21,
@@ -551,7 +551,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-message.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-message.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 22,
@@ -572,7 +572,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-poigne-electrique.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-poigne-electrique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 23,
@@ -603,7 +603,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-poussee.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-poussee.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 24,
@@ -624,7 +624,7 @@
         "img": "systems/add2e/assets/icones/sorts/projectile-magique.webp",
         "onUse": "systems/add2e/scripts/sorts/projectile-magique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 25,
@@ -645,7 +645,7 @@
         "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
         "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 26,
@@ -685,7 +685,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-reparation.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-reparation.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 27,
@@ -716,7 +716,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-saut.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-saut.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 28,
@@ -734,11 +734,11 @@
         {
           "nom": "un bout de ficelle et un morceau de bois",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -747,7 +747,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-serviteur-invisible.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-serviteur-invisible.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 29,
@@ -796,7 +796,7 @@
         "img": "systems/add2e/assets/icones/sorts/sommeil.webp",
         "onUse": "systems/add2e/scripts/sorts/sommeil.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 30,
@@ -827,7 +827,7 @@
         "img": "systems/add2e/assets/icones/sorts/ventriloquie.webp",
         "onUse": "systems/add2e/scripts/sorts/ventriloquie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

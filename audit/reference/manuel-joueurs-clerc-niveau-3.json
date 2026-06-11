@@ -6,7 +6,7 @@
     "niveau": 3,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-3.json",
   "spells": [
@@ -28,11 +28,11 @@
         {
           "nom": "pincée de poussière d’un cimetière",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "symbole sacré du clerc",
@@ -50,7 +50,7 @@
         "img": "systems/add2e/assets/icones/sorts/catalepsie.webp",
         "onUse": "systems/add2e/scripts/sorts/catalepsie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -73,7 +73,7 @@
         "img": "systems/add2e/assets/icones/sorts/delivrance-de-la-malediction.webp",
         "onUse": "systems/add2e/scripts/sorts/delivrance-de-la-malediction.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -95,7 +95,7 @@
         "img": "systems/add2e/assets/icones/sorts/dissipation-de-la-magie.webp",
         "onUse": "systems/add2e/scripts/sorts/dissipation-de-la-magie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -137,7 +137,7 @@
         "img": "systems/add2e/assets/icones/sorts/glyphe-de-garde.webp",
         "onUse": "systems/add2e/scripts/sorts/glyphe-de-garde.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -160,7 +160,7 @@
         "img": "systems/add2e/assets/icones/sorts/guerison-de-la-cecite-ou-de-la-surdite.webp",
         "onUse": "systems/add2e/scripts/sorts/guerison-de-la-cecite-ou-de-la-surdite.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -183,7 +183,7 @@
         "img": "systems/add2e/assets/icones/sorts/guerison-des-maladies.webp",
         "onUse": "systems/add2e/scripts/sorts/guerison-des-maladies.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -217,7 +217,7 @@
         "img": "systems/add2e/assets/icones/sorts/localisation-dobjets.webp",
         "onUse": "systems/add2e/scripts/sorts/localisation-dobjets.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -240,7 +240,7 @@
         "img": "systems/add2e/assets/icones/sorts/lumiere-continuelle.webp",
         "onUse": "systems/add2e/scripts/sorts/lumiere-continuelle.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -262,7 +262,7 @@
         "img": "systems/add2e/assets/icones/sorts/creation-de-nourriture-et-d-eau.webp",
         "onUse": "systems/add2e/scripts/sorts/creation-de-nourriture-et-d-eau.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -282,20 +282,20 @@
         {
           "nom": "goutte de sang",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "morceau de chair humaine",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         },
         {
           "nom": "pincée d’os en poudre",
@@ -322,7 +322,7 @@
         "img": "systems/add2e/assets/icones/sorts/animation-des-morts.webp",
         "onUse": "systems/add2e/scripts/sorts/animation-des-morts.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -364,7 +364,7 @@
         "img": "systems/add2e/assets/icones/sorts/communication-avec-les-morts.webp",
         "onUse": "systems/add2e/scripts/sorts/communication-avec-les-morts.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -415,7 +415,7 @@
         "img": "systems/add2e/assets/icones/sorts/priere.webp",
         "onUse": "systems/add2e/scripts/sorts/priere.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

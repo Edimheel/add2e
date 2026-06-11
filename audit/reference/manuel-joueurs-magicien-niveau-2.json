@@ -6,7 +6,7 @@
     "niveau": 2,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 24,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-2.json",
   "spells": [
@@ -26,11 +26,11 @@
         {
           "nom": "un petit morceau de rayon de miel",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -39,7 +39,7 @@
         "img": "systems/add2e/assets/icones/sorts/bouche-magique.webp",
         "onUse": "systems/add2e/scripts/sorts/bouche-magique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -79,7 +79,7 @@
         "img": "systems/add2e/assets/icones/sorts/bruitage.webp",
         "onUse": "systems/add2e/scripts/sorts/bruitage.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 3,
@@ -97,11 +97,11 @@
         {
           "nom": "de la poudre de blé et un parchemin torsadé en forme de boucle",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -110,7 +110,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-corde-enchantee.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-corde-enchantee.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 4,
@@ -145,7 +145,7 @@
         }
       ],
       "foundry": null,
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 5,
@@ -166,7 +166,7 @@
         "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
         "onUse": "systems/add2e/scripts/sorts/detection-du-mal.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -197,7 +197,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-e-s-p.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-e-s-p.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 7,
@@ -215,11 +215,11 @@
         {
           "nom": "quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -228,7 +228,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-force.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-force.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,
@@ -246,11 +246,11 @@
         {
           "nom": "un éclat de mica",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -259,7 +259,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-fracassement.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-fracassement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -280,7 +280,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-image-miroir.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-image-miroir.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 10,
@@ -298,11 +298,11 @@
         {
           "nom": "un cil mis dans de la gomme arabique",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -311,7 +311,7 @@
         "img": "systems/add2e/assets/icones/sorts/detection-de-linvisibilite.webp",
         "onUse": "systems/add2e/scripts/sorts/detection-de-linvisibilite.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 11,
@@ -351,7 +351,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-levitation.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-levitation.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 12,
@@ -372,7 +372,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-localisation-d-objets.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-localisation-d-objets.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 13,
@@ -393,7 +393,7 @@
         "img": "systems/add2e/assets/icones/sorts/lumiere-eternelle.webp",
         "onUse": "systems/add2e/scripts/sorts/lumiere-eternelle.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 14,
@@ -433,7 +433,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-nuage-puant.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-nuage-puant.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 15,
@@ -454,7 +454,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-or-des-fous.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-or-des-fous.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 16,
@@ -475,7 +475,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-oubli.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-oubli.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 17,
@@ -496,7 +496,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-ouverture.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-ouverture.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 18,
@@ -514,11 +514,11 @@
         {
           "nom": "un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie)",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Composant requis selon l’alternative ou la variante choisie.",
+          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
         }
       ],
       "foundry": {
@@ -527,7 +527,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-peur.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-peur.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 19,
@@ -558,7 +558,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-piege-de-leomund.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-piege-de-leomund.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 20,
@@ -579,7 +579,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-pyrotechnie.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-pyrotechnie.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 21,
@@ -600,7 +600,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-rayon-d-affaiblissement.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-rayon-d-affaiblissement.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 22,
@@ -621,7 +621,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-tenebres-sur-5-metres.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-tenebres-sur-5-metres.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 23,
@@ -639,11 +639,11 @@
         {
           "nom": "un peu de toile d’araignée",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
         }
       ],
       "foundry": {
@@ -652,7 +652,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-toile-d-araignee.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-toile-d-araignee.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 24,
@@ -673,7 +673,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-verrou-magique.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-verrou-magique.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }
