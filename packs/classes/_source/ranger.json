@@ -10,10 +10,10 @@
     "hitDie": 10,
     "hpFormula": "1d10 + constitution.mod",
     "spellcasting": {
-      "lists": ["cleric"],
+      "lists": ["druide", "magicien"],
       "startsAt": 8,
       "maxSpellLevel": 3
-    },  
+    },
 
     "attacksPerRound": [
       { "minLevel": 1, "maxLevel": 20, "attacks": 1 }
@@ -28,7 +28,7 @@
       "Capacités de furtivité en milieu naturel",
       "Surprise améliorée / surprise adverse",
       "Deux armes sans pénalité en armure légère",
-      "Lancer de sorts de prêtre (à partir du niveau 8)"
+      "Lancer de sorts de druide et de magicien (à partir du niveau 8)"
     ],
 
     "titlesByLevel": [
