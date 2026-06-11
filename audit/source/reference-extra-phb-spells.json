@@ -15,29 +15,6 @@
         "onUse": "systems/add2e/scripts/sorts/illusionniste-voile-illusoire.js"
       },
       "composants_materiels_objets": []
-    },
-    {
-      "lot": "clerc-niveau-7",
-      "nom": "Asile",
-      "foundry": {
-        "id": "MjfD1BtI6Zbmcbkn",
-        "nom": "Asile",
-        "img": "systems/add2e/assets/icones/sorts/asile.webp",
-        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/asile.js"
-      },
-      "status": "reference_a_verifier_manuellement",
-      "raison": "Description exacte du Manuel non retrouvée ; description existante dans le découpage non conforme car générique/résumée.",
-      "composants_materiels_objets": [
-        {
-          "nom": "symbole sacré du clerc",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "découpage Foundry existant, à vérifier contre le Manuel",
-          "condition": null,
-          "notes": "Ne pas finaliser tant que la description exacte du Manuel n’est pas retrouvée."
-        }
-      ]
     }
   ]
 }

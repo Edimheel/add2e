@@ -42,7 +42,7 @@
       "Les descriptions sont normalisées seulement pour supprimer retours ligne PDF et césures.",
       "Les lots absents ou incomplets doivent rester non finalisés jusqu'à vérification manuelle."
     ],
-    "missing_descriptions": 1
+    "missing_descriptions": 0
   },
   "clerc-niveau-1": {
     "status": "source_descriptions_extraites_a_verifier",

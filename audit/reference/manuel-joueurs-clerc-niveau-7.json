@@ -7,43 +7,11 @@
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
   "status": "reference_complete_description_normalisee",
-  "expectedCount": 11,
+  "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/clerc-niveau-7.json",
   "spells": [
     {
       "ordre": 1,
-      "nom": "Asile",
-      "ecole": "Abjuration",
-      "niveau": 7,
-      "portee": "toucher",
-      "duree": "spéciale",
-      "zone_effet": "selon description",
-      "composantes": "V, S, M",
-      "temps_incantation": "1 round",
-      "jet_sauvegarde": "Spécial",
-      "description": "Asile ouvre une voie de déplacement magique ou permet un passage extraordinaire. La destination, les limites de transport, les risques et les conditions exactes dépendent du sort, du plan ou du terrain concerné. Le MD valide toujours les points d’arrivée et les obstacles surnaturels.",
-      "composants_materiels_objets": [
-        {
-          "nom": "symbole sacré du clerc",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "composants_materiels_source": "symbole sacré du clerc",
-      "foundry": {
-        "nom": "Asile",
-        "id": "MjfD1BtI6Zbmcbkn",
-        "img": "systems/add2e/assets/icones/sorts/asile.webp",
-        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/asile.js"
-      },
-      "status": "reference_complete_description_normalisee"
-    },
-    {
-      "ordre": 2,
       "nom": "Contrôle du climat",
       "ecole": "Évocation - Altération",
       "niveau": 7,
@@ -92,7 +60,7 @@
       "status": "reference_complete_description_normalisee"
     },
     {
-      "ordre": 3,
+      "ordre": 2,
       "nom": "Marche des vents",
       "ecole": "Altération",
       "niveau": 7,
@@ -113,7 +81,7 @@
       "status": "reference_complete_description_normalisee"
     },
     {
-      "ordre": 4,
+      "ordre": 3,
       "nom": "Parole sacrée/maudite",
       "ecole": "Conjuration/Appel",
       "niveau": 7,
@@ -134,7 +102,7 @@
       "status": "reference_complete_description_normalisee"
     },
     {
-      "ordre": 5,
+      "ordre": 4,
       "nom": "Régénération",
       "ecole": "Nécromancie",
       "niveau": 7,
@@ -185,7 +153,7 @@
       "status": "reference_complete_description_normalisee"
     },
     {
-      "ordre": 6,
+      "ordre": 5,
       "nom": "Restauration",
       "ecole": "Nécromancie",
       "niveau": 7,
@@ -207,7 +175,7 @@
       "status": "reference_complete_description_normalisee"
     },
     {
-      "ordre": 7,
+      "ordre": 6,
       "nom": "Résurrection",
       "ecole": "Nécromancie",
       "niveau": 7,
@@ -258,7 +226,7 @@
       "status": "reference_complete_description_normalisee"
     },
     {
-      "ordre": 8,
+      "ordre": 7,
       "nom": "Seuil",
       "ecole": "Conjuration/Appel",
       "niveau": 7,
@@ -279,7 +247,7 @@
       "status": "reference_complete_description_normalisee"
     },
     {
-      "ordre": 9,
+      "ordre": 8,
       "nom": "Sort astral",
       "ecole": "Altération",
       "niveau": 7,
@@ -300,7 +268,7 @@
       "status": "reference_complete_description_normalisee"
     },
     {
-      "ordre": 10,
+      "ordre": 9,
       "nom": "Symbole",
       "ecole": "Conjuration/Appel",
       "niveau": 7,
@@ -340,7 +308,7 @@
       "status": "reference_complete_description_normalisee"
     },
     {
-      "ordre": 11,
+      "ordre": 10,
       "nom": "Tremblement de terre",
       "ecole": "Altération",
       "niveau": 7,
