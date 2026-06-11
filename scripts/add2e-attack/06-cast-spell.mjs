@@ -1,34 +1,15 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs et composants.
+// Version : 2026-06-11-cast-spell-v20-memorized-by-list
 
 import { formatSortChamp } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
 
-/**
- * Lancer de sort (Script + Gestion Charges Objet)
- * VERSION : 2026-05-26-cast-spell-v19-components-message-fix
- *
- * Règle stricte :
- * - onUse === true  => le sort est réellement lancé, le coût et les composants restent consommés ;
- * - onUse === false => annulation / cible manquante / invalide, le coût et les composants sont remboursés ;
- * - toute autre valeur => erreur stricte, coût et composants remboursés, aucun fallback undefined.
- */
 export async function add2eCastSpell({ actor, sort } = {}) {
   if (!actor || !sort) {
     ui.notifications.warn("Lanceur ou sort introuvable.");
     return false;
   }
-
-  console.log("[ADD2E][CAST_SPELL] Début", {
-    actor: actor.name,
-    sort: sort.name,
-    sortId: sort.id,
-    sortType: sort.type,
-    isPower: !!sort.system?.isPower,
-    onUse: sort.system?.onUse,
-    onuse: sort.system?.onuse,
-    on_use: sort.system?.on_use
-  });
 
   let canCast = false;
   let labelCharge = "";
@@ -41,9 +22,7 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     let value = raw;
     if (Array.isArray(value)) value = value.find(v => typeof v === "string" && v.includes(".js")) ?? value[0] ?? "";
     value = String(value ?? "").trim();
-    if (value.includes(",")) {
-      value = value.split(",").map(s => s.trim()).find(s => s.endsWith(".js")) ?? value.split(",")[0].trim();
-    }
+    if (value.includes(",")) value = value.split(",").map(s => s.trim()).find(s => s.endsWith(".js")) ?? value.split(",")[0].trim();
     return value;
   }
 
@@ -53,9 +32,9 @@ export async function add2eCastSpell({ actor, sort } = {}) {
 
   function add2eRenderApplication(app) {
     if (!app || typeof app.render !== "function") return;
-    try { app.render({ force: true }); return; } catch (e) {}
-    try { app.render(true); return; } catch (e) {}
-    try { app.render(false); } catch (e) {}
+    try { app.render({ force: true }); return; } catch (_e) {}
+    try { app.render(true); return; } catch (_e) {}
+    try { app.render(false); } catch (_e) {}
   }
 
   function add2eActorSheetIsAlreadyOpen(actorDoc) {
@@ -75,6 +54,7 @@ export async function add2eCastSpell({ actor, sort } = {}) {
       const roots = Array.from(document.querySelectorAll(".add2e-character-v3"));
       for (const root of roots) {
         const rows = Array.from(root.querySelectorAll([
+          `[data-sort-id="${sortDoc.id}"]`,
           `[data-item-id="${sortDoc.id}"]`,
           `[data-itemid="${sortDoc.id}"]`,
           `[data-id="${sortDoc.id}"]`,
@@ -89,13 +69,11 @@ export async function add2eCastSpell({ actor, sort } = {}) {
           }
         }
       }
-    } catch (e) {
-      console.warn("[ADD2E][CAST_SPELL][UI_REFRESH][DOM_BADGE_FAILED]", e);
-    }
+    } catch (_e) {}
   }
 
   async function add2eRefreshActorSpellSheets(actorDoc, sortDoc, value) {
-    add2eUpdateVisibleMemorizedBadges(actorDoc, sortDoc, value);
+    if (value !== undefined) add2eUpdateVisibleMemorizedBadges(actorDoc, sortDoc, value);
     try {
       for (const app of Object.values(ui.windows ?? {})) {
         const doc = app?.actor ?? app?.document ?? app?.object ?? null;
@@ -103,10 +81,10 @@ export async function add2eCastSpell({ actor, sort } = {}) {
         const sameItem = doc?.documentName === "Item" && String(doc.id) === String(sortDoc.id);
         if (sameActor || sameItem) add2eRenderApplication(app);
       }
-    } catch (e) {}
+    } catch (_e) {}
 
     setTimeout(() => {
-      add2eUpdateVisibleMemorizedBadges(actorDoc, sortDoc, value);
+      if (value !== undefined) add2eUpdateVisibleMemorizedBadges(actorDoc, sortDoc, value);
       if (!add2eActorSheetIsAlreadyOpen(actorDoc)) return;
       try {
         for (const app of Object.values(ui.windows ?? {})) {
@@ -115,87 +93,41 @@ export async function add2eCastSpell({ actor, sort } = {}) {
           const sameItem = doc?.documentName === "Item" && String(doc.id) === String(sortDoc.id);
           if (sameActor || sameItem) add2eRenderApplication(app);
         }
-      } catch (e) {}
+      } catch (_e) {}
     }, 80);
   }
 
-  function add2eDeepCloneForSpell(value) {
-    if (value === undefined || value === null) return value;
-    try {
-      if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
-      if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
-      return JSON.parse(JSON.stringify(value));
-    } catch (e) { return value; }
-  }
-
-  function add2eNormalizeSpellCounterPath(value) {
-    return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-  }
-
-  function add2eIsMemorizedByListCounterPath(path) {
-    const p = add2eNormalizeSpellCounterPath(path);
-    if (!p) return false;
-    if (p.includes("max") || p.includes("maximum") || p.includes("total") || p.includes("capacity") || p.includes("capacite")) return false;
-    if (p.includes("niveau_max") || p.includes("level_max")) return false;
-    return true;
-  }
-
-  function add2eAdjustMemorizedByListValue(rawByList, targetTotal) {
-    const target = Math.max(0, Number(targetTotal) || 0);
-    if (rawByList === undefined || rawByList === null || rawByList === "") return { changed: false, value: rawByList, beforeSum: 0, afterSum: 0, leaves: [] };
-    if (typeof rawByList === "number") return { changed: rawByList !== target, value: target, beforeSum: Number(rawByList) || 0, afterSum: target, leaves: [{ path: "", before: Number(rawByList) || 0, after: target }] };
-    if (typeof rawByList !== "object") return { changed: false, value: rawByList, beforeSum: 0, afterSum: 0, leaves: [] };
-
-    const clone = add2eDeepCloneForSpell(rawByList);
-    const leaves = [];
-    function scan(obj, pathParts = []) {
-      if (!obj || typeof obj !== "object") return;
-      for (const [key, value] of Object.entries(obj)) {
-        const nextPath = [...pathParts, key];
-        const path = nextPath.join(".");
-        if (typeof value === "number" && Number.isFinite(value) && add2eIsMemorizedByListCounterPath(path)) {
-          leaves.push({ parent: obj, key, path, before: value });
-          continue;
-        }
-        if (value && typeof value === "object" && !Array.isArray(value)) scan(value, nextPath);
-      }
+  function add2eGetSpellEntry(actorDoc, sortDoc) {
+    if (typeof globalThis.add2eGetSpellEntryForSpell === "function") {
+      try { return globalThis.add2eGetSpellEntryForSpell(actorDoc, sortDoc); } catch (_e) {}
     }
-    scan(clone, []);
-    if (!leaves.length) return { changed: false, value: clone, beforeSum: 0, afterSum: 0, leaves: [] };
-
-    const beforeSum = leaves.reduce((sum, leaf) => sum + (Number(leaf.parent[leaf.key]) || 0), 0);
-    let delta = target - beforeSum;
-    if (delta < 0) {
-      let remaining = Math.abs(delta);
-      for (const leaf of leaves) {
-        if (remaining <= 0) break;
-        const current = Math.max(0, Number(leaf.parent[leaf.key]) || 0);
-        if (current <= 0) continue;
-        const dec = Math.min(current, remaining);
-        leaf.parent[leaf.key] = current - dec;
-        remaining -= dec;
-      }
-    } else if (delta > 0) {
-      const first = leaves[0];
-      first.parent[first.key] = Math.max(0, Number(first.parent[first.key]) || 0) + delta;
-    }
-    const afterSum = leaves.reduce((sum, leaf) => sum + (Number(leaf.parent[leaf.key]) || 0), 0);
-    const changed = afterSum !== beforeSum || beforeSum !== target;
-    return { changed, value: clone, beforeSum, afterSum, leaves: leaves.map(leaf => ({ path: leaf.path, before: leaf.before, after: Number(leaf.parent[leaf.key]) || 0 })) };
+    return null;
   }
 
-  async function add2eSetMemorizedCount(actorDoc, sortDoc, value, reason = "") {
+  function add2eGetMemorizedCount(sortDoc, entry) {
+    if (entry && typeof globalThis.add2eGetMemorizedCountForEntry === "function") {
+      return Math.max(0, Number(globalThis.add2eGetMemorizedCountForEntry(sortDoc, entry)) || 0);
+    }
+    if (typeof globalThis.add2eGetTotalMemorizedCount === "function") {
+      return Math.max(0, Number(globalThis.add2eGetTotalMemorizedCount(sortDoc)) || 0);
+    }
+    const byList = sortDoc?.flags?.add2e?.memorizedByList ?? {};
+    if (byList && typeof byList === "object") return Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
+    return Math.max(0, Number(sortDoc?.flags?.add2e?.memorizedCount ?? 0) || 0);
+  }
+
+  async function add2eSetMemorizedCount(actorDoc, sortDoc, value, reason = "", entry = null) {
     const next = Math.max(0, Number(value) || 0);
-    const byListBefore = await sortDoc.getFlag("add2e", "memorizedByList");
-    const byListSync = add2eAdjustMemorizedByListValue(byListBefore, next);
+    if (entry && typeof globalThis.add2eSetMemorizedCountForEntry === "function") {
+      await globalThis.add2eSetMemorizedCountForEntry(sortDoc, entry, next);
+      await add2eRefreshActorSpellSheets(actorDoc, sortDoc, next);
+      return next;
+    }
+
     const updateData = { "flags.add2e.memorizedCount": next };
-    if (byListSync.changed) updateData["flags.add2e.memorizedByList"] = byListSync.value;
     await sortDoc.update(updateData);
     await add2eRefreshActorSpellSheets(actorDoc, sortDoc, next);
-    const after = Number(await sortDoc.getFlag("add2e", "memorizedCount")) || 0;
-    const byListAfter = await sortDoc.getFlag("add2e", "memorizedByList");
-    console.log("[ADD2E][CAST_SPELL][MEMORIZED][SET]", { actor: actorDoc.name, sort: sortDoc.name, reason, wanted: next, after, memorizedByListSync: { changed: byListSync.changed, beforeSum: byListSync.beforeSum, afterSum: byListSync.afterSum, leaves: byListSync.leaves, before: byListBefore, after: byListAfter } });
-    return after;
+    return next;
   }
 
   async function add2ePlayGenericCastVfx(actorDoc, sortDoc) {
@@ -208,7 +140,6 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     if (!componentReservation) return false;
     try {
       const refunded = await globalThis.ADD2E_CONSUMABLES?.add2eRefundSpellComponents?.(componentReservation);
-      if (refunded) console.log("[ADD2E][CAST_SPELL][REFUND][COMPONENTS]", { reason, sort: spellToUse?.name });
       componentReservation = null;
       return !!refunded;
     } catch (e) {
@@ -222,26 +153,20 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     if (!reservedCost) return false;
     try {
       if (reservedCost.kind === "memorized") {
-        const now = Number(await reservedCost.sort.getFlag("add2e", "memorizedCount")) || 0;
+        const now = add2eGetMemorizedCount(reservedCost.sort, reservedCost.entry);
         if (now !== reservedCost.after) {
-          console.warn("[ADD2E][CAST_SPELL][REFUND][MEMORIZED][SKIP_CHANGED]", { reason, sort: reservedCost.sort.name, before: reservedCost.before, after: reservedCost.after, now });
           await add2eRefreshActorSpellSheets(actor, reservedCost.sort, now);
           return false;
         }
-        await add2eSetMemorizedCount(actor, reservedCost.sort, reservedCost.before, `refund:${reason}`);
-        console.log("[ADD2E][CAST_SPELL][REFUND][MEMORIZED]", { reason, sort: reservedCost.sort.name, restored: reservedCost.before });
+        await add2eSetMemorizedCount(actor, reservedCost.sort, reservedCost.before, `refund:${reason}`, reservedCost.entry);
         return true;
       }
 
       if (reservedCost.kind === "power") {
-        const { weapon, isGlobalMode, flagKey, before, after } = reservedCost;
+        const { weapon, flagKey, before, after } = reservedCost;
         const now = Number(await weapon.getFlag("add2e", flagKey)) || 0;
-        if (now !== after) {
-          console.warn("[ADD2E][CAST_SPELL][REFUND][POWER][SKIP_CHANGED]", { reason, weapon: weapon.name, flagKey, before, after, now });
-          return false;
-        }
+        if (now !== after) return false;
         await weapon.setFlag("add2e", flagKey, before);
-        console.log("[ADD2E][CAST_SPELL][REFUND][POWER]", { reason, weapon: weapon.name, flagKey, isGlobalMode, restored: before });
         return true;
       }
     } catch (e) {
@@ -303,24 +228,26 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     reservedCost = { kind: "power", weapon, isGlobalMode, flagKey, before: current, after: newCharges, max, cost };
     canCast = true;
     labelCharge = `<span style="color:#d35400;">Charges : ${newCharges}/${max}</span>`;
-    console.log("[ADD2E][CAST_SPELL][COST_RESERVED][POWER]", reservedCost);
     const baseName = sort.name.replace(/\s\(.*?\)$/, "").trim();
     const realSpell = game.items.find(i => i.type === "sort" && i.name.toLowerCase() === baseName.toLowerCase());
     if (realSpell) spellToUse = realSpell;
   } else {
-    const mem = Number(await sort.getFlag("add2e", "memorizedCount")) || 0;
+    const entry = add2eGetSpellEntry(actor, sort);
+    if (!entry) {
+      ui.notifications.warn(`Le sort "${sort.name}" n'est pas autorisé pour ce lanceur.`);
+      return false;
+    }
+    const mem = add2eGetMemorizedCount(sort, entry);
     if (mem <= 0) {
       ui.notifications.warn(`Le sort "${sort.name}" n'est plus mémorisé !`);
-      console.warn("[ADD2E][CAST_SPELL][MEMORIZED][EMPTY]", { actor: actor.name, sort: sort.name, memorizedCount: mem });
       await add2eRefreshActorSpellSheets(actor, sort, 0);
       return false;
     }
     const newMem = Math.max(0, mem - 1);
-    await add2eSetMemorizedCount(actor, sort, newMem, "reserve before onUse");
-    reservedCost = { kind: "memorized", sort, before: mem, after: newMem };
+    await add2eSetMemorizedCount(actor, sort, newMem, "reserve before onUse", entry);
+    reservedCost = { kind: "memorized", sort, entry, before: mem, after: newMem };
     canCast = true;
     labelCharge = `<span style="color:#2980b9;">Reste : ${newMem}</span>`;
-    console.log("[ADD2E][CAST_SPELL][COST_RESERVED][MEMORIZED]", { actor: actor.name, sort: sort.name, before: mem, after: newMem });
   }
 
   if (!canCast) return false;
@@ -350,10 +277,8 @@ export async function add2eCastSpell({ actor, sort } = {}) {
       else if (result === false) launched = false;
       else {
         launched = false;
-        console.error("[ADD2E][CAST_SPELL][BAD_RETURN_STRICT]", { sort: spellToUse.name, result, message: "Le onUse doit retourner true ou false. Aucun fallback undefined : le coût réservé sera remboursé." });
         ui.notifications.error(`${spellToUse.name} : le script onUse doit retourner true ou false.`);
       }
-      console.log("[ADD2E][CAST_SPELL][ONUSE_RESULT]", { sort: spellToUse.name, result, consumed: launched });
     } catch(e) {
       await add2eRefundReservedCost("erreur script");
       console.error("[ADD2E][CAST_SPELL][ONUSE][ERROR]", { sort: spellToUse.name, scriptPath, error: e });
@@ -364,7 +289,6 @@ export async function add2eCastSpell({ actor, sort } = {}) {
 
   if (!launched) {
     await add2eRefundReservedCost("onUse false");
-    console.log("[ADD2E][CAST_SPELL][NOT_CONSUMED]", { actor: actor.name, sort: spellToUse.name });
     return false;
   }
 
@@ -376,8 +300,6 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   }
 
   await add2eRefreshActorSpellSheets(actor, sort, reservedCost?.kind === "memorized" ? reservedCost.after : undefined);
-
-  console.log("[ADD2E][CAST_SPELL][CONSUMED]", { actor: actor.name, sort: spellToUse.name, reservedCost });
   return true;
 }
 
