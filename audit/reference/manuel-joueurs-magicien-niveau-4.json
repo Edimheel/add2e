@@ -167,27 +167,8 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "ce sort crée une sphère magique autour du magicien qui empêche les sorts de niveau 1, 2 et 3 de rentrer à l’intérieur. Même la zone d’effet de tels sorts ne pénètre pas dans la sphère. En revanche, le magicien peut lancer des sorts vers l’extérieur de la sphère sans qu’ils soient affectés par le globe. Les sorts de 4e niveau ou plus ne sont pas arrêtés par le globe. Les sorts de niveau 3 des objets magiques — boules de feu ou foudre, par exemple – ne pénètrent pas non plus dans le globe. Ce globe peut être détruit par une dissipation de la magie. Lorsqu’il se forme, le globe dégage un faible chatoiement. La composante matérielle est une perle de verre ou de cristal.",
-      "composants_materiels_objets": [
-        {
-          "nom": "perle de verre",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à une perle de cristal.",
-          "notes": null
-        },
-        {
-          "nom": "perle de cristal",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à une perle de verre.",
-          "notes": null
-        }
-      ],
+      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc désenvoûtement (voir p.46).",
+      "composants_materiels_objets": [],
       "foundry": {
         "nom": "Désenvoûtement",
         "id": "Sq750xrgb",
@@ -360,16 +341,25 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "ce sort est semblable au sort de niveau 3 de magicien invocation de monstre I (voir p.74). La différence tient dans le fait que ce sont de 1 à 6 (1d6) monstres de niveau 2 qui sont invoqués. La composante matérielle est la même; il y a également 1 à 4 rounds de délai.",
+      "description": "ce sort crée une sphère magique autour du magicien qui empêche les sorts de niveau 1, 2 et 3 de rentrer à l’intérieur. Même la zone d’effet de tels sorts ne pénètre pas dans la sphère. En revanche, le magicien peut lancer des sorts vers l’extérieur de la sphère sans qu’ils soient affectés par le globe. Les sorts de 4e niveau ou plus ne sont pas arrêtés par le globe. Les sorts de niveau 3 des objets magiques — boules de feu ou foudre, par exemple – ne pénètrent pas non plus dans le globe. Ce globe peut être détruit par une dissipation de la magie. Lorsqu’il se forme, le globe dégage un faible chatoiement. La composante matérielle est une perle de verre ou de cristal.",
       "composants_materiels_objets": [
         {
-          "nom": "la même; il y a également 1 à 4 rounds de délai",
+          "nom": "perle de verre",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "optionnel",
           "cout_po": null,
           "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "condition": "Alternative à une perle de cristal.",
+          "notes": null
+        },
+        {
+          "nom": "perle de cristal",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à une perle de verre.",
+          "notes": null
         }
       ],
       "foundry": {
@@ -378,7 +368,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-globe-mineur-d-invulnerabilite.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-globe-mineur-d-invulnerabilite.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 14,
@@ -391,18 +381,8 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "grâce à ce sort le magicien rend la créature affectée maladroite et gauche. Les créatures qui courent trébucheront et tomberont, celles qui prennent un objet le laisseront tomber, celles qui utilisent des armes feront de même. Se relever ou récupérer un objet prendra tout le round suivant. Les objets fragiles peuvent être endommagés dans leur chute. Si la victime réussit son jet de protection, le sort aura seulement le même effet que le sort de ralentissement (voir p.75). La composante matérielle est un petit morceau de lait solidifié (crème épaisse ou beurre).",
-      "composants_materiels_objets": [
-        {
-          "nom": "un petit morceau de lait solidifié (crème épaisse ou beurre)",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
-        }
-      ],
+      "description": "ce sort est semblable au sort de niveau 3 de magicien invocation de monstre I (voir p.74). La différence tient dans le fait que ce sont de 1 à 6 (1d6) monstres de niveau 2 qui sont invoqués. La composante matérielle est la même; il y a également 1 à 4 rounds de délai.",
+      "composants_materiels_objets": [],
       "foundry": {
         "nom": "Invocation de monstre II",
         "id": "xPNrvuMVoTHmz9GY",
@@ -422,16 +402,16 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien peut mémoriser ou garder en mémoire 3 niveaux de sort additionnels; à savoir, 3 sorts de niveau 1 ou 1 sort de niveau 2 et 1 sort de niveau 1 ou 1 sort de niveau 3. Le magicien peut choisir de mémoriser immédiatement des sorts additionnels ou choisir de garder en mémoire un sort déjà lancé par le biais de ce sort. Quand le sort est utilisé pour mémoriser des sorts supplémentaires, le magicien doit alors apprendre ces sorts et prévoir les composantes requises. Les composantes matérielles de ce sort sont un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante. Toutes les composantes disparaissent quand le sort est lancé.",
+      "description": "grâce à ce sort le magicien rend la créature affectée maladroite et gauche. Les créatures qui courent trébucheront et tomberont, celles qui prennent un objet le laisseront tomber, celles qui utilisent des armes feront de même. Se relever ou récupérer un objet prendra tout le round suivant. Les objets fragiles peuvent être endommagés dans leur chute. Si la victime réussit son jet de protection, le sort aura seulement le même effet que le sort de ralentissement (voir p.75). La composante matérielle est un petit morceau de lait solidifié (crème épaisse ou beurre).",
       "composants_materiels_objets": [
         {
-          "nom": "un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante",
+          "nom": "petit morceau de lait solidifié (crème épaisse ou beurre)",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": null
         }
       ],
       "foundry": {
@@ -440,7 +420,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-maladresse.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-maladresse.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 16,
@@ -453,8 +433,45 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "un piège à feu peut affecter tout objet qu’on peut fermer (livre, boîte, bouteille, coffre, malle, cercueil, porte, tiroir, etc.). Mais dès que ce sort est lancé sur l’objet, le magicien ne peut en lancer un autre dessus, tel qu’un sort de fermeture ou un verrou magique, sauf pour ce qui suit: si on tente de placer un piège à feu et une fermeture, seul le 1er sera effectif, l’autre sera annulé (si les 2 sont lancés en même temps, ils s’annulent tous les 2); si un piège à feu est lancé après un verrou magique, le 1er est annulé (si les deux sont lancés en même temps, ils s’annulent tous les 2); si un verrou magique est lancé après un piège à feu, il y a 50 % de chance que les deux soient annulés. Un sort d’ouverture n’a aucun pouvoir sur un piège à feu: dès que quelqu’un touche l'objet, le piège se déclenche. Le magicien peut utiliser l’objet piégé sans déclencher le sort. Quand le piège fonctionne, il se produit une explosion de 1,50 m de rayon et toutes les créatures dans cette zone d’effet subissent 1d4 points de dégâts plus 1 par niveau du magicien, la moitié seulement si elles réussissent leur jet de protection contre les sorts. L’objet piégé n’est PAS endommagé par l’explosion. Il y a seulement 50 % de chances de détecter un piège à feu et un échec à la tentative de désamorçage fait immédiatement exploser le piège. Le sort peut être annulé/dissipé par une dissipation de la magie. Ce sort ne peut pas être utilisé sous l’eau. Pour lancer ce sort, le magicien doit surligner le système de fermeture avec du souffre ou du salpêtre.",
-      "composants_materiels_objets": [],
+      "description": "avec ce sort, le magicien peut mémoriser ou garder en mémoire 3 niveaux de sort additionnels; à savoir, 3 sorts de niveau 1 ou 1 sort de niveau 2 et 1 sort de niveau 1 ou 1 sort de niveau 3. Le magicien peut choisir de mémoriser immédiatement des sorts additionnels ou choisir de garder en mémoire un sort déjà lancé par le biais de ce sort. Quand le sort est utilisé pour mémoriser des sorts supplémentaires, le magicien doit alors apprendre ces sorts et prévoir les composantes requises. Les composantes matérielles de ce sort sont un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante. Toutes les composantes disparaissent quand le sort est lancé.",
+      "composants_materiels_objets": [
+        {
+          "nom": "morceau de ficelle",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Toutes les composantes disparaissent quand le sort est lancé."
+        },
+        {
+          "nom": "plaque d’ivoire",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": 100,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Toutes les composantes disparaissent quand le sort est lancé."
+        },
+        {
+          "nom": "encre composée de sécrétion de calmar et de sang de dragon noir",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à l’encre composée avec du suc digestif de limace géante.",
+          "notes": "Toutes les composantes disparaissent quand le sort est lancé."
+        },
+        {
+          "nom": "encre composée de sécrétion de calmar et de suc digestif de limace géante",
+          "quantite": 1,
+          "consommation": "optionnel",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative à l’encre composée avec du sang de dragon noir.",
+          "notes": "Toutes les composantes disparaissent quand le sort est lancé."
+        }
+      ],
       "foundry": {
         "nom": "Moyen mnémonique de Rary",
         "id": "wtQdhwfXLq5KI8dx",
@@ -598,7 +615,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien se déplace instantanément de 3\" maximum par niveau qu’il a atteint. Cette forme spéciale de téléportation est sûre, il n’y a pas d’erreur possible et le magicien arrive toujours exactement à l’endroit désiré, soit en visualisant simplement l’endroit, soit en énonçant la distance et la direction (Exemple: 30\" vers le bas en ligne droite; direction nord-ouest, vers le haut à 45°, à 42\"). S’il arrive à un endroit déjà occupé par un corps solide, il reste sur le plan astral jusqu’à ce qu’il soit localisé par quelque créature charitable qui consente à lancer sur lui une dissipation de la magie, car le magicien y demeure étourdi et ne peut lancer aucun sort lui-même. Si le magicien arrive à un endroit sans aucun support, il tombera et subira les dégâts en conséquence, à moins qu’il n’ait un moyen magique de l’éviter. Le magicien peut transporter avec lui un maximum de 5.000 po (250 kg) de matière non vivante, la moitié s’il s’agit de matière vivante. Le fait de lancer ce sort requiert ensuite un temps de récupération d’une durée de 7 segments. TEMPÊTE DE GLACE (Évocation)",
+      "description": "un piège à feu peut affecter tout objet qu’on peut fermer (livre, boîte, bouteille, coffre, malle, cercueil, porte, tiroir, etc.). Mais dès que ce sort est lancé sur l’objet, le magicien ne peut en lancer un autre dessus, tel qu’un sort de fermeture ou un verrou magique, sauf pour ce qui suit: si on tente de placer un piège à feu et une fermeture, seul le 1er sera effectif, l’autre sera annulé (si les 2 sont lancés en même temps, ils s’annulent tous les 2); si un piège à feu est lancé après un verrou magique, le 1er est annulé (si les deux sont lancés en même temps, ils s’annulent tous les 2); si un verrou magique est lancé après un piège à feu, il y a 50 % de chance que les deux soient annulés. Un sort d’ouverture n’a aucun pouvoir sur un piège à feu: dès que quelqu’un touche l'objet, le piège se déclenche. Le magicien peut utiliser l’objet piégé sans déclencher le sort. Quand le piège fonctionne, il se produit une explosion de 1,50 m de rayon et toutes les créatures dans cette zone d’effet subissent 1d4 points de dégâts plus 1 par niveau du magicien, la moitié seulement si elles réussissent leur jet de protection contre les sorts. L’objet piégé n’est PAS endommagé par l’explosion. Il y a seulement 50 % de chances de détecter un piège à feu et un échec à la tentative de désamorçage fait immédiatement exploser le piège. Le sort peut être annulé/dissipé par une dissipation de la magie. Ce sort ne peut pas être utilisé sous l’eau. Pour lancer ce sort, le magicien doit surligner le système de fermeture avec du souffre ou du salpêtre.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Piège à feu",
@@ -619,7 +636,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien crée soit une averse de grêlons dans une zone de 4\" de diamètre, infligeant de 3 à 30 points de dégâts (3d10), soit une chute de neige fondue sur une zone de 8\" de diamètre, qui aveugle les créatures pendant la durée du sort et qui gèle le sol ralentissant ainsi lesdites créatures à 50 % et leur donnant 50 % de chances de tomber si elles essayent de bouger. Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau. Ce sort annule les effets du sort métal brûlant (voir p.57) mais sa première application (l’averse de grêlons) infligera tout de même les dégâts. Lancé sous l’eau, les grêlons seront plus faibles en puissance, n’infligeant que 1d10 points de dommages avant de remonter à la surface; la chute de neige n’a quant à elle aucun effet sous l’eau.",
+      "description": "avec ce sort, le magicien se déplace instantanément de 3\" maximum par niveau qu’il a atteint. Cette forme spéciale de téléportation est sûre, il n’y a pas d’erreur possible et le magicien arrive toujours exactement à l’endroit désiré, soit en visualisant simplement l’endroit, soit en énonçant la distance et la direction (Exemple: 30\" vers le bas en ligne droite; direction nord-ouest, vers le haut à 45°, à 42\"). S’il arrive à un endroit déjà occupé par un corps solide, il reste sur le plan astral jusqu’à ce qu’il soit localisé par quelque créature charitable qui consente à lancer sur lui une dissipation de la magie, car le magicien y demeure étourdi et ne peut lancer aucun sort lui-même. Si le magicien arrive à un endroit sans aucun support, il tombera et subira les dégâts en conséquence, à moins qu’il n’ait un moyen magique de l’éviter. Le magicien peut transporter avec lui un maximum de 5.000 po (250 kg) de matière non vivante, la moitié s’il s’agit de matière vivante. Le fait de lancer ce sort requiert ensuite un temps de récupération d’une durée de 7 segments. TEMPÊTE DE GLACE (Évocation)",
       "composants_materiels_objets": [
         {
           "nom": "une pincée de poussière et quelques gouttes d’eau",
@@ -650,7 +667,7 @@
       "composantes": null,
       "temps_incantation": null,
       "jet_sauvegarde": null,
-      "description": "",
+      "description": "quand ce sort est lancé, le magicien crée soit une averse de grêlons dans une zone de 4\" de diamètre, infligeant de 3 à 30 points de dégâts (3d10), soit une chute de neige fondue sur une zone de 8\" de diamètre, qui aveugle les créatures pendant la durée du sort et qui gèle le sol ralentissant ainsi lesdites créatures à 50 % et leur donnant 50 % de chances de tomber si elles essayent de bouger. Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau. Ce sort annule les effets du sort métal brûlant (voir p.57) mais sa première application (l’averse de grêlons) infligera tout de même les dégâts. Lancé sous l’eau, les grêlons seront plus faibles en puissance, n’infligeant que 1d10 points de dommages avant de remonter à la surface; la chute de neige n’a quant à elle aucun effet sous l’eau.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Tempête de glace",
@@ -658,7 +675,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-tempete-de-glace.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-tempete-de-glace.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 24,

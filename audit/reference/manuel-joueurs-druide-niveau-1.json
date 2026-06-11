@@ -6,7 +6,7 @@
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-1.json",
   "spells": [
@@ -294,13 +294,31 @@
       "description": "ce sort permet au druide de transformer sa massue en chêne en une arme magique +1 au toucher, infligeant de 2 à 8 points de dégâts (2d4) sur les ennemis de taille humaine maximum et de 2 à 5 (2d4+1) sur les opposants de plus grande taille. Le druide doit bien sûr savoir manier la massue. Les composantes matérielles de ce sort sont une massue en chêne, du gui et une feuille de trèfle.",
       "composants_materiels_objets": [
         {
-          "nom": "une massue en chêne, du gui et une feuille de trèfle",
+          "nom": "massue en chêne",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "gui",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "feuille de trèfle",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -309,7 +327,7 @@
         "img": "systems/add2e/assets/icones/sorts/druide-shillelagh.webp",
         "onUse": "systems/add2e/scripts/sorts/druide-shillelagh.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     }
   ]
 }

@@ -6,7 +6,7 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 16,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-7.json",
   "spells": [
@@ -199,13 +199,22 @@
       "description": "ce sort inverse la gravité de la zone d’effet, ce qui fait que tous les objets non fixés et les créatures dans la zone d’effet «tombent vers le haut». L’inversion dure 1 seconde (1/6e de segment), pendant laquelle les créatures et les objets «tombent» de 5 m vers le haut. S’il y a contact avec un objet solide durant cette «chute», l’objet provoque les mêmes dégâts que pour une chute normale. À la fin de la durée du sort, les créatures et les objets affectés retombent à terre. Comme le sort affecte une aire d’effet, des objets se trouvant à plusieurs dizaines de mètres de hauteur peuvent être affectés. Les composantes matérielles sont une pierre aimantée et de la limaille de fer.",
       "composants_materiels_objets": [
         {
-          "nom": "une pierre aimantée et de la limaille de fer",
+          "nom": "pierre aimantée",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "limaille de fer",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -214,7 +223,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-inversion-de-la-gravite.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-inversion-de-la-gravite.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 8,

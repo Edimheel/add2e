@@ -6,7 +6,7 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 24,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-6.json",
   "spells": [
@@ -24,13 +24,22 @@
       "description": "excepté ci-dessus, et le fait que l’inverse élève le niveau des eaux de 15 cm par niveau seulement, ce sort est le même que le sort de niveau 4 de clerc abaissement des eaux (voir p.48). Les composantes matérielles sont une petite fiole d’eau et une petite fiole de poussière.",
       "composants_materiels_objets": [
         {
-          "nom": "une petite fiole d’eau et une petite fiole de poussière",
+          "nom": "petite fiole d’eau",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "La fiole est le contenant réutilisable; son contenu est consommé."
+        },
+        {
+          "nom": "petite fiole de poussière",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "La fiole est le contenant réutilisable; son contenu est consommé."
         }
       ],
       "foundry": {
@@ -39,7 +48,7 @@
         "img": "systems/add2e/assets/icones/sorts/abaissement-des-eaux.webp",
         "onUse": "systems/add2e/scripts/sorts/abaissement-des-eaux.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
@@ -137,13 +146,22 @@
       "description": "ce sort provoque la disparition de la matière. Il affecte même la matière (ou l'énergie) de nature magique telle qu’une main de force de Bigby, mais pas un globe d’invulnérabilité, ni une bulle anti-magique. La désintégration est instantanée et ses effets sont permanents. Tout être vivant peut être affecté, même les morts-vivants, et le magicien peut désintégrer jusqu’à 27 m³ de matière non-vivante. Les créatures et les objets magiques qui ont droit à un jet de protection et qui le réussissent ne sont pas affectés par ce sort. Une seule créature ou un seul objet peut être affecté par ce sort. Les composantes matérielles sont une pierre aimantée et une pincée de poussière.",
       "composants_materiels_objets": [
         {
-          "nom": "une pierre aimantée et une pincée de poussière",
+          "nom": "pierre aimantée",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "pincée de poussière",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -152,7 +170,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-desintegration.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-desintegration.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,
@@ -210,13 +228,31 @@
       "description": "quand ce sort est lancé, il fait se déplacer des éléments comme la terre, l’argile, le sable et autres matériaux similaires. Ainsi, le magicien peut aplanir des dunes, briser les digues, déplacer les buttes, etc. La zone affectée joue sur le temps d’incantation: pour chaque portion de 150 m² de surface, l’incantation dure 1 tour. La limitation pratique de la zone d’effet de ce sort est de 3.600 m² pour 4 heures d’incantation, sans tenir compte de la conjuration de l’élémentaire. S’il y a transformation du terrain (par opposition à simplement faire s’écrouler des buttes en terre ou des talus), l’invocation d’un élémentaire de terre est indispensable pour aider à faire le travail. Toute incantation et/ou invocation devra être terminée avant que les effets ne se manifestent. En aucun cas le magicien n’est capable de déplacer ou de faire s’écrouler des rochers. Les composantes matérielles sont un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer.",
       "composants_materiels_objets": [
         {
-          "nom": "un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer",
+          "nom": "mélange de terre, argile, terreau ou sable",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "petit sac",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "lame en fer",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -225,7 +261,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-glissement-de-terrain.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-glissement-de-terrain.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 9,
@@ -449,13 +485,22 @@
       "description": "ce sort est similaire au sort de niveau 7 de druide réincarnation (voir p.64). Il n’y a aucun jet de protection concernant la résistance aux traumatismes ou à la résurrection. Le magicien touche le cadavre et la nouvelle incarnation de la personne apparait dans un délai de 1 à 6 tours, à condition que la personne ne soit pas morte depuis plus d’un jour par niveau du lanceur du sort. La nouvelle incarnation est: 1d100 Incarnation 01-05 Goblours 06-11 Nain 12-18 Elfe 19-23 Gnoll 24-28 Gnome 29-33 Gobelin 34-40 Demi-elfe 41-47 Petite-gens 48-54 Demi-orque 55-59 Hobgobelin 60-73 Humain 74-79 Kobold 80-85 Orque 86-90 Ogre 91-95 Ogre mage 96-00 Troll Note: les personnes très bonnes ou très mauvaises ne peuvent être réincarnées en des créatures dont l’alignement est opposé. Les composantes matérielles sont un petit tambour et une goutte de sang.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit tambour et une goutte de sang",
+          "nom": "petit tambour",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "goutte de sang",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -464,7 +509,7 @@
         "img": "systems/add2e/assets/icones/sorts/reincarnation.webp",
         "onUse": "systems/add2e/scripts/sorts/reincarnation.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 18,

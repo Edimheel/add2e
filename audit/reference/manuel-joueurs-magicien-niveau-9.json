@@ -6,7 +6,7 @@
     "niveau": 9,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-9.json",
   "spells": [
@@ -118,13 +118,22 @@
       "description": "cette énorme main est similaire aux sorts de main de force de Bigby et poing de Bigby (voir p.85 et 91). La main broyante de Bigby est sous le contrôle mental du magicien; elle peut agripper et comprimer un adversaire. Les dégâts de cette constriction sont les suivants: 1er round 1d10 points de dégâts 2e et 3e round 2d10 points de dégâts 4e round et suivants 4d10 points de dégâts La main a autant de points de vie que le magicien qui a lancé le sort; comme toutes les autres formes de mains de Bigby, sa CA est la même que celle du magicien et elle ne peut être touchée que par des armes magiques. Les composantes matérielles sont un gant en peau de serpent et une coquille d’œuf. MOT DE POUVOIR: «MORT» (Conjuration/Appel) Niveau: 9 Composantes: V Portée: ¼\"/niveau Temps d'incantation: 1 segment Durée: permanente Jet de protection: aucun Zone d'effet: 2\" de diamètre",
       "composants_materiels_objets": [
         {
-          "nom": "un gant en peau de serpent et une coquille d’œuf",
+          "nom": "gant en peau de serpent",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "coquille d’œuf",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -133,7 +142,7 @@
         "img": "systems/add2e/assets/icones/sorts/magicien-main-broyante-de-bigby.webp",
         "onUse": "systems/add2e/scripts/sorts/magicien-main-broyante-de-bigby.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 6,

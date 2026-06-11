@@ -6,7 +6,7 @@
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 24,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-5.json",
   "spells": [
@@ -24,13 +24,31 @@
       "description": "en lançant ce sort, le magicien invoque un chien de garde fantomatique que lui seul peut voir. Il peut alors lui ordonner de garder une porte, un passage, une pièce ou tout autre lieu similaire. Le chien aboiera immédiatement avec force si une créature plus grosse qu’un chat s’approche de l’endroit qu’il garde. Il peut détecter les créatures invisibles, astrales, éthérées, hors de phase, à deux dimensions ou non-visibles; c’est un excellent gardien! De plus, si la créature (ou les créatures) intruse tourne le dos au chien, ce dernier portera une attaque brutale comme s’il possédait 10 dés de vie et infligera 3 à 18 (3d6) points de dégâts. Le chien peut attaquer n’importe quelle créature, même celles qui ne peuvent être touchées que par des armes magiques +3 ou plus. Le chien ne peut pas être attaqué mais on peut le dissiper. Le magicien ne doit jamais se trouver à plus de 3\" de l’endroit que garde le chien ou le sort est annulé. Les composantes matérielles sont un petit sifflet en argent, un morceau d’os et un fil.",
       "composants_materiels_objets": [
         {
-          "nom": "un petit sifflet en argent, un morceau d’os et un fil",
+          "nom": "petit sifflet en argent",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": null
+        },
+        {
+          "nom": "morceau d’os",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
+        },
+        {
+          "nom": "fil",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": null
         }
       ],
       "foundry": {
@@ -39,7 +57,7 @@
         "img": "systems/add2e/assets/icones/sorts/chien-fidele-de-mordenkainen.webp",
         "onUse": "systems/add2e/scripts/sorts/chien-fidele-de-mordenkainen.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_complete_description_normalisee"
     },
     {
       "ordre": 2,
