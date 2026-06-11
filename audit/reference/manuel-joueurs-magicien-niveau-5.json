@@ -409,11 +409,11 @@
         {
           "nom": "un petit morceau de plaque de fer",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Objet durable ou focus utilisé sans destruction indiquée."
         }
       ],
       "foundry": {
@@ -544,11 +544,11 @@
         {
           "nom": "une petite barre de métal, une pour chaque monstre visé",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "non_consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "Objet durable ou focus utilisé sans destruction indiquée."
         }
       ],
       "foundry": {

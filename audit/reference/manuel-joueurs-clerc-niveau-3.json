@@ -115,20 +115,20 @@
         {
           "nom": "encens",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": null,
           "source": "Manuel des joueurs",
           "condition": null,
-          "notes": "Consommation non déterminable depuis la formulation explicite du Manuel."
+          "notes": "La description indique que l’endroit doit être encensé."
         },
         {
           "nom": "poudre d’un diamant d’au moins 2 000 po",
           "quantite": 1,
-          "consommation": "a_verifier",
+          "consommation": "consomme",
           "cout_po": 2000,
           "source": "Manuel des joueurs",
           "condition": "Requise si la zone à protéger excède 4,5 m².",
-          "notes": "La zone est saupoudrée avec cette poudre."
+          "notes": "La description indique que la poudre est saupoudrée."
         }
       ],
       "foundry": {

@@ -4,10 +4,11 @@
 
 - Branche : `agent-audit-sorts`
 - Descriptions manquantes : 0
-- Composants à vérifier global : 90
-- Clerc : 40 composants résolus, 24 à vérifier
+- Composants résolus global : 130
+- Composants à vérifier global : 84
+- Clerc : 52 composants résolus, 22 à vérifier
 - Druide : 2 composants résolus, 8 à vérifier
-- Magicien : 65 composants résolus, 55 à vérifier
+- Magicien : 69 composants résolus, 51 à vérifier
 - Illusionniste : 7 composants résolus, 3 à vérifier
 
 Les descriptions présentes sont reprises strictement depuis `audit/source/reference-descriptions.json`. Les consommations non explicites restent `a_verifier`.
@@ -24,7 +25,6 @@ La liste suivante regroupe les sorts contenant encore au moins un composant avec
 
 - clerc-niveau-1: Résistance au froid
 - clerc-niveau-3: Catalepsie
-- clerc-niveau-3: Glyphe de garde
 - clerc-niveau-3: Nécro-animation
 - clerc-niveau-4: Abaissement des eaux
 - clerc-niveau-4: Bâtons à serpents
@@ -84,15 +84,12 @@ La liste suivante regroupe les sorts contenant encore au moins un composant avec
 - magicien-niveau-5: Débilité mentale
 - magicien-niveau-5: Distorsion des distances
 - magicien-niveau-5: Eau aérée
-- magicien-niveau-5: Mur de fer
 - magicien-niveau-5: Mur de force
 - magicien-niveau-5: Mur de roc
-- magicien-niveau-5: Paralysie des monstres
 - magicien-niveau-5: Passe-muraille
 - magicien-niveau-6: Abaissement des eaux
 - magicien-niveau-6: Désintégration
 - magicien-niveau-6: Glissement de terrain
-- magicien-niveau-6: Holographie
 - magicien-niveau-6: Réincarnation
 - magicien-niveau-6: Répulsion
 - magicien-niveau-6: Transmutation de pierre en chair
@@ -101,7 +98,6 @@ La liste suivante regroupe les sorts contenant encore au moins un composant avec
 - magicien-niveau-8: Antipathie/sympathie
 - magicien-niveau-8: Clone
 - magicien-niveau-8: Cristairain
-- magicien-niveau-8: Poing de Bigby
 - magicien-niveau-8: Transformation d'objets
 - magicien-niveau-9: Main broyante de Bigby
 
@@ -111,12 +107,21 @@ La liste suivante regroupe les sorts contenant encore au moins un composant avec
 - illusionniste-niveau-2: Surdité
 - illusionniste-niveau-3: Écriture illusoire
 
+## Composants résolus dans ce lot
+
+- clerc-niveau-3: Glyphe de garde — encens → consomme
+- clerc-niveau-3: Glyphe de garde — poudre d’un diamant d’au moins 2 000 po → consomme
+- magicien-niveau-5: Mur de fer — un petit morceau de plaque de fer → non_consomme
+- magicien-niveau-5: Paralysie des monstres — une petite barre de métal, une pour chaque monstre visé → non_consomme
+- magicien-niveau-6: Holographie — une petite réplique (poupée) du magicien → non_consomme
+- magicien-niveau-8: Poing de Bigby — un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de «I» → non_consomme
+
 ## Validations exécutées
 
 - JSON de référence validés avec `node audit/tools/validate-reference-schema.mjs` après chaque lot.
 - Recherche finale des occurrences de `consommation: "a_verifier"`.
 - Vérification de `git status --short`.
 - Vérification du diff final : seuls `audit/reference/*.json` et `audit/rapports/REFERENCE-SPELLS-GENERATION.md` sont modifiés.
-- Les composants à vérifier restent inchangés : 90 au total.
+- 6 composants matériels explicites ont été résolus ; 84 restent à vérifier.
 - Les fichiers `audit/reference/*.json` ont été régénérés depuis `audit/source/reference-descriptions.json` ; les 19 descriptions auparavant manquantes ont été propagées sans reformulation.
 - Aucun script, JSON Foundry, fichier de découpage, fichier source ou `system.json` n'est modifié par ce commit.
