@@ -1,69 +1,114 @@
 {
-  "_id": "ranger-add2e-core",
   "name": "Ranger",
   "type": "classe",
   "img": "systems/add2e/assets/ranger.png",
   "system": {
     "label": "Ranger",
     "subclassOf": "Guerrier",
-
-    "hitDie": 10,
-    "hpFormula": "1d10 + constitution.mod",
+    "hitDie": 8,
+    "hpFormula": "2d8 + constitution.mod",
     "spellcasting": {
-      "lists": ["druide", "magicien"],
-      "startsAt": 8,
-      "maxSpellLevel": 3
+      "enabled": true,
+      "mode": "mixed",
+      "type": "prepared",
+      "ability": "sagesse",
+      "abilityKey": "wis",
+      "lists": ["Druide", "Magicien"],
+      "entries": [
+        {
+          "key": "Druide",
+          "label": "Druidique",
+          "startsAt": 8,
+          "maxSpellLevel": 3,
+          "slotsField": "spellsPerLevelDruide",
+          "preparationSource": "progression.spellSlotsByList.Druide"
+        },
+        {
+          "key": "Magicien",
+          "label": "Magicien",
+          "startsAt": 9,
+          "maxSpellLevel": 2,
+          "slotsField": "spellsPerLevelMagicien",
+          "preparationSource": "progression.spellSlotsByList.Magicien"
+        }
+      ],
+      "usesSlots": true,
+      "usesPreparation": true,
+      "preparationSource": "progression.spellSlotsByList"
     },
-
     "attacksPerRound": [
-      { "minLevel": 1, "maxLevel": 20, "attacks": 1 }
+      { "minLevel": 1, "maxLevel": 7, "attacks": 1 },
+      { "minLevel": 8, "maxLevel": 14, "attacks": "3/2" },
+      { "minLevel": 15, "maxLevel": 99, "attacks": 2 }
     ],
-
-    "armorAllowed": ["toutes"],
+    "armorAllowed": ["armure", "bouclier"],
     "shieldAllowed": true,
-    "weaponsAllowed": ["toutes"],
-
+    "weaponsAllowed": ["arme"],
     "specialAbilities": [
-      "Sous-classe de Guerrier",
-      "Capacités de furtivité en milieu naturel",
-      "Surprise améliorée / surprise adverse",
-      "Deux armes sans pénalité en armure légère",
-      "Lancer de sorts de druide et de magicien (à partir du niveau 8)"
+      "Ennemi privilégié humanoïde",
+      "Surprise améliorée",
+      "Pistage",
+      "Combat à deux armes en armure légère",
+      "Sorts druidiques",
+      "Sorts de magicien",
+      "Forteresse de ranger",
+      "Objets magiques mentaux",
+      "Appel des suivants"
     ],
-
-    "titlesByLevel": [
-      { "minLevel": 1, "maxLevel": 1, "title": "Trappeur" },
-      { "minLevel": 2, "maxLevel": 2, "title": "Pisteur" },
-      { "minLevel": 3, "maxLevel": 3, "title": "Éclaireur" },
-      { "minLevel": 4, "maxLevel": 4, "title": "Chasseur" },
-      { "minLevel": 5, "maxLevel": 5, "title": "Traqueur" },
-      { "minLevel": 6, "maxLevel": 6, "title": "Guide" },
-      { "minLevel": 7, "maxLevel": 7, "title": "Pionnier" },
-      { "minLevel": 8, "maxLevel": 8, "title": "Ranger" },
-      { "minLevel": 9, "maxLevel": 20, "title": "Seigneur Ranger" }
-    ],
-
     "progression": [
-      { "niveau": 1,  "xp": 0,        "thac0": 20, "savingThrows": [14,16,15,17,17], "weaponMasterySlots": 0, "skills": [10,15], "spellsPerLevel": [0,0,0] },
-      { "niveau": 2,  "xp": 2250,     "thac0": 19, "savingThrows": [14,16,15,17,17], "weaponMasterySlots": 0, "skills": [15,21], "spellsPerLevel": [0,0,0] },
-      { "niveau": 3,  "xp": 4500,     "thac0": 18, "savingThrows": [13,15,14,16,16], "weaponMasterySlots": 0, "skills": [20,27], "spellsPerLevel": [0,0,0] },
-      { "niveau": 4,  "xp": 10000,    "thac0": 17, "savingThrows": [13,15,14,16,16], "weaponMasterySlots": 0, "skills": [25,33], "spellsPerLevel": [0,0,0] },
-      { "niveau": 5,  "xp": 20000,    "thac0": 16, "savingThrows": [11,13,12,13,14], "weaponMasterySlots": 0, "skills": [31,40], "spellsPerLevel": [0,0,0] },
-      { "niveau": 6,  "xp": 40000,    "thac0": 15, "savingThrows": [11,13,12,13,14], "weaponMasterySlots": 0, "skills": [37,47], "spellsPerLevel": [0,0,0] },
-      { "niveau": 7,  "xp": 90000,    "thac0": 14, "savingThrows": [10,12,11,12,13], "weaponMasterySlots": 0, "skills": [43,55], "spellsPerLevel": [0,0,0] },
-
-      { "niveau": 8,  "xp": 150000,   "thac0": 13, "savingThrows": [10,12,11,12,13], "weaponMasterySlots": 1, "skills": [49,62], "spellsPerLevel": [1,0,0] },
-      { "niveau": 9,  "xp": 225000,   "thac0": 12, "savingThrows": [8,10,9,9,11],   "weaponMasterySlots": 2, "skills": [56,70], "spellsPerLevel": [2,0,0] },
-      { "niveau": 10, "xp": 325000,   "thac0": 11, "savingThrows": [8,10,9,9,11],   "weaponMasterySlots": 3, "skills": [63,78], "spellsPerLevel": [2,1,0] },
-      { "niveau": 11, "xp": 650000,   "thac0": 10, "savingThrows": [7,9,8,8,10],    "weaponMasterySlots": 4, "skills": [70,86], "spellsPerLevel": [2,2,0] },
-      { "niveau": 12, "xp": 975000,   "thac0": 9,  "savingThrows": [7,9,8,8,10],    "weaponMasterySlots": 5, "skills": [77,94], "spellsPerLevel": [2,2,1] },
-      { "niveau": 13, "xp": 1300000,  "thac0": 8,  "savingThrows": [2,7,6,5,8],     "weaponMasterySlots": 6, "skills": [85,99], "spellsPerLevel": [3,2,1] },
-      { "niveau": 14, "xp": 1650000,  "thac0": 7,  "savingThrows": [2,7,6,5,8],     "weaponMasterySlots": 7, "skills": [93,99], "spellsPerLevel": [3,2,2] },
-      { "niveau": 15, "xp": 2000000,  "thac0": 6,  "savingThrows": [4,6,5,4,7],     "weaponMasterySlots": 8, "skills": [99,99], "spellsPerLevel": [3,3,2] },
-      { "niveau": 16, "xp": 2350000,  "thac0": 5,  "savingThrows": [4,6,5,4,7],     "weaponMasterySlots": 9, "skills": [99,99], "spellsPerLevel": [3,3,3] }
-    ]
+      { "niveau": 1, "level": 1, "xp": 0, "hitDice": "2d8", "hd": "2d8", "title": "Trappeur", "thac0": 20, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [0,0,0], "attacksPerRound": "1", "weaponMasterySlots": 0, "skills": [10,15], "tracking": { "exterieur": 10, "souterrain": 15 }, "spellsPerLevelDruide": [0,0,0], "spellsPerLevelMagicien": [0,0], "spellSlotsByList": { "Druide": [0,0,0], "Magicien": [0,0] } },
+      { "niveau": 2, "level": 2, "xp": 2250, "hitDice": "3d8", "hd": "3d8", "title": "Pisteur", "thac0": 19, "savingThrows": [14,16,15,17,17], "spellsPerLevel": [0,0,0], "attacksPerRound": "1", "weaponMasterySlots": 0, "skills": [15,21], "tracking": { "exterieur": 15, "souterrain": 21 }, "spellsPerLevelDruide": [0,0,0], "spellsPerLevelMagicien": [0,0], "spellSlotsByList": { "Druide": [0,0,0], "Magicien": [0,0] } },
+      { "niveau": 3, "level": 3, "xp": 4500, "hitDice": "4d8", "hd": "4d8", "title": "Éclaireur", "thac0": 18, "savingThrows": [13,15,14,16,16], "spellsPerLevel": [0,0,0], "attacksPerRound": "1", "weaponMasterySlots": 0, "skills": [20,27], "tracking": { "exterieur": 20, "souterrain": 27 }, "spellsPerLevelDruide": [0,0,0], "spellsPerLevelMagicien": [0,0], "spellSlotsByList": { "Druide": [0,0,0], "Magicien": [0,0] } },
+      { "niveau": 4, "level": 4, "xp": 10000, "hitDice": "5d8", "hd": "5d8", "title": "Chasseur", "thac0": 17, "savingThrows": [13,15,14,16,16], "spellsPerLevel": [0,0,0], "attacksPerRound": "1", "weaponMasterySlots": 0, "skills": [25,33], "tracking": { "exterieur": 25, "souterrain": 33 }, "spellsPerLevelDruide": [0,0,0], "spellsPerLevelMagicien": [0,0], "spellSlotsByList": { "Druide": [0,0,0], "Magicien": [0,0] } },
+      { "niveau": 5, "level": 5, "xp": 20000, "hitDice": "6d8", "hd": "6d8", "title": "Traqueur", "thac0": 16, "savingThrows": [11,13,12,13,14], "spellsPerLevel": [0,0,0], "attacksPerRound": "1", "weaponMasterySlots": 0, "skills": [31,40], "tracking": { "exterieur": 31, "souterrain": 40 }, "spellsPerLevelDruide": [0,0,0], "spellsPerLevelMagicien": [0,0], "spellSlotsByList": { "Druide": [0,0,0], "Magicien": [0,0] } },
+      { "niveau": 6, "level": 6, "xp": 40000, "hitDice": "7d8", "hd": "7d8", "title": "Guide", "thac0": 15, "savingThrows": [11,13,12,13,14], "spellsPerLevel": [0,0,0], "attacksPerRound": "1", "weaponMasterySlots": 0, "skills": [37,47], "tracking": { "exterieur": 37, "souterrain": 47 }, "spellsPerLevelDruide": [0,0,0], "spellsPerLevelMagicien": [0,0], "spellSlotsByList": { "Druide": [0,0,0], "Magicien": [0,0] } },
+      { "niveau": 7, "level": 7, "xp": 90000, "hitDice": "8d8", "hd": "8d8", "title": "Pionnier", "thac0": 14, "savingThrows": [10,12,11,12,13], "spellsPerLevel": [0,0,0], "attacksPerRound": "1", "weaponMasterySlots": 0, "skills": [43,55], "tracking": { "exterieur": 43, "souterrain": 55 }, "spellsPerLevelDruide": [0,0,0], "spellsPerLevelMagicien": [0,0], "spellSlotsByList": { "Druide": [0,0,0], "Magicien": [0,0] } },
+      { "niveau": 8, "level": 8, "xp": 150000, "hitDice": "9d8", "hd": "9d8", "title": "Ranger", "thac0": 13, "savingThrows": [10,12,11,12,13], "spellsPerLevel": [1,0,0], "attacksPerRound": "3/2", "weaponMasterySlots": 1, "skills": [49,62], "tracking": { "exterieur": 49, "souterrain": 62 }, "spellsPerLevelDruide": [1,0,0], "spellsPerLevelMagicien": [0,0], "spellSlotsByList": { "Druide": [1,0,0], "Magicien": [0,0] } },
+      { "niveau": 9, "level": 9, "xp": 225000, "hitDice": "10d8", "hd": "10d8", "title": "Chevalier ranger", "thac0": 12, "savingThrows": [8,10,9,9,11], "spellsPerLevel": [1,0,0], "attacksPerRound": "3/2", "weaponMasterySlots": 2, "skills": [56,70], "tracking": { "exterieur": 56, "souterrain": 70 }, "spellsPerLevelDruide": [1,0,0], "spellsPerLevelMagicien": [1,0], "spellSlotsByList": { "Druide": [1,0,0], "Magicien": [1,0] } },
+      { "niveau": 10, "level": 10, "xp": 325000, "hitDice": "11d8", "hd": "11d8", "title": "Seigneur ranger", "thac0": 11, "savingThrows": [8,10,9,9,11], "spellsPerLevel": [2,0,0], "attacksPerRound": "3/2", "weaponMasterySlots": 3, "skills": [63,78], "tracking": { "exterieur": 63, "souterrain": 78 }, "spellsPerLevelDruide": [2,0,0], "spellsPerLevelMagicien": [1,0], "spellSlotsByList": { "Druide": [2,0,0], "Magicien": [1,0] } },
+      { "niveau": 11, "level": 11, "xp": 650000, "hitDice": "11d8+2", "hd": "11d8+2", "title": "Seigneur ranger (niveau 11)", "thac0": 10, "savingThrows": [7,9,8,8,10], "spellsPerLevel": [2,0,0], "attacksPerRound": "3/2", "weaponMasterySlots": 4, "skills": [70,86], "tracking": { "exterieur": 70, "souterrain": 86 }, "spellsPerLevelDruide": [2,0,0], "spellsPerLevelMagicien": [2,0], "spellSlotsByList": { "Druide": [2,0,0], "Magicien": [2,0] } },
+      { "niveau": 12, "level": 12, "xp": 975000, "hitDice": "11d8+4", "hd": "11d8+4", "title": "Seigneur ranger (niveau 12)", "thac0": 9, "savingThrows": [7,9,8,8,10], "spellsPerLevel": [2,1,0], "attacksPerRound": "3/2", "weaponMasterySlots": 5, "skills": [77,94], "tracking": { "exterieur": 77, "souterrain": 94 }, "spellsPerLevelDruide": [2,1,0], "spellsPerLevelMagicien": [2,0], "spellSlotsByList": { "Druide": [2,1,0], "Magicien": [2,0] } },
+      { "niveau": 13, "level": 13, "xp": 1300000, "hitDice": "11d8+6", "hd": "11d8+6", "title": "Seigneur ranger (niveau 13)", "thac0": 8, "savingThrows": [2,7,6,5,8], "spellsPerLevel": [2,1,0], "attacksPerRound": "3/2", "weaponMasterySlots": 6, "skills": [85,99], "tracking": { "exterieur": 85, "souterrain": 99 }, "spellsPerLevelDruide": [2,1,0], "spellsPerLevelMagicien": [2,1], "spellSlotsByList": { "Druide": [2,1,0], "Magicien": [2,1] } },
+      { "niveau": 14, "level": 14, "xp": 1650000, "hitDice": "11d8+8", "hd": "11d8+8", "title": "Seigneur ranger (niveau 14)", "thac0": 7, "savingThrows": [2,7,6,5,8], "spellsPerLevel": [2,2,0], "attacksPerRound": "3/2", "weaponMasterySlots": 7, "skills": [93,99], "tracking": { "exterieur": 93, "souterrain": 99 }, "spellsPerLevelDruide": [2,2,0], "spellsPerLevelMagicien": [2,1], "spellSlotsByList": { "Druide": [2,2,0], "Magicien": [2,1] } },
+      { "niveau": 15, "level": 15, "xp": 2000000, "hitDice": "11d8+10", "hd": "11d8+10", "title": "Seigneur ranger (niveau 15)", "thac0": 6, "savingThrows": [4,6,5,4,7], "spellsPerLevel": [2,2,0], "attacksPerRound": "2", "weaponMasterySlots": 8, "skills": [99,99], "tracking": { "exterieur": 99, "souterrain": 99 }, "spellsPerLevelDruide": [2,2,0], "spellsPerLevelMagicien": [2,2], "spellSlotsByList": { "Druide": [2,2,0], "Magicien": [2,2] } },
+      { "niveau": 16, "level": 16, "xp": 2350000, "hitDice": "11d8+12", "hd": "11d8+12", "title": "Seigneur ranger (niveau 16)", "thac0": 5, "savingThrows": [4,6,5,4,7], "spellsPerLevel": [2,2,1], "attacksPerRound": "2", "weaponMasterySlots": 9, "skills": [99,99], "tracking": { "exterieur": 99, "souterrain": 99 }, "spellsPerLevelDruide": [2,2,1], "spellsPerLevelMagicien": [2,2], "spellSlotsByList": { "Druide": [2,2,1], "Magicien": [2,2] } },
+      { "niveau": 17, "level": 17, "xp": 2700000, "hitDice": "11d8+14", "hd": "11d8+14", "title": "Seigneur ranger (niveau 17)", "thac0": 5, "savingThrows": [4,6,5,4,7], "spellsPerLevel": [2,2,2], "attacksPerRound": "2", "weaponMasterySlots": 9, "skills": [99,99], "tracking": { "exterieur": 99, "souterrain": 99 }, "spellsPerLevelDruide": [2,2,2], "spellsPerLevelMagicien": [2,2], "spellSlotsByList": { "Druide": [2,2,2], "Magicien": [2,2] } },
+      { "niveau": 18, "level": 18, "xp": 3050000, "hitDice": "11d8+16", "hd": "11d8+16", "title": "Seigneur ranger (niveau 18)", "thac0": 5, "savingThrows": [4,6,5,4,7], "spellsPerLevel": [2,2,2], "attacksPerRound": "2", "weaponMasterySlots": 9, "skills": [99,99], "tracking": { "exterieur": 99, "souterrain": 99 }, "spellsPerLevelDruide": [2,2,2], "spellsPerLevelMagicien": [2,2], "spellSlotsByList": { "Druide": [2,2,2], "Magicien": [2,2] } },
+      { "niveau": 19, "level": 19, "xp": 3400000, "hitDice": "11d8+18", "hd": "11d8+18", "title": "Seigneur ranger (niveau 19)", "thac0": 5, "savingThrows": [4,6,5,4,7], "spellsPerLevel": [2,2,2], "attacksPerRound": "2", "weaponMasterySlots": 9, "skills": [99,99], "tracking": { "exterieur": 99, "souterrain": 99 }, "spellsPerLevelDruide": [2,2,2], "spellsPerLevelMagicien": [2,2], "spellSlotsByList": { "Druide": [2,2,2], "Magicien": [2,2] } },
+      { "niveau": 20, "level": 20, "xp": 3750000, "hitDice": "11d8+20", "hd": "11d8+20", "title": "Seigneur ranger (niveau 20)", "thac0": 5, "savingThrows": [4,6,5,4,7], "spellsPerLevel": [2,2,2], "attacksPerRound": "2", "weaponMasterySlots": 9, "skills": [99,99], "tracking": { "exterieur": 99, "souterrain": 99 }, "spellsPerLevelDruide": [2,2,2], "spellsPerLevelMagicien": [2,2], "spellSlotsByList": { "Druide": [2,2,2], "Magicien": [2,2] } }
+    ],
+    "savingThrows": ["sauvegarde_paralysie", "sauvegarde_petrification", "sauvegarde_baguettes", "sauvegarde_souffles", "sauvegarde_sortileges"],
+    "primaryAbility": "Force, Intelligence, Sagesse, Constitution",
+    "description": "Sous-classe de guerrier, le ranger est un coureur de bois, pisteur, éclaireur et défenseur du bien. Il excelle contre certains humanoïdes, surprend mieux ses adversaires, suit les traces et gagne des sorts à haut niveau.",
+    "hdPerLevel": "1d8",
+    "hpFirstLevelFormula": "2d8 + constitution.mod",
+    "caracs_min": { "force": 13, "intelligence": 13, "sagesse": 15, "constitution": 14 },
+    "alignment": ["Loyal Bon", "Neutre Bon", "Chaotique Bon"],
+    "alignements_autorises": ["Loyal Bon", "Neutre Bon", "Chaotique Bon"],
+    "spellLists": ["Druide", "Magicien"],
+    "tags": ["classe:ranger", "classe:guerrier", "sous_classe:guerrier", "lanceur:divin", "lanceur:arcane", "sorts:druide", "sorts:magicien"],
+    "ruleNotes": [
+      "Alignement bon obligatoire.",
+      "Bonus de dégâts contre certains humanoïdes : +1 par niveau.",
+      "Pistage en extérieur et en souterrain.",
+      "Sorts de druide à partir du niveau 8, sorts de magicien à partir du niveau 9.",
+      "Sorts du ranger : Druidique 1-3 dès le niveau 8 ; Magicien 1-2 dès le niveau 9. Les deux lignes ont des emplacements séparés."
+    ],
+    "magicAllowed": "Sorts de druide à partir du niveau 8 ; sorts de magicien à partir du niveau 9 ; objets magiques mentaux non écrits au niveau 10.",
+    "richesse_initiale": "5d4 × 10 po",
+    "hpAfter10": 2,
+    "maxHitDice": 11,
+    "casterType": "mixed",
+    "casterAbility": "sagesse",
+    "spellcastingNote": "Sorts mixtes, préparation selon progression.spellSlotsByList."
   },
-  "sort": 100000,
-  "flags": {},
-  "folder": null
+  "effects": [],
+  "folder": "J8lYnNGHqTZetIIf",
+  "flags": {
+    "add2e": {
+      "importedBy": "ADD2E import universel",
+      "importerVersion": "2026-05-26-v14-folders-spells-class-level"
+    }
+  },
+  "ownership": { "default": 0 }
 }
