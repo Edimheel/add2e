@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-11-multiclass-layer-v18-player-tiles-dialog-v2
+// Version : 2026-06-11-multiclass-layer-v19-compact-selected-tiles
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,7 +7,7 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-11-multiclass-layer-v18-player-tiles-dialog-v2";
+const VERSION = "2026-06-11-multiclass-layer-v19-compact-selected-tiles";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -483,20 +483,20 @@ function compatibleMulticlassClassCandidates(actor, preferredClassData = null) {
 
 function tileHtml({ value, title, text, note = "", tone = "gold", checked = false }) {
   const palettes = {
-    gold: ["#3b2612", "#f6e7a8", "#d7a94d", "#8a611d", "✦"],
-    amber: ["#3b2612", "#f3d4a0", "#b66b2f", "#8f4a18", "↻"],
-    bronze: ["#24190c", "#ded1ad", "#9b8561", "#5f4927", "◆"],
-    red: ["#2b0f0b", "#ead0c7", "#a64536", "#7a251d", "×"]
+    gold: ["#261500", "#fff06a", "#f09a10", "#7b4300", "✦", "#1f8a2f"],
+    amber: ["#251000", "#ffc261", "#e35a19", "#79310a", "↻", "#9a4f00"],
+    bronze: ["#1e1508", "#ded1ad", "#8f7144", "#4f3617", "◆", "#5b4b34"],
+    red: ["#2b0f0b", "#ffb0a0", "#b83222", "#6c160f", "×", "#8f1c12"]
   };
-  const [color, bg1, bg2, border, icon] = palettes[tone] ?? palettes.gold;
+  const [color, bg1, bg2, border, icon, accent] = palettes[tone] ?? palettes.gold;
   return `
-    <label style="display:grid;grid-template-columns:40px 1fr;gap:10px;align-items:center;min-height:88px;padding:12px;border:2px solid ${border};border-radius:14px;background:linear-gradient(135deg,${bg1},${bg2});color:${color};box-shadow:0 2px 8px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.45);cursor:pointer;">
-      <input type="radio" name="add2eChoice" value="${esc(value)}" ${checked ? "checked" : ""} style="position:absolute;opacity:0;pointer-events:none;">
-      <span style="font-size:1.8rem;line-height:1;text-align:center;">${icon}</span>
-      <span style="display:grid;gap:3px;text-align:left;">
-        <strong style="font-size:1.04rem;line-height:1.15;">${esc(title)}</strong>
-        <span style="font-size:.9rem;line-height:1.25;">${esc(text)}</span>
-        ${note ? `<span style="font-size:.78rem;line-height:1.2;opacity:.82;">${esc(note)}</span>` : ""}
+    <label style="position:relative;display:grid;grid-template-columns:30px 1fr;gap:8px;align-items:center;min-height:66px;padding:8px 9px;border:2px solid ${border};border-radius:12px;background:linear-gradient(135deg,${bg1},${bg2});color:${color};box-shadow:0 2px 7px rgba(0,0,0,.2),inset 0 0 0 1px rgba(255,255,255,.5);cursor:pointer;">
+      <input type="radio" name="add2eChoice" value="${esc(value)}" ${checked ? "checked" : ""} style="width:24px;height:24px;margin:0;accent-color:${accent};filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));cursor:pointer;">
+      <span style="position:absolute;right:8px;top:7px;font-size:1.05rem;line-height:1;opacity:.9;">${icon}</span>
+      <span style="display:grid;gap:2px;text-align:left;padding-right:20px;">
+        <strong style="font-size:.96rem;line-height:1.1;">${esc(title)}</strong>
+        <span style="font-size:.8rem;line-height:1.15;font-weight:750;">${esc(text)}</span>
+        ${note ? `<span style="font-size:.7rem;line-height:1.1;opacity:.86;">${esc(note)}</span>` : ""}
       </span>
     </label>`;
 }
@@ -518,9 +518,9 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
     const opt = options[i];
     tiles.push(tileHtml({
       value: `multiclass:${i}`,
-      title: opt.already ? "Actualiser le multiclassage" : "Ajouter cette classe",
+      title: opt.already ? "Actualiser" : "Ajouter",
       text: opt.label.replace(/—/g, "•"),
-      note: opt.already ? "Remet les niveaux, titres et sorts en cohérence." : "Ajoute la classe sans perdre le parcours actuel.",
+      note: opt.already ? "Remet le parcours en ordre." : "Conserve les autres classes.",
       tone: "gold",
       checked: i === 0
     }));
@@ -529,43 +529,43 @@ async function showClassDropChoiceDialog(actor, droppedClassData) {
     const opt = replacementOptions[i];
     tiles.push(tileHtml({
       value: `replace:${i}`,
-      title: "Remplacer une classe",
+      title: "Remplacer",
       text: opt.label.replace(/—/g, "•"),
-      note: "Garde un personnage multiclassé avec une autre combinaison.",
+      note: "Change une classe du parcours.",
       tone: "amber",
       checked: !tiles.length && i === 0
     }));
   }
   tiles.push(tileHtml({
     value: "monoclass",
-    title: "Garder une seule classe",
-    text: `Remplacer le parcours actuel par ${droppedName}.`,
-    note: "À utiliser pour repartir sur une classe unique.",
+    title: "Une seule classe",
+    text: `Repartir en ${droppedName}.`,
+    note: "Remplace le parcours actuel.",
     tone: "bronze",
     checked: !tiles.length
   }));
 
   const helperText = options.length
-    ? "Cette classe peut rejoindre le personnage. Choisis la tuile qui correspond à ton intention."
+    ? "Choisis la manière d'ajouter cette classe."
     : replacementOptions.length
-      ? "Cette classe ne peut pas être ajoutée directement avec la race actuelle, mais tu peux modifier une classe existante."
-      : "Cette classe ne peut pas être ajoutée directement avec la race actuelle. Tu peux la garder seule ou annuler.";
+      ? "Choisis une nouvelle combinaison possible."
+      : "Cette classe ne peut pas rejoindre le parcours actuel.";
 
   const content = `
-    <div class="add2e-multiclass-choice" style="display:grid;gap:12px;min-width:640px;max-width:820px;color:#2b1c0d;font-family:var(--font-primary, Signika, sans-serif);">
-      <div style="border:1px solid #5c3b12;border-radius:14px;background:linear-gradient(180deg,#3b2612,#1c1208);padding:12px 14px;box-shadow:inset 0 0 0 1px rgba(255,221,145,.16),0 2px 8px rgba(0,0,0,.25);">
-        <h2 style="margin:0;color:#f9df9a;font-size:1.18rem;text-transform:uppercase;letter-spacing:.03em;border:0;">Choisis ton évolution</h2>
-        <p style="margin:4px 0 0;color:#e8c978;font-size:.92rem;">${esc(helperText)}</p>
+    <div class="add2e-multiclass-choice" style="display:grid;gap:9px;min-width:610px;max-width:760px;color:#2b1c0d;font-family:var(--font-primary, Signika, sans-serif);">
+      <div style="border:1px solid #5c3b12;border-radius:12px;background:linear-gradient(180deg,#3b2612,#1c1208);padding:9px 12px;box-shadow:inset 0 0 0 1px rgba(255,221,145,.16),0 2px 8px rgba(0,0,0,.25);">
+        <h2 style="margin:0;color:#f9df9a;font-size:1.05rem;text-transform:uppercase;letter-spacing:.03em;border:0;">Choisis ton évolution</h2>
+        <p style="margin:3px 0 0;color:#e8c978;font-size:.82rem;">${esc(helperText)}</p>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
-        <div style="border:1px solid #b48a37;border-radius:12px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.74rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Classe actuelle</span><b>${esc(current)}</b></div>
-        <div style="border:1px solid #b48a37;border-radius:12px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.74rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Classe déposée</span><b>${esc(droppedName)}</b></div>
-        <div style="border:1px solid #b48a37;border-radius:12px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.74rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Race actuelle</span><b>${esc(raceName)}</b></div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;">
+        <div style="border:1px solid #b48a37;border-radius:10px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:7px 8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Classe actuelle</span><b style="font-size:.9rem;">${esc(current)}</b></div>
+        <div style="border:1px solid #b48a37;border-radius:10px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:7px 8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Classe déposée</span><b style="font-size:.9rem;">${esc(droppedName)}</b></div>
+        <div style="border:1px solid #b48a37;border-radius:10px;background:linear-gradient(180deg,#fff7df,#ead7a7);padding:7px 8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5);"><span style="display:block;color:#65420f;font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Race actuelle</span><b style="font-size:.9rem;">${esc(raceName)}</b></div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:7px;">
         ${tiles.join("\n")}
       </div>
-      <p style="margin:0;padding:8px 10px;border-left:5px solid #c99a3a;border-radius:8px;background:#f2e1b5;color:#5d451b;font-weight:800;">Sélectionne une tuile, puis valide ton choix.</p>
+      <p style="margin:0;padding:6px 9px;border-left:5px solid #1f8a2f;border-radius:8px;background:#e7f0b9;color:#354408;font-size:.8rem;font-weight:900;">Le rond rempli indique le choix sélectionné.</p>
     </div>`;
 
   const readChoice = (_event, button, dialog) => {
