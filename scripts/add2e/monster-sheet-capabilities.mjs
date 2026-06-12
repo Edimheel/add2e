@@ -1,9 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-06-12-v2-monster-actor-sheet-fallback
+// Version : 2026-06-12-v3-monster-actorsheetv2-wrapper
 // But : séparer les capacités informatives MJ des effets système activables.
-// V13/V14/V15 : assure aussi que actor.sheet existe pour les acteurs monster.
+// Foundry V13/V14/V15 : en V14, les feuilles d'acteur ApplicationV2 doivent être raccordées via ActorSheetV2/DocumentSheetV2.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-06-12-v2-monster-actor-sheet-fallback";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-06-12-v3-monster-actorsheetv2-wrapper";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
 function esc(value) {
@@ -177,9 +177,9 @@ function installMonsterActorSheetFallback(actor) {
     configurable: true,
     get() {
       if (cachedSheet?.render) return cachedSheet;
-      if (typeof globalThis.Add2eMonsterSheet !== "function") return null;
-      cachedSheet = new globalThis.Add2eMonsterSheet(actor);
-      return cachedSheet;
+      if (typeof globalThis.Add2eMonsterActorSheetV2 === "function") cachedSheet = new globalThis.Add2eMonsterActorSheetV2({ document: actor });
+      else if (typeof globalThis.Add2eMonsterSheet === "function") cachedSheet = new globalThis.Add2eMonsterSheet(actor);
+      return cachedSheet ?? null;
     }
   });
 
@@ -188,10 +188,60 @@ function installMonsterActorSheetFallback(actor) {
 }
 
 function installMonsterActorSheetFallbacks() {
-  if (typeof globalThis.Add2eMonsterSheet !== "function") return false;
   let patched = 0;
   for (const actor of game.actors ?? []) if (installMonsterActorSheetFallback(actor)) patched++;
   console.log("[ADD2E][MONSTER_SHEET][ACTOR_SHEET_FALLBACK]", { version: ADD2E_MONSTER_CAPABILITIES_VERSION, patched });
+  return true;
+}
+
+function registerMonsterActorSheetV2Wrapper() {
+  if (globalThis.Add2eMonsterActorSheetV2 || typeof globalThis.Add2eMonsterSheet !== "function") return !!globalThis.Add2eMonsterActorSheetV2;
+
+  const ActorSheetV2 = foundry?.applications?.sheets?.ActorSheetV2;
+  const ActorsCollection = foundry?.documents?.collections?.Actors;
+  if (typeof ActorSheetV2 !== "function" || !ActorsCollection?.registerSheet) return false;
+
+  class Add2eMonsterActorSheetV2 extends ActorSheetV2 {
+    static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS ?? {}, {
+      id: "add2e-monster-actorsheet-v2",
+      classes: ["add2e", "sheet", "actor", "monster"],
+      tag: "section",
+      window: { title: "ADD2e Descartes (FR) - Monstre", resizable: true },
+      position: { width: 720, height: 850 }
+    }, { inplace: false });
+
+    constructor(options = {}, ...args) {
+      if (options?.documentName === "Actor" || options?.type === "monster") options = { document: options };
+      super(options, ...args);
+    }
+
+    get title() { return this.actor?.name ?? super.title; }
+    get editable() { return this.isEditable; }
+
+    async getData() { return globalThis.Add2eMonsterSheet.prototype.getData.call(this); }
+    async _renderHTML(context, options) { return globalThis.Add2eMonsterSheet.prototype._renderHTML.call(this, context, options); }
+    _replaceHTML(result, content, options) { return globalThis.Add2eMonsterSheet.prototype._replaceHTML.call(this, result, content, options); }
+    async _updateObject(event, formData) { return globalThis.Add2eMonsterSheet.prototype._updateObject.call(this, event, formData); }
+    _activateAutoSubmit(root) { return globalThis.Add2eMonsterSheet.prototype._activateAutoSubmit.call(this, root); }
+    activateListeners(content) { return globalThis.Add2eMonsterSheet.prototype.activateListeners.call(this, content); }
+    _injectLayoutFix() { return globalThis.Add2eMonsterSheet.prototype._injectLayoutFix.call(this); }
+    async _onEquipItem(item) { return globalThis.Add2eMonsterSheet.prototype._onEquipItem.call(this, item); }
+    async _recalculerCA() { return globalThis.Add2eMonsterSheet.prototype._recalculerCA.call(this); }
+  }
+
+  globalThis.Add2eMonsterActorSheetV2 = Add2eMonsterActorSheetV2;
+
+  try {
+    if (typeof ActorsCollection.unregisterSheet === "function") ActorsCollection.unregisterSheet("add2e", globalThis.Add2eMonsterSheet, { types: ["monster"] });
+  } catch (_err) {}
+
+  ActorsCollection.registerSheet("add2e", Add2eMonsterActorSheetV2, {
+    types: ["monster"],
+    makeDefault: true,
+    label: "ADD2e Descartes (FR) - Monstre"
+  });
+
+  console.log("[ADD2E][MONSTER_SHEET][ACTORSHEETV2_REGISTERED]", ADD2E_MONSTER_CAPABILITIES_VERSION);
   return true;
 }
 
@@ -237,8 +287,12 @@ Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
 });
 
 Hooks.once("ready", () => {
+  registerMonsterActorSheetV2Wrapper();
   installMonsterActorSheetFallbacks();
-  setTimeout(installMonsterActorSheetFallbacks, 500);
+  setTimeout(() => {
+    registerMonsterActorSheetV2Wrapper();
+    installMonsterActorSheetFallbacks();
+  }, 500);
   if (!globalThis.__ADD2E_MONSTER_SHEET_CREATE_HOOK) {
     globalThis.__ADD2E_MONSTER_SHEET_CREATE_HOOK = true;
     Hooks.on("createActor", actor => {
