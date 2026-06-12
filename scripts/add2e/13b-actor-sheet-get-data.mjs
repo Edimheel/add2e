@@ -1,6 +1,6 @@
 // ADD2E — Actor sheet getData ApplicationV2
 // Full V2 : aucun appel ActorSheet.prototype.
-// Version : 2026-06-11-capabilities-data-v14-thief-rows
+// Version : 2026-06-12-spell-row-material-components-v1
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
@@ -350,21 +350,30 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     const matchingLabels = add2eSpellEntriesForHbs.filter(entry => spellLists.includes(add2eEntryKeyForHbs(entry))).map(add2eEntryLabelForHbs);
     const isObjectPower = add2eIsObjectPowerRow(sort);
     const isCapacity = add2eIsCapacitySpellRow(sort);
+    const s = sort.system ?? {};
 
     return {
       id: sort.id || sort._id,
+      _id: sort.id || sort._id,
+      uuid: sort.uuid,
       name: sort.name || "Sort",
       img: sort.img || "icons/svg/book.svg",
-      ecole: sort.system?.école || sort.system?.ecole || sort.system?.school || "",
-      description: sort.system?.description || "",
-      composantes: sort.system?.composantes || "",
-      temps_incantation: sort.system?.temps_incantation || "",
-      portee: sort.system?.portee || sort.system?.portée || null,
-      duree: sort.system?.duree || sort.system?.durée || null,
+      system: foundry.utils.deepClone(s),
+      flags: foundry.utils.deepClone(sort.flags ?? {}),
+      ecole: s?.école || s?.ecole || s?.school || "",
+      description: s?.description || "",
+      composantes: s?.composantes || "",
+      composants_materiels: foundry.utils.deepClone(s?.composants_materiels ?? []),
+      composants_materiels_objets: foundry.utils.deepClone(s?.composants_materiels_objets ?? []),
+      composants_materiels_source: s?.composants_materiels_source || "",
+      composants_requis: foundry.utils.deepClone(s?.composants_requis ?? []),
+      temps_incantation: s?.temps_incantation || "",
+      portee: s?.portee || s?.portée || null,
+      duree: s?.duree || s?.durée || null,
       isObjectPower,
       isCapacity,
       isRegularSpell: !isObjectPower && !isCapacity,
-      objectPowerCharges: isObjectPower ? (Number(sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount ?? sort.system?.max ?? 0) || 0) : 0,
+      objectPowerCharges: isObjectPower ? (Number(sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount ?? s?.max ?? 0) || 0) : 0,
       listLabel: matchingLabels.length ? matchingLabels.join(" / ") : (spellLists.map(add2eSpellLabel).join(" / ") || "Non autorisé"),
       entries: allowedEntries.map(entry => {
         const count = add2eGetMemorizedCountForEntry(sort, entry);
