@@ -12,7 +12,7 @@ import {
   slug
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-05-28-consumables-core-v3-loose-component-detection";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-12-consumables-core-v4-alternative-components";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -69,15 +69,53 @@ function isOnlyComponentCode(value) {
   return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text);
 }
 
-function addRequirement(out, rawName, rawQty = 1) {
-  const name = String(rawName ?? "").trim();
-  if (!name || isOnlyComponentCode(name)) return;
+function cleanComponentName(value) {
+  let text = String(value ?? "").trim();
+  text = text.replace(/[.!?;:]+$/g, "").trim();
+  text = text.replace(/^d['’]\s*/i, "");
+  text = text.replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
+  text = text.replace(/^(un|une)?\s*peu\s+de\s+/i, "");
+  text = text.replace(/^(quelques|plusieurs)\s+/i, "");
+  text = text.replace(/^petit morceau de\s+/i, "");
+  text = text.replace(/^morceau de\s+/i, "");
+  return text.trim();
+}
+
+function makeRequirement(rawName, rawQty = 1) {
+  const name = cleanComponentName(rawName);
+  if (!name || isOnlyComponentCode(name)) return null;
   const key = slug(name);
-  if (!key) return;
+  if (!key) return null;
   const qty = Math.max(1, Math.floor(num(rawQty, 1)));
-  const existing = out.find(r => r.key === key);
-  if (existing) existing.quantity += qty;
-  else out.push({ name, key, quantity: qty });
+  return { name, key, quantity: qty };
+}
+
+function addRequirement(out, rawName, rawQty = 1) {
+  const req = makeRequirement(rawName, rawQty);
+  if (!req) return;
+  const existing = out.find(r => r.key === req.key && !r.alternatives);
+  if (existing) existing.quantity += req.quantity;
+  else out.push(req);
+}
+
+function addAlternativeRequirement(out, alternatives) {
+  const clean = [];
+  for (const alt of alternatives) {
+    const req = makeRequirement(alt, 1);
+    if (!req) continue;
+    if (!clean.some(r => r.key === req.key)) clean.push(req);
+  }
+  if (!clean.length) return;
+  if (clean.length === 1) {
+    addRequirement(out, clean[0].name, clean[0].quantity);
+    return;
+  }
+  out.push({
+    name: clean.map(r => r.name).join(" ou "),
+    key: clean.map(r => r.key).join("__or__"),
+    quantity: 1,
+    alternatives: clean
+  });
 }
 
 function collectRequirement(out, value) {
@@ -87,10 +125,20 @@ function collectRequirement(out, value) {
     return;
   }
   if (typeof value === "string") {
-    for (const part of asArray(value)) addRequirement(out, part, 1);
+    const segments = value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean);
+    for (const segment of segments) {
+      const alternatives = segment.split(/\bou\b/gi).map(v => v.trim()).filter(Boolean);
+      if (alternatives.length > 1) addAlternativeRequirement(out, alternatives);
+      else addRequirement(out, segment, 1);
+    }
     return;
   }
   if (typeof value === "object") {
+    const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or;
+    if (Array.isArray(alternatives) && alternatives.length) {
+      addAlternativeRequirement(out, alternatives.map(v => typeof v === "object" ? (v.name ?? v.nom ?? v.label ?? v.item ?? v.component ?? v.composant ?? v.slug ?? v.id) : v));
+      return;
+    }
     const name = value.name ?? value.nom ?? value.label ?? value.item ?? value.component ?? value.composant ?? value.slug ?? value.id;
     const qty = value.quantity ?? value.quantite ?? value.qty ?? value.nombre ?? value.count ?? value.value ?? 1;
     if (name) addRequirement(out, name, qty);
@@ -151,6 +199,18 @@ function findActorComponent(actor, requirement) {
   return items.find(item => componentKeys(item).includes(requirement.key))
     ?? items.find(item => componentKeys(item).some(key => key && (key.includes(requirement.key) || requirement.key.includes(key))))
     ?? null;
+}
+
+function findActorComponentForRequirement(actor, requirement) {
+  if (!requirement?.alternatives?.length) {
+    const item = findActorComponent(actor, requirement);
+    return item ? { item, requirement } : null;
+  }
+  for (const alternative of requirement.alternatives) {
+    const item = findActorComponent(actor, alternative);
+    if (item && quantity(item) >= alternative.quantity) return { item, requirement: alternative, group: requirement };
+  }
+  return null;
 }
 
 function sortByName(a, b) {
@@ -229,9 +289,11 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
 
   const consumed = [];
   for (const requirement of reqs) {
-    const item = findActorComponent(actor, requirement);
+    const found = findActorComponentForRequirement(actor, requirement);
+    const item = found?.item ?? null;
+    const selectedRequirement = found?.requirement ?? requirement;
     const before = quantity(item);
-    if (!item || before < requirement.quantity) {
+    if (!item || before < selectedRequirement.quantity) {
       for (const entry of consumed.reverse()) await entry.item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-reserve-rollback" });
       return {
         ok: false,
@@ -242,9 +304,9 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
       };
     }
 
-    const after = before - requirement.quantity;
+    const after = before - selectedRequirement.quantity;
     await item.update(quantityUpdate(after), { add2eReason: "spell-component-reserved-gm" });
-    consumed.push({ item, itemId: item.id, itemName: item.name, requirement, before, after, quantity: requirement.quantity });
+    consumed.push({ item, itemId: item.id, itemName: item.name, requirement: selectedRequirement, groupRequirement: found?.group, before, after, quantity: selectedRequirement.quantity });
   }
 
   console.log("[ADD2E][CONSUMABLES][COMPONENTS][RESERVED][GM]", {
