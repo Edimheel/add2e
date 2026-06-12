@@ -1,6 +1,7 @@
 // ADD2E — ApplicationV2 vendeur : onglets, recherche, achats et restock MJ.
+// Version : 2026-06-12-vendor-auto-missing-spell-components-v3
+
 import {
-  ADD2E_VENDOR_VERSION,
   isVendorActor,
   findVendor,
   createVendor,
@@ -21,7 +22,8 @@ import {
   lower
 } from "./22a-vendor-core.mjs";
 
-const ADD2E_VENDOR_APP_VERSION = "2026-06-12-vendor-component-spell-lists-gm-buyer-v2";
+const ADD2E_VENDOR_APP_VERSION = "2026-06-12-vendor-auto-missing-spell-components-v3";
+
 const ADD2E_VENDOR_STYLE = `
   .add2e-vendor-root{height:100%;max-height:100%;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(180deg,#fff8df,#ead39b);color:#2f250c;font-family:var(--font-primary,serif)}
   .add2e-vendor-root *{box-sizing:border-box}.add2e-vendor-header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid #b98b2d;background:linear-gradient(180deg,#5a3511,#2f1b08);color:#ffe7a8}.add2e-vendor-header h2{margin:0;color:#ffe7a8;font-weight:950;line-height:1.1;text-shadow:0 1px 2px #000}.add2e-vendor-header p{margin:4px 0 0;color:#fff2c2}.add2e-vendor-money{padding:6px 10px;border:1px solid #d9bf73;border-radius:999px;background:#fff3c7;color:#3a2208;font-weight:950;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
@@ -33,43 +35,369 @@ const ADD2E_VENDOR_STYLE = `
 `;
 
 const arr = v => Array.isArray(v) ? v.flatMap(arr) : v === null || v === undefined || v === "" ? [] : typeof v === "string" ? v.split(/[,;|\n]+|\bet\b/gi).map(x => x.trim()).filter(Boolean) : [v];
-const norm = v => lower(v).replace(/[’']/g,"_").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
+const norm = v => lower(v).replace(/[’']/g, "_").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 const uniq = v => [...new Set(v.filter(Boolean))];
-function onlyCode(v){const t=lower(v).replace(/[^a-z]/g,"");return ["v","s","m","vs","vm","sm","vsm","verbal","somatique","materiel","materielle","material"].includes(t);}
-function actorTypeLabel(actor){const t=String(actor?.type??"").toLowerCase();if(t==="personnage")return"Personnages";if(t==="monster")return"Monstres";return"Autres acteurs";}
-function buyerChoices(selectedId=""){const groups=new Map();for(const actor of game.actors??[]){if(!actor?.id||isVendorActor(actor))continue;const label=actorTypeLabel(actor);if(!groups.has(label))groups.set(label,[]);groups.get(label).push(actor);}for(const actors of groups.values())actors.sort((a,b)=>String(a.name).localeCompare(String(b.name)));return[...groups.entries()].map(([label,actors])=>`<optgroup label="${esc(label)}">${actors.map(a=>`<option value="${esc(a.id)}" ${a.id===selectedId?"selected":""}>${esc(a.name)}</option>`).join("")}</optgroup>`).join("");}
-function addReq(map, raw, qty=1, spell=null, mult=1){const name=String(raw??"").trim();if(!name||onlyCode(name))return;const key=norm(name);if(!key)return;const n=Math.max(1,Math.floor(Number(qty)||1))*Math.max(1,Math.floor(Number(mult)||1));const e=map.get(key)??{key,name,quantity:0,spells:[]};e.quantity+=n;if(spell)e.spells.push({name:spell.name??"Sort",count:Math.max(1,Math.floor(Number(mult)||1))});map.set(key,e);}
-function collectReq(map,value,spell,mult){if(value===null||value===undefined||value==="")return;if(Array.isArray(value)){for(const x of value)collectReq(map,x,spell,mult);return;}if(typeof value==="string"){for(const x of arr(value))addReq(map,x,1,spell,mult);return;}if(typeof value==="object"){const name=value.name??value.nom??value.label??value.item??value.itemName??value.component??value.composant??value.slug??value.id;const qty=value.quantity??value.quantite??value.qty??value.nombre??value.count??value.value??1;if(name)addReq(map,name,qty,spell,mult);}}
-function requirements(spell,mult=1){const s=spell?.system??{},f=spell?.flags?.add2e??{},m=new Map();for(const field of [s.composants_requis,s.composantsMateriels,s.composants_materiels,s.composantsMateriel,s.composant_materiel,s.composantMateriel,s.materiel,s.matériel,s.material,s.materialComponent,s.materialComponents,s.material_components,s.requiredComponents,s.componentsRequired,s.components?.material,s.components?.materials,s.composants,f.composants_requis,f.composants,f.components,f.requiredComponents])collectReq(m,field,spell,mult);for(const tag of [...arr(s.tags),...arr(s.effectTags),...arr(f.tags),...arr(f.effectTags)]){const t=String(tag??"").trim();if(/^composant[:_]/i.test(t))addReq(m,t.replace(/^composant[:_]/i,""),1,spell,mult);}return [...m.values()];}
-function sumPrepared(v){if(typeof v==="number"&&Number.isFinite(v))return Math.max(0,v);if(typeof v==="string")return Math.max(0,Number(v)||0);if(!v||typeof v!=="object")return 0;let n=0;for(const x of Object.values(v))n+=sumPrepared(x);return n;}
-function preparedCount(spell){const f=spell?.flags?.add2e??{},s=spell?.system??{};let best=0;for(const v of [spell?.getFlag?.("add2e","memorizedCount"),f.memorizedCount,f.preparedCount,s.memorizedCount,s.preparedCount,s.prepared,s.memorise,s.memorisé,s.memorized,s.memorisation?.value,s.memorisation,s.slots?.prepared,s.slots?.value]){const n=Number(v);if(Number.isFinite(n)&&n>best)best=n;}best=Math.max(best,sumPrepared(spell?.getFlag?.("add2e","memorizedByList")),sumPrepared(f.memorizedByList),sumPrepared(f.preparedByList),sumPrepared(s.memorizedByList),sumPrepared(s.preparedByList));try{const n=Number(globalThis.add2eGetTotalMemorizedCount?.(spell));if(Number.isFinite(n)&&n>best)best=n;}catch(_e){}return Math.max(0,best);}
-function objectPower(spell){const s=spell?.system??{};if(s.isPower===true||s.isObjectPower===true||s.sourceWeaponId||s.sourceItemId||s.powerIndex!==undefined)return true;try{return globalThis.add2eIsObjectMagicSpellForPreparation?.(spell)===true;}catch(_e){return false;}}
-function actorSpells(actor){return Array.from(actor?.items??[]).filter(i=>String(i?.type??"").toLowerCase()==="sort"&&!objectPower(i)).sort((a,b)=>String(a.name).localeCompare(String(b.name)));}
-function reqMap(spells,prepared=false){const out=new Map();for(const spell of spells){const count=preparedCount(spell);if(prepared&&count<=0)continue;for(const r of requirements(spell,prepared?count:1)){const e=out.get(r.key)??{key:r.key,name:r.name,quantity:0,spells:[]};e.quantity+=r.quantity;e.spells.push(...r.spells);out.set(r.key,e);}}return out;}
-function itemKeys(item){const s=item?.system??{},f=item?.flags?.add2e??{};return uniq([item?.name,s.nom,s.slug,s.composant,s.component,s.categorie,s.category,s.sousType,s.sous_type,f.slug,f.componentSlug,...arr(s.tags),...arr(s.effectTags),...arr(f.tags),...arr(f.effectTags)].map(v=>norm(String(v??"").replace(/^(composant|component|spell_component)[:_]/i,""))));}
-function matchReq(item,req){const keys=itemKeys(item);return keys.includes(req.key)||keys.some(k=>k&&(k.includes(req.key)||req.key.includes(k)));}
-function spellLabels(req){const g=new Map();for(const s of req?.spells??[]){const n=s.name??"Sort";g.set(n,Math.max(g.get(n)??0,Number(s.count)||1));}return [...g.entries()].map(([n,c])=>c>1?`${n} ×${c}`:n);}
-function relevance(actor,componentItems){const spells=actorSpells(actor),known=reqMap(spells,false),prepared=reqMap(spells,true),mk=new Set(),mp=new Set(),byItem=new Map();for(const item of componentItems){const kr=[...known.values()].filter(r=>matchReq(item,r)),pr=[...prepared.values()].filter(r=>matchReq(item,r));for(const r of kr)mk.add(r.key);for(const r of pr)mp.add(r.key);byItem.set(item.id,{known:kr,prepared:pr,knownNeed:kr.reduce((s,r)=>s+r.quantity,0),preparedNeed:pr.reduce((s,r)=>s+r.quantity,0),spellNames:uniq([...kr,...pr].flatMap(spellLabels))});}const missing=[...[...prepared.values()].filter(r=>!mp.has(r.key)).map(req=>({req,scope:"prepared"})),...[...known.values()].filter(r=>!mk.has(r.key)&&!prepared.has(r.key)).map(req=>({req,scope:"known"}))];return{byItem,missing,knownCount:known.size,preparedCount:prepared.size};}
+function onlyCode(v) { const t = lower(v).replace(/[^a-z]/g, ""); return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(t); }
 
-class Add2eVendorApp extends foundry.applications.api.ApplicationV2{
-  static DEFAULT_OPTIONS={id:"add2e-vendor-app-{id}",classes:["add2e","add2e-vendor-app"],tag:"section",window:{title:"Boutique ADD2E",resizable:true},position:{width:1120,height:720}};
-  constructor({vendor,buyer}={},options={}){super(options);this.vendor=vendor;this.buyer=buyer??getBuyer();this.activeTab="all";this.searchText="";}
-  get title(){return `${this.vendor?.name??"Boutique"}${this.buyer?` — ${this.buyer.name}`:""}`;}
-  async _prepareContext(){const stock=Array.from(this.vendor?.items??[]).filter(isStockItem).sort((a,b)=>String(a.name).localeCompare(String(b.name)));const rel=this.buyer?relevance(this.buyer,stock.filter(i=>vendorKind(i)==="Composant")):{byItem:new Map(),missing:[],knownCount:0,preparedCount:0};const items=stock.map(item=>{const kind=vendorKind(item);const tab=kind==="Composant"?"components":kind==="Projectile"?"projectiles":"equipment";const r=rel.byItem.get(item.id)??{knownNeed:0,preparedNeed:0,spellNames:[]};const tabs=[tab];if(r.preparedNeed>0)tabs.push("components-prepared");if(r.knownNeed>0)tabs.push("components-known");return{id:item.id,name:item.name,img:item.img||"icons/svg/item-bag.svg",kind,tab,relevantTabs:tabs,stock:quantity(item),priceLabel:formatMoney(priceCopper(item)),preparedNeed:r.preparedNeed,knownNeed:r.knownNeed,spellNames:r.spellNames,missing:false,search:lower(`${item.name} ${kind} ${item.system?.categorie??""} ${item.system?.sousType??""} ${item.system?.sous_type??""} ${r.spellNames.join(" ")}`)}});for(const e of rel.missing){const req=e.req;items.push({id:`missing-${req.key}-${e.scope}`,name:req.name,img:"icons/svg/hazard.svg",kind:"Composant",tab:"components",relevantTabs:[e.scope==="prepared"?"components-prepared":"components-known"],stock:0,priceLabel:"Absent du stock",preparedNeed:e.scope==="prepared"?req.quantity:0,knownNeed:e.scope==="known"?req.quantity:0,spellNames:spellLabels(req),missing:true,search:lower(`${req.name} composant absent ${spellLabels(req).join(" ")}`)});}return{vendor:this.vendor,buyer:this.buyer,buyerMoneyLabel:this.buyer?formatMoney(getMoney(this.buyer)):"Gestion MJ",buyerOptions:buyerChoices(this.buyer?.id),items,isGM:game.user?.isGM===true,activeTab:this.activeTab,searchText:this.searchText,componentPreparedCount:rel.preparedCount,componentKnownCount:rel.knownCount};}
-  _visible(item,ctx,q){return(ctx.activeTab==="all"?!item.missing:item.relevantTabs.includes(ctx.activeTab))&&(!q||item.search.includes(q));}
-  _badges(item){const b=[];if(item.preparedNeed>0)b.push(`<span class="add2e-vendor-tag prepared">Mémorisés : ${item.preparedNeed}</span>`);if(item.knownNeed>0)b.push(`<span class="add2e-vendor-tag known">Connus : ${item.knownNeed}</span>`);if(item.missing)b.push(`<span class="add2e-vendor-tag missing">Absent du stock</span>`);if(!b.length)b.push(`<span class="add2e-vendor-tag">${esc(item.kind)}</span>`);return `<div class="add2e-vendor-tags">${b.join("")}</div>`;}
-  _spells(item){if(!item.spellNames?.length)return "—";const names=item.spellNames.slice(0,4).map(n=>`<span>${esc(n)}</span>`).join("");const more=item.spellNames.length>4?`<span>+ ${item.spellNames.length-4} autre(s)</span>`:"";return `<div class="add2e-vendor-spells"><strong>Sorts :</strong>${names}${more}</div>`;}
-  async _renderHTML(ctx){const tab=(t,l,title="")=>`<button type="button" data-tab="${t}" class="${ctx.activeTab===t?"active":""}" ${title?`title="${esc(title)}"`:""}>${l}</button>`;const q=lower(ctx.searchText);const rows=ctx.items.map(item=>{const hidden=!this._visible(item,ctx,q),disabled=item.stock<=0||!ctx.buyer||item.missing;const gm=ctx.isGM?`<td><div class="add2e-vendor-gm-actions"><input class="add2e-vendor-restock-qty" type="number" min="0" value="${item.stock}" title="Quantité de restock" ${item.missing?"disabled":""}><button type="button" class="add2e-vendor-restock-set add2e-vendor-icon-btn" ${item.missing?"disabled":""} title="Définir le restock"><i class="fas fa-boxes-stacked"></i></button><button type="button" class="add2e-vendor-assign add2e-vendor-icon-btn" ${disabled?"disabled":""} title="Affecter à un token de la scène"><i class="fas fa-user-plus"></i></button></div></td>`:"";return `<tr class="${item.missing?"add2e-vendor-missing":""}" data-item-id="${esc(item.id)}" data-tabs="${esc(item.relevantTabs.join(" "))}" data-search="${esc(item.search)}" data-missing="${item.missing?"1":"0"}" style="${hidden?"display:none;":""}"><td class="add2e-vendor-item"><div class="add2e-vendor-item-wrap"><img src="${esc(item.img)}" alt=""><span>${esc(item.name)}</span></div></td><td>${this._badges(item)}</td><td>${this._spells(item)}</td><td>${esc(item.priceLabel)}</td><td>${item.stock}</td><td><input class="add2e-vendor-buy-qty" type="number" min="1" value="1" title="Quantité à acheter" ${item.missing?"disabled":""}></td><td><div class="add2e-vendor-actions"><button type="button" class="add2e-vendor-buy add2e-vendor-icon-btn" ${disabled?"disabled":""} title="Acheter"><i class="fas fa-cart-shopping"></i></button></div></td>${gm}</tr>`;}).join("");const col=ctx.isGM?8:7;const buyerBlock=ctx.isGM?`<label class="add2e-vendor-buyer-label">Dans la peau de <select class="add2e-vendor-buyer-select">${ctx.buyerOptions}</select></label>`:`<strong>${esc(ctx.buyer?.name??"aucun personnage assigné")}</strong>`;const div=document.createElement("div");div.className="add2e-vendor-root";div.innerHTML=`<style>${ADD2E_VENDOR_STYLE}</style><header class="add2e-vendor-header"><div><h2>${esc(ctx.vendor?.name??"Boutique")}</h2><p>Acheteur : ${buyerBlock}</p></div><div class="add2e-vendor-money">${esc(ctx.buyerMoneyLabel)}</div></header><nav class="add2e-vendor-tabs">${tab("all","Tous")}${tab("components-prepared",`Composants sorts mémorisés (${ctx.componentPreparedCount})`,"Composants matériels requis par les sorts actuellement mémorisés")}${tab("components-known",`Composants sorts connus (${ctx.componentKnownCount})`,"Composants matériels requis par tous les sorts connus du personnage")}${tab("components","Tous composants")}${tab("projectiles","Projectiles")}${tab("equipment","Équipements")}${ctx.isGM?`<button type="button" class="add2e-vendor-restock-all" title="Réapprovisionner tout le stock"><i class="fas fa-boxes-stacked"></i> Restock global</button>`:""}</nav><div class="add2e-vendor-search"><input type="search" class="add2e-vendor-search-input" placeholder="Rechercher un article, composant ou sort..." value="${esc(ctx.searchText)}"></div><div class="add2e-vendor-table-wrap"><table class="add2e-vendor-table"><thead><tr><th>Article</th><th>Usage</th><th>Sorts concernés</th><th>Prix</th><th>Stock</th><th>Qté</th><th>Achat</th>${ctx.isGM?`<th>Restock / Affectation MJ</th>`:""}</tr></thead><tbody>${rows||`<tr><td colspan="${col}">Aucun article en stock.</td></tr>`}</tbody></table></div>`;return div;}
-  _replaceHTML(result,content){content.style.overflow="hidden";content.style.padding="0";content.style.background="linear-gradient(180deg,#fff8df,#ead39b)";content.replaceChildren(result);}
-  async _onRender(context,options={}){await super._onRender?.(context,options);const root=this.element?.querySelector?.(".add2e-vendor-root")??this.element;if(!root)return;const wc=this.element?.closest?.(".application")?.querySelector?.(".window-content")??this.element?.parentElement;if(wc){wc.style.overflow="hidden";wc.style.padding="0";wc.style.background="linear-gradient(180deg,#fff8df,#ead39b)";}root.querySelector(".add2e-vendor-buyer-select")?.addEventListener("change",ev=>{this.buyer=game.actors?.get?.(ev.currentTarget.value)??this.buyer;this.render({force:true});});root.querySelectorAll(".add2e-vendor-tabs button[data-tab]").forEach(b=>b.addEventListener("click",ev=>{this.activeTab=ev.currentTarget.dataset.tab||"all";this._applyFilters(root);}));root.querySelector(".add2e-vendor-search-input")?.addEventListener("input",ev=>{this.searchText=ev.currentTarget.value??"";this._applyFilters(root);});root.querySelectorAll(".add2e-vendor-buy").forEach(b=>b.addEventListener("click",async ev=>{const row=ev.currentTarget.closest("tr[data-item-id]");if(!row||row.dataset.missing==="1")return;const item=this.vendor?.items?.get(row.dataset.itemId);const qty=row.querySelector?.(".add2e-vendor-buy-qty")?.value??1;const ok=await buy({vendor:this.vendor,buyer:this.buyer,item,quantity:qty});if(ok)this.render({force:true});}));root.querySelectorAll(".add2e-vendor-restock-set").forEach(b=>b.addEventListener("click",async ev=>{const row=ev.currentTarget.closest("tr[data-item-id]");if(!row||row.dataset.missing==="1")return;const item=this.vendor?.items?.get(row.dataset.itemId);const qty=row.querySelector?.(".add2e-vendor-restock-qty")?.value??0;await setStock(item,qty);this.render({force:true});}));root.querySelectorAll(".add2e-vendor-assign").forEach(b=>b.addEventListener("click",async ev=>{const row=ev.currentTarget.closest("tr[data-item-id]");if(!row||row.dataset.missing==="1")return;const item=this.vendor?.items?.get(row.dataset.itemId);await this._assignItemDialog(item);this.render({force:true});}));root.querySelector(".add2e-vendor-restock-all")?.addEventListener("click",async()=>{await restockAll(this.vendor);this.render({force:true});});this._applyFilters(root);}
-  async _assignItemDialog(item){if(!game.user?.isGM||!item)return false;const choices=sceneTokenChoices();if(!choices.length){await alertBox("Aucun token cible","Aucun token non vendeur n’est présent sur la scène.");return false;}const options=choices.map(c=>`<option value="${esc(c.tokenId)}">${esc(c.label)}</option>`).join("");const content=`<form><div class="add2e-vendor-assign-dialog"><p>Affecter <b>${esc(item.name)}</b> depuis le stock du vendeur.</p><label>Token cible<select name="tokenId">${options}</select></label><label>Quantité<input name="quantity" type="number" min="1" max="${quantity(item)}" value="1"></label><p class="hint">Stock disponible : ${quantity(item)}</p></div></form>`;const DialogV2=foundry?.applications?.api?.DialogV2;if(!DialogV2?.confirm)return false;let formData=null;const ok=await DialogV2.confirm({window:{title:"Affecter un article"},content,yes:{label:"Affecter",callback:(event,button)=>{const form=button?.form??button?.closest?.("form")??event?.target?.closest?.("form")??document.querySelector(".add2e-vendor-assign-dialog")?.closest?.("form");formData={tokenId:form?.querySelector?.("[name='tokenId']")?.value,quantity:form?.querySelector?.("[name='quantity']")?.value};return true;}},no:{label:"Annuler"},modal:true});if(!ok||!formData)return false;const token=choices.find(c=>c.tokenId===formData.tokenId)?.token??canvas?.tokens?.get?.(formData.tokenId)??null;const result=await assignItemToToken({vendor:this.vendor,item,token,quantity:formData.quantity});if(result?.ok)ui.notifications?.info?.(result.message);else await alertBox("Affectation impossible",result?.message??"Impossible d’affecter cet article.");return result?.ok===true;}
-  _applyFilters(root){const q=lower(this.searchText);root.querySelectorAll(".add2e-vendor-tabs button[data-tab]").forEach(btn=>btn.classList.toggle("active",btn.dataset.tab===this.activeTab));root.querySelectorAll("tbody tr[data-item-id]").forEach(row=>{const tabs=String(row.dataset.tabs??"").split(/\s+/g).filter(Boolean);const tabOk=this.activeTab==="all"?row.dataset.missing!=="1":tabs.includes(this.activeTab);const searchOk=!q||lower(row.dataset.search).includes(q);row.style.display=tabOk&&searchOk?"":"none";});}
+function actorTypeLabel(actor) {
+  const t = String(actor?.type ?? "").toLowerCase();
+  if (t === "personnage") return "Personnages";
+  if (t === "monster") return "Monstres";
+  return "Autres acteurs";
 }
 
-export async function openVendor({vendor=null,buyer=null}={}){vendor=vendor??findVendor();if(!vendor)vendor=await createVendor();if(!vendor)return null;buyer=buyer??getBuyer();if(!buyer&&!game.user?.isGM){await alertBox("Aucun acheteur","Aucun personnage joueur n’est assigné ou sélectionné pour acheter chez ce vendeur.");return null;}const app=new Add2eVendorApp({vendor,buyer});app.render({force:true});return app;}
-async function openVendorFromToken(token){const vendor=token?.actor??null;if(!isVendorActor(vendor))return false;const now=Date.now();const key=`${vendor.id}:${game.user?.id??"user"}`;const last=globalThis.__ADD2E_VENDOR_LAST_OPEN??{};if(last[key]&&now-last[key]<650)return true;last[key]=now;globalThis.__ADD2E_VENDOR_LAST_OPEN=last;await openVendor({vendor,buyer:getBuyer()});return true;}
-function bindVendorToken(token){if(!token||token.__add2eVendorBoundV15)return;if(!isVendorActor(token.actor))return;token.__add2eVendorBoundV15=true;try{token.cursor="pointer";}catch(_err){}try{token.eventMode="static";}catch(_err){}try{token.interactive=true;}catch(_err){}const handler=()=>window.setTimeout(()=>openVendorFromToken(token),0);try{token.on?.("pointertap",handler);}catch(_err){}try{token.on?.("click",handler);}catch(_err){}}
-export function bindAllVendorTokens(){for(const token of canvas?.tokens?.placeables??[])bindVendorToken(token);}
-export function patchVendorTokenClick(){if(globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V15)return;globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V15=true;const TokenClass=foundry?.canvas?.placeables?.Token??CONFIG?.Token?.objectClass??globalThis.Token;const proto=TokenClass?.prototype;if(proto&&typeof proto._onClickLeft==="function"){const original=proto._onClickLeft;proto._onClickLeft=function add2eVendorOnClickLeft(event){const result=original.call(this,event);try{if(isVendorActor(this.actor))window.setTimeout(()=>openVendorFromToken(this),0);}catch(err){console.warn("[ADD2E][VENDOR][TOKEN_CLICK]",err);}return result;};}Hooks.on("canvasReady",bindAllVendorTokens);Hooks.on("createToken",()=>window.setTimeout(bindAllVendorTokens,100));Hooks.on("updateToken",()=>window.setTimeout(bindAllVendorTokens,100));Hooks.on("controlToken",(token,controlled)=>{if(controlled&&isVendorActor(token?.actor))window.setTimeout(()=>openVendorFromToken(token),0);});}
-export function registerVendorDirectoryButton(){Hooks.on("renderActorDirectory",(_app,html)=>{if(!game.user?.isGM)return;const root=html?.jquery?html[0]:html;if(!root?.querySelector||root.querySelector(".add2e-open-default-vendor"))return;const button=document.createElement("button");button.type="button";button.className="add2e-open-default-vendor";button.innerHTML=`<i class="fas fa-coins"></i> Boutique composants/projectiles`;button.addEventListener("click",()=>openVendor());root.querySelector(".directory-footer")?.prepend(button);});}
-export function registerUiGlobals(){game.add2e=game.add2e??{};game.add2e.openVendor=openVendor;game.add2e.vendorAppVersion=ADD2E_VENDOR_APP_VERSION;globalThis.add2eOpenVendor=openVendor;globalThis.ADD2E_VENDOR_VERSION=ADD2E_VENDOR_VERSION;globalThis.ADD2E_VENDOR_APP_VERSION=ADD2E_VENDOR_APP_VERSION;}
+function buyerChoices(selectedId = "") {
+  const groups = new Map();
+  for (const actor of game.actors ?? []) {
+    if (!actor?.id || isVendorActor(actor)) continue;
+    const label = actorTypeLabel(actor);
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(actor);
+  }
+  for (const actors of groups.values()) actors.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  return [...groups.entries()].map(([label, actors]) => `<optgroup label="${esc(label)}">${actors.map(a => `<option value="${esc(a.id)}" ${a.id === selectedId ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</optgroup>`).join("");
+}
+
+function addReq(map, raw, qty = 1, spell = null, mult = 1) {
+  const name = String(raw ?? "").trim();
+  if (!name || onlyCode(name)) return;
+  const key = norm(name);
+  if (!key) return;
+  const n = Math.max(1, Math.floor(Number(qty) || 1)) * Math.max(1, Math.floor(Number(mult) || 1));
+  const e = map.get(key) ?? { key, name, quantity: 0, spells: [] };
+  e.quantity += n;
+  if (spell) e.spells.push({ name: spell.name ?? "Sort", count: Math.max(1, Math.floor(Number(mult) || 1)) });
+  map.set(key, e);
+}
+
+function collectReq(map, value, spell, mult) {
+  if (value === null || value === undefined || value === "") return;
+  if (Array.isArray(value)) { for (const x of value) collectReq(map, x, spell, mult); return; }
+  if (typeof value === "string") { for (const x of arr(value)) addReq(map, x, 1, spell, mult); return; }
+  if (typeof value === "object") {
+    const name = value.name ?? value.nom ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
+    const qty = value.quantity ?? value.quantite ?? value.qty ?? value.nombre ?? value.count ?? value.value ?? 1;
+    if (name) addReq(map, name, qty, spell, mult);
+  }
+}
+
+function requirements(spell, mult = 1) {
+  const s = spell?.system ?? {}, f = spell?.flags?.add2e ?? {}, m = new Map();
+  for (const field of [s.composants_requis, s.composantsMateriels, s.composants_materiels, s.composantsMateriel, s.composant_materiel, s.composantMateriel, s.materiel, s.matériel, s.material, s.materialComponent, s.materialComponents, s.material_components, s.requiredComponents, s.componentsRequired, s.components?.material, s.components?.materials, s.composants, f.composants_requis, f.composants, f.components, f.requiredComponents]) collectReq(m, field, spell, mult);
+  for (const tag of [...arr(s.tags), ...arr(s.effectTags), ...arr(f.tags), ...arr(f.effectTags)]) {
+    const t = String(tag ?? "").trim();
+    if (/^composant[:_]/i.test(t)) addReq(m, t.replace(/^composant[:_]/i, ""), 1, spell, mult);
+  }
+  return [...m.values()];
+}
+
+function sumPrepared(v) {
+  if (typeof v === "number" && Number.isFinite(v)) return Math.max(0, v);
+  if (typeof v === "string") return Math.max(0, Number(v) || 0);
+  if (!v || typeof v !== "object") return 0;
+  let n = 0;
+  for (const x of Object.values(v)) n += sumPrepared(x);
+  return n;
+}
+
+function preparedCount(spell) {
+  const f = spell?.flags?.add2e ?? {}, s = spell?.system ?? {};
+  let best = 0;
+  for (const v of [spell?.getFlag?.("add2e", "memorizedCount"), f.memorizedCount, f.preparedCount, s.memorizedCount, s.preparedCount, s.prepared, s.memorise, s.memorisé, s.memorized, s.memorisation?.value, s.memorisation, s.slots?.prepared, s.slots?.value]) {
+    const n = Number(v);
+    if (Number.isFinite(n) && n > best) best = n;
+  }
+  best = Math.max(best, sumPrepared(spell?.getFlag?.("add2e", "memorizedByList")), sumPrepared(f.memorizedByList), sumPrepared(f.preparedByList), sumPrepared(s.memorizedByList), sumPrepared(s.preparedByList));
+  try { const n = Number(globalThis.add2eGetTotalMemorizedCount?.(spell)); if (Number.isFinite(n) && n > best) best = n; } catch (_e) {}
+  return Math.max(0, best);
+}
+
+function objectPower(spell) {
+  const s = spell?.system ?? {};
+  if (s.isPower === true || s.isObjectPower === true || s.sourceWeaponId || s.sourceItemId || s.powerIndex !== undefined) return true;
+  try { return globalThis.add2eIsObjectMagicSpellForPreparation?.(spell) === true; } catch (_e) { return false; }
+}
+
+function actorSpells(actor) {
+  return Array.from(actor?.items ?? []).filter(i => String(i?.type ?? "").toLowerCase() === "sort" && !objectPower(i)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+}
+
+function reqMap(spells, prepared = false) {
+  const out = new Map();
+  for (const spell of spells) {
+    const count = preparedCount(spell);
+    if (prepared && count <= 0) continue;
+    for (const r of requirements(spell, prepared ? count : 1)) {
+      const e = out.get(r.key) ?? { key: r.key, name: r.name, quantity: 0, spells: [] };
+      e.quantity += r.quantity;
+      e.spells.push(...r.spells);
+      out.set(r.key, e);
+    }
+  }
+  return out;
+}
+
+function itemKeys(item) {
+  const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
+  return uniq([item?.name, s.nom, s.slug, s.composant, s.component, s.categorie, s.category, s.sousType, s.sous_type, f.slug, f.componentSlug, ...arr(s.tags), ...arr(s.effectTags), ...arr(f.tags), ...arr(f.effectTags)].map(v => norm(String(v ?? "").replace(/^(composant|component|spell_component)[:_]/i, ""))));
+}
+
+function matchReq(item, req) {
+  const keys = itemKeys(item);
+  return keys.includes(req.key) || keys.some(k => k && (k.includes(req.key) || req.key.includes(k)));
+}
+
+function spellLabels(req) {
+  const g = new Map();
+  for (const s of req?.spells ?? []) {
+    const n = s.name ?? "Sort";
+    g.set(n, Math.max(g.get(n) ?? 0, Number(s.count) || 1));
+  }
+  return [...g.entries()].map(([n, c]) => c > 1 ? `${n} ×${c}` : n);
+}
+
+function relevance(actor, componentItems) {
+  const spells = actorSpells(actor), known = reqMap(spells, false), prepared = reqMap(spells, true), mk = new Set(), mp = new Set(), byItem = new Map();
+  for (const item of componentItems) {
+    const kr = [...known.values()].filter(r => matchReq(item, r)), pr = [...prepared.values()].filter(r => matchReq(item, r));
+    for (const r of kr) mk.add(r.key);
+    for (const r of pr) mp.add(r.key);
+    byItem.set(item.id, { known: kr, prepared: pr, knownNeed: kr.reduce((s, r) => s + r.quantity, 0), preparedNeed: pr.reduce((s, r) => s + r.quantity, 0), spellNames: uniq([...kr, ...pr].flatMap(spellLabels)) });
+  }
+  const missing = [
+    ...[...prepared.values()].filter(r => !mp.has(r.key)).map(req => ({ req, scope: "prepared" })),
+    ...[...known.values()].filter(r => !mk.has(r.key) && !prepared.has(r.key)).map(req => ({ req, scope: "known" }))
+  ];
+  return { byItem, missing, knownCount: known.size, preparedCount: prepared.size };
+}
+
+function componentStockData(req) {
+  const key = norm(req?.key ?? req?.name);
+  const name = String(req?.name ?? req?.key ?? "Composant").trim();
+  const stock = Math.max(20, Number(req?.quantity) || 1);
+  return {
+    name,
+    type: "objet",
+    img: "icons/svg/item-bag.svg",
+    system: {
+      categorie: "composant_sort",
+      sousType: "composant",
+      slug: key,
+      composant: key,
+      quantite: stock,
+      prix: { valeur: 1, devise: "po" },
+      tags: ["composant_sort", `composant:${key}`]
+    },
+    flags: {
+      add2e: {
+        vendorItem: true,
+        vendorKind: "component",
+        vendorStockMax: stock,
+        autoGeneratedComponent: true,
+        componentSlug: key
+      }
+    }
+  };
+}
+
+class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
+  static DEFAULT_OPTIONS = { id: "add2e-vendor-app-{id}", classes: ["add2e", "add2e-vendor-app"], tag: "section", window: { title: "Boutique ADD2E", resizable: true }, position: { width: 1120, height: 720 } };
+
+  constructor({ vendor, buyer } = {}, options = {}) {
+    super(options);
+    this.vendor = vendor;
+    this.buyer = buyer ?? getBuyer();
+    this.activeTab = "all";
+    this.searchText = "";
+    this._autoStockRunning = false;
+  }
+
+  get title() { return `${this.vendor?.name ?? "Boutique"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
+
+  _stock() {
+    return Array.from(this.vendor?.items ?? []).filter(isStockItem).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  }
+
+  async _ensureMissingComponents() {
+    if (!game.user?.isGM || !this.vendor || !this.buyer || this._autoStockRunning) return 0;
+    this._autoStockRunning = true;
+    try {
+      const stock = this._stock();
+      const componentItems = stock.filter(i => vendorKind(i) === "Composant");
+      const rel = relevance(this.buyer, componentItems);
+      const existing = new Set(componentItems.flatMap(itemKeys));
+      const seen = new Set();
+      const create = [];
+      for (const { req } of rel.missing) {
+        const key = norm(req?.key ?? req?.name);
+        if (!key || existing.has(key) || seen.has(key)) continue;
+        seen.add(key);
+        create.push(componentStockData(req));
+      }
+      if (create.length) await this.vendor.createEmbeddedDocuments("Item", create, { add2eReason: "vendor-auto-missing-spell-components" });
+      if (create.length) ui.notifications?.info?.(`${this.vendor.name} : ${create.length} composant(s) requis ajouté(s) au stock.`);
+      return create.length;
+    } finally {
+      this._autoStockRunning = false;
+    }
+  }
+
+  async _prepareContext() {
+    await this._ensureMissingComponents();
+    const stock = this._stock();
+    const rel = this.buyer ? relevance(this.buyer, stock.filter(i => vendorKind(i) === "Composant")) : { byItem: new Map(), missing: [], knownCount: 0, preparedCount: 0 };
+    const items = stock.map(item => {
+      const kind = vendorKind(item);
+      const tab = kind === "Composant" ? "components" : kind === "Projectile" ? "projectiles" : "equipment";
+      const r = rel.byItem.get(item.id) ?? { knownNeed: 0, preparedNeed: 0, spellNames: [] };
+      const tabs = [tab];
+      if (r.preparedNeed > 0) tabs.push("components-prepared");
+      if (r.knownNeed > 0) tabs.push("components-known");
+      return { id: item.id, name: item.name, img: item.img || "icons/svg/item-bag.svg", kind, tab, relevantTabs: tabs, stock: quantity(item), priceLabel: formatMoney(priceCopper(item)), preparedNeed: r.preparedNeed, knownNeed: r.knownNeed, spellNames: r.spellNames, missing: false, search: lower(`${item.name} ${kind} ${item.system?.categorie ?? ""} ${item.system?.sousType ?? ""} ${item.system?.sous_type ?? ""} ${r.spellNames.join(" ")}`) };
+    });
+    for (const e of rel.missing) {
+      const req = e.req;
+      items.push({ id: `missing-${req.key}-${e.scope}`, name: req.name, img: "icons/svg/hazard.svg", kind: "Composant", tab: "components", relevantTabs: [e.scope === "prepared" ? "components-prepared" : "components-known"], stock: 0, priceLabel: "Absent du stock", preparedNeed: e.scope === "prepared" ? req.quantity : 0, knownNeed: e.scope === "known" ? req.quantity : 0, spellNames: spellLabels(req), missing: true, search: lower(`${req.name} composant absent ${spellLabels(req).join(" ")}`) });
+    }
+    return { vendor: this.vendor, buyer: this.buyer, buyerMoneyLabel: this.buyer ? formatMoney(getMoney(this.buyer)) : "Gestion MJ", buyerOptions: buyerChoices(this.buyer?.id), items, isGM: game.user?.isGM === true, activeTab: this.activeTab, searchText: this.searchText, componentPreparedCount: rel.preparedCount, componentKnownCount: rel.knownCount };
+  }
+
+  _visible(item, ctx, q) { return (ctx.activeTab === "all" ? !item.missing : item.relevantTabs.includes(ctx.activeTab)) && (!q || item.search.includes(q)); }
+  _badges(item) { const b = []; if (item.preparedNeed > 0) b.push(`<span class="add2e-vendor-tag prepared">Mémorisés : ${item.preparedNeed}</span>`); if (item.knownNeed > 0) b.push(`<span class="add2e-vendor-tag known">Connus : ${item.knownNeed}</span>`); if (item.missing) b.push(`<span class="add2e-vendor-tag missing">Absent du stock</span>`); if (!b.length) b.push(`<span class="add2e-vendor-tag">${esc(item.kind)}</span>`); return `<div class="add2e-vendor-tags">${b.join("")}</div>`; }
+  _spells(item) { if (!item.spellNames?.length) return "—"; const names = item.spellNames.slice(0, 4).map(n => `<span>${esc(n)}</span>`).join(""); const more = item.spellNames.length > 4 ? `<span>+ ${item.spellNames.length - 4} autre(s)</span>` : ""; return `<div class="add2e-vendor-spells"><strong>Sorts :</strong>${names}${more}</div>`; }
+
+  async _renderHTML(ctx) {
+    const tab = (t, l, title = "") => `<button type="button" data-tab="${t}" class="${ctx.activeTab === t ? "active" : ""}" ${title ? `title="${esc(title)}"` : ""}>${l}</button>`;
+    const q = lower(ctx.searchText);
+    const rows = ctx.items.map(item => {
+      const hidden = !this._visible(item, ctx, q), disabled = item.stock <= 0 || !ctx.buyer || item.missing;
+      const gm = ctx.isGM ? `<td><div class="add2e-vendor-gm-actions"><input class="add2e-vendor-restock-qty" type="number" min="0" value="${item.stock}" title="Quantité de restock" ${item.missing ? "disabled" : ""}><button type="button" class="add2e-vendor-restock-set add2e-vendor-icon-btn" ${item.missing ? "disabled" : ""} title="Définir le restock"><i class="fas fa-boxes-stacked"></i></button><button type="button" class="add2e-vendor-assign add2e-vendor-icon-btn" ${disabled ? "disabled" : ""} title="Affecter à un token de la scène"><i class="fas fa-user-plus"></i></button></div></td>` : "";
+      return `<tr class="${item.missing ? "add2e-vendor-missing" : ""}" data-item-id="${esc(item.id)}" data-tabs="${esc(item.relevantTabs.join(" "))}" data-search="${esc(item.search)}" data-missing="${item.missing ? "1" : "0"}" style="${hidden ? "display:none;" : ""}"><td class="add2e-vendor-item"><div class="add2e-vendor-item-wrap"><img src="${esc(item.img)}" alt=""><span>${esc(item.name)}</span></div></td><td>${this._badges(item)}</td><td>${this._spells(item)}</td><td>${esc(item.priceLabel)}</td><td>${item.stock}</td><td><input class="add2e-vendor-buy-qty" type="number" min="1" value="1" title="Quantité à acheter" ${item.missing ? "disabled" : ""}></td><td><div class="add2e-vendor-actions"><button type="button" class="add2e-vendor-buy add2e-vendor-icon-btn" ${disabled ? "disabled" : ""} title="Acheter"><i class="fas fa-cart-shopping"></i></button></div></td>${gm}</tr>`;
+    }).join("");
+    const col = ctx.isGM ? 8 : 7;
+    const buyerBlock = ctx.isGM ? `<label class="add2e-vendor-buyer-label">Dans la peau de <select class="add2e-vendor-buyer-select">${ctx.buyerOptions}</select></label>` : `<strong>${esc(ctx.buyer?.name ?? "aucun personnage assigné")}</strong>`;
+    const div = document.createElement("div");
+    div.className = "add2e-vendor-root";
+    div.innerHTML = `<style>${ADD2E_VENDOR_STYLE}</style><header class="add2e-vendor-header"><div><h2>${esc(ctx.vendor?.name ?? "Boutique")}</h2><p>Acheteur : ${buyerBlock}</p></div><div class="add2e-vendor-money">${esc(ctx.buyerMoneyLabel)}</div></header><nav class="add2e-vendor-tabs">${tab("all", "Tous")}${tab("components-prepared", `Composants sorts mémorisés (${ctx.componentPreparedCount})`, "Composants matériels requis par les sorts actuellement mémorisés")}${tab("components-known", `Composants sorts connus (${ctx.componentKnownCount})`, "Composants matériels requis par tous les sorts connus du personnage")}${tab("components", "Tous composants")}${tab("projectiles", "Projectiles")}${tab("equipment", "Équipements")}${ctx.isGM ? `<button type="button" class="add2e-vendor-restock-all" title="Réapprovisionner tout le stock"><i class="fas fa-boxes-stacked"></i> Restock global</button>` : ""}</nav><div class="add2e-vendor-search"><input type="search" class="add2e-vendor-search-input" placeholder="Rechercher un article, composant ou sort..." value="${esc(ctx.searchText)}"></div><div class="add2e-vendor-table-wrap"><table class="add2e-vendor-table"><thead><tr><th>Article</th><th>Usage</th><th>Sorts concernés</th><th>Prix</th><th>Stock</th><th>Qté</th><th>Achat</th>${ctx.isGM ? `<th>Restock / Affectation MJ</th>` : ""}</tr></thead><tbody>${rows || `<tr><td colspan="${col}">Aucun article en stock.</td></tr>`}</tbody></table></div>`;
+    return div;
+  }
+
+  _replaceHTML(result, content) { content.style.overflow = "hidden"; content.style.padding = "0"; content.style.background = "linear-gradient(180deg,#fff8df,#ead39b)"; content.replaceChildren(result); }
+
+  async _onRender(context, options = {}) {
+    await super._onRender?.(context, options);
+    const root = this.element?.querySelector?.(".add2e-vendor-root") ?? this.element;
+    if (!root) return;
+    const wc = this.element?.closest?.(".application")?.querySelector?.(".window-content") ?? this.element?.parentElement;
+    if (wc) { wc.style.overflow = "hidden"; wc.style.padding = "0"; wc.style.background = "linear-gradient(180deg,#fff8df,#ead39b)"; }
+    root.querySelector(".add2e-vendor-buyer-select")?.addEventListener("change", ev => { this.buyer = game.actors?.get?.(ev.currentTarget.value) ?? this.buyer; this.render({ force: true }); });
+    root.querySelectorAll(".add2e-vendor-tabs button[data-tab]").forEach(b => b.addEventListener("click", ev => { this.activeTab = ev.currentTarget.dataset.tab || "all"; this._applyFilters(root); }));
+    root.querySelector(".add2e-vendor-search-input")?.addEventListener("input", ev => { this.searchText = ev.currentTarget.value ?? ""; this._applyFilters(root); });
+    root.querySelectorAll(".add2e-vendor-buy").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); const qty = row.querySelector?.(".add2e-vendor-buy-qty")?.value ?? 1; const ok = await buy({ vendor: this.vendor, buyer: this.buyer, item, quantity: qty }); if (ok) this.render({ force: true }); }));
+    root.querySelectorAll(".add2e-vendor-restock-set").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); const qty = row.querySelector?.(".add2e-vendor-restock-qty")?.value ?? 0; await setStock(item, qty); this.render({ force: true }); }));
+    root.querySelectorAll(".add2e-vendor-assign").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); await this._assignItemDialog(item); this.render({ force: true }); }));
+    root.querySelector(".add2e-vendor-restock-all")?.addEventListener("click", async () => { await restockAll(this.vendor); this.render({ force: true }); });
+    this._applyFilters(root);
+  }
+
+  async _assignItemDialog(item) {
+    if (!game.user?.isGM || !item) return false;
+    const choices = sceneTokenChoices();
+    if (!choices.length) { await alertBox("Aucun token cible", "Aucun token non vendeur n’est présent sur la scène."); return false; }
+    const options = choices.map(c => `<option value="${esc(c.tokenId)}">${esc(c.label)}</option>`).join("");
+    const content = `<form><div class="add2e-vendor-assign-dialog"><p>Affecter <b>${esc(item.name)}</b> depuis le stock du vendeur.</p><label>Token cible<select name="tokenId">${options}</select></label><label>Quantité<input name="quantity" type="number" min="1" max="${quantity(item)}" value="1"></label><p class="hint">Stock disponible : ${quantity(item)}</p></div></form>`;
+    const DialogV2 = foundry?.applications?.api?.DialogV2;
+    if (!DialogV2?.confirm) return false;
+    let formData = null;
+    const ok = await DialogV2.confirm({ window: { title: "Affecter un article" }, content, yes: { label: "Affecter", callback: (event, button) => { const form = button?.form ?? button?.closest?.("form") ?? event?.target?.closest?.("form") ?? document.querySelector(".add2e-vendor-assign-dialog")?.closest?.("form"); formData = { tokenId: form?.querySelector?.("[name='tokenId']")?.value, quantity: form?.querySelector?.("[name='quantity']")?.value }; return true; } }, no: { label: "Annuler" }, modal: true });
+    if (!ok || !formData) return false;
+    const token = choices.find(c => c.tokenId === formData.tokenId)?.token ?? canvas?.tokens?.get?.(formData.tokenId) ?? null;
+    const result = await assignItemToToken({ vendor: this.vendor, item, token, quantity: formData.quantity });
+    if (result?.ok) ui.notifications?.info?.(result.message); else await alertBox("Affectation impossible", result?.message ?? "Impossible d’affecter cet article.");
+    return result?.ok === true;
+  }
+
+  _applyFilters(root) {
+    const q = lower(this.searchText);
+    root.querySelectorAll(".add2e-vendor-tabs button[data-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === this.activeTab));
+    root.querySelectorAll("tbody tr[data-item-id]").forEach(row => { const tabs = String(row.dataset.tabs ?? "").split(/\s+/g).filter(Boolean); const tabOk = this.activeTab === "all" ? row.dataset.missing !== "1" : tabs.includes(this.activeTab); const searchOk = !q || lower(row.dataset.search).includes(q); row.style.display = tabOk && searchOk ? "" : "none"; });
+  }
+}
+
+export async function openVendor({ vendor = null, buyer = null } = {}) {
+  vendor = vendor ?? findVendor();
+  if (!vendor) vendor = await createVendor();
+  if (!vendor) return null;
+  buyer = buyer ?? getBuyer();
+  if (!buyer && !game.user?.isGM) { await alertBox("Aucun acheteur", "Aucun personnage joueur n’est assigné ou sélectionné pour acheter chez ce vendeur."); return null; }
+  const app = new Add2eVendorApp({ vendor, buyer });
+  app.render({ force: true });
+  return app;
+}
+
+async function openVendorFromToken(token) {
+  const vendor = token?.actor ?? null;
+  if (!isVendorActor(vendor)) return false;
+  const now = Date.now();
+  const key = `${vendor.id}:${game.user?.id ?? "user"}`;
+  const last = globalThis.__ADD2E_VENDOR_LAST_OPEN ?? {};
+  if (last[key] && now - last[key] < 650) return true;
+  last[key] = now;
+  globalThis.__ADD2E_VENDOR_LAST_OPEN = last;
+  await openVendor({ vendor, buyer: getBuyer() });
+  return true;
+}
+
+function bindVendorToken(token) {
+  if (!token || token.__add2eVendorBoundV15) return;
+  if (!isVendorActor(token.actor)) return;
+  token.__add2eVendorBoundV15 = true;
+  try { token.cursor = "pointer"; } catch (_err) {}
+  try { token.eventMode = "static"; } catch (_err) {}
+  try { token.interactive = true; } catch (_err) {}
+  const handler = () => window.setTimeout(() => openVendorFromToken(token), 0);
+  try { token.on?.("pointertap", handler); } catch (_err) {}
+  try { token.on?.("click", handler); } catch (_err) {}
+}
+
+export function bindAllVendorTokens() { for (const token of canvas?.tokens?.placeables ?? []) bindVendorToken(token); }
+
+export function patchVendorTokenClick() {
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V15) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V15 = true;
+  const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
+  const proto = TokenClass?.prototype;
+  if (proto && typeof proto._onClickLeft === "function") {
+    const original = proto._onClickLeft;
+    proto._onClickLeft = function add2eVendorOnClickLeft(event) {
+      const result = original.call(this, event);
+      try { if (isVendorActor(this.actor)) window.setTimeout(() => openVendorFromToken(this), 0); } catch (err) { console.warn("[ADD2E][VENDOR][TOKEN_CLICK]", err); }
+      return result;
+    };
+  }
+  Hooks.on("canvasReady", bindAllVendorTokens);
+  Hooks.on("createToken", () => window.setTimeout(bindAllVendorTokens, 100));
+  Hooks.on("updateToken", () => window.setTimeout(bindAllVendorTokens, 100));
+  Hooks.on("controlToken", (token, controlled) => { if (controlled && isVendorActor(token?.actor)) window.setTimeout(() => openVendorFromToken(token), 0); });
+}
+
+export function registerVendorDirectoryButton() {
+  Hooks.on("renderActorDirectory", (_app, html) => {
+    if (!game.user?.isGM) return;
+    const root = html?.jquery ? html[0] : html;
+    if (!root?.querySelector || root.querySelector(".add2e-open-default-vendor")) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "add2e-open-default-vendor";
+    button.innerHTML = `<i class="fas fa-coins"></i> Boutique composants/projectiles`;
+    button.addEventListener("click", () => openVendor());
+    root.querySelector(".directory-footer")?.prepend(button);
+  });
+}
+
+export function registerUiGlobals() {
+  game.add2e = game.add2e ?? {};
+  game.add2e.openVendor = openVendor;
+  game.add2e.vendorAppVersion = ADD2E_VENDOR_APP_VERSION;
+  globalThis.ADD2E_VENDOR_APP_VERSION = ADD2E_VENDOR_APP_VERSION;
+}
