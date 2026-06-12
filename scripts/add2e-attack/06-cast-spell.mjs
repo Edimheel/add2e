@@ -1,13 +1,80 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs et composants.
-// Version : 2026-06-11-cast-spell-v20-memorized-by-list
+// Version : 2026-06-12-cast-spell-v21-resolve-actor-spell
 
 import { formatSortChamp } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
 
+function add2eCastNormalize(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eCastListKeys(sortDoc) {
+  try {
+    if (typeof globalThis.add2eGetSpellListsFromItem === "function") {
+      return globalThis.add2eGetSpellListsFromItem(sortDoc).map(add2eCastNormalize).filter(Boolean);
+    }
+  } catch (_e) {}
+  const s = sortDoc?.system ?? {};
+  const f = sortDoc?.flags?.add2e ?? {};
+  const raw = [f.learnedSpellLists, f.knownSpellLists, f.grantedSpellLists, s.spellLists, s.classe, s.class, s.liste].flatMap(v => Array.isArray(v) ? v : v ? [v] : []);
+  return raw.flatMap(v => String(v ?? "").split(/[,;|\n]+/g)).map(add2eCastNormalize).filter(Boolean);
+}
+
+function add2eResolveActorSpellForCast(actorDoc, sortDoc) {
+  if (!actorDoc?.items || !sortDoc) return sortDoc ?? null;
+  if (sortDoc.parent?.id === actorDoc.id && actorDoc.items.get(sortDoc.id)) return sortDoc;
+
+  const directId = String(sortDoc.id ?? sortDoc._id ?? "").trim();
+  if (directId && actorDoc.items.get(directId)) return actorDoc.items.get(directId);
+
+  const sourceUuid = String(sortDoc.uuid ?? sortDoc._stats?.compendiumSource ?? sortDoc.flags?.core?.sourceId ?? "").trim();
+  const importKey = String(sortDoc.flags?.add2e?.importKey ?? "").trim();
+  const routedClass = add2eCastNormalize(sortDoc.flags?.add2e?.routedClass ?? sortDoc.system?.classe ?? "");
+  const targetName = add2eCastNormalize(sortDoc.name);
+  const targetLevel = Number(sortDoc.system?.niveau ?? sortDoc.system?.level ?? 1) || 1;
+  const targetLists = add2eCastListKeys(sortDoc);
+
+  const actorSpells = Array.from(actorDoc.items ?? []).filter(i => String(i.type ?? "").toLowerCase() === "sort");
+
+  let found = actorSpells.find(i => {
+    const src = String(i._stats?.compendiumSource ?? i.flags?.core?.sourceId ?? i.flags?.add2e?.sourceUuid ?? "").trim();
+    return sourceUuid && src && src === sourceUuid;
+  });
+  if (found) return found;
+
+  found = actorSpells.find(i => importKey && String(i.flags?.add2e?.importKey ?? "") === importKey);
+  if (found) return found;
+
+  found = actorSpells.find(i => {
+    if (add2eCastNormalize(i.name) !== targetName) return false;
+    if ((Number(i.system?.niveau ?? i.system?.level ?? 1) || 1) !== targetLevel) return false;
+    const lists = add2eCastListKeys(i);
+    if (targetLists.length && !targetLists.some(k => lists.includes(k))) return false;
+    if (routedClass && lists.length && !lists.includes(routedClass)) return false;
+    return true;
+  });
+  if (found) return found;
+
+  return sortDoc;
+}
+
 export async function add2eCastSpell({ actor, sort } = {}) {
-  if (!actor || !sort) {
-    ui.notifications.warn("Lanceur ou sort introuvable.");
+  if (!actor) {
+    ui.notifications.warn("Lanceur introuvable.");
+    return false;
+  }
+
+  sort = add2eResolveActorSpellForCast(actor, sort);
+
+  if (!sort) {
+    ui.notifications.warn("Sort introuvable sur l'acteur.");
     return false;
   }
 
