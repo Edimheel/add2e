@@ -1,6 +1,6 @@
 // scripts/add2e/handlebars-helpers.mjs
 // ADD2E — Helpers Handlebars partagés.
-// Version : 2026-06-11-remove-thief-skills-template-helper-v1
+// Version : 2026-06-12-spell-components-extended-fields-v1
 
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.json) {
   Handlebars.registerHelper("json", ctx => JSON.stringify(ctx, null, 2));
@@ -156,26 +156,75 @@ function add2eHbsComponentSlug(component) {
   return add2eHbsSlug(s.slug ?? s.composantSlug ?? s.sousType ?? s.sous_type ?? component?.name ?? "");
 }
 
+function add2eHbsIsOnlyComponentCode(value) {
+  const t = String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+  return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(t);
+}
+
+function add2eHbsAddSpellMaterialEntry(entries, raw, quantity = 1, consume = true) {
+  const nom = String(raw ?? "").trim();
+  if (!nom || add2eHbsIsOnlyComponentCode(nom)) return;
+  const slug = add2eHbsSlug(nom);
+  if (!slug) return;
+  if (entries.some(e => e.slug === slug)) return;
+  entries.push({ slug, nom, quantite: Math.max(1, Number(quantity) || 1), consomme: consume !== false });
+}
+
+function add2eHbsCollectSpellMaterials(entries, value) {
+  if (value === null || value === undefined || value === "") return;
+  if (Array.isArray(value)) {
+    for (const entry of value) add2eHbsCollectSpellMaterials(entries, entry);
+    return;
+  }
+  if (typeof value === "string") {
+    for (const part of value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)) add2eHbsAddSpellMaterialEntry(entries, part, 1, true);
+    return;
+  }
+  if (typeof value === "object") {
+    const name = value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
+    const qty = value.quantite ?? value.quantity ?? value.qty ?? value.nombre ?? value.count ?? 1;
+    if (name) add2eHbsAddSpellMaterialEntry(entries, name, qty, value.consomme ?? value.consume ?? true);
+  }
+}
+
 function add2eHbsSpellMaterialEntries(sort) {
-  const s = sort?.system ?? {};
-  const raw = s.composants_materiels ?? s.composantsMateriels ?? s.materialComponents ?? [];
+  const s = sort?.system ?? sort ?? {};
+  const flags = sort?.flags?.add2e ?? sort?.add2e ?? {};
   const entries = [];
-  for (const entry of add2eHbsAsArray(raw)) {
-    if (!entry) continue;
-    if (typeof entry === "string") {
-      const slug = add2eHbsSlug(entry);
-      if (slug) entries.push({ slug, nom: entry, quantite: 1, consomme: true });
-      continue;
-    }
-    const nom = entry.nom ?? entry.name ?? entry.label ?? entry.slug ?? "Composant";
-    const slug = add2eHbsSlug(entry.slug ?? nom);
-    if (!slug) continue;
-    entries.push({
-      slug,
-      nom: String(nom),
-      quantite: Math.max(1, Number(entry.quantite ?? entry.quantity ?? 1) || 1),
-      consomme: entry.consomme !== false && entry.consume !== false
-    });
+  for (const field of [
+    s.composants_materiels,
+    s.composantsMateriels,
+    s.materialComponents,
+    s.composants_requis,
+    s.composantsMateriel,
+    s.composant_materiel,
+    s.composantMateriel,
+    s.materiel,
+    s.matériel,
+    s.material,
+    s.materialComponent,
+    s.material_components,
+    s.requiredComponents,
+    s.componentsRequired,
+    s.components?.material,
+    s.components?.materials,
+    sort?.materialComponents,
+    sort?.composants_materiels,
+    sort?.composants_requis,
+    flags.composants_requis,
+    flags.composants,
+    flags.components,
+    flags.requiredComponents
+  ]) add2eHbsCollectSpellMaterials(entries, field);
+
+  for (const tag of [
+    ...add2eHbsToTagArray(s.tags),
+    ...add2eHbsToTagArray(s.effectTags),
+    ...add2eHbsToTagArray(flags.tags),
+    ...add2eHbsToTagArray(flags.effectTags)
+  ]) {
+    const raw = String(tag ?? "").trim();
+    if (/^composant[:_]/i.test(raw)) add2eHbsAddSpellMaterialEntry(entries, raw.replace(/^composant[:_]/i, ""), 1, true);
   }
   return entries;
 }
@@ -255,9 +304,7 @@ function add2eHbsBestSave(actor, idx, fallbackRow = null) {
 
 function add2eHbsWeaponMagicBonus(arme, kind) {
   try {
-    if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function") {
-      return Number(Add2eEffectsEngine.getMagicWeaponBonus(arme, kind)) || 0;
-    }
+    if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function") return Number(Add2eEffectsEngine.getMagicWeaponBonus(arme, kind)) || 0;
   } catch (_e) {}
   return kind === "damage" ? add2eHbsNumeric(arme?.system?.bonus_dom) : add2eHbsNumeric(arme?.system?.bonus_hit);
 }
