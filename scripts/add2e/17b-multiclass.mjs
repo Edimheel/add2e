@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-11-multiclass-layer-v22-single-drop-dialog
+// Version : 2026-06-11-multiclass-layer-v23-current-race-first
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,7 +7,7 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-11-multiclass-layer-v22-single-drop-dialog";
+const VERSION = "2026-06-11-multiclass-layer-v23-current-race-first";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -182,6 +182,13 @@ function uniqueRaces(actor) {
     });
 }
 
+function currentRaceOrCompatibleAlternatives(actor, predicate) {
+  const current = systemRace(actor);
+  const currentKey = norm(itemLabel(current, "Race"));
+  if (current && currentKey && predicate(current)) return [current];
+  return uniqueRaces(actor).filter(race => norm(itemLabel(race, "Race")) !== currentKey && predicate(race));
+}
+
 function raceCompatibleForMulticlass(actor, classData, raceData) {
   return raceAllowsClassSet(raceData, wantedClassNames(actor, classData))
     && raceMatchesClassRules(raceData, classData)
@@ -189,12 +196,11 @@ function raceCompatibleForMulticlass(actor, classData, raceData) {
 }
 
 function raceCandidatesForClass(actor, classData) {
-  return uniqueRaces(actor).filter(race => raceCompatibleForMulticlass(actor, classData, race));
+  return currentRaceOrCompatibleAlternatives(actor, race => raceCompatibleForMulticlass(actor, classData, race));
 }
 
 function monoClassOptionsForDroppedClass(actor, classData) {
-  return uniqueRaces(actor)
-    .filter(race => raceMatchesClassRules(race, classData) && classPrerequisitesOk(actor, classData, race, { notify: false }))
+  return currentRaceOrCompatibleAlternatives(actor, race => raceMatchesClassRules(race, classData) && classPrerequisitesOk(actor, classData, race, { notify: false }))
     .map(raceData => ({ action: "monoclass", classData, raceData }));
 }
 
@@ -389,9 +395,9 @@ async function dialogAlert(title, content) {
 }
 
 function installDialogButtonTheme() {
-  if (document.getElementById("add2e-multiclass-button-theme-v22")) return;
+  if (document.getElementById("add2e-multiclass-button-theme-v23")) return;
   const style = document.createElement("style");
-  style.id = "add2e-multiclass-button-theme-v22";
+  style.id = "add2e-multiclass-button-theme-v23";
   style.textContent = `
 .application.add2e-multiclass-dialog button[data-action="validate"],
 .application:has(.add2e-multiclass-choice) button[data-action="validate"] {
@@ -492,12 +498,12 @@ function replacementOptionsForDroppedClass(actor, droppedClassData) {
   const seen = new Set();
   for (const replacedClass of existing) {
     const replaceSlug = classSlug(replacedClass);
-    for (const raceData of uniqueRaces(actor)) {
+    const raceChoices = currentRaceOrCompatibleAlternatives(actor, race => raceCompatibleForReplacement(actor, droppedClassData, replaceSlug, race));
+    for (const raceData of raceChoices) {
       const raceKey = norm(itemLabel(raceData, "Race"));
       const key = `${replaceSlug}|${droppedSlug}|${raceKey}`;
       if (seen.has(key)) continue;
       seen.add(key);
-      if (!raceCompatibleForReplacement(actor, droppedClassData, replaceSlug, raceData)) continue;
       out.push({
         action: "replace-class",
         classData: droppedClassData,
