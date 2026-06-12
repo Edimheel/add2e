@@ -3,7 +3,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-05-27-drop-application-v2-purge-boutique-v1";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-12-drop-spell-known-list-v2";
 globalThis.ADD2E_ACTOR_SHEET_DROP_VERSION = ADD2E_ACTOR_SHEET_DROP_VERSION;
 console.log("[ADD2E][DROP][VERSION]", ADD2E_ACTOR_SHEET_DROP_VERSION);
 
@@ -20,6 +20,107 @@ function add2eDropArray(value) {
   if (value === null || value === undefined) return [];
   if (typeof value === "string") return value.split(/[,;|]/g).map(v => v.trim()).filter(Boolean);
   return [value];
+}
+
+function add2eDropNormalizeSpellKey(value) {
+  if (typeof add2eNormalizeSpellKey === "function") return add2eNormalizeSpellKey(value);
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[\s_-]+/g, "_");
+}
+
+function add2eDropNormalizeSpellName(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eDropSpellLevel(itemOrData) {
+  const sys = itemOrData?.system ?? itemOrData ?? {};
+  return Number(sys.niveau ?? sys.level ?? sys.niveau_sort ?? sys.spellLevel ?? 1) || 1;
+}
+
+function add2eDropSpellListsFromValue(value) {
+  return add2eDropArray(value)
+    .flatMap(v => typeof v === "string" ? v.split(/[,;|\n]+/g) : [v])
+    .map(add2eDropNormalizeSpellKey)
+    .filter(Boolean);
+}
+
+function add2eDropSpellListsFromItem(item) {
+  try {
+    if (typeof add2eGetSpellListsFromItem === "function") return add2eGetSpellListsFromItem(item).map(add2eDropNormalizeSpellKey).filter(Boolean);
+  } catch (_e) {}
+  const sys = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return [
+    ...add2eDropSpellListsFromValue(flags.learnedSpellLists),
+    ...add2eDropSpellListsFromValue(flags.knownSpellLists),
+    ...add2eDropSpellListsFromValue(flags.grantedSpellLists),
+    ...add2eDropSpellListsFromValue(sys.spellLists),
+    ...add2eDropSpellListsFromValue(sys.classe),
+    ...add2eDropSpellListsFromValue(sys.class),
+    ...add2eDropSpellListsFromValue(sys.liste)
+  ].filter(Boolean);
+}
+
+function add2eDropSameSpell(a, b) {
+  return String(a?.type ?? "").toLowerCase() === "sort"
+    && String(b?.type ?? "").toLowerCase() === "sort"
+    && add2eDropNormalizeSpellName(a?.name) === add2eDropNormalizeSpellName(b?.name)
+    && add2eDropSpellLevel(a) === add2eDropSpellLevel(b);
+}
+
+async function add2eDropLearnSpellListOnExisting(actor, existingSort, targetEntry, droppedData) {
+  const targetKey = add2eDropNormalizeSpellKey(targetEntry?.key);
+  if (!actor || !existingSort || !targetKey) return { handled: false };
+
+  const currentLists = new Set(add2eDropSpellListsFromItem(existingSort));
+  if (currentLists.has(targetKey)) {
+    ui.notifications.warn(`"${existingSort.name}" est déjà connu pour la liste ${targetEntry?.label || targetKey}.`);
+    return { handled: true, updated: false, reason: "already-known" };
+  }
+
+  currentLists.add(targetKey);
+  const nextLists = [...currentLists].filter(Boolean);
+  const currentMemByList = foundry.utils.deepClone(existingSort.getFlag?.("add2e", "memorizedByList") ?? existingSort.flags?.add2e?.memorizedByList ?? {});
+  for (const key of Object.keys(currentMemByList)) {
+    if (!nextLists.includes(add2eDropNormalizeSpellKey(key))) delete currentMemByList[key];
+  }
+
+  await existingSort.update({
+    "flags.add2e.learnedSpellLists": nextLists,
+    "flags.add2e.knownSpellLists": nextLists,
+    "flags.add2e.manuallyLearnedSpell": true,
+    "flags.add2e.lastLearnedSpellList": targetKey,
+    "flags.add2e.memorizedByList": currentMemByList,
+    "system.spellLists": nextLists
+  }, { add2eInternal: true, add2eSpellLearnList: true });
+
+  ui.notifications.info(`"${existingSort.name}" ajouté à la liste ${targetEntry?.label || targetKey}.`);
+  add2eRerenderActorSheet?.(actor, false);
+  return { handled: true, updated: true, reason: "list-added", lists: nextLists };
+}
+
+function add2eDropMarkManualSpellList(itemData, targetEntry) {
+  const targetKey = add2eDropNormalizeSpellKey(targetEntry?.key);
+  if (!itemData || !targetKey) return itemData;
+  const data = foundry.utils.duplicate(itemData);
+  data.flags = data.flags ?? {};
+  data.flags.add2e = data.flags.add2e ?? {};
+  data.flags.add2e.learnedSpellLists = [targetKey];
+  data.flags.add2e.knownSpellLists = [targetKey];
+  data.flags.add2e.manuallyLearnedSpell = true;
+  data.flags.add2e.lastLearnedSpellList = targetKey;
+  foundry.utils.setProperty(data, "system.spellLists", [targetKey]);
+  return data;
 }
 
 function add2eDropItemTags(item) {
@@ -174,6 +275,7 @@ async function add2eResolveDropItemData(raw) {
 try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_e) {}
 try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_e) {}
 try { globalThis.add2eDropIsBoutiqueConsumable = add2eDropIsBoutiqueConsumable; } catch (_e) {}
+try { globalThis.add2eDropLearnSpellListOnExisting = add2eDropLearnSpellListOnExisting; } catch (_e) {}
 
 globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
   event.preventDefault?.();
@@ -192,7 +294,7 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
     return false;
   }
 
-  const itemData = await add2eResolveDropItemData(raw);
+  let itemData = await add2eResolveDropItemData(raw);
   if (!itemData) {
     console.warn("[ADD2E] _onDrop impossible de reconstruire itemData", raw);
     return false;
@@ -203,6 +305,8 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
     console.warn("[ADD2E][DROP][V2] Type item non accepté sur personnage.", { type: itemData.type, name: itemData.name });
     return false;
   }
+
+  let add2eDropSpellCheck = null;
 
   if (itemData.type === "sort") {
     console.log("=== [ADD2E DROP SORT][POOLS] ===");
@@ -221,7 +325,7 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
     }
 
     if (!source && itemData.system) {
-      source = { name: itemData.name, type: itemData.type, system: itemData.system };
+      source = { name: itemData.name, type: itemData.type, system: itemData.system, flags: itemData.flags };
     }
 
     if (!source || !source.system) {
@@ -231,6 +335,7 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
     }
 
     const check = add2eCanActorUseSpell(this.actor, source);
+    add2eDropSpellCheck = check;
 
     console.log("[ADD2E DROP SORT][POOLS] check:", {
       sort: source.name,
@@ -260,6 +365,8 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
       }
       return false;
     }
+
+    itemData = add2eDropMarkManualSpellList(itemData, check.entry);
 
     console.log("[ADD2E DROP SORT][POOLS] ✅ DROP SORT OK", {
       sort: source.name,
@@ -377,7 +484,12 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
   }
 
   if (["arme", "armure", "sort", "objet"].includes(itemData.type)) {
-    if (this.actor.items.some(i => i.name === itemData.name && i.type === itemData.type)) {
+    const existing = this.actor.items.find(i => i.name === itemData.name && i.type === itemData.type);
+    if (existing) {
+      if (itemData.type === "sort" && add2eDropSameSpell(existing, itemData) && add2eDropSpellCheck?.entry) {
+        const result = await add2eDropLearnSpellListOnExisting(this.actor, existing, add2eDropSpellCheck.entry, itemData);
+        if (result?.handled) return result.updated;
+      }
       ui.notifications.warn(`"${itemData.name}" est déjà présent sur cet acteur.`);
       return false;
     }
