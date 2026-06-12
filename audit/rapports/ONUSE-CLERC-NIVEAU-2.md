@@ -2,49 +2,41 @@
 
 ## État final
 
-Les 12 chemins onUse déclarés par la référence Clerc niveau 2 existaient, mais utilisaient un gabarit dupliqué avec `new Dialog`, des automatismes génériques non fiables et aucun VFX. Ils ont été corrigés sans modifier les chemins Foundry.
+Les 12 onUse raccordés utilisent désormais un helper partagé DialogV2/VFX et des mécanismes Foundry réels. Les composants restent exclusivement gérés par le résolveur central de lancement.
 
-| Sort | Script | Stratégie | VFX | Résolution conservée au MJ |
-| --- | --- | --- | --- | --- |
-| Augure | `scripts/sorts/augure.js` | aide MJ | `augure` + repli canvas natif | Composantes alternatives : objets divinatoires, ou infusion avec perle écrasée d’au moins 100 po. |
-| Cantique | `scripts/sorts/cantique.js` | automatisation partielle | `cantique` + repli canvas natif | L’effet cesse dès que le clerc ne chante plus, se déplace ou est interrompu. |
-| Charme-serpents | `scripts/sorts/charme-serpents.js` | aide MJ | `charme` + repli canvas natif | Le MJ confirme l’état, les points de vie et la durée de chaque cible. |
-| Détection des charmes | `scripts/sorts/detection-des-charmes.js` | aide MJ | `detection` + repli canvas natif | Aucun état de charme n’est deviné ou révélé automatiquement. |
-| Détection des pièges | `scripts/sorts/detection-des-pieges.js` | aide MJ | `detection` + repli canvas natif | Le MJ confirme les pièges présents et leur nature. |
-| Langage animal | `scripts/sorts/langage-des-animaux.js` | aide MJ | `communication` + repli canvas natif | Le MJ détermine toute faveur ou service avec la réaction, le charisme et le comportement du clerc. |
-| Marteau spirituel | `scripts/sorts/marteau-spirituel.js` | automatisation partielle | `projectile_magique` + repli canvas natif | Le marteau de guerre normal est lancé puis disparaît. |
-| Paralysie | `scripts/sorts/paralysie.js` | automatisation partielle | `paralysie` + repli canvas natif | Les sauvegardes et l’état paralysé ne sont pas automatisés sans mécanisme système fiable. |
-| Perception des alignements | `scripts/sorts/connaissance-des-alignements.js` | aide MJ | `detection` + repli canvas natif | Certains objets magiques peuvent annuler le pouvoir du sort. |
-| Résistance au feu | `scripts/sorts/resistance-au-feu-resistance-au-froid.js` | automatisation partielle | `resistance_feu` + repli canvas natif | La réduction des dégâts reste au MJ faute de mécanisme centralisé confirmé. |
-| Retardement du poison | `scripts/sorts/ralentissement-du-poison.js` | aide MJ | `soin` + repli canvas natif | Aucun état poison ni perte de PV n’est automatisé sans mécanisme système fiable. |
-| Silence sur 5 mètres | `scripts/sorts/silence-rayon-de-15-pieds.js` | automatisation partielle | `silence` + repli canvas natif | Aucun blocage technique des composantes verbales n’est inventé. |
+| Sort | Mécanique réellement automatisée | ActiveEffect / limite restante |
+| --- | --- | --- |
+| Augure | calcul 70 % + niveau et saisie de l'action | aucun ActiveEffect ; réponse au MJ |
+| Cantique | bonus/malus attaques, dégâts et sauvegardes | effets lanceur/cibles ; retrait manuel quand chant/immobilité cesse |
+| Charme-serpents | validation ophidienne/PV et durée contextuelle | charme/calme temporisé |
+| Détection des charmes | lecture des états structurés | effet de détection ; états non structurés au MJ |
+| Détection des pièges | chance 10 %/niveau et zone structurée | effet 3 tours ; révélation au MJ |
+| Langage animal | durée et cible de communication | effets temporaires lanceur/cible |
+| Marteau spirituel | arme temporaire équipée, dégâts P-M/G, valeur magique | item lié à un effet et supprimé à expiration/retrait |
+| Paralysie | JP réel et malus 0/-1/-2 | effet visible sur échec ; aucune application si JP indisponible |
+| Perception des alignements | lecture des champs structurés, carte MJ | effet 1 tour |
+| Résistance au feu | +3 JP et réduction quart/moitié | effet lu par le résolveur central de dégâts feu |
+| Retardement du poison | suspension structurée | effet 1 heure/niveau ; perte périodique suivie par le MJ |
+| Silence sur 5 mètres | JP non-consentant et blocage des sorts verbaux attachés | zone fixe suivie par le MJ faute de résolveur géométrique central |
 
-## Modifications justifiées
+## Fichiers centraux modifiés
 
-Chaque script a été modifié pour les mêmes raisons vérifiées : script existant raccordé, utilisation de Dialog legacy, gabarit générique contenant des comportements non alignés avec la référence, absence de VFX et nécessité d’un retour strict true/false. Aucun script non raccordé n’a été créé.
+- scripts/effects-engine.mjs : lit bonus_save global pour Cantique.
+- scripts/add2e-attack/02-damage.mjs : lit les tags de résistance au feu, lance le JP et réduit les dégâts.
+- scripts/add2e-attack/06-cast-spell.mjs : refuse avant consommation un sort verbal si le lanceur porte Silence.
+- scripts/add2e/18c-active-effects-expiration.mjs et scripts/add2e-active-effects-expire.js : suppriment l'arme temporaire liée au Marteau spirituel.
+- scripts/sorts/clerc-niveau-2-mechanics.mjs : helper partagé évitant la duplication des 12 onUse.
 
-- **Augure** : calcule et affiche 70 % + 1 %/niveau, sans produire de réponse automatique.
-- **Cantique** : rappelle les bonus/malus et les conditions d’interruption ; aucun ActiveEffect n’est créé faute de champs fiables confirmés.
-- **Charme-serpents** : contrôle la présence de cibles et rappelle les limites de PV et durées contextuelles.
-- **Détections / Perception** : contrôlent le nombre de cibles et fournissent l’aide divinatoire sans lire ou inventer d’état.
-- **Langage animal** : confirme une cible et calcule la durée, sans automatiser la réaction.
-- **Marteau spirituel** : calcule durée et valeur magique contre immunités, rappelle dégâts et composant consommé, sans créer d’arme.
-- **Paralysie** : limite à 1–3 cibles et calcule durée/malus de sauvegarde, sans lancer les sauvegardes ni imposer un état non standardisé.
-- **Résistance au feu** : calcule la durée et rappelle +3 / quart / moitié, sans modifier automatiquement les dégâts.
-- **Retardement du poison** : calcule durée et délai post-mortem, sans état poison ni perte automatique de PV.
-- **Silence sur 5 mètres** : calcule durée et affiche la zone de 9 m, sans blocage technique inventé des sorts verbaux.
+## Flags et intégrations
 
-## Compatibilité et limites
+Les effets utilisent flags.add2e.tags avec notamment bonus_attaque, bonus_degats, bonus_save, malus_attaque, malus_degats, etat:paralysie, resistance:feu, bonus_save_vs:feu:3, poison:retarde, silence:verbal et anti_sort:verbal. Les durées numériques sont exprimées en rounds et expirent par le moteur existant.
 
-- Fenêtres : `foundry.applications.api.DialogV2.wait` uniquement ; aucune ApplicationV2 persistante nécessaire.
-- VFX : appel à `ADD2E_PLAY_SPELL_FX`, avec repli visuel via `canvas.interface.createScrollingText`.
-- Contrat : annulation et préconditions invalides retournent `false` ; lancement confirmé retourne `true`.
-- Compatible Foundry V13/V14/V15 : APIs DialogV2 et canvas utilisées avec accès défensifs.
-- Aucun ActiveEffect n’est ajouté : les effets concernés ne disposent pas ici de clés système centralisées confirmées.
+## Compatibilité, limites et validations
 
-## Validations
-
-- 12 scripts raccordés corrigés ; aucun script créé.
-- Aucun `new Dialog`, `Dialog.prompt` ou fallback legacy dans les 12 scripts.
-- Chaque script contient DialogV2, ChatMessage, VFX et retours stricts true/false.
-- Aucun JSON Foundry, référence, source, découpage, `system.json`, `AGENTS.md` ou workflow modifié.
+- DialogV2 uniquement ; aucune ApplicationV2 persistante, aucun Dialog legacy et aucun fallback legacy.
+- Chaque sort conserve un VFX via ADD2E_PLAY_SPELL_FX ou le canvas natif.
+- Annulation/précondition invalide retourne false ; résolution confirmée retourne true.
+- Les composants ne sont pas modifiés ni consommés par les onUse.
+- Compatible Foundry V13/V14/V15 grâce aux APIs Foundry existantes et accès défensifs.
+- node --check exécuté sur les modules ; onUse vérifiés dans une enveloppe AsyncFunction à cause du return de niveau supérieur requis par Foundry.
+- node audit/tools/validate-reference-schema.mjs exécuté.

@@ -57,6 +57,9 @@ export async function add2eExpireTemporaryEffectsForActor(actor, currentRound) {
     if (!actor.effects.get(effectId)) continue;
 
     try {
+      const effect = actor.effects.get(effectId);
+      const temporaryItemId = effect?.flags?.add2e?.temporaryItemId;
+      if (temporaryItemId && actor.items?.get(temporaryItemId)) await actor.deleteEmbeddedDocuments("Item", [temporaryItemId]);
       await actor.deleteEmbeddedDocuments("ActiveEffect", [effectId]);
       deleted += 1;
     } catch (err) {

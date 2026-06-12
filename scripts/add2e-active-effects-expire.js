@@ -61,6 +61,15 @@ Hooks.once("ready", () => {
   }, 500);
 });
 
+Hooks.on("deleteActiveEffect", async effect => {
+  if (!game.user?.isGM) return;
+  const actor = effect?.parent;
+  const temporaryItemId = effect?.flags?.add2e?.temporaryItemId;
+  if (actor?.documentName === "Actor" && temporaryItemId && actor.items?.get(temporaryItemId)) {
+    await actor.deleteEmbeddedDocuments("Item", [temporaryItemId]);
+  }
+});
+
 Hooks.on("updateCombat", async (combat, changed, options, userId) => {
   if (!("round" in changed) && !("turn" in changed)) return;
 

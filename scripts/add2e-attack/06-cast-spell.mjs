@@ -19,6 +19,15 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     return false;
   }
 
+  const add2eCastTags = globalThis.Add2eEffectsEngine?.getActiveTags?.(actor) ?? [];
+  const add2eCastComponents = String(sort.system?.composantes ?? sort.system?.components ?? sort.system?.componentes ?? "");
+  const add2eCastRequiresVerbal = /(^|[,;\s])V([,;\s]|$)/i.test(add2eCastComponents);
+  const add2eCastSilenced = add2eCastTags.some(tag => ["etat:silence", "silence:verbal", "anti_sort:verbal"].includes(String(tag)));
+  if (add2eCastRequiresVerbal && add2eCastSilenced) {
+    ui.notifications.warn(`${sort.name} exige une composante verbale et le lanceur est sous Silence.`);
+    return false;
+  }
+
   console.log("[ADD2E][CAST_SPELL] Début", {
     actor: actor.name,
     sort: sort.name,
