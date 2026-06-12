@@ -1,11 +1,11 @@
 // ============================================================
 // ADD2E — Contrôles de mémorisation des sorts
-// Version : 2026-06-12-v44-refresh-global-counters
+// Version : 2026-06-12-v45-use-visible-counter-for-plus
 // ============================================================
 // Source de vérité des quotas : 07-spellcasting-rules.mjs.
 // Ici : clics +/-, rafraîchissement des compteurs visibles et composants.
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v44-refresh-global-counters";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v45-use-visible-counter-for-plus";
 globalThis.ADD2E_SPELL_PREP_SCROLL_VERSION = ADD2E_SPELL_PREP_SCROLL_VERSION;
 
 function add2eSpellPrepActorWindows(actor) {
@@ -103,6 +103,40 @@ function add2eSpellPrepSetRowCount(actor, sort, next, clickedButton = null) {
   }
 }
 
+function add2eSpellPrepCounterRoots(actor, clickedButton = null) {
+  const roots = add2eSpellPrepActorWindows(actor).map(app => app.element?.[0] ?? app.element ?? null).filter(Boolean);
+  const clickedRoot = clickedButton?.closest?.(".application, .window-app, .app");
+  if (clickedRoot) roots.push(clickedRoot);
+  return [...new Set(roots)];
+}
+
+function add2eSpellPrepReadVisibleTotal(actor, entry, spellLevel, clickedButton = null) {
+  const label = String(entry?.label || add2eSpellLabel(add2eNormalizeSpellKey(entry?.key)) || "").toLowerCase();
+  const nText = `n${Number(spellLevel) || 1}`;
+  const readRatio = text => {
+    const m = String(text ?? "").match(/(\d+)\s*\/\s*(\d+)/);
+    return m ? { count: Number(m[1]), max: Number(m[2]) } : null;
+  };
+
+  for (const root of add2eSpellPrepCounterRoots(actor, clickedButton)) {
+    for (const el of root.querySelectorAll?.(".a2e-spell-capacity-pill") ?? []) {
+      const txt = String(el.textContent ?? "").toLowerCase();
+      if (!txt.includes(label) || !txt.includes(nText)) continue;
+      const ratio = readRatio(txt);
+      if (ratio) return ratio;
+    }
+
+    for (const group of root.querySelectorAll?.(".add2e-spell-list-group") ?? []) {
+      const h3 = group.querySelector?.("h3");
+      const txt = String(h3?.textContent ?? "").toLowerCase();
+      if (!txt.includes(label)) continue;
+      const ratio = readRatio(txt);
+      if (ratio) return ratio;
+    }
+  }
+  return null;
+}
+
 function add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, total, max, clickedButton = null) {
   const key = add2eNormalizeSpellKey(entry?.key);
   const label = entry?.label || add2eSpellLabel(key);
@@ -113,11 +147,7 @@ function add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, total, max, c
   const pillText = `${label} N${spellLevel} ${count}/${limit}`;
   const lowerTitle = `sorts de ${String(label).toLowerCase()}`;
 
-  const roots = add2eSpellPrepActorWindows(actor).map(app => app.element?.[0] ?? app.element ?? null).filter(Boolean);
-  const clickedRoot = clickedButton?.closest?.(".application, .window-app, .app");
-  if (clickedRoot) roots.push(clickedRoot);
-
-  for (const root of new Set(roots)) {
+  for (const root of add2eSpellPrepCounterRoots(actor, clickedButton)) {
     root.querySelectorAll?.(`.a2e-sort-slot-${add2eSpellPrepEscapeCss(key)}`).forEach(el => { el.textContent = compactText; });
 
     root.querySelectorAll?.(".a2e-spell-capacity-pill").forEach(el => {
@@ -235,10 +265,14 @@ async function add2eHandleSpellPreparationButton(btn, event = null, actorOverrid
     if (limit <= 0) return ui.notifications.warn(`Aucun emplacement ${entry.label} de niveau ${spellLevel} disponible.`);
 
     const current = add2eGetMemorizedCountForEntry(sort, entry);
-    const totalBefore = add2eCountPreparedForEntryLevel(actor, entry, spellLevel);
+    const centralTotalBefore = add2eCountPreparedForEntryLevel(actor, entry, spellLevel);
+    const visibleRatio = add2eSpellPrepReadVisibleTotal(actor, entry, spellLevel, btn);
     const isPlus = btn.classList.contains("a2e-spell-entry-plus") || btn.classList.contains("sort-memorize-plus");
     const isMinus = btn.classList.contains("a2e-spell-entry-minus") || btn.classList.contains("sort-memorize-minus");
     if (!isPlus && !isMinus) return;
+
+    let totalBefore = centralTotalBefore;
+    if (isPlus && visibleRatio && Number.isFinite(visibleRatio.count) && visibleRatio.count < centralTotalBefore) totalBefore = visibleRatio.count;
 
     let next = current;
     let totalAfter = totalBefore;
@@ -283,8 +317,8 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
 }
 
 function add2eInstallDelegatedSpellPreparationControls() {
-  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_V44_INSTALLED) return;
-  globalThis.ADD2E_SPELL_PREP_DELEGATED_V44_INSTALLED = true;
+  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_V45_INSTALLED) return;
+  globalThis.ADD2E_SPELL_PREP_DELEGATED_V45_INSTALLED = true;
   document.addEventListener("click", ev => {
     const btn = ev.target?.closest?.(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus");
     if (!btn) return;
