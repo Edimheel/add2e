@@ -1,8 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-05-22-v1-capacites-mj-effets-systeme
+// Version : 2026-06-12-v2-monster-actor-sheet-fallback
 // But : séparer les capacités informatives MJ des effets système activables.
+// V13/V14/V15 : assure aussi que actor.sheet existe pour les acteurs monster.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-05-22-v1-capacites-mj-effets-systeme";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-06-12-v2-monster-actor-sheet-fallback";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
 function esc(value) {
@@ -163,6 +164,37 @@ function buildDetails(actor) {
     </section>`;
 }
 
+function installMonsterActorSheetFallback(actor) {
+  if (!actor || actor.type !== "monster") return false;
+  if (actor.__add2eMonsterSheetFallback === ADD2E_MONSTER_CAPABILITIES_VERSION) return false;
+
+  try {
+    if (actor.sheet?.render) return false;
+  } catch (_err) {}
+
+  let cachedSheet = null;
+  Object.defineProperty(actor, "sheet", {
+    configurable: true,
+    get() {
+      if (cachedSheet?.render) return cachedSheet;
+      if (typeof globalThis.Add2eMonsterSheet !== "function") return null;
+      cachedSheet = new globalThis.Add2eMonsterSheet(actor);
+      return cachedSheet;
+    }
+  });
+
+  actor.__add2eMonsterSheetFallback = ADD2E_MONSTER_CAPABILITIES_VERSION;
+  return true;
+}
+
+function installMonsterActorSheetFallbacks() {
+  if (typeof globalThis.Add2eMonsterSheet !== "function") return false;
+  let patched = 0;
+  for (const actor of game.actors ?? []) if (installMonsterActorSheetFallback(actor)) patched++;
+  console.log("[ADD2E][MONSTER_SHEET][ACTOR_SHEET_FALLBACK]", { version: ADD2E_MONSTER_CAPABILITIES_VERSION, patched });
+  return true;
+}
+
 Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
   try {
     installStyles();
@@ -201,6 +233,17 @@ Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
     });
   } catch (err) {
     console.error("[ADD2E][MONSTER_SHEET][CAPABILITIES] Erreur d'affichage", err);
+  }
+});
+
+Hooks.once("ready", () => {
+  installMonsterActorSheetFallbacks();
+  setTimeout(installMonsterActorSheetFallbacks, 500);
+  if (!globalThis.__ADD2E_MONSTER_SHEET_CREATE_HOOK) {
+    globalThis.__ADD2E_MONSTER_SHEET_CREATE_HOOK = true;
+    Hooks.on("createActor", actor => {
+      if (actor?.type === "monster") setTimeout(() => installMonsterActorSheetFallback(actor), 0);
+    });
   }
 });
 
