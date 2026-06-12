@@ -1,13 +1,14 @@
 // ============================================================
 // ADD2E — Contrôles de mémorisation des sorts
-// Version : 2026-06-12-v48-resolve-stale-spell-ids
+// Version : 2026-06-12-v49-persist-memorized-counts
 // ============================================================
 // Source des quotas : 07-spellcasting-rules.mjs.
 // - Restaure la règle dev-grosses-modifications : memorizedCount prioritaire pour un sort à liste unique.
 // - Restreint les sorts auto-accordés à la liste de la classe accordante.
 // - Sécurise les boutons +/- contre les anciens sortId après drop/rendu.
+// - Persiste les compteurs sans updateSource() préalable pour éviter le reset après F5.
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v48-resolve-stale-spell-ids";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v49-persist-memorized-counts";
 globalThis.ADD2E_SPELL_PREP_SCROLL_VERSION = ADD2E_SPELL_PREP_SCROLL_VERSION;
 
 function add2eSpellPrepNormalizeText(value) {
@@ -21,8 +22,8 @@ function add2eSpellPrepNormalizeText(value) {
 }
 
 function add2eSpellPrepInstallSingleListCountOverride() {
-  if (globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V48) return;
-  globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V48 = true;
+  if (globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V49) return;
+  globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V49 = true;
 
   const normalizeKey = value => typeof add2eNormalizeSpellKey === "function" ? add2eNormalizeSpellKey(value) : add2eSpellPrepNormalizeText(value);
   const originalGetSpellListsFromItem = globalThis.add2eGetSpellListsFromItem;
@@ -102,6 +103,22 @@ function add2eSpellPrepInstallSingleListCountOverride() {
     if (lists.length <= 1 && legacyPresent) return Math.max(0, Number(legacyRaw) || 0);
     const byList = byListOf(sort);
     return Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
+  };
+
+  globalThis.add2eSetMemorizedCountForEntry = async function add2eSetMemorizedCountForEntryPersist(sort, entry, value) {
+    const key = normalizeKey(entry?.key);
+    if (!sort || !key || !regular(sort)) return;
+    const next = Math.max(0, Number(value) || 0);
+    const byList = byListOf(sort);
+    if (next > 0) byList[key] = next;
+    else delete byList[key];
+    for (const k of Object.keys(byList)) if ((Number(byList[k]) || 0) <= 0) delete byList[k];
+    const total = Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
+
+    await sort.update({
+      "flags.add2e.memorizedByList": byList,
+      "flags.add2e.memorizedCount": total
+    }, { render: false, diff: false, add2eSpellPreparation: true });
   };
 
   globalThis.add2eCountPreparedForEntryLevel = function add2eCountPreparedForEntryLevelCompat(actor, entry, spellLevel) {
@@ -256,7 +273,8 @@ function add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, total, max, c
   const pillText = `${label} N${spellLevel} ${count}/${limit}`;
   const lowerTitle = `sorts de ${String(label).toLowerCase()}`;
   for (const root of add2eSpellPrepCounterRoots(actor, clickedButton)) {
-    root.querySelectorAll?.(`.a2e-sort-slot-${CSS.escape?.(key) ?? key}`).forEach(el => { el.textContent = compactText; });
+    const escaped = globalThis.CSS?.escape ? CSS.escape(key) : key.replace(/(["'\\.#:[\],>+~*=])/g, "\\$1");
+    root.querySelectorAll?.(`.a2e-sort-slot-${escaped}`).forEach(el => { el.textContent = compactText; });
     root.querySelectorAll?.(".a2e-spell-capacity-pill").forEach(el => {
       const txt = String(el.textContent ?? "").toLowerCase();
       if (txt.includes(String(label).toLowerCase()) && txt.includes(`n${spellLevel}`)) el.textContent = pillText;
@@ -428,8 +446,8 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
 }
 
 function add2eInstallDelegatedSpellPreparationControls() {
-  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_V48_INSTALLED) return;
-  globalThis.ADD2E_SPELL_PREP_DELEGATED_V48_INSTALLED = true;
+  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_V49_INSTALLED) return;
+  globalThis.ADD2E_SPELL_PREP_DELEGATED_V49_INSTALLED = true;
   add2eSpellPrepInstallSingleListCountOverride();
   document.addEventListener("click", ev => {
     const btn = ev.target?.closest?.(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus");
