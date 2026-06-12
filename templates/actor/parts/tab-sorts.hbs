@@ -184,11 +184,13 @@
                                     <td>
                                       {{#if sort.entries.length}}
                                         {{#each sort.entries as |entry|}}
-                                          <div class="add2e-spell-prep-entry" style="white-space:nowrap;">
-                                            <a class="a2e-action-icon a2e-action-remove a2e-spell-entry-minus" data-sort-id="{{sort.id}}" data-entry-key="{{entry.key}}" title="Retirer une préparation {{entry.label}}"><i class="fas fa-minus-circle"></i></a>
-                                            <span class="sort-memorize-badge" data-add2e-memorized-count="{{entry.count}}">{{entry.count}}</span>
-                                            <a class="a2e-action-icon a2e-action-add a2e-spell-entry-plus" data-sort-id="{{sort.id}}" data-entry-key="{{entry.key}}" title="Ajouter une préparation {{entry.label}}"><i class="fas fa-plus-circle"></i></a>
-                                          </div>
+                                          {{#if (eq entry.key group.key)}}
+                                            <div class="add2e-spell-prep-entry" style="white-space:nowrap;">
+                                              <a class="a2e-action-icon a2e-action-remove a2e-spell-entry-minus" data-sort-id="{{sort.id}}" data-entry-key="{{entry.key}}" title="Retirer une préparation {{entry.label}}"><i class="fas fa-minus-circle"></i></a>
+                                              <span class="sort-memorize-badge" data-add2e-memorized-count="{{entry.count}}">{{entry.count}}</span>
+                                              <a class="a2e-action-icon a2e-action-add a2e-spell-entry-plus" data-sort-id="{{sort.id}}" data-entry-key="{{entry.key}}" title="Ajouter une préparation {{entry.label}}"><i class="fas fa-plus-circle"></i></a>
+                                            </div>
+                                          {{/if}}
                                         {{/each}}
                                       {{else}}
                                         <span class="a2e-muted">—</span>
