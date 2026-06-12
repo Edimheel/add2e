@@ -4,7 +4,7 @@
  * Script exécuté via on_use d'une classFeature.
  * Paramètres attendus par le lanceur : actor, item, sort.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-06-12-v4-world-time-once-per-day";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-06-12-v5-clear-stale-combat-flag";
 const ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS = 24 * 60;
 
 globalThis.ADD2E_MOINE_PAUME_MORTELLE_VERSION = ADD2E_MOINE_PAUME_MORTELLE_VERSION;
@@ -81,6 +81,20 @@ function a2eDamageParts(raw) {
   };
 }
 
+function a2eFindPaumeMortelleWeapon(actor, weaponId = null) {
+  if (!actor) return null;
+  if (weaponId && actor.items?.get?.(weaponId)) return actor.items.get(weaponId);
+
+  return actor.items?.find?.(i =>
+    String(i.type || "").toLowerCase() === "arme" &&
+    (
+      a2eNorm(i.name) === "paume_mortelle" ||
+      a2eNorm(i.system?.sourceCapacite) === "paume_mortelle" ||
+      a2eNorm(i.flags?.add2e?.sourceCapacite) === "paume_mortelle"
+    )
+  ) ?? null;
+}
+
 if (!actor) {
   ui.notifications.error("Paume mortelle : acteur introuvable.");
   return false;
@@ -113,10 +127,15 @@ if (nextAvailableTick > currentTick) {
 const combatKey = game.combat.id;
 const flagKey = `paumeMortelle.${combatKey}`;
 const alreadyPrepared = actor.getFlag("add2e", flagKey);
+let existing = a2eFindPaumeMortelleWeapon(actor, alreadyPrepared?.weaponId ?? null);
 
 if (alreadyPrepared?.prepared === true) {
-  ui.notifications.warn("La Paume mortelle est déjà préparée pour ce combat.");
-  return false;
+  if (existing) {
+    ui.notifications.warn("La Paume mortelle est déjà préparée pour ce combat.");
+    return false;
+  }
+
+  await actor.unsetFlag("add2e", flagKey);
 }
 
 const damage = a2eDamageParts(
@@ -179,13 +198,7 @@ const system = {
   description: "Arme temporaire créée par la capacité Paume mortelle du moine. Elle représente une seule tentative spéciale ; après la résolution de son attaque, elle est automatiquement supprimée de l’onglet Combat. Cette capacité ne peut être préparée qu’une fois par jour de temps ADD2E."
 };
 
-const existing = actor.items.find(i =>
-  String(i.type || "").toLowerCase() === "arme" &&
-  (
-    a2eNorm(i.name) === "paume_mortelle" ||
-    a2eNorm(i.system?.sourceCapacite) === "paume_mortelle"
-  )
-);
+existing = a2eFindPaumeMortelleWeapon(actor);
 
 let weapon;
 if (existing) {
