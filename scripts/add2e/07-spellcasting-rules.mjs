@@ -1,11 +1,11 @@
 // ============================================================
 // ADD2E — Spellcasting générique par lignes de sorts
-// Version : 2026-06-12-spellcasting-multiclass-levels-v3
+// Version : 2026-06-12-spellcasting-multiclass-levels-v4-capacity-filter
 // Supporte les classes simples et les multiclasses AD&D 2e.
 // Les listes identiques sont regroupées : clerc, druide, magicien, illusionniste.
-// La mémorisation utilise uniquement flags.add2e.memorizedByList.
+// La mémorisation utilise flags.add2e.memorizedByList pour les vrais sorts uniquement.
 // ============================================================
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-12-spellcasting-multiclass-levels-v3";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-12-spellcasting-multiclass-levels-v4-capacity-filter";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -297,6 +297,16 @@ function add2eIsObjectMagicSpellForPreparation(sort) {
   return sys.isPower === true || sys.isObjectPower === true || !!sys.sourceWeaponId || !!sys.sourceItemId || sys.powerIndex !== undefined || flags.sourceType === "objet_magique" || !!flags.sourceItemId || !!flags.sourceWeaponId || String(sys.composantes ?? "").toLowerCase().includes("objet");
 }
 
+function add2eIsCapacitySpellForPreparation(sort) {
+  const sys = sort?.system ?? {};
+  const flags = sort?.flags?.add2e ?? {};
+  return sys.isCapacity === true || sys.isCapacite === true || sys.usageType === "classFeature" || !!sys.sourceCapacite || !!sys.sourceFeature || flags.sourceType === "capacite" || flags.sourceType === "capacity";
+}
+
+function add2eIsRegularPreparableSpell(sort) {
+  return !add2eIsObjectMagicSpellForPreparation(sort) && !add2eIsCapacitySpellForPreparation(sort);
+}
+
 function add2eReadSlotValue(raw, spellLevel, key) {
   if (typeof globalThis.add2eSpellSyncReadSlotValue === "function") return globalThis.add2eSpellSyncReadSlotValue(raw, spellLevel, key);
   const idx = Math.max(0, Number(spellLevel) - 1);
@@ -382,7 +392,7 @@ function add2eEntryAvailableForSpell(actor, entry, spellLevel) {
 }
 
 function add2eGetSpellEntryForSpell(actor, sort) {
-  if (add2eIsObjectMagicSpellForPreparation(sort)) return null;
+  if (!add2eIsRegularPreparableSpell(sort)) return null;
   const spellLevel = Number(sort?.system?.niveau ?? sort?.system?.level ?? 0) || 0;
   const sortLists = add2eGetSpellListsFromItem(sort);
   const entries = add2eGetSpellcastingEntries(actor);
@@ -393,7 +403,7 @@ function add2eGetSpellEntryForSpell(actor, sort) {
 }
 
 function add2eCanActorUseSpell(actor, sort) {
-  if (add2eIsObjectMagicSpellForPreparation(sort)) return { ok: false, reason: "object-power", sortLists: [], entries: add2eGetSpellcastingEntries(actor), entry: null };
+  if (!add2eIsRegularPreparableSpell(sort)) return { ok: false, reason: "not-regular-spell", sortLists: [], entries: add2eGetSpellcastingEntries(actor), entry: null };
   const spellLevel = Number(sort?.system?.niveau ?? sort?.system?.level ?? 0) || 0;
   const sortLists = add2eGetSpellListsFromItem(sort);
   const entries = add2eGetSpellcastingEntries(actor);
@@ -411,24 +421,25 @@ function add2eGetMemorizedByList(sort) {
 
 function add2eGetMemorizedCountForEntry(sort, entry) {
   const key = add2eNormalizeSpellKey(entry?.key);
-  if (!sort || !key || add2eIsObjectMagicSpellForPreparation(sort)) return 0;
+  if (!sort || !key || !add2eIsRegularPreparableSpell(sort)) return 0;
   const byList = add2eGetMemorizedByList(sort);
   return Math.max(0, Number(byList[key] ?? 0) || 0);
 }
 
 async function add2eSetMemorizedCountForEntry(sort, entry, value) {
   const key = add2eNormalizeSpellKey(entry?.key);
-  if (!sort || !key || add2eIsObjectMagicSpellForPreparation(sort)) return;
+  if (!sort || !key || !add2eIsRegularPreparableSpell(sort)) return;
   const byList = add2eGetMemorizedByList(sort);
   byList[key] = Math.max(0, Number(value) || 0);
   for (const k of Object.keys(byList)) if ((Number(byList[k]) || 0) <= 0) delete byList[k];
-  const update = { "flags.add2e.memorizedByList": byList };
-  if (sort.flags?.add2e && Object.prototype.hasOwnProperty.call(sort.flags.add2e, "memorizedCount")) update["flags.add2e.memorizedCount"] = undefined;
+  const total = Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
+  const update = { "flags.add2e.memorizedByList": byList, "flags.add2e.memorizedCount": total };
+  sort.updateSource?.({ flags: { add2e: { memorizedByList: byList, memorizedCount: total } } });
   await sort.update(update, { render: false, diff: true });
 }
 
 function add2eGetTotalMemorizedCount(sort) {
-  if (add2eIsObjectMagicSpellForPreparation(sort)) return 0;
+  if (!add2eIsRegularPreparableSpell(sort)) return 0;
   const byList = add2eGetMemorizedByList(sort);
   return Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
 }
@@ -438,7 +449,7 @@ function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
   const lvl = Number(spellLevel) || 1;
   let total = 0;
   for (const s of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
-    if (add2eIsObjectMagicSpellForPreparation(s)) continue;
+    if (!add2eIsRegularPreparableSpell(s)) continue;
     const sLvl = Number(s.system?.niveau ?? s.system?.level ?? 1) || 1;
     if (sLvl !== lvl) continue;
     const lists = add2eGetSpellListsFromItem(s);
@@ -457,6 +468,8 @@ globalThis.add2eGetSlotsForEntryLevel = add2eGetSlotsForEntryLevel;
 globalThis.add2eGetSpellEntryForSpell = add2eGetSpellEntryForSpell;
 globalThis.add2eCanActorUseSpell = add2eCanActorUseSpell;
 globalThis.add2eIsObjectMagicSpellForPreparation = add2eIsObjectMagicSpellForPreparation;
+globalThis.add2eIsCapacitySpellForPreparation = add2eIsCapacitySpellForPreparation;
+globalThis.add2eIsRegularPreparableSpell = add2eIsRegularPreparableSpell;
 globalThis.add2eGetMemorizedCountForEntry = add2eGetMemorizedCountForEntry;
 globalThis.add2eSetMemorizedCountForEntry = add2eSetMemorizedCountForEntry;
 globalThis.add2eGetTotalMemorizedCount = add2eGetTotalMemorizedCount;
