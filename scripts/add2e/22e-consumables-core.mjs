@@ -12,7 +12,7 @@ import {
   slug
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-12-consumables-core-v4-alternative-components";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-12-consumables-core-v5-structured-alternatives";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -73,12 +73,33 @@ function cleanComponentName(value) {
   let text = String(value ?? "").trim();
   text = text.replace(/[.!?;:]+$/g, "").trim();
   text = text.replace(/^d['’]\s*/i, "");
-  text = text.replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
   text = text.replace(/^(un|une)?\s*peu\s+de\s+/i, "");
+  text = text.replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
   text = text.replace(/^(quelques|plusieurs)\s+/i, "");
   text = text.replace(/^petit morceau de\s+/i, "");
   text = text.replace(/^morceau de\s+/i, "");
   return text.trim();
+}
+
+function rawRequirementName(value) {
+  if (typeof value === "object" && value) {
+    return value.name ?? value.nom ?? value.label ?? value.item ?? value.component ?? value.composant ?? value.slug ?? value.id;
+  }
+  return value;
+}
+
+function rawRequirementQuantity(value) {
+  if (typeof value === "object" && value) return value.quantity ?? value.quantite ?? value.qty ?? value.nombre ?? value.count ?? value.value ?? 1;
+  return 1;
+}
+
+function isStructuredAlternative(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const condition = lower(value.condition ?? value.conditions ?? value.note ?? value.notes ?? value.sourceCondition ?? "");
+  if (condition.includes("alternative")) return true;
+  if (/\bou\b/i.test(condition)) return true;
+  const consommation = lower(value.consommation ?? value.consumption ?? value.consume ?? "");
+  return consommation.includes("optionnel") && condition.length > 0;
 }
 
 function makeRequirement(rawName, rawQty = 1) {
@@ -101,7 +122,7 @@ function addRequirement(out, rawName, rawQty = 1) {
 function addAlternativeRequirement(out, alternatives) {
   const clean = [];
   for (const alt of alternatives) {
-    const req = makeRequirement(alt, 1);
+    const req = makeRequirement(rawRequirementName(alt), rawRequirementQuantity(alt));
     if (!req) continue;
     if (!clean.some(r => r.key === req.key)) clean.push(req);
   }
@@ -121,7 +142,14 @@ function addAlternativeRequirement(out, alternatives) {
 function collectRequirement(out, value) {
   if (value === null || value === undefined || value === "") return;
   if (Array.isArray(value)) {
-    for (const entry of value) collectRequirement(out, entry);
+    const alternatives = value.filter(isStructuredAlternative);
+    const alternativeKeys = new Set(alternatives.map(entry => `${rawRequirementName(entry)}|${rawRequirementQuantity(entry)}`));
+    if (alternatives.length > 1) addAlternativeRequirement(out, alternatives);
+    for (const entry of value) {
+      const key = `${rawRequirementName(entry)}|${rawRequirementQuantity(entry)}`;
+      if (alternatives.length > 1 && alternativeKeys.has(key)) continue;
+      collectRequirement(out, entry);
+    }
     return;
   }
   if (typeof value === "string") {
@@ -136,11 +164,11 @@ function collectRequirement(out, value) {
   if (typeof value === "object") {
     const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or;
     if (Array.isArray(alternatives) && alternatives.length) {
-      addAlternativeRequirement(out, alternatives.map(v => typeof v === "object" ? (v.name ?? v.nom ?? v.label ?? v.item ?? v.component ?? v.composant ?? v.slug ?? v.id) : v));
+      addAlternativeRequirement(out, alternatives);
       return;
     }
-    const name = value.name ?? value.nom ?? value.label ?? value.item ?? value.component ?? value.composant ?? value.slug ?? value.id;
-    const qty = value.quantity ?? value.quantite ?? value.qty ?? value.nombre ?? value.count ?? value.value ?? 1;
+    const name = rawRequirementName(value);
+    const qty = rawRequirementQuantity(value);
     if (name) addRequirement(out, name, qty);
   }
 }
