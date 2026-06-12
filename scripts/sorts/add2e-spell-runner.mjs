@@ -1,22 +1,8 @@
-/** ADD2E - Runners de sorts de Clerc - Foundry V13/V14/V15. */
+/** ADD2E - Runners generiques par type de mecanique - Foundry V13/V14/V15. */
 import { ADD2E_SPELL_MECHANICS } from "./add2e-spell-mechanics.mjs";
+import { ADD2E_SPELL_CATALOG } from "./add2e-spell-catalog.mjs";
 
 const { escapeHtml: esc, targetActors, activeTags, sourceContext, confirmDialog, playVfx, chat, standardStatus, effectData, createEffect, rollSave, targetRule, targetNames: names, alignmentOf, applyMany } = ADD2E_SPELL_MECHANICS;
-
-const CLERIC_SPELLS = {
-  augure: { name: "Augure", fx: "augure", color: "#b78cff" },
-  cantique: { name: "Cantique", fx: "cantique", color: "#ffd76a" },
-  "charme-serpents": { name: "Charme-serpents", fx: "charme", color: "#69d48f" },
-  "detection-des-charmes": { name: "Détection des charmes", fx: "detection", color: "#92d9ff" },
-  "detection-des-pieges": { name: "Détection des pièges", fx: "detection", color: "#ffb45d" },
-  "langage-des-animaux": { name: "Langage animal", fx: "communication", color: "#79cf75" },
-  "marteau-spirituel": { name: "Marteau spirituel", fx: "projectile_magique", color: "#e8e8ff" },
-  paralysie: { name: "Paralysie", fx: "paralysie", color: "#8eb6ff" },
-  "connaissance-des-alignements": { name: "Perception des alignements", fx: "detection", color: "#e6b5ff" },
-  "resistance-au-feu": { name: "Résistance au feu", fx: "resistance_feu", color: "#ff7a3d" },
-  "ralentissement-du-poison": { name: "Retardement du poison", fx: "soin", color: "#75d6a2" },
-  "silence-rayon-de-15-pieds": { name: "Silence sur 5 mètres", fx: "silence", color: "#aeb8c8" }
-};
 
 async function runAugure(ctx, spell) {
   const chance = Math.min(100, 70 + ctx.level);
@@ -154,12 +140,39 @@ async function runSilence(ctx, spell) {
   return true;
 }
 
-export async function runClericSpell(context, key) {
-  const spell = CLERIC_SPELLS[key];
+export async function runDivinationAssistSpell(ctx, spell) { return runAugure(ctx, spell); }
+export async function runBuffDebuffSpell(ctx, spell) { return runCantique(ctx, spell); }
+export async function runCommunicationSpell(ctx, spell) { return runAnimalLanguage(ctx, spell); }
+export async function runTemporaryWeaponSpell(ctx, spell) { return runSpiritualHammer(ctx, spell); }
+export async function runProtectionSpell(ctx, spell) { return runFireResistance(ctx, spell); }
+export async function runSilenceSpell(ctx, spell) { return runSilence(ctx, spell); }
+export async function runDetectionSpell(ctx, spell) {
+  const operations = { structured_charms: runDetectCharms, traps: runDetectTraps, alignment: runAlignment };
+  return operations[spell.operation]?.(ctx, spell) ?? false;
+}
+export async function runStatusSpell(ctx, spell) {
+  const operations = { snake_charm: runSnakeCharm, paralysis: runParalysis, delay_poison: runDelayPoison };
+  return operations[spell.operation]?.(ctx, spell) ?? false;
+}
+
+const MECHANIC_RUNNERS = Object.freeze({
+  divination_assist: runDivinationAssistSpell,
+  buff_debuff: runBuffDebuffSpell,
+  communication: runCommunicationSpell,
+  temporary_weapon: runTemporaryWeaponSpell,
+  protection: runProtectionSpell,
+  silence: runSilenceSpell,
+  detection: runDetectionSpell,
+  status: runStatusSpell
+});
+
+export async function runAdd2eSpell({ slug, ...context }) {
+  const spell = ADD2E_SPELL_CATALOG[slug];
   if (!spell) return false;
-  const ctx = sourceContext(context ?? {});
+  const mechanicRunner = MECHANIC_RUNNERS[spell.mechanic];
+  if (!mechanicRunner) return false;
+  const ctx = sourceContext(context);
   if (!ctx.sourceItem || !ctx.caster || !ctx.casterToken) { ui.notifications?.error?.(`${spell.name} : source, lanceur ou token introuvable.`); return false; }
-  const runners = { augure: runAugure, cantique: runCantique, "charme-serpents": runSnakeCharm, "detection-des-charmes": runDetectCharms, "detection-des-pieges": runDetectTraps, "langage-des-animaux": runAnimalLanguage, "marteau-spirituel": runSpiritualHammer, paralysie: runParalysis, "connaissance-des-alignements": runAlignment, "resistance-au-feu": runFireResistance, "ralentissement-du-poison": runDelayPoison, "silence-rayon-de-15-pieds": runSilence };
-  try { return (await runners[key](ctx, spell)) === true; }
-  catch (error) { console.error(`[ADD2E][SPELL_MECHANICS][${key}]`, error); ui.notifications?.error?.(`${spell.name} : erreur de résolution.`); return false; }
+  try { return (await mechanicRunner(ctx, spell)) === true; }
+  catch (error) { console.error(`[ADD2E][SPELL_MECHANICS][${slug}]`, error); ui.notifications?.error?.(`${spell.name} : erreur de résolution.`); return false; }
 }

@@ -26,15 +26,18 @@ Les 12 onUse raccordés utilisent désormais un helper partagé DialogV2/VFX et 
 - scripts/add2e-attack/06-cast-spell.mjs : refuse avant consommation un sort verbal si le lanceur porte Silence.
 - scripts/add2e/18c-active-effects-expiration.mjs et scripts/add2e-active-effects-expire.js : suppriment l'arme temporaire liée au Marteau spirituel.
 - scripts/sorts/add2e-spell-mechanics.mjs : socle générique partagé évitant la duplication des onUse.
-- scripts/sorts/add2e-cleric-spell-runners.mjs : runners et registre de classe Clerc réutilisables.
+- scripts/sorts/add2e-spell-catalog.mjs : configurations déclaratives sans logique de classe.
+- scripts/sorts/add2e-spell-runner.mjs : runners génériques par type de mécanique.
 
 ## Architecture générique des mécaniques de sorts
 
-- `scripts/sorts/add2e-spell-mechanics.mjs` contient maintenant uniquement le socle générique réutilisable : résolution du lanceur et des cibles, DialogV2, VFX, ChatMessage, ActiveEffect, durées, sauvegardes, statuts et application multi-cibles.
-- Les métadonnées, le registre et les runners spécifiques aux sorts de Clerc sont regroupés dans `scripts/sorts/add2e-cleric-spell-runners.mjs`, un fichier de runners de classe réutilisable.
-- Les 12 scripts Clerc niveau 2 importent ce runner de classe et appellent son point d'entrée stable `runClericSpell`.
-- Aucun helper par niveau n'est créé. Cette structure servira directement aux sorts Clerc niveau 3+ sans dupliquer le socle générique.
-- Aucun comportement Clerc niveau 2 n'a changé : les corps des 12 runners, leurs résolutions, ActiveEffects, VFX, retours stricts et intégrations centrales sont conservés à l'identique.
+- L'architecture par classe est supprimée : aucun runner métier n'est lié au Clerc.
+- `scripts/sorts/add2e-spell-mechanics.mjs` reste le socle bas niveau commun.
+- `scripts/sorts/add2e-spell-catalog.mjs` contient uniquement les configurations déclaratives des sorts.
+- `scripts/sorts/add2e-spell-runner.mjs` route les configurations vers des runners génériques par famille de mécanique.
+- Les 12 scripts Clerc niveau 2 appellent maintenant `runAdd2eSpell`.
+- Aucun comportement fonctionnel n'a changé ; les résolveurs existants sont conservés dans le runner générique.
+- L'architecture est utilisable sans duplication par Clerc, Druide, Magicien et Illusionniste.
 ## Flags et intégrations
 
 Les effets utilisent flags.add2e.tags avec notamment bonus_attaque, bonus_degats, bonus_save, malus_attaque, malus_degats, etat:paralysie, resistance:feu, bonus_save_vs:feu:3, poison:retarde, silence:verbal et anti_sort:verbal. Les durées numériques sont exprimées en rounds et expirent par le moteur existant.
