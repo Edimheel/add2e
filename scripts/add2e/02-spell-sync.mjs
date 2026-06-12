@@ -1,10 +1,10 @@
 // ============================================================
 // ADD2E — Synchronisation automatique des sorts Clerc/Druide
 // Source stricte : compendium add2e.sorts
-// Version : 2026-05-26-spell-sync-v11-restore-slot-helper
+// Version : 2026-06-12-spell-sync-sanitize-placeholders-v1
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-05-26-spell-sync-v11-restore-slot-helper";
+const ADD2E_SPELL_SYNC_VERSION = "2026-06-12-spell-sync-sanitize-placeholders-v1";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 function add2eSpellSyncClone(value) {
@@ -12,6 +12,47 @@ function add2eSpellSyncClone(value) {
   if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
   if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
   return JSON.parse(JSON.stringify(value));
+}
+
+function add2eSpellSyncIsPlaceholder(value) {
+  return typeof value === "string" && /a[_\s-]*comple/i.test(value);
+}
+
+function add2eSpellSyncCleanPlaceholders(value) {
+  if (add2eSpellSyncIsPlaceholder(value)) return "";
+  if (Array.isArray(value)) return value.map(add2eSpellSyncCleanPlaceholders).filter(v => !(v === "" || v === null || v === undefined));
+  if (value && typeof value === "object") {
+    const clone = add2eSpellSyncClone(value);
+    for (const [key, entry] of Object.entries(clone)) clone[key] = add2eSpellSyncCleanPlaceholders(entry);
+    return clone;
+  }
+  return value;
+}
+
+function add2eSpellSyncFirstCleanText(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    if (add2eSpellSyncIsPlaceholder(value)) continue;
+    const text = String(value).trim();
+    if (text) return text;
+  }
+  return "";
+}
+
+function add2eSpellSyncSanitizeData(data) {
+  const clean = add2eSpellSyncCleanPlaceholders(data);
+  const system = clean.system ?? {};
+  clean.system = system;
+
+  const ecole = add2eSpellSyncFirstCleanText(system["école"], system.ecole, system.school);
+  if (!add2eSpellSyncFirstCleanText(system["école"]) && ecole) system["école"] = ecole;
+  if (!add2eSpellSyncFirstCleanText(system.ecole) && ecole) system.ecole = ecole;
+
+  const componentTypes = add2eSpellSyncFirstCleanText(system.type, system.composantes, system.composants, system.components);
+  if (!add2eSpellSyncFirstCleanText(system.type) && componentTypes) system.type = componentTypes;
+  if (!add2eSpellSyncFirstCleanText(system.composantes) && componentTypes) system.composantes = componentTypes;
+
+  return clean;
 }
 
 function add2eSpellSyncMaybeJson(value) {
@@ -320,6 +361,7 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
   const duplicateKeys = [];
   const skipped = [];
   let nonSortDocuments = 0;
+  let sanitizedDocuments = 0;
 
   if (!docs.length) {
     globalThis.ADD2E_SPELL_SYNC_CACHE = { cacheKey, builtAt: Date.now(), entries: [], count: 0, docsCount: 0, nonSortDocuments: 0, duplicateCount: 0, duplicateKeys: [], skippedCount: 0, skipped: [] };
@@ -333,7 +375,10 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
       continue;
     }
 
-    const data = doc.toObject();
+    const rawData = doc.toObject();
+    const hadPlaceholders = JSON.stringify(rawData).match(/a[_\s-]*comple/i) !== null;
+    const data = add2eSpellSyncSanitizeData(rawData);
+    if (hadPlaceholders) sanitizedDocuments += 1;
     const system = data.system ?? {};
     const level = add2eSpellSyncSpellLevel(system);
     const lists = add2eSpellSyncSpellLists(system);
@@ -365,7 +410,7 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
   }
 
   entries.sort((a, b) => a.level - b.level || String(a.name).localeCompare(String(b.name), "fr"));
-  const cache = { cacheKey, builtAt: Date.now(), entries, count: entries.length, docsCount: docs.length, nonSortDocuments, duplicateCount: duplicateKeys.length, duplicateKeys, skippedCount: skipped.length, skipped };
+  const cache = { cacheKey, builtAt: Date.now(), entries, count: entries.length, docsCount: docs.length, nonSortDocuments, duplicateCount: duplicateKeys.length, duplicateKeys, skippedCount: skipped.length, skipped, sanitizedDocuments };
   globalThis.ADD2E_SPELL_SYNC_CACHE = cache;
 
   console.info("[ADD2E][SPELL_SYNC][CACHE_READY]", {
@@ -375,9 +420,11 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
     entries: entries.length,
     nonSortDocuments,
     duplicatesMerged: duplicateKeys.length,
+    sanitizedDocuments,
     skipped: skipped.length,
     ms: Math.round(performance.now() - t0)
   });
+  if (sanitizedDocuments) console.warn("[ADD2E][SPELL_SYNC][CACHE_SANITIZED] Des valeurs a_completer ont été neutralisées depuis le compendium add2e.sorts.", { sanitizedDocuments });
   if (skipped.length) console.warn("[ADD2E][SPELL_SYNC][CACHE_SKIPPED]", skipped.slice(0, 80));
   return cache;
 }
@@ -486,7 +533,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
 
       selectedKeys.add(entry.stableKey);
       addScanStat(spellLevel, "import");
-      const data = add2eSpellSyncClone(entry.data);
+      const data = add2eSpellSyncSanitizeData(add2eSpellSyncClone(entry.data));
       delete data._id;
       data.folder = null;
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClass", classItem.name);
@@ -512,6 +559,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
       mode,
       cacheEntries: cache.entries.length,
       cacheDocs: cache.docsCount,
+      sanitizedDocuments: cache.sanitizedDocuments ?? 0,
       durationMs,
       scanStatsByLevel,
       importedNames: createData.map(s => s.name),
@@ -521,7 +569,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
     console.info("[ADD2E][CLASS_DROP_SPELLS][DONE]", summary);
     if (rejectedSpells.length) console.warn("[ADD2E][CLASS_DROP_SPELLS][REJECTED]", rejectedSpells);
 
-    return { handled: true, imported: createData.length, deleted: mode === "replace" ? existingSpellIds.length : 0, maxSpellLevel, minSpellLevel, mode, durationMs, cacheEntries: cache.entries.length, cacheDocs: cache.docsCount, rejectedSpells };
+    return { handled: true, imported: createData.length, deleted: mode === "replace" ? existingSpellIds.length : 0, maxSpellLevel, minSpellLevel, mode, durationMs, cacheEntries: cache.entries.length, cacheDocs: cache.docsCount, sanitizedDocuments: cache.sanitizedDocuments ?? 0, rejectedSpells };
   } finally {
     add2eSpellSyncCloseWaitMessage(waitDialog);
   }
