@@ -19,9 +19,9 @@
     "scripts/add2e-action-hud.mjs",
     "scripts/add2e.mjs",
     "scripts/add2e/22-vendor.mjs",
+    "scripts/monster-sheet.mjs",
     "scripts/08-character-sheet-ui.mjs",
-    "scripts/resolveActiveEffectsOnTarget.mjs",
-    "scripts/monster-sheet.mjs"
+    "scripts/resolveActiveEffectsOnTarget.mjs"
   ],
   "styles": [
     "styles/add2e.css",
