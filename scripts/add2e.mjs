@@ -27,14 +27,31 @@ import "./add2e/14-item-sheets.mjs";
 import "./add2e/15-validation-sockets.mjs";
 import "./add2e/16-preparation-display.mjs";
 import "./add2e/17-movement-xp.mjs";
-import "./add2e/17b-multiclass.mjs";
-import "./add2e/17c-multiclass-mechanics.mjs";
 import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/20-session-xp.mjs";
 import "./add2e/21-consumables.mjs";
 
 const ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION = "2026-05-26-dialog-v2-alert-fallback-v1";
 globalThis.ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION = ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION;
+
+const ADD2E_MULTICLASS_SAFE_IMPORT_VERSION = "2026-06-12-multiclass-safe-dynamic-import-v1";
+globalThis.ADD2E_MULTICLASS_SAFE_IMPORT_VERSION = ADD2E_MULTICLASS_SAFE_IMPORT_VERSION;
+
+async function add2eLoadMulticlassModulesSafely() {
+  if (globalThis.__ADD2E_MULTICLASS_SAFE_IMPORT_DONE) return;
+  globalThis.__ADD2E_MULTICLASS_SAFE_IMPORT_DONE = true;
+
+  try {
+    await import("./add2e/17b-multiclass.mjs");
+    await import("./add2e/17c-multiclass-mechanics.mjs");
+    console.log("[ADD2E][MULTICLASSE][SAFE_IMPORT]", ADD2E_MULTICLASS_SAFE_IMPORT_VERSION);
+  } catch (err) {
+    console.error("[ADD2E][MULTICLASSE][SAFE_IMPORT_ERROR] Le multiclassage n'a pas été chargé, mais le système continue.", err);
+    ui.notifications?.error?.("ADD2E : erreur au chargement du multiclassage. Les feuilles de base restent disponibles. Voir console.");
+  }
+}
+
+Hooks.once("ready", () => add2eLoadMulticlassModulesSafely());
 
 function add2eInstallDialogV2AlertFallback() {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
