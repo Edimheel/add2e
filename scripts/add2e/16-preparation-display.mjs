@@ -1,12 +1,67 @@
 // ============================================================
 // ADD2E — Contrôles de mémorisation des sorts
-// Version : 2026-06-12-v45-use-visible-counter-for-plus
+// Version : 2026-06-12-v46-restore-single-list-count
 // ============================================================
-// Source de vérité des quotas : 07-spellcasting-rules.mjs.
-// Ici : clics +/-, rafraîchissement des compteurs visibles et composants.
+// Source des quotas : 07-spellcasting-rules.mjs.
+// Correction de comptage : pour les sorts à une seule liste, memorizedCount
+// reste la source d'autorité comme sur dev-grosses-modifications.
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v45-use-visible-counter-for-plus";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v46-restore-single-list-count";
 globalThis.ADD2E_SPELL_PREP_SCROLL_VERSION = ADD2E_SPELL_PREP_SCROLL_VERSION;
+
+function add2eSpellPrepInstallSingleListCountOverride() {
+  if (globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V46) return;
+  globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V46 = true;
+
+  const normalizeKey = value => typeof add2eNormalizeSpellKey === "function" ? add2eNormalizeSpellKey(value) : String(value ?? "").trim().toLowerCase();
+  const regular = sort => typeof add2eIsRegularPreparableSpell === "function"
+    ? add2eIsRegularPreparableSpell(sort)
+    : !(typeof add2eIsObjectMagicSpellForPreparation === "function" && add2eIsObjectMagicSpellForPreparation(sort));
+  const listsOf = sort => typeof add2eGetSpellListsFromItem === "function" ? add2eGetSpellListsFromItem(sort) : [];
+  const byListOf = sort => {
+    const raw = sort?.getFlag?.("add2e", "memorizedByList") ?? sort?.flags?.add2e?.memorizedByList ?? {};
+    return raw && typeof raw === "object" && !Array.isArray(raw) ? foundry.utils.deepClone(raw) : {};
+  };
+
+  globalThis.add2eGetMemorizedCountForEntry = function add2eGetMemorizedCountForEntryCompat(sort, entry) {
+    const key = normalizeKey(entry?.key);
+    if (!sort || !key || !regular(sort)) return 0;
+    const lists = listsOf(sort).map(normalizeKey).filter(Boolean);
+    const legacyRaw = sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount;
+    const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
+    const legacyCount = Math.max(0, Number(legacyRaw) || 0);
+    if (lists.length <= 1 && lists.includes(key) && legacyPresent) return legacyCount;
+    const byList = byListOf(sort);
+    if (Object.prototype.hasOwnProperty.call(byList, key)) return Math.max(0, Number(byList[key] ?? 0) || 0);
+    if (lists.length <= 1 && lists.includes(key)) return legacyCount;
+    return 0;
+  };
+
+  globalThis.add2eGetTotalMemorizedCount = function add2eGetTotalMemorizedCountCompat(sort) {
+    if (!sort || !regular(sort)) return 0;
+    const lists = listsOf(sort).map(normalizeKey).filter(Boolean);
+    const legacyRaw = sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount;
+    const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
+    if (lists.length <= 1 && legacyPresent) return Math.max(0, Number(legacyRaw) || 0);
+    const byList = byListOf(sort);
+    return Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
+  };
+
+  globalThis.add2eCountPreparedForEntryLevel = function add2eCountPreparedForEntryLevelCompat(actor, entry, spellLevel) {
+    const key = normalizeKey(entry?.key);
+    const lvl = Number(spellLevel) || 1;
+    let total = 0;
+    for (const sort of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
+      if (!regular(sort)) continue;
+      const sLvl = Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1;
+      if (sLvl !== lvl) continue;
+      const lists = listsOf(sort).map(normalizeKey).filter(Boolean);
+      if (!lists.includes(key)) continue;
+      total += globalThis.add2eGetMemorizedCountForEntry(sort, entry);
+    }
+    return total;
+  };
+}
 
 function add2eSpellPrepActorWindows(actor) {
   const actorId = String(actor?.id ?? "");
@@ -227,12 +282,6 @@ function add2eSpellPrepInjectComponents(actor, root) {
   }
 }
 
-async function add2eSpellPrepClearLegacyMemorizedCount(sort) {
-  if (!sort?.flags?.add2e || !Object.prototype.hasOwnProperty.call(sort.flags.add2e, "memorizedCount")) return;
-  try { await sort.unsetFlag("add2e", "memorizedCount", { render: false }); }
-  catch (err) { console.warn("[ADD2E][SPELL_PREP][LEGACY_COUNT_CLEAR_FAILED]", err); }
-}
-
 async function add2eHandleSpellPreparationButton(btn, event = null, actorOverride = null) {
   event?.preventDefault?.();
   event?.stopPropagation?.();
@@ -244,6 +293,7 @@ async function add2eHandleSpellPreparationButton(btn, event = null, actorOverrid
   const snapshot = add2eSpellPrepSnapshot(actor);
 
   try {
+    add2eSpellPrepInstallSingleListCountOverride();
     const sortId = btn.dataset.sortId || btn.closest?.("[data-sort-id]")?.dataset?.sortId;
     const entryKey = add2eNormalizeSpellKey(btn.dataset.entryKey || btn.dataset.spellEntryKey || btn.getAttribute("data-entry-key") || btn.getAttribute("data-spell-entry-key"));
     const sort = actor.items.get(sortId);
@@ -289,11 +339,11 @@ async function add2eHandleSpellPreparationButton(btn, event = null, actorOverrid
     add2eSpellPrepSetRowCount(actor, sort, next, btn);
     add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, totalAfter, limit, btn);
     await add2eSetMemorizedCountForEntry(sort, entry, next);
-    await add2eSpellPrepClearLegacyMemorizedCount(sort);
     add2eSpellPrepSetRowCount(actor, sort, next, btn);
     add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, totalAfter, limit, btn);
 
     setTimeout(() => {
+      add2eSpellPrepInstallSingleListCountOverride();
       for (const app of add2eSpellPrepActorWindows(actor)) app.render?.(false);
       add2eSpellPrepRestoreRepeated(snapshot);
     }, 120);
@@ -307,6 +357,7 @@ async function add2eHandleSpellPreparationButton(btn, event = null, actorOverrid
 
 function add2eBindNativeHbsSpellPreparationControls(actor, root) {
   if (!actor || !root) return;
+  add2eSpellPrepInstallSingleListCountOverride();
   root.querySelectorAll(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus").forEach(btn => {
     if (btn.dataset.add2ePrepBound === "1") return;
     btn.dataset.add2ePrepBound = "1";
@@ -317,8 +368,9 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
 }
 
 function add2eInstallDelegatedSpellPreparationControls() {
-  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_V45_INSTALLED) return;
-  globalThis.ADD2E_SPELL_PREP_DELEGATED_V45_INSTALLED = true;
+  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_V46_INSTALLED) return;
+  globalThis.ADD2E_SPELL_PREP_DELEGATED_V46_INSTALLED = true;
+  add2eSpellPrepInstallSingleListCountOverride();
   document.addEventListener("click", ev => {
     const btn = ev.target?.closest?.(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus");
     if (!btn) return;
@@ -330,6 +382,7 @@ function add2eInstallDelegatedSpellPreparationControls() {
 function add2eOnActorSheetRendered(app, html) {
   const actor = app?.actor ?? app?.document;
   const root = html?.[0] ?? html;
+  add2eSpellPrepInstallSingleListCountOverride();
   setTimeout(() => {
     add2eBindNativeHbsSpellPreparationControls(actor, root);
     add2eSpellPrepInjectComponents(actor, root);
@@ -346,3 +399,4 @@ Hooks.on("renderApplication", (app, html) => {
 try { globalThis.add2eBindNativeHbsSpellPreparationControls = add2eBindNativeHbsSpellPreparationControls; } catch (_e) {}
 try { globalThis.add2eHandleSpellPreparationButton = add2eHandleSpellPreparationButton; } catch (_e) {}
 try { globalThis.add2eSpellPrepInjectComponents = add2eSpellPrepInjectComponents; } catch (_e) {}
+try { globalThis.add2eSpellPrepInstallSingleListCountOverride = add2eSpellPrepInstallSingleListCountOverride; } catch (_e) {}
