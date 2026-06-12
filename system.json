@@ -20,7 +20,6 @@
     "scripts/add2e.mjs",
     "scripts/add2e/22-vendor.mjs",
     "scripts/08-character-sheet-ui.mjs",
-    "scripts/08b-character-sheet-spell-json-columns.mjs",
     "scripts/resolveActiveEffectsOnTarget.mjs",
     "scripts/monster-sheet.mjs"
   ],
