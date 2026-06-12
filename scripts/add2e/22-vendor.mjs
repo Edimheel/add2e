@@ -42,7 +42,7 @@ import {
 } from "./22e-consumables-core.mjs";
 
 const ADD2E_SHOP_TOKEN_PRESENTATION_VERSION = "2026-05-28-shop-token-name-lock-rotation-hide-actors-v2";
-const ADD2E_SHOP_BUYER_SELECTOR_VERSION = "2026-06-12-shop-buyer-selector-visible-header-v2";
+const ADD2E_SHOP_BUYER_SELECTOR_VERSION = "2026-06-12-shop-buyer-selector-scene-tokens-v3";
 
 function add2eShopTokenDisplayAlwaysValue() {
   return CONST?.TOKEN_DISPLAY_MODES?.ALWAYS ?? 50;
@@ -123,16 +123,41 @@ function add2eShopActorTypeLabel(actor) {
   return "Autres acteurs";
 }
 
-function add2eShopBuyerOptions(selectedId = "") {
+function add2eShopSceneTokenEntries() {
+  const tokens = canvas?.tokens?.placeables ?? [];
+  return tokens
+    .filter(token => token?.id && token?.actor && !add2eIsShopActor(token.actor))
+    .map(token => {
+      const actor = token.actor;
+      const label = add2eShopActorTypeLabel(actor);
+      const tokenName = token.document?.name ?? token.name ?? actor.name ?? "Token";
+      const actorName = actor.name && actor.name !== tokenName ? ` — ${actor.name}` : "";
+      return { token, actor, label, name: `${tokenName}${actorName}` };
+    })
+    .sort((a, b) => String(a.label).localeCompare(String(b.label)) || String(a.name).localeCompare(String(b.name)));
+}
+
+function add2eShopBuyerOptions(selectedBuyer = null) {
   const groups = new Map();
-  for (const actor of game.actors ?? []) {
-    if (!actor?.id || add2eIsShopActor(actor)) continue;
-    const label = add2eShopActorTypeLabel(actor);
-    if (!groups.has(label)) groups.set(label, []);
-    groups.get(label).push(actor);
+  for (const entry of add2eShopSceneTokenEntries()) {
+    if (!groups.has(entry.label)) groups.set(entry.label, []);
+    groups.get(entry.label).push(entry);
   }
-  for (const actors of groups.values()) actors.sort((a, b) => String(a.name).localeCompare(String(b.name)));
-  return [...groups.entries()].map(([label, actors]) => `<optgroup label="${foundry.utils.escapeHTML(label)}">${actors.map(actor => `<option value="${foundry.utils.escapeHTML(actor.id)}" ${actor.id === selectedId ? "selected" : ""}>${foundry.utils.escapeHTML(actor.name)}</option>`).join("")}</optgroup>`).join("");
+
+  if (!groups.size) return `<option value="" disabled selected>Aucun token disponible sur la scène</option>`;
+
+  const selectedActorId = selectedBuyer?.id ?? "";
+  const selectedUuid = selectedBuyer?.uuid ?? "";
+  return [...groups.entries()].map(([label, entries]) => `<optgroup label="${foundry.utils.escapeHTML(label)}">${entries.map(entry => {
+    const selected = entry.actor?.id === selectedActorId || entry.actor?.uuid === selectedUuid;
+    return `<option value="${foundry.utils.escapeHTML(entry.token.id)}" ${selected ? "selected" : ""}>${foundry.utils.escapeHTML(entry.name)}</option>`;
+  }).join("")}</optgroup>`).join("");
+}
+
+function add2eResolveShopBuyerFromTokenId(tokenId) {
+  if (!tokenId) return null;
+  const token = canvas?.tokens?.get?.(tokenId) ?? canvas?.tokens?.placeables?.find?.(t => t?.id === tokenId || t?.document?.id === tokenId) ?? null;
+  return token?.actor ?? null;
 }
 
 function add2eAppElement(app) {
@@ -172,11 +197,11 @@ function add2eInjectShopBuyerSelector(root = null) {
     const borderColor = isVendorRoot ? "#d9bf73" : "#b9965e";
 
     headerText.style.cssText = "display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;";
-    headerText.innerHTML = `<button type="button" class="add2e-shop-buyer-label" style="border:2px solid ${borderColor};border-radius:8px;background:${buttonColor};color:#ffe7a8;font-weight:950;padding:6px 10px;cursor:default;">Dans la peau de...</button><select class="add2e-shop-buyer-select" style="min-height:34px;min-width:280px;max-width:440px;border:2px solid ${borderColor};border-radius:8px;background:#fffaf0;color:#241a10;font-weight:950;padding:5px 8px;">${add2eShopBuyerOptions(buyer?.id)}</select><span style="font-weight:850;color:${isVendorRoot ? "#fff2c2" : "#f3e4c9"};">Acteur courant : <strong>${foundry.utils.escapeHTML(buyer?.name ?? "aucun")}</strong></span>`;
+    headerText.innerHTML = `<button type="button" class="add2e-shop-buyer-label" style="border:2px solid ${borderColor};border-radius:8px;background:${buttonColor};color:#ffe7a8;font-weight:950;padding:6px 10px;cursor:default;">Dans la peau de...</button><select class="add2e-shop-buyer-select" style="min-height:34px;min-width:280px;max-width:440px;border:2px solid ${borderColor};border-radius:8px;background:#fffaf0;color:#241a10;font-weight:950;padding:5px 8px;">${add2eShopBuyerOptions(buyer)}</select><span style="font-weight:850;color:${isVendorRoot ? "#fff2c2" : "#f3e4c9"};">Token courant : <strong>${foundry.utils.escapeHTML(buyer?.name ?? "aucun")}</strong></span>`;
 
     const select = headerText.querySelector(".add2e-shop-buyer-select");
     select?.addEventListener("change", event => {
-      const next = game.actors?.get?.(event.currentTarget.value);
+      const next = add2eResolveShopBuyerFromTokenId(event.currentTarget.value);
       const liveApp = add2eFindAppForRoot(base);
       if (!next || !liveApp) return;
       liveApp.buyer = next;
@@ -195,6 +220,10 @@ function add2eInstallShopBuyerSelectorHooks() {
   globalThis.__ADD2E_SHOP_BUYER_SELECTOR_V2 = true;
   const injectSoon = root => window.setTimeout(() => add2eInjectShopBuyerSelector(root), 0);
   Hooks.on("renderApplication", app => injectSoon(add2eAppElement(app)));
+  Hooks.on("canvasReady", () => injectSoon(document.body));
+  Hooks.on("createToken", () => injectSoon(document.body));
+  Hooks.on("deleteToken", () => injectSoon(document.body));
+  Hooks.on("updateToken", () => injectSoon(document.body));
   const observer = new MutationObserver(mutations => {
     if (mutations.some(m => [...m.addedNodes].some(n => n?.nodeType === 1 && (n.matches?.(".add2e-vendor-root,.add2e-armorer-root") || n.querySelector?.(".add2e-vendor-root,.add2e-armorer-root"))))) injectSoon(document.body);
   });
