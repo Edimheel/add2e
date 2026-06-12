@@ -1,6 +1,6 @@
 // scripts/add2e/handlebars-helpers.mjs
 // ADD2E — Helpers Handlebars partagés.
-// Version : 2026-06-12-spell-components-extended-fields-v1
+// Version : 2026-06-12-spell-components-structured-alternatives-v2
 
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.json) {
   Handlebars.registerHelper("json", ctx => JSON.stringify(ctx, null, 2));
@@ -37,422 +37,68 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.formatSortChamp) {
 }
 
 function add2eHbsSlug(value) {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[’']/g, "_")
-    .replace(/[^a-z0-9:+-]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+  return String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[’']/g, "_").replace(/[^a-z0-9:+-]+/g, "_").replace(/^_+|_+$/g, "");
 }
-
-function add2eHbsAsArray(value) {
-  if (Array.isArray(value)) return value;
-  if (!value) return [];
-  if (typeof value === "object") return Object.values(value);
-  return [value];
-}
-
-function add2eHbsToTagArray(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.flatMap(add2eHbsToTagArray).filter(Boolean);
-  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(v => v.trim()).filter(Boolean);
-  if (typeof value === "object") {
-    for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value"]) {
-      if (value[key] !== undefined) return add2eHbsToTagArray(value[key]);
-    }
-  }
-  return [];
-}
-
-function add2eHbsItemTags(item) {
-  const s = item?.system ?? {};
-  const flags = item?.flags?.add2e ?? {};
-  return [
-    item?.name,
-    s.nom,
-    s.categorie,
-    s.category,
-    s.type,
-    s.sousType,
-    s.sous_type,
-    s.slot,
-    ...add2eHbsToTagArray(s.tags),
-    ...add2eHbsToTagArray(s.effectTags),
-    ...add2eHbsToTagArray(s.effecttags),
-    ...add2eHbsToTagArray(flags.tags)
-  ].map(add2eHbsSlug).filter(Boolean);
-}
-
-function add2eHbsBool(value) {
-  if (value === true) return true;
-  if (value === false || value === undefined || value === null) return false;
-  return ["true", "1", "yes", "oui", "on", "checked", "equipped", "equipe", "équipé", "equipee", "équipée", "portee", "portée"].includes(String(value).trim().toLowerCase());
-}
-
-function add2eHbsItemEquipped(item) {
-  const s = item?.system ?? {};
-  const flags = item?.flags?.add2e ?? {};
-  return add2eHbsBool(s.equipee) || add2eHbsBool(s.equiped) || add2eHbsBool(s.equipped) || flags.equippedProjectile === true || flags.carquoisEquipe === true || flags.selectedProjectile === true;
-}
-
-function add2eHbsIsAmmunition(item) {
-  const s = item?.system ?? {};
-  const name = add2eHbsSlug(item?.name);
-  const tags = new Set(add2eHbsItemTags(item));
-  const fields = [s.categorie, s.category, s.sousType, s.sous_type, s.type, s.subtype, s.kind, s.slot].map(add2eHbsSlug).filter(Boolean);
-  const rejected = new Set(["carquois", "quiver", "contenant", "container", "sac", "sacoche", "etui", "etuis", "boite", "boîte", "bourse"]);
-  if ([...fields, ...tags].some(v => rejected.has(v))) return false;
-  const accepted = new Set(["munition", "munitions", "projectile", "projectiles", "ammo", "ammunition", "trait:munition", "trait:projectile", "categorie:munition", "categorie:projectile", "type:munition", "type:projectile", "famille_arme:munition"]);
-  if (fields.some(v => accepted.has(v))) return true;
-  if ([...tags].some(v => accepted.has(v) || v.startsWith("munition:") || v.startsWith("projectile:"))) return true;
-  return /\b(fleche|fleches|carreau|carreaux|trait|traits|bille|billes|pierre_de_fronde|pierres_de_fronde)\b/.test(name);
-}
-
-function add2eHbsWeaponRequiresProjectile(arme) {
-  const s = arme?.system ?? {};
-  const tags = new Set(add2eHbsItemTags(arme));
-  const name = add2eHbsSlug(arme?.name);
-  if (!(Number(s.portee_courte ?? 0) > 0)) return false;
-  if (["usage:projectile_propulse", "categorie:projectile_propulse", "trait:projectile_propulse", "type:projectile_propulse", "arme:projectile_propulse"].some(t => tags.has(t))) return true;
-  if (/\b(arc|arbalete|fronde)\b/.test(name)) return true;
-  if (["usage:lancer", "usage:jet", "usage:arme_de_jet"].some(t => tags.has(t))) return false;
-  return true;
-}
-
-function add2eHbsFindEquippedProjectile(items) {
-  return add2eHbsAsArray(items).find(item => add2eHbsIsAmmunition(item) && add2eHbsItemEquipped(item)) ?? null;
-}
-
-function add2eHbsDamageData(item) {
-  const s = item?.system ?? {};
-  return s.dégâts ?? s.degats ?? s.damage ?? s.damages ?? null;
-}
-
-function add2eHbsDamagePart(data, keys) {
-  if (!data || typeof data !== "object") return "";
-  for (const key of keys) {
-    const value = data[key];
-    if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
-  }
-  return "";
-}
-
-function add2eHbsDisplayDamageForItem(item) {
-  const data = add2eHbsDamageData(item);
-  if (typeof data === "string" && data.trim()) return data.trim();
-  const medium = add2eHbsDamagePart(data, ["contre_moyen", "moyen", "medium", "m", "M"]);
-  const large = add2eHbsDamagePart(data, ["contre_grand", "grand", "large", "g", "G", "L"]);
-  if (medium || large) return `${medium || "-"} / ${large || "-"}`;
-  const s = item?.system ?? {};
-  const directMedium = s.degats_moyen ?? s.dégâts_moyen ?? s.degatsMoyen ?? s.damageMedium;
-  const directLarge = s.degats_grand ?? s.dégâts_grand ?? s.degatsGrand ?? s.damageLarge;
-  if (directMedium || directLarge) return `${directMedium || "-"} / ${directLarge || "-"}`;
-  return "-";
-}
-
-function add2eHbsComponentSlug(component) {
-  const s = component?.system ?? {};
-  return add2eHbsSlug(s.slug ?? s.composantSlug ?? s.sousType ?? s.sous_type ?? component?.name ?? "");
-}
-
-function add2eHbsIsOnlyComponentCode(value) {
-  const t = String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
-  return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(t);
-}
-
-function add2eHbsAddSpellMaterialEntry(entries, raw, quantity = 1, consume = true) {
-  const nom = String(raw ?? "").trim();
-  if (!nom || add2eHbsIsOnlyComponentCode(nom)) return;
-  const slug = add2eHbsSlug(nom);
-  if (!slug) return;
-  if (entries.some(e => e.slug === slug)) return;
-  entries.push({ slug, nom, quantite: Math.max(1, Number(quantity) || 1), consomme: consume !== false });
-}
-
-function add2eHbsCollectSpellMaterials(entries, value) {
-  if (value === null || value === undefined || value === "") return;
-  if (Array.isArray(value)) {
-    for (const entry of value) add2eHbsCollectSpellMaterials(entries, entry);
-    return;
-  }
-  if (typeof value === "string") {
-    for (const part of value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)) add2eHbsAddSpellMaterialEntry(entries, part, 1, true);
-    return;
-  }
-  if (typeof value === "object") {
-    const name = value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
-    const qty = value.quantite ?? value.quantity ?? value.qty ?? value.nombre ?? value.count ?? 1;
-    if (name) add2eHbsAddSpellMaterialEntry(entries, name, qty, value.consomme ?? value.consume ?? true);
-  }
-}
-
-function add2eHbsSpellMaterialEntries(sort) {
-  const s = sort?.system ?? sort ?? {};
-  const flags = sort?.flags?.add2e ?? sort?.add2e ?? {};
-  const entries = [];
-  for (const field of [
-    s.composants_materiels,
-    s.composantsMateriels,
-    s.materialComponents,
-    s.composants_requis,
-    s.composantsMateriel,
-    s.composant_materiel,
-    s.composantMateriel,
-    s.materiel,
-    s.matériel,
-    s.material,
-    s.materialComponent,
-    s.material_components,
-    s.requiredComponents,
-    s.componentsRequired,
-    s.components?.material,
-    s.components?.materials,
-    sort?.materialComponents,
-    sort?.composants_materiels,
-    sort?.composants_requis,
-    flags.composants_requis,
-    flags.composants,
-    flags.components,
-    flags.requiredComponents
-  ]) add2eHbsCollectSpellMaterials(entries, field);
-
-  for (const tag of [
-    ...add2eHbsToTagArray(s.tags),
-    ...add2eHbsToTagArray(s.effectTags),
-    ...add2eHbsToTagArray(flags.tags),
-    ...add2eHbsToTagArray(flags.effectTags)
-  ]) {
-    const raw = String(tag ?? "").trim();
-    if (/^composant[:_]/i.test(raw)) add2eHbsAddSpellMaterialEntry(entries, raw.replace(/^composant[:_]/i, ""), 1, true);
-  }
-  return entries;
-}
-
-function add2eHbsSpellMaterialSlugs(sort) {
-  return add2eHbsSpellMaterialEntries(sort).map(entry => entry.slug).filter(Boolean);
-}
-
-function add2eHbsSigned(value) {
-  const n = Number(value || 0);
-  return `${n >= 0 ? "+" : ""}${n}`;
-}
-
-function add2eHbsNumeric(value) {
-  const n = Number(value ?? 0);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function add2eHbsClassItems(actor) {
-  return add2eHbsAsArray(actor?.items?.contents ?? actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-}
-
-function add2eHbsClassSlug(cls) {
-  const sys = cls?.system ?? {};
-  return add2eHbsSlug(sys.slug ?? sys.label ?? sys.nom ?? sys.name ?? cls?.name ?? "classe");
-}
-
-function add2eHbsClassLevel(actor, cls) {
-  const slug = add2eHbsClassSlug(cls);
-  const map = actor?.system?.niveaux_par_classe ?? {};
-  return Math.max(1, add2eHbsNumeric(map[slug] ?? cls?.system?.niveau ?? cls?.system?.level ?? actor?.system?.niveau ?? 1));
-}
-
-function add2eHbsProgressionRowForClass(actor, cls) {
-  const level = add2eHbsClassLevel(actor, cls);
-  const progression = Array.isArray(cls?.system?.progression) ? cls.system.progression : [];
-  if (!progression.length) return null;
-  return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null;
-}
-
-function add2eHbsRowThaco(row) {
-  return add2eHbsNumeric(row?.thac0 ?? row?.thaco ?? row?.THAC0 ?? 20);
-}
-
-function add2eHbsBestThaco(actor, fallback = 20) {
-  const classes = add2eHbsClassItems(actor);
-  if (!classes.length || actor?.system?.multiclasse?.enabled !== true) return add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20);
-  const values = classes.map(cls => add2eHbsRowThaco(add2eHbsProgressionRowForClass(actor, cls))).filter(v => Number.isFinite(v) && v > 0);
-  return values.length ? Math.min(...values) : add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20);
-}
-
-function add2eHbsReadSave(row, idx) {
-  const s = row?.savingThrows ?? row?.saves ?? row?.jets_sauvegarde ?? row?.sauvegardes ?? null;
-  if (Array.isArray(s)) return add2eHbsNumeric(s[idx] ?? NaN);
-  if (s && typeof s === "object") {
-    const keys = [
-      ["paralysie", "poison", "mort", "death", "save0"],
-      ["petrification", "pétrification", "polymorphose", "polymorph", "save1"],
-      ["baguettes", "batons", "badines", "wand", "wands", "save2"],
-      ["souffles", "breath", "souffle", "save3"],
-      ["sorts", "sortileges", "sortilèges", "spell", "spells", "save4"]
-    ][Number(idx) || 0] ?? [];
-    for (const key of keys) if (s[key] !== undefined) return add2eHbsNumeric(s[key]);
-  }
-  return NaN;
-}
-
-function add2eHbsBestSave(actor, idx, fallbackRow = null) {
-  const classes = add2eHbsClassItems(actor);
-  if (!classes.length || actor?.system?.multiclasse?.enabled !== true) {
-    const v = add2eHbsReadSave(fallbackRow, idx);
-    return Number.isFinite(v) ? v : "—";
-  }
-  const values = classes.map(cls => add2eHbsReadSave(add2eHbsProgressionRowForClass(actor, cls), idx)).filter(v => Number.isFinite(v) && v > 0);
-  return values.length ? Math.min(...values) : "—";
-}
-
-function add2eHbsWeaponMagicBonus(arme, kind) {
-  try {
-    if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function") return Number(Add2eEffectsEngine.getMagicWeaponBonus(arme, kind)) || 0;
-  } catch (_e) {}
-  return kind === "damage" ? add2eHbsNumeric(arme?.system?.bonus_dom) : add2eHbsNumeric(arme?.system?.bonus_hit);
-}
-
-function add2eHbsEquippedArmorPieces(actor) {
-  const items = add2eHbsAsArray(actor?.items?.contents ?? actor?.items ?? []);
-  return items.filter(item => String(item?.type ?? "") === "armure" && add2eHbsItemEquipped(item));
-}
-
-function add2eHbsArmorOtherBonus(actor, key) {
-  return add2eHbsEquippedArmorPieces(actor).reduce((sum, item) => sum + add2eHbsNumeric(item?.system?.[key]), 0);
-}
-
-function add2eHbsWeaponAbilityBonuses(actor, arme) {
-  const sys = actor?.system ?? {};
-  const type = String(arme?.system?.type_degats ?? "").toLowerCase();
-  const isMelee = type.includes("tranchant") || type.includes("contondant");
-  const isPiercing = type.includes("perforant");
-  if (isMelee) return { hit: add2eHbsNumeric(sys.force_bonus_toucher), damage: add2eHbsNumeric(sys.force_bonus_degats), label: "FOR" };
-  if (isPiercing) return { hit: add2eHbsNumeric(sys.dex_att), damage: add2eHbsNumeric(sys.dex_att), label: "DEX" };
-  return { hit: 0, damage: 0, label: "—" };
-}
-
-function add2eHbsEquippedWeaponRows(actor, listeArmes, listeObjets, combatDefense) {
-  const armes = add2eHbsAsArray(listeArmes).filter(arme => add2eHbsItemEquipped(arme));
-  const thacoBase = add2eHbsBestThaco(actor, combatDefense?.thaco ?? actor?.system?.thac0 ?? 20);
-  const otherHit = add2eHbsArmorOtherBonus(actor, "bonus_toucher");
-  const otherDamage = add2eHbsArmorOtherBonus(actor, "bonus_degats");
-
-  return armes.map(arme => {
-    const ability = add2eHbsWeaponAbilityBonuses(actor, arme);
-    const magicHit = add2eHbsWeaponMagicBonus(arme, "hit");
-    const magicDamage = add2eHbsWeaponMagicBonus(arme, "damage");
-    const totalHit = magicHit + ability.hit + otherHit;
-    const totalDamage = magicDamage + ability.damage + otherDamage;
-    const thacoEffectif = thacoBase - totalHit;
-    return {
-      id: arme?._id ?? arme?.id ?? "",
-      name: arme?.name ?? "Arme",
-      damage: add2eHbsWeaponRequiresProjectile(arme) ? (add2eHbsFindEquippedProjectile(listeObjets) ? add2eHbsDisplayDamageForItem(add2eHbsFindEquippedProjectile(listeObjets)) : add2eHbsDisplayDamageForItem(arme)) : add2eHbsDisplayDamageForItem(arme),
-      type: arme?.system?.type_degats ?? "",
-      abilityLabel: ability.label,
-      magicHit,
-      magicDamage,
-      abilityHit: ability.hit,
-      abilityDamage: ability.damage,
-      otherHit,
-      otherDamage,
-      totalHit,
-      totalDamage,
-      thacoBase,
-      thacoEffectif,
-      magicHitSigned: add2eHbsSigned(magicHit),
-      magicDamageSigned: add2eHbsSigned(magicDamage),
-      abilityHitSigned: add2eHbsSigned(ability.hit),
-      abilityDamageSigned: add2eHbsSigned(ability.damage),
-      otherHitSigned: add2eHbsSigned(otherHit),
-      otherDamageSigned: add2eHbsSigned(otherDamage),
-      totalHitSigned: add2eHbsSigned(totalHit),
-      totalDamageSigned: add2eHbsSigned(totalDamage)
-    };
-  });
-}
+function add2eHbsAsArray(value) { if (Array.isArray(value)) return value; if (!value) return []; if (typeof value === "object") return Object.values(value); return [value]; }
+function add2eHbsToTagArray(value) { if (!value) return []; if (Array.isArray(value)) return value.flatMap(add2eHbsToTagArray).filter(Boolean); if (typeof value === "string") return value.split(/[,;|\n]+/g).map(v => v.trim()).filter(Boolean); if (typeof value === "object") { for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value"]) if (value[key] !== undefined) return add2eHbsToTagArray(value[key]); } return []; }
+function add2eHbsItemTags(item) { const s = item?.system ?? {}; const flags = item?.flags?.add2e ?? {}; return [item?.name, s.nom, s.categorie, s.category, s.type, s.sousType, s.sous_type, s.slot, ...add2eHbsToTagArray(s.tags), ...add2eHbsToTagArray(s.effectTags), ...add2eHbsToTagArray(s.effecttags), ...add2eHbsToTagArray(flags.tags)].map(add2eHbsSlug).filter(Boolean); }
+function add2eHbsBool(value) { if (value === true) return true; if (value === false || value === undefined || value === null) return false; return ["true", "1", "yes", "oui", "on", "checked", "equipped", "equipe", "équipé", "equipee", "équipée", "portee", "portée"].includes(String(value).trim().toLowerCase()); }
+function add2eHbsItemEquipped(item) { const s = item?.system ?? {}; const flags = item?.flags?.add2e ?? {}; return add2eHbsBool(s.equipee) || add2eHbsBool(s.equiped) || add2eHbsBool(s.equipped) || flags.equippedProjectile === true || flags.carquoisEquipe === true || flags.selectedProjectile === true; }
+function add2eHbsIsAmmunition(item) { const s = item?.system ?? {}; const name = add2eHbsSlug(item?.name); const tags = new Set(add2eHbsItemTags(item)); const fields = [s.categorie, s.category, s.sousType, s.sous_type, s.type, s.subtype, s.kind, s.slot].map(add2eHbsSlug).filter(Boolean); const rejected = new Set(["carquois", "quiver", "contenant", "container", "sac", "sacoche", "etui", "etuis", "boite", "boîte", "bourse"]); if ([...fields, ...tags].some(v => rejected.has(v))) return false; const accepted = new Set(["munition", "munitions", "projectile", "projectiles", "ammo", "ammunition", "trait:munition", "trait:projectile", "categorie:munition", "categorie:projectile", "type:munition", "type:projectile", "famille_arme:munition"]); if (fields.some(v => accepted.has(v))) return true; if ([...tags].some(v => accepted.has(v) || v.startsWith("munition:") || v.startsWith("projectile:"))) return true; return /\b(fleche|fleches|carreau|carreaux|trait|traits|bille|billes|pierre_de_fronde|pierres_de_fronde)\b/.test(name); }
+function add2eHbsWeaponRequiresProjectile(arme) { const s = arme?.system ?? {}; const tags = new Set(add2eHbsItemTags(arme)); const name = add2eHbsSlug(arme?.name); if (!(Number(s.portee_courte ?? 0) > 0)) return false; if (["usage:projectile_propulse", "categorie:projectile_propulse", "trait:projectile_propulse", "type:projectile_propulse", "arme:projectile_propulse"].some(t => tags.has(t))) return true; if (/\b(arc|arbalete|fronde)\b/.test(name)) return true; if (["usage:lancer", "usage:jet", "usage:arme_de_jet"].some(t => tags.has(t))) return false; return true; }
+function add2eHbsFindEquippedProjectile(items) { return add2eHbsAsArray(items).find(item => add2eHbsIsAmmunition(item) && add2eHbsItemEquipped(item)) ?? null; }
+function add2eHbsDamageData(item) { const s = item?.system ?? {}; return s.dégâts ?? s.degats ?? s.damage ?? s.damages ?? null; }
+function add2eHbsDamagePart(data, keys) { if (!data || typeof data !== "object") return ""; for (const key of keys) { const value = data[key]; if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim(); } return ""; }
+function add2eHbsDisplayDamageForItem(item) { const data = add2eHbsDamageData(item); if (typeof data === "string" && data.trim()) return data.trim(); const medium = add2eHbsDamagePart(data, ["contre_moyen", "moyen", "medium", "m", "M"]); const large = add2eHbsDamagePart(data, ["contre_grand", "grand", "large", "g", "G", "L"]); if (medium || large) return `${medium || "-"} / ${large || "-"}`; const s = item?.system ?? {}; const directMedium = s.degats_moyen ?? s.dégâts_moyen ?? s.degatsMoyen ?? s.damageMedium; const directLarge = s.degats_grand ?? s.dégâts_grand ?? s.degatsGrand ?? s.damageLarge; if (directMedium || directLarge) return `${directMedium || "-"} / ${directLarge || "-"}`; return "-"; }
+function add2eHbsComponentSlug(component) { const s = component?.system ?? {}; return add2eHbsSlug(s.slug ?? s.composantSlug ?? s.sousType ?? s.sous_type ?? component?.name ?? ""); }
+function add2eHbsIsOnlyComponentCode(value) { const t = String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, ""); return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(t); }
+function add2eHbsCleanComponentName(value) { return String(value ?? "").trim().replace(/[.!?;:]+$/g, "").replace(/^d['’]\s*/i, "").replace(/^(un|une)?\s*peu\s+de\s+/i, "").replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "").replace(/^(quelques|plusieurs)\s+/i, "").replace(/^petit morceau de\s+/i, "").replace(/^morceau de\s+/i, "").trim(); }
+function add2eHbsMaterialRawName(value) { if (value && typeof value === "object") return value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id; return value; }
+function add2eHbsMaterialQty(value) { if (value && typeof value === "object") return value.quantite ?? value.quantity ?? value.qty ?? value.nombre ?? value.count ?? 1; return 1; }
+function add2eHbsStructuredAlternative(value) { if (!value || typeof value !== "object" || Array.isArray(value)) return false; const condition = String(value.condition ?? value.conditions ?? value.note ?? value.notes ?? "").toLowerCase(); const consommation = String(value.consommation ?? value.consumption ?? value.consume ?? "").toLowerCase(); return condition.includes("alternative") || /\bou\b/i.test(condition) || (consommation.includes("optionnel") && condition.length > 0); }
+function add2eHbsAddSpellMaterialEntry(entries, raw, quantity = 1, consume = true) { const nom = add2eHbsCleanComponentName(raw); if (!nom || add2eHbsIsOnlyComponentCode(nom)) return; const slug = add2eHbsSlug(nom); if (!slug) return; if (entries.some(e => e.slug === slug)) return; entries.push({ slug, nom, quantite: Math.max(1, Number(quantity) || 1), consomme: consume !== false }); }
+function add2eHbsAddAlternativeMaterials(entries, alternatives) { const clean = []; for (const alt of alternatives) { const nom = add2eHbsCleanComponentName(add2eHbsMaterialRawName(alt)); if (!nom || add2eHbsIsOnlyComponentCode(nom)) continue; const slug = add2eHbsSlug(nom); if (!slug || clean.some(e => e.slug === slug)) continue; clean.push({ slug, nom, quantite: Math.max(1, Number(add2eHbsMaterialQty(alt)) || 1), consomme: true }); } if (clean.length === 1) add2eHbsAddSpellMaterialEntry(entries, clean[0].nom, clean[0].quantite, true); else if (clean.length > 1) entries.push({ slug: clean.map(e => e.slug).join("__or__"), nom: clean.map(e => e.nom).join(" ou "), quantite: 1, consomme: true, alternatives: clean }); }
+function add2eHbsCollectSpellMaterials(entries, value) { if (value === null || value === undefined || value === "") return; if (Array.isArray(value)) { const alternatives = value.filter(add2eHbsStructuredAlternative); const keys = new Set(alternatives.map(e => `${add2eHbsMaterialRawName(e)}|${add2eHbsMaterialQty(e)}`)); if (alternatives.length > 1) add2eHbsAddAlternativeMaterials(entries, alternatives); for (const entry of value) { const key = `${add2eHbsMaterialRawName(entry)}|${add2eHbsMaterialQty(entry)}`; if (alternatives.length > 1 && keys.has(key)) continue; add2eHbsCollectSpellMaterials(entries, entry); } return; } if (typeof value === "string") { for (const part of value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)) { const alternatives = part.split(/\bou\b/gi).map(v => v.trim()).filter(Boolean); if (alternatives.length > 1) add2eHbsAddAlternativeMaterials(entries, alternatives); else add2eHbsAddSpellMaterialEntry(entries, part, 1, true); } return; } if (typeof value === "object") { const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or; if (Array.isArray(alternatives) && alternatives.length) { add2eHbsAddAlternativeMaterials(entries, alternatives); return; } const name = add2eHbsMaterialRawName(value); const qty = add2eHbsMaterialQty(value); if (name) add2eHbsAddSpellMaterialEntry(entries, name, qty, value.consomme ?? value.consume ?? value.consommation !== "non" ?? true); } }
+function add2eHbsSpellMaterialEntries(sort) { const s = sort?.system ?? sort ?? {}; const flags = sort?.flags?.add2e ?? sort?.add2e ?? {}; const entries = []; for (const field of [s.composants_materiels, s.composants_materiels_objets, s.composantsMateriels, s.materialComponents, s.composants_requis, s.composantsMateriel, s.composant_materiel, s.composantMateriel, s.materiel, s.matériel, s.material, s.materialComponent, s.material_components, s.requiredComponents, s.componentsRequired, s.components?.material, s.components?.materials, sort?.materialComponents, sort?.composants_materiels, sort?.composants_materiels_objets, sort?.composants_requis, flags.composants_requis, flags.composants, flags.components, flags.requiredComponents]) add2eHbsCollectSpellMaterials(entries, field); for (const tag of [...add2eHbsToTagArray(s.tags), ...add2eHbsToTagArray(s.effectTags), ...add2eHbsToTagArray(flags.tags), ...add2eHbsToTagArray(flags.effectTags)]) { const raw = String(tag ?? "").trim(); if (/^composant[:_]/i.test(raw)) add2eHbsAddSpellMaterialEntry(entries, raw.replace(/^composant[:_]/i, ""), 1, true); } return entries; }
+function add2eHbsSpellMaterialSlugs(sort) { return add2eHbsSpellMaterialEntries(sort).flatMap(entry => entry.alternatives?.length ? entry.alternatives.map(a => a.slug) : [entry.slug]).filter(Boolean); }
+function add2eHbsSigned(value) { const n = Number(value || 0); return `${n >= 0 ? "+" : ""}${n}`; }
+function add2eHbsNumeric(value) { const n = Number(value ?? 0); return Number.isFinite(n) ? n : 0; }
+function add2eHbsClassItems(actor) { return add2eHbsAsArray(actor?.items?.contents ?? actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe"); }
+function add2eHbsClassSlug(cls) { const sys = cls?.system ?? {}; return add2eHbsSlug(sys.slug ?? sys.label ?? sys.nom ?? sys.name ?? cls?.name ?? "classe"); }
+function add2eHbsClassLevel(actor, cls) { const slug = add2eHbsClassSlug(cls); const map = actor?.system?.niveaux_par_classe ?? {}; return Math.max(1, add2eHbsNumeric(map[slug] ?? cls?.system?.niveau ?? cls?.system?.level ?? actor?.system?.niveau ?? 1)); }
+function add2eHbsProgressionRowForClass(actor, cls) { const level = add2eHbsClassLevel(actor, cls); const progression = Array.isArray(cls?.system?.progression) ? cls.system.progression : []; if (!progression.length) return null; return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null; }
+function add2eHbsRowThaco(row) { return add2eHbsNumeric(row?.thac0 ?? row?.thaco ?? row?.THAC0 ?? 20); }
+function add2eHbsBestThaco(actor, fallback = 20) { const classes = add2eHbsClassItems(actor); if (!classes.length || actor?.system?.multiclasse?.enabled !== true) return add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20); const values = classes.map(cls => add2eHbsRowThaco(add2eHbsProgressionRowForClass(actor, cls))).filter(v => Number.isFinite(v) && v > 0); return values.length ? Math.min(...values) : add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20); }
+function add2eHbsReadSave(row, idx) { const s = row?.savingThrows ?? row?.saves ?? row?.jets_sauvegarde ?? row?.sauvegardes ?? null; if (Array.isArray(s)) return add2eHbsNumeric(s[idx] ?? NaN); if (s && typeof s === "object") { const keys = [["paralysie", "poison", "mort", "death", "save0"], ["petrification", "pétrification", "polymorphose", "polymorph", "save1"], ["baguettes", "batons", "badines", "wand", "wands", "save2"], ["souffles", "breath", "souffle", "save3"], ["sorts", "sortileges", "sortilèges", "spell", "spells", "save4"]][Number(idx) || 0] ?? []; for (const key of keys) if (s[key] !== undefined) return add2eHbsNumeric(s[key]); } return NaN; }
+function add2eHbsBestSave(actor, idx, fallbackRow = null) { const classes = add2eHbsClassItems(actor); if (!classes.length || actor?.system?.multiclasse?.enabled !== true) { const v = add2eHbsReadSave(fallbackRow, idx); return Number.isFinite(v) ? v : "—"; } const values = classes.map(cls => add2eHbsReadSave(add2eHbsProgressionRowForClass(actor, cls), idx)).filter(v => Number.isFinite(v) && v > 0); return values.length ? Math.min(...values) : "—"; }
+function add2eHbsWeaponMagicBonus(arme, kind) { try { if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function") return Number(Add2eEffectsEngine.getMagicWeaponBonus(arme, kind)) || 0; } catch (_e) {} return kind === "damage" ? add2eHbsNumeric(arme?.system?.bonus_dom) : add2eHbsNumeric(arme?.system?.bonus_hit); }
+function add2eHbsEquippedArmorPieces(actor) { const items = add2eHbsAsArray(actor?.items?.contents ?? actor?.items ?? []); return items.filter(item => String(item?.type ?? "") === "armure" && add2eHbsItemEquipped(item)); }
+function add2eHbsArmorOtherBonus(actor, key) { return add2eHbsEquippedArmorPieces(actor).reduce((sum, item) => sum + add2eHbsNumeric(item?.system?.[key]), 0); }
+function add2eHbsWeaponAbilityBonuses(actor, arme) { const sys = actor?.system ?? {}; const type = String(arme?.system?.type_degats ?? "").toLowerCase(); const isMelee = type.includes("tranchant") || type.includes("contondant"); const isPiercing = type.includes("perforant"); if (isMelee) return { hit: add2eHbsNumeric(sys.force_bonus_toucher), damage: add2eHbsNumeric(sys.force_bonus_degats), label: "FOR" }; if (isPiercing) return { hit: add2eHbsNumeric(sys.dex_att), damage: add2eHbsNumeric(sys.dex_att), label: "DEX" }; return { hit: 0, damage: 0, label: "—" }; }
+function add2eHbsEquippedWeaponRows(actor, listeArmes, listeObjets, combatDefense) { const armes = add2eHbsAsArray(listeArmes).filter(arme => add2eHbsItemEquipped(arme)); const thacoBase = add2eHbsBestThaco(actor, combatDefense?.thaco ?? actor?.system?.thac0 ?? 20); const otherHit = add2eHbsArmorOtherBonus(actor, "bonus_toucher"); const otherDamage = add2eHbsArmorOtherBonus(actor, "bonus_degats"); return armes.map(arme => { const ability = add2eHbsWeaponAbilityBonuses(actor, arme); const magicHit = add2eHbsWeaponMagicBonus(arme, "hit"); const magicDamage = add2eHbsWeaponMagicBonus(arme, "damage"); const totalHit = magicHit + ability.hit + otherHit; const totalDamage = magicDamage + ability.damage + otherDamage; const thacoEffectif = thacoBase - totalHit; return { id: arme?._id ?? arme?.id ?? "", name: arme?.name ?? "Arme", damage: add2eHbsWeaponRequiresProjectile(arme) ? (add2eHbsFindEquippedProjectile(listeObjets) ? add2eHbsDisplayDamageForItem(add2eHbsFindEquippedProjectile(listeObjets)) : add2eHbsDisplayDamageForItem(arme)) : add2eHbsDisplayDamageForItem(arme), type: arme?.system?.type_degats ?? "", abilityLabel: ability.label, magicHit, magicDamage, abilityHit: ability.hit, abilityDamage: ability.damage, otherHit, otherDamage, totalHit, totalDamage, thacoBase, thacoEffectif, magicHitSigned: add2eHbsSigned(magicHit), magicDamageSigned: add2eHbsSigned(magicDamage), abilityHitSigned: add2eHbsSigned(ability.hit), abilityDamageSigned: add2eHbsSigned(ability.damage), otherHitSigned: add2eHbsSigned(otherHit), otherDamageSigned: add2eHbsSigned(otherDamage), totalHitSigned: add2eHbsSigned(totalHit), totalDamageSigned: add2eHbsSigned(totalDamage) }; }); }
 
 if (typeof Handlebars !== "undefined") {
   Handlebars.registerHelper("add2eBestThaco", add2eHbsBestThaco);
   Handlebars.registerHelper("add2eBestSave", add2eHbsBestSave);
   Handlebars.registerHelper("add2eEquippedWeaponRows", add2eHbsEquippedWeaponRows);
-
   Handlebars.registerHelper("capitalize", str => (str && typeof str === "string") ? str.charAt(0).toUpperCase() + str.slice(1) : str);
   Handlebars.registerHelper("uppercase", str => (str && typeof str === "string") ? str.toUpperCase() : str);
   Handlebars.registerHelper("substr", (str, start, len) => (str && typeof str === "string") ? str.substr(start, len) : str);
   Handlebars.registerHelper("concat", function () { return Array.from(arguments).slice(0, -1).join(''); });
   Handlebars.registerHelper("array", function () { return Array.prototype.slice.call(arguments, 0, -1); });
-
-  Handlebars.registerHelper("joinLines", function(value, fallback) {
-    if (Array.isArray(value) && value.length) return value.filter(Boolean).join("\n");
-    if (typeof value === "string" && value.trim()) return value;
-    return typeof fallback === "string" ? fallback : "";
-  });
-
-  Handlebars.registerHelper("negativeNumber", function(value) {
-    const n = Number(value || 0);
-    return n === 0 ? 0 : -Math.abs(n);
-  });
-
+  Handlebars.registerHelper("joinLines", function(value, fallback) { if (Array.isArray(value) && value.length) return value.filter(Boolean).join("\n"); if (typeof value === "string" && value.trim()) return value; return typeof fallback === "string" ? fallback : ""; });
+  Handlebars.registerHelper("negativeNumber", function(value) { const n = Number(value || 0); return n === 0 ? 0 : -Math.abs(n); });
   Handlebars.registerHelper("signedNumber", function(value) { return add2eHbsSigned(value); });
   Handlebars.registerHelper("add2eItemDisplayDamage", function(item) { return add2eHbsDisplayDamageForItem(item); });
-  Handlebars.registerHelper("add2eWeaponDisplayDamage", function(arme, listeObjets) {
-    if (add2eHbsWeaponRequiresProjectile(arme)) {
-      const projectile = add2eHbsFindEquippedProjectile(listeObjets);
-      if (projectile) return add2eHbsDisplayDamageForItem(projectile);
-    }
-    return add2eHbsDisplayDamageForItem(arme);
-  });
-
-  Handlebars.registerHelper("magicSourceNames", function(value, fallback) {
-    if (!Array.isArray(value) || !value.length) return typeof fallback === "string" ? fallback : "";
-    return value.filter(Boolean).map(source => String(source).replace(/:\s*[-+]?\d+\s*$/, "")).join("\n");
-  });
-
-  Handlebars.registerHelper("componentSpellNames", function(component, sortsParNiveau) {
-    const componentSlug = add2eHbsComponentSlug(component);
-    if (!componentSlug || !sortsParNiveau || typeof sortsParNiveau !== "object") return "—";
-    const spells = [];
-    for (const list of Object.values(sortsParNiveau)) {
-      for (const sort of add2eHbsAsArray(list)) {
-        const slugs = add2eHbsSpellMaterialSlugs(sort);
-        if (slugs.includes(componentSlug)) spells.push(String(sort?.name ?? "Sort"));
-      }
-    }
-    if (!spells.length) return "—";
-    return [...new Set(spells)].sort((a, b) => a.localeCompare(b)).join(", ");
-  });
-
-  Handlebars.registerHelper("spellMaterialComponents", function(sort) {
-    const entries = add2eHbsSpellMaterialEntries(sort);
-    if (!entries.length) return "—";
-    const text = entries.map(entry => {
-      const qty = entry.quantite > 1 ? ` x${entry.quantite}` : "";
-      const state = entry.consomme ? "" : " (non consommé)";
-      return `${entry.nom}${qty}${state}`;
-    }).join(", ");
-    return text || "—";
-  });
+  Handlebars.registerHelper("add2eWeaponDisplayDamage", function(arme, listeObjets) { if (add2eHbsWeaponRequiresProjectile(arme)) { const projectile = add2eHbsFindEquippedProjectile(listeObjets); if (projectile) return add2eHbsDisplayDamageForItem(projectile); } return add2eHbsDisplayDamageForItem(arme); });
+  Handlebars.registerHelper("magicSourceNames", function(value, fallback) { if (!Array.isArray(value) || !value.length) return typeof fallback === "string" ? fallback : ""; return value.filter(Boolean).map(source => String(source).replace(/:\s*[-+]?\d+\s*$/, "")).join("\n"); });
+  Handlebars.registerHelper("componentSpellNames", function(component, sortsParNiveau) { const componentSlug = add2eHbsComponentSlug(component); if (!componentSlug || !sortsParNiveau || typeof sortsParNiveau !== "object") return "—"; const spells = []; for (const list of Object.values(sortsParNiveau)) for (const sort of add2eHbsAsArray(list)) { const slugs = add2eHbsSpellMaterialSlugs(sort); if (slugs.includes(componentSlug)) spells.push(String(sort?.name ?? "Sort")); } return spells.length ? [...new Set(spells)].sort((a, b) => a.localeCompare(b)).join(", ") : "—"; });
+  Handlebars.registerHelper("spellMaterialComponents", function(sort) { const entries = add2eHbsSpellMaterialEntries(sort); if (!entries.length) return "—"; const text = entries.map(entry => { const qty = entry.quantite > 1 ? ` x${entry.quantite}` : ""; const state = entry.consomme ? "" : " (non consommé)"; return `${entry.nom}${qty}${state}`; }).join(", "); return text || "—"; });
 }
 
-if (typeof Handlebars !== "undefined" && !Handlebars.helpers.getFlag) {
-  Handlebars.registerHelper("getFlag", function(item, flag) {
-    try {
-      if (!item || typeof item.getFlag !== "function") return false;
-      const [scope, key] = flag.split('.');
-      return item.getFlag(scope, key);
-    } catch {
-      return false;
-    }
-  });
-}
-if (typeof Handlebars !== "undefined" && !Handlebars.helpers.toSpecialArray) {
-  Handlebars.registerHelper("toSpecialArray", function (val) {
-    if (Array.isArray(val)) return val.filter(e => !!e && e !== "" && e !== "NEW");
-    if (typeof val === "object" && val !== null) return Object.values(val).filter(e => !!e && e !== "" && e !== "NEW");
-    return [];
-  });
-}
-if (typeof Handlebars !== "undefined" && !Handlebars.helpers.length) {
-  Handlebars.registerHelper('length', function(x) { return x ? x.length : 0; });
-}
+if (typeof Handlebars !== "undefined" && !Handlebars.helpers.getFlag) Handlebars.registerHelper("getFlag", function(item, flag) { try { if (!item || typeof item.getFlag !== "function") return false; const [scope, key] = flag.split('.'); return item.getFlag(scope, key); } catch { return false; } });
+if (typeof Handlebars !== "undefined" && !Handlebars.helpers.toSpecialArray) Handlebars.registerHelper("toSpecialArray", function (val) { if (Array.isArray(val)) return val.filter(e => !!e && e !== "" && e !== "NEW"); if (typeof val === "object" && val !== null) return Object.values(val).filter(e => !!e && e !== "" && e !== "NEW"); return []; });
+if (typeof Handlebars !== "undefined" && !Handlebars.helpers.length) Handlebars.registerHelper('length', function(x) { return x ? x.length : 0; });
 
 globalThis.add2eHbsBestThaco = add2eHbsBestThaco;
 globalThis.add2eHbsBestSave = add2eHbsBestSave;
