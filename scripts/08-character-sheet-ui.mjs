@@ -93,6 +93,20 @@ function add2eEscapeHtml(value) {
   return div.innerHTML;
 }
 
+function add2eSpellColumnsIsPlaceholder(value) {
+  return typeof value === "string" && /a[_\s-]*comple/i.test(value);
+}
+
+function add2eSpellColumnsFirstCleanText(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    if (add2eSpellColumnsIsPlaceholder(value)) continue;
+    const text = String(value).trim();
+    if (text) return text;
+  }
+  return "";
+}
+
 function add2eSpellColumnsMaterialText(value) {
   if (value === null || value === undefined || value === "") return "";
   if (Array.isArray(value)) {
@@ -123,29 +137,41 @@ function add2eSpellColumnsEnsureHeaders(table) {
   const hasEcole = headers.some(th => th.textContent.trim() === "École");
   const hasType = headers.some(th => th.textContent.trim() === "Type");
   const actions = headers.find(th => th.textContent.trim() === "Actions");
-  if (!hasEcole || hasType || !actions) return false;
-
-  actions.insertAdjacentHTML("beforebegin", "<th>Type</th><th>Composants</th>");
+  if (!hasEcole || !actions) return false;
+  if (!hasType) actions.insertAdjacentHTML("beforebegin", "<th>Type</th><th>Composants</th>");
   return true;
 }
 
 function add2eSpellColumnsApplyToTable(actor, table) {
   if (!add2eSpellColumnsEnsureHeaders(table)) return;
+  const headerTexts = Array.from(table.querySelectorAll("thead tr th")).map(th => th.textContent.trim());
+  const ecoleIndex = headerTexts.indexOf("École");
+  const typeIndex = headerTexts.indexOf("Type");
+  const componentsIndex = headerTexts.indexOf("Composants");
 
   for (const row of table.querySelectorAll("tbody tr.sort-row")) {
-    if (row.dataset.add2eSpellJsonColumns === "1") continue;
     const sort = add2eSpellColumnsGetSort(actor, row);
     const system = sort?.system ?? {};
-    const type = system.type ?? "";
+    const ecole = add2eSpellColumnsFirstCleanText(system["école"], system.ecole, system.school);
+    const type = add2eSpellColumnsFirstCleanText(system.type, system.composantes, system.composants, system.components);
     const components = add2eSpellColumnsMaterialText(system.composants_materiels);
     const cells = Array.from(row.children);
     const actionsCell = cells[cells.length - 1];
     if (!actionsCell) continue;
 
-    actionsCell.insertAdjacentHTML(
-      "beforebegin",
-      `<td>${add2eEscapeHtml(type)}</td><td>${add2eEscapeHtml(components)}</td>`
-    );
+    if (ecole && ecoleIndex >= 0 && cells[ecoleIndex]) cells[ecoleIndex].textContent = ecole;
+
+    if (row.dataset.add2eSpellJsonColumns === "1") continue;
+
+    if (typeIndex >= 0 && componentsIndex >= 0 && cells[typeIndex] && cells[componentsIndex] && typeIndex < cells.length - 1) {
+      cells[typeIndex].textContent = type;
+      cells[componentsIndex].textContent = components;
+    } else {
+      actionsCell.insertAdjacentHTML(
+        "beforebegin",
+        `<td>${add2eEscapeHtml(type)}</td><td>${add2eEscapeHtml(components)}</td>`
+      );
+    }
     row.dataset.add2eSpellJsonColumns = "1";
 
     const descRow = row.nextElementSibling;
