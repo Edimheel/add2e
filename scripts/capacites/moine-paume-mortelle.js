@@ -4,7 +4,8 @@
  * Script exécuté via on_use d'une classFeature.
  * Paramètres attendus par le lanceur : actor, item, sort.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-05-03-v3-combat-only";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-06-12-v4-world-time-once-per-day";
+const ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS = 24 * 60;
 
 globalThis.ADD2E_MOINE_PAUME_MORTELLE_VERSION = ADD2E_MOINE_PAUME_MORTELLE_VERSION;
 
@@ -20,6 +21,38 @@ function a2eNorm(v) {
 function a2eNum(v, fallback = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function a2eGetWorldTimeTick() {
+  try {
+    if (typeof game?.add2e?.time?.currentTick === "function") {
+      return Math.max(0, Math.floor(Number(game.add2e.time.currentTick()) || 0));
+    }
+  } catch (_err) {}
+
+  try {
+    if (typeof globalThis.ADD2E_TIME_ENGINE?.currentTick === "function") {
+      return Math.max(0, Math.floor(Number(globalThis.ADD2E_TIME_ENGINE.currentTick()) || 0));
+    }
+  } catch (_err) {}
+
+  try {
+    const value = Number(game?.settings?.get?.("add2e", "worldTimeTick"));
+    if (Number.isFinite(value)) return Math.max(0, Math.floor(value));
+  } catch (_err) {}
+
+  return 0;
+}
+
+function a2eFormatRounds(rounds) {
+  const value = Math.max(0, Math.ceil(Number(rounds) || 0));
+  if (value <= 0) return "disponible";
+
+  const hours = Math.floor(value / 60);
+  const rest = value % 60;
+  if (hours > 0 && rest > 0) return `${hours} heure(s) et ${rest} round(s)`;
+  if (hours > 0) return `${hours} heure(s)`;
+  return `${value} round(s)`;
 }
 
 function a2eGetMonkRow(actor) {
@@ -63,6 +96,17 @@ const level = Math.max(1, a2eNum(actor.system?.niveau, 1));
 
 if (!row?.quiveringPalm) {
   ui.notifications.warn("Paume mortelle indisponible à ce niveau.");
+  return false;
+}
+
+const dailyFlagKey = "paumeMortelle.daily";
+const currentTick = a2eGetWorldTimeTick();
+const dailyState = actor.getFlag("add2e", dailyFlagKey) ?? {};
+const nextAvailableTick = Number(dailyState.nextAvailableTick ?? 0) || 0;
+
+if (nextAvailableTick > currentTick) {
+  const remaining = nextAvailableTick - currentTick;
+  ui.notifications.warn(`Paume mortelle déjà utilisée aujourd’hui. Prochaine utilisation dans ${a2eFormatRounds(remaining)}.`);
   return false;
 }
 
@@ -130,9 +174,9 @@ const system = {
   uses: {
     value: 1,
     max: 1,
-    per: "combat"
+    per: "day"
   },
-  description: "Arme temporaire créée par la capacité Paume mortelle du moine. Elle représente une seule tentative spéciale ; après la résolution de son attaque, elle est automatiquement supprimée de l’onglet Combat."
+  description: "Arme temporaire créée par la capacité Paume mortelle du moine. Elle représente une seule tentative spéciale ; après la résolution de son attaque, elle est automatiquement supprimée de l’onglet Combat. Cette capacité ne peut être préparée qu’une fois par jour de temps ADD2E."
 };
 
 const existing = actor.items.find(i =>
@@ -155,7 +199,11 @@ if (existing) {
         sourceClasse: "moine",
         sourceCapacite: "paume_mortelle",
         usageUnique: true,
-        deleteAfterAttack: true
+        deleteAfterAttack: true,
+        useLimit: "day",
+        dayRounds: ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS,
+        preparedAtTick: currentTick,
+        nextAvailableTick: currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS
       }
     }
   }, { add2eInternal: true });
@@ -172,12 +220,29 @@ if (existing) {
         sourceClasse: "moine",
         sourceCapacite: "paume_mortelle",
         usageUnique: true,
-        deleteAfterAttack: true
+        deleteAfterAttack: true,
+        useLimit: "day",
+        dayRounds: ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS,
+        preparedAtTick: currentTick,
+        nextAvailableTick: currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS
       }
     }
   }], { add2eInternal: true });
   weapon = created?.[0] ?? null;
 }
+
+await actor.setFlag("add2e", dailyFlagKey, {
+  used: true,
+  prepared: true,
+  weaponId: weapon?.id ?? null,
+  combatId: game.combat?.id ?? null,
+  level,
+  damage: damage.raw,
+  usedAtTick: currentTick,
+  nextAvailableTick: currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS,
+  dayRounds: ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS,
+  version: ADD2E_MOINE_PAUME_MORTELLE_VERSION
+});
 
 await actor.setFlag("add2e", flagKey, {
   prepared: true,
@@ -185,7 +250,9 @@ await actor.setFlag("add2e", flagKey, {
   combatId: game.combat?.id ?? null,
   level,
   damage: damage.raw,
-  at: Date.now()
+  at: Date.now(),
+  preparedAtTick: currentTick,
+  nextAvailableTick: currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS
 });
 
 await ChatMessage.create({
@@ -195,10 +262,11 @@ await ChatMessage.create({
       <h3>Paume mortelle</h3>
       <p><b>${actor.name}</b> prépare une tentative de Paume mortelle.</p>
       <p>Une arme temporaire <b>Paume mortelle</b> a été créée dans l’onglet Combat.</p>
-      <p><b>Dégâts de base :</b> ${damage.raw}. <b>Usage :</b> 1 tentative pendant ce combat uniquement.</p>
+      <p><b>Dégâts de base :</b> ${damage.raw}. <b>Usage :</b> 1 tentative par jour.</p>
+      <p><b>Temps ADD2E :</b> tick ${currentTick} → prochaine utilisation au tick ${currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS}.</p>
     </div>
   `
 });
 
-ui.notifications.info("Paume mortelle prête : arme temporaire créée dans l’onglet Combat.");
+ui.notifications.info("Paume mortelle prête : arme temporaire créée dans l’onglet Combat. Prochaine utilisation après 24 heures de temps ADD2E.");
 return true;
