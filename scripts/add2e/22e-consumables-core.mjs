@@ -12,7 +12,7 @@ import {
   slug
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-12-consumables-core-v6-remove-zero-components";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-12-consumables-core-v7-stable-source-alternatives";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -146,11 +146,10 @@ function collectRequirement(out, value) {
     return;
   }
   if (typeof value === "string") {
-    const segments = value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean);
-    for (const segment of segments) {
-      const alternatives = segment.split(/\bou\b/gi).map(v => v.trim()).filter(Boolean);
+    for (const part of asArray(value)) {
+      const alternatives = String(part).split(/\bou\b/gi).map(v => v.trim()).filter(Boolean);
       if (alternatives.length > 1) addAlternativeRequirement(out, alternatives);
-      else addRequirement(out, segment, 1);
+      else addRequirement(out, part, 1);
     }
     return;
   }
@@ -179,9 +178,8 @@ function spellComponentRequirements(sort) {
   const out = [];
   const fields = [
     system.composants_requis,
-    system.composants_materiels,
-    system.composants_materiels_objets,
     system.composantsMateriels,
+    system.composants_materiels,
     system.composant_materiel,
     system.composantMateriel,
     system.materiel,
@@ -189,7 +187,6 @@ function spellComponentRequirements(sort) {
     system.material,
     system.materialComponent,
     system.materialComponents,
-    system.material_components,
     system.requiredComponents,
     system.componentsRequired,
     flags.composants_requis,
