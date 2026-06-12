@@ -1,19 +1,69 @@
 // ============================================================
 // ADD2E — Contrôles de mémorisation des sorts
-// Version : 2026-06-12-v46-restore-single-list-count
+// Version : 2026-06-12-v47-auto-granted-class-list
 // ============================================================
 // Source des quotas : 07-spellcasting-rules.mjs.
 // Correction de comptage : pour les sorts à une seule liste, memorizedCount
 // reste la source d'autorité comme sur dev-grosses-modifications.
+// Correction multiclassage : un sort auto-accordé par une classe n'accorde
+// que la liste de cette classe, même si le compendium contient des listes communes.
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v46-restore-single-list-count";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v47-auto-granted-class-list";
 globalThis.ADD2E_SPELL_PREP_SCROLL_VERSION = ADD2E_SPELL_PREP_SCROLL_VERSION;
 
 function add2eSpellPrepInstallSingleListCountOverride() {
-  if (globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V46) return;
-  globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V46 = true;
+  if (globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V47) return;
+  globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V47 = true;
 
   const normalizeKey = value => typeof add2eNormalizeSpellKey === "function" ? add2eNormalizeSpellKey(value) : String(value ?? "").trim().toLowerCase();
+  const originalGetSpellListsFromItem = globalThis.add2eGetSpellListsFromItem;
+
+  const normalizeArray = value => {
+    if (Array.isArray(value)) return value.flatMap(normalizeArray).filter(Boolean);
+    if (value === undefined || value === null || value === "") return [];
+    if (typeof value === "string") return value.split(/[,;|\n]+/g).map(normalizeKey).filter(Boolean);
+    return [normalizeKey(value)].filter(Boolean);
+  };
+
+  const classNameLists = className => {
+    const n = normalizeKey(className);
+    if (n.includes("clerc") || n.includes("pretre") || n.includes("priest")) return ["clerc"];
+    if (n.includes("druide") || n.includes("druid")) return ["druide"];
+    if (n.includes("magicien") || n.includes("mage") || n.includes("wizard")) return ["magicien"];
+    if (n.includes("illusionniste") || n.includes("illusionist")) return ["illusionniste"];
+    return [];
+  };
+
+  const grantedListsForSort = sort => {
+    const flags = sort?.flags?.add2e ?? {};
+    const explicit = normalizeArray(flags.grantedSpellLists ?? flags.learnedSpellLists ?? flags.knownSpellLists);
+    if (explicit.length) return [...new Set(explicit)];
+
+    if (flags.autoGrantedSpellSync !== true && !flags.autoGrantedByClassId && !flags.autoGrantedByClass) return [];
+
+    const actor = sort?.parent ?? null;
+    const classId = flags.autoGrantedByClassId;
+    const classItem = classId && actor?.items?.get ? actor.items.get(classId) : null;
+    if (classItem) {
+      try {
+        if (typeof add2eSpellSyncClassLists === "function") {
+          const lists = normalizeArray(add2eSpellSyncClassLists(classItem));
+          if (lists.length) return [...new Set(lists)];
+        }
+      } catch (_e) {}
+      const lists = classNameLists(classItem.name ?? classItem.system?.label ?? classItem.system?.nom ?? classItem.system?.name);
+      if (lists.length) return lists;
+    }
+
+    return classNameLists(flags.autoGrantedByClass);
+  };
+
+  globalThis.add2eGetSpellListsFromItem = function add2eGetSpellListsFromItemGrantedCompat(sort) {
+    const granted = grantedListsForSort(sort);
+    if (granted.length) return granted;
+    return typeof originalGetSpellListsFromItem === "function" ? originalGetSpellListsFromItem(sort) : [];
+  };
+
   const regular = sort => typeof add2eIsRegularPreparableSpell === "function"
     ? add2eIsRegularPreparableSpell(sort)
     : !(typeof add2eIsObjectMagicSpellForPreparation === "function" && add2eIsObjectMagicSpellForPreparation(sort));
