@@ -1,12 +1,12 @@
 // ADD2E — Pont mécanique multiclassage
-// Version : 2026-06-11-multiclass-mechanics-v2-grouped-spell-lists
+// Version : 2026-06-12-multiclass-mechanics-v3-exceptional-strength-any-order
 //
 // Rôle : adapter les mécaniques historiques mono-classe au multiclassage sans réécrire
 // les modules sources. Les sorts sont regroupés par liste réelle : clerc, druide,
 // magicien, illusionniste. Les niveaux de sorts affichables sont bornés par les
 // emplacements réellement disponibles au niveau courant de chaque classe.
 
-const VERSION = "2026-06-11-multiclass-mechanics-v2-grouped-spell-lists";
+const VERSION = "2026-06-12-multiclass-mechanics-v3-exceptional-strength-any-order";
 const TAG = "[ADD2E][MULTICLASSE][MECA]";
 
 globalThis.ADD2E_MULTICLASS_MECHANICS_VERSION = VERSION;
@@ -69,6 +69,28 @@ function multiclassEntries(actor) {
     const row = progression.find(r => n(r?.niveau ?? r?.level, 0) === level) ?? progression[level - 1] ?? {};
     return { item, system: item.system ?? {}, slug, name: item.name, level, xp, progression, row };
   });
+}
+
+function isExceptionalStrengthClass(entry) {
+  const sys = entry?.system ?? {};
+  const text = [
+    entry?.slug,
+    entry?.name,
+    sys.slug,
+    sys.label,
+    sys.nom,
+    sys.name,
+    sys.classe,
+    sys.class
+  ].map(norm).join(" ");
+  return text.includes("guerrier") || text.includes("paladin") || text.includes("rodeur") || text.includes("ranger");
+}
+
+function actorCanUseExceptionalStrength(actor, entries = null) {
+  const force = Number(actor?.system?.force ?? 0);
+  if (force !== 18) return false;
+  const list = entries ?? multiclassEntries(actor);
+  return list.some(isExceptionalStrengthClass);
 }
 
 function rowValue(row, keys, fallback = null) {
@@ -462,6 +484,8 @@ function installSheetPatch() {
       data.combatDefense = data.combatDefense ?? {};
       if (thaco !== null) data.combatDefense.thaco = thaco;
       if (saves) data.actor.system.sauvegardes = saves;
+      data.canExceptionalStrength = actorCanUseExceptionalStrength(actor, entries);
+      if (data.canExceptionalStrength && (data.actor.system.force_ex === undefined || data.actor.system.force_ex === null || data.actor.system.force_ex === "")) data.actor.system.force_ex = 0;
       const allFeatures = add2eMulticlassActorClassFeatures(actor);
       data.activeClassFeatures = allFeatures.filter(f => {
         const activable = typeof globalThis.add2eIsFeatureActivable === "function" ? globalThis.add2eIsFeatureActivable(f) : !!f.activable;
