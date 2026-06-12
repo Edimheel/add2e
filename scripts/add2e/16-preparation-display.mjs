@@ -1,25 +1,12 @@
 // ============================================================
 // ADD2E — Contrôles de mémorisation des sorts
-// Version : 2026-06-12-v43-fix-minus-decrement
+// Version : 2026-06-12-v44-refresh-global-counters
 // ============================================================
 // Source de vérité des quotas : 07-spellcasting-rules.mjs.
-// Ce fichier gère uniquement l'interaction +/-, le rafraîchissement visuel
-// et l'affichage des composants matériels sur les lignes de sorts.
+// Ici : clics +/-, rafraîchissement des compteurs visibles et composants.
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v43-fix-minus-decrement";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-06-12-v44-refresh-global-counters";
 globalThis.ADD2E_SPELL_PREP_SCROLL_VERSION = ADD2E_SPELL_PREP_SCROLL_VERSION;
-
-const ADD2E_SPELL_PREP_PENDING_SCROLL = new Map();
-
-function add2eSpellPrepRootFromNode(node) {
-  if (!node) return null;
-  return node.closest?.(".add2e-character-v3") ?? node.querySelector?.(".add2e-character-v3") ?? node;
-}
-
-function add2eSpellPrepWindowRootFromNode(node) {
-  if (!node) return null;
-  return node.closest?.(".window-app, .application, .app") ?? node;
-}
 
 function add2eSpellPrepActorWindows(actor) {
   const actorId = String(actor?.id ?? "");
@@ -45,98 +32,43 @@ function add2eSpellPrepResolveActorFromButton(btn) {
   return game.user?.character ?? null;
 }
 
-function add2eSpellPrepScrollableNodes(root) {
-  if (!root) return [];
-  const nodes = [];
-  const add = el => {
-    if (!el || typeof el.scrollTop !== "number") return;
-    if (!nodes.includes(el)) nodes.push(el);
-  };
-  add(root.closest?.(".window-content"));
-  add(root.closest?.(".sheet-body"));
-  add(root.closest?.(".a2e-tab-content"));
-  add(root.closest?.(".tab-sorts"));
-  add(root.querySelector?.(".window-content"));
-  add(root.querySelector?.(".sheet-body"));
-  add(root.querySelector?.(".a2e-tab-content.active"));
-  add(root.querySelector?.('.a2e-tab-content[data-tab="sorts"]'));
-  add(root.querySelector?.(".tab-sorts"));
-  add(root);
-  add(document.scrollingElement);
-  return nodes;
+function add2eSpellPrepEscapeCss(value) {
+  const text = String(value ?? "");
+  try { if (globalThis.CSS?.escape) return CSS.escape(text); } catch (_e) {}
+  return text.replace(/(["'\\.#:[\],>+~*=])/g, "\\$1");
 }
 
-function add2eSpellPrepCaptureScroll(root) {
-  return add2eSpellPrepScrollableNodes(root).map((el, index) => ({ index, scrollTop: Number(el.scrollTop) || 0, scrollLeft: Number(el.scrollLeft) || 0 }));
-}
-
-function add2eSpellPrepRestoreScroll(root, snapshot) {
-  if (!root || !snapshot?.length) return;
-  const nodes = add2eSpellPrepScrollableNodes(root);
-  for (const item of snapshot) {
-    const el = nodes[item.index];
-    if (!el) continue;
-    el.scrollTop = item.scrollTop;
-    el.scrollLeft = item.scrollLeft;
-  }
-}
-
-function add2eSpellPrepRestoreScrollRepeated(root, snapshot) {
-  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700]) setTimeout(() => add2eSpellPrepRestoreScroll(root, snapshot), delay);
-}
-
-function add2eSpellPrepCaptureActorScroll(actor) {
+function add2eSpellPrepSnapshot(actor) {
   return add2eSpellPrepActorWindows(actor).map(app => {
     const root = app.element?.[0] ?? app.element ?? null;
-    const activeTab = root?.querySelector?.(".a2e-tabs .item.active[data-tab]")?.dataset?.tab
-      ?? root?.querySelector?.(".a2e-tab-content.active[data-tab]")?.dataset?.tab
-      ?? null;
-    return { appId: app.appId, actorId: actor?.id, activeTab, scroll: add2eSpellPrepCaptureScroll(root) };
+    const scrollables = [root?.closest?.(".window-content"), root?.querySelector?.(".a2e-tab-content.active"), root, document.scrollingElement].filter(Boolean);
+    const activeTab = root?.querySelector?.(".a2e-tabs .item.active[data-tab]")?.dataset?.tab ?? root?.querySelector?.(".a2e-tab-content.active[data-tab]")?.dataset?.tab ?? null;
+    return { appId: app.appId, activeTab, scroll: scrollables.map((el, i) => ({ i, top: Number(el.scrollTop) || 0, left: Number(el.scrollLeft) || 0 })) };
   });
 }
 
-function add2eSpellPrepRestoreActorScroll(actor, snapshot) {
+function add2eSpellPrepRestoreSnapshot(snapshot) {
   if (!snapshot?.length) return;
   for (const snap of snapshot) {
     const app = ui.windows?.[snap.appId];
     const root = app?.element?.[0] ?? app?.element ?? null;
     if (!root) continue;
     if (snap.activeTab) {
-      try {
-        root.querySelectorAll?.(".a2e-tabs .item[data-tab]").forEach(el => el.classList.toggle("active", el.dataset.tab === snap.activeTab));
-        root.querySelectorAll?.(".a2e-tab-content[data-tab]").forEach(el => el.classList.toggle("active", el.dataset.tab === snap.activeTab));
-      } catch (_e) {}
+      root.querySelectorAll?.(".a2e-tabs .item[data-tab]").forEach(el => el.classList.toggle("active", el.dataset.tab === snap.activeTab));
+      root.querySelectorAll?.(".a2e-tab-content[data-tab]").forEach(el => el.classList.toggle("active", el.dataset.tab === snap.activeTab));
     }
-    add2eSpellPrepRestoreScroll(root, snap.scroll);
+    const scrollables = [root.closest?.(".window-content"), root.querySelector?.(".a2e-tab-content.active"), root, document.scrollingElement].filter(Boolean);
+    for (const s of snap.scroll ?? []) {
+      const el = scrollables[s.i];
+      if (!el) continue;
+      el.scrollTop = s.top;
+      el.scrollLeft = s.left;
+    }
   }
 }
 
-function add2eSpellPrepRestoreActorScrollRepeated(actor, snapshot) {
-  for (const delay of [0, 10, 25, 60, 120, 240, 420, 700]) setTimeout(() => add2eSpellPrepRestoreActorScroll(actor, snapshot), delay);
-}
-
-function add2eSpellPrepStorePendingActorScroll(actor, snapshot, reason) {
-  const actorId = String(actor?.id ?? "");
-  if (!actorId || !snapshot?.length) return;
-  ADD2E_SPELL_PREP_PENDING_SCROLL.set(actorId, { reason, createdAt: Date.now(), expiresAt: Date.now() + 5000, snapshot });
-}
-
-function add2eSpellPrepConsumePendingActorScroll(actor) {
-  const actorId = String(actor?.id ?? "");
-  if (!actorId) return null;
-  const pending = ADD2E_SPELL_PREP_PENDING_SCROLL.get(actorId);
-  if (!pending) return null;
-  if (Date.now() > pending.expiresAt) {
-    ADD2E_SPELL_PREP_PENDING_SCROLL.delete(actorId);
-    return null;
-  }
-  return pending.snapshot;
-}
-
-function add2eSpellPrepEscapeCss(value) {
-  const text = String(value ?? "");
-  try { if (globalThis.CSS?.escape) return CSS.escape(text); } catch (_e) {}
-  return text.replace(/(["'\\.#:[\],>+~*=])/g, "\\$1");
+function add2eSpellPrepRestoreRepeated(snapshot) {
+  for (const delay of [0, 20, 80, 180, 360, 700]) setTimeout(() => add2eSpellPrepRestoreSnapshot(snapshot), delay);
 }
 
 function add2eSpellPrepFindRowsForSort(root, sortId) {
@@ -151,69 +83,59 @@ function add2eSpellPrepFindRowsForSort(root, sortId) {
   return [...rows];
 }
 
-function add2eSpellPrepUpdateBadgeInContainer(container, count) {
-  if (!container) return 0;
-  const text = String(Math.max(0, Number(count) || 0));
-  const badges = Array.from(container.querySelectorAll?.(".sort-memorize-badge, [data-memorized-count], [data-add2e-memorized-count]") ?? []);
-  for (const badge of badges) {
-    badge.textContent = text;
-    badge.dataset.memorizedCount = text;
-    badge.dataset.add2eMemorizedCount = text;
-    badge.setAttribute("data-memorized-count", text);
-  }
-  return badges.length;
-}
-
-function add2eSpellPrepCounter(actor, entry, spellLevel, countOverride = null, maxOverride = null) {
-  const key = add2eNormalizeSpellKey(entry?.key);
-  const slots = add2eGetSpellSlotPoolsByLevel(actor);
-  const pool = slots?.[key] ?? entry;
-  return {
-    key,
-    label: entry?.label || pool?.label || add2eSpellLabel(key),
-    count: Number.isFinite(Number(countOverride)) ? Math.max(0, Number(countOverride)) : add2eCountPreparedForEntryLevel(actor, entry, spellLevel),
-    max: Number.isFinite(Number(maxOverride)) ? Math.max(0, Number(maxOverride)) : Number(pool?.slotsByLevel?.[spellLevel] ?? add2eGetSlotsForEntryLevel(actor, entry, spellLevel) ?? 0) || 0
+function add2eSpellPrepSetRowCount(actor, sort, next, clickedButton = null) {
+  const text = String(Math.max(0, Number(next) || 0));
+  const setIn = container => {
+    if (!container) return;
+    for (const badge of container.querySelectorAll?.(".sort-memorize-badge, [data-memorized-count], [data-add2e-memorized-count]") ?? []) {
+      badge.textContent = text;
+      badge.dataset.memorizedCount = text;
+      badge.dataset.add2eMemorizedCount = text;
+      badge.setAttribute("data-memorized-count", text);
+    }
   };
-}
-
-function add2eSpellPrepRefreshLevelCounters(actor, spellLevel, entry, clickedButton = null, countOverride = null, maxOverride = null) {
-  if (!actor || !entry || !spellLevel) return;
-  const counter = add2eSpellPrepCounter(actor, entry, spellLevel, countOverride, maxOverride);
-  const compactText = `${counter.label} ${counter.count}/${counter.max}`;
-  const fullText = `${counter.label} : ${counter.count} / ${counter.max}`;
-
+  setIn(clickedButton?.closest?.(".add2e-spell-prep-entry"));
+  setIn(clickedButton?.closest?.("tr"));
+  const sortId = String(sort?.id ?? sort?._id ?? "");
   for (const app of add2eSpellPrepActorWindows(actor)) {
     const root = app.element?.[0] ?? app.element ?? null;
-    if (!root) continue;
+    for (const row of add2eSpellPrepFindRowsForSort(root, sortId)) setIn(row);
+  }
+}
 
-    root.querySelectorAll?.(`.a2e-sort-slot-${add2eSpellPrepEscapeCss(counter.key)}`).forEach(el => { el.textContent = compactText; });
+function add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, total, max, clickedButton = null) {
+  const key = add2eNormalizeSpellKey(entry?.key);
+  const label = entry?.label || add2eSpellLabel(key);
+  const count = Math.max(0, Number(total) || 0);
+  const limit = Math.max(0, Number(max) || 0);
+  const fullText = `${label} : ${count} / ${limit}`;
+  const compactText = `${label} ${count}/${limit}`;
+  const pillText = `${label} N${spellLevel} ${count}/${limit}`;
+  const lowerTitle = `sorts de ${String(label).toLowerCase()}`;
+
+  const roots = add2eSpellPrepActorWindows(actor).map(app => app.element?.[0] ?? app.element ?? null).filter(Boolean);
+  const clickedRoot = clickedButton?.closest?.(".application, .window-app, .app");
+  if (clickedRoot) roots.push(clickedRoot);
+
+  for (const root of new Set(roots)) {
+    root.querySelectorAll?.(`.a2e-sort-slot-${add2eSpellPrepEscapeCss(key)}`).forEach(el => { el.textContent = compactText; });
+
+    root.querySelectorAll?.(".a2e-spell-capacity-pill").forEach(el => {
+      const txt = String(el.textContent ?? "").toLowerCase();
+      if (txt.includes(String(label).toLowerCase()) && txt.includes(`n${spellLevel}`)) el.textContent = pillText;
+    });
 
     root.querySelectorAll?.(".add2e-spell-list-group").forEach(group => {
-      const text = String(group.querySelector?.("h3")?.textContent ?? "");
-      if (!text.includes(counter.label)) return;
-      const badge = group.querySelector?.("h3 .sort-memorize-badge");
+      const h3 = group.querySelector?.("h3");
+      const h3Text = String(h3?.textContent ?? "").toLowerCase();
+      if (!h3 || (!h3Text.includes(String(label).toLowerCase()) && !h3Text.includes(lowerTitle))) return;
+      const badge = h3.querySelector?.(".sort-memorize-badge");
       if (badge) badge.textContent = fullText;
     });
 
     const clickedGroup = clickedButton?.closest?.(".add2e-spell-list-group");
-    if (clickedGroup) {
-      const badge = clickedGroup.querySelector?.("h3 .sort-memorize-badge");
-      if (badge) badge.textContent = fullText;
-    }
-  }
-}
-
-function add2eSpellPrepUpdateVisibleBadges(actor, sort, count, clickedButton = null) {
-  const sortId = String(sort?.id ?? sort?._id ?? "");
-  if (clickedButton) {
-    add2eSpellPrepUpdateBadgeInContainer(clickedButton.closest?.(".add2e-spell-prep-entry"), count);
-    add2eSpellPrepUpdateBadgeInContainer(clickedButton.closest?.("td"), count);
-    add2eSpellPrepUpdateBadgeInContainer(clickedButton.closest?.("tr"), count);
-  }
-  for (const app of add2eSpellPrepActorWindows(actor)) {
-    const root = app.element?.[0] ?? app.element ?? null;
-    if (!root) continue;
-    for (const row of add2eSpellPrepFindRowsForSort(root, sortId)) add2eSpellPrepUpdateBadgeInContainer(row, count);
+    const clickedBadge = clickedGroup?.querySelector?.("h3 .sort-memorize-badge");
+    if (clickedBadge) clickedBadge.textContent = fullText;
   }
 }
 
@@ -264,13 +186,12 @@ function add2eSpellPrepInjectComponents(actor, root) {
     if (!sort) continue;
     row.querySelector(".add2e-sort-components")?.remove();
     const comps = add2eSpellPrepMaterialComponents(sort);
+    if (!comps.length) continue;
     const badge = document.createElement("span");
-    badge.className = `add2e-sort-components ${comps.length ? "" : "empty"}`;
-    badge.textContent = comps.length ? `Composants : ${comps.join(", ")}` : "Composants : aucun";
-    badge.title = comps.length ? `Composants matériels nécessaires : ${comps.join(", ")}` : "Aucun composant matériel identifié sur ce sort.";
-    const target = row.querySelector(".a2e-sort-name-link")?.parentElement
-      ?? Array.from(row.children).find(td => td.textContent?.trim() && !td.querySelector("img"))
-      ?? row.querySelector("td");
+    badge.className = "add2e-sort-components";
+    badge.textContent = `Composants : ${comps.join(", ")}`;
+    badge.title = `Composants matériels nécessaires : ${comps.join(", ")}`;
+    const target = row.querySelector(".a2e-sort-name-link")?.parentElement ?? row.querySelector("td:nth-child(3)") ?? row.querySelector("td");
     target?.appendChild(document.createTextNode(" "));
     target?.appendChild(badge);
   }
@@ -290,11 +211,7 @@ async function add2eHandleSpellPreparationButton(btn, event = null, actorOverrid
 
   const actor = actorOverride ?? add2eSpellPrepResolveActorFromButton(btn);
   if (!actor?.items) return ui.notifications.warn("Acteur introuvable pour la préparation du sort.");
-
-  const scrollRoot = add2eSpellPrepWindowRootFromNode(btn) ?? add2eSpellPrepRootFromNode(btn);
-  const scrollSnapshot = add2eSpellPrepCaptureScroll(scrollRoot);
-  const actorScrollSnapshot = add2eSpellPrepCaptureActorScroll(actor);
-  add2eSpellPrepStorePendingActorScroll(actor, actorScrollSnapshot, "spell-prep-update");
+  const snapshot = add2eSpellPrepSnapshot(actor);
 
   try {
     const sortId = btn.dataset.sortId || btn.closest?.("[data-sort-id]")?.dataset?.sortId;
@@ -335,23 +252,22 @@ async function add2eHandleSpellPreparationButton(btn, event = null, actorOverrid
       totalAfter = Math.max(0, totalBefore - 1);
     }
 
-    add2eSpellPrepUpdateVisibleBadges(actor, sort, next, btn);
-    add2eSpellPrepRefreshLevelCounters(actor, spellLevel, entry, btn, totalAfter, limit);
+    add2eSpellPrepSetRowCount(actor, sort, next, btn);
+    add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, totalAfter, limit, btn);
     await add2eSetMemorizedCountForEntry(sort, entry, next);
     await add2eSpellPrepClearLegacyMemorizedCount(sort);
-    add2eSpellPrepUpdateVisibleBadges(actor, sort, next, btn);
-    add2eSpellPrepRefreshLevelCounters(actor, spellLevel, entry, btn, totalAfter, limit);
+    add2eSpellPrepSetRowCount(actor, sort, next, btn);
+    add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, totalAfter, limit, btn);
 
     setTimeout(() => {
       for (const app of add2eSpellPrepActorWindows(actor)) app.render?.(false);
-      add2eSpellPrepRestoreActorScrollRepeated(actor, actorScrollSnapshot);
-    }, 80);
+      add2eSpellPrepRestoreRepeated(snapshot);
+    }, 120);
   } catch (err) {
     console.error("[ADD2E][SPELL_PREP][ERROR]", err);
     ui.notifications.error("Erreur pendant la mémorisation du sort.");
   } finally {
-    add2eSpellPrepRestoreScrollRepeated(scrollRoot, scrollSnapshot);
-    add2eSpellPrepRestoreActorScrollRepeated(actor, actorScrollSnapshot);
+    add2eSpellPrepRestoreRepeated(snapshot);
   }
 }
 
@@ -367,8 +283,8 @@ function add2eBindNativeHbsSpellPreparationControls(actor, root) {
 }
 
 function add2eInstallDelegatedSpellPreparationControls() {
-  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_V43_INSTALLED) return;
-  globalThis.ADD2E_SPELL_PREP_DELEGATED_V43_INSTALLED = true;
+  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_V44_INSTALLED) return;
+  globalThis.ADD2E_SPELL_PREP_DELEGATED_V44_INSTALLED = true;
   document.addEventListener("click", ev => {
     const btn = ev.target?.closest?.(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus");
     if (!btn) return;
@@ -380,8 +296,6 @@ function add2eInstallDelegatedSpellPreparationControls() {
 function add2eOnActorSheetRendered(app, html) {
   const actor = app?.actor ?? app?.document;
   const root = html?.[0] ?? html;
-  const pending = add2eSpellPrepConsumePendingActorScroll(actor);
-  if (pending) add2eSpellPrepRestoreActorScrollRepeated(actor, pending);
   setTimeout(() => {
     add2eBindNativeHbsSpellPreparationControls(actor, root);
     add2eSpellPrepInjectComponents(actor, root);
@@ -393,12 +307,6 @@ Hooks.on("renderActorSheet", add2eOnActorSheetRendered);
 Hooks.on("renderApplication", (app, html) => {
   const actor = app?.actor ?? app?.document;
   if (actor?.documentName === "Actor") add2eOnActorSheetRendered(app, html);
-});
-Hooks.on("updateItem", (item, changes) => {
-  const actor = item?.parent;
-  if (actor?.documentName !== "Actor" || !changes?.flags?.add2e) return;
-  const pending = add2eSpellPrepConsumePendingActorScroll(actor);
-  if (pending) add2eSpellPrepRestoreActorScrollRepeated(actor, pending);
 });
 
 try { globalThis.add2eBindNativeHbsSpellPreparationControls = add2eBindNativeHbsSpellPreparationControls; } catch (_e) {}
