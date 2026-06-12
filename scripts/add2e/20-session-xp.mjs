@@ -1,5 +1,5 @@
 // ADD2E — XP de session automatisée — ApplicationV2
-// Version : 2026-06-12-session-xp-v4-multiclass-aware
+// Version : 2026-06-12-session-xp-v5-player-owned-recipients-dedupe
 //
 // Règles :
 // - Les monstres ne montent jamais de niveau.
@@ -7,11 +7,12 @@
 // - Seuls les monstres morts ou tombés à 0 PV apparaissent dans le bilan/récap.
 // - Le récap chat affiche le partage de chaque monstre entre les personnages.
 // - Le bilan XP est une ApplicationV2 native, sans Dialog V1.
-// - L'XP est appliquée uniquement aux acteurs type "personnage".
+// - L'XP est appliquée uniquement aux acteurs type "personnage" cochés.
+// - Seuls les personnages possédés par un joueur non-MJ sont cochés par défaut.
 // - Les personnages multiclassés reçoivent leur part globale, puis cette part est divisée entre leurs classes.
 // - Les tokens non liés des personnages reçoivent aussi la même XP système.
 
-const VERSION = "2026-06-12-session-xp-v4-multiclass-aware";
+const VERSION = "2026-06-12-session-xp-v5-player-owned-recipients-dedupe";
 const TAG = "[ADD2E][SESSION_XP]";
 const FLAG_SCOPE = "add2e";
 const FLAG_LEDGER = "sessionXpLedger";
@@ -248,16 +249,43 @@ function activeLedgerRows() {
   return currentLedger().filter(ledgerEntryIsDead).map(entry => ({ ...entry, source: "ledger", alreadyRecorded: true, checked: true, dead: true }));
 }
 
+function rowTokenIdentity(row) {
+  if (row?.sceneId && row?.tokenId) return `token:${row.sceneId}:${row.tokenId}`;
+  return "";
+}
+
+function rowActorIdentity(row) {
+  const actorPart = row?.actorUuid || row?.actorId || norm(row?.monsterName || row?.tokenName || "monstre");
+  const scenePart = row?.sceneId || row?.sceneName || "world";
+  return `actor:${scenePart}:${actorPart}:${norm(row?.monsterName || row?.tokenName || "monstre")}`;
+}
+
 function sceneRowsNotInActiveLedger() {
-  return allSceneMonsterRows().filter(row => row && !row.alreadyRecorded).map(row => ({ ...row, checked: true }));
+  const ledgerTokenKeys = new Set(activeLedgerRows().map(rowTokenIdentity).filter(Boolean));
+  return allSceneMonsterRows()
+    .filter(row => row && !ledgerTokenKeys.has(rowTokenIdentity(row)) && !row.alreadyRecorded)
+    .map(row => ({ ...row, checked: true }));
 }
 
 function sourceRowsForApp() {
+  const sceneDeadRows = allSceneMonsterRows();
+  const sceneActorKeys = new Set(sceneDeadRows.map(rowActorIdentity));
   const rows = [];
   const keys = new Set();
+  const actorKeys = new Set();
+
   for (const row of [...activeLedgerRows(), ...sceneRowsNotInActiveLedger()]) {
-    if (!row?.key || keys.has(row.key)) continue;
-    keys.add(row.key);
+    if (!row?.key) continue;
+    const tokenIdentity = rowTokenIdentity(row);
+    const actorIdentity = rowActorIdentity(row);
+
+    if (row.source === "ledger" && !tokenIdentity && sceneActorKeys.has(actorIdentity)) continue;
+    const dedupeKey = tokenIdentity || actorIdentity || row.key;
+    if (keys.has(dedupeKey)) continue;
+    if (!tokenIdentity && actorKeys.has(actorIdentity)) continue;
+
+    keys.add(dedupeKey);
+    actorKeys.add(actorIdentity);
     rows.push(row);
   }
   return rows;
@@ -278,6 +306,20 @@ function isMulticlassActor(actor) {
     try { if (globalThis.add2eMulticlassEnabled(actor)) return true; } catch (_e) {}
   }
   return actor.system?.multiclasse?.enabled === true || classItems(actor).length > 1;
+}
+
+function isPlayerOwnedCharacter(actor) {
+  if (!actor || actor.type !== "personnage") return false;
+  const users = Array.from(game.users ?? []).filter(user => !user?.isGM);
+  for (const user of users) {
+    try {
+      if (actor.testUserPermission?.(user, "OWNER")) return true;
+    } catch (_e) {}
+    try {
+      if (Number(actor.ownership?.[user.id] ?? 0) >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) return true;
+    } catch (_e) {}
+  }
+  return false;
 }
 
 function currentXp(actor) {
@@ -309,9 +351,10 @@ function splitInteger(total, keys) {
 }
 
 function characterDisplay(row) {
-  if (!row.multiclass) return `Niv. ${esc(row.level)}`;
+  const ownerNote = row.playerOwned ? "" : " — aucun propriétaire joueur";
+  if (!row.multiclass) return `Niv. ${esc(row.level)}${ownerNote}`;
   const parts = row.classes.map(c => `${esc(c.name)} ${esc(c.level)} (${c.xp.toLocaleString()} XP)`).join(" / ");
-  return `Multiclasse — ${parts}`;
+  return `Multiclasse — ${parts}${ownerNote}`;
 }
 
 function characterRows() {
@@ -327,6 +370,7 @@ function characterRows() {
         xp: Math.max(0, Math.floor(num(xpMap?.[slug] ?? cls.system?.xp ?? 0, 0)))
       };
     });
+    const playerOwned = isPlayerOwnedCharacter(actor);
     return {
       actor,
       actorId: actor.id,
@@ -334,7 +378,9 @@ function characterRows() {
       level: Math.max(1, num(actor.system?.niveau, 1)),
       xp: currentXp(actor),
       multiclass: isMulticlassActor(actor),
-      classes
+      classes,
+      playerOwned,
+      checked: playerOwned
     };
   });
 }
@@ -343,8 +389,8 @@ function auditXpFields() {
   const monsters = game.actors?.filter(a => a.type === "monster") ?? [];
   const chars = game.actors?.filter(a => a.type === "personnage") ?? [];
   const monsterRows = monsters.map(actor => ({ id: actor.id, name: actor.name, xp: monsterXpValue(actor), rawXp: actor.system?.xp, hp: actorHpValue(actor), dead: actorHpValue(actor) <= 0, ok: monsterXpValue(actor) > 0 }));
-  const characterRowsAudit = chars.map(actor => ({ id: actor.id, name: actor.name, xp: actor.system?.xp, niveau: actor.system?.niveau, multiclasse: isMulticlassActor(actor), xp_par_classe: actor.system?.xp_par_classe, niveaux_par_classe: actor.system?.niveaux_par_classe, classes: classItems(actor).map(c => c.name), progression_xp: actor.system?.progression_xp, ok: actor.system?.xp !== undefined && actor.system?.niveau !== undefined }));
-  const result = { version: VERSION, monsters: monsterRows, deadMonsters: monsterRows.filter(r => r.dead), aliveMonstersIgnored: monsterRows.filter(r => !r.dead), characters: characterRowsAudit, monstersWithoutXp: monsterRows.filter(r => !r.ok), charactersWithMissingXpFields: characterRowsAudit.filter(r => !r.ok), ledger: currentLedger() };
+  const characterRowsAudit = chars.map(actor => ({ id: actor.id, name: actor.name, playerOwned: isPlayerOwnedCharacter(actor), xp: actor.system?.xp, niveau: actor.system?.niveau, multiclasse: isMulticlassActor(actor), xp_par_classe: actor.system?.xp_par_classe, niveaux_par_classe: actor.system?.niveaux_par_classe, classes: classItems(actor).map(c => c.name), progression_xp: actor.system?.progression_xp, ok: actor.system?.xp !== undefined && actor.system?.niveau !== undefined }));
+  const result = { version: VERSION, monsters: monsterRows, deadMonsters: monsterRows.filter(r => r.dead), aliveMonstersIgnored: monsterRows.filter(r => !r.dead), characters: characterRowsAudit, monstersWithoutXp: monsterRows.filter(r => !r.ok), charactersWithMissingXpFields: characterRowsAudit.filter(r => !r.ok), ledger: currentLedger(), visibleSources: sourceRowsForApp() };
   console.table(monsterRows);
   console.table(characterRowsAudit);
   log("[AUDIT]", result);
@@ -364,9 +410,11 @@ function sourceRowHtml(row) {
 }
 
 function characterRowHtml(row) {
+  const checked = row.checked ? "checked" : "";
+  const ownerChip = row.playerOwned ? `<span class="a2e-xp-chip player">Joueur</span>` : `<span class="a2e-xp-chip muted">Non joueur</span>`;
   return `<tr class="a2e-xp-character-row" data-actor-id="${esc(row.actorId)}">
-    <td class="center"><input type="checkbox" data-role="include-character" checked></td>
-    <td><strong>${esc(row.name)}</strong><br><small>${characterDisplay(row)}</small></td>
+    <td class="center"><input type="checkbox" data-role="include-character" ${checked}></td>
+    <td><strong>${esc(row.name)}</strong> ${ownerChip}<br><small>${characterDisplay(row)}</small></td>
     <td class="right current-xp">${row.xp.toLocaleString()}</td>
     <td class="right"><input class="a2e-xp-number small" type="number" data-role="share" value="1" min="0" step="0.5"></td>
     <td class="right"><input class="a2e-xp-number small" type="number" data-role="bonus-percent" value="0" step="1"></td>
@@ -387,16 +435,16 @@ function appHtml() {
       .add2e-session-xp-v2 th,.add2e-session-xp-v2 td{border:1px solid var(--gold);padding:6px 7px;vertical-align:middle;color:#2b1b0c}.add2e-session-xp-v2 th{background:linear-gradient(180deg,#f0dda2,#d9bd65);color:#3b2207;font-weight:900;text-shadow:none}
       .add2e-session-xp-v2 tbody tr:nth-child(even){background:#fff5dc}.add2e-session-xp-v2 tbody tr:hover{background:#fff0bd}.add2e-session-xp-v2 .center{text-align:center}.add2e-session-xp-v2 .right{text-align:right}
       .add2e-session-xp-v2 input[type="checkbox"]{width:20px;height:20px;accent-color:#346f38}.add2e-session-xp-v2 .a2e-xp-number{width:86px;max-width:100%;text-align:right;padding:4px 6px;border:1px solid #9d8542;border-radius:5px;background:#fff;color:#111;font-weight:700}.add2e-session-xp-v2 .a2e-xp-number.small{width:68px}
-      .add2e-session-xp-v2 .a2e-xp-name{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.add2e-session-xp-v2 .a2e-xp-chip{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;font-size:.72rem;font-weight:800;border:1px solid #bfa65a;background:#fff6d8;color:#4a300b}.add2e-session-xp-v2 .a2e-xp-chip.dead{border-color:#9d2d25;background:#ffe4df;color:#8d2b22}
+      .add2e-session-xp-v2 .a2e-xp-name{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.add2e-session-xp-v2 .a2e-xp-chip{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;font-size:.72rem;font-weight:800;border:1px solid #bfa65a;background:#fff6d8;color:#4a300b}.add2e-session-xp-v2 .a2e-xp-chip.dead{border-color:#9d2d25;background:#ffe4df;color:#8d2b22}.add2e-session-xp-v2 .a2e-xp-chip.player{border-color:#267a3d;background:#e7ffe7;color:#1f642e}.add2e-session-xp-v2 .a2e-xp-chip.muted{border-color:#9a8a70;background:#eee7dc;color:#69563f}
       .add2e-session-xp-v2 .global-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:6px 0 12px}.add2e-session-xp-v2 .global-grid label{display:flex;flex-direction:column;gap:3px;padding:7px;border:1px solid var(--gold);border-radius:7px;background:#fffaf0;font-weight:800;color:#4a2d0a}.add2e-session-xp-v2 .global-grid input{width:100%;padding:5px 7px;border:1px solid #9d8542;border-radius:5px;background:#fff;color:#111}
       .add2e-session-xp-v2 .footer-note{padding:7px 9px;border-radius:6px;background:#f1fff0;border:1px solid #7caf78;color:#285c2a;font-weight:700}.add2e-session-xp-v2 .source-table col:nth-child(1){width:62px}.add2e-session-xp-v2 .source-table col:nth-child(2){width:auto}.add2e-session-xp-v2 .source-table col:nth-child(3){width:120px}.add2e-session-xp-v2 .source-table col:nth-child(4){width:105px}.add2e-session-xp-v2 .char-table col:nth-child(1){width:62px}.add2e-session-xp-v2 .char-table col:nth-child(2){width:auto}.add2e-session-xp-v2 .char-table col:nth-child(3){width:105px}.add2e-session-xp-v2 .char-table col:nth-child(4){width:82px}.add2e-session-xp-v2 .char-table col:nth-child(5){width:92px}.add2e-session-xp-v2 .char-table col:nth-child(6){width:92px}
       .add2e-session-xp-v2 .buttons{display:flex;gap:8px;justify-content:flex-end;padding:9px 10px;border-top:1px solid #b99742;background:#e5d09a;flex:0 0 auto}.add2e-session-xp-v2 button{padding:7px 12px;border:1px solid #7a5a16;border-radius:6px;background:#fff7d9;color:#2c1a07;font-weight:800;cursor:pointer}.add2e-session-xp-v2 button.apply{background:#2d7a3e;color:#fff;border-color:#1f5a2d}.add2e-session-xp-v2 button.reset{background:#8d2b22;color:#fff;border-color:#6f1d17}.add2e-session-xp-v2 button:disabled{opacity:.55;cursor:wait}
     </style>
     <div class="scroll">
-      <h3>Sources d'XP monstres morts</h3><div class="hint">Seuls les monstres morts ou à 0 PV apparaissent ici. Les monstres encore vivants sont exclus du bilan et du récap.</div>
+      <h3>Sources d'XP monstres morts</h3><div class="hint">Seuls les monstres morts ou à 0 PV apparaissent ici. Le registre et la scène sont dédoublonnés pour éviter de compter deux fois le même token.</div>
       <table class="source-table"><colgroup><col><col><col><col></colgroup><thead><tr><th>Incl.</th><th>Monstre mort</th><th>Scène</th><th>PX</th></tr></thead><tbody>${sourceRows.map(sourceRowHtml).join("") || `<tr><td colspan="4"><em>Aucun monstre mort enregistré ou présent sur les scènes.</em></td></tr>`}</tbody></table>
       <h3>Bonus globaux</h3><div class="global-grid"><label>Objectifs / rôleplay <input type="number" name="objectivesXp" value="0" step="1"></label><label>Trésors <input type="number" name="treasureXp" value="0" step="1"></label><label>Bonus MJ global <input type="number" name="gmBonusXp" value="0" step="1"></label><label>Motif <input type="text" name="reason" value="Bilan XP de session"></label></div>
-      <h3>Répartition vers les personnages</h3><table class="char-table"><colgroup><col><col><col><col><col><col></colgroup><thead><tr><th>Incl.</th><th>Personnage</th><th>XP actuel</th><th>Part</th><th>Bonus %</th><th>Bonus fixe</th></tr></thead><tbody>${chars.map(characterRowHtml).join("") || `<tr><td colspan="6"><em>Aucun personnage trouvé.</em></td></tr>`}</tbody></table>
+      <h3>Répartition vers les personnages</h3><div class="hint">Seuls les personnages possédés par au moins un joueur non-MJ sont cochés par défaut. Les autres restent visibles mais décochés.</div><table class="char-table"><colgroup><col><col><col><col><col><col></colgroup><thead><tr><th>Incl.</th><th>Personnage</th><th>XP actuel</th><th>Part</th><th>Bonus %</th><th>Bonus fixe</th></tr></thead><tbody>${chars.map(characterRowHtml).join("") || `<tr><td colspan="6"><em>Aucun personnage trouvé.</em></td></tr>`}</tbody></table>
       <div class="footer-note">Application : mono-classe = XP globale. Multiclasse = XP globale répartie également entre les classes, puis recalcul des niveaux par classe.</div>
     </div>
     <div class="buttons"><button type="button" data-action="audit">Audit champs</button><button type="button" class="reset" data-action="reset">Réinitialiser registre</button><button type="button" class="apply" data-action="apply">Appliquer l'XP</button><button type="button" data-action="close">Fermer</button></div>
@@ -406,19 +454,7 @@ function appHtml() {
 function readAppData(root) {
   const selectedSources = [...root.querySelectorAll(".a2e-xp-source-row")].map(row => {
     if (row.querySelector("[data-role='include-source']")?.checked !== true) return null;
-    return {
-      key: row.dataset.key || "",
-      source: row.dataset.source || "",
-      monsterName: row.dataset.monsterName || row.dataset.tokenName || "Monstre",
-      tokenName: row.dataset.tokenName || row.dataset.monsterName || "Monstre",
-      sceneName: row.dataset.sceneName || "",
-      sceneId: row.dataset.sceneId || "",
-      tokenId: row.dataset.tokenId || "",
-      actorId: row.dataset.actorId || "",
-      actorUuid: row.dataset.actorUuid || "",
-      reason: row.dataset.reason || "session_xp",
-      xp: Math.max(0, Math.floor(num(row.querySelector("[data-role='source-xp']")?.value, 0)))
-    };
+    return { key: row.dataset.key || "", source: row.dataset.source || "", monsterName: row.dataset.monsterName || row.dataset.tokenName || "Monstre", tokenName: row.dataset.tokenName || row.dataset.monsterName || "Monstre", sceneName: row.dataset.sceneName || "", sceneId: row.dataset.sceneId || "", tokenId: row.dataset.tokenId || "", actorId: row.dataset.actorId || "", actorUuid: row.dataset.actorUuid || "", reason: row.dataset.reason || "session_xp", xp: Math.max(0, Math.floor(num(row.querySelector("[data-role='source-xp']")?.value, 0))) };
   }).filter(Boolean);
 
   const recipients = [...root.querySelectorAll(".a2e-xp-character-row")].map(row => {
@@ -441,34 +477,19 @@ function splitXpByShares(totalXp, recipients) {
   const xp = Math.max(0, Math.floor(num(totalXp, 0)));
   const shareTotal = recipients.reduce((sum, row) => sum + Math.max(0, num(row.share, 0)), 0);
   if (xp <= 0 || shareTotal <= 0) return recipients.map(row => ({ ...row, base: 0, raw: 0, fraction: 0 }));
-  const rows = recipients.map(row => {
-    const raw = xp * (row.share / shareTotal);
-    const base = Math.floor(raw);
-    return { ...row, raw, base, fraction: raw - base };
-  });
+  const rows = recipients.map(row => { const raw = xp * (row.share / shareTotal); const base = Math.floor(raw); return { ...row, raw, base, fraction: raw - base }; });
   let remainder = xp - rows.reduce((sum, row) => sum + row.base, 0);
-  for (const row of [...rows].sort((a, b) => b.fraction - a.fraction)) {
-    if (remainder <= 0) break;
-    row.base += 1;
-    remainder -= 1;
-  }
+  for (const row of [...rows].sort((a, b) => b.fraction - a.fraction)) { if (remainder <= 0) break; row.base += 1; remainder -= 1; }
   return rows;
 }
 
 function computeDistribution(data) {
   const rows = splitXpByShares(data.sourceTotal, data.recipients);
-  return rows.map(row => {
-    const percentBonus = Math.floor(row.base * (row.bonusPercent / 100));
-    const total = Math.max(0, row.base + percentBonus + row.bonusFlat);
-    return { ...row, percentBonus, total };
-  });
+  return rows.map(row => { const percentBonus = Math.floor(row.base * (row.bonusPercent / 100)); const total = Math.max(0, row.base + percentBonus + row.bonusFlat); return { ...row, percentBonus, total }; });
 }
 
 function computeMonsterShareRows(data) {
-  return data.selectedSources.map(source => ({
-    ...source,
-    shares: splitXpByShares(source.xp, data.recipients).map(row => ({ actorId: row.actorId, name: row.name, share: row.share, xp: row.base }))
-  }));
+  return data.selectedSources.map(source => ({ ...source, shares: splitXpByShares(source.xp, data.recipients).map(row => ({ actorId: row.actorId, name: row.name, share: row.share, xp: row.base })) }));
 }
 
 async function markSourcesApplied(selectedSources, reason) {
@@ -500,10 +521,8 @@ function unlinkedTokenDocsForActor(actor) {
 
 function multiclassPayload(actor, xpMap) {
   if (typeof globalThis.add2eMulticlassUpdatePayload === "function") {
-    try {
-      const payload = globalThis.add2eMulticlassUpdatePayload(actor, null, xpMap, null);
-      if (payload && typeof payload === "object") return payload;
-    } catch (err) { warn("[MULTICLASS_PAYLOAD][ERROR]", { actor: actor.name, err }); }
+    try { const payload = globalThis.add2eMulticlassUpdatePayload(actor, null, xpMap, null); if (payload && typeof payload === "object") return payload; }
+    catch (err) { warn("[MULTICLASS_PAYLOAD][ERROR]", { actor: actor.name, err }); }
   }
   const total = Object.values(xpMap ?? {}).reduce((sum, value) => sum + Math.max(0, Math.floor(num(value, 0))), 0);
   return { "system.xp": total, "system.xp_par_classe": xpMap };
@@ -567,12 +586,12 @@ async function awardCharacterXp(actor, total, reason) {
     const plan = multiclassAwardPlan(actor, amount);
     payload = multiclassPayload(actor, plan.afterMap);
     classBreakdown = plan.keys.map(key => ({ key, before: Math.max(0, Math.floor(num(plan.beforeMap[key], 0))), gained: Math.max(0, Math.floor(num(plan.deltas[key], 0))), after: Math.max(0, Math.floor(num(plan.afterMap[key], 0))) }));
-    await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "session-xp-v4-multiclass" });
+    await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "session-xp-v5-multiclass" });
     if (typeof globalThis.add2eRecalcMulticlassActor === "function") await globalThis.add2eRecalcMulticlassActor(actor).catch(err => warn("[AWARD][MULTICLASS_RECALC]", { actor: actor.name, err }));
   } else {
     const expectedAfter = before + amount;
     payload = { "system.xp": expectedAfter };
-    await actor.update(payload, { add2eReason: "session-xp-v4" });
+    await actor.update(payload, { add2eReason: "session-xp-v5" });
   }
 
   const liveActor = game.actors.get(actor.id) ?? actor;
@@ -619,9 +638,7 @@ async function applySessionXp(data) {
     return `<li>${esc(row.actor.name)} : +<b>${row.gained.toLocaleString()}</b> XP <small>(base ${row.base.toLocaleString()}${row.percentBonus ? `, bonus % ${row.percentBonus.toLocaleString()}` : ""}${row.bonusFlat ? `, bonus fixe ${row.bonusFlat.toLocaleString()}` : ""})</small> — ${row.before.toLocaleString()} → ${row.after.toLocaleString()}${classBreakdownHtml(row)}${tokenNote}</li>`;
   }).join("");
 
-  await ChatMessage.create({
-    content: `<div class="add2e-xp-session-chat" style="border:2px solid #a87924;border-radius:10px;background:#fff8df;padding:.75em .95em;color:#2b1b0c;"><h2 style="margin:.1em 0 .45em;color:#7d331f;">Bilan XP de session</h2><p><b>Total réparti :</b> ${data.sourceTotal.toLocaleString()} XP</p><p><b>Monstres morts :</b> ${data.monsterXp.toLocaleString()} XP — <b>Objectifs :</b> ${data.objectivesXp.toLocaleString()} XP — <b>Trésors :</b> ${data.treasureXp.toLocaleString()} XP — <b>Bonus MJ :</b> ${data.gmBonusXp.toLocaleString()} XP</p><details open><summary><b>Monstres morts et partage par personnage</b></summary><ul>${monsterLines || "<li>Aucun monstre mort sélectionné.</li>"}</ul></details><details open><summary><b>Répartition finale appliquée</b></summary><ul>${resultLines}</ul></details></div>`
-  });
+  await ChatMessage.create({ content: `<div class="add2e-xp-session-chat" style="border:2px solid #a87924;border-radius:10px;background:#fff8df;padding:.75em .95em;color:#2b1b0c;"><h2 style="margin:.1em 0 .45em;color:#7d331f;">Bilan XP de session</h2><p><b>Total réparti :</b> ${data.sourceTotal.toLocaleString()} XP</p><p><b>Monstres morts :</b> ${data.monsterXp.toLocaleString()} XP — <b>Objectifs :</b> ${data.objectivesXp.toLocaleString()} XP — <b>Trésors :</b> ${data.treasureXp.toLocaleString()} XP — <b>Bonus MJ :</b> ${data.gmBonusXp.toLocaleString()} XP</p><details open><summary><b>Monstres morts et partage par personnage</b></summary><ul>${monsterLines || "<li>Aucun monstre mort sélectionné.</li>"}</ul></details><details open><summary><b>Répartition finale appliquée</b></summary><ul>${resultLines}</ul></details></div>` });
 
   for (const row of results) refreshActorAndTokenSheets(row.actor);
   ui.notifications.info("XP de session appliquée. Les sources utilisées sont maintenant masquées.");
@@ -630,7 +647,7 @@ async function applySessionXp(data) {
 }
 
 class Add2eSessionXpApp extends ApplicationV2 {
-  static DEFAULT_OPTIONS = { id: "add2e-session-xp-app-v4", classes: ["add2e", "session-xp", "app-v2"], tag: "section", window: { title: "ADD2E — Bilan XP de session", resizable: true }, position: { width: 980, height: 780 } };
+  static DEFAULT_OPTIONS = { id: "add2e-session-xp-app-v5", classes: ["add2e", "session-xp", "app-v2"], tag: "section", window: { title: "ADD2E — Bilan XP de session", resizable: true }, position: { width: 980, height: 780 } };
   async _renderHTML(_context, _options) { const wrapper = document.createElement("div"); wrapper.innerHTML = appHtml(); return wrapper; }
   _replaceHTML(result, content, _options) { content.replaceChildren(...result.childNodes); this._activateListeners(content); }
   _activateListeners(content) {
@@ -697,24 +714,9 @@ function xpToolDefinition() {
 
 function installToolInControl(control, tool = xpToolDefinition()) {
   if (!control) return false;
-  if (Array.isArray(control.tools)) {
-    const existing = control.tools.find(t => t?.name === tool.name || t?.id === tool.name);
-    if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; existing.visible = tool.visible; }
-    else control.tools.push(tool);
-    return true;
-  }
-  if (control.tools instanceof Map) {
-    const existing = control.tools.get(tool.name);
-    if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; existing.visible = tool.visible; }
-    else control.tools.set(tool.name, tool);
-    return true;
-  }
-  if (control.tools && typeof control.tools === "object") {
-    const existing = control.tools[tool.name];
-    if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; existing.visible = tool.visible; }
-    else control.tools[tool.name] = tool;
-    return true;
-  }
+  if (Array.isArray(control.tools)) { const existing = control.tools.find(t => t?.name === tool.name || t?.id === tool.name); if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; existing.visible = tool.visible; } else control.tools.push(tool); return true; }
+  if (control.tools instanceof Map) { const existing = control.tools.get(tool.name); if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; existing.visible = tool.visible; } else control.tools.set(tool.name, tool); return true; }
+  if (control.tools && typeof control.tools === "object") { const existing = control.tools[tool.name]; if (existing) { delete existing.onClick; existing.onChange = tool.onChange; existing.button = true; existing.visible = tool.visible; } else control.tools[tool.name] = tool; return true; }
   control.tools = [tool];
   return true;
 }
@@ -722,18 +724,8 @@ function installToolInControl(control, tool = xpToolDefinition()) {
 function installSceneControlButton(controls) {
   if (!game.user?.isGM) return;
   const tool = xpToolDefinition();
-  if (Array.isArray(controls)) {
-    const tokenControl = controls.find(c => c?.name === "token" || c?.name === "tokens") ?? controls[0];
-    if (installToolInControl(tokenControl, tool)) return;
-    controls.push({ name: "add2e", title: "ADD2E", icon: "fas fa-dragon", tools: [tool], activeTool: tool.name });
-    return;
-  }
-  if (controls && typeof controls === "object") {
-    const tokenControl = controls.token ?? controls.tokens ?? controls.Token ?? Object.values(controls).find(c => c?.name === "token" || c?.name === "tokens");
-    if (installToolInControl(tokenControl, tool)) return;
-    controls.add2e = controls.add2e ?? { name: "add2e", title: "ADD2E", icon: "fas fa-dragon", tools: {} };
-    installToolInControl(controls.add2e, tool);
-  }
+  if (Array.isArray(controls)) { const tokenControl = controls.find(c => c?.name === "token" || c?.name === "tokens") ?? controls[0]; if (installToolInControl(tokenControl, tool)) return; controls.push({ name: "add2e", title: "ADD2E", icon: "fas fa-dragon", tools: [tool], activeTool: tool.name }); return; }
+  if (controls && typeof controls === "object") { const tokenControl = controls.token ?? controls.tokens ?? controls.Token ?? Object.values(controls).find(c => c?.name === "token" || c?.name === "tokens"); if (installToolInControl(tokenControl, tool)) return; controls.add2e = controls.add2e ?? { name: "add2e", title: "ADD2E", icon: "fas fa-dragon", tools: {} }; installToolInControl(controls.add2e, tool); }
 }
 
 function rootFromHtml(html, app = null) {
@@ -761,10 +753,7 @@ function injectActorDirectoryButton(app, html) {
   target.prepend(btn);
 }
 
-Hooks.once("init", () => {
-  game.settings.register("add2e", FLAG_LEDGER, { name: "ADD2E — Registre XP de session", hint: "Registre interne des monstres morts ou tombés à 0 PV pendant la session.", scope: "world", config: false, type: Array, default: [] });
-});
-
+Hooks.once("init", () => { game.settings.register("add2e", FLAG_LEDGER, { name: "ADD2E — Registre XP de session", hint: "Registre interne des monstres morts ou tombés à 0 PV pendant la session.", scope: "world", config: false, type: Array, default: [] }); });
 Hooks.once("ready", () => { log("[READY]", { version: VERSION }); });
 Hooks.on("preUpdateActor", (actor, changes, _options, userId) => { if (!canRecordFromUser(userId)) return true; if (!actorDropsToZero(actor, changes)) return true; queueRecord(actor, { reason: "pv_zero", notify: true }); return true; });
 Hooks.on("preUpdateToken", (tokenDoc, changes, _options, userId) => { if (!canRecordFromUser(userId)) return true; if (!tokenDropsToZero(tokenDoc, changes)) return true; queueRecord(tokenDoc.actor, { tokenDoc, scene: tokenDoc.parent, reason: "token_pv_zero", notify: true }); return true; });
