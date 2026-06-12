@@ -1,5 +1,5 @@
-/** ADD2E - Mecanismes partages des sorts de Clerc niveau 2 - Foundry V13/V14/V15. */
-const SPELLS = {
+/** ADD2E - Mecanismes de sorts partages - Foundry V13/V14/V15. */
+const SPELL_MECHANICS = {
   augure: { name: "Augure", fx: "augure", color: "#b78cff" },
   cantique: { name: "Cantique", fx: "cantique", color: "#ffd76a" },
   "charme-serpents": { name: "Charme-serpents", fx: "charme", color: "#69d48f" },
@@ -111,6 +111,29 @@ async function applyMany(actors, makeData) {
   for (const actor of actors) results.push(await createEffect(actor, makeData(actor)));
   return results;
 }
+
+/** Outils communs reutilisables par tous les scripts de sorts ADD2E. */
+export const ADD2E_SPELL_MECHANICS = Object.freeze({
+  escapeHtml: esc,
+  normalizeKey: norm,
+  levelOf,
+  targetTokens,
+  targetActors,
+  activeTags,
+  sourceContext,
+  confirmDialog,
+  playVfx,
+  chat,
+  durationData,
+  standardStatus,
+  effectData,
+  createEffect,
+  rollSave,
+  targetRule,
+  targetNames: names,
+  alignmentOf,
+  applyMany
+});
 
 async function runAugure(ctx, spell) {
   const chance = Math.min(100, 70 + ctx.level);
@@ -248,12 +271,12 @@ async function runSilence(ctx, spell) {
   return true;
 }
 
-export async function runClericLevel2Spell(context, key) {
-  const spell = SPELLS[key];
+export async function runSpellMechanic(context, key) {
+  const spell = SPELL_MECHANICS[key];
   if (!spell) return false;
   const ctx = sourceContext(context ?? {});
   if (!ctx.sourceItem || !ctx.caster || !ctx.casterToken) { ui.notifications?.error?.(`${spell.name} : source, lanceur ou token introuvable.`); return false; }
   const runners = { augure: runAugure, cantique: runCantique, "charme-serpents": runSnakeCharm, "detection-des-charmes": runDetectCharms, "detection-des-pieges": runDetectTraps, "langage-des-animaux": runAnimalLanguage, "marteau-spirituel": runSpiritualHammer, paralysie: runParalysis, "connaissance-des-alignements": runAlignment, "resistance-au-feu": runFireResistance, "ralentissement-du-poison": runDelayPoison, "silence-rayon-de-15-pieds": runSilence };
   try { return (await runners[key](ctx, spell)) === true; }
-  catch (error) { console.error(`[ADD2E][CLERIC_LEVEL_2][${key}]`, error); ui.notifications?.error?.(`${spell.name} : erreur de résolution.`); return false; }
+  catch (error) { console.error(`[ADD2E][SPELL_MECHANICS][${key}]`, error); ui.notifications?.error?.(`${spell.name} : erreur de résolution.`); return false; }
 }

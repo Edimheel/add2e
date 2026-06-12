@@ -25,7 +25,15 @@ Les 12 onUse raccordés utilisent désormais un helper partagé DialogV2/VFX et 
 - scripts/add2e-attack/02-damage.mjs : lit les tags de résistance au feu, lance le JP et réduit les dégâts.
 - scripts/add2e-attack/06-cast-spell.mjs : refuse avant consommation un sort verbal si le lanceur porte Silence.
 - scripts/add2e/18c-active-effects-expiration.mjs et scripts/add2e-active-effects-expire.js : suppriment l'arme temporaire liée au Marteau spirituel.
-- scripts/sorts/clerc-niveau-2-mechanics.mjs : helper partagé évitant la duplication des 12 onUse.
+- scripts/sorts/add2e-spell-mechanics.mjs : helper générique partagé évitant la duplication des onUse.
+
+## Architecture générique des mécaniques de sorts
+
+- Le helper spécifique précédent a été supprimé et remplacé par `scripts/sorts/add2e-spell-mechanics.mjs`.
+- Les 12 scripts Clerc niveau 2 importent désormais ce helper générique et appellent son répartiteur `runSpellMechanic`.
+- Le module expose aussi `ADD2E_SPELL_MECHANICS`, un socle réutilisable pour la résolution du lanceur et des cibles, DialogV2, ChatMessage, VFX, ActiveEffects, durées, sauvegardes, statuts et application multiple.
+- Ce refactor évite une prolifération de helpers par classe et niveau. Le même socle doit servir aux futurs lots Clerc niveau 3+, Magicien, Druide et Illusionniste.
+- Aucun comportement de sort n'a été modifié : les résolutions, ActiveEffects, VFX, retours stricts et intégrations centrales restent identiques à ceux introduits par le commit précédent.
 
 ## Flags et intégrations
 
