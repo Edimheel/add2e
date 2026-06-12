@@ -1,5 +1,5 @@
 // ADD2E — XP de session automatisée — ApplicationV2
-// Version : 2026-06-02-session-xp-v3-dead-monsters-shared-recap
+// Version : 2026-06-12-session-xp-v4-multiclass-aware
 //
 // Règles :
 // - Les monstres ne montent jamais de niveau.
@@ -8,17 +8,18 @@
 // - Le récap chat affiche le partage de chaque monstre entre les personnages.
 // - Le bilan XP est une ApplicationV2 native, sans Dialog V1.
 // - L'XP est appliquée uniquement aux acteurs type "personnage".
-// - Les tokens non liés des personnages reçoivent aussi la même XP.
+// - Les personnages multiclassés reçoivent leur part globale, puis cette part est divisée entre leurs classes.
+// - Les tokens non liés des personnages reçoivent aussi la même XP système.
 
-const VERSION = "2026-06-02-session-xp-v3-dead-monsters-shared-recap";
+const VERSION = "2026-06-12-session-xp-v4-multiclass-aware";
 const TAG = "[ADD2E][SESSION_XP]";
 const FLAG_SCOPE = "add2e";
 const FLAG_LEDGER = "sessionXpLedger";
 const FLAG_RECORDED = "sessionXpRecorded";
 const FLAG_RECORDED_KEY = "sessionXpRecordedKey";
+const INTERNAL = "add2eSessionXpInternal";
 
 const ApplicationV2 = foundry.applications.api.ApplicationV2;
-
 globalThis.ADD2E_SESSION_XP_VERSION = VERSION;
 
 function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
@@ -28,7 +29,7 @@ function num(value, fallback = 0) {
   if (typeof value === "number") return Number.isFinite(value) ? value : fallback;
   if (typeof value === "boolean") return value ? 1 : 0;
   if (value && typeof value === "object") {
-    for (const key of ["value", "valeur", "total", "current", "actuel", "base", "max", "xp", "px", "pdv", "pv", "hp"]) {
+    for (const key of ["value", "valeur", "total", "current", "actuel", "base", "max", "xp", "px", "pdv", "pv", "hp", "niveau", "level"]) {
       if (value[key] !== undefined && value[key] !== null && typeof value[key] !== "object") return num(value[key], fallback);
     }
     return fallback;
@@ -45,6 +46,21 @@ function esc(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function norm(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function clone(value) {
+  return foundry.utils.deepClone(value ?? {});
 }
 
 function nowIso() {
@@ -174,7 +190,6 @@ async function recordMonsterXp(actor, { tokenDoc = null, scene = null, reason = 
 
   const entry = buildLedgerEntry(actor, { tokenDoc, scene, reason });
   const ledger = currentLedger();
-
   if (!force && alreadyRecorded(actor, tokenDoc, ledger, entry.key)) {
     log("[RECORD][SKIP_ALREADY]", { actor: actor.name, key: entry.key });
     return null;
@@ -183,7 +198,6 @@ async function recordMonsterXp(actor, { tokenDoc = null, scene = null, reason = 
   ledger.push(entry);
   await saveLedger(ledger);
   await markRecorded(actor, tokenDoc, entry);
-
   log("[RECORD][OK]", entry);
   if (notify) ui.notifications.info(`${entry.monsterName} enregistré pour ${entry.xp.toLocaleString()} PX.`);
   return entry;
@@ -197,7 +211,6 @@ function queueRecord(actor, options = {}) {
 function allSceneMonsterRows() {
   const activeKeys = new Set(currentLedger().filter(ledgerEntryIsDead).map(e => e.key));
   const rows = [];
-
   for (const scene of game.scenes ?? []) {
     for (const tokenDoc of scene.tokens ?? []) {
       const actor = tokenDoc.actor;
@@ -205,7 +218,6 @@ function allSceneMonsterRows() {
       const hp = actorHpValue(actor);
       if (hp > 0) continue;
       const key = tokenKey({ actor, tokenDoc, scene });
-      const xp = monsterXpValue(actor);
       rows.push({
         key,
         source: "scene",
@@ -219,7 +231,7 @@ function allSceneMonsterRows() {
         monsterName: actor.name,
         sceneId: scene.id,
         sceneName: scene.name,
-        xp,
+        xp: monsterXpValue(actor),
         hp,
         dead: true,
         included: true,
@@ -229,20 +241,15 @@ function allSceneMonsterRows() {
       });
     }
   }
-
   return rows;
 }
 
 function activeLedgerRows() {
-  return currentLedger()
-    .filter(ledgerEntryIsDead)
-    .map(entry => ({ ...entry, source: "ledger", alreadyRecorded: true, checked: true, dead: true }));
+  return currentLedger().filter(ledgerEntryIsDead).map(entry => ({ ...entry, source: "ledger", alreadyRecorded: true, checked: true, dead: true }));
 }
 
 function sceneRowsNotInActiveLedger() {
-  return allSceneMonsterRows()
-    .filter(row => row && !row.alreadyRecorded)
-    .map(row => ({ ...row, checked: true }));
+  return allSceneMonsterRows().filter(row => row && !row.alreadyRecorded).map(row => ({ ...row, checked: true }));
 }
 
 function sourceRowsForApp() {
@@ -256,46 +263,88 @@ function sourceRowsForApp() {
   return rows;
 }
 
+function classItems(actor) {
+  return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).filter(i => String(i.type || "").toLowerCase() === "classe");
+}
+
+function classSlug(itemOrSystem) {
+  const sys = itemOrSystem?.system ?? itemOrSystem ?? {};
+  return norm(sys.slug ?? sys.label ?? sys.nom ?? sys.name ?? itemOrSystem?.name ?? "classe");
+}
+
+function isMulticlassActor(actor) {
+  if (!actor || actor.type !== "personnage") return false;
+  if (typeof globalThis.add2eMulticlassEnabled === "function") {
+    try { if (globalThis.add2eMulticlassEnabled(actor)) return true; } catch (_e) {}
+  }
+  return actor.system?.multiclasse?.enabled === true || classItems(actor).length > 1;
+}
+
+function currentXp(actor) {
+  return Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
+}
+
+function currentClassXpMap(actor) {
+  const map = clone(actor?.system?.xp_par_classe ?? {});
+  for (const cls of classItems(actor)) {
+    const slug = classSlug(cls);
+    if (!slug) continue;
+    map[slug] = Math.max(0, Math.floor(num(map[slug] ?? cls.system?.xp ?? 0, 0)));
+  }
+  return map;
+}
+
+function splitInteger(total, keys) {
+  const amount = Math.max(0, Math.floor(num(total, 0)));
+  const list = (keys ?? []).filter(Boolean);
+  if (!list.length) return {};
+  const base = Math.floor(amount / list.length);
+  let remainder = amount - base * list.length;
+  const out = {};
+  for (const key of list) {
+    out[key] = base + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder -= 1;
+  }
+  return out;
+}
+
+function characterDisplay(row) {
+  if (!row.multiclass) return `Niv. ${esc(row.level)}`;
+  const parts = row.classes.map(c => `${esc(c.name)} ${esc(c.level)} (${c.xp.toLocaleString()} XP)`).join(" / ");
+  return `Multiclasse — ${parts}`;
+}
+
 function characterRows() {
-  return (game.actors?.filter(a => a.type === "personnage") ?? []).map(actor => ({
-    actor,
-    actorId: actor.id,
-    name: actor.name,
-    level: Math.max(1, num(actor.system?.niveau, 1)),
-    xp: Math.max(0, Math.floor(num(actor.system?.xp, 0)))
-  }));
+  return (game.actors?.filter(a => a.type === "personnage") ?? []).map(actor => {
+    const classes = classItems(actor).map(cls => {
+      const slug = classSlug(cls);
+      const xpMap = actor.system?.xp_par_classe ?? {};
+      const levelMap = actor.system?.niveaux_par_classe ?? {};
+      return {
+        slug,
+        name: cls.name,
+        level: Math.max(1, Math.floor(num(levelMap?.[slug] ?? cls.system?.niveau ?? actor.system?.niveau ?? 1, 1))),
+        xp: Math.max(0, Math.floor(num(xpMap?.[slug] ?? cls.system?.xp ?? 0, 0)))
+      };
+    });
+    return {
+      actor,
+      actorId: actor.id,
+      name: actor.name,
+      level: Math.max(1, num(actor.system?.niveau, 1)),
+      xp: currentXp(actor),
+      multiclass: isMulticlassActor(actor),
+      classes
+    };
+  });
 }
 
 function auditXpFields() {
   const monsters = game.actors?.filter(a => a.type === "monster") ?? [];
   const chars = game.actors?.filter(a => a.type === "personnage") ?? [];
-  const monsterRows = monsters.map(actor => ({
-    id: actor.id,
-    name: actor.name,
-    xp: monsterXpValue(actor),
-    rawXp: actor.system?.xp,
-    hp: actorHpValue(actor),
-    dead: actorHpValue(actor) <= 0,
-    ok: monsterXpValue(actor) > 0
-  }));
-  const characterRowsAudit = chars.map(actor => ({
-    id: actor.id,
-    name: actor.name,
-    xp: actor.system?.xp,
-    niveau: actor.system?.niveau,
-    progression_xp: actor.system?.progression_xp,
-    ok: actor.system?.xp !== undefined && actor.system?.niveau !== undefined
-  }));
-  const result = {
-    version: VERSION,
-    monsters: monsterRows,
-    deadMonsters: monsterRows.filter(r => r.dead),
-    aliveMonstersIgnored: monsterRows.filter(r => !r.dead),
-    characters: characterRowsAudit,
-    monstersWithoutXp: monsterRows.filter(r => !r.ok),
-    charactersWithMissingXpFields: characterRowsAudit.filter(r => !r.ok),
-    ledger: currentLedger()
-  };
+  const monsterRows = monsters.map(actor => ({ id: actor.id, name: actor.name, xp: monsterXpValue(actor), rawXp: actor.system?.xp, hp: actorHpValue(actor), dead: actorHpValue(actor) <= 0, ok: monsterXpValue(actor) > 0 }));
+  const characterRowsAudit = chars.map(actor => ({ id: actor.id, name: actor.name, xp: actor.system?.xp, niveau: actor.system?.niveau, multiclasse: isMulticlassActor(actor), xp_par_classe: actor.system?.xp_par_classe, niveaux_par_classe: actor.system?.niveaux_par_classe, classes: classItems(actor).map(c => c.name), progression_xp: actor.system?.progression_xp, ok: actor.system?.xp !== undefined && actor.system?.niveau !== undefined }));
+  const result = { version: VERSION, monsters: monsterRows, deadMonsters: monsterRows.filter(r => r.dead), aliveMonstersIgnored: monsterRows.filter(r => !r.dead), characters: characterRowsAudit, monstersWithoutXp: monsterRows.filter(r => !r.ok), charactersWithMissingXpFields: characterRowsAudit.filter(r => !r.ok), ledger: currentLedger() };
   console.table(monsterRows);
   console.table(characterRowsAudit);
   log("[AUDIT]", result);
@@ -317,7 +366,7 @@ function sourceRowHtml(row) {
 function characterRowHtml(row) {
   return `<tr class="a2e-xp-character-row" data-actor-id="${esc(row.actorId)}">
     <td class="center"><input type="checkbox" data-role="include-character" checked></td>
-    <td><strong>${esc(row.name)}</strong><br><small>Niv. ${esc(row.level)}</small></td>
+    <td><strong>${esc(row.name)}</strong><br><small>${characterDisplay(row)}</small></td>
     <td class="right current-xp">${row.xp.toLocaleString()}</td>
     <td class="right"><input class="a2e-xp-number small" type="number" data-role="share" value="1" min="0" step="0.5"></td>
     <td class="right"><input class="a2e-xp-number small" type="number" data-role="bonus-percent" value="0" step="1"></td>
@@ -328,7 +377,6 @@ function characterRowHtml(row) {
 function appHtml() {
   const sourceRows = sourceRowsForApp();
   const chars = characterRows();
-
   return `<div class="add2e-session-xp-v2">
     <style>
       .add2e-session-xp-v2{--gold:#d7ba63;--red:#8d2b22;--green:#267a3d;--blue:#235f8f;--panel:#fffaf0;height:100%;overflow:hidden;display:flex;flex-direction:column;color:#2b1b0c;background:linear-gradient(135deg,#f8efd7 0%,#ead7a8 100%)}
@@ -349,7 +397,7 @@ function appHtml() {
       <table class="source-table"><colgroup><col><col><col><col></colgroup><thead><tr><th>Incl.</th><th>Monstre mort</th><th>Scène</th><th>PX</th></tr></thead><tbody>${sourceRows.map(sourceRowHtml).join("") || `<tr><td colspan="4"><em>Aucun monstre mort enregistré ou présent sur les scènes.</em></td></tr>`}</tbody></table>
       <h3>Bonus globaux</h3><div class="global-grid"><label>Objectifs / rôleplay <input type="number" name="objectivesXp" value="0" step="1"></label><label>Trésors <input type="number" name="treasureXp" value="0" step="1"></label><label>Bonus MJ global <input type="number" name="gmBonusXp" value="0" step="1"></label><label>Motif <input type="text" name="reason" value="Bilan XP de session"></label></div>
       <h3>Répartition vers les personnages</h3><table class="char-table"><colgroup><col><col><col><col><col><col></colgroup><thead><tr><th>Incl.</th><th>Personnage</th><th>XP actuel</th><th>Part</th><th>Bonus %</th><th>Bonus fixe</th></tr></thead><tbody>${chars.map(characterRowHtml).join("") || `<tr><td colspan="6"><em>Aucun personnage trouvé.</em></td></tr>`}</tbody></table>
-      <div class="footer-note">Application : seuls les acteurs de type <code>personnage</code> reçoivent l'XP. Les monstres morts restent uniquement des sources de PX.</div>
+      <div class="footer-note">Application : mono-classe = XP globale. Multiclasse = XP globale répartie également entre les classes, puis recalcul des niveaux par classe.</div>
     </div>
     <div class="buttons"><button type="button" data-action="audit">Audit champs</button><button type="button" class="reset" data-action="reset">Réinitialiser registre</button><button type="button" class="apply" data-action="apply">Appliquer l'XP</button><button type="button" data-action="close">Fermer</button></div>
   </div>`;
@@ -379,38 +427,20 @@ function readAppData(root) {
     if (!actor || actor.type !== "personnage") return null;
     const share = Math.max(0, num(row.querySelector("[data-role='share']")?.value, 1));
     if (share <= 0) return null;
-    return {
-      actor,
-      actorId: actor.id,
-      name: actor.name,
-      share,
-      bonusPercent: num(row.querySelector("[data-role='bonus-percent']")?.value, 0),
-      bonusFlat: Math.floor(num(row.querySelector("[data-role='bonus-flat']")?.value, 0))
-    };
+    return { actor, actorId: actor.id, name: actor.name, share, bonusPercent: num(row.querySelector("[data-role='bonus-percent']")?.value, 0), bonusFlat: Math.floor(num(row.querySelector("[data-role='bonus-flat']")?.value, 0)) };
   }).filter(Boolean);
 
   const objectivesXp = Math.max(0, Math.floor(num(root.querySelector("input[name='objectivesXp']")?.value, 0)));
   const treasureXp = Math.max(0, Math.floor(num(root.querySelector("input[name='treasureXp']")?.value, 0)));
   const gmBonusXp = Math.max(0, Math.floor(num(root.querySelector("input[name='gmBonusXp']")?.value, 0)));
   const monsterXp = selectedSources.reduce((sum, row) => sum + row.xp, 0);
-
-  return {
-    selectedSources,
-    recipients,
-    monsterXp,
-    objectivesXp,
-    treasureXp,
-    gmBonusXp,
-    sourceTotal: monsterXp + objectivesXp + treasureXp + gmBonusXp,
-    reason: root.querySelector("input[name='reason']")?.value || "Bilan XP de session"
-  };
+  return { selectedSources, recipients, monsterXp, objectivesXp, treasureXp, gmBonusXp, sourceTotal: monsterXp + objectivesXp + treasureXp + gmBonusXp, reason: root.querySelector("input[name='reason']")?.value || "Bilan XP de session" };
 }
 
 function splitXpByShares(totalXp, recipients) {
   const xp = Math.max(0, Math.floor(num(totalXp, 0)));
   const shareTotal = recipients.reduce((sum, row) => sum + Math.max(0, num(row.share, 0)), 0);
   if (xp <= 0 || shareTotal <= 0) return recipients.map(row => ({ ...row, base: 0, raw: 0, fraction: 0 }));
-
   const rows = recipients.map(row => {
     const raw = xp * (row.share / shareTotal);
     const base = Math.floor(raw);
@@ -437,12 +467,7 @@ function computeDistribution(data) {
 function computeMonsterShareRows(data) {
   return data.selectedSources.map(source => ({
     ...source,
-    shares: splitXpByShares(source.xp, data.recipients).map(row => ({
-      actorId: row.actorId,
-      name: row.name,
-      share: row.share,
-      xp: row.base
-    }))
+    shares: splitXpByShares(source.xp, data.recipients).map(row => ({ actorId: row.actorId, name: row.name, share: row.share, xp: row.base }))
   }));
 }
 
@@ -451,23 +476,7 @@ async function markSourcesApplied(selectedSources, reason) {
   const appliedAt = nowIso();
   for (const source of selectedSources) {
     const existingIndex = ledger.findIndex(entry => entry?.key === source.key);
-    const appliedEntry = {
-      ...(existingIndex >= 0 ? ledger[existingIndex] : {}),
-      key: source.key,
-      actorId: source.actorId,
-      actorUuid: source.actorUuid,
-      tokenId: source.tokenId,
-      tokenName: source.tokenName,
-      monsterName: source.monsterName,
-      sceneId: source.sceneId,
-      sceneName: source.sceneName,
-      xp: source.xp,
-      dead: true,
-      reason: source.reason || "session_apply",
-      included: false,
-      appliedAt,
-      appliedReason: reason
-    };
+    const appliedEntry = { ...(existingIndex >= 0 ? ledger[existingIndex] : {}), key: source.key, actorId: source.actorId, actorUuid: source.actorUuid, tokenId: source.tokenId, tokenName: source.tokenName, monsterName: source.monsterName, sceneId: source.sceneId, sceneName: source.sceneName, xp: source.xp, dead: true, reason: source.reason || "session_apply", included: false, appliedAt, appliedReason: reason };
     if (existingIndex >= 0) ledger[existingIndex] = appliedEntry;
     else ledger.push(appliedEntry);
   }
@@ -477,7 +486,6 @@ async function markSourcesApplied(selectedSources, reason) {
 function unlinkedTokenDocsForActor(actor) {
   const rows = [];
   if (!actor?.id) return rows;
-
   for (const scene of game.scenes ?? []) {
     for (const tokenDoc of scene.tokens ?? []) {
       if (tokenDoc.actorId !== actor.id) continue;
@@ -487,27 +495,49 @@ function unlinkedTokenDocsForActor(actor) {
       rows.push({ scene, tokenDoc, tokenActor });
     }
   }
-
   return rows;
 }
 
-async function syncXpToUnlinkedTokens(actor, xpValue) {
+function multiclassPayload(actor, xpMap) {
+  if (typeof globalThis.add2eMulticlassUpdatePayload === "function") {
+    try {
+      const payload = globalThis.add2eMulticlassUpdatePayload(actor, null, xpMap, null);
+      if (payload && typeof payload === "object") return payload;
+    } catch (err) { warn("[MULTICLASS_PAYLOAD][ERROR]", { actor: actor.name, err }); }
+  }
+  const total = Object.values(xpMap ?? {}).reduce((sum, value) => sum + Math.max(0, Math.floor(num(value, 0))), 0);
+  return { "system.xp": total, "system.xp_par_classe": xpMap };
+}
+
+function multiclassAwardPlan(actor, amount) {
+  const classes = classItems(actor);
+  const keys = classes.map(classSlug).filter(Boolean);
+  const beforeMap = currentClassXpMap(actor);
+  const deltas = splitInteger(amount, keys);
+  const afterMap = { ...beforeMap };
+  for (const key of keys) afterMap[key] = Math.max(0, Math.floor(num(beforeMap[key], 0))) + Math.max(0, Math.floor(num(deltas[key], 0)));
+  return { classes, keys, beforeMap, deltas, afterMap };
+}
+
+async function syncXpToUnlinkedTokens(actor, updatePayload, fallbackXpValue) {
   const updates = [];
   const rows = unlinkedTokenDocsForActor(actor);
-
   for (const row of rows) {
-    const before = Math.max(0, Math.floor(num(row.tokenActor.system?.xp, 0)));
+    const before = currentXp(row.tokenActor);
     try {
-      await row.tokenActor.update({ "system.xp": xpValue }, { add2eReason: "session-xp-token-sync" });
-      const after = Math.max(0, Math.floor(num(row.tokenActor.system?.xp, xpValue)));
-      updates.push({ scene: row.scene.name, token: row.tokenDoc.name, before, after, ok: after === xpValue });
+      let payload = clone(updatePayload);
+      if (isMulticlassActor(row.tokenActor) && updatePayload?.["system.xp_par_classe"]) payload = multiclassPayload(row.tokenActor, updatePayload["system.xp_par_classe"]);
+      if (!payload || !Object.keys(payload).length) payload = { "system.xp": fallbackXpValue };
+      await row.tokenActor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "session-xp-token-sync" });
+      if (isMulticlassActor(row.tokenActor) && typeof globalThis.add2eRecalcMulticlassActor === "function") await globalThis.add2eRecalcMulticlassActor(row.tokenActor).catch(() => null);
+      const after = currentXp(row.tokenActor);
+      updates.push({ scene: row.scene.name, token: row.tokenDoc.name, before, after, ok: after === fallbackXpValue });
     } catch (err) {
       updates.push({ scene: row.scene.name, token: row.tokenDoc.name, before, after: before, ok: false, error: err?.message ?? String(err) });
       warn("[TOKEN_SYNC][ERROR]", { actor: actor.name, scene: row.scene.name, token: row.tokenDoc.name, err });
     }
   }
-
-  if (updates.length) log("[TOKEN_SYNC][DONE]", { actor: actor.name, xp: xpValue, tokens: updates });
+  if (updates.length) log("[TOKEN_SYNC][DONE]", { actor: actor.name, xp: fallbackXpValue, tokens: updates });
   return updates;
 }
 
@@ -526,22 +556,33 @@ function refreshActorAndTokenSheets(actor) {
 }
 
 async function awardCharacterXp(actor, total, reason) {
-  const before = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
   const amount = Math.max(0, Math.floor(num(total, 0)));
-  const expectedAfter = before + amount;
-  log("[AWARD][START]", { actor: actor.name, before, amount, expectedAfter, reason });
+  const before = currentXp(actor);
+  const multiclass = isMulticlassActor(actor);
+  log("[AWARD][START]", { actor: actor.name, before, amount, reason, multiclass });
 
-  await actor.update({ "system.xp": expectedAfter }, { add2eReason: "session-xp-v3" });
+  let payload;
+  let classBreakdown = [];
+  if (multiclass) {
+    const plan = multiclassAwardPlan(actor, amount);
+    payload = multiclassPayload(actor, plan.afterMap);
+    classBreakdown = plan.keys.map(key => ({ key, before: Math.max(0, Math.floor(num(plan.beforeMap[key], 0))), gained: Math.max(0, Math.floor(num(plan.deltas[key], 0))), after: Math.max(0, Math.floor(num(plan.afterMap[key], 0))) }));
+    await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "session-xp-v4-multiclass" });
+    if (typeof globalThis.add2eRecalcMulticlassActor === "function") await globalThis.add2eRecalcMulticlassActor(actor).catch(err => warn("[AWARD][MULTICLASS_RECALC]", { actor: actor.name, err }));
+  } else {
+    const expectedAfter = before + amount;
+    payload = { "system.xp": expectedAfter };
+    await actor.update(payload, { add2eReason: "session-xp-v4" });
+  }
 
   const liveActor = game.actors.get(actor.id) ?? actor;
-  const after = Math.max(0, Math.floor(num(liveActor.system?.xp, expectedAfter)));
-  if (after !== expectedAfter) warn("[AWARD][VERIFY]", { actor: actor.name, before, amount, expectedAfter, after });
-
-  const tokenSync = await syncXpToUnlinkedTokens(liveActor, after);
+  const after = currentXp(liveActor);
+  const expectedAfter = multiclass ? before + amount : payload["system.xp"];
+  if (after !== expectedAfter) warn("[AWARD][VERIFY]", { actor: actor.name, before, amount, expectedAfter, after, multiclass });
+  const tokenSync = await syncXpToUnlinkedTokens(liveActor, payload, after);
   refreshActorAndTokenSheets(liveActor);
-
-  log("[AWARD][DONE]", { actor: actor.name, before, amount, expectedAfter, after, tokenSync });
-  return { before, after, expectedAfter, tokenSync };
+  log("[AWARD][DONE]", { actor: actor.name, before, amount, expectedAfter, after, multiclass, classBreakdown, tokenSync });
+  return { before, after, expectedAfter, tokenSync, multiclass, classBreakdown };
 }
 
 function monsterShareHtml(monsterShareRows) {
@@ -549,6 +590,12 @@ function monsterShareHtml(monsterShareRows) {
     const parts = row.shares.map(s => `<li>${esc(s.name)} : <b>${s.xp.toLocaleString()}</b> XP <small>(part ${esc(s.share)})</small></li>`).join("");
     return `<li><b>${esc(row.monsterName)}</b> : ${row.xp.toLocaleString()} PX${row.sceneName ? ` <small>(${esc(row.sceneName)})</small>` : ""}<ul>${parts || "<li>Aucun personnage inclus.</li>"}</ul></li>`;
   }).join("");
+}
+
+function classBreakdownHtml(row) {
+  if (!row.multiclass || !row.classBreakdown?.length) return "";
+  const parts = row.classBreakdown.map(c => `${esc(c.key)} +${c.gained.toLocaleString()} (${c.before.toLocaleString()} → ${c.after.toLocaleString()})`).join(" ; ");
+  return ` <small>— classes : ${parts}</small>`;
 }
 
 async function applySessionXp(data) {
@@ -560,28 +607,16 @@ async function applySessionXp(data) {
   const distribution = computeDistribution(data);
   const monsterShares = computeMonsterShareRows(data);
   const results = [];
-
   for (const row of distribution) {
     const awarded = await awardCharacterXp(row.actor, row.total, data.reason);
-    results.push({
-      actor: game.actors.get(row.actor.id) ?? row.actor,
-      before: awarded.before,
-      after: awarded.after,
-      expectedAfter: awarded.expectedAfter,
-      gained: row.total,
-      base: row.base,
-      percentBonus: row.percentBonus,
-      bonusFlat: row.bonusFlat,
-      tokenSync: awarded.tokenSync ?? []
-    });
+    results.push({ actor: game.actors.get(row.actor.id) ?? row.actor, before: awarded.before, after: awarded.after, expectedAfter: awarded.expectedAfter, gained: row.total, base: row.base, percentBonus: row.percentBonus, bonusFlat: row.bonusFlat, tokenSync: awarded.tokenSync ?? [], multiclass: awarded.multiclass, classBreakdown: awarded.classBreakdown ?? [] });
   }
 
   await markSourcesApplied(data.selectedSources, data.reason);
-
   const monsterLines = monsterShareHtml(monsterShares);
   const resultLines = results.map(row => {
     const tokenNote = row.tokenSync?.length ? ` <small>— tokens synchronisés : ${row.tokenSync.length}</small>` : "";
-    return `<li>${esc(row.actor.name)} : +<b>${row.gained.toLocaleString()}</b> XP <small>(base ${row.base.toLocaleString()}${row.percentBonus ? `, bonus % ${row.percentBonus.toLocaleString()}` : ""}${row.bonusFlat ? `, bonus fixe ${row.bonusFlat.toLocaleString()}` : ""})</small> — ${row.before.toLocaleString()} → ${row.after.toLocaleString()}${tokenNote}</li>`;
+    return `<li>${esc(row.actor.name)} : +<b>${row.gained.toLocaleString()}</b> XP <small>(base ${row.base.toLocaleString()}${row.percentBonus ? `, bonus % ${row.percentBonus.toLocaleString()}` : ""}${row.bonusFlat ? `, bonus fixe ${row.bonusFlat.toLocaleString()}` : ""})</small> — ${row.before.toLocaleString()} → ${row.after.toLocaleString()}${classBreakdownHtml(row)}${tokenNote}</li>`;
   }).join("");
 
   await ChatMessage.create({
@@ -589,32 +624,15 @@ async function applySessionXp(data) {
   });
 
   for (const row of results) refreshActorAndTokenSheets(row.actor);
-
   ui.notifications.info("XP de session appliquée. Les sources utilisées sont maintenant masquées.");
   log("[APPLIED]", { data, distribution, monsterShares, results });
   return { data, distribution, monsterShares, results };
 }
 
 class Add2eSessionXpApp extends ApplicationV2 {
-  static DEFAULT_OPTIONS = {
-    id: "add2e-session-xp-app-v3",
-    classes: ["add2e", "session-xp", "app-v2"],
-    tag: "section",
-    window: { title: "ADD2E — Bilan XP de session", resizable: true },
-    position: { width: 980, height: 780 }
-  };
-
-  async _renderHTML(_context, _options) {
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = appHtml();
-    return wrapper;
-  }
-
-  _replaceHTML(result, content, _options) {
-    content.replaceChildren(...result.childNodes);
-    this._activateListeners(content);
-  }
-
+  static DEFAULT_OPTIONS = { id: "add2e-session-xp-app-v4", classes: ["add2e", "session-xp", "app-v2"], tag: "section", window: { title: "ADD2E — Bilan XP de session", resizable: true }, position: { width: 980, height: 780 } };
+  async _renderHTML(_context, _options) { const wrapper = document.createElement("div"); wrapper.innerHTML = appHtml(); return wrapper; }
+  _replaceHTML(result, content, _options) { content.replaceChildren(...result.childNodes); this._activateListeners(content); }
   _activateListeners(content) {
     const root = content.querySelector(".add2e-session-xp-v2");
     if (!root) return;
@@ -623,16 +641,9 @@ class Add2eSessionXpApp extends ApplicationV2 {
     root.querySelector("[data-action='apply']")?.addEventListener("click", async ev => {
       ev.preventDefault();
       ev.currentTarget.disabled = true;
-      try {
-        const data = readAppData(root);
-        await applySessionXp(data);
-        this.render({ force: true });
-      } catch (err) {
-        console.error(`${TAG}[APPLY][ERROR]`, err);
-        ui.notifications.error("Application de l'XP impossible. Voir console.");
-      } finally {
-        ev.currentTarget.disabled = false;
-      }
+      try { const data = readAppData(root); await applySessionXp(data); this.render({ force: true }); }
+      catch (err) { console.error(`${TAG}[APPLY][ERROR]`, err); ui.notifications.error("Application de l'XP impossible. Voir console."); }
+      finally { ev.currentTarget.disabled = false; }
     });
     root.querySelector("[data-action='close']")?.addEventListener("click", ev => { ev.preventDefault(); this.close(); });
   }
@@ -656,10 +667,8 @@ async function clearSessionXpLedger({ alsoFlags = false } = {}) {
     for (const scene of game.scenes ?? []) {
       const updates = [];
       for (const token of scene.tokens ?? []) {
-        const flags = foundry.utils.deepClone(token.flags ?? {});
-        if (flags?.add2e?.[FLAG_RECORDED] || flags?.add2e?.[FLAG_RECORDED_KEY]) {
-          updates.push({ _id: token.id, [`flags.${FLAG_SCOPE}.-=${FLAG_RECORDED}`]: null, [`flags.${FLAG_SCOPE}.-=${FLAG_RECORDED_KEY}`]: null });
-        }
+        const flags = clone(token.flags ?? {});
+        if (flags?.add2e?.[FLAG_RECORDED] || flags?.add2e?.[FLAG_RECORDED_KEY]) updates.push({ _id: token.id, [`flags.${FLAG_SCOPE}.-=${FLAG_RECORDED}`]: null, [`flags.${FLAG_SCOPE}.-=${FLAG_RECORDED_KEY}`]: null });
       }
       if (updates.length) await scene.updateEmbeddedDocuments("Token", updates).catch(err => warn("[CLEAR_FLAGS_TOKEN_ERROR]", err));
     }
@@ -679,10 +688,7 @@ async function registerTokenDeletion(tokenDoc) {
 
 function openXpSessionFromTool() {
   try { openSessionXpApplication(); }
-  catch (err) {
-    console.error(`${TAG}[OPEN][ERROR]`, err);
-    ui.notifications.error("Ouverture du bilan XP impossible. Voir console.");
-  }
+  catch (err) { console.error(`${TAG}[OPEN][ERROR]`, err); ui.notifications.error("Ouverture du bilan XP impossible. Voir console."); }
 }
 
 function xpToolDefinition() {
@@ -756,41 +762,16 @@ function injectActorDirectoryButton(app, html) {
 }
 
 Hooks.once("init", () => {
-  game.settings.register("add2e", FLAG_LEDGER, {
-    name: "ADD2E — Registre XP de session",
-    hint: "Registre interne des monstres morts ou tombés à 0 PV pendant la session.",
-    scope: "world",
-    config: false,
-    type: Array,
-    default: []
-  });
+  game.settings.register("add2e", FLAG_LEDGER, { name: "ADD2E — Registre XP de session", hint: "Registre interne des monstres morts ou tombés à 0 PV pendant la session.", scope: "world", config: false, type: Array, default: [] });
 });
 
-Hooks.once("ready", () => {
-  log("[READY]", { version: VERSION });
-});
-
-Hooks.on("preUpdateActor", (actor, changes, _options, userId) => {
-  if (!canRecordFromUser(userId)) return true;
-  if (!actorDropsToZero(actor, changes)) return true;
-  queueRecord(actor, { reason: "pv_zero", notify: true });
-  return true;
-});
-
-Hooks.on("preUpdateToken", (tokenDoc, changes, _options, userId) => {
-  if (!canRecordFromUser(userId)) return true;
-  if (!tokenDropsToZero(tokenDoc, changes)) return true;
-  queueRecord(tokenDoc.actor, { tokenDoc, scene: tokenDoc.parent, reason: "token_pv_zero", notify: true });
-  return true;
-});
-
+Hooks.once("ready", () => { log("[READY]", { version: VERSION }); });
+Hooks.on("preUpdateActor", (actor, changes, _options, userId) => { if (!canRecordFromUser(userId)) return true; if (!actorDropsToZero(actor, changes)) return true; queueRecord(actor, { reason: "pv_zero", notify: true }); return true; });
+Hooks.on("preUpdateToken", (tokenDoc, changes, _options, userId) => { if (!canRecordFromUser(userId)) return true; if (!tokenDropsToZero(tokenDoc, changes)) return true; queueRecord(tokenDoc.actor, { tokenDoc, scene: tokenDoc.parent, reason: "token_pv_zero", notify: true }); return true; });
 Hooks.on("preDeleteToken", tokenDoc => registerTokenDeletion(tokenDoc));
 Hooks.on("getSceneControlButtons", controls => installSceneControlButton(controls));
 Hooks.on("renderActorDirectory", injectActorDirectoryButton);
-Hooks.on("renderSidebarTab", (app, html) => {
-  const id = app?.id ?? app?.tabName ?? app?.constructor?.name ?? "";
-  if (/actor/i.test(String(id))) injectActorDirectoryButton(app, html);
-});
+Hooks.on("renderSidebarTab", (app, html) => { const id = app?.id ?? app?.tabName ?? app?.constructor?.name ?? ""; if (/actor/i.test(String(id))) injectActorDirectoryButton(app, html); });
 
 globalThis.add2eRecordMonsterXp = recordMonsterXp;
 globalThis.add2eAuditXpFields = auditXpFields;
@@ -803,3 +784,4 @@ globalThis.add2eInstallXpSceneButton = installSceneControlButton;
 globalThis.add2eInjectXpActorDirectoryButton = injectActorDirectoryButton;
 globalThis.add2eSyncXpToUnlinkedTokens = syncXpToUnlinkedTokens;
 globalThis.add2eSessionXpComputeMonsterShares = computeMonsterShareRows;
+globalThis.add2eSessionXpAwardCharacter = awardCharacterXp;
