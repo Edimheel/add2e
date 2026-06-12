@@ -22,7 +22,6 @@
                       <tr>
                         <th>Composant</th>
                         <th style="width:90px;">Qté</th>
-                        <th style="width:120px;">Identifiant</th>
                         <th>Utilisé par</th>
                         <th style="width:120px;">Actions</th>
                       </tr>
@@ -35,7 +34,6 @@
                             <b>{{component.name}}</b>
                           </td>
                           <td>{{component.system.quantite}}</td>
-                          <td>{{#if component.system.slug}}{{component.system.slug}}{{else}}{{component.system.sousType}}{{/if}}</td>
                           <td>{{componentSpellNames component ../sortsParNiveau}}</td>
                           <td>
                             <div class="a2e-actions">
