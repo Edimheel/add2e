@@ -140,14 +140,63 @@ async function runSilence(ctx, spell) {
   return true;
 }
 
+async function runCreateFoodWaterAssist(ctx, spell) {
+  const totalVolume = 27 * ctx.level;
+  const humanoids = 3 * ctx.level;
+  const horses = ctx.level;
+  const result = await confirmDialog(spell, `<p>Crée <b>${totalVolume} dm³</b> de nourriture et/ou d'eau.</p><p>Cette quantité nourrit <b>${humanoids} créatures de taille humaine</b> ou <b>${horses} créature(s) de taille cheval</b> pendant une journée.</p>`, `<label>Répartition<select name="mode"><option value="food">nourriture uniquement</option><option value="water">eau uniquement</option><option value="equal">nourriture et eau en quantités égales</option></select></label>`, form => ({ mode: form.elements.mode?.value }));
+  if (!result) return false;
+  const allocation = result.mode === "equal" ? `${totalVolume / 2} dm³ de nourriture et ${totalVolume / 2} dm³ d'eau` : `${totalVolume} dm³ ${result.mode === "water" ? "d'eau" : "de nourriture"}`;
+  await playVfx(spell, ctx.casterToken);
+  await chat(ctx.caster, ctx.casterToken, spell, `<p><b>Quantité créée :</b> ${allocation}.</p><p>Capacité journalière : ${humanoids} créatures de taille humaine ou ${horses} créature(s) de taille cheval.</p><p>Aucun Item permanent n'a été créé.</p>`);
+  return true;
+}
+function speakDeadLimits(level) {
+  if (level <= 6) return { elapsed: "1 semaine", rounds: 1, duration: "1 round", questions: 2 };
+  if (level <= 8) return { elapsed: "1 mois", rounds: 3, duration: "3 rounds", questions: 3 };
+  if (level <= 12) return { elapsed: "1 année", rounds: 10, duration: "1 tour", questions: 4 };
+  if (level <= 15) return { elapsed: "10 ans", rounds: 20, duration: "2 tours", questions: 5 };
+  if (level <= 20) return { elapsed: "100 ans", rounds: 30, duration: "3 tours", questions: 6 };
+  return { elapsed: "1 000 ans", rounds: 60, duration: "6 tours", questions: 7 };
+}
+async function runSpeakWithDead(ctx, spell) {
+  if (!targetRule(spell, ctx.targets, 0, 1)) return false;
+  const limits = speakDeadLimits(ctx.level);
+  const result = await confirmDialog(spell, `<p>Aide MJ pour converser avec des restes. Le lanceur doit parler la langue de la créature morte.</p><p><b>Temps maximal depuis la mort :</b> ${limits.elapsed}. <b>Durée :</b> ${limits.duration}. <b>Questions :</b> ${limits.questions}.</p><p><b>Cible/restes sélectionnés :</b> ${names(ctx.targets)}.</p>`, `<label><input name="remains" type="checkbox" required> Je confirme que le corps, les restes ou la partie concernée sont disponibles</label><label><input name="language" type="checkbox" required> Je confirme une langue commune</label>`, form => ({ remains: form.elements.remains?.checked, language: form.elements.language?.checked }));
+  if (!result?.remains || !result?.language) return false;
+  await playVfx(spell, ctx.casterToken, ctx.targets);
+  const gm = ChatMessage.getWhisperRecipients("GM").map(user => user.id);
+  await chat(ctx.caster, ctx.casterToken, spell, `<p><b>Restes ciblés :</b> ${names(ctx.targets)}.</p><p>Temps maximal depuis la mort : <b>${limits.elapsed}</b>. Durée : <b>${limits.duration}</b>. Nombre maximal de questions : <b>${limits.questions}</b>.</p><p>Les réponses dépendent uniquement des connaissances de la créature morte et sont déterminées par le MJ.</p>`, { whisper: gm });
+  return true;
+}
+async function runLocateOrHideObject(ctx, spell) {
+  const range = 6 + ctx.level;
+  const rounds = ctx.level;
+  const result = await confirmDialog(spell, `<p>Portée : <b>${range} pouces</b>. Durée : <b>${rounds} round(s)</b>. Le sort ne fonctionne pas sur un être vivant.</p>`, `<label>Mode<select name="mode"><option value="locate">localiser un objet connu ou familier</option><option value="hide">dissimuler un objet de la détection</option></select></label><label>Description de l'objet<input name="object" type="text" required></label><label><input name="notLiving" type="checkbox" required> Je confirme que la cible n'est pas un être vivant</label>`, form => ({ mode: form.elements.mode?.value, object: String(form.elements.object?.value ?? "").trim(), notLiving: form.elements.notLiving?.checked }));
+  if (!result?.object || !result?.notLiving) return false;
+  const tags = result.mode === "hide" ? ["etat:dissimulation_objet", "protection:localisation_objet"] : ["etat:localisation_objet", "detection:objet"];
+  await createEffect(ctx.caster, effectData({ spell, sourceItem: ctx.sourceItem, rounds, tags, extra: { mode: result.mode, objectDescription: result.object, rangeInches: range } }));
+  await playVfx(spell, ctx.casterToken);
+  const gm = ChatMessage.getWhisperRecipients("GM").map(user => user.id);
+  await chat(ctx.caster, ctx.casterToken, spell, `<p><b>Mode :</b> ${result.mode === "hide" ? "dissimulation" : "localisation"}.</p><p><b>Objet déclaré :</b> ${esc(result.object)}.</p><p>Portée : <b>${range} pouces</b>. Durée : <b>${rounds} round(s)</b>.</p><p>Aucune position ou information secrète n'est révélée automatiquement.</p>`, { whisper: gm });
+  return true;
+}
+
 export async function runDivinationAssistSpell(ctx, spell) { return runAugure(ctx, spell); }
 export async function runBuffDebuffSpell(ctx, spell) { return runCantique(ctx, spell); }
-export async function runCommunicationSpell(ctx, spell) { return runAnimalLanguage(ctx, spell); }
+export async function runCommunicationSpell(ctx, spell) {
+  const operations = { animal_language: runAnimalLanguage, speak_with_dead: runSpeakWithDead };
+  return operations[spell.operation]?.(ctx, spell) ?? false;
+}
+export async function runCreationSpell(ctx, spell) {
+  const operations = { create_food_water_assist: runCreateFoodWaterAssist };
+  return operations[spell.operation]?.(ctx, spell) ?? false;
+}
 export async function runTemporaryWeaponSpell(ctx, spell) { return runSpiritualHammer(ctx, spell); }
 export async function runProtectionSpell(ctx, spell) { return runFireResistance(ctx, spell); }
 export async function runSilenceSpell(ctx, spell) { return runSilence(ctx, spell); }
 export async function runDetectionSpell(ctx, spell) {
-  const operations = { structured_charms: runDetectCharms, traps: runDetectTraps, alignment: runAlignment };
+  const operations = { structured_charms: runDetectCharms, traps: runDetectTraps, alignment: runAlignment, locate_or_hide_object: runLocateOrHideObject };
   return operations[spell.operation]?.(ctx, spell) ?? false;
 }
 export async function runStatusSpell(ctx, spell) {
@@ -159,6 +208,7 @@ const MECHANIC_RUNNERS = Object.freeze({
   divination_assist: runDivinationAssistSpell,
   buff_debuff: runBuffDebuffSpell,
   communication: runCommunicationSpell,
+  creation: runCreationSpell,
   temporary_weapon: runTemporaryWeaponSpell,
   protection: runProtectionSpell,
   silence: runSilenceSpell,
