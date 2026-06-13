@@ -1,21 +1,10 @@
-// OnUse ADD2E genere automatiquement pour Catalepsie
-// Compatible Foundry V13/V14/V15.
-// Retour attendu: true = sort consomme, false = sort non consomme.
-
+// ADD2E — onUse Clerc niveau 3 : Catalepsie — runner générique V13/V14/V15.
 try {
-  const sortName = item?.name ?? "Catalepsie";
-  const actorName = actor?.name ?? token?.actor?.name ?? "acteur";
-  const message = "<p><strong>" + sortName + "</strong></p><p>" + actorName + " lance le sort. Les effets precis restent a appliquer selon le Manuel des joueurs AD&D 2e.</p>";
-  if (globalThis.ChatMessage?.create) {
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker ? ChatMessage.getSpeaker({ actor }) : undefined,
-      content: message
-    });
-  }
-  globalThis.ui?.notifications?.info?.(sortName + " lance.");
-  return true;
+  const api = await import("/systems/add2e/scripts/sorts/add2e-spell-runner.mjs");
+  const result = await api.runAdd2eSpell({ actor, item, sort, token, args, sourceItem, slug: "catalepsie" });
+  return result === true;
 } catch (error) {
-  console.error("[ADD2E][SORT][ONUSE_AUTO]", error);
-  globalThis.ui?.notifications?.error?.("Erreur lors de l'execution du sort.");
+  console.error("[ADD2E][ONUSE][catalepsie]", error);
+  ui.notifications?.error?.("Catalepsie : erreur de résolution.");
   return false;
 }
