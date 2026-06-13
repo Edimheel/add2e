@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs et composants.
-// Version : 2026-06-12-cast-spell-v21-resolve-actor-spell
+// Version : 2026-06-13-cast-spell-v22-onuse-path-aliases
 
 import { formatSortChamp } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -91,6 +91,52 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     value = String(value ?? "").trim();
     if (value.includes(",")) value = value.split(",").map(s => s.trim()).find(s => s.endsWith(".js")) ?? value.split(",")[0].trim();
     return value;
+  }
+
+  function add2eOnUseAliasStem(stem) {
+    const key = add2eCastNormalize(stem);
+    const aliases = {
+      projectile_magique: "missile_magique",
+      projectiles_magiques: "missile_magique"
+    };
+    return aliases[key] ?? "";
+  }
+
+  function add2eOnUseScriptCandidates(scriptPath, sortDoc) {
+    const original = String(scriptPath ?? "").trim();
+    if (!original) return [];
+
+    const clean = original.split(/[?#]/)[0];
+    const slash = clean.lastIndexOf("/");
+    const dir = slash >= 0 ? clean.slice(0, slash + 1) : "";
+    const file = slash >= 0 ? clean.slice(slash + 1) : clean;
+    const dot = file.toLowerCase().endsWith(".js") ? file.slice(0, -3) : file;
+
+    const stems = [
+      dot,
+      dot.replace(/-/g, "_"),
+      add2eCastNormalize(dot),
+      add2eOnUseAliasStem(dot),
+      add2eCastNormalize(sortDoc?.name),
+      add2eOnUseAliasStem(sortDoc?.name)
+    ].filter(Boolean);
+
+    const out = [original];
+    for (const stem of stems) {
+      out.push(`${dir}${stem}.js`);
+      out.push(`${dir}${String(stem).replace(/_/g, "-")}.js`);
+    }
+    return [...new Set(out.filter(Boolean))];
+  }
+
+  async function add2eFetchOnUseScript(scriptPath, sortDoc) {
+    let last = null;
+    for (const candidate of add2eOnUseScriptCandidates(scriptPath, sortDoc)) {
+      const response = await fetch(candidate, { cache: "no-store" });
+      if (response.ok) return { response, scriptPath: candidate };
+      last = { response, scriptPath: candidate };
+    }
+    return last ?? { response: null, scriptPath };
   }
 
   function add2eGetCasterToken(actorDoc) {
@@ -328,11 +374,13 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   if (scriptPath) {
     scriptExecuted = true;
     try {
-      const response = await fetch(scriptPath, { cache: "no-store" });
-      if (!response.ok) {
+      const fetched = await add2eFetchOnUseScript(scriptPath, spellToUse);
+      const response = fetched?.response;
+      const effectiveScriptPath = fetched?.scriptPath || scriptPath;
+      if (!response?.ok) {
         await add2eRefundReservedCost("script introuvable");
         ui.notifications.error(`${spellToUse.name} : script onUse introuvable.`);
-        console.error("[ADD2E][CAST_SPELL][ONUSE][FETCH_FAILED]", { sort: spellToUse.name, scriptPath, status: response.status, statusText: response.statusText });
+        console.error("[ADD2E][CAST_SPELL][ONUSE][FETCH_FAILED]", { sort: spellToUse.name, scriptPath, tried: add2eOnUseScriptCandidates(scriptPath, spellToUse), status: response?.status, statusText: response?.statusText });
         return false;
       }
       const code = await response.text();
