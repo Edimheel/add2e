@@ -4,6 +4,33 @@ import { ADD2E_SPELL_CATALOG } from "./add2e-spell-catalog.mjs";
 
 const { escapeHtml: esc, targetActors, activeTags, sourceContext, confirmDialog, playVfx, chat, standardStatus, effectData, createEffect, createTemporaryItems, rollSave, targetRule, targetNames: names, alignmentOf, applyMany } = ADD2E_SPELL_MECHANICS;
 
+function effectTags(effect) {
+  const tags = effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? [];
+  const statuses = Array.from(effect?.statuses ?? []);
+  return [...tags, ...statuses].map(t => String(t ?? "").trim().toLowerCase()).filter(Boolean);
+}
+function effectMatches(effect, tags = []) {
+  const wanted = tags.map(t => String(t ?? "").trim().toLowerCase()).filter(Boolean);
+  const current = effectTags(effect);
+  const name = String(effect?.name ?? "").trim().toLowerCase();
+  return wanted.some(t => current.includes(t) || name.includes(t.replace(/^etat:/, "").replace(/^condition:/, "")));
+}
+async function deleteTaggedEffects(actor, tags = []) {
+  if (!actor) return 0;
+  const ids = Array.from(actor.effects ?? []).filter(effect => effectMatches(effect, tags)).map(effect => effect.id).filter(Boolean);
+  if (!ids.length) return 0;
+  if (actor.isOwner || game.user?.isGM) {
+    await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
+    return ids.length;
+  }
+  if (!game.socket) return 0;
+  game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "deleteActiveEffects", payload: { actorUuid: actor.uuid, actorId: actor.id, effectIds: ids, tags, fromUserId: game.user.id } });
+  return ids.length;
+}
+async function confirmTouchAndMode(spell, modeLabels, extraHtml = "") {
+  return confirmDialog(spell, `<p>Choisis le mode de résolution.</p>${extraHtml}`, `<label>Mode<select name="mode">${modeLabels.map(m => `<option value="${esc(m.value)}">${esc(m.label)}</option>`).join("")}</select></label><label><input name="touch" type="checkbox"> Contact / toucher réussi si le mode inverse l'exige</label><label><input name="forceOnNoSave" type="checkbox"> Si le jet de sauvegarde est indisponible, le MJ autorise l'application de l'effet</label>`, form => ({ mode: form.elements.mode?.value, touch: form.elements.touch?.checked, forceOnNoSave: form.elements.forceOnNoSave?.checked }));
+}
+
 async function runAugure(ctx, spell) {
   const chance = Math.min(100, 70 + ctx.level);
   const result = await confirmDialog(spell, `<p>Décris l'action envisagée. L'augure porte sur les <b>3 prochains tours</b>.</p><p>Chance correcte calculée : <b>${chance} %</b>. Le MJ formule la réponse.</p>`, `<label>Action envisagée<textarea name="question" rows="3" required></textarea></label>`, form => ({ question: String(form.elements.question?.value ?? "").trim() }));
@@ -21,6 +48,17 @@ async function runCantique(ctx, spell) {
   await applyMany(targetActors(ctx.targets), () => effectData({ spell, sourceItem: ctx.sourceItem, tags, extra: { manualRemoval: true, group: result.group } }));
   await playVfx(spell, ctx.casterToken, ctx.targets);
   await chat(ctx.caster, ctx.casterToken, spell, `<p>${ctx.targets.length} cible(s) affectée(s) comme <b>${plus ? "alliées" : "ennemies"}</b>.</p><p>Effet sans durée fixe : retirer les ActiveEffects dès que le chant, l'immobilité ou la concentration cesse.</p>`);
+  return true;
+}
+async function runPrayer(ctx, spell) {
+  if (!targetRule(spell, ctx.targets, 1, 99)) return false;
+  const result = await confirmDialog(spell, `<p>Applique Prière aux cibles sélectionnées pendant <b>${ctx.level} round(s)</b>. Contrairement à Cantique, il n'y a pas de concentration, d'immobilité ou de retrait manuel lié au chant.</p><p><b>Cibles :</b> ${names(ctx.targets)}</p>`, `<label>Groupe<select name="group"><option value="allies">Alliés (+1 attaque, dégâts, sauvegardes)</option><option value="enemies">Ennemis (-1 attaque, dégâts, sauvegardes)</option></select></label>`, form => ({ group: form.elements.group?.value }));
+  if (!result) return false;
+  const plus = result.group === "allies";
+  const tags = plus ? ["etat:priere_allie", "bonus_attaque:1", "bonus_degats:1", "bonus_save:1"] : ["etat:priere_ennemi", "malus_attaque:-1", "malus_degats:-1", "bonus_save:-1"];
+  await applyMany(targetActors(ctx.targets), () => effectData({ spell, sourceItem: ctx.sourceItem, rounds: ctx.level, tags, extra: { group: result.group, effectType: "prayer" } }));
+  await playVfx(spell, ctx.casterToken, ctx.targets);
+  await chat(ctx.caster, ctx.casterToken, spell, `<p>${ctx.targets.length} cible(s) affectée(s) comme <b>${plus ? "alliées" : "ennemies"}</b> pendant <b>${ctx.level} round(s)</b>.</p><p>Les bonus/malus sont lus par les résolveurs centraux déjà utilisés par Cantique.</p>`);
   return true;
 }
 async function runSnakeCharm(ctx, spell) {
@@ -92,6 +130,16 @@ async function runParalysis(ctx, spell) {
   await chat(ctx.caster, ctx.casterToken, spell, lines.join("") + `<p>${failed.length} ActiveEffect(s) de paralysie appliqué(s).</p>`);
   return true;
 }
+async function runCatalepsy(ctx, spell) {
+  if (!targetRule(spell, ctx.targets, 1, 1)) return false;
+  const rounds = 10 + ctx.level;
+  const result = await confirmDialog(spell, `<p>Applique Catalepsie à <b>${names(ctx.targets)}</b> pendant <b>${rounds} rounds</b>.</p><p>Le sort simule la mort sans tuer ni poser les statuts vitaux réels.</p>`);
+  if (!result) return false;
+  await createEffect(ctx.targets[0].actor, effectData({ spell, sourceItem: ctx.sourceItem, rounds, tags: ["etat:catalepsie", "apparence:mort", "sort:catalepsie"], extra: { effectType: "catalepsy", simulatedDeath: true } }));
+  await playVfx(spell, ctx.casterToken, ctx.targets);
+  await chat(ctx.caster, ctx.casterToken, spell, `<p><b>${names(ctx.targets)}</b> paraît mort pendant <b>${rounds} rounds</b>, sans recevoir les statuts mort ou inconscient.</p><p>Le MJ arbitre les examens du corps et la perception de l'état.</p>`);
+  return true;
+}
 async function runAlignment(ctx, spell) {
   if (!targetRule(spell, ctx.targets, 1, 10)) return false;
   const result = await confirmDialog(spell, `<p>Perçoit l'alignement de ${names(ctx.targets)} pendant 1 tour. Les protections et objets contraires restent soumis à validation du MJ.</p>`);
@@ -121,6 +169,59 @@ async function runDelayPoison(ctx, spell) {
   await chat(ctx.caster, ctx.casterToken, spell, `<p>ActiveEffect de suivi appliqué pour <b>${600 * ctx.level} rounds</b>. La perte de PV n'est pas automatisée faute de moteur périodique central.</p>`);
   return true;
 }
+async function runCureOrInflictBlindness(ctx, spell) {
+  if (!targetRule(spell, ctx.targets, 1, 1)) return false;
+  const target = ctx.targets[0].actor;
+  const result = await confirmTouchAndMode(spell, [{ value: "cure", label: "Guérir la cécité" }, { value: "inflict", label: "Inverse : infliger la cécité" }]);
+  if (!result) return false;
+  const tags = ["etat:cecite", "status:blind", "condition:blind", "blindness", "etat:aveugle"];
+  if (result.mode === "cure") {
+    const removed = await deleteTaggedEffects(target, tags);
+    if (!removed) { ui.notifications?.warn?.(`${spell.name} : aucun effet de cécité structuré curable trouvé.`); return false; }
+    await playVfx(spell, ctx.casterToken, ctx.targets);
+    await chat(ctx.caster, ctx.casterToken, spell, `<p><b>${esc(target.name)}</b> : ${removed} effet(s) de cécité structuré(s) retiré(s).</p>`);
+    return true;
+  }
+  if (!result.touch) { ui.notifications?.warn?.(`${spell.name} inverse : confirme d'abord le toucher réussi.`); return false; }
+  const save = await rollSave(target, { index: 4, vsType: "sorts", modifier: 0 });
+  if (save.available && save.success) {
+    await playVfx(spell, ctx.casterToken, ctx.targets);
+    await chat(ctx.caster, ctx.casterToken, spell, `<p><b>${esc(target.name)}</b> réussit son jet de sauvegarde (${save.total}/${save.threshold}) : aucun effet de cécité appliqué.</p>`);
+    return true;
+  }
+  if (!save.available && !result.forceOnNoSave) { ui.notifications?.warn?.(`${spell.name} inverse : JP indisponible, effet non appliqué.`); return false; }
+  await createEffect(target, effectData({ spell, sourceItem: ctx.sourceItem, tags: ["etat:cecite", "condition:blind", "sort:cecite"], status: standardStatus("blind", "blinded"), extra: { effectType: "blindness", save: save.available ? { total: save.total, threshold: save.threshold, success: false } : { unavailable: true, gmConfirmed: true } } }));
+  await playVfx(spell, ctx.casterToken, ctx.targets);
+  await chat(ctx.caster, ctx.casterToken, spell, `<p><b>${esc(target.name)}</b> subit un effet de cécité structuré.</p>`);
+  return true;
+}
+async function runCureOrInflictDisease(ctx, spell) {
+  if (!targetRule(spell, ctx.targets, 1, 1)) return false;
+  const target = ctx.targets[0].actor;
+  const result = await confirmTouchAndMode(spell, [{ value: "cure", label: "Guérir une maladie" }, { value: "inflict", label: "Inverse : contamination" }], `<p>La contamination inverse crée un suivi : délai <b>1d6 tours</b>, pertes de PV/Force suivies par le MJ.</p>`);
+  if (!result) return false;
+  const tags = ["etat:maladie", "condition:disease", "disease", "maladie"];
+  if (result.mode === "cure") {
+    const removed = await deleteTaggedEffects(target, tags);
+    if (!removed) { ui.notifications?.warn?.(`${spell.name} : aucun effet de maladie structuré curable trouvé.`); return false; }
+    await playVfx(spell, ctx.casterToken, ctx.targets);
+    await chat(ctx.caster, ctx.casterToken, spell, `<p><b>${esc(target.name)}</b> : ${removed} effet(s) de maladie structuré(s) retiré(s).</p>`);
+    return true;
+  }
+  if (!result.touch) { ui.notifications?.warn?.(`${spell.name} inverse : confirme d'abord le toucher réussi.`); return false; }
+  const save = await rollSave(target, { index: 4, vsType: "sorts", modifier: 0 });
+  if (save.available && save.success) {
+    await playVfx(spell, ctx.casterToken, ctx.targets);
+    await chat(ctx.caster, ctx.casterToken, spell, `<p><b>${esc(target.name)}</b> réussit son jet de sauvegarde (${save.total}/${save.threshold}) : aucune contamination appliquée.</p>`);
+    return true;
+  }
+  if (!save.available && !result.forceOnNoSave) { ui.notifications?.warn?.(`${spell.name} inverse : JP indisponible, effet non appliqué.`); return false; }
+  const delay = await new Roll("1d6").evaluate({ async: true });
+  await createEffect(target, effectData({ spell, sourceItem: ctx.sourceItem, tags: ["etat:contamination", "etat:maladie", "condition:disease", "sort:contamination"], extra: { effectType: "disease", onsetTurns: Number(delay.total), damageFollowUp: "MJ", save: save.available ? { total: save.total, threshold: save.threshold, success: false } : { unavailable: true, gmConfirmed: true } } }));
+  await playVfx(spell, ctx.casterToken, ctx.targets);
+  await chat(ctx.caster, ctx.casterToken, spell, `<p><b>${esc(target.name)}</b> subit une contamination structurée.</p><p>Délai avant effets : <b>${delay.total} tour(s)</b>. Les pertes de PV et de Force restent suivies par le MJ.</p>`);
+  return true;
+}
 async function runSilence(ctx, spell) {
   if (!targetRule(spell, ctx.targets, 0, 1)) return false;
   const result = await confirmDialog(spell, `<p>Zone sphérique de <b>9 m de diamètre</b>, durée <b>${2 * ctx.level} rounds</b>.</p><p>Cible sélectionnée : ${names(ctx.targets)}.</p>`, `<label>Mode<select name="mode"><option value="attached">sur créature / objet mobile</option><option value="fixed">zone fixe suivie sur le lanceur</option></select></label><label><input name="unwilling" type="checkbox"> cible non consentante (JP contre les sorts)</label>`, form => ({ mode: form.elements.mode?.value, unwilling: form.elements.unwilling?.checked }));
@@ -139,7 +240,6 @@ async function runSilence(ctx, spell) {
   await chat(ctx.caster, ctx.casterToken, spell, `<p>Effet appliqué pour <b>${2 * ctx.level} rounds</b>. Le résolveur central bloque les sorts verbaux lorsqu'un acteur porte l'effet de silence.</p><p>Une zone fixe reste suivie par le MJ, le système ne disposant pas d'un résolveur géométrique central des zones.</p>`);
   return true;
 }
-
 async function runCreateFoodWaterAssist(ctx, spell) {
   const totalVolume = 27 * ctx.level;
   const humanoids = 3 * ctx.level;
@@ -197,7 +297,10 @@ async function runLocateOrHideObject(ctx, spell) {
 }
 
 export async function runDivinationAssistSpell(ctx, spell) { return runAugure(ctx, spell); }
-export async function runBuffDebuffSpell(ctx, spell) { return runCantique(ctx, spell); }
+export async function runBuffDebuffSpell(ctx, spell) {
+  const operations = { chant: runCantique, prayer: runPrayer };
+  return operations[spell.operation]?.(ctx, spell) ?? false;
+}
 export async function runCommunicationSpell(ctx, spell) {
   const operations = { animal_language: runAnimalLanguage, speak_with_dead: runSpeakWithDead };
   return operations[spell.operation]?.(ctx, spell) ?? false;
@@ -214,7 +317,7 @@ export async function runDetectionSpell(ctx, spell) {
   return operations[spell.operation]?.(ctx, spell) ?? false;
 }
 export async function runStatusSpell(ctx, spell) {
-  const operations = { snake_charm: runSnakeCharm, paralysis: runParalysis, delay_poison: runDelayPoison };
+  const operations = { snake_charm: runSnakeCharm, paralysis: runParalysis, delay_poison: runDelayPoison, catalepsy: runCatalepsy, cure_or_inflict_blindness: runCureOrInflictBlindness, cure_or_inflict_disease: runCureOrInflictDisease };
   return operations[spell.operation]?.(ctx, spell) ?? false;
 }
 
