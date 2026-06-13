@@ -1,10 +1,22 @@
 // ADD2E — Multiclassage : drop classe/race
-// Version : 2026-06-13-multiclass-drop-v1
+// Version : 2026-06-13-multiclass-drop-v2-candidates-export
 
-import { classItems, cloneItemData } from "./17b-multiclass-core.mjs";
-import { currentRaceOrCompatibleAlternatives } from "./17b-multiclass-rules.mjs";
+import { classItems, classSlug, cloneItemData, itemLabel } from "./17b-multiclass-core.mjs";
+import { currentRaceOrCompatibleAlternatives, raceCompatibleForMulticlass, worldItemsByType } from "./17b-multiclass-rules.mjs";
 import { showClassDropChoiceDialog } from "./17b-multiclass-dialogs.mjs";
 import { addClassAsMulticlass, applyClassAsMonoclass, applyRaceForMulticlass, replaceClassInMulticlass } from "./17b-multiclass-operations.mjs";
+
+export function compatibleMulticlassClassCandidates(actor, preferredClassData = null) {
+  const out = [];
+  const seen = new Set();
+  for (const cls of [preferredClassData, ...worldItemsByType("classe")].filter(Boolean)) {
+    const slug = classSlug(cls);
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+    if (currentRaceOrCompatibleAlternatives(actor, race => raceCompatibleForMulticlass(actor, cls, race)).length) out.push(cls);
+  }
+  return out.sort((a, b) => itemLabel(a, "Classe").localeCompare(itemLabel(b, "Classe"), game.i18n?.lang ?? "fr"));
+}
 
 async function resolveDroppedItemData(event, data = null) {
   const raw = data ?? TextEditor.getDragEventData(event);
