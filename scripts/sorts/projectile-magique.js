@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Projectile magique
-// Version : 2026-06-13-projectile-magique-shield-message-v1
+// Version : 2026-06-13-projectile-magique-target-tiles-v1
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -178,57 +178,43 @@ return await (async () => {
     }
   }
 
-  async function askDistribution({ candidates, nbMissiles, selectedIds, sourceToken, rangeMeters }) {
+  async function askDistribution({ candidates, nbMissiles, sourceToken, rangeMeters }) {
     const DialogV2 = foundry?.applications?.api?.DialogV2;
     if (!DialogV2?.wait) {
       ui.notifications.error("Projectile magique : DialogV2 indisponible.");
       return null;
     }
 
-    const defaultDistribution = new Map();
-    const selectedCandidates = candidates.filter(t => selectedIds.has(t.id));
-    const preferred = selectedCandidates.length ? selectedCandidates : candidates.slice(0, 1);
-    let remaining = nbMissiles;
-    for (const t of preferred) {
-      if (remaining <= 0) break;
-      defaultDistribution.set(t.id, 1);
-      remaining--;
-    }
-    if (preferred.length === 1 && remaining > 0) defaultDistribution.set(preferred[0].id, (defaultDistribution.get(preferred[0].id) || 0) + remaining);
-
     const rows = candidates.map(t => {
-      const value = defaultDistribution.get(t.id) || 0;
       const distance = tokenDistanceMeters(sourceToken, t);
       return `
-        <article class="add2e-mm-card" data-token-id="${esc(t.id)}" style="display:grid;grid-template-columns:38px 1fr 102px;gap:8px;align-items:center;border:1px solid #8e63c7;border-radius:8px;background:#fffaff;padding:7px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.12);">
-          <img src="${esc(t.document?.texture?.src || t.actor?.img || 'icons/svg/mystery-man.svg')}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;background:#fff;">
-          <div style="min-width:0;">
-            <div style="font-weight:900;color:#2d2144;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.name)}</div>
-            <div style="font-size:11px;color:#4a2e78;">${distance.toFixed(1)} m / ${rangeMeters.toFixed(1)} m</div>
-          </div>
-          <div style="display:grid;grid-template-columns:28px 42px 28px;gap:3px;align-items:center;">
-            <button type="button" data-add2e-mm-delta="-1" data-target="${esc(t.id)}" style="height:26px;border-radius:5px;border:1px solid #8e63c7;background:#f6f0ff;color:#4a2e78;font-weight:900;">−</button>
-            <input type="number" name="target.${esc(t.id)}" min="0" max="${nbMissiles}" value="${value}" style="height:26px;width:42px;text-align:center;font-weight:900;border:1px solid #8e63c7;border-radius:5px;background:#fff;">
-            <button type="button" data-add2e-mm-delta="1" data-target="${esc(t.id)}" style="height:26px;border-radius:5px;border:1px solid #8e63c7;background:#f6f0ff;color:#4a2e78;font-weight:900;">+</button>
-          </div>
-        </article>`;
+        <button type="button" class="add2e-mm-tile" data-token-id="${esc(t.id)}" style="position:relative;display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;text-align:left;border:2px solid #8e63c7;border-radius:10px;background:linear-gradient(135deg,#fffaff,#efe2ff);padding:8px;min-height:70px;color:#2d2144;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.16);">
+          <img src="${esc(t.document?.texture?.src || t.actor?.img || 'icons/svg/mystery-man.svg')}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;background:#fff;border:1px solid #8e63c7;">
+          <span style="display:grid;gap:2px;min-width:0;">
+            <strong style="font-size:13px;line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.name)}</strong>
+            <span style="font-size:11px;color:#4a2e78;">${distance.toFixed(1)} m / ${rangeMeters.toFixed(1)} m</span>
+            <span class="add2e-mm-tile-hint" style="font-size:10px;color:#6c31b5;font-weight:800;">Clique pour affecter</span>
+          </span>
+          <span class="add2e-mm-count" style="position:absolute;right:6px;top:6px;min-width:26px;height:26px;border-radius:999px;background:#5b3f8c;color:#fff;display:grid;place-items:center;font-weight:900;font-size:15px;border:2px solid #d8c3ff;">0</span>
+          <input type="hidden" name="target.${esc(t.id)}" value="0">
+        </button>`;
     }).join("");
 
     const content = `
-      <form class="add2e-dialog-v2 add2e-mm-dialog-v2" style="min-width:440px;max-width:560px;font-family:var(--font-primary);color:#2d2144;">
+      <form class="add2e-dialog-v2 add2e-mm-dialog-v2" style="min-width:500px;max-width:680px;font-family:var(--font-primary);color:#2d2144;">
         <section style="display:flex;align-items:center;gap:10px;border:1px solid #8e63c7;border-radius:10px;background:#f6f0ff;padding:9px;margin-bottom:8px;">
           <img src="${esc(SPELL.imgFallback)}" style="width:42px;height:42px;border-radius:6px;object-fit:cover;background:#fff;border:1px solid #8e63c7;">
           <div style="flex:1;">
             <div style="font-weight:900;color:#6c31b5;text-transform:uppercase;letter-spacing:.3px;">Projectile magique</div>
-            <div style="font-size:12px;">Répartis ${nbMissiles} projectile${nbMissiles > 1 ? "s" : ""} entre les cibles à portée.</div>
+            <div style="font-size:12px;">Clique sur une tuile pour affecter un projectile. Au maximum, le clic suivant revient à 0.</div>
           </div>
           <div style="text-align:center;border:1px solid #8e63c7;border-radius:8px;background:#fffaff;padding:5px 8px;min-width:70px;">
             <div style="font-size:10px;text-transform:uppercase;color:#4a2e78;font-weight:800;">Restants</div>
             <div class="add2e-mm-remaining" style="font-size:22px;font-weight:900;color:#6c31b5;">${nbMissiles}</div>
           </div>
         </section>
-        <section style="max-height:360px;overflow:auto;padding-right:2px;">${rows}</section>
-        <p style="font-size:12px;margin:.4em 0 0;color:#4a2e78;">Les cibles hors portée ne sont pas listées. Bouclier annule les projectiles reçus.</p>
+        <section class="add2e-mm-tiles" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;max-height:390px;overflow:auto;padding:2px;">${rows}</section>
+        <p style="font-size:12px;margin:.45em 0 0;color:#4a2e78;">Aucune cible n’est pré-affectée. Tous les projectiles doivent être affectés avant de lancer.</p>
       </form>`;
 
     return await DialogV2.wait({
@@ -279,19 +265,36 @@ return await (async () => {
             remaining.textContent = String(Math.max(0, nbMissiles - total));
             remaining.style.color = total === nbMissiles ? "#1f7a35" : "#6c31b5";
           }
+          for (const tile of form.querySelectorAll(".add2e-mm-tile")) {
+            const tokenId = tile.dataset.tokenId;
+            const input = form.querySelector(`[name="target.${CSS.escape(tokenId)}"]`);
+            const value = Math.max(0, Math.floor(Number(input?.value) || 0));
+            const count = tile.querySelector(".add2e-mm-count");
+            const hint = tile.querySelector(".add2e-mm-tile-hint");
+            if (count) count.textContent = String(value);
+            tile.style.borderColor = value > 0 ? "#1f7a35" : "#8e63c7";
+            tile.style.background = value > 0 ? "linear-gradient(135deg,#e9ffe9,#c9f3cf)" : "linear-gradient(135deg,#fffaff,#efe2ff)";
+            if (hint) hint.textContent = value > 0 ? `${value} projectile${value > 1 ? "s" : ""} affecté${value > 1 ? "s" : ""}` : "Clique pour affecter";
+          }
         };
         form.addEventListener("click", event => {
-          const button = event.target?.closest?.("[data-add2e-mm-delta]");
-          if (!button) return;
+          const tile = event.target?.closest?.(".add2e-mm-tile");
+          if (!tile || !form.contains(tile)) return;
           event.preventDefault();
-          const targetId = button.dataset.target;
-          const input = form.querySelector(`[name="target.${CSS.escape(targetId)}"]`);
+          const tokenId = tile.dataset.tokenId;
+          const input = form.querySelector(`[name="target.${CSS.escape(tokenId)}"]`);
           if (!input) return;
-          const delta = Number(button.dataset.add2eMmDelta) || 0;
-          input.value = String(Math.max(0, Math.min(nbMissiles, Math.floor(Number(input.value) || 0) + delta)));
+          const inputs = Array.from(form.querySelectorAll('input[name^="target."]'));
+          const current = Math.max(0, Math.floor(Number(input.value) || 0));
+          const total = inputs.reduce((sum, el) => sum + Math.max(0, Math.floor(Number(el.value) || 0)), 0);
+          let next = current >= nbMissiles ? 0 : current + 1;
+          if (next > current && total >= nbMissiles) {
+            ui.notifications.warn("Tous les projectiles sont déjà affectés.");
+            return;
+          }
+          input.value = String(next);
           refresh();
         });
-        form.addEventListener("input", refresh);
         refresh();
       }
     });
@@ -408,7 +411,7 @@ return await (async () => {
   await createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned: distribution.total, rangeMeters });
 
   console.log(`${TAG}[DONE]`, {
-    version: "2026-06-13-projectile-magique-shield-message-v1",
+    version: "2026-06-13-projectile-magique-target-tiles-v1",
     caster: caster.name,
     level,
     metersPerGridCell: metersPerGridCell(),
