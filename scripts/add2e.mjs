@@ -32,31 +32,3 @@ import "./add2e/17c-multiclass-mechanics.mjs";
 import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/20-session-xp.mjs";
 import "./add2e/21-consumables.mjs";
-
-const ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION = "2026-06-13-dialog-v2-alert-single-ok-v1";
-globalThis.ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION = ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION;
-
-function add2eInstallDialogV2AlertFallback() {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2 || typeof DialogV2.alert === "function" || typeof DialogV2.wait !== "function") return false;
-
-  DialogV2.alert = async function add2eDialogV2AlertFallback({ window = {}, content = "", ok = {}, modal = true, classes = [] } = {}) {
-    return DialogV2.wait({
-      classes,
-      window,
-      content,
-      buttons: [{ action: "ok", label: ok?.label || "OK", default: true, callback: () => true }],
-      modal,
-      rejectClose: false,
-      close: () => true
-    });
-  };
-
-  game.add2e = game.add2e ?? {};
-  game.add2e.dialogV2AlertFallbackVersion = ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION;
-  console.log("[ADD2E][DIALOG_V2][ALERT_FALLBACK]", ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION);
-  return true;
-}
-
-Hooks.once("init", () => add2eInstallDialogV2AlertFallback());
-Hooks.once("ready", () => add2eInstallDialogV2AlertFallback());
