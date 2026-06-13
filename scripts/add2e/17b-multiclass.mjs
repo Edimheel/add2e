@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage propre
-// Version : 2026-06-11-multiclass-layer-v23-current-race-first
+// Version : 2026-06-13-multiclass-layer-v24-hp-sync-level-cap-dialog
 //
 // Module dédié au multiclassage.
 // Champ de référence unique pour les races : system.multiclassing.allowedCombinations.
@@ -7,7 +7,7 @@
 // L'XP globale est gérée par 17-movement-xp.mjs.
 // Ce fichier synchronise l'XP/niveau par classe, les drops multiclasses et les champs dynamiques ApplicationV2.
 
-const VERSION = "2026-06-11-multiclass-layer-v23-current-race-first";
+const VERSION = "2026-06-13-multiclass-layer-v24-hp-sync-level-cap-dialog";
 const TAG = "[ADD2E][MULTICLASSE]";
 const INTERNAL = "add2eMulticlassInternal";
 
@@ -394,6 +394,19 @@ async function dialogAlert(title, content) {
   return false;
 }
 
+async function notifyLevelCap(actor, slug, requestedLevel, appliedLevel, payload) {
+  if (!game.user?.isGM) return false;
+  if (!(Number(requestedLevel) > Number(appliedLevel))) return false;
+  const row = payload?.["system.classes"]?.find(cls => cls.slug === slug) ?? null;
+  const className = row?.name ?? slug;
+  const maxLevel = row?.levelMaxRace ?? appliedLevel;
+  const raceName = itemLabel(systemRace(actor), "Race");
+  return dialogAlert(
+    "ADD2E — Niveau maximum atteint",
+    `<p><b>${esc(className)}</b> ne peut pas dépasser le niveau <b>${esc(maxLevel)}</b> pour la race <b>${esc(raceName)}</b>.</p><p>Le niveau demandé <b>${esc(requestedLevel)}</b> a été ramené à <b>${esc(appliedLevel)}</b>.</p>`
+  );
+}
+
 function installDialogButtonTheme() {
   if (document.getElementById("add2e-multiclass-button-theme-v23")) return;
   const style = document.createElement("style");
@@ -770,6 +783,7 @@ async function updateDirectMulticlassField(sheet, input) {
   const name = String(input.name);
   const value = Math.max(0, Math.floor(num(input.value, 0)));
   let payload = null;
+  let capNotice = null;
   if (name.startsWith("system.xp_par_classe.")) {
     const slug = name.slice("system.xp_par_classe.".length);
     if (!slug) return false;
@@ -777,10 +791,17 @@ async function updateDirectMulticlassField(sheet, input) {
   } else if (name.startsWith("system.niveaux_par_classe.")) {
     const slug = name.slice("system.niveaux_par_classe.".length);
     if (!slug) return false;
-    payload = multiclassUpdatePayload(actor, null, null, { [slug]: Math.max(1, value) });
+    const requestedLevel = Math.max(1, value);
+    payload = multiclassUpdatePayload(actor, null, null, { [slug]: requestedLevel });
+    const appliedLevel = Number(foundry.utils.getProperty(payload ?? {}, `system.niveaux_par_classe.${slug}`) ?? requestedLevel);
+    if (requestedLevel > appliedLevel) capNotice = { slug, requestedLevel, appliedLevel };
   }
   if (!payload) return false;
   await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-direct-field" });
+  if (typeof globalThis.add2eSyncMulticlassHp === "function") {
+    await globalThis.add2eSyncMulticlassHp(actor, { force: false, syncCurrent: false, reason: "multiclass-direct-field" });
+  }
+  if (capNotice) await notifyLevelCap(actor, capNotice.slug, capNotice.requestedLevel, capNotice.appliedLevel, payload);
   sheet?._add2eRememberActiveTab?.();
   sheet?.render?.(false);
   return true;
