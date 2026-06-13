@@ -33,20 +33,22 @@ import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/20-session-xp.mjs";
 import "./add2e/21-consumables.mjs";
 
-const ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION = "2026-05-26-dialog-v2-alert-fallback-v1";
+const ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION = "2026-06-13-dialog-v2-alert-single-ok-v1";
 globalThis.ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION = ADD2E_DIALOG_V2_ALERT_FALLBACK_VERSION;
 
 function add2eInstallDialogV2AlertFallback() {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2 || typeof DialogV2.alert === "function" || typeof DialogV2.confirm !== "function") return false;
+  if (!DialogV2 || typeof DialogV2.alert === "function" || typeof DialogV2.wait !== "function") return false;
 
-  DialogV2.alert = async function add2eDialogV2AlertFallback({ window = {}, content = "", ok = {}, modal = true } = {}) {
-    return DialogV2.confirm({
+  DialogV2.alert = async function add2eDialogV2AlertFallback({ window = {}, content = "", ok = {}, modal = true, classes = [] } = {}) {
+    return DialogV2.wait({
+      classes,
       window,
       content,
-      yes: { label: ok?.label || "Compris" },
-      no: { label: "Fermer" },
-      modal
+      buttons: [{ action: "ok", label: ok?.label || "OK", default: true, callback: () => true }],
+      modal,
+      rejectClose: false,
+      close: () => true
     });
   };
 
