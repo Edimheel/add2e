@@ -68,6 +68,20 @@ async function createEffect(actor, data) {
   game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createActiveEffect", payload: { actorUuid: actor.uuid, actorId: actor.id, effectData: data, fromUserId: game.user.id } });
   return { id: null, relayed: true };
 }
+async function createTemporaryItems(actor, { spell, sourceItem, creator = null, items = [] }) {
+  if (!actor || !items.length || !(actor.isOwner || game.user?.isGM)) return [];
+  const createdAtWorldTime = Number(game.time?.worldTime);
+  const itemData = items.filter(item => item?.name && Number(item.quantity) > 0).map(item => ({
+    name: item.name,
+    type: item.type ?? "objet",
+    img: item.img ?? sourceItem?.img ?? "icons/svg/item-bag.svg",
+    system: { nom: item.name, description: item.description ?? "", quantite: Number(item.quantity), quantity: Number(item.quantity), unite: item.unit ?? null, equipee: false, tags: Array.from(new Set(["objet:creation_magique_temporaire", ...(item.tags ?? [])])) },
+    flags: { add2e: { temporarySpellItem: true, createdBySpell: spell.name, sourceSpell: spell.name, sourceSpellId: sourceItem?.id ?? null, creatorActorId: creator?.id ?? null, createdAtWorldTime: Number.isFinite(createdAtWorldTime) ? createdAtWorldTime : null, ...(item.flags ?? {}) } }
+  }));
+  if (!itemData.length) return [];
+  return actor.createEmbeddedDocuments("Item", itemData);
+}
+
 function saveValue(actor, index) {
   const saves = actor?.system?.sauvegardes;
   const value = Array.isArray(saves) ? Number(saves[index]) : NaN;
@@ -114,6 +128,7 @@ export const ADD2E_SPELL_MECHANICS = Object.freeze({
   standardStatus,
   effectData,
   createEffect,
+  createTemporaryItems,
   rollSave,
   targetRule,
   targetNames: names,

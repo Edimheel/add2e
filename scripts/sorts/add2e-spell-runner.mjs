@@ -2,7 +2,7 @@
 import { ADD2E_SPELL_MECHANICS } from "./add2e-spell-mechanics.mjs";
 import { ADD2E_SPELL_CATALOG } from "./add2e-spell-catalog.mjs";
 
-const { escapeHtml: esc, targetActors, activeTags, sourceContext, confirmDialog, playVfx, chat, standardStatus, effectData, createEffect, rollSave, targetRule, targetNames: names, alignmentOf, applyMany } = ADD2E_SPELL_MECHANICS;
+const { escapeHtml: esc, targetActors, activeTags, sourceContext, confirmDialog, playVfx, chat, standardStatus, effectData, createEffect, createTemporaryItems, rollSave, targetRule, targetNames: names, alignmentOf, applyMany } = ADD2E_SPELL_MECHANICS;
 
 async function runAugure(ctx, spell) {
   const chance = Math.min(100, 70 + ctx.level);
@@ -144,11 +144,21 @@ async function runCreateFoodWaterAssist(ctx, spell) {
   const totalVolume = 27 * ctx.level;
   const humanoids = 3 * ctx.level;
   const horses = ctx.level;
-  const result = await confirmDialog(spell, `<p>Crée <b>${totalVolume} dm³</b> de nourriture et/ou d'eau.</p><p>Cette quantité nourrit <b>${humanoids} créatures de taille humaine</b> ou <b>${horses} créature(s) de taille cheval</b> pendant une journée.</p>`, `<label>Répartition<select name="mode"><option value="food">nourriture uniquement</option><option value="water">eau uniquement</option><option value="equal">nourriture et eau en quantités égales</option></select></label>`, form => ({ mode: form.elements.mode?.value }));
+  const recipients = Array.from(new Map([ctx.caster, ...targetActors(ctx.targets)].filter(Boolean).map(actor => [actor.id, actor])).values());
+  const recipientOptions = recipients.map(actor => '<option value="' + esc(actor.id) + '">' + esc(actor.name) + '</option>').join("");
+  const result = await confirmDialog(spell, '<p>Crée <b>' + totalVolume + ' dm³</b> de nourriture et/ou d’eau.</p><p>Cette quantité nourrit <b>' + humanoids + ' créatures de taille humaine</b> ou <b>' + horses + ' créature(s) de taille cheval</b> pendant une journée.</p>', '<label>Répartition<select name="mode"><option value="food">nourriture uniquement</option><option value="water">eau uniquement</option><option value="equal">nourriture et eau en quantités égales</option></select></label><label>Inventaire destinataire<select name="recipient">' + recipientOptions + '</select></label>', form => ({ mode: form.elements.mode?.value, recipientId: form.elements.recipient?.value }));
   if (!result) return false;
-  const allocation = result.mode === "equal" ? `${totalVolume / 2} dm³ de nourriture et ${totalVolume / 2} dm³ d'eau` : `${totalVolume} dm³ ${result.mode === "water" ? "d'eau" : "de nourriture"}`;
-  await playVfx(spell, ctx.casterToken);
-  await chat(ctx.caster, ctx.casterToken, spell, `<p><b>Quantité créée :</b> ${allocation}.</p><p>Capacité journalière : ${humanoids} créatures de taille humaine ou ${horses} créature(s) de taille cheval.</p><p>Aucun Item permanent n'a été créé.</p>`);
+  const recipient = recipients.find(actor => actor.id === result.recipientId) ?? ctx.caster;
+  if (!recipient) return false;
+  const portions = result.mode === "equal" ? totalVolume / 2 : totalVolume;
+  const items = [];
+  if (result.mode !== "water") items.push({ name: "Nourriture créée par Manne", type: spell.itemType, quantity: portions, unit: "dm³", img: "icons/consumables/food/bowl-stew-brown.webp", description: "Nourriture créée par Manne. Volume : " + portions + " dm³.", tags: ["sort:manne", "creation:nourriture"], flags: { creationKind: "food", volumeDm3: portions } });
+  if (result.mode !== "food") items.push({ name: "Eau créée par Manne", type: spell.itemType, quantity: portions, unit: "dm³", img: "icons/consumables/drinks/water-jug-blue.webp", description: "Eau créée par Manne. Volume : " + portions + " dm³.", tags: ["sort:manne", "creation:eau"], flags: { creationKind: "water", volumeDm3: portions } });
+  const created = await createTemporaryItems(recipient, { spell, sourceItem: ctx.sourceItem, creator: ctx.caster, items });
+  if (created.length !== items.length) return false;
+  await playVfx(spell, ctx.casterToken, ctx.targets);
+  const itemSummary = created.map(item => esc(item.name) + " (" + (item.system?.quantite ?? "?") + " dm³)").join(", ");
+  await chat(ctx.caster, ctx.casterToken, spell, '<p><b>' + created.length + ' Item(s) technique(s)</b> créé(s) dans l’inventaire de <b>' + esc(recipient.name) + '</b>.</p><p>Quantité : ' + itemSummary + '.</p><p>Capacité journalière : ' + humanoids + ' créatures de taille humaine ou ' + horses + ' créature(s) de taille cheval.</p>');
   return true;
 }
 function speakDeadLimits(level) {
@@ -162,23 +172,27 @@ function speakDeadLimits(level) {
 async function runSpeakWithDead(ctx, spell) {
   if (!targetRule(spell, ctx.targets, 0, 1)) return false;
   const limits = speakDeadLimits(ctx.level);
-  const result = await confirmDialog(spell, `<p>Aide MJ pour converser avec des restes. Le lanceur doit parler la langue de la créature morte.</p><p><b>Temps maximal depuis la mort :</b> ${limits.elapsed}. <b>Durée :</b> ${limits.duration}. <b>Questions :</b> ${limits.questions}.</p><p><b>Cible/restes sélectionnés :</b> ${names(ctx.targets)}.</p>`, `<label><input name="remains" type="checkbox" required> Je confirme que le corps, les restes ou la partie concernée sont disponibles</label><label><input name="language" type="checkbox" required> Je confirme une langue commune</label>`, form => ({ remains: form.elements.remains?.checked, language: form.elements.language?.checked }));
+  const result = await confirmDialog(spell, '<p>Aide MJ pour converser avec des restes. Le lanceur doit parler la langue de la créature morte.</p><p><b>Temps maximal depuis la mort :</b> ' + limits.elapsed + '. <b>Durée :</b> ' + limits.duration + '. <b>Questions :</b> ' + limits.questions + '.</p><p><b>Cible/restes sélectionnés :</b> ' + names(ctx.targets) + '.</p>', '<label><input name="remains" type="checkbox" required> Je confirme que le corps, les restes ou la partie concernée sont disponibles</label><label><input name="language" type="checkbox" required> Je confirme une langue commune</label>', form => ({ remains: form.elements.remains?.checked, language: form.elements.language?.checked }));
   if (!result?.remains || !result?.language) return false;
+  const recipient = ctx.targets[0]?.actor ?? ctx.caster;
+  const tracking = await createEffect(recipient, effectData({ spell, sourceItem: ctx.sourceItem, rounds: limits.rounds, tags: ["etat:necromancie", "communication:morts", "suivi:questions_morts"], extra: { effectType: "speak_with_dead", questionsMax: limits.questions, questionsRemaining: limits.questions, maxTimeSinceDeath: limits.elapsed, durationText: limits.duration, requiresGMAnswers: true } }));
+  if (!tracking) return false;
   await playVfx(spell, ctx.casterToken, ctx.targets);
   const gm = ChatMessage.getWhisperRecipients("GM").map(user => user.id);
-  await chat(ctx.caster, ctx.casterToken, spell, `<p><b>Restes ciblés :</b> ${names(ctx.targets)}.</p><p>Temps maximal depuis la mort : <b>${limits.elapsed}</b>. Durée : <b>${limits.duration}</b>. Nombre maximal de questions : <b>${limits.questions}</b>.</p><p>Les réponses dépendent uniquement des connaissances de la créature morte et sont déterminées par le MJ.</p>`, { whisper: gm });
+  await chat(ctx.caster, ctx.casterToken, spell, '<p><b>Suivi posé sur :</b> ' + esc(recipient.name) + '.</p><p>Temps maximal depuis la mort : <b>' + limits.elapsed + '</b>. Durée : <b>' + limits.duration + '</b>. Questions restantes : <b>' + limits.questions + '</b>.</p><p>Les réponses dépendent uniquement des connaissances de la créature morte et sont déterminées par le MJ.</p>', { whisper: gm });
   return true;
 }
 async function runLocateOrHideObject(ctx, spell) {
   const range = 6 + ctx.level;
   const rounds = ctx.level;
-  const result = await confirmDialog(spell, `<p>Portée : <b>${range} pouces</b>. Durée : <b>${rounds} round(s)</b>. Le sort ne fonctionne pas sur un être vivant.</p>`, `<label>Mode<select name="mode"><option value="locate">localiser un objet connu ou familier</option><option value="hide">dissimuler un objet de la détection</option></select></label><label>Description de l'objet<input name="object" type="text" required></label><label><input name="notLiving" type="checkbox" required> Je confirme que la cible n'est pas un être vivant</label>`, form => ({ mode: form.elements.mode?.value, object: String(form.elements.object?.value ?? "").trim(), notLiving: form.elements.notLiving?.checked }));
+  const result = await confirmDialog(spell, '<p>Portée : <b>' + range + ' pouces</b>. Durée : <b>' + rounds + ' round(s)</b>. Le sort ne fonctionne pas sur un être vivant.</p>', '<label>Mode<select name="mode"><option value="locate">localiser un objet connu ou familier</option><option value="hide">dissimuler un objet de la détection</option></select></label><label>Description de l’objet<input name="object" type="text" required></label><label><input name="notLiving" type="checkbox" required> Je confirme que la cible n’est pas un être vivant</label>', form => ({ mode: form.elements.mode?.value, object: String(form.elements.object?.value ?? "").trim(), notLiving: form.elements.notLiving?.checked }));
   if (!result?.object || !result?.notLiving) return false;
   const tags = result.mode === "hide" ? ["etat:dissimulation_objet", "protection:localisation_objet"] : ["etat:localisation_objet", "detection:objet"];
-  await createEffect(ctx.caster, effectData({ spell, sourceItem: ctx.sourceItem, rounds, tags, extra: { mode: result.mode, objectDescription: result.object, rangeInches: range } }));
+  const tracking = await createEffect(ctx.caster, effectData({ spell, sourceItem: ctx.sourceItem, rounds, tags, extra: { effectType: "locate_object", mode: result.mode, objectDescription: result.object, rangeInches: range, durationRounds: rounds, noAutomaticReveal: true } }));
+  if (!tracking) return false;
   await playVfx(spell, ctx.casterToken);
   const gm = ChatMessage.getWhisperRecipients("GM").map(user => user.id);
-  await chat(ctx.caster, ctx.casterToken, spell, `<p><b>Mode :</b> ${result.mode === "hide" ? "dissimulation" : "localisation"}.</p><p><b>Objet déclaré :</b> ${esc(result.object)}.</p><p>Portée : <b>${range} pouces</b>. Durée : <b>${rounds} round(s)</b>.</p><p>Aucune position ou information secrète n'est révélée automatiquement.</p>`, { whisper: gm });
+  await chat(ctx.caster, ctx.casterToken, spell, '<p><b>Mode :</b> ' + (result.mode === "hide" ? "dissimulation" : "localisation") + '.</p><p><b>Objet déclaré :</b> ' + esc(result.object) + '.</p><p>Portée : <b>' + range + ' pouces</b>. Durée : <b>' + rounds + ' round(s)</b>.</p><p>ActiveEffect de suivi créé ; aucune position ou information secrète n’est révélée automatiquement.</p>', { whisper: gm });
   return true;
 }
 
