@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Projectile magique
-// Version : 2026-06-13-projectile-magique-target-tiles-v1
+// Version : 2026-06-13-projectile-magique-target-tiles-v2
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -214,7 +214,6 @@ return await (async () => {
           </div>
         </section>
         <section class="add2e-mm-tiles" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;max-height:390px;overflow:auto;padding:2px;">${rows}</section>
-        <p style="font-size:12px;margin:.45em 0 0;color:#4a2e78;">Aucune cible n’est pré-affectée. Tous les projectiles doivent être affectés avant de lancer.</p>
       </form>`;
 
     return await DialogV2.wait({
@@ -287,10 +286,14 @@ return await (async () => {
           const inputs = Array.from(form.querySelectorAll('input[name^="target."]'));
           const current = Math.max(0, Math.floor(Number(input.value) || 0));
           const total = inputs.reduce((sum, el) => sum + Math.max(0, Math.floor(Number(el.value) || 0)), 0);
-          let next = current >= nbMissiles ? 0 : current + 1;
-          if (next > current && total >= nbMissiles) {
+          let next = 0;
+          if (current >= nbMissiles || (current > 0 && total >= nbMissiles)) {
+            next = 0;
+          } else if (total >= nbMissiles) {
             ui.notifications.warn("Tous les projectiles sont déjà affectés.");
             return;
+          } else {
+            next = current + 1;
           }
           input.value = String(next);
           refresh();
@@ -379,7 +382,7 @@ return await (async () => {
     return false;
   }
 
-  const distribution = await askDistribution({ candidates, nbMissiles, selectedIds, sourceToken, rangeMeters });
+  const distribution = await askDistribution({ candidates, selectedIds, nbMissiles, sourceToken, rangeMeters });
   if (!distribution) {
     await refundObjectChargeIfNeeded(sourceItem, caster);
     return false;
@@ -411,7 +414,7 @@ return await (async () => {
   await createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned: distribution.total, rangeMeters });
 
   console.log(`${TAG}[DONE]`, {
-    version: "2026-06-13-projectile-magique-target-tiles-v1",
+    version: "2026-06-13-projectile-magique-target-tiles-v2",
     caster: caster.name,
     level,
     metersPerGridCell: metersPerGridCell(),
