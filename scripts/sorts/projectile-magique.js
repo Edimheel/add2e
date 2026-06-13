@@ -1,9 +1,23 @@
 // ADD2E — onUse Magicien : Projectile magique
-// Version : 2026-06-13-projectile-magique-target-tiles-v3-missile-vfx
+// Version : 2026-06-13-projectile-magique-target-tiles-v4-real-jb2a-files
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
   const TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][PROJECTILE_MAGIQUE]";
+  const PROJECTILE_FX_CANDIDATES = [
+    "modules/jb2a_patreon/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Purple_30ft_1600x400.webm",
+    "modules/jb2a_patreon/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Blue_30ft_1600x400.webm",
+    "modules/jb2a_patreon/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Green_30ft_1600x400.webm",
+    "modules/jb2a_patreon/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Purple_60ft_2800x400.webm",
+    "modules/jb2a_patreon/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Blue_60ft_2800x400.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Purple_30ft_1600x400.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Blue_30ft_1600x400.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Green_30ft_1600x400.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Purple_60ft_2800x400.webm",
+    "modules/JB2A_DnD5e/Library/1st_Level/Magic_Missile/MagicMissile_01_Regular_Blue_60ft_2800x400.webm"
+  ];
+  const PROJECTILE_FX_CACHE = new Map();
+
   const SPELL = {
     name: "Projectile magique",
     slug: "projectile_magique",
@@ -105,6 +119,87 @@ return await (async () => {
     game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation, payload });
   }
 
+  function moduleLooksActiveForPath(path) {
+    const p = String(path || "");
+    if (p.startsWith("modules/jb2a_patreon/")) return game.modules?.get?.("jb2a_patreon")?.active === true;
+    if (p.startsWith("modules/JB2A_DnD5e/")) return game.modules?.get?.("JB2A_DnD5e")?.active === true;
+    return true;
+  }
+
+  async function fileExists(path) {
+    path = String(path || "").trim();
+    if (!path) return false;
+    if (PROJECTILE_FX_CACHE.has(path)) return PROJECTILE_FX_CACHE.get(path);
+    if (!moduleLooksActiveForPath(path)) {
+      PROJECTILE_FX_CACHE.set(path, false);
+      return false;
+    }
+    try {
+      const response = await fetch(path, { method: "GET", cache: "force-cache", headers: { Range: "bytes=0-1" } });
+      const ok = !!response.ok || response.status === 206;
+      PROJECTILE_FX_CACHE.set(path, ok);
+      return ok;
+    } catch (_err) {
+      PROJECTILE_FX_CACHE.set(path, false);
+      return false;
+    }
+  }
+
+  function collectSequencerMagicMissileFiles() {
+    const roots = [
+      globalThis.Sequencer?.Database?.entries,
+      globalThis.Sequencer?.Database?._entries,
+      globalThis.Sequencer?.Database?.database,
+      globalThis.Sequencer?.Database?._database
+    ].filter(Boolean);
+    const found = new Set();
+    const seen = new WeakSet();
+
+    function scan(value, depth = 0) {
+      if (!value || depth > 6) return;
+      if (typeof value === "string") {
+        const key = value.toLowerCase();
+        if ((key.includes("magicmissile") || key.includes("magic_missile") || key.includes("magic missile")) && (key.endsWith(".webm") || key.endsWith(".mp4"))) found.add(value);
+        return;
+      }
+      if (typeof value !== "object") return;
+      if (seen.has(value)) return;
+      seen.add(value);
+      if (Array.isArray(value)) {
+        for (const entry of value) scan(entry, depth + 1);
+        return;
+      }
+      if (value instanceof Map) {
+        for (const [key, entry] of value.entries()) {
+          scan(key, depth + 1);
+          scan(entry, depth + 1);
+        }
+        return;
+      }
+      for (const [key, entry] of Object.entries(value)) {
+        scan(key, depth + 1);
+        scan(entry, depth + 1);
+      }
+    }
+
+    for (const root of roots) scan(root, 0);
+    return [...found];
+  }
+
+  async function pickProjectileFxFile() {
+    const candidates = [...collectSequencerMagicMissileFiles(), ...PROJECTILE_FX_CANDIDATES];
+    for (const candidate of candidates) {
+      if (await fileExists(candidate)) return candidate;
+    }
+    console.warn(`${TAG}[NO_PROJECTILE_FILE] Aucun fichier JB2A Magic Missile trouvé.`, {
+      sequencerAvailable: typeof Sequence !== "undefined",
+      jb2aPatreon: game.modules?.get?.("jb2a_patreon")?.active === true,
+      jb2aFree: game.modules?.get?.("JB2A_DnD5e")?.active === true,
+      candidates
+    });
+    return "";
+  }
+
   async function refundObjectChargeIfNeeded(sourceItem, caster, reason = "") {
     if (reason) ui.notifications.warn(reason);
     try {
@@ -176,7 +271,13 @@ return await (async () => {
   }
 
   async function playMissileVfx(sourceToken, targetToken, missileIndex) {
-    if (typeof Sequence === "undefined" || !sourceToken || !targetToken || !canvas?.ready) return false;
+    if (typeof Sequence === "undefined" || !sourceToken || !targetToken || !canvas?.ready) {
+      console.warn(`${TAG}[NO_SEQUENCER] Effet visuel ignoré : Sequencer ou canvas indisponible.`);
+      return false;
+    }
+
+    const file = await pickProjectileFxFile();
+    if (!file) return false;
 
     const origin = tokenCenter(sourceToken);
     const target = tokenCenter(targetToken);
@@ -184,41 +285,22 @@ return await (async () => {
     const spread = 10;
     const from = { x: origin.x + wave * spread, y: origin.y - 8 };
     const to = { x: target.x - wave * spread, y: target.y };
-    const files = [
-      "jb2a.magic_missile.purple",
-      "jb2a.magic_missile.purple.01",
-      "jb2a.magic_missile",
-      "jb2a.energy_beam.normal.purple.01"
-    ];
-
-    for (const file of files) {
-      try {
-        await new Sequence()
-          .effect()
-          .file(file)
-          .atLocation(from)
-          .stretchTo(to)
-          .randomizeMirrorY()
-          .delay(missileIndex * 130)
-          .play();
-        return true;
-      } catch (err) {
-        console.warn(`${TAG}[VFX_FILE_FAILED]`, { file, err });
-      }
-    }
 
     try {
-      canvas.interface?.createScrollingText?.(to, "✦", {
-        anchor: CONST.TEXT_ANCHOR_POINTS.CENTER,
-        direction: CONST.TEXT_ANCHOR_POINTS.TOP,
-        distance: 1.2 * gridSizePx(),
-        fontSize: 30,
-        stroke: 0x2d2144,
-        strokeThickness: 4,
-        fill: 0x8e63c7
-      });
-    } catch (_e) {}
-    return false;
+      await new Sequence()
+        .effect()
+        .file(file)
+        .atLocation(from)
+        .stretchTo(to)
+        .randomizeMirrorY()
+        .delay(missileIndex * 130)
+        .play();
+      console.log(`${TAG}[VFX_PLAY]`, { file, from, to, source: sourceToken.name, target: targetToken.name });
+      return true;
+    } catch (err) {
+      console.warn(`${TAG}[VFX_FAILED]`, { file, from, to, err });
+      return false;
+    }
   }
 
   async function askDistribution({ candidates, nbMissiles, sourceToken, rangeMeters }) {
@@ -458,7 +540,7 @@ return await (async () => {
   await createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned: distribution.total, rangeMeters });
 
   console.log(`${TAG}[DONE]`, {
-    version: "2026-06-13-projectile-magique-target-tiles-v3-missile-vfx",
+    version: "2026-06-13-projectile-magique-target-tiles-v4-real-jb2a-files",
     caster: caster.name,
     level,
     metersPerGridCell: metersPerGridCell(),
