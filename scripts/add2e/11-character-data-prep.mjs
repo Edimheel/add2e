@@ -2,7 +2,7 @@
 //  HOOK UNIQUE updateActor
 // =======================
 
-const ADD2E_MULTICLASS_HP_SYNC_VERSION = "2026-06-12-multiclass-hp-current-clamp-v1";
+const ADD2E_MULTICLASS_HP_SYNC_VERSION = "2026-06-12-multiclass-hp-current-clamp-v2";
 globalThis.ADD2E_MULTICLASS_HP_SYNC_VERSION = ADD2E_MULTICLASS_HP_SYNC_VERSION;
 const ADD2E_MULTICLASS_HP_SYNC_LOCK = new Set();
 
@@ -29,6 +29,10 @@ async function add2eSyncMulticlassHp(actor, { force = false, syncCurrent = false
 
   ADD2E_MULTICLASS_HP_SYNC_LOCK.add(actor.id);
   try {
+    const oldMax = Number(actor.system?.points_de_coup ?? 0);
+    const oldCurrent = Number(actor.system?.pdv ?? 0);
+    const wasFull = Number.isFinite(oldMax) && oldMax > 0 && Number.isFinite(oldCurrent) && oldCurrent >= oldMax;
+
     if (typeof actor.sheet?.autoSetPointsDeCoup === "function") {
       await actor.sheet.autoSetPointsDeCoup({ syncCurrent: false, force, reason });
     }
@@ -38,7 +42,7 @@ async function add2eSyncMulticlassHp(actor, { force = false, syncCurrent = false
     if (!Number.isFinite(max) || max <= 0 || !Number.isFinite(current)) return true;
 
     const update = {};
-    if (syncCurrent) update["system.pdv"] = max;
+    if (syncCurrent || wasFull) update["system.pdv"] = max;
     else if (current > max) update["system.pdv"] = max;
 
     if (Object.keys(update).length) await actor.update(update, { add2eInternal: true, add2eReason: reason });
