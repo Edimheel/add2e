@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Projectile magique
-// Version : 2026-06-13-projectile-magique-target-tiles-v2
+// Version : 2026-06-13-projectile-magique-target-tiles-v3-missile-vfx
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -82,9 +82,22 @@ return await (async () => {
     return (6 + Math.max(1, level)) * 3;
   }
 
+  function tokenCenter(tokenDoc) {
+    const center = tokenDoc?.center;
+    if (center && Number.isFinite(center.x) && Number.isFinite(center.y)) return { x: center.x, y: center.y };
+    const doc = tokenDoc?.document ?? tokenDoc;
+    const size = gridSizePx();
+    const width = Number(doc?.width ?? 1) || 1;
+    const height = Number(doc?.height ?? 1) || 1;
+    return {
+      x: Number(doc?.x ?? 0) + (width * size / 2),
+      y: Number(doc?.y ?? 0) + (height * size / 2)
+    };
+  }
+
   function tokenDistanceMeters(sourceToken, targetToken) {
-    const s = sourceToken.center ?? { x: sourceToken.document.x, y: sourceToken.document.y };
-    const t = targetToken.center ?? { x: targetToken.document.x, y: targetToken.document.y };
+    const s = tokenCenter(sourceToken);
+    const t = tokenCenter(targetToken);
     return Math.hypot((t.x ?? 0) - (s.x ?? 0), (t.y ?? 0) - (s.y ?? 0)) / gridSizePx() * metersPerGridCell();
   }
 
@@ -163,19 +176,49 @@ return await (async () => {
   }
 
   async function playMissileVfx(sourceToken, targetToken, missileIndex) {
-    if (typeof Sequence === "undefined" || !sourceToken || !targetToken) return;
-    try {
-      await new Sequence()
-        .effect()
-        .file("jb2a.magic_missile.purple")
-        .atLocation(sourceToken)
-        .stretchTo(targetToken)
-        .randomizeMirrorY()
-        .delay(missileIndex * 160)
-        .play();
-    } catch (err) {
-      console.warn(`${TAG}[VFX_FAILED]`, err);
+    if (typeof Sequence === "undefined" || !sourceToken || !targetToken || !canvas?.ready) return false;
+
+    const origin = tokenCenter(sourceToken);
+    const target = tokenCenter(targetToken);
+    const wave = (missileIndex % 3) - 1;
+    const spread = 10;
+    const from = { x: origin.x + wave * spread, y: origin.y - 8 };
+    const to = { x: target.x - wave * spread, y: target.y };
+    const files = [
+      "jb2a.magic_missile.purple",
+      "jb2a.magic_missile.purple.01",
+      "jb2a.magic_missile",
+      "jb2a.energy_beam.normal.purple.01"
+    ];
+
+    for (const file of files) {
+      try {
+        await new Sequence()
+          .effect()
+          .file(file)
+          .atLocation(from)
+          .stretchTo(to)
+          .randomizeMirrorY()
+          .delay(missileIndex * 130)
+          .play();
+        return true;
+      } catch (err) {
+        console.warn(`${TAG}[VFX_FILE_FAILED]`, { file, err });
+      }
     }
+
+    try {
+      canvas.interface?.createScrollingText?.(to, "✦", {
+        anchor: CONST.TEXT_ANCHOR_POINTS.CENTER,
+        direction: CONST.TEXT_ANCHOR_POINTS.TOP,
+        distance: 1.2 * gridSizePx(),
+        fontSize: 30,
+        stroke: 0x2d2144,
+        strokeThickness: 4,
+        fill: 0x8e63c7
+      });
+    } catch (_e) {}
+    return false;
   }
 
   async function askDistribution({ candidates, nbMissiles, sourceToken, rangeMeters }) {
@@ -397,6 +440,7 @@ return await (async () => {
     if (!targetToken?.actor) continue;
 
     if (isShieldedAgainstMagicMissile(targetToken.actor)) {
+      for (let i = 0; i < count; i++) await playMissileVfx(sourceToken, targetToken, globalMissileIndex++);
       summaries.push({ name: targetToken.name, nb: count, dmg: 0, shielded: true, note: "Bouclier : dégâts réduits à 0" });
       continue;
     }
@@ -414,7 +458,7 @@ return await (async () => {
   await createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned: distribution.total, rangeMeters });
 
   console.log(`${TAG}[DONE]`, {
-    version: "2026-06-13-projectile-magique-target-tiles-v2",
+    version: "2026-06-13-projectile-magique-target-tiles-v3-missile-vfx",
     caster: caster.name,
     level,
     metersPerGridCell: metersPerGridCell(),
