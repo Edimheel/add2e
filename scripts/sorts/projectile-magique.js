@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Projectile magique
-// Version : 2026-06-13-projectile-magique-rename-v1
+// Version : 2026-06-13-projectile-magique-shield-message-v1
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -302,8 +302,10 @@ return await (async () => {
     const casterImg = sourceToken?.document?.texture?.src ?? caster?.img ?? "icons/svg/mystery-man.svg";
     const spellImg = sourceItem?.img || SPELL.imgFallback || "icons/svg/magic.svg";
     const rows = summaries.length
-      ? summaries.map(m => `<tr><td style="padding:4px 6px;"><b>${esc(m.name)}</b></td><td style="text-align:center;padding:4px 6px;">${m.nb}</td><td style="padding:4px 6px;text-align:right;"><b>${m.dmg}</b></td></tr>`).join("")
+      ? summaries.map(m => `<tr><td style="padding:4px 6px;"><b>${esc(m.name)}</b>${m.note ? `<div style="font-size:11px;color:#8a4b00;font-weight:800;margin-top:2px;">${esc(m.note)}</div>` : ""}</td><td style="text-align:center;padding:4px 6px;">${m.nb}</td><td style="padding:4px 6px;text-align:right;"><b>${m.dmg}</b></td></tr>`).join("")
       : `<tr><td colspan="3" style="padding:6px;text-align:center;"><i>Aucun projectile résolu.</i></td></tr>`;
+    const shieldRows = summaries.filter(m => m.shielded).map(m => `<li><b>${esc(m.name)}</b> : Bouclier annule les projectiles reçus ; dégâts réduits à 0.</li>`).join("");
+    const shieldBlock = shieldRows ? `<div style="border:1px solid #d08b28;border-radius:6px;background:#fff1d6;color:#6c3a00;padding:7px 9px;margin:7px 0;font-size:12px;"><b>Bouclier</b><ul style="margin:.35em 0 0 1.1em;padding:0;">${shieldRows}</ul></div>` : "";
 
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: caster, token: sourceToken }),
@@ -319,6 +321,7 @@ return await (async () => {
             <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;">
               <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Projectiles magiques</div>
               <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>${totalAssigned}</b> projectile${totalAssigned > 1 ? "s" : ""} lancé${totalAssigned > 1 ? "s" : ""}.</p>
+              ${shieldBlock}
               <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px;">
                 <thead><tr><th style="text-align:left;padding:4px 6px;">Cible</th><th>Projectiles</th><th style="text-align:right;padding:4px 6px;">Dégâts</th></tr></thead>
                 <tbody>${rows}</tbody>
@@ -388,7 +391,7 @@ return await (async () => {
     if (!targetToken?.actor) continue;
 
     if (isShieldedAgainstMagicMissile(targetToken.actor)) {
-      summaries.push({ name: targetToken.name, nb: count, dmg: 0 });
+      summaries.push({ name: targetToken.name, nb: count, dmg: 0, shielded: true, note: "Bouclier : dégâts réduits à 0" });
       continue;
     }
 
@@ -405,7 +408,7 @@ return await (async () => {
   await createChat({ caster, sourceItem, sourceToken, summaries, totalAssigned: distribution.total, rangeMeters });
 
   console.log(`${TAG}[DONE]`, {
-    version: "2026-06-13-projectile-magique-rename-v1",
+    version: "2026-06-13-projectile-magique-shield-message-v1",
     caster: caster.name,
     level,
     metersPerGridCell: metersPerGridCell(),
