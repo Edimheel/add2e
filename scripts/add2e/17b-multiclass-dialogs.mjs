@@ -1,12 +1,23 @@
 // ADD2E — Multiclassage : DialogV2
-// Version : 2026-06-13-multiclass-dialogs-v1
+// Version : 2026-06-13-multiclass-dialogs-v2-level-cap-ok
 
 import { classItems, classSlug, esc, itemLabel, norm, systemRace } from "./17b-multiclass-core.mjs";
 import { classRaceMaxLevel, monoClassOptionsForDroppedClass, raceCandidatesForClass, raceCompatibleForMulticlass, raceMatchesClassRules, raceAllowsClassSet, classPrerequisitesOk } from "./17b-multiclass-rules.mjs";
 
-export async function dialogAlert(title, content) {
+export async function dialogAlert(title, content, { classes = ["add2e-multiclass-alert"], okLabel = "OK" } = {}) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (DialogV2?.alert) return DialogV2.alert({ window: { title }, content, ok: { label: "Compris" }, modal: true });
+  if (DialogV2?.alert) return DialogV2.alert({ window: { title }, content, ok: { label: okLabel }, modal: true, classes });
+  if (DialogV2?.wait) {
+    return DialogV2.wait({
+      classes,
+      window: { title },
+      content,
+      buttons: [{ action: "ok", label: okLabel, default: true, callback: () => true }],
+      modal: true,
+      rejectClose: false,
+      close: () => true
+    });
+  }
   ui.notifications.warn(String(content ?? "").replace(/<[^>]+>/g, " "));
   return false;
 }
@@ -15,7 +26,23 @@ function installDialogButtonTheme() {
   if (document.getElementById("add2e-multiclass-button-theme-split")) return;
   const style = document.createElement("style");
   style.id = "add2e-multiclass-button-theme-split";
-  style.textContent = `.application.add2e-multiclass-dialog button[data-action="validate"]{background:linear-gradient(180deg,#2fa447,#176b2a)!important;border:1px solid #0d4b1b!important;color:#fff8df!important;font-weight:900!important;border-radius:10px!important}.application.add2e-multiclass-dialog button[data-action="cancel"]{background:linear-gradient(180deg,#b94838,#711f17)!important;border:1px solid #55150f!important;color:#fff3ea!important;font-weight:900!important;border-radius:10px!important}`;
+  style.textContent = `
+.application.add2e-multiclass-dialog button[data-action="validate"]{background:linear-gradient(180deg,#2fa447,#176b2a)!important;border:1px solid #0d4b1b!important;color:#fff8df!important;font-weight:900!important;border-radius:10px!important}
+.application.add2e-multiclass-dialog button[data-action="cancel"]{background:linear-gradient(180deg,#b94838,#711f17)!important;border:1px solid #55150f!important;color:#fff3ea!important;font-weight:900!important;border-radius:10px!important}
+.application.add2e-multiclass-alert .window-content{background:linear-gradient(135deg,#fff8df,#ead49a)!important;color:#2b1c0d!important}
+.application.add2e-multiclass-alert button[data-action="ok"],
+.application.add2e-multiclass-alert button.default,
+.application.add2e-multiclass-alert footer button{background:linear-gradient(180deg,#2fa447,#176b2a)!important;border:1px solid #0d4b1b!important;color:#fff8df!important;font-weight:900!important;border-radius:10px!important;min-width:96px!important}
+.add2e-level-cap-dialog{display:grid;gap:10px;min-width:420px;max-width:560px;color:#2b1c0d;font-family:var(--font-primary, Signika, sans-serif)}
+.add2e-level-cap-dialog .cap-head{border:1px solid #6f4515;border-radius:12px;background:linear-gradient(180deg,#4b2b0f,#1f1207);padding:10px 12px;color:#ffe39d;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.add2e-level-cap-dialog .cap-head h2{margin:0;border:0;color:#ffe39d;font-size:1.08rem;text-transform:uppercase;letter-spacing:.04em}
+.add2e-level-cap-dialog .cap-head p{margin:5px 0 0;color:#fff3cf;font-weight:700}
+.add2e-level-cap-dialog .cap-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.add2e-level-cap-dialog .cap-card{border:1px solid #c59a3d;border-radius:10px;background:#fffaf0;padding:8px 10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)}
+.add2e-level-cap-dialog .cap-card span{display:block;color:#6b470f;font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.add2e-level-cap-dialog .cap-card b{font-size:1.05rem;color:#2b1c0d}
+.add2e-level-cap-dialog .cap-warning{border:1px solid #9d2d25;border-radius:10px;background:#ffe5df;color:#7b1f18;padding:9px 11px;font-weight:800}
+`;
   document.head.appendChild(style);
 }
 
@@ -116,9 +143,24 @@ export async function showClassDropChoiceDialog(actor, droppedClassData, current
 
 export async function notifyLevelCap(actor, slug, requestedLevel, appliedLevel, payload) {
   if (!game.user?.isGM || !(Number(requestedLevel) > Number(appliedLevel))) return false;
+  installDialogButtonTheme();
   const row = payload?.["system.classes"]?.find(cls => cls.slug === slug) ?? null;
   const className = row?.name ?? slug;
   const maxLevel = row?.levelMaxRace ?? appliedLevel;
   const raceName = itemLabel(systemRace(actor), "Race");
-  return dialogAlert("ADD2E — Niveau maximum atteint", `<p><b>${esc(className)}</b> ne peut pas dépasser le niveau <b>${esc(maxLevel)}</b> pour la race <b>${esc(raceName)}</b>.</p><p>Le niveau demandé <b>${esc(requestedLevel)}</b> a été ramené à <b>${esc(appliedLevel)}</b>.</p>`);
+  const content = `
+    <div class="add2e-level-cap-dialog">
+      <div class="cap-head">
+        <h2>Niveau maximum atteint</h2>
+        <p>La limite raciale empêche cette progression.</p>
+      </div>
+      <div class="cap-grid">
+        <div class="cap-card"><span>Classe</span><b>${esc(className)}</b></div>
+        <div class="cap-card"><span>Race</span><b>${esc(raceName)}</b></div>
+        <div class="cap-card"><span>Niveau demandé</span><b>${esc(requestedLevel)}</b></div>
+        <div class="cap-card"><span>Niveau appliqué</span><b>${esc(appliedLevel)}</b></div>
+      </div>
+      <div class="cap-warning">${esc(className)} ne peut pas dépasser le niveau ${esc(maxLevel)} pour cette race.</div>
+    </div>`;
+  return dialogAlert("ADD2E — Niveau maximum atteint", content, { classes: ["add2e-multiclass-alert"], okLabel: "OK" });
 }
