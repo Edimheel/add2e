@@ -28,7 +28,6 @@ import "./add2e/15-validation-sockets.mjs";
 import "./add2e/16-preparation-display.mjs";
 import "./add2e/17-movement-xp.mjs";
 import "./add2e/17b-multiclass.mjs";
-import "./add2e/17d-multiclass-level-cap-dialog.mjs";
 import "./add2e/17c-multiclass-mechanics.mjs";
 import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/20-session-xp.mjs";
