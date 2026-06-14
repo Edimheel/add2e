@@ -422,7 +422,7 @@ function add2eCanActorUseSpell(actor, sort) {
   const entries = add2eGetSpellcastingEntries(actor);
   const matching = entries.filter(e => sortLists.includes(e.key));
   if (!matching.length) return { ok: false, reason: "list", sortLists, entries, entry: null };
-  for (const entry of matching) if (add2eEntryAvailableForSpell(actor, e, spellLevel)) return { ok: true, reason: "ok", sortLists, entries, entry, actorLevel: add2eSpellClassLevel(actor, entry.sources?.[0]?.classSlug ?? entry.classSlug), spellLevel };
+  for (const entry of matching) if (add2eEntryAvailableForSpell(actor, entry, spellLevel)) return { ok: true, reason: "ok", sortLists, entries, entry, actorLevel: add2eSpellClassLevel(actor, entry.sources?.[0]?.classSlug ?? entry.classSlug), spellLevel };
   const entry = matching[0] ?? null;
   return { ok: false, reason: "level", sortLists, entries, entry, actorLevel: entry ? add2eSpellClassLevel(actor, entry.sources?.[0]?.classSlug ?? entry.classSlug) : 0, spellLevel };
 }
