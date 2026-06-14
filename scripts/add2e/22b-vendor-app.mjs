@@ -1,5 +1,5 @@
 // ADD2E — ApplicationV2 vendeur : onglets, recherche, achats et restock MJ.
-// Version : 2026-06-12-vendor-auto-missing-spell-components-v3
+// Version : 2026-06-14-vendor-token-buy-components-v4
 
 import {
   isVendorActor,
@@ -13,6 +13,7 @@ import {
   formatMoney,
   getMoney,
   buy,
+  buyLocal,
   setStock,
   restockAll,
   assignItemToToken,
@@ -22,7 +23,9 @@ import {
   lower
 } from "./22a-vendor-core.mjs";
 
-const ADD2E_VENDOR_APP_VERSION = "2026-06-12-vendor-auto-missing-spell-components-v3";
+const ADD2E_VENDOR_APP_VERSION = "2026-06-14-vendor-token-buy-components-v4";
+const SOCKET_BUY_V2 = "ADD2E_VENDOR_BUY_REQUEST_V2";
+const SOCKET_BUY_RESULT_V2 = "ADD2E_VENDOR_BUY_RESULT_V2";
 
 const ADD2E_VENDOR_STYLE = `
   .add2e-vendor-root{height:100%;max-height:100%;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(180deg,#fff8df,#ead39b);color:#2f250c;font-family:var(--font-primary,serif)}
@@ -38,6 +41,26 @@ const arr = v => Array.isArray(v) ? v.flatMap(arr) : v === null || v === undefin
 const norm = v => lower(v).replace(/[’']/g, "_").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 const uniq = v => [...new Set(v.filter(Boolean))];
 function onlyCode(v) { const t = lower(v).replace(/[^a-z]/g, ""); return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(t); }
+
+function isResponsibleGM() {
+  if (!game.user?.isGM) return false;
+  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+  return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
+}
+
+function cleanComponentName(value) {
+  let text = String(value ?? "").trim();
+  text = text.replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
+  text = text.replace(/^\(?\s*m\s*\)?\s*[:：\-–—]?\s*/i, "").trim();
+  text = text.replace(/[.!?;:]+$/g, "").trim();
+  text = text.replace(/^d['’]\s*/i, "");
+  text = text.replace(/^(un|une)?\s*peu\s+de\s+/i, "");
+  text = text.replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
+  text = text.replace(/^(quelques|plusieurs)\s+/i, "");
+  text = text.replace(/^petit morceau de\s+/i, "");
+  text = text.replace(/^morceau de\s+/i, "");
+  return text.trim();
+}
 
 function actorTypeLabel(actor) {
   const t = String(actor?.type ?? "").toLowerCase();
@@ -59,7 +82,7 @@ function buyerChoices(selectedId = "") {
 }
 
 function addReq(map, raw, qty = 1, spell = null, mult = 1) {
-  const name = String(raw ?? "").trim();
+  const name = cleanComponentName(raw);
   if (!name || onlyCode(name)) return;
   const key = norm(name);
   if (!key) return;
@@ -75,15 +98,30 @@ function collectReq(map, value, spell, mult) {
   if (Array.isArray(value)) { for (const x of value) collectReq(map, x, spell, mult); return; }
   if (typeof value === "string") { for (const x of arr(value)) addReq(map, x, 1, spell, mult); return; }
   if (typeof value === "object") {
+    const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or;
+    if (Array.isArray(alternatives) && alternatives.length) {
+      addReq(map, alternatives.map(x => cleanComponentName(x?.name ?? x?.nom ?? x?.label ?? x?.item ?? x?.component ?? x?.composant ?? x)).filter(Boolean).join(" ou "), 1, spell, mult);
+      return;
+    }
     const name = value.name ?? value.nom ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
     const qty = value.quantity ?? value.quantite ?? value.qty ?? value.nombre ?? value.count ?? value.value ?? 1;
     if (name) addReq(map, name, qty, spell, mult);
   }
 }
 
+function collectMaterialText(map, value, spell, mult) {
+  const text = String(value ?? "").trim();
+  if (!text) return;
+  const parenthetical = [...text.matchAll(/\bM\b\s*\(([^)]+)\)/gi)].map(m => m[1]);
+  if (parenthetical.length) { for (const p of parenthetical) collectReq(map, p, spell, mult); return; }
+  if (/^\s*[VSMvsm,;\/\s]+\s*$/.test(text)) return;
+  collectReq(map, text, spell, mult);
+}
+
 function requirements(spell, mult = 1) {
   const s = spell?.system ?? {}, f = spell?.flags?.add2e ?? {}, m = new Map();
-  for (const field of [s.composants_requis, s.composantsMateriels, s.composants_materiels, s.composantsMateriel, s.composant_materiel, s.composantMateriel, s.materiel, s.matériel, s.material, s.materialComponent, s.materialComponents, s.material_components, s.requiredComponents, s.componentsRequired, s.components?.material, s.components?.materials, s.composants, f.composants_requis, f.composants, f.components, f.requiredComponents]) collectReq(m, field, spell, mult);
+  for (const field of [s.composants_requis, s.composantsMateriels, s.composants_materiels, s.composantsMateriel, s.composant_materiel, s.composantMateriel, s.materiel, s.matériel, s.material, s.materialComponent, s.materialComponents, s.material_components, s.requiredComponents, s.componentsRequired, s.components?.material, s.components?.materials, f.composants_requis, f.composants, f.components, f.requiredComponents]) collectReq(m, field, spell, mult);
+  for (const field of [s.composants, s.composantes, s.components, f.composantes]) collectMaterialText(m, field, spell, mult);
   for (const tag of [...arr(s.tags), ...arr(s.effectTags), ...arr(f.tags), ...arr(f.effectTags)]) {
     const t = String(tag ?? "").trim();
     if (/^composant[:_]/i.test(t)) addReq(m, t.replace(/^composant[:_]/i, ""), 1, spell, mult);
@@ -173,7 +211,7 @@ function relevance(actor, componentItems) {
 
 function componentStockData(req) {
   const key = norm(req?.key ?? req?.name);
-  const name = String(req?.name ?? req?.key ?? "Composant").trim();
+  const name = cleanComponentName(req?.name ?? req?.key ?? "Composant");
   const stock = Math.max(20, Number(req?.quantity) || 1);
   return {
     name,
@@ -198,6 +236,44 @@ function componentStockData(req) {
       }
     }
   };
+}
+
+async function ensureVendorMinimumHp(vendor) {
+  if (!game.user?.isGM || !vendor?.update) return false;
+  const s = vendor.system ?? {};
+  const update = {};
+  for (const key of ["pdv", "points_de_coup", "pv", "pv_actuels", "pv_max", "points_de_vie", "points_de_vie_max"]) {
+    if (!(Number(s[key]) >= 1)) update[`system.${key}`] = 1;
+  }
+  if (!Object.keys(update).length) return false;
+  await vendor.update(update, { add2eReason: "vendor-minimum-hit-points" });
+  return true;
+}
+
+async function buyThroughVendor({ vendor, buyer, item, quantity: qty }) {
+  if (game.user?.isGM) return buy({ vendor, buyer, item, quantity: qty });
+  if (!vendor || !buyer || !item) return false;
+  qty = Math.max(1, Math.floor(Number(qty) || 1));
+  const total = priceCopper(item) * qty;
+  if (quantity(item) < qty) return alertBox("Stock insuffisant", `${item.name} : stock disponible ${quantity(item)}.`).then(() => false);
+  if (toCopperSafe(getMoney(buyer)) < total) return alertBox("Argent insuffisant", `${buyer.name} n’a pas assez d’argent. Prix : ${formatMoney(total)}.`).then(() => false);
+  if (!await alertConfirmBuy(item, qty, total)) return false;
+  game.socket?.emit?.("system.add2e", { type: SOCKET_BUY_V2, requestId: foundry.utils.randomID(), userId: game.user.id, vendorId: vendor.id, buyerId: buyer.id, buyerUuid: buyer.uuid, itemId: item.id, quantity: qty });
+  return true;
+}
+
+function toCopperSafe(money) {
+  const coins = game.add2e?.vendorMoney?.coins ?? [
+    { key: "pp", pc: 500 }, { key: "po", pc: 100 }, { key: "pe", pc: 50 }, { key: "pa", pc: 10 }, { key: "pc", pc: 1 }
+  ];
+  return coins.reduce((sum, c) => sum + (Number(money?.[c.key]) || 0) * c.pc, 0);
+}
+
+async function alertConfirmBuy(item, qty, total) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  const content = `<p>Acheter <b>${qty} × ${esc(item.name)}</b> pour <b>${formatMoney(total)}</b> ?</p>`;
+  if (DialogV2?.confirm) return DialogV2.confirm({ window: { title: "Confirmer l’achat" }, content, yes: { label: "Acheter" }, no: { label: "Annuler" }, modal: true });
+  return false;
 }
 
 class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
@@ -243,6 +319,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
   }
 
   async _prepareContext() {
+    await ensureVendorMinimumHp(this.vendor);
     await this._ensureMissingComponents();
     const stock = this._stock();
     const rel = this.buyer ? relevance(this.buyer, stock.filter(i => vendorKind(i) === "Composant")) : { byItem: new Map(), missing: [], knownCount: 0, preparedCount: 0 };
@@ -293,7 +370,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
     root.querySelector(".add2e-vendor-buyer-select")?.addEventListener("change", ev => { this.buyer = game.actors?.get?.(ev.currentTarget.value) ?? this.buyer; this.render({ force: true }); });
     root.querySelectorAll(".add2e-vendor-tabs button[data-tab]").forEach(b => b.addEventListener("click", ev => { this.activeTab = ev.currentTarget.dataset.tab || "all"; this._applyFilters(root); }));
     root.querySelector(".add2e-vendor-search-input")?.addEventListener("input", ev => { this.searchText = ev.currentTarget.value ?? ""; this._applyFilters(root); });
-    root.querySelectorAll(".add2e-vendor-buy").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); const qty = row.querySelector?.(".add2e-vendor-buy-qty")?.value ?? 1; const ok = await buy({ vendor: this.vendor, buyer: this.buyer, item, quantity: qty }); if (ok) this.render({ force: true }); }));
+    root.querySelectorAll(".add2e-vendor-buy").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); const qty = row.querySelector?.(".add2e-vendor-buy-qty")?.value ?? 1; const ok = await buyThroughVendor({ vendor: this.vendor, buyer: this.buyer, item, quantity: qty }); if (ok) this.render({ force: true }); }));
     root.querySelectorAll(".add2e-vendor-restock-set").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); const qty = row.querySelector?.(".add2e-vendor-restock-qty")?.value ?? 0; await setStock(item, qty); this.render({ force: true }); }));
     root.querySelectorAll(".add2e-vendor-assign").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); await this._assignItemDialog(item); this.render({ force: true }); }));
     root.querySelector(".add2e-vendor-restock-all")?.addEventListener("click", async () => { await restockAll(this.vendor); this.render({ force: true }); });
@@ -324,13 +401,32 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
   }
 }
 
+function vendorAppKey(vendor) {
+  return `${vendor?.id ?? "vendor"}:${game.user?.id ?? "user"}`;
+}
+
 export async function openVendor({ vendor = null, buyer = null } = {}) {
   vendor = vendor ?? findVendor();
   if (!vendor) vendor = await createVendor();
   if (!vendor) return null;
+  if (game.user?.isGM) await ensureVendorMinimumHp(vendor);
   buyer = buyer ?? getBuyer();
   if (!buyer && !game.user?.isGM) { await alertBox("Aucun acheteur", "Aucun personnage joueur n’est assigné ou sélectionné pour acheter chez ce vendeur."); return null; }
+  const key = vendorAppKey(vendor);
+  const registry = globalThis.__ADD2E_VENDOR_APP_REGISTRY ?? new Map();
+  globalThis.__ADD2E_VENDOR_APP_REGISTRY = registry;
+  const existing = registry.get(key);
+  if (existing) {
+    existing.vendor = vendor;
+    existing.buyer = buyer;
+    existing.render?.({ force: true });
+    existing.bringToFront?.();
+    return existing;
+  }
   const app = new Add2eVendorApp({ vendor, buyer });
+  const originalClose = app.close?.bind(app);
+  if (originalClose) app.close = async (...args) => { registry.delete(key); return originalClose(...args); };
+  registry.set(key, app);
   app.render({ force: true });
   return app;
 }
@@ -341,7 +437,7 @@ async function openVendorFromToken(token) {
   const now = Date.now();
   const key = `${vendor.id}:${game.user?.id ?? "user"}`;
   const last = globalThis.__ADD2E_VENDOR_LAST_OPEN ?? {};
-  if (last[key] && now - last[key] < 650) return true;
+  if (last[key] && now - last[key] < 1200) return true;
   last[key] = now;
   globalThis.__ADD2E_VENDOR_LAST_OPEN = last;
   await openVendor({ vendor, buyer: getBuyer() });
@@ -349,22 +445,21 @@ async function openVendorFromToken(token) {
 }
 
 function bindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV15) return;
+  if (!token || token.__add2eVendorBoundV16) return;
   if (!isVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV15 = true;
+  token.__add2eVendorBoundV16 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
-  const handler = () => window.setTimeout(() => openVendorFromToken(token), 0);
+  const handler = event => { event?.stopPropagation?.(); window.setTimeout(() => openVendorFromToken(token), 0); };
   try { token.on?.("pointertap", handler); } catch (_err) {}
-  try { token.on?.("click", handler); } catch (_err) {}
 }
 
 export function bindAllVendorTokens() { for (const token of canvas?.tokens?.placeables ?? []) bindVendorToken(token); }
 
 export function patchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V15) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V15 = true;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V16) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V16 = true;
   const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
   const proto = TokenClass?.prototype;
   if (proto && typeof proto._onClickLeft === "function") {
@@ -378,7 +473,6 @@ export function patchVendorTokenClick() {
   Hooks.on("canvasReady", bindAllVendorTokens);
   Hooks.on("createToken", () => window.setTimeout(bindAllVendorTokens, 100));
   Hooks.on("updateToken", () => window.setTimeout(bindAllVendorTokens, 100));
-  Hooks.on("controlToken", (token, controlled) => { if (controlled && isVendorActor(token?.actor)) window.setTimeout(() => openVendorFromToken(token), 0); });
 }
 
 export function registerVendorDirectoryButton() {
@@ -395,9 +489,31 @@ export function registerVendorDirectoryButton() {
   });
 }
 
+function registerVendorPurchaseSockets() {
+  if (globalThis.__ADD2E_VENDOR_BUY_V2_SOCKET_REGISTERED) return;
+  globalThis.__ADD2E_VENDOR_BUY_V2_SOCKET_REGISTERED = true;
+  game.socket?.on?.("system.add2e", async data => {
+    if (!data || typeof data !== "object") return;
+    if (data.type === SOCKET_BUY_RESULT_V2) {
+      if (data.userId !== game.user?.id) return;
+      data.ok ? ui.notifications?.info?.(data.message ?? "Achat effectué.") : ui.notifications?.warn?.(data.message ?? "Achat impossible.");
+      return;
+    }
+    if (data.type !== SOCKET_BUY_V2 || !isResponsibleGM()) return;
+    const vendor = game.actors?.get(data.vendorId);
+    const buyer = data.buyerUuid ? await fromUuid(data.buyerUuid).catch(() => null) : game.actors?.get(data.buyerId);
+    const item = vendor?.items?.get(data.itemId);
+    let result = { ok: false, message: "Achat impossible." };
+    try { result = await buyLocal({ vendor, buyer, item, quantity: data.quantity }, { confirm: false }); }
+    catch (e) { result = { ok: false, message: e?.message || "Erreur pendant l'achat." }; }
+    game.socket?.emit?.("system.add2e", { type: SOCKET_BUY_RESULT_V2, requestId: data.requestId, userId: data.userId, ok: !!result.ok, message: result.message });
+  });
+}
+
 export function registerUiGlobals() {
   game.add2e = game.add2e ?? {};
   game.add2e.openVendor = openVendor;
   game.add2e.vendorAppVersion = ADD2E_VENDOR_APP_VERSION;
   globalThis.ADD2E_VENDOR_APP_VERSION = ADD2E_VENDOR_APP_VERSION;
+  registerVendorPurchaseSockets();
 }
