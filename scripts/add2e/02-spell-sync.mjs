@@ -1,10 +1,10 @@
 // ============================================================
 // ADD2E — Synchronisation automatique des sorts
 // Source stricte : compendium add2e.sorts
-// Version : 2026-06-14-spell-sync-compendium-truth-reset-on-level-down-v1
+// Version : 2026-06-14-spell-sync-cleric-druid-only-reset-on-level-down-v2
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-06-14-spell-sync-compendium-truth-reset-on-level-down-v1";
+const ADD2E_SPELL_SYNC_VERSION = "2026-06-14-spell-sync-cleric-druid-only-reset-on-level-down-v2";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_PREUPDATE_LEVELS = globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS instanceof Map ? globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS : new Map();
@@ -143,9 +143,7 @@ function add2eSpellSyncClassLists(classItem) {
   const className = add2eSpellSyncNormalize(classItem?.name ?? sys.name ?? sys.label ?? sys.nom ?? "");
   if (className.includes("clerc") || className.includes("pretre") || className.includes("priest") || className.includes("paladin")) lists.push("clerc");
   if (className.includes("druide") || className.includes("druid")) lists.push("druide");
-  if (className.includes("magicien") || className.includes("mage") || className.includes("wizard")) lists.push("magicien");
-  if (className.includes("illusionniste") || className.includes("illusionist")) lists.push("illusionniste");
-  return [...new Set(lists)].filter(v => ["clerc", "druide", "magicien", "illusionniste"].includes(v));
+  return [...new Set(lists)].filter(v => ["clerc", "druide"].includes(v));
 }
 
 function add2eSpellSyncSpellLevel(system = {}) {
@@ -471,7 +469,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
   if (!actor || !classItem || classItem.type !== "classe") return { handled: false, imported: 0, deleted: 0 };
   const mode = options.mode === "missing" ? "missing" : "replace";
   const classLists = add2eSpellSyncClassLists(classItem);
-  if (!classLists.length) return { handled: false, imported: 0, deleted: 0, reason: "no-spell-list" };
+  if (!classLists.length) return { handled: false, imported: 0, deleted: 0, reason: "not-auto-synced-class" };
   const actorLevel = Math.max(1, Number(options.actorLevel ?? add2eSpellSyncClassLevel(actor, classItem)) || 1);
   const maxSpellLevel = add2eSpellSyncMaxSpellLevel(classItem, actorLevel);
   const minSpellLevel = Math.max(1, Number(options.minSpellLevel ?? 1) || 1);
@@ -549,8 +547,21 @@ async function add2eSyncNewSpellLevelsAfterActorLevelChange(actor, newLevel = nu
     const current = add2eSpellSyncLevelSignature(actor);
     const levelDecreased = add2eSpellSyncHasLevelDecrease(previous, current);
     const classItems = add2eSpellSyncClassItems(actor).filter(cls => add2eSpellSyncClassLists(cls).length);
-    if (!classItems.length) { await add2eSpellSyncSetLevelSignature(actor, current); return null; }
     let imported = 0, deleted = 0, reset = 0;
+
+    if (levelDecreased) {
+      const resetResult = await add2eResetActorSpellMemorization(actor, "level-down");
+      reset += resetResult.reset ?? 0;
+    }
+
+    if (!classItems.length) {
+      await add2eSpellSyncSetLevelSignature(actor, current);
+      const key = actor.uuid || actor.id;
+      if (key) ADD2E_SPELL_SYNC_PREUPDATE_LEVELS.delete(key);
+      if (reset) add2eRerenderActorSheet?.(actor, false);
+      return { handled: true, imported: 0, deleted: 0, reset, levelDecreased, skippedAutoSync: true };
+    }
+
     for (const classItem of classItems) {
       const level = Math.max(1, Number(newLevel ?? add2eSpellSyncClassLevel(actor, classItem)) || 1);
       const classLists = add2eSpellSyncClassLists(classItem);
@@ -560,8 +571,8 @@ async function add2eSyncNewSpellLevelsAfterActorLevelChange(actor, newLevel = nu
       const knownBeforePrune = Math.max(lastFlagMax, existingMaxBeforePrune);
       const prune = await add2ePruneActorSpellsForClassLevel(actor, classItem, level, { notify: true });
       deleted += prune?.deleted ?? 0;
-      if (levelDecreased || maxSpellLevel < knownBeforePrune) {
-        const resetResult = await add2eResetActorSpellMemorization(actor, levelDecreased ? "level-down" : "spell-cap-down");
+      if (!levelDecreased && maxSpellLevel < knownBeforePrune) {
+        const resetResult = await add2eResetActorSpellMemorization(actor, "spell-cap-down");
         reset += resetResult.reset ?? 0;
       }
       const previousKnownMax = Math.max(add2eSpellSyncGetLastMax(actor), add2eSpellSyncMaxExistingLevel(actor, classLists));
@@ -585,7 +596,12 @@ async function add2eResyncSelectedActorSpells(options = {}) {
   if (!actor) { ui.notifications.warn("Sélectionne un token ou définis un personnage utilisateur."); return null; }
   add2eInvalidateSpellSyncCache();
   let imported = 0, deleted = 0;
-  for (const classItem of add2eSpellSyncClassItems(actor).filter(cls => add2eSpellSyncClassLists(cls).length)) {
+  const autoClasses = add2eSpellSyncClassItems(actor).filter(cls => add2eSpellSyncClassLists(cls).length);
+  if (!autoClasses.length) {
+    ui.notifications.info("Aucune classe à auto-synchroniser. Seuls Clerc et Druide sont alimentés automatiquement.");
+    return { handled: true, imported: 0, deleted: 0, skippedAutoSync: true };
+  }
+  for (const classItem of autoClasses) {
     const result = await add2eSyncActorSpellsFromClass(actor, classItem, { mode: "missing", actorLevel: add2eSpellSyncClassLevel(actor, classItem), minSpellLevel: 1, showWait: options.showWait !== false, forceCacheRefresh: true });
     imported += result?.imported ?? 0;
     deleted += result?.deleted ?? 0;
