@@ -1,6 +1,6 @@
 // ============================================================================
-// ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-06-06-active-effects-expire-entry-world-time-v1
+// ADD2E — Point d'entrée : expiration des effets + états vitaux.
+// Version : 2026-06-01-active-effects-expire-split-entry-v4-native-tracker
 // ============================================================================
 
 import { ADD2E_VITAL_STATUS_CORE_VERSION } from "./add2e/18a-vital-status-core.mjs";
@@ -13,56 +13,24 @@ import {
   ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
   add2eExpireTemporaryEffectsForActor
 } from "./add2e/18c-active-effects-expiration.mjs";
-import {
-  ADD2E_TIME_ENGINE_VERSION,
-  add2eRegisterTimeEngineApi
-} from "./add2e/19a-time-engine.mjs";
-import {
-  ADD2E_ROUND_ENGINE_VERSION,
-  add2eRegisterRoundEngineHooks,
-  add2eRoundEngineOnCombatProgress
-} from "./add2e/19-round-engine.mjs";
-import {
-  ADD2E_WORLD_TIME_ENGINE_VERSION,
-  add2eRegisterWorldTimeEngine,
-  add2eOpenWorldTimeApplication,
-  add2eWorldTimeAdvance,
-  add2eWorldTimeExpireAllActors
-} from "./add2e/19b-world-time-engine.mjs";
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-06-06-active-effects-expire-entry-world-time-v1";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-06-01-active-effects-expire-split-entry-v4-native-tracker";
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
 globalThis.ADD2E_VITAL_STATUS_SYNC_VERSION = ADD2E_VITAL_STATUS_SYNC_VERSION;
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION;
-globalThis.ADD2E_TIME_ENGINE_VERSION = ADD2E_TIME_ENGINE_VERSION;
-globalThis.ADD2E_ROUND_ENGINE_VERSION = ADD2E_ROUND_ENGINE_VERSION;
-globalThis.ADD2E_WORLD_TIME_ENGINE_VERSION = ADD2E_WORLD_TIME_ENGINE_VERSION;
 globalThis.add2eSyncActorVitalStatus = add2eSyncActorVitalStatus;
 globalThis.add2eVitalRegisterStatusEffects = add2eVitalRegisterStatusEffects;
-globalThis.add2eExpireTemporaryEffectsForActor = add2eExpireTemporaryEffectsForActor;
-globalThis.add2eRoundEngineOnCombatProgress = add2eRoundEngineOnCombatProgress;
-globalThis.add2eOpenWorldTimeApplication = add2eOpenWorldTimeApplication;
-globalThis.add2eWorldTimeAdvance = add2eWorldTimeAdvance;
-globalThis.add2eWorldTimeExpireAllActors = add2eWorldTimeExpireAllActors;
 
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", {
   entry: globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION,
   core: ADD2E_VITAL_STATUS_CORE_VERSION,
   sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
-  expiration: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
-  timeEngine: ADD2E_TIME_ENGINE_VERSION,
-  roundEngine: ADD2E_ROUND_ENGINE_VERSION,
-  worldTimeEngine: ADD2E_WORLD_TIME_ENGINE_VERSION
+  expiration: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION
 });
 
-Hooks.once("init", add2eRegisterTimeEngineApi);
 Hooks.once("init", add2eVitalRegisterStatusEffects);
-Hooks.once("setup", add2eRegisterTimeEngineApi);
 Hooks.once("setup", add2eVitalRegisterStatusEffects);
-Hooks.once("ready", add2eRegisterTimeEngineApi);
 Hooks.once("ready", add2eVitalRegisterStatusEffects);
-Hooks.once("ready", add2eRegisterWorldTimeEngine);
-Hooks.once("ready", add2eRegisterRoundEngineHooks);
 
 Hooks.on("updateActor", async (actor, changed, options, userId) => {
   if (!game.user?.isGM) return;
@@ -81,8 +49,6 @@ Hooks.once("ready", () => {
   if (!game.user?.isGM) return;
 
   window.setTimeout(() => {
-    add2eRegisterTimeEngineApi();
-    add2eRegisterWorldTimeEngine();
     add2eVitalRegisterStatusEffects();
 
     for (const actor of game.actors ?? []) {
@@ -93,4 +59,39 @@ Hooks.once("ready", () => {
       if (token?.actor) add2eSyncActorVitalStatus(token.actor, { reason: "ready-token-scan" });
     }
   }, 500);
+});
+
+Hooks.on("deleteActiveEffect", async effect => {
+  if (!game.user?.isGM) return;
+  const actor = effect?.parent;
+  const temporaryItemId = effect?.flags?.add2e?.temporaryItemId;
+  if (actor?.documentName === "Actor" && temporaryItemId && actor.items?.get(temporaryItemId)) {
+    await actor.deleteEmbeddedDocuments("Item", [temporaryItemId]);
+  }
+});
+
+Hooks.on("updateCombat", async (combat, changed, options, userId) => {
+  if (!("round" in changed) && !("turn" in changed)) return;
+
+  const currentRound = combat.round ?? 0;
+  console.log("[ADD2E][AUTO-REMOVE] updateCombat déclenché :", { round: currentRound, changed });
+
+  try {
+    add2eVitalRegisterStatusEffects();
+
+    for (const combatant of combat.combatants || []) {
+      if (!combatant) continue;
+
+      const actor = combatant.actor;
+      if (!actor) {
+        console.warn("[ADD2E][AUTO-REMOVE] combatant sans actor :", combatant);
+        continue;
+      }
+
+      await add2eExpireTemporaryEffectsForActor(actor, currentRound);
+      await add2eSyncActorVitalStatus(actor, { reason: "updateCombat:scan" });
+    }
+  } catch (err) {
+    console.error("[ADD2E][AUTO-REMOVE] ERREUR dans updateCombat(auto-remove-effects) :", err);
+  }
 });
