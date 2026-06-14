@@ -13,7 +13,7 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-14-consumables-core-v8-holy-water-dialog";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-14-consumables-core-v9-stable-components-all-fields";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -25,6 +25,17 @@ const asArray = value => Array.isArray(value)
     : typeof value === "string"
       ? value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)
       : [value];
+
+function toFieldArray(value) {
+  if (value === null || value === undefined || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(toFieldArray).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value", "material", "materials", "components"]) {
+      if (value[key] !== undefined) return toFieldArray(value[key]);
+    }
+  }
+  return asArray(value);
+}
 
 async function componentAlert(message, title = "Composant manquant") {
   const clean = String(message || "Composant matériel manquant.").trim();
@@ -69,9 +80,12 @@ function itemTextFields(item) {
     flags.kind,
     flags.slug,
     flags.componentSlug,
-    ...asArray(system.tags),
-    ...asArray(system.effectTags),
-    ...asArray(flags.tags)
+    ...toFieldArray(system.tags),
+    ...toFieldArray(system.effectTags),
+    ...toFieldArray(system.effecttags),
+    ...toFieldArray(flags.tags),
+    ...toFieldArray(flags.effectTags),
+    ...toFieldArray(flags.effecttags)
   ].map(lower).filter(Boolean);
 }
 
@@ -79,25 +93,12 @@ function isKnownLooseComponentName(value) {
   const key = slug(value);
   if (!key) return false;
   const exact = new Set([
-    "eau_benite",
-    "eau_maudite",
-    "eau_benite_ou_maudite",
-    "eau_benite_maudite",
-    "symbole_sacre",
-    "gui",
-    "encens",
-    "poudre_d_argent",
-    "poudre_d_or",
-    "poudre_de_fer",
-    "sable",
-    "soufre",
-    "phosphore",
-    "ambre",
-    "perle",
-    "miroir"
+    "eau_benite", "eau_maudite", "eau_benite_ou_maudite", "eau_benite_maudite",
+    "symbole_sacre", "gui", "encens", "poudre_d_argent", "poudre_d_or", "poudre_de_fer",
+    "sable", "soufre", "phosphore", "ambre", "perle", "miroir"
   ]);
   if (exact.has(key)) return true;
-  return /(^|_)(eau_benite|eau_maudite|encens|gui|soufre|phosphore|poudre_d_argent|poudre_d_or|poudre_de_fer)(_|$)/.test(key);
+  return /(^|_)(eau_benite|eau_maudite|symbole_sacre|encens|gui|soufre|phosphore|poudre_d_argent|poudre_d_or|poudre_de_fer)(_|$)/.test(key);
 }
 
 function isSpellComponentItem(item) {
@@ -120,6 +121,7 @@ function isOnlyComponentCode(value) {
 
 function cleanComponentName(value) {
   let text = String(value ?? "").trim();
+  text = text.replace(/[()\[\]{}]/g, " ").replace(/\s+/g, " ").trim();
   text = text.replace(/[.!?;:]+$/g, "").trim();
   text = text.replace(/^d['’]\s*/i, "");
   text = text.replace(/^(un|une)?\s*peu\s+de\s+/i, "");
@@ -127,11 +129,13 @@ function cleanComponentName(value) {
   text = text.replace(/^(quelques|plusieurs)\s+/i, "");
   text = text.replace(/^petit morceau de\s+/i, "");
   text = text.replace(/^morceau de\s+/i, "");
+  text = text.replace(/^poignee de\s+/i, "");
+  text = text.replace(/^poignée de\s+/i, "");
   return text.trim();
 }
 
 function rawRequirementName(value) {
-  if (typeof value === "object" && value) return value.name ?? value.nom ?? value.label ?? value.item ?? value.component ?? value.composant ?? value.slug ?? value.id;
+  if (typeof value === "object" && value) return value.name ?? value.nom ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
   return value;
 }
 
@@ -201,8 +205,9 @@ function collectRequirement(out, value) {
     return;
   }
   if (typeof value === "string") {
-    for (const part of asArray(value)) {
-      const alternatives = String(part).split(/\bou\b/gi).map(v => v.trim()).filter(Boolean);
+    for (const rawPart of asArray(value)) {
+      const part = String(rawPart ?? "").replace(/[()\[\]{}]/g, " ").replace(/\s+/g, " ").trim();
+      const alternatives = part.split(/\bou\b/gi).map(v => v.trim()).filter(Boolean);
       if (alternatives.length > 1) addAlternativeRequirement(out, alternatives);
       else addRequirement(out, part, 1);
     }
@@ -223,7 +228,14 @@ function collectRequirement(out, value) {
 function spellHasMaterialComponent(sort) {
   const system = sort?.system ?? {};
   const flags = sort?.flags?.add2e ?? {};
-  const text = [system.composantes, system.components, flags.composantes, flags.components].flatMap(asArray).map(lower).join(" ");
+  const text = [
+    system.composantes,
+    system.components,
+    system.componentes,
+    flags.composantes,
+    flags.components,
+    flags.componentes
+  ].flatMap(toFieldArray).map(lower).join(" ");
   return /(^|[^a-z])m([^a-z]|$)|materiel|matériel|material/.test(text);
 }
 
@@ -231,10 +243,14 @@ function spellComponentRequirements(sort) {
   const system = sort?.system ?? {};
   const flags = sort?.flags?.add2e ?? {};
   const out = [];
-  const fields = [
-    system.composants_requis,
-    system.composantsMateriels,
+  const primaryFields = [
     system.composants_materiels,
+    system.composantsMateriels,
+    sort?.composants_materiels
+  ].filter(v => v !== undefined && v !== null && v !== "");
+  const fallbackFields = [
+    system.composants_requis,
+    system.composantsMateriel,
     system.composant_materiel,
     system.composantMateriel,
     system.materiel,
@@ -242,15 +258,27 @@ function spellComponentRequirements(sort) {
     system.material,
     system.materialComponent,
     system.materialComponents,
+    system.material_components,
     system.requiredComponents,
     system.componentsRequired,
+    system.components?.material,
+    system.components?.materials,
+    system.components?.materialComponent,
+    system.components?.materialComponents,
+    system.composants_materiels_objets,
+    sort?.materialComponents,
+    sort?.composants_requis,
+    sort?.composants_materiels_objets,
     flags.composants_requis,
     flags.composants,
     flags.components,
-    flags.requiredComponents
-  ];
+    flags.requiredComponents,
+    flags.effectTags,
+    flags.effecttags
+  ].filter(v => v !== undefined && v !== null && v !== "");
+  const fields = primaryFields.length ? primaryFields : fallbackFields;
   for (const field of fields) collectRequirement(out, field);
-  for (const tag of [...asArray(system.tags), ...asArray(system.effectTags), ...asArray(flags.tags)]) {
+  for (const tag of [...toFieldArray(system.tags), ...toFieldArray(system.effectTags), ...toFieldArray(system.effecttags), ...toFieldArray(flags.tags), ...toFieldArray(flags.effectTags), ...toFieldArray(flags.effecttags)]) {
     const text = String(tag ?? "").trim();
     if (/^composant[:_]/i.test(text)) addRequirement(out, text.replace(/^composant[:_]/i, ""), 1);
   }
@@ -258,9 +286,10 @@ function spellComponentRequirements(sort) {
 }
 
 function componentKeyVariants(value) {
-  const base = slug(String(value ?? "").replace(/^(composant|component|spell_component)[:_]/i, ""));
+  const base = slug(cleanComponentName(String(value ?? "").replace(/^(composant|component|spell_component)[:_]/i, "")));
   const keys = new Set();
   if (base) keys.add(base);
+  if (base.endsWith("s") && base.length > 4) keys.add(base.replace(/s+$/g, ""));
   if (base === "eau_benite_ou_maudite" || base === "eau_benite_maudite" || (base.includes("eau_benite") && base.includes("maudite"))) {
     keys.add("eau_benite");
     keys.add("eau_maudite");
@@ -274,9 +303,7 @@ function componentKeyVariants(value) {
 
 function componentKeys(item) {
   const keys = new Set();
-  for (const field of itemTextFields(item)) {
-    for (const key of componentKeyVariants(field)) keys.add(key);
-  }
+  for (const field of itemTextFields(item)) for (const key of componentKeyVariants(field)) keys.add(key);
   return Array.from(keys).filter(Boolean);
 }
 
@@ -341,7 +368,7 @@ export function patchActorSheetConsumablesData() {
 }
 
 function serializableReservation(result) {
-  return { ok: !!result?.ok, blocked: !!result?.blocked, skipped: !!result?.skipped, message: result?.message, missing: result?.missing, actorId: result?.actorId, sortId: result?.sortId, sortName: result?.sortName, consumed: (result?.consumed ?? []).map(entry => ({ itemId: entry.itemId, itemName: entry.itemName, before: entry.before, after: entry.after, quantity: entry.quantity, requirement: entry.requirement })) };
+  return { ok: !!result?.ok, blocked: !!result?.blocked, skipped: !!result?.skipped, message: result?.message, missing: result?.missing, actorId: result?.actorId, sortId: result?.sortId, sortName: result?.sortName, consumed: (result?.consumed ?? []).map(entry => ({ itemId: entry.itemId, itemName: entry.itemName, before: entry.before, after: entry.after, quantity: entry.quantity, requirement: entry.requirement, groupRequirement: entry.groupRequirement })) };
 }
 
 async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
@@ -364,8 +391,6 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
     await item.update(quantityUpdate(after), { add2eReason: "spell-component-reserved-gm" });
     consumed.push({ item, itemId: item.id, itemName: item.name, requirement: selectedRequirement, groupRequirement: found?.group, before, after, quantity: selectedRequirement.quantity });
   }
-  for (const entry of consumed) if (entry.after <= 0 && actor.items?.has?.(entry.itemId)) await entry.item.delete({ add2eReason: "spell-component-zero-removed" });
-  console.log("[ADD2E][CONSUMABLES][COMPONENTS][RESERVED][GM]", { actor: actor?.name, sort: sort?.name, consumed: consumed.map(c => ({ item: c.itemName, before: c.before, after: c.after })) });
   return { ok: true, blocked: false, actorId: actor?.id, sortId: sort?.id, sortName: sort?.name, consumed };
 }
 
@@ -377,7 +402,6 @@ async function refundSpellComponentsLocal(reservation) {
     const item = actor.items?.get(entry.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === entry.itemName && isSpellComponentItem(i));
     if (item) await item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-refund-gm" });
   }
-  console.log("[ADD2E][CONSUMABLES][COMPONENTS][REFUND][GM]", { actor: actor?.name, sort: reservation?.sortName, count: entries.length });
   return true;
 }
 
@@ -416,8 +440,8 @@ export async function add2eRefundSpellComponents(reservation) {
 
 export function registerGlobals() {
   game.add2e = game.add2e ?? {};
-  game.add2e.consumables = { add2eReserveSpellComponents, add2eRefundSpellComponents, prepareActorSheetConsumables };
-  globalThis.ADD2E_CONSUMABLES = game.add2e.consumables;
+  game.add2e.consumables = { ...(game.add2e.consumables ?? {}), add2eReserveSpellComponents, add2eRefundSpellComponents, prepareActorSheetConsumables };
+  globalThis.ADD2E_CONSUMABLES = { ...(globalThis.ADD2E_CONSUMABLES ?? {}), ...game.add2e.consumables };
   globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
   globalThis.add2eReserveSpellComponents = add2eReserveSpellComponents;
   globalThis.add2eRefundSpellComponents = add2eRefundSpellComponents;
@@ -444,7 +468,7 @@ export function registerSockets() {
     }
     let ok = false;
     try { ok = await refundSpellComponentsLocal(payload.reservation); }
-    catch (err) { console.warn("[ADD2E][CONSUMABLES][COMPONENTS][REFUND][GM]", err); }
+    catch (err) { console.warn("[ADD2E][CONSUMABLES][COMPONENTS][REFUND]", err); }
     game.socket.emit("system.add2e", { type: SOCKET_COMPONENT_RESULT, requestId: payload.requestId, userId: payload.userId, result: { ok } });
   });
 }
