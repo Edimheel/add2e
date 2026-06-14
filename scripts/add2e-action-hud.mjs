@@ -1,19 +1,13 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-06-14-v43-components-and-free-drag
+// Version : 2026-06-14-v44-strict-components-position-reset
 // Le HUD reste une interface : les actions délèguent aux fonctions système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-06-14-v43-components-and-free-drag";
+const ADD2E_ACTION_HUD_VERSION = "2026-06-14-v44-strict-components-position-reset";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v43";
-const LEGACY_STORAGE_KEYS = [
-  "add2e.actionHud.state.v42",
-  "add2e.actionHud.state.v40",
-  "add2e.actionHud.state.v39",
-  "add2e.actionHud.state.v34",
-  "add2e.actionHud.layout.v1"
-];
+const STORAGE_KEY = "add2e.actionHud.state.v44";
+const LEGACY_STORAGE_KEYS = [];
 const TAG = "[ADD2E][ACTION_HUD]";
 const EDGE_PAD = 0;
 const HANDLE_VISIBLE = 42;
@@ -143,17 +137,16 @@ function relevant(actor) {
 }
 
 function defaultState() {
-  return { left: 116, top: null, bottom: 22, width: 640, maxMenuHeight: 360, collapsed: false };
+  return { left: 80, top: 80, bottom: null, width: 640, maxMenuHeight: 360, collapsed: false };
 }
 
 function normalizeLoadedState(raw = {}) {
   const normalized = { ...defaultState(), ...(raw || {}) };
   normalized.width = num(normalized.width, 640);
   normalized.maxMenuHeight = num(normalized.maxMenuHeight ?? normalized.menuHeight, 360);
-  normalized.left = num(normalized.left, 116);
-  if (Number.isFinite(Number(normalized.top))) normalized.top = Number(normalized.top);
-  else if (Number.isFinite(Number(normalized.bottom))) normalized.top = Math.max(EDGE_PAD, window.innerHeight - 110 - Number(normalized.bottom));
-  else normalized.top = null;
+  normalized.left = num(normalized.left, 80);
+  normalized.top = Number.isFinite(Number(normalized.top)) ? Number(normalized.top) : 80;
+  normalized.bottom = null;
   return normalized;
 }
 
@@ -186,6 +179,14 @@ function saveState(partial = {}) {
   } catch (_e) {}
 }
 
+function resetHudPosition() {
+  const collapsed = loadState().collapsed === true;
+  state = { ...defaultState(), collapsed };
+  saveState(state);
+  applyGeometry(hud(), true);
+  return state;
+}
+
 function applyGeometry(element = hud(), force = false) {
   if (!element || (!force && (dragging || resizing))) return;
   const current = loadState();
@@ -199,9 +200,9 @@ function applyGeometry(element = hud(), force = false) {
   const maxTop = Math.max(EDGE_PAD, viewportHeight - Math.min(elementHeight, HANDLE_VISIBLE));
 
   current.width = clamp(num(current.width, 640), 360, Math.max(420, viewportWidth));
-  current.left = clamp(num(current.left, 116), minLeft, maxLeft);
-  const fallbackTop = Math.max(EDGE_PAD, viewportHeight - Math.min(elementHeight, 110) - num(current.bottom, 22));
-  current.top = clamp(Number.isFinite(Number(current.top)) ? Number(current.top) : fallbackTop, minTop, maxTop);
+  current.left = clamp(num(current.left, 80), minLeft, maxLeft);
+  current.top = clamp(Number.isFinite(Number(current.top)) ? Number(current.top) : 80, minTop, maxTop);
+  current.bottom = null;
   current.maxMenuHeight = clamp(num(current.maxMenuHeight, 360), 120, Math.max(160, viewportHeight - 60));
 
   element.style.left = `${Math.round(current.left)}px`;
@@ -299,9 +300,18 @@ function isOnlyComponentCode(value) {
   return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text);
 }
 
+function isBadComponentName(value) {
+  const text = lower(value);
+  if (!text || isOnlyComponentCode(text)) return true;
+  if (/manuel|joueur|optionnel|optional|alternative|requise|requis|required|creation|création|destruction|composantes?|components?/.test(text)) return true;
+  if (text.length > 48) return true;
+  if (text.split(/\s+/).length > 5) return true;
+  return false;
+}
+
 function addComponentRequirement(out, rawName, rawQty = 1) {
   const name = String(rawName ?? "").trim();
-  if (!name || isOnlyComponentCode(name)) return;
+  if (isBadComponentName(name)) return;
   const key = slug(name);
   if (!key) return;
   const quantity = Math.max(1, Math.floor(num(rawQty, 1)));
@@ -338,18 +348,9 @@ function componentRequirements(sort) {
     system.composantsMateriel,
     system.composant_materiel,
     system.composantMateriel,
-    system.materiel,
-    system.matériel,
-    system.material,
-    system.materialComponent,
-    system.materialComponents,
     system.requiredComponents,
     system.componentsRequired,
-    system.components?.material,
-    system.components?.materials,
     flags.composants_requis,
-    flags.composants,
-    flags.components,
     flags.requiredComponents
   ];
 
@@ -703,7 +704,7 @@ function hudHtml(actor, token = null) {
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${activeTab === key ? "active" : ""}" data-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="${activeTab === key ? "active" : ""}" data-section="${key}">${html}</section>`;
 
-  return `<div class="a2e-hud-shell"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellRows(actor))}${section("capacites", featureRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
+  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellRows(actor))}${section("capacites", featureRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
 }
 
 function renderHud(actor = null, token = null, { reason = "render" } = {}) {
@@ -946,10 +947,12 @@ Hooks.once("init", () => {
   };
   game.add2e.closeActionHud = closeHud;
   game.add2e.refreshActionHud = () => hudActor ? renderHud(hudActor, hudToken, { reason: "api-refresh-current" }) : refreshHud("api-refresh");
+  game.add2e.resetActionHudPosition = resetHudPosition;
   Object.assign(globalThis, {
     add2eRenderActionHud: renderHud,
     add2eRefreshActionHud: refreshHud,
     add2eCloseActionHud: closeHud,
+    add2eResetActionHudPosition: resetHudPosition,
     add2eHudCheck: () => ({
       version: ADD2E_ACTION_HUD_VERSION,
       actor: currentActor()?.name ?? null,
