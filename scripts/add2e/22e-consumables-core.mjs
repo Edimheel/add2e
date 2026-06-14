@@ -13,7 +13,7 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-14-consumables-core-v9-stable-components-all-fields";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-14-consumables-core-v10-empty-primary-fallback";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -37,6 +37,15 @@ function toFieldArray(value) {
   return asArray(value);
 }
 
+function componentSettingEnabled() {
+  try {
+    if (!game?.settings?.settings?.has?.("add2e.gestionComposantsSorts")) return true;
+    return !!game.settings.get("add2e", "gestionComposantsSorts");
+  } catch (_err) {
+    return true;
+  }
+}
+
 async function componentAlert(message, title = "Composant manquant") {
   const clean = String(message || "Composant matériel manquant.").trim();
   const DialogV2 = foundry?.applications?.api?.DialogV2;
@@ -44,7 +53,6 @@ async function componentAlert(message, title = "Composant manquant") {
     <h3 style="margin:0 0 0.45rem 0;"><i class="fas fa-pouch"></i> ${esc(title)}</h3>
     <p style="margin:0;">${esc(clean)}</p>
   </div>`;
-
   if (DialogV2?.alert) {
     await DialogV2.alert({ window: { title }, content, ok: { label: "Compris" }, modal: true });
     return true;
@@ -228,26 +236,20 @@ function collectRequirement(out, value) {
 function spellHasMaterialComponent(sort) {
   const system = sort?.system ?? {};
   const flags = sort?.flags?.add2e ?? {};
-  const text = [
-    system.composantes,
-    system.components,
-    system.componentes,
-    flags.composantes,
-    flags.components,
-    flags.componentes
-  ].flatMap(toFieldArray).map(lower).join(" ");
+  const text = [system.composantes, system.components, system.componentes, flags.composantes, flags.components, flags.componentes]
+    .flatMap(toFieldArray).map(lower).join(" ");
   return /(^|[^a-z])m([^a-z]|$)|materiel|matériel|material/.test(text);
+}
+
+function collectFields(out, fields) {
+  for (const field of fields.filter(v => v !== undefined && v !== null && v !== "")) collectRequirement(out, field);
 }
 
 function spellComponentRequirements(sort) {
   const system = sort?.system ?? {};
   const flags = sort?.flags?.add2e ?? {};
   const out = [];
-  const primaryFields = [
-    system.composants_materiels,
-    system.composantsMateriels,
-    sort?.composants_materiels
-  ].filter(v => v !== undefined && v !== null && v !== "");
+  const primaryFields = [system.composants_materiels, system.composantsMateriels, sort?.composants_materiels];
   const fallbackFields = [
     system.composants_requis,
     system.composantsMateriel,
@@ -275,9 +277,11 @@ function spellComponentRequirements(sort) {
     flags.requiredComponents,
     flags.effectTags,
     flags.effecttags
-  ].filter(v => v !== undefined && v !== null && v !== "");
-  const fields = primaryFields.length ? primaryFields : fallbackFields;
-  for (const field of fields) collectRequirement(out, field);
+  ];
+
+  collectFields(out, primaryFields);
+  if (!out.length) collectFields(out, fallbackFields);
+
   for (const tag of [...toFieldArray(system.tags), ...toFieldArray(system.effectTags), ...toFieldArray(system.effecttags), ...toFieldArray(flags.tags), ...toFieldArray(flags.effectTags), ...toFieldArray(flags.effecttags)]) {
     const text = String(tag ?? "").trim();
     if (/^composant[:_]/i.test(text)) addRequirement(out, text.replace(/^composant[:_]/i, ""), 1);
@@ -353,7 +357,13 @@ export function prepareActorSheetConsumables(data) {
   data.listeCarquois = carquois;
   data.listeSacocheComposants = sacoche;
   data.listeObjetsDivers = divers;
-  data.add2eConsumablesSummary = { carquoisCount: carquois.length, sacocheCount: sacoche.length, objetsDiversCount: divers.length, carquoisQuantity: carquois.reduce((sum, item) => sum + quantity(item), 0), sacocheQuantity: sacoche.reduce((sum, item) => sum + quantity(item), 0) };
+  data.add2eConsumablesSummary = {
+    carquoisCount: carquois.length,
+    sacocheCount: sacoche.length,
+    objetsDiversCount: divers.length,
+    carquoisQuantity: carquois.reduce((sum, item) => sum + quantity(item), 0),
+    sacocheQuantity: sacoche.reduce((sum, item) => sum + quantity(item), 0)
+  };
   return data;
 }
 
@@ -363,15 +373,37 @@ export function patchActorSheetConsumablesData() {
   if (typeof proto.getData !== "function") return false;
   proto.__add2eConsumablesSheetDataV2 = true;
   const originalGetData = proto.getData;
-  proto.getData = async function add2eConsumablesGetData(...args) { const data = await originalGetData.apply(this, args); return prepareActorSheetConsumables(data); };
+  proto.getData = async function add2eConsumablesGetData(...args) {
+    const data = await originalGetData.apply(this, args);
+    return prepareActorSheetConsumables(data);
+  };
   return true;
 }
 
 function serializableReservation(result) {
-  return { ok: !!result?.ok, blocked: !!result?.blocked, skipped: !!result?.skipped, message: result?.message, missing: result?.missing, actorId: result?.actorId, sortId: result?.sortId, sortName: result?.sortName, consumed: (result?.consumed ?? []).map(entry => ({ itemId: entry.itemId, itemName: entry.itemName, before: entry.before, after: entry.after, quantity: entry.quantity, requirement: entry.requirement, groupRequirement: entry.groupRequirement })) };
+  return {
+    ok: !!result?.ok,
+    blocked: !!result?.blocked,
+    skipped: !!result?.skipped,
+    message: result?.message,
+    missing: result?.missing,
+    actorId: result?.actorId,
+    sortId: result?.sortId,
+    sortName: result?.sortName,
+    consumed: (result?.consumed ?? []).map(entry => ({
+      itemId: entry.itemId,
+      itemName: entry.itemName,
+      before: entry.before,
+      after: entry.after,
+      quantity: entry.quantity,
+      requirement: entry.requirement,
+      groupRequirement: entry.groupRequirement
+    }))
+  };
 }
 
 async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
+  if (!componentSettingEnabled()) return { ok: true, skipped: true, consumed: [] };
   const reqs = Array.isArray(requirements) && requirements.length ? requirements : spellComponentRequirements(sort);
   if (!reqs.length) {
     if (!spellHasMaterialComponent(sort)) return { ok: true, skipped: true, consumed: [] };
@@ -411,7 +443,11 @@ function requestGmComponentOperation(operation, payload) {
     const requestId = payload.requestId ?? foundry.utils.randomID();
     let done = false;
     const finish = result => { if (done) return; done = true; try { game.socket.off?.("system.add2e", handler); } catch (_e) {} resolve(result); };
-    const handler = data => { if (data?.type !== SOCKET_COMPONENT_RESULT) return; if (data.requestId !== requestId || data.userId !== game.user?.id) return; finish(data.result ?? { ok: false, blocked: true, message: "Réponse MJ invalide." }); };
+    const handler = data => {
+      if (data?.type !== SOCKET_COMPONENT_RESULT) return;
+      if (data.requestId !== requestId || data.userId !== game.user?.id) return;
+      finish(data.result ?? { ok: false, blocked: true, message: "Réponse MJ invalide." });
+    };
     game.socket.on?.("system.add2e", handler);
     window.setTimeout(() => finish({ ok: false, blocked: true, message: "Aucune réponse du MJ pour les composants de sort." }), 7000);
     game.socket.emit("system.add2e", { type: GM_OPERATION_TYPE, operation, payload: { ...payload, requestId, userId: game.user?.id } });
@@ -419,6 +455,7 @@ function requestGmComponentOperation(operation, payload) {
 }
 
 export async function add2eReserveSpellComponents(actor, sort) {
+  if (!componentSettingEnabled()) return { ok: true, skipped: true, consumed: [] };
   const result = game.user?.isGM
     ? await reserveSpellComponentsLocal(actor, sort)
     : await requestGmComponentOperation(GM_OPERATION_COMPONENT_RESERVE, {
