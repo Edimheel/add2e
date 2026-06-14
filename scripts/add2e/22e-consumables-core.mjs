@@ -9,10 +9,11 @@ import {
   quantityUpdate,
   num,
   lower,
-  slug
+  slug,
+  esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-12-consumables-core-v7-stable-source-alternatives";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-14-consumables-core-v8-holy-water-dialog";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -25,11 +26,32 @@ const asArray = value => Array.isArray(value)
       ? value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)
       : [value];
 
+async function componentAlert(message, title = "Composant manquant") {
+  const clean = String(message || "Composant matériel manquant.").trim();
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  const content = `<div class="add2e-dialog add2e-consumable-alert">
+    <h3 style="margin:0 0 0.45rem 0;"><i class="fas fa-pouch"></i> ${esc(title)}</h3>
+    <p style="margin:0;">${esc(clean)}</p>
+  </div>`;
+
+  if (DialogV2?.alert) {
+    await DialogV2.alert({ window: { title }, content, ok: { label: "Compris" }, modal: true });
+    return true;
+  }
+  if (DialogV2?.confirm) {
+    await DialogV2.confirm({ window: { title }, content, yes: { label: "Compris" }, no: { label: "Fermer" }, modal: true });
+    return true;
+  }
+  ui.notifications?.warn?.(clean);
+  return false;
+}
+
 function itemTextFields(item) {
   const system = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
   return [
     item?.name,
+    system.nom,
     system.categorie,
     system.category,
     system.sousType,
@@ -41,6 +63,8 @@ function itemTextFields(item) {
     system.slug,
     system.composant,
     system.component,
+    system.composantSlug,
+    system.componentSlug,
     flags.vendorKind,
     flags.kind,
     flags.slug,
@@ -49,6 +73,31 @@ function itemTextFields(item) {
     ...asArray(system.effectTags),
     ...asArray(flags.tags)
   ].map(lower).filter(Boolean);
+}
+
+function isKnownLooseComponentName(value) {
+  const key = slug(value);
+  if (!key) return false;
+  const exact = new Set([
+    "eau_benite",
+    "eau_maudite",
+    "eau_benite_ou_maudite",
+    "eau_benite_maudite",
+    "symbole_sacre",
+    "gui",
+    "encens",
+    "poudre_d_argent",
+    "poudre_d_or",
+    "poudre_de_fer",
+    "sable",
+    "soufre",
+    "phosphore",
+    "ambre",
+    "perle",
+    "miroir"
+  ]);
+  if (exact.has(key)) return true;
+  return /(^|_)(eau_benite|eau_maudite|encens|gui|soufre|phosphore|poudre_d_argent|poudre_d_or|poudre_de_fer)(_|$)/.test(key);
 }
 
 function isSpellComponentItem(item) {
@@ -61,7 +110,7 @@ function isSpellComponentItem(item) {
   if (fields.some(v => v.startsWith("composant:") || v.startsWith("component:") || v.startsWith("spell_component:"))) return true;
   if (fields.some(v => v.includes("composant") && v.includes("sort"))) return true;
   if (fields.some(v => v.includes("spell") && v.includes("component"))) return true;
-  return false;
+  return isKnownLooseComponentName(item?.name) || isKnownLooseComponentName(item?.system?.nom);
 }
 
 function isOnlyComponentCode(value) {
@@ -100,10 +149,16 @@ function isStructuredAlternative(value) {
   return consommation.includes("optionnel") && condition.length > 0;
 }
 
+function requirementKey(rawName) {
+  const key = slug(cleanComponentName(rawName));
+  if (key === "eau_benite_ou_maudite" || key === "eau_benite_maudite") return "eau_benite";
+  return key;
+}
+
 function makeRequirement(rawName, rawQty = 1) {
   const name = cleanComponentName(rawName);
   if (!name || isOnlyComponentCode(name)) return null;
-  const key = slug(name);
+  const key = requirementKey(name);
   if (!key) return null;
   const qty = Math.max(1, Math.floor(num(rawQty, 1)));
   return { name, key, quantity: qty };
@@ -202,15 +257,48 @@ function spellComponentRequirements(sort) {
   return out;
 }
 
+function componentKeyVariants(value) {
+  const base = slug(String(value ?? "").replace(/^(composant|component|spell_component)[:_]/i, ""));
+  const keys = new Set();
+  if (base) keys.add(base);
+  if (base === "eau_benite_ou_maudite" || base === "eau_benite_maudite" || (base.includes("eau_benite") && base.includes("maudite"))) {
+    keys.add("eau_benite");
+    keys.add("eau_maudite");
+    keys.add("eau_benite_ou_maudite");
+    keys.add("eau_benite_maudite");
+  }
+  if (base === "eau_benite") keys.add("eau_benite_ou_maudite");
+  if (base === "eau_maudite") keys.add("eau_benite_ou_maudite");
+  return Array.from(keys).filter(Boolean);
+}
+
 function componentKeys(item) {
-  return itemTextFields(item).map(v => slug(String(v ?? "").replace(/^(composant|component|spell_component)[:_]/i, ""))).filter(Boolean);
+  const keys = new Set();
+  for (const field of itemTextFields(item)) {
+    for (const key of componentKeyVariants(field)) keys.add(key);
+  }
+  return Array.from(keys).filter(Boolean);
+}
+
+function requirementKeys(requirement) {
+  return componentKeyVariants(requirement?.key ?? requirement?.name);
+}
+
+function compatibleComponentKey(itemKey, requirementKey) {
+  if (!itemKey || !requirementKey) return false;
+  if (itemKey === requirementKey) return true;
+  if (itemKey.includes(requirementKey) || requirementKey.includes(itemKey)) return true;
+  if ((requirementKey === "eau_benite" || requirementKey === "eau_maudite") && (itemKey === "eau_benite_ou_maudite" || itemKey === "eau_benite_maudite")) return true;
+  return false;
 }
 
 function findActorComponent(actor, requirement) {
   const items = Array.from(actor?.items ?? []).filter(isSpellComponentItem);
-  return items.find(item => componentKeys(item).includes(requirement.key))
-    ?? items.find(item => componentKeys(item).some(key => key && (key.includes(requirement.key) || requirement.key.includes(key))))
-    ?? null;
+  const reqKeys = requirementKeys(requirement);
+  return items.find(item => {
+    const keys = componentKeys(item);
+    return reqKeys.some(reqKey => keys.some(itemKey => compatibleComponentKey(itemKey, reqKey)));
+  }) ?? null;
 }
 
 function findActorComponentForRequirement(actor, requirement) {
@@ -307,10 +395,16 @@ function requestGmComponentOperation(operation, payload) {
 }
 
 export async function add2eReserveSpellComponents(actor, sort) {
-  if (game.user?.isGM) return reserveSpellComponentsLocal(actor, sort);
-  const requirements = spellComponentRequirements(sort);
-  if (!requirements.length && !spellHasMaterialComponent(sort)) return { ok: true, skipped: true, consumed: [] };
-  return requestGmComponentOperation(GM_OPERATION_COMPONENT_RESERVE, { actorId: actor?.id, sortId: sort?.id, sortName: sort?.name, requirements });
+  const result = game.user?.isGM
+    ? await reserveSpellComponentsLocal(actor, sort)
+    : await requestGmComponentOperation(GM_OPERATION_COMPONENT_RESERVE, {
+      actorId: actor?.id,
+      sortId: sort?.id,
+      sortName: sort?.name,
+      requirements: spellComponentRequirements(sort)
+    });
+  if (result?.blocked) await componentAlert(result.message || "Composant matériel manquant.");
+  return result;
 }
 
 export async function add2eRefundSpellComponents(reservation) {
