@@ -1,5 +1,5 @@
 // ADD2E — ApplicationV2 vendeur : onglets, recherche, achats et restock MJ.
-// Version : 2026-06-14-vendor-token-buy-components-v4
+// Version : 2026-06-14-vendor-player-safe-components-v5
 
 import {
   isVendorActor,
@@ -12,7 +12,6 @@ import {
   priceCopper,
   formatMoney,
   getMoney,
-  buy,
   buyLocal,
   setStock,
   restockAll,
@@ -23,7 +22,7 @@ import {
   lower
 } from "./22a-vendor-core.mjs";
 
-const ADD2E_VENDOR_APP_VERSION = "2026-06-14-vendor-token-buy-components-v4";
+const ADD2E_VENDOR_APP_VERSION = "2026-06-14-vendor-player-safe-components-v5";
 const SOCKET_BUY_V2 = "ADD2E_VENDOR_BUY_REQUEST_V2";
 const SOCKET_BUY_RESULT_V2 = "ADD2E_VENDOR_BUY_RESULT_V2";
 
@@ -118,7 +117,40 @@ function collectMaterialText(map, value, spell, mult) {
   collectReq(map, text, spell, mult);
 }
 
-function requirements(spell, mult = 1) {
+function spellNameKeys(spell) {
+  const s = spell?.system ?? {}, f = spell?.flags?.add2e ?? {};
+  return uniq([spell?.name, s.nom, s.name, s.slug, f.slug, f.importKey, f.originalName].map(norm));
+}
+
+function associatedSpellNames(item) {
+  const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
+  return uniq([
+    ...arr(s.sorts_associes), ...arr(s.sortsAssocies), ...arr(s.spells), ...arr(s.spellNames), ...arr(s.sorts),
+    ...arr(f.sorts_associes), ...arr(f.sortsAssocies), ...arr(f.spells), ...arr(f.spellNames)
+  ].map(v => String(v ?? "").trim()).filter(Boolean));
+}
+
+function componentsAssociatedWithSpell(spell, componentItems, mult = 1) {
+  if (!componentItems?.length) return [];
+  const spellKeys = new Set(spellNameKeys(spell));
+  const out = [];
+  const seen = new Set();
+  for (const item of componentItems) {
+    const names = associatedSpellNames(item);
+    if (!names.length) continue;
+    if (!names.some(name => spellKeys.has(norm(name)))) continue;
+    const key = norm(item.name);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push({ key, name: item.name, quantity: Math.max(1, Math.floor(Number(mult) || 1)), spells: [{ name: spell?.name ?? "Sort", count: Math.max(1, Math.floor(Number(mult) || 1)) }] });
+  }
+  return out;
+}
+
+function requirements(spell, mult = 1, componentItems = []) {
+  const associated = componentsAssociatedWithSpell(spell, componentItems, mult);
+  if (associated.length) return associated;
+
   const s = spell?.system ?? {}, f = spell?.flags?.add2e ?? {}, m = new Map();
   for (const field of [s.composants_requis, s.composantsMateriels, s.composants_materiels, s.composantsMateriel, s.composant_materiel, s.composantMateriel, s.materiel, s.matériel, s.material, s.materialComponent, s.materialComponents, s.material_components, s.requiredComponents, s.componentsRequired, s.components?.material, s.components?.materials, f.composants_requis, f.composants, f.components, f.requiredComponents]) collectReq(m, field, spell, mult);
   for (const field of [s.composants, s.composantes, s.components, f.composantes]) collectMaterialText(m, field, spell, mult);
@@ -160,12 +192,12 @@ function actorSpells(actor) {
   return Array.from(actor?.items ?? []).filter(i => String(i?.type ?? "").toLowerCase() === "sort" && !objectPower(i)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
 }
 
-function reqMap(spells, prepared = false) {
+function reqMap(spells, prepared = false, componentItems = []) {
   const out = new Map();
   for (const spell of spells) {
     const count = preparedCount(spell);
     if (prepared && count <= 0) continue;
-    for (const r of requirements(spell, prepared ? count : 1)) {
+    for (const r of requirements(spell, prepared ? count : 1, componentItems)) {
       const e = out.get(r.key) ?? { key: r.key, name: r.name, quantity: 0, spells: [] };
       e.quantity += r.quantity;
       e.spells.push(...r.spells);
@@ -177,12 +209,14 @@ function reqMap(spells, prepared = false) {
 
 function itemKeys(item) {
   const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
-  return uniq([item?.name, s.nom, s.slug, s.composant, s.component, s.categorie, s.category, s.sousType, s.sous_type, f.slug, f.componentSlug, ...arr(s.tags), ...arr(s.effectTags), ...arr(f.tags), ...arr(f.effectTags)].map(v => norm(String(v ?? "").replace(/^(composant|component|spell_component)[:_]/i, ""))));
+  return uniq([item?.name, s.nom, s.slug, s.composant, s.component, f.slug, f.componentSlug, ...arr(s.tags), ...arr(s.effectTags), ...arr(f.tags), ...arr(f.effectTags)].map(v => norm(String(v ?? "").replace(/^(composant|component|spell_component)[:_]/i, ""))));
 }
 
 function matchReq(item, req) {
   const keys = itemKeys(item);
-  return keys.includes(req.key) || keys.some(k => k && (k.includes(req.key) || req.key.includes(k)));
+  if (keys.includes(req.key)) return true;
+  if (String(req.key ?? "").length < 5) return false;
+  return keys.some(k => k && k.length >= 5 && (k.includes(req.key) || req.key.includes(k)));
 }
 
 function spellLabels(req) {
@@ -195,7 +229,7 @@ function spellLabels(req) {
 }
 
 function relevance(actor, componentItems) {
-  const spells = actorSpells(actor), known = reqMap(spells, false), prepared = reqMap(spells, true), mk = new Set(), mp = new Set(), byItem = new Map();
+  const spells = actorSpells(actor), known = reqMap(spells, false, componentItems), prepared = reqMap(spells, true, componentItems), mk = new Set(), mp = new Set(), byItem = new Map();
   for (const item of componentItems) {
     const kr = [...known.values()].filter(r => matchReq(item, r)), pr = [...prepared.values()].filter(r => matchReq(item, r));
     for (const r of kr) mk.add(r.key);
@@ -250,18 +284,6 @@ async function ensureVendorMinimumHp(vendor) {
   return true;
 }
 
-async function buyThroughVendor({ vendor, buyer, item, quantity: qty }) {
-  if (game.user?.isGM) return buy({ vendor, buyer, item, quantity: qty });
-  if (!vendor || !buyer || !item) return false;
-  qty = Math.max(1, Math.floor(Number(qty) || 1));
-  const total = priceCopper(item) * qty;
-  if (quantity(item) < qty) return alertBox("Stock insuffisant", `${item.name} : stock disponible ${quantity(item)}.`).then(() => false);
-  if (toCopperSafe(getMoney(buyer)) < total) return alertBox("Argent insuffisant", `${buyer.name} n’a pas assez d’argent. Prix : ${formatMoney(total)}.`).then(() => false);
-  if (!await alertConfirmBuy(item, qty, total)) return false;
-  game.socket?.emit?.("system.add2e", { type: SOCKET_BUY_V2, requestId: foundry.utils.randomID(), userId: game.user.id, vendorId: vendor.id, buyerId: buyer.id, buyerUuid: buyer.uuid, itemId: item.id, quantity: qty });
-  return true;
-}
-
 function toCopperSafe(money) {
   const coins = game.add2e?.vendorMoney?.coins ?? [
     { key: "pp", pc: 500 }, { key: "po", pc: 100 }, { key: "pe", pc: 50 }, { key: "pa", pc: 10 }, { key: "pc", pc: 1 }
@@ -274,6 +296,23 @@ async function alertConfirmBuy(item, qty, total) {
   const content = `<p>Acheter <b>${qty} × ${esc(item.name)}</b> pour <b>${formatMoney(total)}</b> ?</p>`;
   if (DialogV2?.confirm) return DialogV2.confirm({ window: { title: "Confirmer l’achat" }, content, yes: { label: "Acheter" }, no: { label: "Annuler" }, modal: true });
   return false;
+}
+
+async function buyThroughVendor({ vendor, buyer, item, quantity: qty }) {
+  if (!vendor || !buyer || !item) return false;
+  qty = Math.max(1, Math.floor(Number(qty) || 1));
+  const total = priceCopper(item) * qty;
+  if (quantity(item) < qty) return alertBox("Stock insuffisant", `${item.name} : stock disponible ${quantity(item)}.`).then(() => false);
+  if (toCopperSafe(getMoney(buyer)) < total) return alertBox("Argent insuffisant", `${buyer.name} n’a pas assez d’argent. Prix : ${formatMoney(total)}.`).then(() => false);
+  if (!await alertConfirmBuy(item, qty, total)) return false;
+  if (game.user?.isGM) {
+    const r = await buyLocal({ vendor, buyer, item, quantity: qty }, { confirm: false });
+    if (!r.ok && !r.cancelled) await alertBox("Achat impossible", r.message);
+    else if (r.ok) ui.notifications?.info?.(r.message);
+    return r.ok;
+  }
+  game.socket?.emit?.("system.add2e", { type: SOCKET_BUY_V2, requestId: foundry.utils.randomID(), userId: game.user.id, vendorId: vendor.id, buyerId: buyer.id, buyerUuid: buyer.uuid, itemId: item.id, quantity: qty });
+  return true;
 }
 
 class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
@@ -319,10 +358,11 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
   }
 
   async _prepareContext() {
-    await ensureVendorMinimumHp(this.vendor);
+    if (game.user?.isGM) await ensureVendorMinimumHp(this.vendor);
     await this._ensureMissingComponents();
     const stock = this._stock();
-    const rel = this.buyer ? relevance(this.buyer, stock.filter(i => vendorKind(i) === "Composant")) : { byItem: new Map(), missing: [], knownCount: 0, preparedCount: 0 };
+    const componentItems = stock.filter(i => vendorKind(i) === "Composant");
+    const rel = this.buyer ? relevance(this.buyer, componentItems) : { byItem: new Map(), missing: [], knownCount: 0, preparedCount: 0 };
     const items = stock.map(item => {
       const kind = vendorKind(item);
       const tab = kind === "Composant" ? "components" : kind === "Projectile" ? "projectiles" : "equipment";
@@ -330,7 +370,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
       const tabs = [tab];
       if (r.preparedNeed > 0) tabs.push("components-prepared");
       if (r.knownNeed > 0) tabs.push("components-known");
-      return { id: item.id, name: item.name, img: item.img || "icons/svg/item-bag.svg", kind, tab, relevantTabs: tabs, stock: quantity(item), priceLabel: formatMoney(priceCopper(item)), preparedNeed: r.preparedNeed, knownNeed: r.knownNeed, spellNames: r.spellNames, missing: false, search: lower(`${item.name} ${kind} ${item.system?.categorie ?? ""} ${item.system?.sousType ?? ""} ${item.system?.sous_type ?? ""} ${r.spellNames.join(" ")}`) };
+      return { id: item.id, name: item.name, img: item.img || "icons/svg/item-bag.svg", kind, tab, relevantTabs: tabs, stock: quantity(item), priceLabel: formatMoney(priceCopper(item)), preparedNeed: r.preparedNeed, knownNeed: r.knownNeed, spellNames: r.spellNames, missing: false, search: lower(`${item.name} ${kind} ${item.system?.categorie ?? ""} ${item.system?.sousType ?? ""} ${item.system?.sous_type ?? ""} ${r.spellNames.join(" ")} ${associatedSpellNames(item).join(" ")}`) };
     });
     for (const e of rel.missing) {
       const req = e.req;
@@ -370,7 +410,7 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
     root.querySelector(".add2e-vendor-buyer-select")?.addEventListener("change", ev => { this.buyer = game.actors?.get?.(ev.currentTarget.value) ?? this.buyer; this.render({ force: true }); });
     root.querySelectorAll(".add2e-vendor-tabs button[data-tab]").forEach(b => b.addEventListener("click", ev => { this.activeTab = ev.currentTarget.dataset.tab || "all"; this._applyFilters(root); }));
     root.querySelector(".add2e-vendor-search-input")?.addEventListener("input", ev => { this.searchText = ev.currentTarget.value ?? ""; this._applyFilters(root); });
-    root.querySelectorAll(".add2e-vendor-buy").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); const qty = row.querySelector?.(".add2e-vendor-buy-qty")?.value ?? 1; const ok = await buyThroughVendor({ vendor: this.vendor, buyer: this.buyer, item, quantity: qty }); if (ok) this.render({ force: true }); }));
+    root.querySelectorAll(".add2e-vendor-buy").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); const qty = row.querySelector?.(".add2e-vendor-buy-qty")?.value ?? 1; const ok = await buyThroughVendor({ vendor: this.vendor, buyer: this.buyer, item, quantity: qty }); if (ok && game.user?.isGM) this.render({ force: true }); }));
     root.querySelectorAll(".add2e-vendor-restock-set").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); const qty = row.querySelector?.(".add2e-vendor-restock-qty")?.value ?? 0; await setStock(item, qty); this.render({ force: true }); }));
     root.querySelectorAll(".add2e-vendor-assign").forEach(b => b.addEventListener("click", async ev => { const row = ev.currentTarget.closest("tr[data-item-id]"); if (!row || row.dataset.missing === "1") return; const item = this.vendor?.items?.get(row.dataset.itemId); await this._assignItemDialog(item); this.render({ force: true }); }));
     root.querySelector(".add2e-vendor-restock-all")?.addEventListener("click", async () => { await restockAll(this.vendor); this.render({ force: true }); });
@@ -405,6 +445,20 @@ function vendorAppKey(vendor) {
   return `${vendor?.id ?? "vendor"}:${game.user?.id ?? "user"}`;
 }
 
+function appElement(app) {
+  if (app?.element instanceof HTMLElement) return app.element;
+  if (app?.element?.[0] instanceof HTMLElement) return app.element[0];
+  return null;
+}
+
+function appStillUsable(app) {
+  if (!app) return false;
+  const el = appElement(app);
+  if (!el) return false;
+  const root = el.closest?.(".application") ?? el;
+  return document.body?.contains?.(root) === true;
+}
+
 export async function openVendor({ vendor = null, buyer = null } = {}) {
   vendor = vendor ?? findVendor();
   if (!vendor) vendor = await createVendor();
@@ -416,13 +470,14 @@ export async function openVendor({ vendor = null, buyer = null } = {}) {
   const registry = globalThis.__ADD2E_VENDOR_APP_REGISTRY ?? new Map();
   globalThis.__ADD2E_VENDOR_APP_REGISTRY = registry;
   const existing = registry.get(key);
-  if (existing) {
+  if (existing && appStillUsable(existing)) {
     existing.vendor = vendor;
     existing.buyer = buyer;
     existing.render?.({ force: true });
     existing.bringToFront?.();
     return existing;
   }
+  registry.delete(key);
   const app = new Add2eVendorApp({ vendor, buyer });
   const originalClose = app.close?.bind(app);
   if (originalClose) app.close = async (...args) => { registry.delete(key); return originalClose(...args); };
@@ -445,9 +500,9 @@ async function openVendorFromToken(token) {
 }
 
 function bindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV16) return;
+  if (!token || token.__add2eVendorBoundV17) return;
   if (!isVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV16 = true;
+  token.__add2eVendorBoundV17 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
@@ -458,8 +513,8 @@ function bindVendorToken(token) {
 export function bindAllVendorTokens() { for (const token of canvas?.tokens?.placeables ?? []) bindVendorToken(token); }
 
 export function patchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V16) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V16 = true;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V17) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V17 = true;
   const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
   const proto = TokenClass?.prototype;
   if (proto && typeof proto._onClickLeft === "function") {
