@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs et composants.
-// Version : 2026-06-14-cast-spell-restore-actor-spell-id-resolution-v1
+// Version : 2026-06-14-cast-spell-reversible-component-selection-v1
 
 import { formatSortChamp } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -61,6 +61,12 @@ function extractScriptPath(raw) {
   value = String(value ?? "").trim();
   if (value.includes(",")) value = value.split(",").map(s => s.trim()).find(s => s.endsWith(".js")) ?? value.split(",")[0].trim();
   return value;
+}
+function onUseManagesSpellComponents(scriptPath, sortDoc) {
+  const explicit = sortDoc?.flags?.add2e?.componentManagement ?? sortDoc?.system?.componentManagement ?? sortDoc?.system?.gestionComposants;
+  if (["onUse", "onuse", "script", "manual", "manuel"].includes(String(explicit ?? "").trim())) return true;
+  const path = norm(scriptPath);
+  return path.includes("benediction");
 }
 function renderApplication(app) {
   if (!app || typeof app.render !== "function") return;
@@ -213,6 +219,8 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     if (sort.system?.isPower) return true;
     const api = globalThis.ADD2E_CONSUMABLES;
     if (!api?.add2eReserveSpellComponents) return true;
+    const scriptPath = extractScriptPath(spellToUse.system?.onUse || spellToUse.system?.onuse || spellToUse.system?.on_use);
+    if (onUseManagesSpellComponents(scriptPath, spellToUse)) return true;
     componentReservation = await api.add2eReserveSpellComponents(actor, spellToUse);
     if (componentReservation?.blocked) { await refundCost("composants manquants"); ui.notifications.warn(componentReservation.message || "Composant matériel manquant."); return false; }
     return true;
