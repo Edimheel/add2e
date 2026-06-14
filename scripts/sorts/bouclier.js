@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien niveau 1 : Bouclier
-// Version : 2026-06-14-magicien-bouclier-visible-vfx-v3-fixed-large-scale
+// Version : 2026-06-14-magicien-bouclier-eldritch-web-v1
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -12,18 +12,13 @@ const ADD2E_ITEM = typeof item !== "undefined" ? item : (typeof sort !== "undefi
 const ADD2E_TOKEN = typeof token !== "undefined" ? token : null;
 const ADD2E_ARGS = typeof args !== "undefined" ? args : [];
 
-const ADD2E_BOUCLIER_VFX_CANDIDATES = [
-  "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Blue_400x400.webm",
-  "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Yellow_400x400.webm",
-  "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Purple_400x400.webm",
-  "modules/jb2a_patreon/Library/1st_Level/Shield/Shield_02_Regular_Blue_Complete_400x400.webm",
-  "modules/jb2a_patreon/Library/1st_Level/Shield/Shield_01_Regular_Blue_Intro_400x400.webm",
-  "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Blue_400x400.webm",
-  "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Yellow_400x400.webm",
-  "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Purple_400x400.webm",
-  "modules/JB2A_DnD5e/Library/1st_Level/Shield/Shield_01_Regular_Blue_Intro_400x400.webm"
+const ADD2E_BOUCLIER_VFX_NAME = "jb2a.shield_themed.above.eldritch_web.01.dark_purple";
+const ADD2E_BOUCLIER_VFX_FALLBACKS = [
+  "jb2a.shield_themed.above.eldritch_web.01.dark_purple",
+  "jb2a.shield_themed.above.eldritch_web.01.purple",
+  "jb2a.shield_themed.above.eldritch_web.dark_purple",
+  "jb2a.shield_themed.above.eldritch_web"
 ];
-const ADD2E_BOUCLIER_VFX_CACHE = new Map();
 
 const ADD2E_SORT_CONFIG = {
   name: "Bouclier",
@@ -35,7 +30,6 @@ const ADD2E_SORT_CONFIG = {
   castingTimeText: "1 segment",
   saveText: "Aucun",
   areaText: "spéciale",
-  img: "systems/add2e/assets/icones/sorts/bouclier.webp",
   imgFallback: "icons/magic/defensive/shield-barrier-blue.webp"
 };
 
@@ -70,19 +64,14 @@ function add2eNormalize(value) {
 }
 
 function add2eSpellImg() {
-  const img = String(ADD2E_ITEM?.img ?? "");
-  if (img) return img;
-  return ADD2E_SORT_CONFIG.imgFallback;
+  return String(ADD2E_ITEM?.img ?? "") || ADD2E_SORT_CONFIG.imgFallback;
 }
 
 function add2eCasterLevel(actorDoc) {
-  return Number(
-    actorDoc?.system?.niveau ??
-    actorDoc?.system?.level ??
-    actorDoc?.system?.details?.niveau ??
-    actorDoc?.system?.details?.level ??
-    1
-  ) || 1;
+  const sys = actorDoc?.system ?? {};
+  const classRows = Array.isArray(sys.classes) ? sys.classes : [];
+  const magicien = classRows.find(c => /magicien|mage|illusionniste/i.test(String(c.name ?? c.slug ?? "")));
+  return Number(magicien?.level ?? magicien?.niveau ?? sys.niveau ?? sys.level ?? sys.details?.niveau ?? 1) || 1;
 }
 
 function add2eGetCasterToken(actorDoc) {
@@ -114,8 +103,8 @@ function add2eEffectDuration(rounds) {
   };
 }
 
-function add2eTimeFlags({ actorDoc, rounds }) {
-  const tags = [
+function add2eBouclierTags(rounds) {
+  return [
     "classe:magicien",
     "liste:magicien",
     "niveau:1",
@@ -133,6 +122,10 @@ function add2eTimeFlags({ actorDoc, rounds }) {
     "duree:5_rounds_par_niveau",
     `duree_rounds:${rounds}`
   ];
+}
+
+function add2eTimeFlags({ actorDoc, rounds }) {
+  const tags = add2eBouclierTags(rounds);
   const time = add2eTimeApi();
   return time?.flags?.({
     source: "bouclier.js",
@@ -165,34 +158,13 @@ function add2eTimeFlags({ actorDoc, rounds }) {
 }
 
 function add2eEmitGmOperation(operation, payload) {
-  game.socket?.emit?.("system.add2e", {
-    type: "ADD2E_GM_OPERATION",
-    operation,
-    payload
-  });
+  game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation, payload });
 }
 
 function add2eBuildBouclierEffect(actorDoc, level) {
   const rounds = add2eBouclierRounds(level);
   const timeFlags = add2eTimeFlags({ actorDoc, rounds });
-  const tags = timeFlags.tags ?? [
-    "classe:magicien",
-    "liste:magicien",
-    "niveau:1",
-    "sort:bouclier",
-    "ecole:evocation",
-    "type:protection",
-    "type:defense",
-    "immunite:missile_magique",
-    "immunite:projectile_magique",
-    "ca_fixe_projectile_lance:2",
-    "ca_fixe_projectile_propulse:3",
-    "ca_fixe_autres:4",
-    "bonus_save_frontal:1",
-    "condition:attaque_frontale",
-    "duree:5_rounds_par_niveau",
-    `duree_rounds:${rounds}`
-  ];
+  const tags = timeFlags.tags ?? add2eBouclierTags(rounds);
 
   return {
     name: ADD2E_SORT_CONFIG.name,
@@ -223,6 +195,7 @@ function add2eBuildBouclierEffect(actorDoc, level) {
           acOtherFrontal: 4,
           frontalSaveBonus: 1,
           magicMissileImmune: true,
+          projectileMagiqueImmune: true,
           frontOnly: true,
           sourceItemId: ADD2E_ITEM?.id ?? null,
           sourceItemUuid: ADD2E_ITEM?.uuid ?? null
@@ -246,12 +219,10 @@ function add2eEffectIsBouclier(effect) {
 
 async function add2eDeleteExistingBouclier(actorDoc) {
   if (!actorDoc) return false;
-
   const effectIds = Array.from(actorDoc.effects ?? [])
     .filter(add2eEffectIsBouclier)
     .map(e => e.id)
     .filter(Boolean);
-
   if (!effectIds.length) return false;
 
   if (game.user?.isGM || actorDoc.isOwner) {
@@ -271,7 +242,6 @@ async function add2eDeleteExistingBouclier(actorDoc) {
 
 async function add2eApplyBouclierEffect(actorDoc, effectData) {
   if (!actorDoc || !effectData) return false;
-
   const casterToken = add2eGetCasterToken(actorDoc);
   const payload = {
     actorUuid: actorDoc.uuid,
@@ -322,40 +292,28 @@ function add2eRegisterBouclierVfxHooks() {
   });
 }
 
-function add2eBouclierModuleLooksActive(path) {
-  const p = String(path || "");
-  if (p.startsWith("modules/jb2a_patreon/")) return game.modules?.get?.("jb2a_patreon")?.active === true;
-  if (p.startsWith("modules/JB2A_DnD5e/")) return game.modules?.get?.("JB2A_DnD5e")?.active === true;
+function add2eSequencerEntryExists(entry) {
+  if (!entry || typeof Sequence !== "function") return false;
+  try {
+    const db = globalThis.Sequencer?.Database;
+    if (typeof db?.getEntry === "function") return !!db.getEntry(entry);
+    if (typeof db?.getPathsUnder === "function") {
+      const parent = entry.split(".").slice(0, -1).join(".");
+      return (db.getPathsUnder(parent) ?? []).includes(entry);
+    }
+  } catch (_err) {}
   return true;
 }
 
-async function add2eBouclierFileExists(path) {
-  path = String(path || "").trim();
-  if (!path) return false;
-  if (ADD2E_BOUCLIER_VFX_CACHE.has(path)) return ADD2E_BOUCLIER_VFX_CACHE.get(path);
-  if (!add2eBouclierModuleLooksActive(path)) {
-    ADD2E_BOUCLIER_VFX_CACHE.set(path, false);
-    return false;
-  }
-  try {
-    const response = await fetch(path, { method: "GET", cache: "force-cache", headers: { Range: "bytes=0-1" } });
-    const ok = !!response.ok || response.status === 206;
-    ADD2E_BOUCLIER_VFX_CACHE.set(path, ok);
-    return ok;
-  } catch (_err) {
-    ADD2E_BOUCLIER_VFX_CACHE.set(path, false);
-    return false;
-  }
-}
-
 async function add2ePickBouclierVfxFile() {
-  for (const candidate of ADD2E_BOUCLIER_VFX_CANDIDATES) {
-    if (await add2eBouclierFileExists(candidate)) return candidate;
+  for (const candidate of ADD2E_BOUCLIER_VFX_FALLBACKS) {
+    if (add2eSequencerEntryExists(candidate)) return candidate;
   }
-  console.warn(`${ADD2E_ONUSE_TAG}[NO_SHIELD_VFX_FILE] Aucun fichier JB2A Shield trouvé.`, {
+  console.warn(`${ADD2E_ONUSE_TAG}[NO_SHIELD_VFX_FILE] Entrée Sequencer JB2A introuvable.`, {
+    preferred: ADD2E_BOUCLIER_VFX_NAME,
     jb2aPatreon: game.modules?.get?.("jb2a_patreon")?.active === true,
     jb2aFree: game.modules?.get?.("JB2A_DnD5e")?.active === true,
-    candidates: ADD2E_BOUCLIER_VFX_CANDIDATES
+    candidates: ADD2E_BOUCLIER_VFX_FALLBACKS
   });
   return "";
 }
@@ -376,7 +334,7 @@ async function add2ePlayBouclierVfx(actorDoc) {
 
   add2eEndBouclierVfxForToken(casterToken);
   const visName = add2eBouclierVisualName(casterToken);
-  const fixedScale = 1.45;
+  const fixedScale = 1.85;
 
   try {
     await new Sequence()
@@ -387,7 +345,7 @@ async function add2ePlayBouclierVfx(actorDoc) {
       .name(visName)
       .belowTokens(false)
       .scale(fixedScale)
-      .opacity(0.90)
+      .opacity(0.95)
       .play();
     console.log(`${ADD2E_ONUSE_TAG}[VFX_PLAY]`, { file: jb2aPath, token: casterToken.name, name: visName, fixedScale });
     return true;
@@ -418,15 +376,13 @@ async function add2eChatBouclier(actorDoc, level) {
           <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. 1</div>
           <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
         </div>
-
         <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
           <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Barrière invisible</div>
-            <p style="margin:.35em 0;font-size:13px;line-height:1.35;">Une force invisible se dresse devant le magicien et se déplace avec lui.</p>
+            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Barrière eldritch</div>
+            <p style="margin:.35em 0;font-size:13px;line-height:1.35;">Une trame sombre se déploie autour du magicien et se déplace avec lui.</p>
             <p style="margin:.35em 0;font-size:13px;line-height:1.35;">Elle détourne les attaques frontales et arrête les projectiles magiques.</p>
             <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Durée :</b> ${rounds} round${rounds > 1 ? "s" : ""}.</p>
           </div>
-
           <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;margin-top:7px;">
             <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
             <div style="margin-top:5px;font-size:12px;line-height:1.35;">
@@ -457,7 +413,8 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   actor: ADD2E_ACTOR?.name,
   sort: ADD2E_ITEM?.name,
   level,
-  durationRounds
+  durationRounds,
+  preferredVfx: ADD2E_BOUCLIER_VFX_NAME
 });
 
 await add2eDeleteExistingBouclier(ADD2E_ACTOR);
@@ -469,7 +426,8 @@ console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   consumedByDispatcher: true,
   effectRequested,
   vfxPlayed,
-  durationRounds
+  durationRounds,
+  preferredVfx: ADD2E_BOUCLIER_VFX_NAME
 });
 
 return true;
