@@ -1,8 +1,16 @@
 // ADD2E — Définitions boutiques reconstruites.
-// Version : 2026-06-14-shop-flags-v1
+// Version : 2026-06-14-shop-flags-v2
 
-export const SHOP_REBUILD_VERSION = "2026-06-14-shop-flags-v1";
+export const SHOP_REBUILD_VERSION = "2026-06-14-shop-flags-v2";
 export const SHOP_SCOPE = "add2e";
+
+export const COINS = [
+  { key: "pp", label: "PP", pc: 500 },
+  { key: "po", label: "PO", pc: 100 },
+  { key: "pe", label: "PE", pc: 50 },
+  { key: "pa", label: "PA", pc: 10 },
+  { key: "pc", label: "PC", pc: 1 }
+];
 
 export function low(value) {
   return String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
