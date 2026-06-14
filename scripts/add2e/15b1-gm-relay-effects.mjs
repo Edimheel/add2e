@@ -1,6 +1,23 @@
 // ADD2E — Relais MJ : dégâts et effets.
+// Version : 2026-06-14-gm-relay-effects-normalize-duration-v1
 
 import { relayArray, relayNormalize, resolveActor } from "./15b0-gm-relay-common.mjs";
+
+function currentCombatRound() {
+  const round = Number(game.combat?.round ?? 0);
+  return Number.isFinite(round) && round > 0 ? round : 0;
+}
+
+async function normalizeCreatedEffect(effect) {
+  if (!effect) return;
+  try {
+    if (typeof game.add2e?.time?.normalizeEffect === "function") {
+      await game.add2e.time.normalizeEffect(effect, currentCombatRound());
+    }
+  } catch (err) {
+    console.warn("[ADD2E][GM-RELAY][ACTIVE_EFFECT_NORMALIZE_FAILED]", { effect: effect.name, effectId: effect.id, err });
+  }
+}
 
 export async function applyDamage(payload) {
   const targetActor = await resolveActor(payload);
@@ -56,7 +73,8 @@ export async function createActiveEffect(payload) {
 
   const effectData = foundry.utils.duplicate(payload.effectData ?? {});
   delete effectData._id;
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+  const created = await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+  await normalizeCreatedEffect(created?.[0]);
 }
 
 export async function applyLegacyActiveEffect(data) {
@@ -71,5 +89,6 @@ export async function applyLegacyActiveEffect(data) {
   effectData.flags.add2e.appliedBySocket = true;
   effectData.flags.add2e.appliedByGM = game.user.id;
   effectData.flags.add2e.appliedAt = Date.now();
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+  const created = await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+  await normalizeCreatedEffect(created?.[0]);
 }
