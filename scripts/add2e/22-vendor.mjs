@@ -4,7 +4,6 @@
 import {
   ADD2E_VENDOR_VERSION,
   VENDOR_SETTING,
-  ensureVendorOnLaunch,
   registerRecoveryHooks,
   patchActorSheetMoney,
   patchAttackRollProjectileConsumption,
@@ -27,7 +26,6 @@ import {
 import {
   ADD2E_ARMORER_VERSION,
   ARMORER_SETTING,
-  ensureArmorerOnLaunch,
   registerGlobals as registerArmorerGlobals,
   registerSockets as registerArmorerSockets,
   isArmorerActor,
@@ -51,7 +49,7 @@ import {
   registerSockets as registerConsumablesSockets
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-14-shop-orchestration-v4-minimal";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-14-shop-orchestration-v5-lazy-stock";
 
 function isShopActor(actor) {
   return isVendorActor(actor) || isArmorerActor(actor);
@@ -164,8 +162,6 @@ Hooks.once("ready", async () => {
   registerArmorerSockets();
   registerConsumablesSockets();
 
-  await ensureVendorOnLaunch().catch(err => console.warn("[ADD2E][VENDOR][AUTO_CREATE]", err));
-  await ensureArmorerOnLaunch().catch(err => console.warn("[ADD2E][ARMORER][AUTO_CREATE]", err));
   await enforceShopActors().catch(err => console.warn("[ADD2E][SHOP][ENSURE_ACTORS]", err));
   await enforceShopTokenPresentation().catch(err => console.warn("[ADD2E][SHOP][TOKEN_PRESENTATION]", err));
 
