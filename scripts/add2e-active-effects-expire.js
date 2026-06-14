@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-06-14-active-effects-expire-time-engine-restore-spell-items-v1
+// Version : 2026-06-14-active-effects-expire-single-round-engine-v1
 // ============================================================================
 
 import { ADD2E_VITAL_STATUS_CORE_VERSION } from "./add2e/18a-vital-status-core.mjs";
@@ -30,7 +30,7 @@ import {
   add2eWorldTimeExpireAllActors
 } from "./add2e/19b-world-time-engine.mjs";
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-06-14-active-effects-expire-time-engine-restore-spell-items-v1";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-06-14-active-effects-expire-single-round-engine-v1";
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
 globalThis.ADD2E_VITAL_STATUS_SYNC_VERSION = ADD2E_VITAL_STATUS_SYNC_VERSION;
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION;
@@ -101,37 +101,5 @@ Hooks.on("deleteActiveEffect", async effect => {
   const temporaryItemId = effect?.flags?.add2e?.temporaryItemId;
   if (actor?.documentName === "Actor" && temporaryItemId && actor.items?.get(temporaryItemId)) {
     await actor.deleteEmbeddedDocuments("Item", [temporaryItemId]);
-  }
-});
-
-Hooks.on("updateCombat", async (combat, changed, options, userId) => {
-  if (!("round" in changed) && !("turn" in changed)) return;
-
-  const currentRound = combat.round ?? 0;
-  console.log("[ADD2E][AUTO-REMOVE] updateCombat déclenché :", { round: currentRound, changed });
-
-  try {
-    add2eRegisterTimeEngineApi();
-    add2eRegisterWorldTimeEngine();
-    add2eVitalRegisterStatusEffects();
-
-    if (typeof add2eRoundEngineOnCombatProgress === "function") {
-      await add2eRoundEngineOnCombatProgress(combat, changed, options, userId);
-    }
-
-    for (const combatant of combat.combatants || []) {
-      if (!combatant) continue;
-
-      const actor = combatant.actor;
-      if (!actor) {
-        console.warn("[ADD2E][AUTO-REMOVE] combatant sans actor :", combatant);
-        continue;
-      }
-
-      await add2eExpireTemporaryEffectsForActor(actor, currentRound);
-      await add2eSyncActorVitalStatus(actor, { reason: "updateCombat:scan" });
-    }
-  } catch (err) {
-    console.error("[ADD2E][AUTO-REMOVE] ERREUR dans updateCombat(auto-remove-effects) :", err);
   }
 });
