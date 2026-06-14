@@ -1,13 +1,12 @@
 // ADD2E — Marchand V2 reconstruit en unités courtes.
-// Version : 2026-06-14-merchant-unit-v3
+// Version : 2026-06-14-merchant-unit-v4-token-click
 
 import { findVendor, createVendor, getBuyer, isVendorActor, vendorKind, isStockItem, quantity, priceCopper, formatMoney, getMoney, buy, restockAll, setStock, assignItemToToken, alertBox, esc, lower, slug } from "./22a-vendor-core.mjs";
 
-const VERSION = "2026-06-14-merchant-unit-v3";
+const VERSION = "2026-06-14-merchant-unit-v4-token-click";
 const arr = v => Array.isArray(v) ? v.flatMap(arr) : v == null || v === "" ? [] : typeof v === "string" ? v.split(/[,;|\n]+/g).map(x => x.trim()).filter(Boolean) : [v];
 const key = v => slug(String(v ?? ""));
 const uniq = v => [...new Set(v.filter(Boolean))];
-
 function buyerOptions(selected = "") { return Array.from(game.actors ?? []).filter(a => a?.id && !isVendorActor(a)).sort((a,b)=>String(a.name).localeCompare(String(b.name))).map(a => `<option value="${esc(a.id)}" ${a.id === selected ? "selected" : ""}>${esc(a.name)}</option>`).join(""); }
 function linked(item) { const s = item?.system ?? {}, f = item?.flags?.add2e ?? {}; return uniq([...arr(s.sorts_associes), ...arr(s.sortsAssocies), ...arr(s.spells), ...arr(s.spellNames), ...arr(f.sorts_associes), ...arr(f.sortsAssocies), ...arr(f.spells), ...arr(f.spellNames)].map(x => String(x).trim()).filter(Boolean)); }
 function spellKeys(spell) { const s = spell?.system ?? {}, f = spell?.flags?.add2e ?? {}; return uniq([spell?.name, s.nom, s.slug, f.slug, f.importKey].map(key)); }
@@ -29,8 +28,10 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
 }
 
 const registry = () => globalThis.__ADD2E_MERCHANT_UNIT_APPS ??= new Map();
+function openLock(actor) { const id = `${game.user?.id}:${actor?.id}`; const now = Date.now(); const m = globalThis.__ADD2E_MERCHANT_OPEN_LOCK ??= {}; if (m[id] && now - m[id] < 750) return false; m[id] = now; return true; }
+async function openFromToken(token) { if (!isVendorActor(token?.actor) || !openLock(token.actor)) return false; await openVendor({ vendor: token.actor, buyer: getBuyer() }); return true; }
 export async function openVendor({ vendor = null, buyer = null } = {}) { vendor = vendor ?? findVendor(); if (!vendor && game.user?.isGM) vendor = await createVendor(); if (!vendor) return alertBox("Marchand introuvable", "Le marchand doit être créé côté MJ."); buyer = buyer ?? getBuyer(); if (!buyer && !game.user?.isGM) return alertBox("Aucun acheteur", "Aucun personnage assigné ou sélectionné."); const id = `${game.user?.id}:${vendor.id}`; const old = registry().get(id); if (old?.rendered) { old.vendor=vendor; old.buyer=buyer; old.render({force:true}); old.bringToFront?.(); return old; } const app = new Add2eMerchantApp({ vendor, buyer }); registry().set(id, app); app.render({ force:true }); return app; }
-export function bindAllVendorTokens() { for (const token of canvas?.tokens?.placeables ?? []) if (isVendorActor(token?.actor)) try { token.cursor="pointer"; token.eventMode="static"; token.interactive=true; } catch (_e) {} }
-export function patchVendorTokenClick() { if (globalThis.__ADD2E_MERCHANT_UNIT_CLICK_V3) return; globalThis.__ADD2E_MERCHANT_UNIT_CLICK_V3=true; const C=foundry?.canvas?.placeables?.Token??CONFIG?.Token?.objectClass??globalThis.Token; const p=C?.prototype; if(p&&typeof p._onClickLeft==="function"){const old=p._onClickLeft;p._onClickLeft=function(event){const result=old.call(this,event);if(isVendorActor(this.actor))setTimeout(()=>openVendor({vendor:this.actor,buyer:getBuyer()}),0);return result;};} Hooks.on("canvasReady", bindAllVendorTokens); }
+export function bindAllVendorTokens() { for (const token of canvas?.tokens?.placeables ?? []) { if (!isVendorActor(token?.actor) || token.__add2eMerchantTapV4) continue; token.__add2eMerchantTapV4=true; try { token.cursor="pointer"; token.eventMode="static"; token.interactive=true; token.on?.("pointertap", ev=>{ev?.stopPropagation?.(); openFromToken(token);}); token.on?.("pointerup", ev=>{ev?.stopPropagation?.(); openFromToken(token);}); } catch (_e) {} } }
+export function patchVendorTokenClick() { if (globalThis.__ADD2E_MERCHANT_UNIT_CLICK_V4) return; globalThis.__ADD2E_MERCHANT_UNIT_CLICK_V4=true; const C=foundry?.canvas?.placeables?.Token??CONFIG?.Token?.objectClass??globalThis.Token; const p=C?.prototype; if(p&&typeof p._onClickLeft==="function"){const old=p._onClickLeft;p._onClickLeft=function(event){const result=old.call(this,event);if(isVendorActor(this.actor))setTimeout(()=>openFromToken(this),0);return result;};} Hooks.on("canvasReady", bindAllVendorTokens); Hooks.on("createToken",()=>setTimeout(bindAllVendorTokens,100)); Hooks.on("updateToken",()=>setTimeout(bindAllVendorTokens,100)); setTimeout(bindAllVendorTokens,500); }
 export function registerVendorDirectoryButton() { Hooks.on("renderActorDirectory", (_app, html) => { if (!game.user?.isGM) return; const root=html?.jquery?html[0]:html; if(!root?.querySelector||root.querySelector(".add2e-open-default-vendor"))return; const button=document.createElement("button"); button.type="button"; button.className="add2e-open-default-vendor"; button.textContent="Marchand"; button.addEventListener("click",()=>openVendor()); root.querySelector(".directory-footer")?.prepend(button); }); }
 export function registerUiGlobals() { game.add2e=game.add2e??{}; game.add2e.openVendor=openVendor; game.add2e.vendorAppVersion=VERSION; }
