@@ -1,12 +1,12 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-06-14-v44-strict-components-position-reset
+// Version : 2026-06-14-v45-direct-hud-drag-binding
 // Le HUD reste une interface : les actions délèguent aux fonctions système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-06-14-v44-strict-components-position-reset";
+const ADD2E_ACTION_HUD_VERSION = "2026-06-14-v45-direct-hud-drag-binding";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v44";
+const STORAGE_KEY = "add2e.actionHud.state.v45";
 const LEGACY_STORAGE_KEYS = [];
 const TAG = "[ADD2E][ACTION_HUD]";
 const EDGE_PAD = 0;
@@ -743,7 +743,16 @@ function closeHud() {
   hudToken = null;
 }
 
+function bindDirectHudPointerEvents(element) {
+  if (!element || element.__add2eDirectDragBindingV45) return;
+  element.__add2eDirectDragBindingV45 = true;
+  element.addEventListener("pointerdown", pointerDown, true);
+  element.addEventListener("mousedown", pointerDown, true);
+  element.addEventListener("touchstart", pointerDown, { capture: true, passive: false });
+}
+
 function bindHudEvents(element, actor) {
+  bindDirectHudPointerEvents(element);
   element.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", event => {
     event.preventDefault();
     event.stopPropagation();
@@ -917,6 +926,7 @@ function startDrag(event) {
 }
 
 function pointerDown(event) {
+  if (dragging || resizing) return;
   if (startResize(event)) return;
   startDrag(event);
 }
