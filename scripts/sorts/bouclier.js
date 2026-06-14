@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien niveau 1 : Bouclier
-// Version : 2026-06-06-magicien-bouclier-time-engine-v1
+// Version : 2026-06-14-magicien-bouclier-visible-vfx-v2
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -11,6 +11,19 @@ const ADD2E_ACTOR = typeof actor !== "undefined" ? actor : null;
 const ADD2E_ITEM = typeof item !== "undefined" ? item : (typeof sort !== "undefined" ? sort : (typeof spell !== "undefined" ? spell : null));
 const ADD2E_TOKEN = typeof token !== "undefined" ? token : null;
 const ADD2E_ARGS = typeof args !== "undefined" ? args : [];
+
+const ADD2E_BOUCLIER_VFX_CANDIDATES = [
+  "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Blue_400x400.webm",
+  "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Yellow_400x400.webm",
+  "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Purple_400x400.webm",
+  "modules/jb2a_patreon/Library/1st_Level/Shield/Shield_02_Regular_Blue_Complete_400x400.webm",
+  "modules/jb2a_patreon/Library/1st_Level/Shield/Shield_01_Regular_Blue_Intro_400x400.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Blue_400x400.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Yellow_400x400.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Purple_400x400.webm",
+  "modules/JB2A_DnD5e/Library/1st_Level/Shield/Shield_01_Regular_Blue_Intro_400x400.webm"
+];
+const ADD2E_BOUCLIER_VFX_CACHE = new Map();
 
 const ADD2E_SORT_CONFIG = {
   name: "Bouclier",
@@ -111,6 +124,7 @@ function add2eTimeFlags({ actorDoc, rounds }) {
     "type:protection",
     "type:defense",
     "immunite:missile_magique",
+    "immunite:projectile_magique",
     "ca_fixe_projectile_lance:2",
     "ca_fixe_projectile_propulse:3",
     "ca_fixe_autres:4",
@@ -170,6 +184,7 @@ function add2eBuildBouclierEffect(actorDoc, level) {
     "type:protection",
     "type:defense",
     "immunite:missile_magique",
+    "immunite:projectile_magique",
     "ca_fixe_projectile_lance:2",
     "ca_fixe_projectile_propulse:3",
     "ca_fixe_autres:4",
@@ -225,7 +240,8 @@ function add2eEffectIsBouclier(effect) {
     || name.includes("bouclier")
     || tags.includes("sort:bouclier")
     || tags.includes("sort_bouclier")
-    || tags.includes("immunite:missile_magique");
+    || tags.includes("immunite:missile_magique")
+    || tags.includes("immunite:projectile_magique");
 }
 
 async function add2eDeleteExistingBouclier(actorDoc) {
@@ -247,7 +263,7 @@ async function add2eDeleteExistingBouclier(actorDoc) {
     actorUuid: actorDoc.uuid,
     actorId: actorDoc.id,
     effectIds,
-    tags: ["sort:bouclier", "immunite:missile_magique"],
+    tags: ["sort:bouclier", "immunite:missile_magique", "immunite:projectile_magique"],
     names: ["Bouclier"]
   });
   return true;
@@ -278,6 +294,18 @@ async function add2eApplyBouclierEffect(actorDoc, effectData) {
   return true;
 }
 
+function add2eBouclierVisualName(tokenDoc) {
+  return `bouclier-effect-${tokenDoc?.id ?? tokenDoc?.document?.id ?? "unknown"}`;
+}
+
+function add2eEndBouclierVfxForToken(tokenDoc) {
+  if (!tokenDoc) return false;
+  const visName = add2eBouclierVisualName(tokenDoc);
+  try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name: visName, object: tokenDoc }); } catch (_err) {}
+  try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name: visName }); } catch (_err) {}
+  return true;
+}
+
 function add2eRegisterBouclierVfxHooks() {
   if (globalThis.ADD2E_BOUCLIER_VFX_HOOKS_REGISTERED) return;
   globalThis.ADD2E_BOUCLIER_VFX_HOOKS_REGISTERED = true;
@@ -285,10 +313,7 @@ function add2eRegisterBouclierVfxHooks() {
   const stopVfx = effect => {
     if (!add2eEffectIsBouclier(effect)) return;
     const actorDoc = effect?.parent;
-    for (const tokenDoc of actorDoc?.getActiveTokens?.() ?? []) {
-      const visName = `bouclier-effect-${tokenDoc.id}`;
-      try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name: visName, object: tokenDoc }); } catch (_err) {}
-    }
+    for (const tokenDoc of actorDoc?.getActiveTokens?.() ?? []) add2eEndBouclierVfxForToken(tokenDoc);
   };
 
   Hooks.on("deleteActiveEffect", stopVfx);
@@ -297,34 +322,78 @@ function add2eRegisterBouclierVfxHooks() {
   });
 }
 
-function add2ePlayBouclierVfx(actorDoc) {
-  const casterToken = add2eGetCasterToken(actorDoc);
-  if (!casterToken || typeof Sequence !== "function") return false;
+function add2eBouclierModuleLooksActive(path) {
+  const p = String(path || "");
+  if (p.startsWith("modules/jb2a_patreon/")) return game.modules?.get?.("jb2a_patreon")?.active === true;
+  if (p.startsWith("modules/JB2A_DnD5e/")) return game.modules?.get?.("JB2A_DnD5e")?.active === true;
+  return true;
+}
 
-  let jb2aPath = null;
-  if (game.modules.get("jb2a_patreon")?.active) {
-    jb2aPath = "modules/jb2a_patreon/Library/1st_Level/Shield/Shield_02_Regular_Blue_Complete_400x400.webm";
-  } else if (game.modules.get("jb2a_free")?.active) {
-    jb2aPath = "modules/jb2a_free/Library/1st_Level/Shield/Shield_01_Regular_Blue_Intro_400x400.webm";
+async function add2eBouclierFileExists(path) {
+  path = String(path || "").trim();
+  if (!path) return false;
+  if (ADD2E_BOUCLIER_VFX_CACHE.has(path)) return ADD2E_BOUCLIER_VFX_CACHE.get(path);
+  if (!add2eBouclierModuleLooksActive(path)) {
+    ADD2E_BOUCLIER_VFX_CACHE.set(path, false);
+    return false;
+  }
+  try {
+    const response = await fetch(path, { method: "GET", cache: "force-cache", headers: { Range: "bytes=0-1" } });
+    const ok = !!response.ok || response.status === 206;
+    ADD2E_BOUCLIER_VFX_CACHE.set(path, ok);
+    return ok;
+  } catch (_err) {
+    ADD2E_BOUCLIER_VFX_CACHE.set(path, false);
+    return false;
+  }
+}
+
+async function add2ePickBouclierVfxFile() {
+  for (const candidate of ADD2E_BOUCLIER_VFX_CANDIDATES) {
+    if (await add2eBouclierFileExists(candidate)) return candidate;
+  }
+  console.warn(`${ADD2E_ONUSE_TAG}[NO_SHIELD_VFX_FILE] Aucun fichier JB2A Shield trouvé.`, {
+    jb2aPatreon: game.modules?.get?.("jb2a_patreon")?.active === true,
+    jb2aFree: game.modules?.get?.("JB2A_DnD5e")?.active === true,
+    candidates: ADD2E_BOUCLIER_VFX_CANDIDATES
+  });
+  return "";
+}
+
+async function add2ePlayBouclierVfx(actorDoc) {
+  const casterToken = add2eGetCasterToken(actorDoc);
+  if (!casterToken || typeof Sequence !== "function" || !canvas?.ready) {
+    console.warn(`${ADD2E_ONUSE_TAG}[NO_SEQUENCER_OR_TOKEN] Effet visuel ignoré.`, {
+      hasToken: !!casterToken,
+      hasSequence: typeof Sequence === "function",
+      canvasReady: !!canvas?.ready
+    });
+    return false;
   }
 
+  const jb2aPath = await add2ePickBouclierVfxFile();
   if (!jb2aPath) return false;
 
-  const visName = `bouclier-effect-${casterToken.id}`;
-  try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name: visName, object: casterToken }); } catch (_err) {}
+  add2eEndBouclierVfxForToken(casterToken);
+  const visName = add2eBouclierVisualName(casterToken);
 
-  new Sequence()
-    .effect()
-    .file(jb2aPath)
-    .attachTo(casterToken)
-    .persist(true)
-    .name(visName)
-    .belowTokens(false)
-    .scale(0.70)
-    .opacity(0.85)
-    .play();
-
-  return true;
+  try {
+    await new Sequence()
+      .effect()
+      .file(jb2aPath)
+      .attachTo(casterToken)
+      .persist(true)
+      .name(visName)
+      .belowTokens(false)
+      .scaleToObject(1.25)
+      .opacity(0.85)
+      .play();
+    console.log(`${ADD2E_ONUSE_TAG}[VFX_PLAY]`, { file: jb2aPath, token: casterToken.name, name: visName });
+    return true;
+  } catch (err) {
+    console.warn(`${ADD2E_ONUSE_TAG}[VFX_FAILED]`, { file: jb2aPath, token: casterToken.name, err });
+    return false;
+  }
 }
 
 async function add2eChatBouclier(actorDoc, level) {
@@ -392,12 +461,13 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
 
 await add2eDeleteExistingBouclier(ADD2E_ACTOR);
 const effectRequested = await add2eApplyBouclierEffect(ADD2E_ACTOR, effectData);
-add2ePlayBouclierVfx(ADD2E_ACTOR);
+const vfxPlayed = await add2ePlayBouclierVfx(ADD2E_ACTOR);
 await add2eChatBouclier(ADD2E_ACTOR, level);
 
 console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   consumedByDispatcher: true,
   effectRequested,
+  vfxPlayed,
   durationRounds
 });
 
