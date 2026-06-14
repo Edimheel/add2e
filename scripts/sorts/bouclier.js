@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien niveau 1 : Bouclier
-// Version : 2026-06-14-magicien-bouclier-eldritch-web-v1
+// Version : 2026-06-14-magicien-bouclier-eldritch-web-v2-scale-1-5-cell
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
@@ -334,7 +334,7 @@ async function add2ePlayBouclierVfx(actorDoc) {
 
   add2eEndBouclierVfxForToken(casterToken);
   const visName = add2eBouclierVisualName(casterToken);
-  const fixedScale = 1.85;
+  const shieldScaleToObject = 1.5;
 
   try {
     await new Sequence()
@@ -344,13 +344,13 @@ async function add2ePlayBouclierVfx(actorDoc) {
       .persist(true)
       .name(visName)
       .belowTokens(false)
-      .scale(fixedScale)
+      .scaleToObject(shieldScaleToObject)
       .opacity(0.95)
       .play();
-    console.log(`${ADD2E_ONUSE_TAG}[VFX_PLAY]`, { file: jb2aPath, token: casterToken.name, name: visName, fixedScale });
+    console.log(`${ADD2E_ONUSE_TAG}[VFX_PLAY]`, { file: jb2aPath, token: casterToken.name, name: visName, shieldScaleToObject });
     return true;
   } catch (err) {
-    console.warn(`${ADD2E_ONUSE_TAG}[VFX_FAILED]`, { file: jb2aPath, token: casterToken.name, fixedScale, err });
+    console.warn(`${ADD2E_ONUSE_TAG}[VFX_FAILED]`, { file: jb2aPath, token: casterToken.name, shieldScaleToObject, err });
     return false;
   }
 }
