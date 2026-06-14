@@ -1,10 +1,10 @@
 // ADD2E — Marchand V2 compact.
-// Version : 2026-06-14-merchant-unit-v8-player-socket-buy
+// Version : 2026-06-14-merchant-unit-v9-isolated-player-buy
 
 import { findVendor, createVendor, getBuyer, isVendorActor, vendorKind, isStockItem, quantity, priceCopper, formatMoney, getMoney, buy, restockAll, setStock, assignItemToToken, alertBox, esc, lower, slug } from "./22a-vendor-core.mjs";
-import { normalizeShopCurrency } from "./22x-vendor-socket-bootstrap.mjs";
+import { normalizeShopCurrency, ADD2E_VENDOR_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-14-merchant-unit-v8-player-socket-buy";
+const VERSION = "2026-06-14-merchant-unit-v9-isolated-player-buy";
 const arr = v => Array.isArray(v) ? v.flatMap(arr) : v == null || v === "" ? [] : typeof v === "string" ? v.split(/[,;|\n]+/g).map(x => x.trim()).filter(Boolean) : [v];
 const key = v => slug(String(v ?? ""));
 const uniq = v => [...new Set(v.filter(Boolean))];
@@ -46,7 +46,7 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
   }
   _replaceHTML(result, content) { content.replaceChildren(result); }
   async _onRender(c,o) { await super._onRender?.(c,o); const r=this.element; r.querySelector(".buyer")?.addEventListener("change", e=>{this.buyer=game.actors.get(e.currentTarget.value)??this.buyer;this.render({force:true});}); r.querySelector(".search")?.addEventListener("input", e=>{this.search=e.currentTarget.value??"";this.render({force:true});}); r.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click", e=>{this.tab=e.currentTarget.dataset.tab;this.render({force:true});})); r.querySelectorAll("button[data-action]").forEach(b=>b.addEventListener("click", e=>this.click(e))); }
-  async playerBuy(item, qty) { qty = Math.max(1, Math.floor(Number(qty) || 1)); if (!this.vendor || !this.buyer || !item) return false; if (quantity(item) < qty) return alertBox("Stock insuffisant", `${item.name} : stock disponible ${quantity(item)}.`).then(() => false); if (!await confirmPlayerBuy(item, qty)) return false; game.socket?.emit?.("system.add2e", { type: "ADD2E_VENDOR_BUY_REQUEST", requestId: foundry.utils.randomID(), userId: game.user.id, vendorId: this.vendor.id, buyerId: this.buyer.id, buyerUuid: this.buyer.uuid, itemId: item.id, quantity: qty }); return true; }
+  async playerBuy(item, qty) { qty = Math.max(1, Math.floor(Number(qty) || 1)); if (!this.vendor || !this.buyer || !item) return false; if (quantity(item) < qty) return alertBox("Stock insuffisant", `${item.name} : stock disponible ${quantity(item)}.`).then(() => false); if (!await confirmPlayerBuy(item, qty)) return false; game.socket?.emit?.("system.add2e", { type: ADD2E_VENDOR_PLAYER_BUY, requestId: foundry.utils.randomID(), userId: game.user.id, vendorId: this.vendor.id, buyerId: this.buyer.id, buyerUuid: this.buyer.uuid, itemId: item.id, quantity: qty }); return true; }
   async click(e) { const a=e.currentTarget.dataset.action; if(a==="restock"){await restockAll(this.vendor);return this.render({force:true});} const row=e.currentTarget.closest("tr"); const item=this.vendor.items.get(row?.dataset.id); if(a==="stock"){await setStock(item,row.querySelector(".s")?.value);return this.render({force:true});} if(a==="assign")return this.assign(item); normalizeShopCurrency(); if(!game.user?.isGM)return this.playerBuy(item,row.querySelector(".q")?.value); const ok=await buy({vendor:this.vendor,buyer:this.buyer,item,quantity:row.querySelector(".q")?.value}); if(ok&&game.user?.isGM)this.render({force:true}); }
   async assign(item) { if(!this.buyer)return alertBox("Aucun acteur","Choisis d’abord un acteur acheteur présent sur la scène."); const r=await assignItemToToken({vendor:this.vendor,item,token:{actor:this.buyer,name:this.buyer.name},quantity:1}); r.ok?ui.notifications.info(r.message):ui.notifications.warn(r.message); this.render({force:true}); }
 }
