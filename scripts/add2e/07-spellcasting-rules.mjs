@@ -1,11 +1,11 @@
 // ============================================================
 // ADD2E — Spellcasting générique par lignes de sorts
-// Version : 2026-06-12-spellcasting-multiclass-levels-v4-capacity-filter
+// Version : 2026-06-14-spellcasting-multiclass-levels-v5-manual-single-class-level
 // Supporte les classes simples et les multiclasses AD&D 2e.
 // Les listes identiques sont regroupées : clerc, druide, magicien, illusionniste.
 // La mémorisation utilise flags.add2e.memorizedByList pour les vrais sorts uniquement.
 // ============================================================
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-12-spellcasting-multiclass-levels-v4-capacity-filter";
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-14-spellcasting-multiclass-levels-v5-manual-single-class-level";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -93,6 +93,16 @@ function add2eActorIsMulticlass(actor) {
   return actor?.system?.multiclasse?.enabled === true || add2eSpellClassItems(actor).length > 1;
 }
 
+function add2eSpellManualSingleClassLevel(actor) {
+  if (add2eActorIsMulticlass(actor)) return null;
+  const sys = actor?.system ?? {};
+  for (const value of [sys.niveau, sys.level, sys.niveau_total, sys.levelTotal]) {
+    const n = add2eSpellNumber(value, null);
+    if (Number.isFinite(n) && n >= 1) return Math.max(1, Math.floor(n));
+  }
+  return null;
+}
+
 function add2eSpellReadNestedLevel(root, slug, classId = null) {
   if (!root || typeof root !== "object") return null;
   const keys = [slug, classId].filter(Boolean);
@@ -145,6 +155,9 @@ function add2eSpellLevelForClassXp(classSystem, xpValue) {
 }
 
 function add2eSpellClassLevel(actor, classSlug = null) {
+  const manualSingleClassLevel = add2eSpellManualSingleClassLevel(actor);
+  if (Number.isFinite(manualSingleClassLevel) && manualSingleClassLevel >= 1) return manualSingleClassLevel;
+
   const slug = add2eSpellSlug(classSlug ?? "");
   const classItems = add2eSpellClassItems(actor);
   const cls = slug ? classItems.find(c => add2eSpellClassSlug(c) === slug) : classItems[0];
@@ -409,7 +422,7 @@ function add2eCanActorUseSpell(actor, sort) {
   const entries = add2eGetSpellcastingEntries(actor);
   const matching = entries.filter(e => sortLists.includes(e.key));
   if (!matching.length) return { ok: false, reason: "list", sortLists, entries, entry: null };
-  for (const entry of matching) if (add2eEntryAvailableForSpell(actor, entry, spellLevel)) return { ok: true, reason: "ok", sortLists, entries, entry, actorLevel: add2eSpellClassLevel(actor, entry.sources?.[0]?.classSlug ?? entry.classSlug), spellLevel };
+  for (const entry of matching) if (add2eEntryAvailableForSpell(actor, e, spellLevel)) return { ok: true, reason: "ok", sortLists, entries, entry, actorLevel: add2eSpellClassLevel(actor, entry.sources?.[0]?.classSlug ?? entry.classSlug), spellLevel };
   const entry = matching[0] ?? null;
   return { ok: false, reason: "level", sortLists, entries, entry, actorLevel: entry ? add2eSpellClassLevel(actor, entry.sources?.[0]?.classSlug ?? entry.classSlug) : 0, spellLevel };
 }
@@ -457,6 +470,15 @@ function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
   }
   return total;
 }
+
+Hooks.on("updateActor", (actor, changed) => {
+  const changedLevel = foundry.utils.hasProperty(changed, "system.niveau") ||
+    foundry.utils.hasProperty(changed, "system.level") ||
+    foundry.utils.hasProperty(changed, "system.niveau_total") ||
+    foundry.utils.hasProperty(changed, "system.levelTotal");
+  if (!changedLevel) return;
+  window.setTimeout(() => add2eRerenderActorSheet(actor, true), 30);
+});
 
 globalThis.add2eNormalizeSpellKey = add2eNormalizeSpellKey;
 globalThis.add2eSpellLabel = add2eSpellLabel;
