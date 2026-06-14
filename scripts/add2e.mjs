@@ -18,7 +18,6 @@ import "./add2e/04-class-active-abilities.mjs";
 import "./add2e/object-magic-powers.mjs";
 import "./add2e/06-class-effects-thief.mjs";
 import "./add2e/07-spellcasting-rules.mjs";
-import("./add2e/" + "07b" + "-spellcasting-manual-level-compat.mjs");
 import "./add2e/09-race-class-drop.mjs";
 import "./add2e/10-monk-rules.mjs";
 import "./add2e/11-character-data-prep.mjs";
