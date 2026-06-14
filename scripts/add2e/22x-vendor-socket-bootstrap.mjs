@@ -1,5 +1,5 @@
-// ADD2E — Bootstrap socket et monnaie marchands.
-// Version : 2026-06-14-shop-currency-bootstrap-v1
+// ADD2E — Bootstrap socket, monnaie et UI boutiques.
+// Version : 2026-06-14-shop-bootstrap-v2
 
 import { registerSockets, COINS as VENDOR_COINS } from "./22a-vendor-core.mjs";
 import { COINS as ARMORER_COINS } from "./22c-armorer-core.mjs";
@@ -20,17 +20,25 @@ export function normalizeShopCurrency() {
   normalizeCoins(VENDOR_COINS);
   normalizeCoins(ARMORER_COINS);
   game.add2e = game.add2e ?? {};
-  game.add2e.shopCurrencyVersion = "2026-06-14-shop-currency-bootstrap-v1";
-  game.add2e.shopCurrency = {
-    pcParPa: 100,
-    paParPo: 100,
-    poParPp: 100
-  };
+  game.add2e.shopCurrencyVersion = "2026-06-14-shop-bootstrap-v2";
+  game.add2e.shopCurrency = { pcParPa: 100, paParPo: 100, poParPp: 100 };
+}
+
+export function loadShopStylesheet() {
+  const id = "add2e-shop-ui-stylesheet";
+  if (document.getElementById(id)) return;
+  const link = document.createElement("link");
+  link.id = id;
+  link.rel = "stylesheet";
+  link.type = "text/css";
+  link.href = "systems/add2e/styles/add2e-shops.css";
+  document.head.appendChild(link);
 }
 
 normalizeShopCurrency();
 
 Hooks.once("ready", () => {
   normalizeShopCurrency();
+  loadShopStylesheet();
   registerSockets();
 });
