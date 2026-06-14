@@ -1,7 +1,7 @@
-// ADD2E — Bootstrap socket, monnaie et UI boutiques.
-// Version : 2026-06-14-shop-bootstrap-v4-isolated-player-buy
+// ADD2E — Bootstrap monnaie, UI boutiques et achat joueur isolé.
+// Version : 2026-06-14-shop-bootstrap-v5-no-legacy-socket
 
-import { registerSockets, COINS as VENDOR_COINS, buyLocal } from "./22a-vendor-core.mjs";
+import { COINS as VENDOR_COINS, buyLocal } from "./22a-vendor-core.mjs";
 import { COINS as ARMORER_COINS } from "./22c-armorer-core.mjs";
 
 export const ADD2E_VENDOR_PLAYER_BUY = "ADD2E_VENDOR_PLAYER_BUY_V2";
@@ -20,17 +20,14 @@ function normalizeCoins(target) {
 }
 
 function isResponsibleGM() {
-  if (!game.user?.isGM) return false;
-  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
-  return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
+  return game.user?.isGM && (typeof game.user.isActiveGM === "boolean" ? game.user.isActiveGM : game.users?.activeGM?.id === game.user.id || !game.users?.activeGM);
 }
 
 export function normalizeShopCurrency() {
   normalizeCoins(VENDOR_COINS);
   normalizeCoins(ARMORER_COINS);
   game.add2e = game.add2e ?? {};
-  game.add2e.shopCurrencyVersion = "2026-06-14-shop-bootstrap-v4-isolated-player-buy";
-  game.add2e.shopCurrency = { pcParPa: 100, paParPo: 100, poParPp: 100 };
+  game.add2e.shopCurrencyVersion = "2026-06-14-shop-bootstrap-v5-no-legacy-socket";
 }
 
 function loadStylesheetOnce(id, href) {
@@ -38,7 +35,6 @@ function loadStylesheetOnce(id, href) {
   const link = document.createElement("link");
   link.id = id;
   link.rel = "stylesheet";
-  link.type = "text/css";
   link.href = href;
   document.head.appendChild(link);
 }
@@ -54,8 +50,7 @@ function registerIsolatedPlayerBuySocket() {
   game.socket?.on?.("system.add2e", async data => {
     if (!data || typeof data !== "object") return;
     if (data.type === ADD2E_VENDOR_PLAYER_BUY_RESULT) {
-      if (data.userId !== game.user?.id) return;
-      data.ok ? ui.notifications?.info?.(data.message ?? "Achat effectué.") : ui.notifications?.warn?.(data.message ?? "Achat impossible.");
+      if (data.userId === game.user?.id) (data.ok ? ui.notifications?.info : ui.notifications?.warn)?.(data.message ?? (data.ok ? "Achat effectué." : "Achat impossible."));
       return;
     }
     if (data.type !== ADD2E_VENDOR_PLAYER_BUY || !isResponsibleGM()) return;
@@ -64,26 +59,11 @@ function registerIsolatedPlayerBuySocket() {
     const buyer = data.buyerUuid ? await fromUuid(data.buyerUuid).catch(() => null) : game.actors?.get(data.buyerId) ?? null;
     const item = vendor?.items?.get(data.itemId) ?? null;
     let result = { ok: false, message: "Achat impossible." };
-    try {
-      result = await buyLocal({ vendor, buyer, item, quantity: data.quantity }, { confirm: false });
-    } catch (err) {
-      result = { ok: false, message: err?.message ?? "Erreur pendant l’achat." };
-    }
-    game.socket?.emit?.("system.add2e", {
-      type: ADD2E_VENDOR_PLAYER_BUY_RESULT,
-      requestId: data.requestId,
-      userId: data.userId,
-      ok: !!result.ok,
-      message: result.message
-    });
+    try { result = await buyLocal({ vendor, buyer, item, quantity: data.quantity }, { confirm: false }); }
+    catch (err) { result = { ok: false, message: err?.message ?? "Erreur pendant l’achat." }; }
+    game.socket?.emit?.("system.add2e", { type: ADD2E_VENDOR_PLAYER_BUY_RESULT, requestId: data.requestId, userId: data.userId, ok: !!result.ok, message: result.message });
   });
 }
 
 normalizeShopCurrency();
-
-Hooks.once("ready", () => {
-  normalizeShopCurrency();
-  loadShopStylesheet();
-  registerSockets();
-  registerIsolatedPlayerBuySocket();
-});
+Hooks.once("ready", () => { normalizeShopCurrency(); loadShopStylesheet(); registerIsolatedPlayerBuySocket(); });
