@@ -1,7 +1,76 @@
 // ADD2E — Multiclassage : règles, progression et payload
-// Version : 2026-06-13-multiclass-rules-v1
+// Version : 2026-06-14-multiclass-rules-compendium-candidates-v1
 
 import { classItems, classSlug, cloneItemData, itemLabel, norm, num, pickClassAlignment, systemRace, warn } from "./17b-multiclass-core.mjs";
+
+const MULTICLASS_CANDIDATE_PACKS = {
+  race: ["add2e.races"],
+  classe: ["add2e.classes"]
+};
+
+const MULTICLASS_CANDIDATE_CACHE = {
+  race: null,
+  classe: null
+};
+
+function candidateKey(data) {
+  const sys = data?.system ?? {};
+  return norm(data?.name ?? sys.slug ?? sys.label ?? sys.name ?? sys.nom ?? data?.id ?? "");
+}
+
+function dedupeCandidates(items) {
+  const seen = new Set();
+  const out = [];
+  for (const item of items ?? []) {
+    const key = candidateKey(item);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+async function loadCandidatePack(type) {
+  const wanted = String(type ?? "").toLowerCase();
+  const docs = [];
+
+  for (const packId of MULTICLASS_CANDIDATE_PACKS[wanted] ?? []) {
+    const pack = game?.packs?.get?.(packId);
+    if (!pack) {
+      warn("[MULTICLASS][COMPENDIUM_MISSING]", { type: wanted, packId });
+      continue;
+    }
+
+    try {
+      const index = await pack.getIndex({ fields: ["name", "type", "system.slug", "system.label"] });
+      for (const entry of index) {
+        if (String(entry?.type ?? "").toLowerCase() !== wanted) continue;
+        const doc = await pack.getDocument(entry._id);
+        if (!doc) continue;
+        const data = cloneItemData(doc);
+        if (data) docs.push(data);
+      }
+    } catch (err) {
+      warn("[MULTICLASS][COMPENDIUM_LOAD_ERROR]", { type: wanted, packId, err });
+    }
+  }
+
+  return dedupeCandidates(docs);
+}
+
+export async function preloadMulticlassCandidatePacks(type = null) {
+  const types = type ? [String(type).toLowerCase()] : Object.keys(MULTICLASS_CANDIDATE_CACHE);
+  for (const wanted of types) {
+    if (!Object.prototype.hasOwnProperty.call(MULTICLASS_CANDIDATE_CACHE, wanted)) continue;
+    if (Array.isArray(MULTICLASS_CANDIDATE_CACHE[wanted])) continue;
+    MULTICLASS_CANDIDATE_CACHE[wanted] = await loadCandidatePack(wanted);
+  }
+  return type ? (MULTICLASS_CANDIDATE_CACHE[String(type).toLowerCase()] ?? []) : MULTICLASS_CANDIDATE_CACHE;
+}
+
+Hooks.once("ready", () => {
+  preloadMulticlassCandidatePacks().catch(err => warn("[MULTICLASS][COMPENDIUM_PRELOAD_ERROR]", err));
+});
 
 export function comboTokens(combo) {
   if (Array.isArray(combo)) return combo.map(norm).filter(Boolean);
@@ -54,6 +123,10 @@ export function classPrerequisitesOk(actor, classData, raceData = null, options 
 }
 
 export function worldItemsByType(type) {
+  const wanted = String(type ?? "").toLowerCase();
+  const cached = MULTICLASS_CANDIDATE_CACHE[wanted];
+  if (Array.isArray(cached) && cached.length) return cached.map(cloneItemData).filter(Boolean);
+
   try {
     if (typeof add2eWorldItemsByType === "function") return add2eWorldItemsByType(type);
   } catch (err) { warn("[WORLD_ITEMS_GLOBAL_ERROR]", err); }
