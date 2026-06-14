@@ -1,10 +1,11 @@
 // ADD2E — Armurier V2 avec onglets.
-// Version : 2026-06-14-armorer-v2-tabs-1
+// Version : 2026-06-14-armorer-v2-scene-buyers-1
 
 import { isArmorerActor, findArmorer, createArmorer, getBuyer, armorerKind, quantity, priceCopper, formatMoney, getMoney, buy, restockAll, getArmorerDisplayItems, alertBox, esc, lower } from "./22c-armorer-core.mjs";
 
-const VERSION = "2026-06-14-armorer-v2-tabs-1";
-function buyerChoices(selected = "") { return Array.from(game.actors ?? []).filter(a => a?.id && !isArmorerActor(a)).sort((a, b) => String(a.name).localeCompare(String(b.name))).map(a => `<option value="${esc(a.id)}" ${a.id === selected ? "selected" : ""}>${esc(a.name)}</option>`).join(""); }
+const VERSION = "2026-06-14-armorer-v2-scene-buyers-1";
+function isOtherShopActor(actor) { return actor?.getFlag?.("add2e", "isVendor") === true || /marchand de composants/i.test(String(actor?.name ?? "")); }
+function buyerChoices(selected = "") { const map = new Map(); for (const t of canvas?.tokens?.placeables ?? []) { const a = t?.actor; if (a?.id && !isArmorerActor(a) && !isOtherShopActor(a)) map.set(a.id, a); } return [...map.values()].sort((a, b) => String(a.name).localeCompare(String(b.name))).map(a => `<option value="${esc(a.id)}" ${a.id === selected ? "selected" : ""}>${esc(a.name)}</option>`).join(""); }
 function cat(item) { const k = armorerKind(item); return k === "Arme" ? "armes" : k === "Armure" ? "armures" : k === "Projectile" ? "projectiles" : "all"; }
 class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = { id: "add2e-armorer-{id}", classes: ["add2e", "add2e-armorer-app"], tag: "section", window: { title: "Armurier ADD2E", resizable: true }, position: { width: 980, height: 640 } };
