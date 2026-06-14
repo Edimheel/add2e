@@ -1,10 +1,10 @@
-// ADD2E — Marchand V2 reconstruit en unités courtes.
-// Version : 2026-06-14-merchant-unit-v6-buy-currency
+// ADD2E — Marchand V2 compact.
+// Version : 2026-06-14-merchant-unit-v7-compact-layout
 
 import { findVendor, createVendor, getBuyer, isVendorActor, vendorKind, isStockItem, quantity, priceCopper, formatMoney, getMoney, buy, restockAll, setStock, assignItemToToken, alertBox, esc, lower, slug } from "./22a-vendor-core.mjs";
 import { normalizeShopCurrency } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-14-merchant-unit-v6-buy-currency";
+const VERSION = "2026-06-14-merchant-unit-v7-compact-layout";
 const arr = v => Array.isArray(v) ? v.flatMap(arr) : v == null || v === "" ? [] : typeof v === "string" ? v.split(/[,;|\n]+/g).map(x => x.trim()).filter(Boolean) : [v];
 const key = v => slug(String(v ?? ""));
 const uniq = v => [...new Set(v.filter(Boolean))];
@@ -19,12 +19,30 @@ function spells(actor) { return Array.from(actor?.items ?? []).filter(i => Strin
 function usage(actor, item) { if (vendorKind(item) !== "Composant") return { known:0, prep:0, names:[] }; const aliases = linked(item).map(key); if (!aliases.length) return { known:0, prep:0, names:[] }; let known = 0, prep = 0, names = []; for (const sp of spells(actor)) if (spellKeys(sp).some(k => aliases.includes(k))) { known += 1; const m = memorized(sp); prep += m; names.push(m > 1 ? `${sp.name} ×${m}` : sp.name); } return { known, prep, names: uniq(names) }; }
 
 class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
-  static DEFAULT_OPTIONS = { id: "add2e-merchant-{id}", classes: ["add2e", "add2e-merchant-app"], tag: "section", window: { title: "Marchand ADD2E", resizable: true }, position: { width: 1080, height: 680 } };
+  static DEFAULT_OPTIONS = { id: "add2e-merchant-{id}", classes: ["add2e", "add2e-merchant-app"], tag: "section", window: { title: "Marchand ADD2E", resizable: true }, position: { width: 980, height: 620 } };
   constructor({ vendor, buyer } = {}, options = {}) { super(options); this.vendor = vendor; this.buyer = buyer ?? getBuyer(); this.tab = "all"; this.search = ""; }
   get title() { return `${this.vendor?.name ?? "Marchand"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
   stock() { return Array.from(this.vendor?.items ?? []).filter(isStockItem).sort((a,b)=>String(a.name).localeCompare(String(b.name))); }
   async _prepareContext() { normalizeShopCurrency(); return { vendor: this.vendor, buyer: this.buyer, items: this.stock(), isGM: game.user?.isGM === true, tab: this.tab, search: this.search }; }
-  async _renderHTML(ctx) { let prepCount=0, knownCount=0; const rows=ctx.items.map(i=>{const kind=vendorKind(i),u=usage(ctx.buyer,i),tabs=[kind==="Composant"?"components":kind==="Projectile"?"projectiles":"equipment"]; if(u.prep>0){tabs.push("prepared");prepCount++;} if(u.known>0){tabs.push("known");knownCount++;} const txt=lower(`${i.name} ${kind} ${u.names.join(" ")}`); const visible=(ctx.tab==="all"||tabs.includes(ctx.tab))&&(!ctx.search||txt.includes(lower(ctx.search))); const gm=ctx.isGM?`<td><input class="s" type="number" min="0" value="${quantity(i)}" style="width:54px"><button data-action="stock">Stock</button><button data-action="assign" ${!ctx.buyer||quantity(i)<=0?"disabled":""}>Donner</button></td>`:""; return `<tr data-id="${esc(i.id)}" style="${visible?"":"display:none"}"><td>${esc(i.name)}</td><td>${esc(kind)}</td><td>${u.prep?`Mém. ${u.prep}`:""} ${u.known?`Conn. ${u.known}`:""}</td><td>${esc(u.names.length?u.names.join(", "):"—")}</td><td>${esc(priceLabel(i))}</td><td>${quantity(i)}</td><td><input class="q" type="number" min="1" value="1" style="width:54px"></td><td><button data-action="buy" ${!ctx.buyer||quantity(i)<=0?"disabled":""}>Acheter</button></td>${gm}</tr>`;}).join(""); const nav=[["all","Tous"],["prepared",`Composants sorts mémorisés (${prepCount})`],["known",`Composants sorts connus (${knownCount})`],["components","Composants"],["projectiles","Projectiles"],["equipment","Équipement"]].map(([id,lab])=>`<button data-tab="${id}" ${ctx.tab===id?"style='outline:2px solid #fff'":""}>${lab}</button>`).join(""); const buyer=ctx.isGM?`<select class="buyer">${buyerOptions(ctx.buyer?.id)}</select>`:`<b>${esc(ctx.buyer?.name??"aucun")}</b>`; const div=document.createElement("section"); div.style.cssText="height:100%;overflow:auto;background:#f1d99c;color:#231706;padding:10px"; div.innerHTML=`<h2>${esc(ctx.vendor?.name??"Marchand")}</h2><p>Acheteur : ${buyer} — ${ctx.buyer?esc(formatMoney(getMoney(ctx.buyer))):""}</p><div>${nav}${ctx.isGM?`<button data-action="restock">Restock global</button>`:""}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche" style="width:100%"><table style="width:100%;background:#fff7df"><thead><tr><th>Article</th><th>Type</th><th>Usage</th><th>Sorts</th><th>Prix</th><th>Stock</th><th>Qté</th><th></th>${ctx.isGM?"<th>MJ</th>":""}</tr></thead><tbody>${rows}</tbody></table>`; return div; }
+  async _renderHTML(ctx) {
+    let prepCount = 0, knownCount = 0;
+    const rows = ctx.items.map(i => {
+      const kind = vendorKind(i);
+      const u = usage(ctx.buyer, i);
+      const tabs = [kind === "Composant" ? "components" : kind === "Projectile" ? "projectiles" : "equipment"];
+      if (u.prep > 0) { tabs.push("prepared"); prepCount++; }
+      if (u.known > 0) { tabs.push("known"); knownCount++; }
+      const txt = lower(`${i.name} ${kind} ${u.names.join(" ")}`);
+      const visible = (ctx.tab === "all" || tabs.includes(ctx.tab)) && (!ctx.search || txt.includes(lower(ctx.search)));
+      const gm = ctx.isGM ? `<td><input class="s" type="number" min="0" value="${quantity(i)}"><button data-action="stock" title="Définir le stock">Stock</button><button data-action="assign" title="Donner à l’acheteur" ${!ctx.buyer||quantity(i)<=0?"disabled":""}>Donner</button></td>` : "";
+      return `<tr data-id="${esc(i.id)}" style="${visible?"":"display:none"}"><td title="${esc(i.name)}">${esc(i.name)}</td><td title="${esc(kind)}">${esc(kind)}</td><td title="${esc(u.names.length?u.names.join(", "):"—")}">${esc(u.names.length?u.names.join(", "):"—")}</td><td>${esc(priceLabel(i))}</td><td>${quantity(i)}</td><td><input class="q" type="number" min="1" value="1"></td><td><button data-action="buy" title="Acheter" ${!ctx.buyer||quantity(i)<=0?"disabled":""}>Acheter</button></td>${gm}</tr>`;
+    }).join("");
+    const nav = [["all","Tous"],["prepared",`Mémorisés (${prepCount})`],["known",`Connus (${knownCount})`],["components","Composants"],["projectiles","Projectiles"],["equipment","Équipement"]].map(([id,lab])=>`<button data-tab="${id}" ${ctx.tab===id?"style='outline:2px solid #fff'":""}>${lab}</button>`).join("");
+    const buyer = ctx.isGM ? `<select class="buyer">${buyerOptions(ctx.buyer?.id)}</select>` : `<b>${esc(ctx.buyer?.name??"aucun")}</b>`;
+    const div = document.createElement("section");
+    div.innerHTML = `<p><span>Acheteur :</span> ${buyer} <strong>${ctx.buyer?esc(formatMoney(getMoney(ctx.buyer))):""}</strong></p><div>${nav}${ctx.isGM?`<button data-action="restock">Restock global</button>`:""}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche"><table><thead><tr><th>Article</th><th>Type</th><th>Sorts</th><th>Prix</th><th>Stock</th><th>Qté</th><th></th>${ctx.isGM?"<th>MJ</th>":""}</tr></thead><tbody>${rows}</tbody></table>`;
+    return div;
+  }
   _replaceHTML(result, content) { content.replaceChildren(result); }
   async _onRender(c,o) { await super._onRender?.(c,o); const r=this.element; r.querySelector(".buyer")?.addEventListener("change", e=>{this.buyer=game.actors.get(e.currentTarget.value)??this.buyer;this.render({force:true});}); r.querySelector(".search")?.addEventListener("input", e=>{this.search=e.currentTarget.value??"";this.render({force:true});}); r.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click", e=>{this.tab=e.currentTarget.dataset.tab;this.render({force:true});})); r.querySelectorAll("button[data-action]").forEach(b=>b.addEventListener("click", e=>this.click(e))); }
   async click(e) { const a=e.currentTarget.dataset.action; if(a==="restock"){await restockAll(this.vendor);return this.render({force:true});} const row=e.currentTarget.closest("tr"); const item=this.vendor.items.get(row?.dataset.id); if(a==="stock"){await setStock(item,row.querySelector(".s")?.value);return this.render({force:true});} if(a==="assign")return this.assign(item); normalizeShopCurrency(); const ok=await buy({vendor:this.vendor,buyer:this.buyer,item,quantity:row.querySelector(".q")?.value}); if(ok&&game.user?.isGM)this.render({force:true}); }
