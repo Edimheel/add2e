@@ -1,5 +1,5 @@
-// ADD2E — ApplicationV2 vendeur : onglets, recherche, achats et restock MJ.
-// Version : 2026-06-14-vendor-player-safe-components-v5
+// ADD2E — ApplicationV2 vendeur : boutique composants/projectiles, achats et sélection MJ.
+// Version : 2026-06-14-vendor-app-v8-shop-architecture
 
 import {
   isVendorActor,
@@ -19,10 +19,11 @@ import {
   sceneTokenChoices,
   alertBox,
   esc,
-  lower
+  lower,
+  slug
 } from "./22a-vendor-core.mjs";
 
-const ADD2E_VENDOR_APP_VERSION = "2026-06-14-vendor-player-safe-components-v5";
+const ADD2E_VENDOR_APP_VERSION = "2026-06-14-vendor-app-v8-shop-architecture";
 const SOCKET_BUY_V2 = "ADD2E_VENDOR_BUY_REQUEST_V2";
 const SOCKET_BUY_RESULT_V2 = "ADD2E_VENDOR_BUY_RESULT_V2";
 
@@ -36,30 +37,16 @@ const ADD2E_VENDOR_STYLE = `
   .add2e-vendor-tags{display:flex;flex-wrap:wrap;gap:4px;max-width:300px}.add2e-vendor-tag{display:inline-flex;align-items:center;border:1px solid #b98b2d;border-radius:999px;background:#fff3c7;color:#3a2208;padding:2px 6px;font-size:11px;font-weight:900;line-height:1.2}.add2e-vendor-tag.prepared{background:#dff1c5;border-color:#6d8b2a}.add2e-vendor-tag.known{background:#d8e6ff;border-color:#4a6ea8}.add2e-vendor-tag.missing{background:#f7d0c4;border-color:#a64b2b}.add2e-vendor-spells{max-width:310px;font-size:12px;line-height:1.25;color:#3a2208}.add2e-vendor-spells strong{font-weight:950}.add2e-vendor-spells span{display:block;white-space:normal}.add2e-vendor-assign-dialog{display:grid;gap:10px;color:#2f250c}.add2e-vendor-assign-dialog label{display:grid;gap:4px;font-weight:800}.add2e-vendor-assign-dialog select,.add2e-vendor-assign-dialog input{width:100%;min-height:30px}
 `;
 
-const arr = v => Array.isArray(v) ? v.flatMap(arr) : v === null || v === undefined || v === "" ? [] : typeof v === "string" ? v.split(/[,;|\n]+|\bet\b/gi).map(x => x.trim()).filter(Boolean) : [v];
-const norm = v => lower(v).replace(/[’']/g, "_").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-const uniq = v => [...new Set(v.filter(Boolean))];
-function onlyCode(v) { const t = lower(v).replace(/[^a-z]/g, ""); return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(t); }
+const asArray = value => Array.isArray(value)
+  ? value.flatMap(asArray)
+  : value === null || value === undefined || value === ""
+    ? []
+    : typeof value === "string"
+      ? value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)
+      : [value];
 
-function isResponsibleGM() {
-  if (!game.user?.isGM) return false;
-  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
-  return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
-}
-
-function cleanComponentName(value) {
-  let text = String(value ?? "").trim();
-  text = text.replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
-  text = text.replace(/^\(?\s*m\s*\)?\s*[:：\-–—]?\s*/i, "").trim();
-  text = text.replace(/[.!?;:]+$/g, "").trim();
-  text = text.replace(/^d['’]\s*/i, "");
-  text = text.replace(/^(un|une)?\s*peu\s+de\s+/i, "");
-  text = text.replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
-  text = text.replace(/^(quelques|plusieurs)\s+/i, "");
-  text = text.replace(/^petit morceau de\s+/i, "");
-  text = text.replace(/^morceau de\s+/i, "");
-  return text.trim();
-}
+const norm = value => slug(String(value ?? ""));
+const uniq = values => [...new Set(values.filter(Boolean))];
 
 function actorTypeLabel(actor) {
   const t = String(actor?.type ?? "").toLowerCase();
@@ -80,41 +67,10 @@ function buyerChoices(selectedId = "") {
   return [...groups.entries()].map(([label, actors]) => `<optgroup label="${esc(label)}">${actors.map(a => `<option value="${esc(a.id)}" ${a.id === selectedId ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</optgroup>`).join("");
 }
 
-function addReq(map, raw, qty = 1, spell = null, mult = 1) {
-  const name = cleanComponentName(raw);
-  if (!name || onlyCode(name)) return;
-  const key = norm(name);
-  if (!key) return;
-  const n = Math.max(1, Math.floor(Number(qty) || 1)) * Math.max(1, Math.floor(Number(mult) || 1));
-  const e = map.get(key) ?? { key, name, quantity: 0, spells: [] };
-  e.quantity += n;
-  if (spell) e.spells.push({ name: spell.name ?? "Sort", count: Math.max(1, Math.floor(Number(mult) || 1)) });
-  map.set(key, e);
-}
-
-function collectReq(map, value, spell, mult) {
-  if (value === null || value === undefined || value === "") return;
-  if (Array.isArray(value)) { for (const x of value) collectReq(map, x, spell, mult); return; }
-  if (typeof value === "string") { for (const x of arr(value)) addReq(map, x, 1, spell, mult); return; }
-  if (typeof value === "object") {
-    const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or;
-    if (Array.isArray(alternatives) && alternatives.length) {
-      addReq(map, alternatives.map(x => cleanComponentName(x?.name ?? x?.nom ?? x?.label ?? x?.item ?? x?.component ?? x?.composant ?? x)).filter(Boolean).join(" ou "), 1, spell, mult);
-      return;
-    }
-    const name = value.name ?? value.nom ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
-    const qty = value.quantity ?? value.quantite ?? value.qty ?? value.nombre ?? value.count ?? value.value ?? 1;
-    if (name) addReq(map, name, qty, spell, mult);
-  }
-}
-
-function collectMaterialText(map, value, spell, mult) {
-  const text = String(value ?? "").trim();
-  if (!text) return;
-  const parenthetical = [...text.matchAll(/\bM\b\s*\(([^)]+)\)/gi)].map(m => m[1]);
-  if (parenthetical.length) { for (const p of parenthetical) collectReq(map, p, spell, mult); return; }
-  if (/^\s*[VSMvsm,;\/\s]+\s*$/.test(text)) return;
-  collectReq(map, text, spell, mult);
+function isResponsibleGM() {
+  if (!game.user?.isGM) return false;
+  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+  return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
 }
 
 function spellNameKeys(spell) {
@@ -125,163 +81,148 @@ function spellNameKeys(spell) {
 function associatedSpellNames(item) {
   const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
   return uniq([
-    ...arr(s.sorts_associes), ...arr(s.sortsAssocies), ...arr(s.spells), ...arr(s.spellNames), ...arr(s.sorts),
-    ...arr(f.sorts_associes), ...arr(f.sortsAssocies), ...arr(f.spells), ...arr(f.spellNames)
+    ...asArray(s.sorts_associes), ...asArray(s.sortsAssocies), ...asArray(s.spells), ...asArray(s.spellNames), ...asArray(s.sorts),
+    ...asArray(f.sorts_associes), ...asArray(f.sortsAssocies), ...asArray(f.spells), ...asArray(f.spellNames)
   ].map(v => String(v ?? "").trim()).filter(Boolean));
 }
 
-function componentsAssociatedWithSpell(spell, componentItems, mult = 1) {
-  if (!componentItems?.length) return [];
-  const spellKeys = new Set(spellNameKeys(spell));
-  const out = [];
-  const seen = new Set();
-  for (const item of componentItems) {
-    const names = associatedSpellNames(item);
-    if (!names.length) continue;
-    if (!names.some(name => spellKeys.has(norm(name)))) continue;
-    const key = norm(item.name);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    out.push({ key, name: item.name, quantity: Math.max(1, Math.floor(Number(mult) || 1)), spells: [{ name: spell?.name ?? "Sort", count: Math.max(1, Math.floor(Number(mult) || 1)) }] });
+function itemComponentKeys(item) {
+  const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
+  return uniq([item?.name, s.nom, s.slug, s.composant, s.component, f.slug, f.componentSlug, ...asArray(s.tags), ...asArray(s.effectTags), ...asArray(f.tags)]
+    .map(v => norm(String(v ?? "").replace(/^(composant|component|spell_component)[:_]/i, ""))));
+}
+
+function cleanComponentName(value) {
+  let text = String(value ?? "").trim();
+  text = text.replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
+  text = text.replace(/^\(?\s*m\s*\)?\s*[:：\-–—]?\s*/i, "").trim();
+  text = text.replace(/[.!?;:]+$/g, "").trim();
+  text = text.replace(/^d['’]\s*/i, "");
+  text = text.replace(/^(un|une)?\s*peu\s+de\s+/i, "");
+  text = text.replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
+  text = text.replace(/^(quelques|plusieurs)\s+/i, "");
+  text = text.replace(/^petit morceau de\s+/i, "");
+  text = text.replace(/^morceau de\s+/i, "");
+  return text.trim();
+}
+
+function addFallbackRequirement(map, raw, spell, count) {
+  const name = cleanComponentName(raw);
+  if (!name) return;
+  const key = norm(name);
+  if (!key || ["v", "s", "m", "vs", "vm", "sm", "vsm", "materiel", "material"].includes(key)) return;
+  const e = map.get(key) ?? { key, name, quantity: 0, spells: [] };
+  e.quantity += count;
+  e.spells.push({ name: spell?.name ?? "Sort", count });
+  map.set(key, e);
+}
+
+function fallbackRequirementsForSpell(spell, count = 1) {
+  const s = spell?.system ?? {}, f = spell?.flags?.add2e ?? {}, out = new Map();
+  const fields = [s.composants_requis, s.composantsMateriels, s.composants_materiels, s.composant_materiel, s.composantMateriel, s.materiel, s.matériel, s.material, s.materialComponent, s.materialComponents, s.requiredComponents, s.componentsRequired, f.composants_requis, f.composants, f.components, f.requiredComponents];
+  for (const field of fields) for (const value of asArray(field)) addFallbackRequirement(out, typeof value === "object" ? (value.name ?? value.nom ?? value.label ?? value.item ?? value.component ?? value.composant) : value, spell, count);
+  for (const tag of [...asArray(s.tags), ...asArray(s.effectTags), ...asArray(f.tags)]) {
+    const text = String(tag ?? "").trim();
+    if (/^composant[:_]/i.test(text)) addFallbackRequirement(out, text.replace(/^composant[:_]/i, ""), spell, count);
   }
-  return out;
+  return [...out.values()];
 }
 
-function requirements(spell, mult = 1, componentItems = []) {
-  const associated = componentsAssociatedWithSpell(spell, componentItems, mult);
-  if (associated.length) return associated;
-
-  const s = spell?.system ?? {}, f = spell?.flags?.add2e ?? {}, m = new Map();
-  for (const field of [s.composants_requis, s.composantsMateriels, s.composants_materiels, s.composantsMateriel, s.composant_materiel, s.composantMateriel, s.materiel, s.matériel, s.material, s.materialComponent, s.materialComponents, s.material_components, s.requiredComponents, s.componentsRequired, s.components?.material, s.components?.materials, f.composants_requis, f.composants, f.components, f.requiredComponents]) collectReq(m, field, spell, mult);
-  for (const field of [s.composants, s.composantes, s.components, f.composantes]) collectMaterialText(m, field, spell, mult);
-  for (const tag of [...arr(s.tags), ...arr(s.effectTags), ...arr(f.tags), ...arr(f.effectTags)]) {
-    const t = String(tag ?? "").trim();
-    if (/^composant[:_]/i.test(t)) addReq(m, t.replace(/^composant[:_]/i, ""), 1, spell, mult);
-  }
-  return [...m.values()];
+function memorizedCount(spell) {
+  try {
+    const n = Number(globalThis.add2eGetTotalMemorizedCount?.(spell));
+    if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  } catch (_err) {}
+  const raw = spell?.getFlag?.("add2e", "memorizedByList") ?? spell?.flags?.add2e?.memorizedByList ?? {};
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) return Object.values(raw).reduce((sum, v) => sum + (Number(v) || 0), 0);
+  return Math.max(0, Number(spell?.getFlag?.("add2e", "memorizedCount") ?? spell?.flags?.add2e?.memorizedCount ?? 0) || 0);
 }
 
-function sumPrepared(v) {
-  if (typeof v === "number" && Number.isFinite(v)) return Math.max(0, v);
-  if (typeof v === "string") return Math.max(0, Number(v) || 0);
-  if (!v || typeof v !== "object") return 0;
-  let n = 0;
-  for (const x of Object.values(v)) n += sumPrepared(x);
-  return n;
-}
-
-function preparedCount(spell) {
-  const f = spell?.flags?.add2e ?? {}, s = spell?.system ?? {};
-  let best = 0;
-  for (const v of [spell?.getFlag?.("add2e", "memorizedCount"), f.memorizedCount, f.preparedCount, s.memorizedCount, s.preparedCount, s.prepared, s.memorise, s.memorisé, s.memorized, s.memorisation?.value, s.memorisation, s.slots?.prepared, s.slots?.value]) {
-    const n = Number(v);
-    if (Number.isFinite(n) && n > best) best = n;
-  }
-  best = Math.max(best, sumPrepared(spell?.getFlag?.("add2e", "memorizedByList")), sumPrepared(f.memorizedByList), sumPrepared(f.preparedByList), sumPrepared(s.memorizedByList), sumPrepared(s.preparedByList));
-  try { const n = Number(globalThis.add2eGetTotalMemorizedCount?.(spell)); if (Number.isFinite(n) && n > best) best = n; } catch (_e) {}
-  return Math.max(0, best);
-}
-
-function objectPower(spell) {
-  const s = spell?.system ?? {};
-  if (s.isPower === true || s.isObjectPower === true || s.sourceWeaponId || s.sourceItemId || s.powerIndex !== undefined) return true;
-  try { return globalThis.add2eIsObjectMagicSpellForPreparation?.(spell) === true; } catch (_e) { return false; }
+function isRegularSpell(actor, spell) {
+  if (String(spell?.type ?? "").toLowerCase() !== "sort") return false;
+  try { if (globalThis.add2eIsRegularPreparableSpell?.(spell) === false) return false; } catch (_err) {}
+  try {
+    const r = globalThis.add2eCanActorUseSpell?.(actor, spell);
+    if (r && r.ok === false && ["list", "level", "not-regular-spell"].includes(r.reason)) return false;
+  } catch (_err) {}
+  const s = spell?.system ?? {}, f = spell?.flags?.add2e ?? {};
+  if (s.isPower === true || s.isObjectPower === true || s.isCapacity === true || s.isCapacite === true || f.sourceType === "capacite") return false;
+  return true;
 }
 
 function actorSpells(actor) {
-  return Array.from(actor?.items ?? []).filter(i => String(i?.type ?? "").toLowerCase() === "sort" && !objectPower(i)).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  return Array.from(actor?.items ?? [])
+    .filter(spell => isRegularSpell(actor, spell))
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)));
 }
 
-function reqMap(spells, prepared = false, componentItems = []) {
+function componentNeeds(actor, componentItems, preparedOnly) {
   const out = new Map();
+  const spells = actorSpells(actor);
   for (const spell of spells) {
-    const count = preparedCount(spell);
-    if (prepared && count <= 0) continue;
-    for (const r of requirements(spell, prepared ? count : 1, componentItems)) {
-      const e = out.get(r.key) ?? { key: r.key, name: r.name, quantity: 0, spells: [] };
-      e.quantity += r.quantity;
-      e.spells.push(...r.spells);
-      out.set(r.key, e);
+    const count = preparedOnly ? memorizedCount(spell) : 1;
+    if (preparedOnly && count <= 0) continue;
+    const spellKeys = new Set(spellNameKeys(spell));
+    let matched = false;
+
+    for (const item of componentItems) {
+      const names = associatedSpellNames(item);
+      if (!names.length || !names.some(name => spellKeys.has(norm(name)))) continue;
+      const key = norm(item.name);
+      const e = out.get(key) ?? { key, name: item.name, quantity: 0, spells: [], itemIds: new Set() };
+      e.quantity += count;
+      e.spells.push({ name: spell.name, count });
+      e.itemIds.add(item.id);
+      out.set(key, e);
+      matched = true;
+    }
+
+    if (!matched) {
+      for (const req of fallbackRequirementsForSpell(spell, count)) {
+        const item = componentItems.find(i => itemComponentKeys(i).includes(req.key));
+        const key = item ? norm(item.name) : req.key;
+        const e = out.get(key) ?? { key, name: item?.name ?? req.name, quantity: 0, spells: [], itemIds: new Set() };
+        e.quantity += req.quantity;
+        e.spells.push(...req.spells);
+        if (item) e.itemIds.add(item.id);
+        out.set(key, e);
+      }
     }
   }
   return out;
 }
 
-function itemKeys(item) {
-  const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
-  return uniq([item?.name, s.nom, s.slug, s.composant, s.component, f.slug, f.componentSlug, ...arr(s.tags), ...arr(s.effectTags), ...arr(f.tags), ...arr(f.effectTags)].map(v => norm(String(v ?? "").replace(/^(composant|component|spell_component)[:_]/i, ""))));
-}
-
-function matchReq(item, req) {
-  const keys = itemKeys(item);
-  if (keys.includes(req.key)) return true;
-  if (String(req.key ?? "").length < 5) return false;
-  return keys.some(k => k && k.length >= 5 && (k.includes(req.key) || req.key.includes(k)));
-}
-
-function spellLabels(req) {
-  const g = new Map();
-  for (const s of req?.spells ?? []) {
-    const n = s.name ?? "Sort";
-    g.set(n, Math.max(g.get(n) ?? 0, Number(s.count) || 1));
-  }
-  return [...g.entries()].map(([n, c]) => c > 1 ? `${n} ×${c}` : n);
+function spellLabels(need) {
+  const grouped = new Map();
+  for (const s of need?.spells ?? []) grouped.set(s.name, Math.max(grouped.get(s.name) ?? 0, Number(s.count) || 1));
+  return [...grouped.entries()].map(([name, count]) => count > 1 ? `${name} ×${count}` : name);
 }
 
 function relevance(actor, componentItems) {
-  const spells = actorSpells(actor), known = reqMap(spells, false, componentItems), prepared = reqMap(spells, true, componentItems), mk = new Set(), mp = new Set(), byItem = new Map();
+  const known = actor ? componentNeeds(actor, componentItems, false) : new Map();
+  const prepared = actor ? componentNeeds(actor, componentItems, true) : new Map();
+  const byItem = new Map();
+  const preparedMatched = new Set();
+  const knownMatched = new Set();
+
   for (const item of componentItems) {
-    const kr = [...known.values()].filter(r => matchReq(item, r)), pr = [...prepared.values()].filter(r => matchReq(item, r));
-    for (const r of kr) mk.add(r.key);
-    for (const r of pr) mp.add(r.key);
-    byItem.set(item.id, { known: kr, prepared: pr, knownNeed: kr.reduce((s, r) => s + r.quantity, 0), preparedNeed: pr.reduce((s, r) => s + r.quantity, 0), spellNames: uniq([...kr, ...pr].flatMap(spellLabels)) });
+    const keys = itemComponentKeys(item);
+    const preparedNeeds = [...prepared.values()].filter(n => n.itemIds?.has(item.id) || keys.includes(n.key));
+    const knownNeeds = [...known.values()].filter(n => n.itemIds?.has(item.id) || keys.includes(n.key));
+    for (const n of preparedNeeds) preparedMatched.add(n.key);
+    for (const n of knownNeeds) knownMatched.add(n.key);
+    byItem.set(item.id, {
+      preparedNeed: preparedNeeds.reduce((sum, n) => sum + n.quantity, 0),
+      knownNeed: knownNeeds.reduce((sum, n) => sum + n.quantity, 0),
+      spellNames: uniq([...preparedNeeds, ...knownNeeds].flatMap(spellLabels))
+    });
   }
+
   const missing = [
-    ...[...prepared.values()].filter(r => !mp.has(r.key)).map(req => ({ req, scope: "prepared" })),
-    ...[...known.values()].filter(r => !mk.has(r.key) && !prepared.has(r.key)).map(req => ({ req, scope: "known" }))
+    ...[...prepared.values()].filter(n => !preparedMatched.has(n.key)).map(req => ({ scope: "prepared", req })),
+    ...[...known.values()].filter(n => !knownMatched.has(n.key) && !prepared.has(n.key)).map(req => ({ scope: "known", req }))
   ];
   return { byItem, missing, knownCount: known.size, preparedCount: prepared.size };
-}
-
-function componentStockData(req) {
-  const key = norm(req?.key ?? req?.name);
-  const name = cleanComponentName(req?.name ?? req?.key ?? "Composant");
-  const stock = Math.max(20, Number(req?.quantity) || 1);
-  return {
-    name,
-    type: "objet",
-    img: "icons/svg/item-bag.svg",
-    system: {
-      categorie: "composant_sort",
-      sousType: "composant",
-      slug: key,
-      composant: key,
-      quantite: stock,
-      prix: { valeur: 1, devise: "po" },
-      tags: ["composant_sort", `composant:${key}`]
-    },
-    flags: {
-      add2e: {
-        vendorItem: true,
-        vendorKind: "component",
-        vendorStockMax: stock,
-        autoGeneratedComponent: true,
-        componentSlug: key
-      }
-    }
-  };
-}
-
-async function ensureVendorMinimumHp(vendor) {
-  if (!game.user?.isGM || !vendor?.update) return false;
-  const s = vendor.system ?? {};
-  const update = {};
-  for (const key of ["pdv", "points_de_coup", "pv", "pv_actuels", "pv_max", "points_de_vie", "points_de_vie_max"]) {
-    if (!(Number(s[key]) >= 1)) update[`system.${key}`] = 1;
-  }
-  if (!Object.keys(update).length) return false;
-  await vendor.update(update, { add2eReason: "vendor-minimum-hit-points" });
-  return true;
 }
 
 function toCopperSafe(money) {
@@ -291,11 +232,16 @@ function toCopperSafe(money) {
   return coins.reduce((sum, c) => sum + (Number(money?.[c.key]) || 0) * c.pc, 0);
 }
 
-async function alertConfirmBuy(item, qty, total) {
+async function confirmBuy(item, qty, total) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  const content = `<p>Acheter <b>${qty} × ${esc(item.name)}</b> pour <b>${formatMoney(total)}</b> ?</p>`;
-  if (DialogV2?.confirm) return DialogV2.confirm({ window: { title: "Confirmer l’achat" }, content, yes: { label: "Acheter" }, no: { label: "Annuler" }, modal: true });
-  return false;
+  if (!DialogV2?.confirm) return false;
+  return DialogV2.confirm({
+    window: { title: "Confirmer l’achat" },
+    content: `<p>Acheter <b>${qty} × ${esc(item.name)}</b> pour <b>${formatMoney(total)}</b> ?</p>`,
+    yes: { label: "Acheter" },
+    no: { label: "Annuler" },
+    modal: true
+  });
 }
 
 async function buyThroughVendor({ vendor, buyer, item, quantity: qty }) {
@@ -304,13 +250,15 @@ async function buyThroughVendor({ vendor, buyer, item, quantity: qty }) {
   const total = priceCopper(item) * qty;
   if (quantity(item) < qty) return alertBox("Stock insuffisant", `${item.name} : stock disponible ${quantity(item)}.`).then(() => false);
   if (toCopperSafe(getMoney(buyer)) < total) return alertBox("Argent insuffisant", `${buyer.name} n’a pas assez d’argent. Prix : ${formatMoney(total)}.`).then(() => false);
-  if (!await alertConfirmBuy(item, qty, total)) return false;
+  if (!await confirmBuy(item, qty, total)) return false;
+
   if (game.user?.isGM) {
-    const r = await buyLocal({ vendor, buyer, item, quantity: qty }, { confirm: false });
-    if (!r.ok && !r.cancelled) await alertBox("Achat impossible", r.message);
-    else if (r.ok) ui.notifications?.info?.(r.message);
-    return r.ok;
+    const result = await buyLocal({ vendor, buyer, item, quantity: qty }, { confirm: false });
+    if (result?.ok) ui.notifications?.info?.(result.message);
+    else if (!result?.cancelled) await alertBox("Achat impossible", result?.message ?? "Achat impossible.");
+    return result?.ok === true;
   }
+
   game.socket?.emit?.("system.add2e", { type: SOCKET_BUY_V2, requestId: foundry.utils.randomID(), userId: game.user.id, vendorId: vendor.id, buyerId: buyer.id, buyerUuid: buyer.uuid, itemId: item.id, quantity: qty });
   return true;
 }
@@ -324,45 +272,15 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
     this.buyer = buyer ?? getBuyer();
     this.activeTab = "all";
     this.searchText = "";
-    this._autoStockRunning = false;
   }
 
   get title() { return `${this.vendor?.name ?? "Boutique"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
-
-  _stock() {
-    return Array.from(this.vendor?.items ?? []).filter(isStockItem).sort((a, b) => String(a.name).localeCompare(String(b.name)));
-  }
-
-  async _ensureMissingComponents() {
-    if (!game.user?.isGM || !this.vendor || !this.buyer || this._autoStockRunning) return 0;
-    this._autoStockRunning = true;
-    try {
-      const stock = this._stock();
-      const componentItems = stock.filter(i => vendorKind(i) === "Composant");
-      const rel = relevance(this.buyer, componentItems);
-      const existing = new Set(componentItems.flatMap(itemKeys));
-      const seen = new Set();
-      const create = [];
-      for (const { req } of rel.missing) {
-        const key = norm(req?.key ?? req?.name);
-        if (!key || existing.has(key) || seen.has(key)) continue;
-        seen.add(key);
-        create.push(componentStockData(req));
-      }
-      if (create.length) await this.vendor.createEmbeddedDocuments("Item", create, { add2eReason: "vendor-auto-missing-spell-components" });
-      if (create.length) ui.notifications?.info?.(`${this.vendor.name} : ${create.length} composant(s) requis ajouté(s) au stock.`);
-      return create.length;
-    } finally {
-      this._autoStockRunning = false;
-    }
-  }
+  _stock() { return Array.from(this.vendor?.items ?? []).filter(isStockItem).sort((a, b) => String(a.name).localeCompare(String(b.name))); }
 
   async _prepareContext() {
-    if (game.user?.isGM) await ensureVendorMinimumHp(this.vendor);
-    await this._ensureMissingComponents();
     const stock = this._stock();
     const componentItems = stock.filter(i => vendorKind(i) === "Composant");
-    const rel = this.buyer ? relevance(this.buyer, componentItems) : { byItem: new Map(), missing: [], knownCount: 0, preparedCount: 0 };
+    const rel = relevance(this.buyer, componentItems);
     const items = stock.map(item => {
       const kind = vendorKind(item);
       const tab = kind === "Composant" ? "components" : kind === "Projectile" ? "projectiles" : "equipment";
@@ -370,12 +288,13 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
       const tabs = [tab];
       if (r.preparedNeed > 0) tabs.push("components-prepared");
       if (r.knownNeed > 0) tabs.push("components-known");
-      return { id: item.id, name: item.name, img: item.img || "icons/svg/item-bag.svg", kind, tab, relevantTabs: tabs, stock: quantity(item), priceLabel: formatMoney(priceCopper(item)), preparedNeed: r.preparedNeed, knownNeed: r.knownNeed, spellNames: r.spellNames, missing: false, search: lower(`${item.name} ${kind} ${item.system?.categorie ?? ""} ${item.system?.sousType ?? ""} ${item.system?.sous_type ?? ""} ${r.spellNames.join(" ")} ${associatedSpellNames(item).join(" ")}`) };
+      return { id: item.id, name: item.name, img: item.img || "icons/svg/item-bag.svg", kind, relevantTabs: tabs, stock: quantity(item), priceLabel: formatMoney(priceCopper(item)), preparedNeed: r.preparedNeed, knownNeed: r.knownNeed, spellNames: r.spellNames, missing: false, search: lower(`${item.name} ${kind} ${r.spellNames.join(" ")} ${associatedSpellNames(item).join(" ")}`) };
     });
-    for (const e of rel.missing) {
-      const req = e.req;
-      items.push({ id: `missing-${req.key}-${e.scope}`, name: req.name, img: "icons/svg/hazard.svg", kind: "Composant", tab: "components", relevantTabs: [e.scope === "prepared" ? "components-prepared" : "components-known"], stock: 0, priceLabel: "Absent du stock", preparedNeed: e.scope === "prepared" ? req.quantity : 0, knownNeed: e.scope === "known" ? req.quantity : 0, spellNames: spellLabels(req), missing: true, search: lower(`${req.name} composant absent ${spellLabels(req).join(" ")}`) });
+
+    for (const { scope, req } of rel.missing) {
+      items.push({ id: `missing-${req.key}-${scope}`, name: req.name, img: "icons/svg/hazard.svg", kind: "Composant", relevantTabs: [scope === "prepared" ? "components-prepared" : "components-known"], stock: 0, priceLabel: "Absent du stock", preparedNeed: scope === "prepared" ? req.quantity : 0, knownNeed: scope === "known" ? req.quantity : 0, spellNames: spellLabels(req), missing: true, search: lower(`${req.name} ${spellLabels(req).join(" ")}`) });
     }
+
     return { vendor: this.vendor, buyer: this.buyer, buyerMoneyLabel: this.buyer ? formatMoney(getMoney(this.buyer)) : "Gestion MJ", buyerOptions: buyerChoices(this.buyer?.id), items, isGM: game.user?.isGM === true, activeTab: this.activeTab, searchText: this.searchText, componentPreparedCount: rel.preparedCount, componentKnownCount: rel.knownCount };
   }
 
@@ -441,29 +360,14 @@ class Add2eVendorApp extends foundry.applications.api.ApplicationV2 {
   }
 }
 
-function vendorAppKey(vendor) {
-  return `${vendor?.id ?? "vendor"}:${game.user?.id ?? "user"}`;
-}
-
-function appElement(app) {
-  if (app?.element instanceof HTMLElement) return app.element;
-  if (app?.element?.[0] instanceof HTMLElement) return app.element[0];
-  return null;
-}
-
-function appStillUsable(app) {
-  if (!app) return false;
-  const el = appElement(app);
-  if (!el) return false;
-  const root = el.closest?.(".application") ?? el;
-  return document.body?.contains?.(root) === true;
-}
+function vendorAppKey(vendor) { return `${vendor?.id ?? "vendor"}:${game.user?.id ?? "user"}`; }
+function appElement(app) { if (app?.element instanceof HTMLElement) return app.element; if (app?.element?.[0] instanceof HTMLElement) return app.element[0]; return null; }
+function appStillUsable(app) { const el = appElement(app); if (!el) return false; const root = el.closest?.(".application") ?? el; return document.body?.contains?.(root) === true; }
 
 export async function openVendor({ vendor = null, buyer = null } = {}) {
   vendor = vendor ?? findVendor();
   if (!vendor) vendor = await createVendor();
   if (!vendor) return null;
-  if (game.user?.isGM) await ensureVendorMinimumHp(vendor);
   buyer = buyer ?? getBuyer();
   if (!buyer && !game.user?.isGM) { await alertBox("Aucun acheteur", "Aucun personnage joueur n’est assigné ou sélectionné pour acheter chez ce vendeur."); return null; }
   const key = vendorAppKey(vendor);
@@ -499,22 +403,20 @@ async function openVendorFromToken(token) {
   return true;
 }
 
-function bindVendorToken(token) {
-  if (!token || token.__add2eVendorBoundV17) return;
-  if (!isVendorActor(token.actor)) return;
-  token.__add2eVendorBoundV17 = true;
-  try { token.cursor = "pointer"; } catch (_err) {}
-  try { token.eventMode = "static"; } catch (_err) {}
-  try { token.interactive = true; } catch (_err) {}
-  const handler = event => { event?.stopPropagation?.(); window.setTimeout(() => openVendorFromToken(token), 0); };
-  try { token.on?.("pointertap", handler); } catch (_err) {}
+export function bindAllVendorTokens() {
+  for (const token of canvas?.tokens?.placeables ?? []) {
+    if (!token || token.__add2eVendorBoundV18) continue;
+    if (!isVendorActor(token.actor)) continue;
+    token.__add2eVendorBoundV18 = true;
+    try { token.cursor = "pointer"; } catch (_err) {}
+    try { token.eventMode = "static"; } catch (_err) {}
+    try { token.interactive = true; } catch (_err) {}
+  }
 }
 
-export function bindAllVendorTokens() { for (const token of canvas?.tokens?.placeables ?? []) bindVendorToken(token); }
-
 export function patchVendorTokenClick() {
-  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V17) return;
-  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V17 = true;
+  if (globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V18) return;
+  globalThis.__ADD2E_VENDOR_TOKEN_CLICK_PATCHED_V18 = true;
   const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
   const proto = TokenClass?.prototype;
   if (proto && typeof proto._onClickLeft === "function") {
