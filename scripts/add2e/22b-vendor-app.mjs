@@ -1,10 +1,10 @@
 // ADD2E — Marchand V2 compact.
-// Version : 2026-06-14-merchant-unit-v7-compact-layout
+// Version : 2026-06-14-merchant-unit-v8-player-socket-buy
 
 import { findVendor, createVendor, getBuyer, isVendorActor, vendorKind, isStockItem, quantity, priceCopper, formatMoney, getMoney, buy, restockAll, setStock, assignItemToToken, alertBox, esc, lower, slug } from "./22a-vendor-core.mjs";
 import { normalizeShopCurrency } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-14-merchant-unit-v7-compact-layout";
+const VERSION = "2026-06-14-merchant-unit-v8-player-socket-buy";
 const arr = v => Array.isArray(v) ? v.flatMap(arr) : v == null || v === "" ? [] : typeof v === "string" ? v.split(/[,;|\n]+/g).map(x => x.trim()).filter(Boolean) : [v];
 const key = v => slug(String(v ?? ""));
 const uniq = v => [...new Set(v.filter(Boolean))];
@@ -17,6 +17,7 @@ function spellKeys(spell) { const s = spell?.system ?? {}, f = spell?.flags?.add
 function memorized(spell) { try { const n = Number(globalThis.add2eGetTotalMemorizedCount?.(spell)); if (Number.isFinite(n) && n > 0) return Math.floor(n); } catch (_e) {} const raw = spell?.getFlag?.("add2e", "memorizedByList") ?? spell?.flags?.add2e?.memorizedByList ?? {}; if (raw && typeof raw === "object" && !Array.isArray(raw)) return Object.values(raw).reduce((s,v)=>s+(Number(v)||0),0); return Number(spell?.getFlag?.("add2e", "memorizedCount") ?? spell?.flags?.add2e?.memorizedCount ?? 0) || 0; }
 function spells(actor) { return Array.from(actor?.items ?? []).filter(i => String(i?.type ?? "").toLowerCase() === "sort" && !i.system?.isPower && !i.system?.isObjectPower).sort((a,b)=>String(a.name).localeCompare(String(b.name))); }
 function usage(actor, item) { if (vendorKind(item) !== "Composant") return { known:0, prep:0, names:[] }; const aliases = linked(item).map(key); if (!aliases.length) return { known:0, prep:0, names:[] }; let known = 0, prep = 0, names = []; for (const sp of spells(actor)) if (spellKeys(sp).some(k => aliases.includes(k))) { known += 1; const m = memorized(sp); prep += m; names.push(m > 1 ? `${sp.name} ×${m}` : sp.name); } return { known, prep, names: uniq(names) }; }
+async function confirmPlayerBuy(item, qty) { const D = foundry?.applications?.api?.DialogV2; const total = formatMoney(priceCopper(item) * qty); return D?.confirm?.({ window: { title: "Confirmer l’achat" }, content: `<p>Acheter <b>${qty} × ${esc(item.name)}</b> pour <b>${total}</b> ?</p>`, yes: { label: "Acheter" }, no: { label: "Annuler" }, modal: true }) ?? false; }
 
 class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = { id: "add2e-merchant-{id}", classes: ["add2e", "add2e-merchant-app"], tag: "section", window: { title: "Marchand ADD2E", resizable: true }, position: { width: 980, height: 620 } };
@@ -45,7 +46,8 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
   }
   _replaceHTML(result, content) { content.replaceChildren(result); }
   async _onRender(c,o) { await super._onRender?.(c,o); const r=this.element; r.querySelector(".buyer")?.addEventListener("change", e=>{this.buyer=game.actors.get(e.currentTarget.value)??this.buyer;this.render({force:true});}); r.querySelector(".search")?.addEventListener("input", e=>{this.search=e.currentTarget.value??"";this.render({force:true});}); r.querySelectorAll("button[data-tab]").forEach(b=>b.addEventListener("click", e=>{this.tab=e.currentTarget.dataset.tab;this.render({force:true});})); r.querySelectorAll("button[data-action]").forEach(b=>b.addEventListener("click", e=>this.click(e))); }
-  async click(e) { const a=e.currentTarget.dataset.action; if(a==="restock"){await restockAll(this.vendor);return this.render({force:true});} const row=e.currentTarget.closest("tr"); const item=this.vendor.items.get(row?.dataset.id); if(a==="stock"){await setStock(item,row.querySelector(".s")?.value);return this.render({force:true});} if(a==="assign")return this.assign(item); normalizeShopCurrency(); const ok=await buy({vendor:this.vendor,buyer:this.buyer,item,quantity:row.querySelector(".q")?.value}); if(ok&&game.user?.isGM)this.render({force:true}); }
+  async playerBuy(item, qty) { qty = Math.max(1, Math.floor(Number(qty) || 1)); if (!this.vendor || !this.buyer || !item) return false; if (quantity(item) < qty) return alertBox("Stock insuffisant", `${item.name} : stock disponible ${quantity(item)}.`).then(() => false); if (!await confirmPlayerBuy(item, qty)) return false; game.socket?.emit?.("system.add2e", { type: "ADD2E_VENDOR_BUY_REQUEST", requestId: foundry.utils.randomID(), userId: game.user.id, vendorId: this.vendor.id, buyerId: this.buyer.id, buyerUuid: this.buyer.uuid, itemId: item.id, quantity: qty }); return true; }
+  async click(e) { const a=e.currentTarget.dataset.action; if(a==="restock"){await restockAll(this.vendor);return this.render({force:true});} const row=e.currentTarget.closest("tr"); const item=this.vendor.items.get(row?.dataset.id); if(a==="stock"){await setStock(item,row.querySelector(".s")?.value);return this.render({force:true});} if(a==="assign")return this.assign(item); normalizeShopCurrency(); if(!game.user?.isGM)return this.playerBuy(item,row.querySelector(".q")?.value); const ok=await buy({vendor:this.vendor,buyer:this.buyer,item,quantity:row.querySelector(".q")?.value}); if(ok&&game.user?.isGM)this.render({force:true}); }
   async assign(item) { if(!this.buyer)return alertBox("Aucun acteur","Choisis d’abord un acteur acheteur présent sur la scène."); const r=await assignItemToToken({vendor:this.vendor,item,token:{actor:this.buyer,name:this.buyer.name},quantity:1}); r.ok?ui.notifications.info(r.message):ui.notifications.warn(r.message); this.render({force:true}); }
 }
 
