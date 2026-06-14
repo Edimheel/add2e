@@ -42,6 +42,8 @@ import {
 } from "./22e-consumables-core.mjs";
 
 const ADD2E_SHOP_TOKEN_PRESENTATION_VERSION = "2026-05-28-shop-token-name-lock-rotation-hide-actors-v2";
+const ADD2E_SHOP_HP_VERSION = "2026-06-14-shop-hp-one-v1";
+const ADD2E_SHOP_HP = 1;
 
 function add2eShopTokenDisplayAlwaysValue() {
   return CONST?.TOKEN_DISPLAY_MODES?.ALWAYS ?? 50;
@@ -49,6 +51,52 @@ function add2eShopTokenDisplayAlwaysValue() {
 
 function add2eIsShopActor(actor) {
   return isVendorActor(actor) || isArmorerActor(actor);
+}
+
+function add2eShopHitPointUpdate() {
+  return {
+    "system.pdv": ADD2E_SHOP_HP,
+    "system.pv": ADD2E_SHOP_HP,
+    "system.points_de_coup": ADD2E_SHOP_HP,
+    "system.points_de_vie": ADD2E_SHOP_HP,
+    "system.pv_max": ADD2E_SHOP_HP,
+    "system.hp.value": ADD2E_SHOP_HP,
+    "system.hp.max": ADD2E_SHOP_HP,
+    "system.attributes.hp.value": ADD2E_SHOP_HP,
+    "system.attributes.hp.max": ADD2E_SHOP_HP,
+    "flags.add2e.shopHpVersion": ADD2E_SHOP_HP_VERSION
+  };
+}
+
+function add2eShopActorNeedsHitPointUpdate(actor) {
+  const sys = actor?.system ?? {};
+  const values = [
+    sys.pdv,
+    sys.pv,
+    sys.points_de_coup,
+    sys.points_de_vie,
+    sys.pv_max,
+    sys.hp?.value,
+    sys.hp?.max,
+    sys.attributes?.hp?.value,
+    sys.attributes?.hp?.max
+  ];
+  return actor?.getFlag?.("add2e", "shopHpVersion") !== ADD2E_SHOP_HP_VERSION
+    || values.some(value => Number(value) !== ADD2E_SHOP_HP);
+}
+
+async function add2eEnforceShopHitPoints() {
+  if (!game.user?.isGM) return false;
+
+  for (const actor of game.actors ?? []) {
+    if (!add2eIsShopActor(actor) || !add2eShopActorNeedsHitPointUpdate(actor)) continue;
+    await actor.update(add2eShopHitPointUpdate(), { add2eReason: "shop-hit-points-one" });
+  }
+
+  game.add2e = game.add2e ?? {};
+  game.add2e.shopHpVersion = ADD2E_SHOP_HP_VERSION;
+  globalThis.ADD2E_SHOP_HP_VERSION = ADD2E_SHOP_HP_VERSION;
+  return true;
 }
 
 async function add2eEnforceShopTokenPresentation() {
@@ -150,6 +198,7 @@ Hooks.once("ready", async () => {
 
   await ensureVendorOnLaunch().catch(err => console.warn("[ADD2E][VENDOR][AUTO_CREATE]", err));
   await ensureArmorerOnLaunch().catch(err => console.warn("[ADD2E][ARMORER][AUTO_CREATE]", err));
+  await add2eEnforceShopHitPoints().catch(err => console.warn("[ADD2E][SHOP_HP]", err));
   await add2eEnforceShopTokenPresentation().catch(err => console.warn("[ADD2E][SHOP_TOKEN][PRESENTATION]", err));
 
   registerRecoveryHooks();
