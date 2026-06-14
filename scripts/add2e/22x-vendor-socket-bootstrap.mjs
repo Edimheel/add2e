@@ -1,5 +1,5 @@
 // ADD2E — Bootstrap monnaie, UI boutiques et achats joueurs isolés.
-// Version : 2026-06-14-shop-bootstrap-v8-armorer-isolated-buy
+// Version : 2026-06-14-shop-bootstrap-v9-disable-player-move-xp-item-recalc
 
 import { COINS as VENDOR_COINS, buyLocal as vendorBuyLocal } from "./22a-vendor-core.mjs";
 import { COINS as ARMORER_COINS, buyLocal as armorerBuyLocal, getArmorerDisplayItems, itemKey as armorerItemKey } from "./22c-armorer-core.mjs";
@@ -34,11 +34,11 @@ function isResponsibleGM() {
 }
 
 function diag(label, data = {}) {
-  console.warn(`${DIAG}[${label}]`, { user: game.user?.name, userId: game.user?.id, isGM: game.user?.isGM, activeGM: game.users?.activeGM?.id, version: "2026-06-14-shop-bootstrap-v8-armorer-isolated-buy", ...data });
+  console.warn(`${DIAG}[${label}]`, { user: game.user?.name, userId: game.user?.id, isGM: game.user?.isGM, activeGM: game.users?.activeGM?.id, version: "2026-06-14-shop-bootstrap-v9-disable-player-move-xp-item-recalc", ...data });
 }
 
 function permissionDiag(label, data = {}) {
-  console.warn(`${PERM}[${label}]`, { user: game.user?.name, userId: game.user?.id, isGM: game.user?.isGM, version: "2026-06-14-shop-bootstrap-v8-armorer-isolated-buy", ...data });
+  console.warn(`${PERM}[${label}]`, { user: game.user?.name, userId: game.user?.id, isGM: game.user?.isGM, version: "2026-06-14-shop-bootstrap-v9-disable-player-move-xp-item-recalc", ...data });
 }
 
 function isShopDoc(actor) {
@@ -65,12 +65,47 @@ function installPlayerUpdateDiagnostics() {
   permissionDiag("PLAYER_UPDATE_DIAGNOSTICS_INSTALLED");
 }
 
+function hookCallback(entry) {
+  if (typeof entry === "function") return entry;
+  return entry?.fn ?? entry?.callback ?? entry?.hook ?? null;
+}
+
+function isMoveXpItemRecalcHook(entry) {
+  const fn = hookCallback(entry);
+  if (typeof fn !== "function") return false;
+  let src = "";
+  try { src = Function.prototype.toString.call(fn); } catch (_e) { return false; }
+  return src.includes("recalc(actor") && src.includes("mode: \"movement\"") && src.includes("actor.type === \"personnage\"");
+}
+
+function removeMoveXpItemRecalcHooksForPlayers() {
+  if (game.user?.isGM || globalThis.__ADD2E_MOVE_XP_PLAYER_ITEM_RECALC_REMOVED_V1) return;
+  globalThis.__ADD2E_MOVE_XP_PLAYER_ITEM_RECALC_REMOVED_V1 = true;
+  const buckets = [];
+  for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
+    const direct = Hooks?._hooks?.[hookName];
+    const legacy = Hooks?.events?.[hookName];
+    if (Array.isArray(direct)) buckets.push({ hookName, list: direct, source: "_hooks" });
+    if (Array.isArray(legacy) && legacy !== direct) buckets.push({ hookName, list: legacy, source: "events" });
+  }
+  const removed = [];
+  for (const bucket of buckets) {
+    const before = bucket.list.length;
+    for (let i = bucket.list.length - 1; i >= 0; i--) {
+      if (isMoveXpItemRecalcHook(bucket.list[i])) bucket.list.splice(i, 1);
+    }
+    const count = before - bucket.list.length;
+    if (count > 0) removed.push({ hookName: bucket.hookName, source: bucket.source, count });
+  }
+  permissionDiag("MOVE_XP_PLAYER_ITEM_RECALC_HOOK_REMOVAL", { removed });
+}
+
 export function normalizeShopCurrency() {
   normalizeCoins(VENDOR_COINS);
   normalizeCoins(ARMORER_COINS);
   game.add2e = game.add2e ?? {};
-  game.add2e.shopCurrencyVersion = "2026-06-14-shop-bootstrap-v8-armorer-isolated-buy";
-  game.add2e.shopBuyDiagnosticsVersion = "2026-06-14-shop-bootstrap-v8-armorer-isolated-buy";
+  game.add2e.shopCurrencyVersion = "2026-06-14-shop-bootstrap-v9-disable-player-move-xp-item-recalc";
+  game.add2e.shopBuyDiagnosticsVersion = "2026-06-14-shop-bootstrap-v9-disable-player-move-xp-item-recalc";
 }
 
 function loadStylesheetOnce(id, href) {
@@ -142,4 +177,4 @@ async function handleArmorerBuy(data) {
 }
 
 normalizeShopCurrency();
-Hooks.once("ready", () => { normalizeShopCurrency(); loadShopStylesheet(); installPlayerUpdateDiagnostics(); registerIsolatedPlayerBuySocket(); });
+Hooks.once("ready", () => { normalizeShopCurrency(); loadShopStylesheet(); installPlayerUpdateDiagnostics(); removeMoveXpItemRecalcHooksForPlayers(); registerIsolatedPlayerBuySocket(); });
