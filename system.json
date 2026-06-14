@@ -1,11 +1,11 @@
 {
   "id": "add2e",
   "title": "AD&D 2e (Descartes)",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "socket": true,
   "compatibility": {
     "minimum": "13",
-    "verified": "13"
+    "verified": "15"
   },
   "authors": [
     {
@@ -19,10 +19,9 @@
     "scripts/add2e-action-hud.mjs",
     "scripts/add2e.mjs",
     "scripts/add2e/22-vendor.mjs",
-    "scripts/add2e/22x-vendor-socket-bootstrap.mjs",
-    "scripts/monster-sheet.mjs",
     "scripts/08-character-sheet-ui.mjs",
-    "scripts/resolveActiveEffectsOnTarget.mjs"
+    "scripts/resolveActiveEffectsOnTarget.mjs",
+    "scripts/monster-sheet.mjs"
   ],
   "styles": [
     "styles/add2e.css",
