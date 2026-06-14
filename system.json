@@ -2,6 +2,8 @@
   "id": "add2e",
   "title": "AD&D 2e (Descartes)",
   "version": "0.1.18",
+  "manifest": "https://raw.githubusercontent.com/Edimheel/add2e/dev-multiclasse/system.json",
+  "download": "https://github.com/Edimheel/add2e/archive/refs/heads/dev-multiclasse.zip",
   "socket": true,
   "compatibility": {
     "minimum": "13",
