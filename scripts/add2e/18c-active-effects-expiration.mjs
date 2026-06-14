@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Expiration des effets temporaires.
-// Version : 2026-06-14-active-effects-expiration-time-tick-v2
+// Version : 2026-06-14-active-effects-expiration-combat-first-v1
 // ============================================================================
 
 import { add2eVitalEffectKind } from "./18a-vital-status-core.mjs";
@@ -9,12 +9,7 @@ import {
   add2eTimeRemainingRounds
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-06-14-active-effects-expiration-time-tick-v2";
-
-function isFiniteNumber(value) {
-  const n = Number(value);
-  return Number.isFinite(n);
-}
+export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-06-14-active-effects-expiration-combat-first-v1";
 
 function numeric(value, fallback = NaN) {
   const n = Number(value);
@@ -24,16 +19,48 @@ function numeric(value, fallback = NaN) {
 function hasTimedDuration(effect) {
   const duration = effect?.duration ?? {};
   const flags = effect?.flags?.add2e ?? {};
-  return isFiniteNumber(duration.rounds) ||
-    isFiniteNumber(duration.remaining) ||
-    isFiniteNumber(flags.rounds) ||
-    isFiniteNumber(flags.durationRounds) ||
-    isFiniteNumber(flags.dureeRounds) ||
-    isFiniteNumber(flags.duree_rounds) ||
-    isFiniteNumber(flags.roundEngine?.totalRounds) ||
-    isFiniteNumber(flags.timeEngine?.totalRounds) ||
-    isFiniteNumber(flags.duration?.rounds) ||
-    isFiniteNumber(flags.duration?.durationRounds);
+  return Number.isFinite(Number(duration.rounds)) ||
+    Number.isFinite(Number(duration.remaining)) ||
+    Number.isFinite(Number(flags.rounds)) ||
+    Number.isFinite(Number(flags.durationRounds)) ||
+    Number.isFinite(Number(flags.dureeRounds)) ||
+    Number.isFinite(Number(flags.duree_rounds)) ||
+    Number.isFinite(Number(flags.roundEngine?.totalRounds)) ||
+    Number.isFinite(Number(flags.timeEngine?.totalRounds)) ||
+    Number.isFinite(Number(flags.duration?.rounds)) ||
+    Number.isFinite(Number(flags.duration?.durationRounds));
+}
+
+function combatRemaining(effect, currentRound) {
+  const duration = effect?.duration ?? {};
+  const totalRounds = numeric(duration.rounds, NaN);
+  const startRound = numeric(duration.startRound, NaN);
+  const round = numeric(currentRound, NaN);
+  if (!Number.isFinite(totalRounds) || totalRounds <= 0) return null;
+  if (!Number.isFinite(startRound) || startRound <= 0) return null;
+  if (!Number.isFinite(round) || round <= 0) return null;
+  const elapsed = Math.max(0, round - startRound);
+  return {
+    totalRounds,
+    elapsed,
+    remaining: Math.max(0, totalRounds - elapsed),
+    startRound,
+    currentRound: round,
+    clock: "combat"
+  };
+}
+
+function remainingForEffect(effect, currentRound) {
+  const byCombat = combatRemaining(effect, currentRound);
+  if (byCombat) return byCombat;
+
+  const byTime = add2eTimeRemainingRounds(effect, currentRound);
+  if (byTime) return byTime;
+
+  const nativeRemaining = numeric(effect?.duration?.remaining, NaN);
+  if (Number.isFinite(nativeRemaining)) return { remaining: nativeRemaining, clock: "native" };
+
+  return null;
 }
 
 async function deleteTemporaryLinkedItem(actor, effect) {
@@ -64,17 +91,12 @@ export async function add2eExpireTemporaryEffectsForActor(actor, currentRound = 
 
     if (!actor.effects.get(effect.id)) continue;
 
-    const remainingData = add2eTimeRemainingRounds(effect, effectiveRound);
-    let remaining = remainingData?.remaining;
-
-    if (!Number.isFinite(Number(remaining)) && Number.isFinite(Number(effect.duration?.remaining))) {
-      remaining = Number(effect.duration.remaining);
-    }
-
-    if (Number.isFinite(Number(remaining)) && Number(remaining) <= 0) toDelete.push(effect.id);
+    const remainingData = remainingForEffect(effect, effectiveRound);
+    const remaining = Number(remainingData?.remaining);
+    if (Number.isFinite(remaining) && remaining <= 0) toDelete.push(effect.id);
   }
 
-  const validIds = toDelete.filter(id => id && actor.effects.get(id));
+  const validIds = [...new Set(toDelete)].filter(id => id && actor.effects.get(id));
   if (!validIds.length) return { actor: actor.name, deleted: 0, ids: [] };
 
   console.log("[ADD2E][AUTO-REMOVE] Suppression auto des effets expirés", { actor: actor.name, ids: validIds });
