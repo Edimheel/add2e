@@ -1,4 +1,5 @@
 // ADD2E — ApplicationV2 armurier : armes, armures, projectiles, achat, affectation MJ et compatibilité acteur.
+// Version : 2026-06-14-armorer-app-v7-shop-architecture
 
 import {
   ADD2E_ARMORER_VERSION,
@@ -23,12 +24,13 @@ import {
   lower
 } from "./22c-armorer-core.mjs";
 
-const ADD2E_ARMORER_APP_VERSION = "2026-06-02-armorer-app-v6-assign-display-item-resolution";
+const ADD2E_ARMORER_APP_VERSION = "2026-06-14-armorer-app-v7-shop-architecture";
 
 const ADD2E_ARMORER_STYLE = `
   .add2e-armorer-root{height:100%;max-height:100%;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(180deg,#f6f2e6,#c8b58f);color:#241a10;font-family:var(--font-primary,serif)}
   .add2e-armorer-root *{box-sizing:border-box}.add2e-armorer-header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid #8f6b37;background:linear-gradient(180deg,#3c3327,#18130d);color:#f8ddb0}.add2e-armorer-header h2{margin:0;color:#f8ddb0;font-weight:950;line-height:1.1;text-shadow:0 1px 2px #000}.add2e-armorer-header p{margin:4px 0 0;color:#f3e4c9}.add2e-armorer-money{padding:6px 10px;border:1px solid #b9965e;border-radius:999px;background:#f6e4bf;color:#241a10;font-weight:950;white-space:nowrap}
-  .add2e-armorer-tabs{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #b9965e;background:#dfc89e}.add2e-armorer-tabs button{border:1px solid #6f4c24;border-radius:8px;background:linear-gradient(180deg,#6b4a25,#352211);color:#f8ddb0;font-weight:900;padding:5px 10px;line-height:1.2;min-height:28px;cursor:pointer}.add2e-armorer-tabs button.active{box-shadow:0 0 0 2px #dfb66e inset;filter:brightness(1.12)}.add2e-armorer-restock-all{margin-left:auto}
+  .add2e-armorer-buyer-label{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;color:#f3e4c9;font-weight:850}.add2e-armorer-buyer-select{min-height:30px;min-width:260px;max-width:420px;border:1px solid #b9965e;border-radius:7px;background:#fffaf0;color:#241a10;font-weight:900;padding:4px 8px}
+  .add2e-armorer-tabs{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #b9965e;background:#dfc89e;flex-wrap:wrap}.add2e-armorer-tabs button{border:1px solid #6f4c24;border-radius:8px;background:linear-gradient(180deg,#6b4a25,#352211);color:#f8ddb0;font-weight:900;padding:5px 10px;line-height:1.2;min-height:28px;cursor:pointer}.add2e-armorer-tabs button.active{box-shadow:0 0 0 2px #dfb66e inset;filter:brightness(1.12)}.add2e-armorer-restock-all{margin-left:auto}
   .add2e-armorer-search{flex:0 0 auto;padding:10px 14px;border-bottom:1px solid #b9965e;background:#ead8b6}.add2e-armorer-search-input{width:100%;min-height:30px;padding:5px 9px;border:1px solid #8f6b37;border-radius:8px;background:#fffaf0;color:#241a10;font-weight:700}
   .add2e-armorer-table-wrap{flex:1 1 auto;min-height:0;overflow-y:auto!important;overflow-x:hidden;padding:12px 14px 16px}.add2e-armorer-table{width:100%;border-collapse:collapse;table-layout:auto;background:rgba(255,252,242,.95);border:1px solid #b9965e;color:#241a10}.add2e-armorer-table th{position:sticky;top:0;z-index:2;background:#d4ba86;color:#241a10;border-bottom:1px solid #8f6b37;padding:7px 8px;text-align:left;font-weight:950}.add2e-armorer-table td{padding:5px 7px;border-bottom:1px solid #dcc490;vertical-align:middle;color:#241a10;font-weight:750}.add2e-armorer-table tbody tr:nth-child(even){background:rgba(228,208,164,.35)}.add2e-armorer-table tbody tr:hover{background:rgba(237,213,165,.7)}
   .add2e-armorer-row-usable{box-shadow:inset 4px 0 0 #2f8f43}.add2e-armorer-row-unusable{box-shadow:inset 4px 0 0 #b83232}.add2e-armorer-name-usable{color:#16752b!important}.add2e-armorer-name-unusable{color:#b31616!important}.add2e-armorer-name-neutral{color:#241a10!important}
@@ -36,6 +38,25 @@ const ADD2E_ARMORER_STYLE = `
   .add2e-armorer-buy-qty,.add2e-armorer-restock-qty{width:54px!important;min-width:54px!important;max-width:54px!important;text-align:center;border:1px solid #8f6b37;border-radius:6px;background:#fffaf0;color:#241a10;font-weight:900;min-height:26px}.add2e-armorer-actions,.add2e-armorer-gm-actions{display:flex;align-items:center;gap:5px;flex-wrap:nowrap}.add2e-armorer-icon-btn{width:28px;height:28px;min-width:28px;max-width:28px;padding:0;border:1px solid #6f4c24;border-radius:7px;background:linear-gradient(180deg,#6b4a25,#352211);color:#f8ddb0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.add2e-armorer-icon-btn i{pointer-events:none;font-size:13px;line-height:1}.add2e-armorer-icon-btn:hover{filter:brightness(1.15)}.add2e-armorer-icon-btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.8)}
   .add2e-armorer-assign-dialog{display:grid;gap:10px;color:#241a10}.add2e-armorer-assign-dialog label{display:grid;gap:4px;font-weight:800}.add2e-armorer-assign-dialog select,.add2e-armorer-assign-dialog input{width:100%;min-height:30px}
 `;
+
+function actorTypeLabel(actor) {
+  const type = String(actor?.type ?? "").toLowerCase();
+  if (type === "personnage") return "Personnages";
+  if (type === "monster") return "Monstres";
+  return "Autres acteurs";
+}
+
+function buyerChoices(selectedId = "") {
+  const groups = new Map();
+  for (const actor of game.actors ?? []) {
+    if (!actor?.id || isArmorerActor(actor)) continue;
+    const label = actorTypeLabel(actor);
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(actor);
+  }
+  for (const actors of groups.values()) actors.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  return [...groups.entries()].map(([label, actors]) => `<optgroup label="${esc(label)}">${actors.map(a => `<option value="${esc(a.id)}" ${a.id === selectedId ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</optgroup>`).join("");
+}
 
 function tabForKind(item, kind) {
   if (kind === "Projectile") return "projectiles";
@@ -61,13 +82,9 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
     this.searchText = "";
   }
 
-  get title() {
-    return `${this.armorer?.name ?? "Armurier"}${this.buyer ? ` — ${this.buyer.name}` : ""}`;
-  }
+  get title() { return `${this.armorer?.name ?? "Armurier"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
 
-  async _displayItems() {
-    return await getArmorerDisplayItems(this.armorer);
-  }
+  async _displayItems() { return await getArmorerDisplayItems(this.armorer); }
 
   async _resolveDisplayedItem(itemId) {
     if (!itemId) return null;
@@ -100,6 +117,7 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
       armorer: this.armorer,
       buyer: this.buyer,
       buyerMoneyLabel: this.buyer ? formatMoney(getMoney(this.buyer)) : "Gestion MJ",
+      buyerOptions: buyerChoices(this.buyer?.id),
       items,
       isGM: game.user?.isGM === true,
       activeTab: this.activeTab,
@@ -118,10 +136,13 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
       return `<tr class="${rowClass}" data-item-id="${esc(item.id)}" data-tab="${item.tab}" data-search="${esc(item.search)}" style="${hidden ? "display:none;" : ""}"><td class="add2e-armorer-item"><div class="add2e-armorer-item-wrap"><img src="${esc(item.img)}" alt=""><span class="${nameClass}" title="${esc(item.usability.label)} — ${esc(item.usability.reason)}">${esc(item.name)}</span></div></td><td>${esc(item.kind)}</td><td>${esc(item.priceLabel)}</td><td>${item.stock}</td><td><input class="add2e-armorer-buy-qty" type="number" min="1" value="1" title="Quantité à acheter"></td><td><div class="add2e-armorer-actions"><button type="button" class="add2e-armorer-buy add2e-armorer-icon-btn" ${item.stock <= 0 || !context.buyer ? "disabled" : ""} title="Acheter"><i class="fas fa-cart-shopping"></i></button></div></td>${gmCell}</tr>`;
     }).join("");
     const colCount = context.isGM ? 7 : 6;
+    const buyerBlock = context.isGM
+      ? `<label class="add2e-armorer-buyer-label">Dans la peau de <select class="add2e-armorer-buyer-select">${context.buyerOptions}</select></label>`
+      : `<strong>${esc(context.buyer?.name ?? "aucun personnage assigné")}</strong>`;
 
     const div = document.createElement("div");
     div.className = "add2e-armorer-root";
-    div.innerHTML = `<style>${ADD2E_ARMORER_STYLE}</style><header class="add2e-armorer-header"><div><h2>${esc(context.armorer?.name ?? "Armurier")}</h2><p>Acheteur : <strong>${esc(context.buyer?.name ?? (context.isGM ? "gestion MJ" : "aucun personnage assigné"))}</strong></p></div><div class="add2e-armorer-money">${esc(context.buyerMoneyLabel)}</div></header><nav class="add2e-armorer-tabs">${tabButton("all", "Tous")}${tabButton("weapons", "Armes")}${tabButton("armors", "Armures")}${tabButton("projectiles", "Projectiles")}${context.isGM ? `<button type="button" class="add2e-armorer-restock-all" title="Réapprovisionner tout le stock"><i class="fas fa-boxes-stacked"></i> Restock global</button>` : ""}</nav><div class="add2e-armorer-search"><input type="search" class="add2e-armorer-search-input" placeholder="Rechercher une arme, une armure ou un projectile..." value="${esc(context.searchText)}"></div><div class="add2e-armorer-table-wrap"><table class="add2e-armorer-table"><thead><tr><th>Article</th><th>Type</th><th>Prix</th><th>Stock</th><th>Qté</th><th>Achat</th>${context.isGM ? `<th>Restock / Affectation MJ</th>` : ""}</tr></thead><tbody>${rows || `<tr><td colspan="${colCount}">Aucun article en stock.</td></tr>`}</tbody></table></div>`;
+    div.innerHTML = `<style>${ADD2E_ARMORER_STYLE}</style><header class="add2e-armorer-header"><div><h2>${esc(context.armorer?.name ?? "Armurier")}</h2><p>Acheteur : ${buyerBlock}</p></div><div class="add2e-armorer-money">${esc(context.buyerMoneyLabel)}</div></header><nav class="add2e-armorer-tabs">${tabButton("all", "Tous")}${tabButton("weapons", "Armes")}${tabButton("armors", "Armures")}${tabButton("projectiles", "Projectiles")}${context.isGM ? `<button type="button" class="add2e-armorer-restock-all" title="Réapprovisionner tout le stock"><i class="fas fa-boxes-stacked"></i> Restock global</button>` : ""}</nav><div class="add2e-armorer-search"><input type="search" class="add2e-armorer-search-input" placeholder="Rechercher une arme, une armure ou un projectile..." value="${esc(context.searchText)}"></div><div class="add2e-armorer-table-wrap"><table class="add2e-armorer-table"><thead><tr><th>Article</th><th>Type</th><th>Prix</th><th>Stock</th><th>Qté</th><th>Achat</th>${context.isGM ? `<th>Restock / Affectation MJ</th>` : ""}</tr></thead><tbody>${rows || `<tr><td colspan="${colCount}">Aucun article en stock.</td></tr>`}</tbody></table></div>`;
     return div;
   }
 
@@ -130,11 +151,6 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
     content.style.padding = "0";
     content.style.background = "linear-gradient(180deg,#f6f2e6,#c8b58f)";
     content.replaceChildren(result);
-  }
-
-  _refreshLater() {
-    window.setTimeout(() => this.render({ force: true }), 250);
-    window.setTimeout(() => this.render({ force: true }), 1200);
   }
 
   async _onRender(context, options = {}) {
@@ -148,6 +164,11 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
       windowContent.style.padding = "0";
       windowContent.style.background = "linear-gradient(180deg,#f6f2e6,#c8b58f)";
     }
+
+    root.querySelector(".add2e-armorer-buyer-select")?.addEventListener("change", ev => {
+      this.buyer = game.actors?.get?.(ev.currentTarget.value) ?? this.buyer;
+      this.render({ force: true });
+    });
 
     root.querySelectorAll(".add2e-armorer-tabs button[data-tab]").forEach(button => button.addEventListener("click", ev => {
       this.activeTab = ev.currentTarget.dataset.tab || "all";
@@ -164,8 +185,7 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
       const item = await this._resolveDisplayedItem(row?.dataset?.itemId);
       const qty = row?.querySelector?.(".add2e-armorer-buy-qty")?.value ?? 1;
       const ok = await buy({ armorer: this.armorer, buyer: this.buyer, item, quantity: qty });
-      if (ok) this.render({ force: true });
-      this._refreshLater();
+      if (ok && game.user?.isGM) this.render({ force: true });
     }));
 
     root.querySelectorAll(".add2e-armorer-restock-set").forEach(button => button.addEventListener("click", async ev => {
@@ -216,10 +236,7 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
       yes: {
         label: "Affecter",
         callback: (event, button) => {
-          const form = button?.form
-            ?? button?.closest?.("form")
-            ?? event?.target?.closest?.("form")
-            ?? document.querySelector(".add2e-armorer-assign-dialog")?.closest?.("form");
+          const form = button?.form ?? button?.closest?.("form") ?? event?.target?.closest?.("form") ?? document.querySelector(".add2e-armorer-assign-dialog")?.closest?.("form");
           formData = {
             tokenId: form?.querySelector?.("[name='tokenId']")?.value,
             quantity: form?.querySelector?.("[name='quantity']")?.value
@@ -250,6 +267,23 @@ class Add2eArmorerApp extends foundry.applications.api.ApplicationV2 {
   }
 }
 
+function armorerAppKey(armorer) {
+  return `${game.user?.id ?? "user"}:${armorer?.id ?? "armorer"}`;
+}
+
+function appElement(app) {
+  if (app?.element instanceof HTMLElement) return app.element;
+  if (app?.element?.[0] instanceof HTMLElement) return app.element[0];
+  return null;
+}
+
+function appStillUsable(app) {
+  const el = appElement(app);
+  if (!el) return false;
+  const root = el.closest?.(".application") ?? el;
+  return document.body?.contains?.(root) === true;
+}
+
 export async function openArmorer({ armorer = null, buyer = null } = {}) {
   armorer = armorer ?? findArmorer();
   if (!armorer) armorer = await createArmorer();
@@ -260,20 +294,23 @@ export async function openArmorer({ armorer = null, buyer = null } = {}) {
     return null;
   }
 
-  const key = `${game.user?.id ?? "user"}:${armorer.id}`;
+  const key = armorerAppKey(armorer);
   globalThis.__ADD2E_ARMORER_APPS ??= {};
   const existing = globalThis.__ADD2E_ARMORER_APPS[key];
-  if (existing?.rendered) {
+  if (existing && appStillUsable(existing)) {
     existing.buyer = buyer;
+    existing.armorer = armorer;
     existing.bringToFront?.();
     existing.render({ force: true });
     return existing;
   }
+  delete globalThis.__ADD2E_ARMORER_APPS[key];
 
   const app = new Add2eArmorerApp({ armorer, buyer });
+  const originalClose = app.close?.bind(app);
+  if (originalClose) app.close = async (...args) => { delete globalThis.__ADD2E_ARMORER_APPS[key]; return originalClose(...args); };
   globalThis.__ADD2E_ARMORER_APPS[key] = app;
   app.render({ force: true });
-  Hooks.on?.("add2eArmorerMoneyChanged", () => app.render({ force: true }));
   return app;
 }
 
@@ -291,13 +328,13 @@ async function openArmorerFromToken(token) {
 }
 
 function bindArmorerToken(token) {
-  if (!token || token.__add2eArmorerBoundV2) return;
+  if (!token || token.__add2eArmorerBoundV3) return;
   if (!isArmorerActor(token.actor)) return;
-  token.__add2eArmorerBoundV2 = true;
+  token.__add2eArmorerBoundV3 = true;
   try { token.cursor = "pointer"; } catch (_err) {}
   try { token.eventMode = "static"; } catch (_err) {}
   try { token.interactive = true; } catch (_err) {}
-  const handler = () => window.setTimeout(() => openArmorerFromToken(token), 0);
+  const handler = event => { event?.stopPropagation?.(); window.setTimeout(() => openArmorerFromToken(token), 0); };
   try { token.on?.("pointertap", handler); } catch (_err) {}
 }
 
@@ -306,39 +343,32 @@ export function bindAllArmorerTokens() {
 }
 
 export function patchArmorerTokenClick() {
-  if (globalThis.__ADD2E_ARMORER_TOKEN_CLICK_PATCHED_V2) return;
-  globalThis.__ADD2E_ARMORER_TOKEN_CLICK_PATCHED_V2 = true;
+  if (globalThis.__ADD2E_ARMORER_TOKEN_CLICK_PATCHED_V3) return;
+  globalThis.__ADD2E_ARMORER_TOKEN_CLICK_PATCHED_V3 = true;
   const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
   const proto = TokenClass?.prototype;
   if (proto && typeof proto._onClickLeft === "function") {
     const original = proto._onClickLeft;
     proto._onClickLeft = function add2eArmorerOnClickLeft(event) {
       const result = original.call(this, event);
-      try {
-        if (isArmorerActor(this.actor)) window.setTimeout(() => openArmorerFromToken(this), 0);
-      } catch (err) {
-        console.warn("[ADD2E][ARMORER][TOKEN_CLICK]", err);
-      }
+      try { if (isArmorerActor(this.actor)) window.setTimeout(() => openArmorerFromToken(this), 0); } catch (err) { console.warn("[ADD2E][ARMORER][TOKEN_CLICK]", err); }
       return result;
     };
   }
   Hooks.on("canvasReady", bindAllArmorerTokens);
   Hooks.on("createToken", () => window.setTimeout(bindAllArmorerTokens, 100));
   Hooks.on("updateToken", () => window.setTimeout(bindAllArmorerTokens, 100));
-  Hooks.on("controlToken", (token, controlled) => {
-    if (controlled && isArmorerActor(token?.actor)) window.setTimeout(() => openArmorerFromToken(token), 0);
-  });
 }
 
 export function registerArmorerDirectoryButton() {
   Hooks.on("renderActorDirectory", (_app, html) => {
     if (!game.user?.isGM) return;
     const root = html?.jquery ? html[0] : html;
-    if (!root?.querySelector || root.querySelector(".add2e-open-default-armorer")) return;
+    if (!root?.querySelector || root.querySelector(".add2e-open-armorer")) return;
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "add2e-open-default-armorer";
-    button.innerHTML = `<i class="fas fa-shield-halved"></i> Armurier`;
+    button.className = "add2e-open-armorer";
+    button.innerHTML = `<i class="fas fa-hammer"></i> Armurier`;
     button.addEventListener("click", () => openArmorer());
     root.querySelector(".directory-footer")?.prepend(button);
   });
@@ -348,7 +378,6 @@ export function registerArmorerUiGlobals() {
   game.add2e = game.add2e ?? {};
   game.add2e.openArmorer = openArmorer;
   game.add2e.armorerAppVersion = ADD2E_ARMORER_APP_VERSION;
-  globalThis.add2eOpenArmorer = openArmorer;
-  globalThis.ADD2E_ARMORER_VERSION = ADD2E_ARMORER_VERSION;
   globalThis.ADD2E_ARMORER_APP_VERSION = ADD2E_ARMORER_APP_VERSION;
+  globalThis.ADD2E_ARMORER_VERSION = ADD2E_ARMORER_VERSION;
 }
