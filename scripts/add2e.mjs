@@ -32,3 +32,4 @@ import "./add2e/17c-multiclass-mechanics.mjs";
 import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/20-session-xp.mjs";
 import "./add2e/21-consumables.mjs";
+import "./add2e/24-player-trades.mjs";
