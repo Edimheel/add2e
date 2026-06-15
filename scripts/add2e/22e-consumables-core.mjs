@@ -13,10 +13,12 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-15-consumables-core-v11-delete-empty-components";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-15-consumables-core-v12-delete-zero-quantity-items";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
+
+const ZERO_DELETE_OPTION = "add2eDeletingEmptyComponent";
 
 const asArray = value => Array.isArray(value)
   ? value
@@ -435,9 +437,64 @@ async function deleteDepletedConsumedItems(actor, consumed) {
     .map(entry => entry.itemId);
   const uniqueIds = [...new Set(ids)];
   if (!uniqueIds.length) return 0;
-  await actor.deleteEmbeddedDocuments("Item", uniqueIds, { add2eReason: "spell-component-depleted-delete" });
+  await actor.deleteEmbeddedDocuments("Item", uniqueIds, { add2eReason: "spell-component-depleted-delete", [ZERO_DELETE_OPTION]: true });
   for (const entry of consumed) if (uniqueIds.includes(entry.itemId)) entry.deleted = true;
   return uniqueIds.length;
+}
+
+async function deleteZeroQuantityComponentItem(item, reason = "spell-component-zero-delete") {
+  const actor = item?.parent;
+  if (!actor || actor.documentName !== "Actor") return false;
+  if (String(item?.type ?? "").toLowerCase() !== "objet") return false;
+  if (!isSpellComponentItem(item)) return false;
+  if (quantity(item) > 0) return false;
+  if (!game.user?.isGM && item.isOwner !== true && actor.isOwner !== true) return false;
+  if (!actor.items?.get?.(item.id)) return false;
+  await actor.deleteEmbeddedDocuments("Item", [item.id], { add2eReason: reason, [ZERO_DELETE_OPTION]: true });
+  return true;
+}
+
+async function cleanupExistingZeroQuantityComponents() {
+  if (!game.user?.isGM) return 0;
+  let deleted = 0;
+  for (const actor of game.actors ?? []) {
+    const ids = Array.from(actor.items ?? [])
+      .filter(item => String(item?.type ?? "").toLowerCase() === "objet" && isSpellComponentItem(item) && quantity(item) <= 0)
+      .map(item => item.id)
+      .filter(Boolean);
+    if (!ids.length) continue;
+    await actor.deleteEmbeddedDocuments("Item", [...new Set(ids)], { add2eReason: "spell-component-zero-ready-cleanup", [ZERO_DELETE_OPTION]: true });
+    deleted += ids.length;
+  }
+  if (deleted) console.log("[ADD2E][CONSUMABLES][ZERO_COMPONENTS_DELETED]", { deleted });
+  return deleted;
+}
+
+function installZeroQuantityComponentDeletionHook() {
+  if (globalThis.__ADD2E_CONSUMABLES_ZERO_DELETE_V1) return false;
+  globalThis.__ADD2E_CONSUMABLES_ZERO_DELETE_V1 = true;
+
+  Hooks.on("updateItem", (item, changed, options) => {
+    if (options?.[ZERO_DELETE_OPTION]) return;
+    if (!item?.parent || item.parent.documentName !== "Actor") return;
+    const quantityChanged = foundry.utils.hasProperty(changed, "system.quantite") ||
+      foundry.utils.hasProperty(changed, "system.quantity");
+    if (!quantityChanged) return;
+    window.setTimeout(() => {
+      const actor = item.parent;
+      const live = actor?.items?.get?.(item.id);
+      if (!live) return;
+      deleteZeroQuantityComponentItem(live, "spell-component-zero-update-delete").catch(err => {
+        console.warn("[ADD2E][CONSUMABLES][ZERO_DELETE_FAILED]", { actor: actor?.name, item: live?.name, err });
+      });
+    }, 25);
+  });
+
+  Hooks.once("ready", () => window.setTimeout(() => {
+    cleanupExistingZeroQuantityComponents().catch(err => console.warn("[ADD2E][CONSUMABLES][ZERO_READY_CLEANUP_FAILED]", err));
+  }, 750));
+
+  return true;
 }
 
 async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
@@ -529,7 +586,9 @@ export function registerGlobals() {
   globalThis.add2eReserveSpellComponents = add2eReserveSpellComponents;
   globalThis.add2eRefundSpellComponents = add2eRefundSpellComponents;
   globalThis.add2ePrepareActorSheetConsumables = prepareActorSheetConsumables;
+  globalThis.add2eDeleteZeroQuantityComponentItem = deleteZeroQuantityComponentItem;
   patchActorSheetConsumablesData();
+  installZeroQuantityComponentDeletionHook();
 }
 
 export function registerSockets() {
