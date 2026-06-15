@@ -9,8 +9,8 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="charisme" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="charisme"
-                       title="Base : {{actor.system.charisme_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.charisme}}&#10;Total : {{add actor.system.charisme_base actor.system.bonus_caracteristiques.charisme}}">
-                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.charisme_base actor.system.bonus_caracteristiques.charisme}}</span>
+                       title="Base : {{actor.system.charisme_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.charisme}}&#10;Total effectif : {{actor.system.cha_aff}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{actor.system.cha_aff}}</span>
                     {{#if actor.system.bonus_caracteristiques.charisme}}
                       <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.charisme 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.charisme}})</span>
                     {{/if}}
