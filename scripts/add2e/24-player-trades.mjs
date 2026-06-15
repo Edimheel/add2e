@@ -1,7 +1,7 @@
 // ADD2E — Échanges entre personnages joueurs — DialogV2 / Foundry V13-V15
-// Version : 2026-06-15-player-trades-ui-v3-global-style
+// Version : 2026-06-15-player-trades-ui-v4-narrow
 
-const ADD2E_PLAYER_TRADES_VERSION = "2026-06-15-player-trades-ui-v3-global-style";
+const ADD2E_PLAYER_TRADES_VERSION = "2026-06-15-player-trades-ui-v4-narrow";
 const ADD2E_PLAYER_TRADES_SOCKET = "system.add2e";
 const ADD2E_TRADE_STYLE_ID = "add2e-player-trades-style";
 const ADD2E_TRADE_COINS = ["pp", "po", "pe", "pa", "pc"];
@@ -81,14 +81,14 @@ function add2eTradeCssText() {
     }
     .add2e-trade-actor-row {
       display: grid;
-      grid-template-columns: 1fr 34px 1fr;
-      gap: 6px;
+      grid-template-columns: 1fr 24px 1fr;
+      gap: 4px;
       align-items: center;
       text-align: center;
     }
     .add2e-trade-actor-pill {
       min-width: 0;
-      padding: 7px 8px;
+      padding: 6px 5px;
       border: 1px solid #7f5526;
       border-radius: 8px;
       background: linear-gradient(180deg, #fff0c2 0%, #d7a65d 100%);
@@ -98,17 +98,18 @@ function add2eTradeCssText() {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-size: .82rem;
     }
-    .add2e-trade-arrow { color: #7c241a; font-size: 1.25rem; }
+    .add2e-trade-arrow { color: #7c241a; font-size: 1rem; }
     .add2e-trade-offer {
       display: grid;
-      grid-template-columns: 42px 1fr;
-      gap: 8px;
+      grid-template-columns: 34px 1fr;
+      gap: 7px;
       align-items: center;
     }
     .add2e-trade-offer-icon {
-      width: 42px;
-      height: 42px;
+      width: 34px;
+      height: 34px;
       border-radius: 8px;
       border: 1px solid #7c4a20;
       background: linear-gradient(180deg, #f6dfad, #bd8743);
@@ -116,18 +117,18 @@ function add2eTradeCssText() {
       align-items: center;
       justify-content: center;
       color: #622016;
-      font-size: 1.35rem;
+      font-size: 1.1rem;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 4px rgba(45,20,8,.22);
     }
-    .add2e-trade-label { display:block; color:#5b1e16; font-size:.74rem; font-weight:900; text-transform:uppercase; letter-spacing:.035em; margin-bottom:2px; }
+    .add2e-trade-label { display:block; color:#5b1e16; font-size:.68rem; font-weight:900; text-transform:uppercase; letter-spacing:.035em; margin-bottom:2px; }
     .add2e-trade-value { font-weight:900; color:#2b1b0d; }
-    .add2e-trade-grid { display:grid; grid-template-columns: 92px 1fr; gap: 6px 8px; align-items:center; }
-    .add2e-trade-grid label { color:#4a2f17; font-weight:900; font-size:.82rem; }
+    .add2e-trade-grid { display:grid; grid-template-columns: 1fr; gap: 4px; align-items:center; }
+    .add2e-trade-grid label { color:#4a2f17; font-weight:900; font-size:.78rem; }
     .add2e-trade-grid input,
     .add2e-trade-grid select,
     .add2e-trade-money-row input {
       width: 100%;
-      min-height: 28px;
+      min-height: 26px;
       border: 1px solid #7d5a2c;
       border-radius: 6px;
       background: rgba(255,252,235,.95);
@@ -135,18 +136,18 @@ function add2eTradeCssText() {
       font-weight: 800;
       box-shadow: inset 0 1px 3px rgba(55,30,10,.16);
     }
-    .add2e-trade-money-row { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; }
+    .add2e-trade-money-row { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:3px; }
     .add2e-trade-coin-field {
       display:flex;
       flex-direction:column;
       gap:2px;
       min-width:0;
-      padding:5px;
+      padding:3px;
       border:1px solid #9a7036;
       border-radius:7px;
       background:rgba(255,244,207,.72);
     }
-    .add2e-trade-coin-field span { font-size:.72rem; font-weight:900; color:#6e2418; text-align:center; }
+    .add2e-trade-coin-field span { font-size:.62rem; font-weight:900; color:#6e2418; text-align:center; }
     .add2e-trade-chip {
       display:inline-flex;
       align-items:center;
@@ -162,15 +163,16 @@ function add2eTradeCssText() {
       white-space:nowrap;
     }
     .add2e-trade-chip i { color:#7c241a; }
-    .add2e-trade-muted { color:#6f5a40; font-style:italic; font-weight:700; }
-    .add2e-trade-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:9px; }
+    .add2e-trade-muted { color:#6f5a40; font-style:italic; font-weight:700; font-size:.78rem; }
+    .add2e-trade-actions { display:flex; justify-content:flex-end; gap:6px; margin-top:8px; }
     .add2e-trade-btn {
-      min-width: 92px;
+      min-width: 74px;
       border-radius: 7px;
-      padding: 6px 12px;
+      padding: 5px 8px;
       font-weight: 900;
       cursor: pointer;
       box-shadow: 0 2px 5px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.22);
+      font-size: .8rem;
     }
     .add2e-trade-btn.validate { border:1px solid #6e1414; background:linear-gradient(180deg,#a7372d,#6e1714); color:#fff1d5; }
     .add2e-trade-btn.cancel { border:1px solid #6a5640; background:linear-gradient(180deg,#7b6c5c,#4f463b); color:#fff1d5; }
@@ -318,7 +320,7 @@ function add2eTradeHideFooter(dialogRoot) {
   }
 }
 
-function add2eTradeOpenDialog({ title, content, width = 440, onReady }) {
+function add2eTradeOpenDialog({ title, content, width = 220, onReady }) {
   const DialogV2 = add2eTradeDialogV2();
   if (!DialogV2) {
     ui.notifications.error("Dialog V2 est introuvable : échange impossible.");
