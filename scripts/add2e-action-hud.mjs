@@ -1,9 +1,9 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-06-15-v47-named-actor-effects-only
+// Version : 2026-06-15-v48-player-controlled-token-open
 // Le HUD reste une interface : les actions délèguent aux fonctions système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v47-named-actor-effects-only";
+const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v48-player-controlled-token-open";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
 const STORAGE_KEY = "add2e.actionHud.state.v46";
@@ -20,6 +20,7 @@ let dragging = false;
 let resizing = false;
 let manualIntentUntil = 0;
 let state = null;
+let canvasTokenClickBound = false;
 
 const TABS = ["attaques", "sorts", "capacites", "effets", "sauvegardes", "caracs"];
 const CARACS = [
@@ -92,7 +93,13 @@ function slug(value) {
 
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 function hud() { return document.getElementById(HUD_ID); }
-function currentActor() { return hudActor ?? canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null; }
+function controlledRelevantTokens() { return (canvas?.tokens?.controlled ?? []).filter(token => token?.actor && relevant(token.actor)); }
+function currentActor() {
+  if (hudActor) return hudActor;
+  const controlled = controlledRelevantTokens();
+  if (controlled.length === 1) return controlled[0].actor;
+  return game.user?.character ?? null;
+}
 function tokenFor(actor) { return canvas?.tokens?.controlled?.find?.(t => t.actor?.id === actor?.id) ?? actor?.getActiveTokens?.()[0] ?? null; }
 function actorType(actor) { return norm(actor?.type ?? actor?._source?.type ?? actor?.baseActor?.type ?? ""); }
 function canUse(actor) { return !!actor && (game.user?.isGM || actor.isOwner || actor.testUserPermission?.(game.user, "OWNER")); }
@@ -103,6 +110,14 @@ function relevant(actor) {
   if (type === "personnage") return canUse(actor);
   if (type === "monster") return game.user?.isGM === true;
   return false;
+}
+function hudTargetFromControlledSelection({ allowCharacterFallback = true } = {}) {
+  const controlled = controlledRelevantTokens();
+  if (controlled.length === 1) return { actor: controlled[0].actor, token: controlled[0], ambiguous: false };
+  if (controlled.length > 1) return { actor: null, token: null, ambiguous: true };
+  const character = allowCharacterFallback ? game.user?.character : null;
+  if (character && relevant(character)) return { actor: character, token: tokenFor(character), ambiguous: false };
+  return { actor: null, token: null, ambiguous: false };
 }
 
 function defaultState() {
@@ -640,9 +655,15 @@ function renderHud(actor = null, token = null, { reason = "render" } = {}) {
   return true;
 }
 
-function refreshHud(reason = "refresh") {
-  const token = canvas?.tokens?.controlled?.[0] ?? null;
-  return renderHud(token?.actor ?? game.user?.character ?? null, token, { reason });
+function refreshHud(reason = "refresh", options = {}) {
+  const target = options?.token?.actor && relevant(options.token.actor)
+    ? { actor: options.token.actor, token: options.token, ambiguous: false }
+    : hudTargetFromControlledSelection({ allowCharacterFallback: options.allowCharacterFallback !== false });
+  if (!target.actor) {
+    if (!target.ambiguous && options.closeWhenEmpty === true) closeHud();
+    return false;
+  }
+  return renderHud(target.actor, target.token, { reason });
 }
 function closeHud() { hud()?.remove(); hudActor = null; hudToken = null; }
 
@@ -814,6 +835,30 @@ function pointerDown(event) {
   startDrag(event);
 }
 
+function tokenFromCanvasPointer(event) {
+  let object = event?.target ?? null;
+  for (let guard = 0; object && guard < 12; guard += 1) {
+    if (object?.actor && object?.document) return object;
+    if (object?.object?.actor && object?.object?.document) return object.object;
+    object = object.parent ?? null;
+  }
+  return null;
+}
+function onCanvasTokenPointerDown(event) {
+  if (dragging || resizing) return;
+  const token = tokenFromCanvasPointer(event);
+  if (!token?.controlled || !token.actor || !relevant(token.actor)) return;
+  const controlled = controlledRelevantTokens();
+  if (controlled.length <= 1) return;
+  manualIntentUntil = Date.now() + 500;
+  renderHud(token.actor, token, { reason: "controlled-token-click" });
+}
+function bindCanvasControlledTokenClick() {
+  if (canvasTokenClickBound || !canvas?.stage?.on) return;
+  canvasTokenClickBound = true;
+  canvas.stage.on("pointerdown", onCanvasTokenPointerDown);
+}
+
 function currentCombatant(combat = game.combat) {
   if (!combat) return null;
   const id = combat.current?.combatantId ?? combat.combatantId ?? null;
@@ -831,8 +876,10 @@ Hooks.once("init", () => {
   game.add2e = game.add2e ?? {};
   game.add2e.actionHudVersion = ADD2E_ACTION_HUD_VERSION;
   game.add2e.openActionHud = (actor = null) => {
-    const token = canvas?.tokens?.controlled?.[0] ?? null;
-    return renderHud(actor ?? token?.actor ?? game.user?.character, actor ? tokenFor(actor) : token, { reason: "api-open" });
+    const target = actor
+      ? { actor, token: tokenFor(actor) }
+      : hudTargetFromControlledSelection({ allowCharacterFallback: true });
+    return renderHud(target.actor, target.token, { reason: "api-open" });
   };
   game.add2e.closeActionHud = closeHud;
   game.add2e.refreshActionHud = () => hudActor ? renderHud(hudActor, hudToken, { reason: "api-refresh-current" }) : refreshHud("api-refresh");
@@ -846,6 +893,7 @@ Hooks.once("init", () => {
       version: ADD2E_ACTION_HUD_VERSION,
       actor: currentActor()?.name ?? null,
       actorId: currentActor()?.id ?? null,
+      controlledTokens: controlledRelevantTokens().map(token => ({ id: token.id, actor: token.actor?.name ?? null, actorId: token.actor?.id ?? null })),
       activeTab,
       selectedSpellGroup,
       attackRoll: typeof globalThis.add2eAttackRoll,
@@ -864,10 +912,20 @@ Hooks.once("ready", () => {
   document.addEventListener("mousedown", pointerDown, true);
   document.addEventListener("touchstart", pointerDown, true);
   window.addEventListener("resize", () => applyGeometry(hud(), true));
-  setTimeout(() => refreshHud("ready"), 300);
+  setTimeout(() => {
+    bindCanvasControlledTokenClick();
+    refreshHud("ready", { allowCharacterFallback: true, closeWhenEmpty: false });
+  }, 300);
 });
-Hooks.on("controlToken", () => { manualIntentUntil = Date.now() + 500; setTimeout(() => refreshHud("controlToken"), 60); });
-Hooks.on("canvasReady", () => setTimeout(() => refreshHud("canvasReady"), 150));
+Hooks.on("controlToken", (token, controlled) => {
+  manualIntentUntil = Date.now() + 500;
+  setTimeout(() => {
+    bindCanvasControlledTokenClick();
+    if (controlled && token?.actor && relevant(token.actor)) return renderHud(token.actor, token, { reason: "controlToken-selected" });
+    return refreshHud("controlToken", { allowCharacterFallback: true, closeWhenEmpty: true });
+  }, 60);
+});
+Hooks.on("canvasReady", () => setTimeout(() => { bindCanvasControlledTokenClick(); refreshHud("canvasReady", { allowCharacterFallback: true, closeWhenEmpty: false }); }, 150));
 Hooks.on("updateCombat", combat => setTimeout(() => followCombat(combat, false), 80));
 Hooks.on("combatTurn", combat => setTimeout(() => followCombat(combat, false), 80));
 Hooks.on("combatRound", combat => setTimeout(() => followCombat(combat, false), 80));
