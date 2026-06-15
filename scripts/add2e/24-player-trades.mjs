@@ -1,8 +1,9 @@
 // ADD2E — Échanges entre personnages joueurs — DialogV2 / Foundry V13-V15
-// Version : 2026-06-15-player-trades-ui-v2
+// Version : 2026-06-15-player-trades-ui-v3-global-style
 
-const ADD2E_PLAYER_TRADES_VERSION = "2026-06-15-player-trades-ui-v2";
+const ADD2E_PLAYER_TRADES_VERSION = "2026-06-15-player-trades-ui-v3-global-style";
 const ADD2E_PLAYER_TRADES_SOCKET = "system.add2e";
+const ADD2E_TRADE_STYLE_ID = "add2e-player-trades-style";
 const ADD2E_TRADE_COINS = ["pp", "po", "pe", "pa", "pc"];
 const ADD2E_TRADE_COIN_LABELS = { pp: "PP", po: "PO", pe: "PE", pa: "PA", pc: "PC" };
 const add2eTradePending = new Map();
@@ -31,128 +32,20 @@ function add2eTradeUuid() {
   return `add2e-trade-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-function add2eTradeGetMoney(actor) {
-  const raw = actor?.getFlag?.("add2e", "monnaie") ?? actor?.flags?.add2e?.monnaie ?? {};
-  const out = {};
-  for (const coin of ADD2E_TRADE_COINS) out[coin] = add2eTradeInt(raw?.[coin], 0);
-  return out;
-}
-
-async function add2eTradeSetMoney(actor, money) {
-  const normalized = {};
-  for (const coin of ADD2E_TRADE_COINS) normalized[coin] = add2eTradeInt(money?.[coin], 0);
-  await actor.setFlag("add2e", "monnaie", normalized);
-}
-
-function add2eTradeMoneyLabel(money) {
-  const parts = [];
-  for (const coin of ADD2E_TRADE_COINS) {
-    const n = add2eTradeInt(money?.[coin], 0);
-    if (n > 0) parts.push(`${n} ${ADD2E_TRADE_COIN_LABELS[coin]}`);
-  }
-  return parts.length ? parts.join(", ") : "aucune monnaie";
-}
-
-function add2eTradeMoneyInputs(prefix = "money", money = {}) {
-  return `<div class="add2e-trade-money-row">
-    ${ADD2E_TRADE_COINS.map(coin => `
-      <label class="add2e-trade-coin-field">
-        <span>${ADD2E_TRADE_COIN_LABELS[coin]}</span>
-        <input type="number" min="0" step="1" name="${prefix}-${coin}" value="${add2eTradeInt(money?.[coin], 0)}">
-      </label>`).join("")}
-  </div>`;
-}
-
-function add2eTradeReadMoney(root, prefix = "money") {
-  const out = {};
-  for (const coin of ADD2E_TRADE_COINS) out[coin] = add2eTradeInt(root?.querySelector?.(`[name="${prefix}-${coin}"]`)?.value, 0);
-  return out;
-}
-
-function add2eTradeHasMoney(money) {
-  return ADD2E_TRADE_COINS.some(coin => add2eTradeInt(money?.[coin], 0) > 0);
-}
-
-function add2eTradeCanPay(actor, requested) {
-  const wallet = add2eTradeGetMoney(actor);
-  return ADD2E_TRADE_COINS.every(coin => wallet[coin] >= add2eTradeInt(requested?.[coin], 0));
-}
-
-function add2eTradeApplyMoneyDelta(money, delta) {
-  const out = { ...money };
-  for (const coin of ADD2E_TRADE_COINS) out[coin] = add2eTradeInt(out[coin], 0) + add2eTradeInt(delta?.[coin], 0);
-  return out;
-}
-
-function add2eTradeNegateMoney(money) {
-  const out = {};
-  for (const coin of ADD2E_TRADE_COINS) out[coin] = -add2eTradeInt(money?.[coin], 0);
-  return out;
-}
-
-function add2eTradeActorFromElement(el) {
-  const root = el?.closest?.("[data-actor-id]");
-  const actorId = root?.dataset?.actorId;
-  if (actorId && game.actors?.get(actorId)) return game.actors.get(actorId);
-
-  const appRoot = el?.closest?.(".application, .window-app, .app");
-  const appId = appRoot?.dataset?.applicationId || String(appRoot?.id || "").replace(/^app-/, "");
-  const app = appId ? (foundry?.applications?.instances?.get?.(appId) ?? ui.windows?.[appId]) : null;
-  return app?.actor ?? app?.document ?? null;
-}
-
-function add2eTradeSceneActors(sourceActor) {
-  const scene = canvas?.scene ?? game.scenes?.current ?? null;
-  const seen = new Set();
-  const rows = [];
-  for (const token of scene?.tokens?.contents ?? []) {
-    const actor = token.actor;
-    if (!actor || actor.id === sourceActor?.id || actor.type !== "personnage" || seen.has(actor.id)) continue;
-    seen.add(actor.id);
-    rows.push({ id: actor.id, name: actor.name, tokenName: token.name });
-  }
-  return rows.sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function add2eTradeItemQuantity(item) {
-  const q = add2eTradeInt(item?.system?.quantite ?? item?.system?.quantity, 1);
-  return Math.max(1, q);
-}
-
-function add2eTradeOfferLabel(proposal) {
-  if (proposal?.offer?.kind === "money") return `${proposal.offer.quantity} ${ADD2E_TRADE_COIN_LABELS[proposal.offer.coin] ?? proposal.offer.coin}`;
-  return `${proposal?.offer?.quantity ?? 1} × ${proposal?.offer?.name ?? "Objet"}`;
-}
-
-function add2eTradeOfferIcon(proposal) {
-  if (proposal?.offer?.kind === "money") return "fas fa-coins";
-  const type = String(proposal?.offer?.itemType ?? "").toLowerCase();
-  if (type === "arme") return "fas fa-swords";
-  if (type === "armure") return "fas fa-shield-alt";
-  return "fas fa-box-open";
-}
-
-function add2eTradeMoneyChips(money) {
-  const chips = ADD2E_TRADE_COINS
-    .map(coin => {
-      const value = add2eTradeInt(money?.[coin], 0);
-      if (value <= 0) return "";
-      return `<span class="add2e-trade-chip"><i class="fas fa-coins"></i>${value} ${ADD2E_TRADE_COIN_LABELS[coin]}</span>`;
-    })
-    .filter(Boolean)
-    .join("");
-  return chips || `<span class="add2e-trade-muted">aucune monnaie</span>`;
-}
-
-function add2eTradeStyles() {
-  return `<style>
+function add2eTradeCssText() {
+  return `
+    .add2e-trade-window .window-content,
+    .add2e-trade-window .standard-form,
+    .add2e-trade-window form {
+      background: transparent !important;
+      padding: 0 !important;
+      border: 0 !important;
+    }
     .add2e-trade-dialog {
       box-sizing: border-box;
       width: 100%;
       color: #2b1b0d;
-      background:
-        radial-gradient(circle at 12% 0%, rgba(255,246,206,.95) 0, rgba(255,246,206,0) 38%),
-        linear-gradient(180deg, #efe0bc 0%, #d9bd82 100%);
+      background: radial-gradient(circle at 12% 0%, rgba(255,246,206,.95) 0, rgba(255,246,206,0) 38%), linear-gradient(180deg, #efe0bc 0%, #d9bd82 100%);
       border: 2px solid #5a3418;
       border-radius: 10px;
       padding: 10px;
@@ -282,7 +175,136 @@ function add2eTradeStyles() {
     .add2e-trade-btn.validate { border:1px solid #6e1414; background:linear-gradient(180deg,#a7372d,#6e1714); color:#fff1d5; }
     .add2e-trade-btn.cancel { border:1px solid #6a5640; background:linear-gradient(180deg,#7b6c5c,#4f463b); color:#fff1d5; }
     .add2e-trade-btn:hover { filter:brightness(1.08); transform:translateY(-1px); }
-  </style>`;
+  `;
+}
+
+function add2eTradeEnsureStyles() {
+  if (!document?.head) return;
+  let style = document.getElementById(ADD2E_TRADE_STYLE_ID);
+  if (!style) {
+    style = document.createElement("style");
+    style.id = ADD2E_TRADE_STYLE_ID;
+    document.head.appendChild(style);
+  }
+  style.textContent = add2eTradeCssText();
+}
+
+function add2eTradeStyles() {
+  add2eTradeEnsureStyles();
+  return "";
+}
+
+function add2eTradeGetMoney(actor) {
+  const raw = actor?.getFlag?.("add2e", "monnaie") ?? actor?.flags?.add2e?.monnaie ?? {};
+  const out = {};
+  for (const coin of ADD2E_TRADE_COINS) out[coin] = add2eTradeInt(raw?.[coin], 0);
+  return out;
+}
+
+async function add2eTradeSetMoney(actor, money) {
+  const normalized = {};
+  for (const coin of ADD2E_TRADE_COINS) normalized[coin] = add2eTradeInt(money?.[coin], 0);
+  await actor.setFlag("add2e", "monnaie", normalized);
+}
+
+function add2eTradeMoneyLabel(money) {
+  const parts = [];
+  for (const coin of ADD2E_TRADE_COINS) {
+    const n = add2eTradeInt(money?.[coin], 0);
+    if (n > 0) parts.push(`${n} ${ADD2E_TRADE_COIN_LABELS[coin]}`);
+  }
+  return parts.length ? parts.join(", ") : "aucune monnaie";
+}
+
+function add2eTradeMoneyInputs(prefix = "money", money = {}) {
+  return `<div class="add2e-trade-money-row">
+    ${ADD2E_TRADE_COINS.map(coin => `
+      <label class="add2e-trade-coin-field">
+        <span>${ADD2E_TRADE_COIN_LABELS[coin]}</span>
+        <input type="number" min="0" step="1" name="${prefix}-${coin}" value="${add2eTradeInt(money?.[coin], 0)}">
+      </label>`).join("")}
+  </div>`;
+}
+
+function add2eTradeReadMoney(root, prefix = "money") {
+  const out = {};
+  for (const coin of ADD2E_TRADE_COINS) out[coin] = add2eTradeInt(root?.querySelector?.(`[name="${prefix}-${coin}"]`)?.value, 0);
+  return out;
+}
+
+function add2eTradeHasMoney(money) {
+  return ADD2E_TRADE_COINS.some(coin => add2eTradeInt(money?.[coin], 0) > 0);
+}
+
+function add2eTradeCanPay(actor, requested) {
+  const wallet = add2eTradeGetMoney(actor);
+  return ADD2E_TRADE_COINS.every(coin => wallet[coin] >= add2eTradeInt(requested?.[coin], 0));
+}
+
+function add2eTradeApplyMoneyDelta(money, delta) {
+  const out = { ...money };
+  for (const coin of ADD2E_TRADE_COINS) out[coin] = add2eTradeInt(out[coin], 0) + add2eTradeInt(delta?.[coin], 0);
+  return out;
+}
+
+function add2eTradeNegateMoney(money) {
+  const out = {};
+  for (const coin of ADD2E_TRADE_COINS) out[coin] = -add2eTradeInt(money?.[coin], 0);
+  return out;
+}
+
+function add2eTradeActorFromElement(el) {
+  const root = el?.closest?.("[data-actor-id]");
+  const actorId = root?.dataset?.actorId;
+  if (actorId && game.actors?.get(actorId)) return game.actors.get(actorId);
+
+  const appRoot = el?.closest?.(".application, .window-app, .app");
+  const appId = appRoot?.dataset?.applicationId || String(appRoot?.id || "").replace(/^app-/, "");
+  const app = appId ? (foundry?.applications?.instances?.get?.(appId) ?? ui.windows?.[appId]) : null;
+  return app?.actor ?? app?.document ?? null;
+}
+
+function add2eTradeSceneActors(sourceActor) {
+  const scene = canvas?.scene ?? game.scenes?.current ?? null;
+  const seen = new Set();
+  const rows = [];
+  for (const token of scene?.tokens?.contents ?? []) {
+    const actor = token.actor;
+    if (!actor || actor.id === sourceActor?.id || actor.type !== "personnage" || seen.has(actor.id)) continue;
+    seen.add(actor.id);
+    rows.push({ id: actor.id, name: actor.name, tokenName: token.name });
+  }
+  return rows.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function add2eTradeItemQuantity(item) {
+  const q = add2eTradeInt(item?.system?.quantite ?? item?.system?.quantity, 1);
+  return Math.max(1, q);
+}
+
+function add2eTradeOfferLabel(proposal) {
+  if (proposal?.offer?.kind === "money") return `${proposal.offer.quantity} ${ADD2E_TRADE_COIN_LABELS[proposal.offer.coin] ?? proposal.offer.coin}`;
+  return `${proposal?.offer?.quantity ?? 1} × ${proposal?.offer?.name ?? "Objet"}`;
+}
+
+function add2eTradeOfferIcon(proposal) {
+  if (proposal?.offer?.kind === "money") return "fas fa-coins";
+  const type = String(proposal?.offer?.itemType ?? "").toLowerCase();
+  if (type === "arme") return "fas fa-swords";
+  if (type === "armure") return "fas fa-shield-alt";
+  return "fas fa-box-open";
+}
+
+function add2eTradeMoneyChips(money) {
+  const chips = ADD2E_TRADE_COINS
+    .map(coin => {
+      const value = add2eTradeInt(money?.[coin], 0);
+      if (value <= 0) return "";
+      return `<span class="add2e-trade-chip"><i class="fas fa-coins"></i>${value} ${ADD2E_TRADE_COIN_LABELS[coin]}</span>`;
+    })
+    .filter(Boolean)
+    .join("");
+  return chips || `<span class="add2e-trade-muted">aucune monnaie</span>`;
 }
 
 function add2eTradeHideFooter(dialogRoot) {
@@ -302,6 +324,7 @@ function add2eTradeOpenDialog({ title, content, width = 440, onReady }) {
     ui.notifications.error("Dialog V2 est introuvable : échange impossible.");
     return null;
   }
+  add2eTradeEnsureStyles();
   const dialog = new DialogV2({
     window: { title },
     content,
@@ -576,6 +599,7 @@ function add2eTradeHandleClick(ev) {
 }
 
 Hooks.once("ready", () => {
+  add2eTradeEnsureStyles();
   game.socket.on(ADD2E_PLAYER_TRADES_SOCKET, add2eTradeHandleSocket);
   document.addEventListener("click", add2eTradeHandleClick, true);
   globalThis.ADD2E_PLAYER_TRADES_VERSION = ADD2E_PLAYER_TRADES_VERSION;
