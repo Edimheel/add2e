@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage : règles, progression et payload
-// Version : 2026-06-14-multiclass-rules-compendium-candidates-v1
+// Version : 2026-06-15-multiclass-rules-all-compatible-races-v1
 
 import { classItems, classSlug, cloneItemData, itemLabel, norm, num, pickClassAlignment, systemRace, warn } from "./17b-multiclass-core.mjs";
 
@@ -147,8 +147,20 @@ export function uniqueRaces(actor) {
 export function currentRaceOrCompatibleAlternatives(actor, predicate) {
   const current = systemRace(actor);
   const currentKey = norm(itemLabel(current, "Race"));
-  if (current && currentKey && predicate(current)) return [current];
-  return uniqueRaces(actor).filter(race => norm(itemLabel(race, "Race")) !== currentKey && predicate(race));
+  const ordered = [];
+  const seen = new Set();
+
+  const pushIfValid = race => {
+    const key = norm(itemLabel(race, "Race"));
+    if (!race || !key || seen.has(key)) return;
+    if (!predicate(race)) return;
+    seen.add(key);
+    ordered.push(race);
+  };
+
+  pushIfValid(current);
+  for (const race of uniqueRaces(actor)) pushIfValid(race);
+  return ordered;
 }
 
 export function wantedClassNames(actor, classData = null) {
