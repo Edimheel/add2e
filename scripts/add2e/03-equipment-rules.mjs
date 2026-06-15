@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags
-// Version : 2026-06-15-class-equipment-default-tags-v1
+// Version : 2026-06-10-multiclass-equipment-restrictions-v1
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Multiclassage AD&D 2e :
 // - armes : autorisées si au moins une classe les autorise ;
@@ -73,115 +73,6 @@ function add2eGetActorClassItem(actor) {
   return classItems[0] ?? null;
 }
 
-function add2eClassNameTags(classe) {
-  return [classe?.label, classe?.nom, classe?.name, classe?.classe, classe?.__classItemName]
-    .map(add2eNormalizeEquipTag)
-    .filter(Boolean);
-}
-
-function add2eClassEquipmentRulePreset(classe) {
-  const names = add2eClassNameTags(classe);
-  const has = (...values) => values.some(v => names.includes(add2eNormalizeEquipTag(v)) || names.some(n => n.includes(add2eNormalizeEquipTag(v))));
-  const anyWeapon = { mode: "allow-tags", allowedTags: ["arme"] };
-  const anyArmor = { mode: "allow-tags", allowedTags: ["armure", "bouclier", "heaume", "casque"] };
-  const noArmor = { mode: "forbid-tags", forbiddenTags: ["armure", "bouclier", "categorie_armure:legere", "categorie_armure:moyenne", "categorie_armure:lourde", "categorie_armure:bouclier"] };
-  const noShield = false;
-
-  if (has("guerrier", "paladin", "ranger")) return { weaponRestriction: anyWeapon, armorRestriction: anyArmor, shieldAllowed: true };
-
-  if (has("magicien", "mage", "illusionniste")) return {
-    weaponRestriction: {
-      mode: "allow-tags",
-      allowedTags: [
-        "arme:dague", "type_arme:dague", "arme:poignard", "type_arme:poignard",
-        "arme:baton", "type_arme:baton", "arme:baton_de_combat", "type_arme:baton_de_combat",
-        "arme:flechette", "type_arme:flechette", "arme:dart", "type_arme:dart"
-      ]
-    },
-    armorRestriction: noArmor,
-    shieldAllowed: noShield
-  };
-
-  if (has("voleur")) return {
-    weaponRestriction: {
-      mode: "allow-tags",
-      allowedTags: [
-        "arme:gourdin", "type_arme:gourdin", "arme:club", "type_arme:club",
-        "arme:dague", "type_arme:dague", "arme:poignard", "type_arme:poignard",
-        "arme:flechette", "type_arme:flechette", "arme:dart", "type_arme:dart",
-        "arme:fronde", "type_arme:fronde", "famille_arme:fronde",
-        "arme:epee_courte", "type_arme:epee_courte", "arme:epee_longue", "type_arme:epee_longue",
-        "arme:epee_large", "type_arme:epee_large", "famille_arme:epee"
-      ]
-    },
-    armorRestriction: {
-      mode: "allow-tags",
-      allowedTags: ["categorie_armure:legere", "armure:cuir", "type_armure:cuir", "armure:cuir_cloute", "type_armure:cuir_cloute"]
-    },
-    shieldAllowed: noShield
-  };
-
-  if (has("assassin")) return {
-    weaponRestriction: anyWeapon,
-    armorRestriction: {
-      mode: "allow-tags",
-      allowedTags: ["categorie_armure:legere", "armure:cuir", "type_armure:cuir", "armure:cuir_cloute", "type_armure:cuir_cloute"]
-    },
-    shieldAllowed: noShield
-  };
-
-  if (has("clerc")) return {
-    weaponRestriction: {
-      mode: "allow-tags",
-      allowedTags: [
-        "degat:contondant", "arme:masse", "famille_arme:masse", "arme:marteau", "type_arme:marteau_de_guerre",
-        "arme:fleau", "famille_arme:fleau", "arme:baton", "type_arme:baton", "arme:fronde", "type_arme:fronde"
-      ]
-    },
-    armorRestriction: anyArmor,
-    shieldAllowed: true
-  };
-
-  if (has("druide")) return {
-    weaponRestriction: {
-      mode: "allow-tags",
-      allowedTags: [
-        "arme:dague", "type_arme:dague", "arme:cimeterre", "type_arme:cimeterre", "arme:serpe", "type_arme:serpe",
-        "arme:lance", "type_arme:lance", "arme:javelot", "type_arme:javelot", "arme:baton", "type_arme:baton",
-        "arme:fronde", "type_arme:fronde", "famille_arme:fronde", "arme:marteau", "type_arme:marteau"
-      ]
-    },
-    armorRestriction: {
-      mode: "allow-tags",
-      allowedTags: ["categorie_armure:legere", "armure:cuir", "type_armure:cuir", "bouclier", "categorie_armure:bouclier"]
-    },
-    shieldAllowed: true
-  };
-
-  if (has("moine")) return {
-    weaponRestriction: {
-      mode: "allow-tags",
-      allowedTags: [
-        "arme:gourdin", "type_arme:gourdin", "arme:baton", "type_arme:baton", "arme:dague", "type_arme:dague",
-        "arme:fronde", "type_arme:fronde", "arme:javelot", "type_arme:javelot", "arme:lance", "type_arme:lance"
-      ]
-    },
-    armorRestriction: noArmor,
-    shieldAllowed: noShield
-  };
-
-  return {};
-}
-
-function add2eApplyDefaultClassEquipmentRules(classe) {
-  const out = classe ?? {};
-  const preset = add2eClassEquipmentRulePreset(out);
-  if (!add2eHasUsefulValue(out.weaponRestriction) && !add2eHasUsefulValue(out.weaponsAllowed) && !add2eHasUsefulValue(out.armes_autorisees) && add2eHasUsefulValue(preset.weaponRestriction)) out.weaponRestriction = add2eDeepClone(preset.weaponRestriction);
-  if (!add2eHasUsefulValue(out.armorRestriction) && !add2eHasUsefulValue(out.armorAllowed) && !add2eHasUsefulValue(out.armures_autorisees) && add2eHasUsefulValue(preset.armorRestriction)) out.armorRestriction = add2eDeepClone(preset.armorRestriction);
-  if (!add2eHasUsefulValue(out.shieldAllowed) && add2eHasUsefulValue(preset.shieldAllowed)) out.shieldAllowed = preset.shieldAllowed;
-  return out;
-}
-
 function add2eClassSystemFromItem(classItem, actor = null) {
   const itemSystem = add2eDeepClone(classItem?.system ?? {}) || {};
   const details = actor && !add2eActorIsMulticlass(actor) ? add2eDeepClone(actor?.system?.details_classe ?? {}) || {} : {};
@@ -190,58 +81,10 @@ function add2eClassSystemFromItem(classItem, actor = null) {
   for (const field of ruleFields) if (add2eHasUsefulValue(itemSystem[field])) merged[field] = add2eDeepClone(itemSystem[field]);
   merged.__classItemId = classItem?.id ?? null;
   merged.__classItemName = classItem?.name ?? null;
-  return add2eApplyDefaultClassEquipmentRules(merged);
+  return merged;
 }
+
 function add2eGetActorClassSystem(actor) { return add2eClassSystemFromItem(add2eGetActorClassItem(actor), actor); }
-
-function add2eArmorCategoryFromText(nameNorm, catNorm, typeNorm, sys = {}) {
-  const text = `${nameNorm} ${catNorm} ${typeNorm}`;
-  if (text.includes("bouclier")) return "bouclier";
-  if (text.includes("heaume") || text.includes("casque")) return "heaume";
-  if (/(hoqueton|cuir|cuir_cloute|matelasse|rembourre|padded|leather|studded)/.test(text)) return "legere";
-  if (/(broigne|brigandine|cotte|mailles|maille|annele|annelee|ecailles|ecaille|lorica|scale|chain|ring)/.test(text)) return "moyenne";
-  if (/(feuillete|feuilletee|plate|plates|harnois|bandes|bande|attelles|attelle|splint|banded|field|full_plate)/.test(text)) return "lourde";
-  const ac = Number(sys?.ac ?? sys?.ca ?? sys?.classe_armure ?? sys?.classeArmure);
-  if (Number.isFinite(ac)) {
-    if (ac >= 7) return "legere";
-    if (ac >= 5) return "moyenne";
-    if (ac <= 4) return "lourde";
-  }
-  return "";
-}
-
-function add2eAddCanonicalArmorTags(tags, sys, nameNorm, catNorm, typeNorm) {
-  const category = add2eArmorCategoryFromText(nameNorm, catNorm, typeNorm, sys);
-  if (!category) return;
-  if (category === "bouclier") {
-    tags.add("bouclier"); tags.add("armure:bouclier"); tags.add("categorie_armure:bouclier");
-    return;
-  }
-  if (category === "heaume") {
-    tags.add("heaume"); tags.add("casque");
-    return;
-  }
-  tags.add(`categorie_armure:${category}`);
-  tags.add(`armure:${category}`);
-  tags.add(`type_armure:${category}`);
-}
-
-function add2eAddCanonicalWeaponTags(tags, sys, nameNorm, typeNorm, familleNorm) {
-  const text = `${nameNorm} ${typeNorm} ${familleNorm}`;
-  const addType = t => { tags.add(`type_arme:${t}`); tags.add(`arme:${t}`); };
-  const addFamily = t => tags.add(`famille_arme:${t}`);
-  if (text.includes("arc")) { addFamily("arc"); tags.add("usage:distance"); }
-  if (text.includes("arbalete")) { addFamily("arbalete"); tags.add("usage:distance"); }
-  if (text.includes("fronde")) { addType("fronde"); addFamily("fronde"); tags.add("usage:distance"); }
-  if (text.includes("dague") || text.includes("poignard")) addType("dague");
-  if (text.includes("baton")) addType("baton");
-  if (text.includes("flechette") || text.includes("dart")) addType("flechette");
-  if (text.includes("epee")) addFamily("epee");
-  if (text.includes("marteau")) { addType("marteau"); tags.add("degat:contondant"); }
-  if (text.includes("masse")) { addFamily("masse"); tags.add("degat:contondant"); }
-  if (text.includes("fleau")) { addFamily("fleau"); tags.add("degat:contondant"); }
-  if (text.includes("gourdin") || text.includes("club")) { addType("gourdin"); tags.add("degat:contondant"); }
-}
 
 function add2eGetItemEquipTags(item) {
   const tags = new Set();
@@ -259,7 +102,6 @@ function add2eGetItemEquipTags(item) {
     if (nameNorm) { tags.add(`arme:${nameNorm}`); tags.add(`type_arme:${nameNorm}`); }
     if (typeNorm) tags.add(`type_arme:${typeNorm}`);
     if (familleNorm) tags.add(`famille_arme:${familleNorm}`);
-    add2eAddCanonicalWeaponTags(tags, sys, nameNorm, typeNorm, familleNorm);
     for (const p of props) {
       const prop = add2eNormalizeEquipTag(p); if (!prop) continue;
       tags.add(prop); tags.add(`arme:${prop}`);
@@ -284,7 +126,6 @@ function add2eGetItemEquipTags(item) {
     if (nameNorm) { tags.add(`armure:${nameNorm}`); tags.add(`type_armure:${nameNorm}`); }
     if (catNorm) { tags.add(`armure:${catNorm}`); tags.add(`categorie_armure:${catNorm}`); }
     if (typeNorm) tags.add(`type_armure:${typeNorm}`);
-    add2eAddCanonicalArmorTags(tags, sys, nameNorm, catNorm, typeNorm);
     if (nameNorm.includes("bouclier") || catNorm.includes("bouclier")) { tags.add("bouclier"); tags.add("armure:bouclier"); tags.add("categorie_armure:bouclier"); }
     if (nameNorm.includes("heaume") || nameNorm.includes("casque") || catNorm.includes("heaume") || catNorm.includes("casque")) { tags.add("heaume"); tags.add("casque"); }
     for (const p of props) {
@@ -386,6 +227,3 @@ try { globalThis.add2eIsShield = add2eIsShield; } catch (_e) {}
 try { globalThis.add2eIsHelmet = add2eIsHelmet; } catch (_e) {}
 try { globalThis.add2eLegacyAllowsItemByNameOrTag = add2eLegacyAllowsItemByNameOrTag; } catch (_e) {}
 try { globalThis.add2eCheckEquipmentAllowedForClassSystem = add2eCheckEquipmentAllowedForClassSystem; } catch (_e) {}
-try { globalThis.add2eClassEquipmentRulePreset = add2eClassEquipmentRulePreset; } catch (_e) {}
-try { globalThis.add2eApplyDefaultClassEquipmentRules = add2eApplyDefaultClassEquipmentRules; } catch (_e) {}
-try { globalThis.add2eArmorCategoryFromText = add2eArmorCategoryFromText; } catch (_e) {}
