@@ -1,7 +1,7 @@
 // ADD2E — Échanges entre personnages joueurs — DialogV2 / Foundry V13-V15
-// Version : 2026-06-15-player-trades-v1
+// Version : 2026-06-15-player-trades-ui-v2
 
-const ADD2E_PLAYER_TRADES_VERSION = "2026-06-15-player-trades-v1";
+const ADD2E_PLAYER_TRADES_VERSION = "2026-06-15-player-trades-ui-v2";
 const ADD2E_PLAYER_TRADES_SOCKET = "system.add2e";
 const ADD2E_TRADE_COINS = ["pp", "po", "pe", "pa", "pc"];
 const ADD2E_TRADE_COIN_LABELS = { pp: "PP", po: "PO", pe: "PE", pa: "PA", pc: "PC" };
@@ -56,7 +56,8 @@ function add2eTradeMoneyLabel(money) {
 function add2eTradeMoneyInputs(prefix = "money", money = {}) {
   return `<div class="add2e-trade-money-row">
     ${ADD2E_TRADE_COINS.map(coin => `
-      <label>${ADD2E_TRADE_COIN_LABELS[coin]}
+      <label class="add2e-trade-coin-field">
+        <span>${ADD2E_TRADE_COIN_LABELS[coin]}</span>
         <input type="number" min="0" step="1" name="${prefix}-${coin}" value="${add2eTradeInt(money?.[coin], 0)}">
       </label>`).join("")}
   </div>`;
@@ -123,30 +124,179 @@ function add2eTradeOfferLabel(proposal) {
   return `${proposal?.offer?.quantity ?? 1} × ${proposal?.offer?.name ?? "Objet"}`;
 }
 
+function add2eTradeOfferIcon(proposal) {
+  if (proposal?.offer?.kind === "money") return "fas fa-coins";
+  const type = String(proposal?.offer?.itemType ?? "").toLowerCase();
+  if (type === "arme") return "fas fa-swords";
+  if (type === "armure") return "fas fa-shield-alt";
+  return "fas fa-box-open";
+}
+
+function add2eTradeMoneyChips(money) {
+  const chips = ADD2E_TRADE_COINS
+    .map(coin => {
+      const value = add2eTradeInt(money?.[coin], 0);
+      if (value <= 0) return "";
+      return `<span class="add2e-trade-chip"><i class="fas fa-coins"></i>${value} ${ADD2E_TRADE_COIN_LABELS[coin]}</span>`;
+    })
+    .filter(Boolean)
+    .join("");
+  return chips || `<span class="add2e-trade-muted">aucune monnaie</span>`;
+}
+
 function add2eTradeStyles() {
   return `<style>
-    .add2e-trade-dialog { color:#2a1b0d;background:linear-gradient(180deg,#efe0bc 0%,#d8bd82 100%);border:2px solid #5a3418;border-radius:8px;padding:10px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);font-family:var(--font-primary); }
-    .add2e-trade-dialog h3 { margin:0 0 8px;color:#5b1e16;font-size:1.05rem;font-weight:900; }
-    .add2e-trade-box { border:1px solid #8a6330;border-radius:8px;background:rgba(255,247,218,.66);padding:8px;margin-bottom:8px;line-height:1.25; }
-    .add2e-trade-grid { display:grid;grid-template-columns:90px 1fr;gap:6px 8px;align-items:center; }
-    .add2e-trade-grid input,.add2e-trade-grid select,.add2e-trade-money-row input { width:100%;box-sizing:border-box; }
-    .add2e-trade-money-row { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px; }
-    .add2e-trade-money-row label { font-size:.74rem;font-weight:800;color:#4a2f17; }
-    .add2e-trade-actions { display:flex;justify-content:flex-end;gap:8px;margin-top:9px; }
-    .add2e-trade-btn { border-radius:7px;padding:6px 12px;font-weight:900;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.25); }
-    .add2e-trade-btn.validate { border:1px solid #6e1414;background:linear-gradient(180deg,#a7372d,#6e1714);color:#fff1d5; }
-    .add2e-trade-btn.cancel { border:1px solid #6a5640;background:linear-gradient(180deg,#7b6c5c,#4f463b);color:#fff1d5; }
+    .add2e-trade-dialog {
+      box-sizing: border-box;
+      width: 100%;
+      color: #2b1b0d;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(255,246,206,.95) 0, rgba(255,246,206,0) 38%),
+        linear-gradient(180deg, #efe0bc 0%, #d9bd82 100%);
+      border: 2px solid #5a3418;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.45), 0 5px 18px rgba(35,18,5,.42);
+      font-family: var(--font-primary);
+    }
+    .add2e-trade-dialog * { box-sizing: border-box; }
+    .add2e-trade-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 0 8px;
+      padding: 7px 9px;
+      border: 1px solid #7c2f1d;
+      border-radius: 8px;
+      color: #fff0ce;
+      background: linear-gradient(180deg, #8e2f24 0%, #5f1713 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 2px 5px rgba(45,20,8,.24);
+      font-weight: 900;
+      letter-spacing: .02em;
+    }
+    .add2e-trade-title i { color: #f8d37a; }
+    .add2e-trade-title small { font-size: .72rem; color: #f7db9e; font-weight: 800; white-space: nowrap; }
+    .add2e-trade-box {
+      border: 1px solid #8a6330;
+      border-radius: 8px;
+      background: rgba(255,247,218,.72);
+      padding: 8px;
+      margin-bottom: 8px;
+      line-height: 1.25;
+      box-shadow: inset 0 0 10px rgba(90,52,24,.12);
+    }
+    .add2e-trade-actor-row {
+      display: grid;
+      grid-template-columns: 1fr 34px 1fr;
+      gap: 6px;
+      align-items: center;
+      text-align: center;
+    }
+    .add2e-trade-actor-pill {
+      min-width: 0;
+      padding: 7px 8px;
+      border: 1px solid #7f5526;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #fff0c2 0%, #d7a65d 100%);
+      color: #2c1b0c;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .add2e-trade-arrow { color: #7c241a; font-size: 1.25rem; }
+    .add2e-trade-offer {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .add2e-trade-offer-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      border: 1px solid #7c4a20;
+      background: linear-gradient(180deg, #f6dfad, #bd8743);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #622016;
+      font-size: 1.35rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 4px rgba(45,20,8,.22);
+    }
+    .add2e-trade-label { display:block; color:#5b1e16; font-size:.74rem; font-weight:900; text-transform:uppercase; letter-spacing:.035em; margin-bottom:2px; }
+    .add2e-trade-value { font-weight:900; color:#2b1b0d; }
+    .add2e-trade-grid { display:grid; grid-template-columns: 92px 1fr; gap: 6px 8px; align-items:center; }
+    .add2e-trade-grid label { color:#4a2f17; font-weight:900; font-size:.82rem; }
+    .add2e-trade-grid input,
+    .add2e-trade-grid select,
+    .add2e-trade-money-row input {
+      width: 100%;
+      min-height: 28px;
+      border: 1px solid #7d5a2c;
+      border-radius: 6px;
+      background: rgba(255,252,235,.95);
+      color: #2b1b0d;
+      font-weight: 800;
+      box-shadow: inset 0 1px 3px rgba(55,30,10,.16);
+    }
+    .add2e-trade-money-row { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; }
+    .add2e-trade-coin-field {
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+      padding:5px;
+      border:1px solid #9a7036;
+      border-radius:7px;
+      background:rgba(255,244,207,.72);
+    }
+    .add2e-trade-coin-field span { font-size:.72rem; font-weight:900; color:#6e2418; text-align:center; }
+    .add2e-trade-chip {
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      margin:2px 3px 2px 0;
+      padding:3px 7px;
+      border-radius:999px;
+      border:1px solid #8c612d;
+      background:linear-gradient(180deg,#ffe7a3,#c9933e);
+      color:#2b1b0d;
+      font-size:.78rem;
+      font-weight:900;
+      white-space:nowrap;
+    }
+    .add2e-trade-chip i { color:#7c241a; }
+    .add2e-trade-muted { color:#6f5a40; font-style:italic; font-weight:700; }
+    .add2e-trade-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:9px; }
+    .add2e-trade-btn {
+      min-width: 92px;
+      border-radius: 7px;
+      padding: 6px 12px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.22);
+    }
+    .add2e-trade-btn.validate { border:1px solid #6e1414; background:linear-gradient(180deg,#a7372d,#6e1714); color:#fff1d5; }
+    .add2e-trade-btn.cancel { border:1px solid #6a5640; background:linear-gradient(180deg,#7b6c5c,#4f463b); color:#fff1d5; }
+    .add2e-trade-btn:hover { filter:brightness(1.08); transform:translateY(-1px); }
   </style>`;
 }
 
 function add2eTradeHideFooter(dialogRoot) {
   const win = dialogRoot?.closest?.(".application, .window-app, .app, .dialog");
+  if (win) {
+    win.classList.add("add2e-trade-window");
+    win.style.setProperty("background", "transparent", "important");
+  }
   for (const footer of win?.querySelectorAll?.(".form-footer, .dialog-buttons, footer") ?? []) {
     if (!footer.closest(".add2e-trade-dialog")) footer.style.display = "none";
   }
 }
 
-function add2eTradeOpenDialog({ title, content, width = 430, onReady }) {
+function add2eTradeOpenDialog({ title, content, width = 440, onReady }) {
   const DialogV2 = add2eTradeDialogV2();
   if (!DialogV2) {
     ui.notifications.error("Dialog V2 est introuvable : échange impossible.");
@@ -190,18 +340,32 @@ function add2eTradeOpenRequester(actor, button) {
   if (maxQty <= 0) return ui.notifications.warn("Rien à échanger sur cette ligne.");
 
   const uid = add2eTradeUuid();
-  const label = isMoney ? `${ADD2E_TRADE_COIN_LABELS[coin]} disponibles : ${maxQty}` : `${item.name} — quantité disponible : ${maxQty}`;
+  const offerName = isMoney ? `${ADD2E_TRADE_COIN_LABELS[coin]}` : item.name;
+  const offerDetail = isMoney ? `${maxQty} ${ADD2E_TRADE_COIN_LABELS[coin]} disponibles` : `Quantité disponible : ${maxQty}`;
+  const offerIcon = isMoney ? "fas fa-coins" : add2eTradeOfferIcon({ offer: { itemType: item.type } });
   const options = targets.map(t => `<option value="${add2eTradeEscape(t.id)}">${add2eTradeEscape(t.name)} (${add2eTradeEscape(t.tokenName)})</option>`).join("");
   const content = `${add2eTradeStyles()}
     <div class="add2e-trade-dialog" data-add2e-trade-dialog="${uid}">
-      <h3>Proposer un échange</h3>
-      <div class="add2e-trade-box"><b>${add2eTradeEscape(actor.name)}</b> propose <b>${add2eTradeEscape(label)}</b>.</div>
+      <div class="add2e-trade-title"><span><i class="fas fa-handshake"></i> Proposer un échange</span><small>ADD2E</small></div>
+      <div class="add2e-trade-box add2e-trade-actor-row">
+        <div class="add2e-trade-actor-pill" title="${add2eTradeEscape(actor.name)}">${add2eTradeEscape(actor.name)}</div>
+        <div class="add2e-trade-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="add2e-trade-actor-pill">Receveur</div>
+      </div>
+      <div class="add2e-trade-box add2e-trade-offer">
+        <div class="add2e-trade-offer-icon"><i class="${offerIcon}"></i></div>
+        <div>
+          <span class="add2e-trade-label">Ce qui est proposé</span>
+          <div class="add2e-trade-value">${add2eTradeEscape(offerName)}</div>
+          <div class="add2e-trade-muted">${add2eTradeEscape(offerDetail)}</div>
+        </div>
+      </div>
       <div class="add2e-trade-box add2e-trade-grid">
         <label>Receveur</label><select name="targetActorId">${options}</select>
         <label>Quantité</label><input type="number" name="quantity" min="1" max="${maxQty}" step="1" value="1">
       </div>
       <div class="add2e-trade-box">
-        <div style="font-weight:900;margin-bottom:5px;">Argent demandé en échange</div>
+        <span class="add2e-trade-label">Argent demandé en échange</span>
         ${add2eTradeMoneyInputs("request", {})}
       </div>
       <div class="add2e-trade-actions">
@@ -252,12 +416,28 @@ function add2eTradeOpenReceiver(proposal) {
 
   const uid = `${proposal.id}-receiver-${game.user.id}`;
   const requestLabel = add2eTradeMoneyLabel(proposal.requestMoney);
+  const requestHtml = add2eTradeMoneyChips(proposal.requestMoney);
+  const offerIcon = add2eTradeOfferIcon(proposal);
   const content = `${add2eTradeStyles()}
     <div class="add2e-trade-dialog" data-add2e-trade-dialog="${uid}">
-      <h3>Valider l'échange</h3>
-      <div class="add2e-trade-box"><b>${add2eTradeEscape(proposal.sourceActorName)}</b> propose à <b>${add2eTradeEscape(proposal.targetActorName)}</b>.</div>
-      <div class="add2e-trade-box"><b>Objet / argent reçu :</b><br>${add2eTradeEscape(add2eTradeOfferLabel(proposal))}</div>
-      <div class="add2e-trade-box"><b>Argent à donner en échange :</b><br>${add2eTradeEscape(requestLabel)}</div>
+      <div class="add2e-trade-title"><span><i class="fas fa-handshake"></i> Valider l'échange</span><small>Confirmation</small></div>
+      <div class="add2e-trade-box add2e-trade-actor-row">
+        <div class="add2e-trade-actor-pill" title="${add2eTradeEscape(proposal.sourceActorName)}">${add2eTradeEscape(proposal.sourceActorName)}</div>
+        <div class="add2e-trade-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="add2e-trade-actor-pill" title="${add2eTradeEscape(proposal.targetActorName)}">${add2eTradeEscape(proposal.targetActorName)}</div>
+      </div>
+      <div class="add2e-trade-box add2e-trade-offer">
+        <div class="add2e-trade-offer-icon"><i class="${offerIcon}"></i></div>
+        <div>
+          <span class="add2e-trade-label">Reçu</span>
+          <div class="add2e-trade-value">${add2eTradeEscape(add2eTradeOfferLabel(proposal))}</div>
+        </div>
+      </div>
+      <div class="add2e-trade-box">
+        <span class="add2e-trade-label">À donner en échange</span>
+        <div>${requestHtml}</div>
+        <div class="add2e-trade-muted" style="margin-top:4px;">${add2eTradeEscape(requestLabel)}</div>
+      </div>
       <div class="add2e-trade-actions">
         <button type="button" class="add2e-trade-btn cancel" data-add2e-trade-refuse>Refuser</button>
         <button type="button" class="add2e-trade-btn validate" data-add2e-trade-accept>Valider</button>
