@@ -1,5 +1,5 @@
-// ADD2E — Relais socket central pour ADD2E_GM_OPERATION et messages joueurs/MJ.
-// Version : 2026-06-15-gm-detail-central-relay-disabled-v1
+// ADD2E — Relais socket central pour ADD2E_GM_OPERATION et message joueur d'attaque.
+// Version : 2026-06-15-gm-detail-central-relay-cleanup-v1
 
 import {
   ADD2E_GM_OPERATION,
@@ -26,22 +26,10 @@ import { vendorRecordProjectileSpent, consumeSpellComponent } from "./15b3-gm-re
 
 const ADD2E_ATTACK_PLAYER_LOCAL_CHAT = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
 const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
-const LOCAL_CHAT_VERSION = "2026-06-15-gm-detail-central-relay-disabled-v1";
+const LOCAL_CHAT_VERSION = "2026-06-15-gm-detail-central-relay-cleanup-v1";
 const LOG = "[ADD2E][ATTACK_CHAT_RELAY]";
 
 globalThis.ADD2E_LOCAL_PLAYER_ATTACK_CHAT_RELAY_VERSION = LOCAL_CHAT_VERSION;
-globalThis.ADD2E_ATTACK_GM_DETAIL_USE_CENTRAL_RELAY ??= false;
-
-function gmIds() {
-  const recipients = ChatMessage.getWhisperRecipients?.("GM") ?? [];
-  const ids = recipients.map(u => u.id).filter(Boolean);
-  if (ids.length) return ids;
-  return Array.from(game.users ?? []).filter(u => u.isGM).map(u => u.id).filter(Boolean);
-}
-
-function centralGmDetailRelayEnabled() {
-  return globalThis.ADD2E_ATTACK_GM_DETAIL_USE_CENTRAL_RELAY === true;
-}
 
 function localAttackCardKey(payload = {}) {
   return String(payload.id ?? `${payload.version ?? "no-version"}:${payload.speaker?.alias ?? "ADD2E"}:${String(payload.content ?? "").slice(0, 120)}`);
@@ -126,81 +114,9 @@ async function createPersistentPlayerAttackChat(payload = {}) {
   }
 }
 
-async function createGmAttackDetailChat(payload = {}) {
-  if (!game.user?.isGM) return false;
-  if (!isResponsibleGM()) return false;
-
-  const content = String(payload.content ?? "");
-  if (!content) {
-    console.warn(`${LOG}[GM_DETAIL_EMPTY]`, { relayVersion: LOCAL_CHAT_VERSION });
-    return false;
-  }
-
-  globalThis.ADD2E_GM_ATTACK_DETAIL_CHAT_SEEN ??= new Set();
-  const key = localAttackCardKey(payload);
-  if (globalThis.ADD2E_GM_ATTACK_DETAIL_CHAT_SEEN.has(key)) {
-    console.log(`${LOG}[GM_DETAIL_DUPLICATE_SKIPPED]`, { key });
-    return false;
-  }
-  globalThis.ADD2E_GM_ATTACK_DETAIL_CHAT_SEEN.add(key);
-
-  const whisper = Array.isArray(payload.whisper) && payload.whisper.length ? payload.whisper : gmIds();
-  try {
-    await ChatMessage.create({
-      speaker: payload.speaker ?? { alias: "ADD2E" },
-      content,
-      avatar: payload.avatar,
-      whisper,
-      blind: false,
-      flags: {
-        ...(payload.flags ?? {}),
-        add2e: {
-          ...(payload.flags?.add2e ?? {}),
-          attackChatVisibility: "gm-only",
-          attackChatVisibilityVersion: payload.flags?.add2e?.attackChatVisibilityVersion ?? LOCAL_CHAT_VERSION,
-          gmRelayVersion: LOCAL_CHAT_VERSION,
-          createdByGmRelay: true,
-          localAttackKey: key
-        }
-      }
-    });
-
-    console.log(`${LOG}[GM_DETAIL_CREATED]`, {
-      relayVersion: LOCAL_CHAT_VERSION,
-      user: game.user?.name,
-      whisper,
-      actor: payload.speaker?.alias ?? null,
-      key
-    });
-    return true;
-  } catch (err) {
-    console.error(`${LOG}[GM_DETAIL_CREATE_ERROR]`, err, {
-      relayVersion: LOCAL_CHAT_VERSION,
-      whisper,
-      key
-    });
-    return false;
-  }
-}
-
 async function handleAttackChatSocket(data) {
   if (data?.type === ADD2E_ATTACK_PLAYER_LOCAL_CHAT) {
     await createPersistentPlayerAttackChat(data.payload ?? {});
-    return true;
-  }
-
-  if (data?.type === ADD2E_ATTACK_GM_DETAIL_CHAT) {
-    if (!centralGmDetailRelayEnabled()) {
-      console.log(`${LOG}[GM_DETAIL_SKIPPED_CENTRAL_DISABLED]`, {
-        relayVersion: LOCAL_CHAT_VERSION,
-        user: game.user?.name,
-        isGM: game.user?.isGM,
-        reason: "handled-by-04-attack-roll-legacy-relay",
-        rollback: "globalThis.add2eUseCentralGmAttackDetailRelay()"
-      });
-      return false;
-    }
-    await createGmAttackDetailChat(data.payload ?? {});
     return true;
   }
 
@@ -249,15 +165,14 @@ function registerAttackChatRelay() {
   globalThis.ADD2E_ATTACK_CHAT_RELAY_REGISTERED = LOCAL_CHAT_VERSION;
 
   game.socket.on(ADD2E_SOCKET, async data => {
-    if (data?.type !== ADD2E_ATTACK_PLAYER_LOCAL_CHAT && data?.type !== ADD2E_ATTACK_GM_DETAIL_CHAT) return;
+    if (data?.type !== ADD2E_ATTACK_PLAYER_LOCAL_CHAT) return;
     console.log(`${LOG}[SOCKET_RECEIVED]`, {
       relayVersion: LOCAL_CHAT_VERSION,
       user: game.user?.name,
       isGM: game.user?.isGM,
       type: data?.type,
       payloadVersion: data?.payload?.version,
-      targets: data?.payload?.userIds ?? [],
-      centralGmDetailRelayEnabled: centralGmDetailRelayEnabled()
+      targets: data?.payload?.userIds ?? []
     });
     await handleAttackChatSocket(data);
   });
@@ -267,7 +182,7 @@ function registerAttackChatRelay() {
     user: game.user?.name,
     isGM: game.user?.isGM,
     ready: game?.ready,
-    centralGmDetailRelayEnabled: centralGmDetailRelayEnabled()
+    scope: "player-attack-chat-only"
   });
   return true;
 }
@@ -350,26 +265,13 @@ function installGenericGmRelay() {
 installAttackChatRelay();
 Hooks.once("ready", installGenericGmRelay);
 
-globalThis.add2eUseCentralGmAttackDetailRelay = function add2eUseCentralGmAttackDetailRelay() {
-  globalThis.ADD2E_ATTACK_GM_DETAIL_USE_CENTRAL_RELAY = true;
-  console.warn(`${LOG}[ROLLBACK] Relais central GM_DETAIL réactivé. Recharge Foundry pour revenir au comportement par défaut.`, { relayVersion: LOCAL_CHAT_VERSION });
-  return true;
-};
-
-globalThis.add2eUseLocalGmAttackDetailRelay = function add2eUseLocalGmAttackDetailRelay() {
-  globalThis.ADD2E_ATTACK_GM_DETAIL_USE_CENTRAL_RELAY = false;
-  console.warn(`${LOG}[DEFAULT] Relais central GM_DETAIL désactivé ; le relais local de 04-attack-roll.mjs gère le détail MJ.`, { relayVersion: LOCAL_CHAT_VERSION });
-  return true;
-};
-
 globalThis.add2eAttackChatRelayDebug = function add2eAttackChatRelayDebug() {
   return {
     relayVersion: LOCAL_CHAT_VERSION,
     attackRelayRegistered: globalThis.ADD2E_ATTACK_CHAT_RELAY_REGISTERED,
     genericRelayRegistered: globalThis.ADD2E_GM_OPERATION_RELAY_REGISTERED,
-    centralGmDetailRelayEnabled: centralGmDetailRelayEnabled(),
-    rollbackEnableCentral: "globalThis.add2eUseCentralGmAttackDetailRelay()",
-    defaultDisableCentral: "globalThis.add2eUseLocalGmAttackDetailRelay()",
+    scope: "player-attack-chat-only",
+    gmDetailHandledBy: "scripts/add2e-attack/04-attack-roll.mjs",
     user: game.user?.name,
     userId: game.user?.id,
     isGM: game.user?.isGM,
