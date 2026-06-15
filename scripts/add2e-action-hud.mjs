@@ -1,9 +1,9 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-06-15-v46-bottom-anchor-active-effects
+// Version : 2026-06-15-v47-named-actor-effects-only
 // Le HUD reste une interface : les actions délèguent aux fonctions système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v46-bottom-anchor-active-effects";
+const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v47-named-actor-effects-only";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
 const STORAGE_KEY = "add2e.actionHud.state.v46";
@@ -427,48 +427,51 @@ function features(actor) {
   return [];
 }
 
-function effectKey(effect) { return effect?.uuid ?? effect?.id ?? effect?._id ?? effect?.name ?? String(Math.random()); }
+function effectDisplayName(effect) {
+  const name = String(effect?.name ?? effect?.label ?? effect?._source?.name ?? effect?._source?.label ?? "").trim();
+  if (!name) return "";
+  if (["activeeffect", "active effect", "effet actif", "effect"].includes(lower(name))) return "";
+  return name;
+}
+function effectKey(effect) { return effect?.uuid ?? effect?.id ?? effect?._id ?? effectDisplayName(effect); }
 function effectOriginItem(actor, effect) {
-  const origin = String(effect?.origin ?? effect?.sourceName ?? "");
-  const itemId = origin.match(/Item\.([A-Za-z0-9]+)/)?.[1] ?? effect?.parent?.id ?? null;
-  if (!itemId) return null;
-  return actor?.items?.get?.(itemId) ?? null;
+  const flags = effect?.flags?.add2e ?? {};
+  const candidates = [flags.itemId, flags.sourceItemId, flags.originItemId, effect?.originItemId, effect?.sourceItemId].filter(Boolean);
+  const origin = String(effect?.origin ?? effect?._source?.origin ?? "");
+  const matches = [...origin.matchAll(/Item\.([A-Za-z0-9]+)/g)].map(match => match[1]);
+  candidates.push(...matches.reverse());
+  for (const id of candidates) {
+    const item = actor?.items?.get?.(id);
+    if (item) return item;
+  }
+  return null;
 }
-function effectHasDuration(effect) {
-  const d = effect?.duration ?? {};
-  return [d.seconds, d.rounds, d.turns, d.startTime, d.startRound, d.combat, d.remaining].some(value => value !== undefined && value !== null && value !== "");
-}
-function isClassOrRacePassiveEffect(actor, effect) {
+function effectIsFromRaceOrClass(actor, effect) {
   const item = effectOriginItem(actor, effect);
   const itemType = String(item?.type ?? "").toLowerCase();
   const flags = effect?.flags?.add2e ?? {};
-  return itemType === "race" || itemType === "classe" || flags.race === true || flags.classe === true || flags.classFeature === true || flags.racial === true;
+  const sourceType = lower(flags.sourceType ?? flags.type ?? flags.kind ?? effect?.sourceType ?? "");
+  return itemType === "race" || itemType === "classe" || sourceType === "race" || sourceType === "classe" || flags.race === true || flags.classe === true || flags.classFeature === true || flags.racial === true;
 }
-function isHudActiveEffect(actor, effect, fromTemporary = false) {
+function isHudActiveEffect(actor, effect) {
   if (!effect) return false;
-  if (effect.disabled === true || effect.isSuppressed === true) return false;
-  if (effect.active === false) return false;
-  if (fromTemporary) return true;
-  if (isClassOrRacePassiveEffect(actor, effect) && effectHasDuration(effect) !== true) return false;
-  if (effect.transfer === true && effectHasDuration(effect) !== true) return false;
+  if (!effectDisplayName(effect)) return false;
+  if (effect.disabled === true || effect.isSuppressed === true || effect.active === false) return false;
+  if (effectIsFromRaceOrClass(actor, effect)) return false;
   return true;
 }
-function addEffectSource(map, actor, values, fromTemporary = false) {
-  for (const effect of arr(values)) {
-    if (!isHudActiveEffect(actor, effect, fromTemporary)) continue;
+function addActorEmbeddedEffects(map, actor) {
+  for (const effect of arr(actor?.effects)) {
+    if (!isHudActiveEffect(actor, effect)) continue;
     map.set(effectKey(effect), effect);
   }
 }
 function effects(actor) {
   const map = new Map();
+  addActorEmbeddedEffects(map, actor);
   const tokenActor = tokenFor(actor)?.actor ?? null;
-  for (const sourceActor of [actor, tokenActor].filter(Boolean)) {
-    addEffectSource(map, sourceActor, sourceActor.effects, false);
-    addEffectSource(map, sourceActor, sourceActor.appliedEffects, true);
-    addEffectSource(map, sourceActor, sourceActor.temporaryEffects, true);
-    try { addEffectSource(map, sourceActor, sourceActor.allApplicableEffects?.(), true); } catch (_e) {}
-  }
-  return [...map.values()].sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? "")));
+  if (tokenActor && tokenActor !== actor) addActorEmbeddedEffects(map, tokenActor);
+  return [...map.values()].sort((a, b) => effectDisplayName(a).localeCompare(effectDisplayName(b)));
 }
 
 function ability(actor, key) {
@@ -591,7 +594,7 @@ function featureRows(actor) {
 function effectRows(actor) {
   const rows = effects(actor);
   if (!rows.length) return `<div class="empty">Aucun effet actif.</div>`;
-  return rows.map(effect => `<div class="row effect-row"><img src="${esc(effect.img || effect.icon || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(effect.name)}</div><div class="meta"><span>Effet actif</span></div></div><button type="button" class="act danger" data-action="remove-effect" data-effect-id="${esc(effect.id ?? effect._id ?? "")}"><i class="fas fa-trash"></i></button></div>`).join("");
+  return rows.map(effect => `<div class="row effect-row"><img src="${esc(effect.img || effect.icon || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(effectDisplayName(effect))}</div><div class="meta"><span>Effet actif hors race/classe</span></div></div><button type="button" class="act danger" data-action="remove-effect" data-effect-id="${esc(effect.id ?? effect._id ?? "")}"><i class="fas fa-trash"></i></button></div>`).join("");
 }
 
 function saveRows(actor) {
@@ -716,7 +719,7 @@ async function removeEffect(actor, effectId) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   const ok = DialogV2?.confirm ? await DialogV2.confirm({
     window: { title: "Supprimer l'effet" },
-    content: `<p>Supprimer <strong>${esc(effect.name)}</strong> ?</p>`,
+    content: `<p>Supprimer <strong>${esc(effectDisplayName(effect))}</strong> ?</p>`,
     yes: { label: "Supprimer", icon: "fas fa-trash" },
     no: { label: "Annuler" }
   }) : true;
