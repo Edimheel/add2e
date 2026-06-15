@@ -7,6 +7,7 @@ import "./13b-actor-sheet-object-magic-postprocess.mjs";
 import "./13c-actor-sheet-caracs-pv-tabs-render.mjs";
 import "./13d-actor-sheet-listeners.mjs";
 import "./13e-actor-sheet-drop.mjs";
+import "./13e-actor-sheet-drop-compendium-resolver.mjs";
 import "./13f-actor-sheet-registration.mjs";
 
 const ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION = "2026-05-20-bracers-fixed-ca-sheet-v6-defensive-items-only";
@@ -118,6 +119,3 @@ if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototy
     }, true);
   };
 }
-
-console.log("[ADD2E][BRACELETS_DEFENSE][FIX]",ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION);
-console.log("[ADD2E][ACTOR_ITEM_OPEN]", ADD2E_ACTOR_ITEM_OPEN_VERSION);
