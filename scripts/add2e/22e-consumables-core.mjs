@@ -13,7 +13,7 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-14-consumables-core-v10-empty-primary-fallback";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-15-consumables-core-v11-delete-empty-components";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -25,6 +25,30 @@ const asArray = value => Array.isArray(value)
     : typeof value === "string"
       ? value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)
       : [value];
+
+function deepClone(value) {
+  try { return foundry.utils.deepClone(value); }
+  catch (_err) {
+    try { return foundry.utils.duplicate(value); }
+    catch (_e) { return JSON.parse(JSON.stringify(value ?? null)); }
+  }
+}
+
+function itemDataForRefund(item) {
+  if (!item) return null;
+  const data = typeof item.toObject === "function" ? item.toObject() : deepClone(item);
+  if (!data || typeof data !== "object") return null;
+  delete data._id;
+  delete data._stats;
+  return data;
+}
+
+function withQuantityOnItemData(itemData, value) {
+  const data = deepClone(itemData);
+  data.system ??= {};
+  data.system.quantite = Math.max(0, Math.floor(num(value, 0)));
+  return data;
+}
 
 function toFieldArray(value) {
   if (value === null || value === undefined || value === "") return [];
@@ -326,10 +350,11 @@ function compatibleComponentKey(itemKey, requirementKey) {
 function findActorComponent(actor, requirement) {
   const items = Array.from(actor?.items ?? []).filter(isSpellComponentItem);
   const reqKeys = requirementKeys(requirement);
-  return items.find(item => {
+  const matches = items.filter(item => {
     const keys = componentKeys(item);
     return reqKeys.some(reqKey => keys.some(itemKey => compatibleComponentKey(itemKey, reqKey)));
-  }) ?? null;
+  });
+  return matches.find(item => quantity(item) >= Number(requirement?.quantity ?? 1)) ?? matches[0] ?? null;
 }
 
 function findActorComponentForRequirement(actor, requirement) {
@@ -351,8 +376,8 @@ function sortByName(a, b) {
 export function prepareActorSheetConsumables(data) {
   const items = Array.from(data?.actor?.items ?? []);
   const objets = Array.isArray(data?.listeObjets) && data.listeObjets.length ? data.listeObjets : items.filter(item => item.type === "objet");
-  const carquois = objets.filter(isAmmunition).sort(sortByName);
-  const sacoche = objets.filter(isSpellComponentItem).sort(sortByName);
+  const carquois = objets.filter(item => isAmmunition(item) && quantity(item) > 0).sort(sortByName);
+  const sacoche = objets.filter(item => isSpellComponentItem(item) && quantity(item) > 0).sort(sortByName);
   const divers = objets.filter(item => !isAmmunition(item) && !isSpellComponentItem(item)).sort(sortByName);
   data.listeCarquois = carquois;
   data.listeSacocheComposants = sacoche;
@@ -393,13 +418,26 @@ function serializableReservation(result) {
     consumed: (result?.consumed ?? []).map(entry => ({
       itemId: entry.itemId,
       itemName: entry.itemName,
+      itemData: entry.itemData,
       before: entry.before,
       after: entry.after,
       quantity: entry.quantity,
       requirement: entry.requirement,
-      groupRequirement: entry.groupRequirement
+      groupRequirement: entry.groupRequirement,
+      deleted: entry.deleted === true
     }))
   };
+}
+
+async function deleteDepletedConsumedItems(actor, consumed) {
+  const ids = consumed
+    .filter(entry => entry.after <= 0 && entry.itemId && actor?.items?.get?.(entry.itemId))
+    .map(entry => entry.itemId);
+  const uniqueIds = [...new Set(ids)];
+  if (!uniqueIds.length) return 0;
+  await actor.deleteEmbeddedDocuments("Item", uniqueIds, { add2eReason: "spell-component-depleted-delete" });
+  for (const entry of consumed) if (uniqueIds.includes(entry.itemId)) entry.deleted = true;
+  return uniqueIds.length;
 }
 
 async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
@@ -420,9 +458,11 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
       return { ok: false, blocked: true, consumed: [], missing: requirement, message: `${actor?.name ?? "Le lanceur"} n'a pas le composant requis : ${requirement.name} (${requirement.quantity}).` };
     }
     const after = before - selectedRequirement.quantity;
+    const itemData = itemDataForRefund(item);
     await item.update(quantityUpdate(after), { add2eReason: "spell-component-reserved-gm" });
-    consumed.push({ item, itemId: item.id, itemName: item.name, requirement: selectedRequirement, groupRequirement: found?.group, before, after, quantity: selectedRequirement.quantity });
+    consumed.push({ item, itemId: item.id, itemName: item.name, itemData, requirement: selectedRequirement, groupRequirement: found?.group, before, after, quantity: selectedRequirement.quantity, deleted: false });
   }
+  await deleteDepletedConsumedItems(actor, consumed);
   return { ok: true, blocked: false, actorId: actor?.id, sortId: sort?.id, sortName: sort?.name, consumed };
 }
 
@@ -432,7 +472,13 @@ async function refundSpellComponentsLocal(reservation) {
   if (!actor || !entries.length) return false;
   for (const entry of entries) {
     const item = actor.items?.get(entry.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === entry.itemName && isSpellComponentItem(i));
-    if (item) await item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-refund-gm" });
+    if (item) {
+      await item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-refund-gm" });
+      continue;
+    }
+    if (entry.itemData) {
+      await actor.createEmbeddedDocuments("Item", [withQuantityOnItemData(entry.itemData, entry.before)], { add2eReason: "spell-component-refund-recreate-gm" });
+    }
   }
   return true;
 }
