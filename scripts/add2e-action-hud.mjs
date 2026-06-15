@@ -1,9 +1,9 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-06-15-v49-effect-duration-label
+// Version : 2026-06-15-v50-equipment-tab-money
 // Le HUD reste une interface : les actions délèguent aux fonctions système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v49-effect-duration-label";
+const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v50-equipment-tab-money";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
 const STORAGE_KEY = "add2e.actionHud.state.v46";
@@ -22,7 +22,14 @@ let manualIntentUntil = 0;
 let state = null;
 let canvasTokenClickBound = false;
 
-const TABS = ["attaques", "sorts", "capacites", "effets", "sauvegardes", "caracs"];
+const TABS = ["attaques", "sorts", "capacites", "equipement", "effets", "sauvegardes", "caracs"];
+const COINS = [
+  ["pp", "PP"],
+  ["po", "PO"],
+  ["pe", "PE"],
+  ["pa", "PA"],
+  ["pc", "PC"]
+];
 const CARACS = [
   ["force", "FOR", "Force", "fa-fist-raised"],
   ["dexterite", "DEX", "Dextérité", "fa-running"],
@@ -93,6 +100,9 @@ function slug(value) {
 
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 function hud() { return document.getElementById(HUD_ID); }
+function actorItems(actor) { return Array.from(actor?.items ?? []).filter(item => item && item.type); }
+function actorEffects(actor) { return Array.from(actor?.effects ?? []).filter(Boolean); }
+function getItem(actor, id) { return actor?.items?.get?.(id) ?? actorItems(actor).find(item => item.id === id || item._id === id) ?? null; }
 function controlledRelevantTokens() { return (canvas?.tokens?.controlled ?? []).filter(token => token?.actor && relevant(token.actor)); }
 function currentActor() {
   if (hudActor) return hudActor;
@@ -100,7 +110,7 @@ function currentActor() {
   if (controlled.length === 1) return controlled[0].actor;
   return game.user?.character ?? null;
 }
-function tokenFor(actor) { return canvas?.tokens?.controlled?.find?.(t => t.actor?.id === actor?.id) ?? actor?.getActiveTokens?.()[0] ?? null; }
+function tokenFor(actor) { return canvas?.tokens?.controlled?.find?.(token => token.actor?.id === actor?.id) ?? actor?.getActiveTokens?.()[0] ?? null; }
 function actorType(actor) { return norm(actor?.type ?? actor?._source?.type ?? actor?.baseActor?.type ?? ""); }
 function canUse(actor) { return !!actor && (game.user?.isGM || actor.isOwner || actor.testUserPermission?.(game.user, "OWNER")); }
 function isMonsterActor(actor) { return actorType(actor) === "monster"; }
@@ -120,15 +130,12 @@ function hudTargetFromControlledSelection({ allowCharacterFallback = true } = {}
   return { actor: null, token: null, ambiguous: false };
 }
 
-function defaultState() {
-  return { left: 80, bottom: 80, top: null, width: 640, maxMenuHeight: 360, collapsed: false };
-}
-
+function defaultState() { return { left: 80, bottom: 80, top: null, width: 680, maxMenuHeight: 380, collapsed: false }; }
 function normalizeLoadedState(raw = {}) {
   const normalized = { ...defaultState(), ...(raw || {}) };
   const viewportHeight = Math.max(1, window.innerHeight || document.documentElement?.clientHeight || 1);
-  normalized.width = num(normalized.width, 640);
-  normalized.maxMenuHeight = num(normalized.maxMenuHeight ?? normalized.menuHeight, 360);
+  normalized.width = num(normalized.width, 680);
+  normalized.maxMenuHeight = num(normalized.maxMenuHeight ?? normalized.menuHeight, 380);
   normalized.left = num(normalized.left, 80);
   if (Number.isFinite(Number(normalized.bottom))) normalized.bottom = Number(normalized.bottom);
   else if (Number.isFinite(Number(normalized.top))) normalized.bottom = Math.max(EDGE_PAD, viewportHeight - Number(normalized.top) - 110);
@@ -136,7 +143,6 @@ function normalizeLoadedState(raw = {}) {
   normalized.top = null;
   return normalized;
 }
-
 function loadState() {
   if (state) return state;
   let raw = null;
@@ -150,12 +156,10 @@ function loadState() {
   state = normalizeLoadedState(raw);
   return state;
 }
-
 function saveState(partial = {}) {
   Object.assign(loadState(), partial);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_e) {}
 }
-
 function resetHudPosition() {
   const collapsed = loadState().collapsed === true;
   state = { ...defaultState(), collapsed };
@@ -163,24 +167,21 @@ function resetHudPosition() {
   applyGeometry(hud(), true);
   return state;
 }
-
 function applyGeometry(element = hud(), force = false) {
   if (!element || (!force && (dragging || resizing))) return;
   const current = loadState();
   const viewportWidth = Math.max(1, window.innerWidth || document.documentElement?.clientWidth || 1);
   const viewportHeight = Math.max(1, window.innerHeight || document.documentElement?.clientHeight || 1);
-  const elementWidth = element.offsetWidth || current.width || 640;
+  const elementWidth = element.offsetWidth || current.width || 680;
   const elementHeight = element.offsetHeight || 110;
   const minLeft = Math.min(EDGE_PAD, viewportWidth - HANDLE_VISIBLE);
   const maxLeft = Math.max(EDGE_PAD, viewportWidth - Math.min(elementWidth, HANDLE_VISIBLE));
   const maxBottom = Math.max(EDGE_PAD, viewportHeight - Math.min(elementHeight, HANDLE_VISIBLE));
-
-  current.width = clamp(num(current.width, 640), 360, Math.max(420, viewportWidth));
+  current.width = clamp(num(current.width, 680), 380, Math.max(420, viewportWidth));
   current.left = clamp(num(current.left, 80), minLeft, maxLeft);
   current.bottom = clamp(num(current.bottom, 80), EDGE_PAD, maxBottom);
   current.top = null;
-  current.maxMenuHeight = clamp(num(current.maxMenuHeight, 360), 120, Math.max(160, viewportHeight - 60));
-
+  current.maxMenuHeight = clamp(num(current.maxMenuHeight, 380), 120, Math.max(160, viewportHeight - 60));
   element.style.left = `${Math.round(current.left)}px`;
   element.style.top = "auto";
   element.style.bottom = `${Math.round(current.bottom)}px`;
@@ -188,7 +189,6 @@ function applyGeometry(element = hud(), force = false) {
   element.style.width = `${Math.round(current.width)}px`;
   element.style.setProperty("--a2e-hud-menu-max", `${Math.round(current.maxMenuHeight)}px`);
 }
-
 function setCollapsed(value, persist = true) {
   const element = hud();
   if (!element) return;
@@ -201,7 +201,6 @@ function itemEquipped(item) {
   const system = item?.system ?? {};
   return system.equipee === true || system.equipped === true || system.portee === true || system.worn === true || system.estEquipee === true;
 }
-
 function itemTags(item) {
   const system = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
@@ -210,7 +209,6 @@ function itemTags(item) {
     system.type_arme, system.famille, system.famille_arme, system.tags, system.effectTags, flags.tags, flags.effectTags
   ].flatMap(arr).map(norm).filter(Boolean);
 }
-
 function itemTextFields(item) {
   const system = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
@@ -221,13 +219,11 @@ function itemTextFields(item) {
     ...arr(system.tags), ...arr(system.effectTags), ...arr(flags.tags), ...arr(flags.effectTags)
   ].map(lower).filter(Boolean);
 }
-
 function isContainerLike(item) {
   const text = itemTags(item).join(" ");
   const name = norm(item?.name);
   return text.includes("sacoche") || text.includes("component") || text.includes("composant") || name.includes("sacoche") || name.includes("composant");
 }
-
 function isSpellComponentItem(item) {
   if (!item) return false;
   const fields = itemTextFields(item);
@@ -239,12 +235,10 @@ function isSpellComponentItem(item) {
   if (fields.some(v => v.includes("spell") && v.includes("component"))) return true;
   return isContainerLike(item);
 }
-
 function isOnlyComponentCode(value) {
   const text = lower(value).replace(/[^a-z]/g, "");
   return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text);
 }
-
 function isBadComponentName(value) {
   const text = lower(value);
   if (!text || isOnlyComponentCode(text)) return true;
@@ -253,7 +247,6 @@ function isBadComponentName(value) {
   if (text.split(/\s+/).length > 5) return true;
   return false;
 }
-
 function addComponentRequirement(out, rawName, rawQty = 1) {
   const name = String(rawName ?? "").trim();
   if (isBadComponentName(name)) return;
@@ -264,7 +257,6 @@ function addComponentRequirement(out, rawName, rawQty = 1) {
   if (existing) existing.quantity += quantity;
   else out.push({ name, key, quantity });
 }
-
 function collectComponentRequirement(out, value) {
   if (value === null || value === undefined || value === "") return;
   if (Array.isArray(value)) {
@@ -281,7 +273,6 @@ function collectComponentRequirement(out, value) {
     if (name) addComponentRequirement(out, name, quantity);
   }
 }
-
 function componentRequirements(sort) {
   const system = sort?.system ?? {};
   const flags = sort?.flags?.add2e ?? {};
@@ -300,20 +291,17 @@ function componentRequirements(sort) {
   }
   return out;
 }
-
 function componentKeys(item) {
   return itemTextFields(item)
     .map(value => slug(String(value ?? "").replace(/^(composant|component|spell_component)[:_]/i, "")))
     .filter(Boolean);
 }
-
 function findActorComponent(actor, requirement) {
-  const items = Array.from(actor?.items ?? []).filter(item => isSpellComponentItem(item) && quantityNumber(item, 0) >= requirement.quantity);
+  const items = actorItems(actor).filter(item => isSpellComponentItem(item) && quantityNumber(item, 0) >= requirement.quantity);
   return items.find(item => componentKeys(item).includes(requirement.key))
     ?? items.find(item => componentKeys(item).some(key => key && (key.includes(requirement.key) || requirement.key.includes(key))))
     ?? null;
 }
-
 function spellComponentBadges(actor, sort) {
   const requirements = componentRequirements(sort);
   if (!requirements.length) return "";
@@ -330,7 +318,6 @@ function isPropelledWeapon(item) {
   const system = item?.system ?? {};
   return system.projectile_propulse === true || system.arme_a_projectile === true || tags.includes("projectile_propulse") || tags.includes("usage_projectile_propulse") || ["arc", "arbalete", "fronde"].some(key => name.includes(key));
 }
-
 function projectileKeys(item) {
   const text = `${norm(item?.name)} ${itemTags(item).join(" ")}`;
   if (text.includes("arbalete")) return ["carreau", "carreaux", "bolt"];
@@ -338,39 +325,63 @@ function projectileKeys(item) {
   if (text.includes("fronde")) return ["bille", "billes", "pierre", "pierres", "bullet"];
   return ["munition", "projectile", "ammo"];
 }
-
 function quantity(item) {
   const system = item?.system ?? {};
   const value = system.quantite ?? system.quantity ?? system.qty ?? system.nombre ?? system.nb ?? system.uses?.value ?? system.charges?.value;
   return value === undefined || value === null || value === "" ? "—" : String(value);
 }
-
 function quantityNumber(item, fallback = 1) {
   const value = quantity(item);
   return value === "—" ? fallback : num(value, fallback);
 }
-
 function equippedProjectile(actor, weapon) {
   if (!usesProjectileInventory(actor) || !isPropelledWeapon(weapon)) return null;
   const keys = projectileKeys(weapon).map(norm);
-  const items = actor.items?.filter?.(item => item.id !== weapon.id && itemEquipped(item) && keys.some(key => norm(item.name).includes(key) || itemTags(item).some(tag => tag.includes(key)))) ?? [];
+  const items = actorItems(actor).filter(item => item.id !== weapon.id && itemEquipped(item) && keys.some(key => norm(item.name).includes(key) || itemTags(item).some(tag => tag.includes(key))));
   return items.find(item => quantity(item) !== "0") ?? items[0] ?? null;
 }
-
 function damage(item) {
   const system = item?.system ?? {};
   return system?.dégâts?.contre_moyen ?? system?.degats?.contre_moyen ?? system?.degats_moyen ?? system?.damage ?? system?.degats ?? system?.dmg ?? "—";
 }
-
 function range(item) {
   const system = item?.system ?? {};
   const values = [system.portee_courte ?? system.portee_short, system.portee_moyenne ?? system.portee_medium, system.portee_longue ?? system.portee_long]
     .filter(value => value !== undefined && value !== null && String(value) !== "");
   return values.length ? values.join(" / ") : "Contact";
 }
+function weapons(actor) { return actorItems(actor).filter(item => String(item.type ?? "").toLowerCase() === "arme" && itemEquipped(item)); }
 
-function weapons(actor) {
-  return actor?.items?.filter?.(item => String(item.type ?? "").toLowerCase() === "arme" && itemEquipped(item)) ?? [];
+function moneyRaw(actor) {
+  const flag = actor?.getFlag?.("add2e", "monnaie");
+  if (flag && typeof flag === "object") return flag;
+  const system = actor?.system ?? {};
+  return system.monnaie ?? system.argent ?? system.currency ?? {};
+}
+function moneyAmount(actor, key) { return Math.max(0, Math.floor(num(moneyRaw(actor)?.[key], 0))); }
+function moneyPanel(actor) {
+  return `<div class="money-row"><span class="money-title">Argent</span>${COINS.map(([key, label]) => `<span class="money-pill">${label} ${esc(moneyAmount(actor, key))}</span>`).join("")}</div>`;
+}
+function equipmentTypeLabel(item) {
+  const type = String(item?.type ?? "").toLowerCase();
+  if (type === "arme") return "Arme";
+  if (type === "armure") return "Armure";
+  return "Équipement";
+}
+function equipmentItems(actor) {
+  return actorItems(actor)
+    .filter(item => ["objet", "arme", "armure"].includes(String(item.type ?? "").toLowerCase()))
+    .sort((a, b) => equipmentTypeLabel(a).localeCompare(equipmentTypeLabel(b)) || String(a.name).localeCompare(String(b.name)));
+}
+function equipmentRows(actor) {
+  const rows = equipmentItems(actor);
+  const body = rows.length ? rows.map(item => {
+    const equipped = itemEquipped(item);
+    const qty = quantity(item);
+    const qtyLabel = qty !== "—" ? ` ×${esc(qty)}` : "";
+    return `<div class="row equipment-row"><img src="${esc(item.img || "icons/svg/item-bag.svg")}" alt=""><div><div class="title">${esc(item.name)}${qtyLabel}</div><div class="meta"><span>${esc(equipmentTypeLabel(item))}</span><span class="${equipped ? "equip-ok" : "equip-off"}">${equipped ? "Équipé" : "Non équipé"}</span></div></div><button type="button" class="act" data-action="toggle-equipment" data-item-id="${esc(item.id)}">${equipped ? "Retirer" : "Équiper"}</button></div>`;
+  }).join("") : `<div class="empty">Aucun équipement.</div>`;
+  return `${moneyPanel(actor)}${body}`;
 }
 
 function sumPreparedTree(value) {
@@ -381,7 +392,6 @@ function sumPreparedTree(value) {
   for (const child of Object.values(value)) total += sumPreparedTree(child);
   return total;
 }
-
 function preparedCount(sort) {
   const flags = sort?.flags?.add2e ?? {};
   const system = sort?.system ?? {};
@@ -409,25 +419,18 @@ function preparedCount(sort) {
   } catch (_e) {}
   return Math.max(0, best);
 }
-
 function isObjectPowerSpell(sort) {
   const system = sort?.system ?? {};
   if (system.isPower === true || system.isObjectPower === true || system.sourceWeaponId || system.sourceItemId || system.powerIndex !== undefined) return true;
   try { return globalThis.add2eIsObjectMagicSpellForPreparation?.(sort) === true; }
   catch (_e) { return false; }
 }
-
-function spells(actor) {
-  return actor?.items?.filter?.(item => String(item.type ?? "").toLowerCase() === "sort" && !isObjectPowerSpell(item) && preparedCount(item) > 0) ?? [];
-}
-
+function spells(actor) { return actorItems(actor).filter(item => String(item.type ?? "").toLowerCase() === "sort" && !isObjectPowerSpell(item) && preparedCount(item) > 0); }
 function spellLevel(sort) { return Math.max(0, num(sort?.system?.niveau ?? sort?.system?.level ?? sort?.system?.niveau_sort, 0)); }
 function spellListLabel(sort) {
   const system = sort?.system ?? {};
-  const raw = [
-    system.liste, system.list, system.spellList, system.classe, system.class, system.sourceClasse, system.casterClass,
-    ...arr(system.lists), ...arr(system.listes), ...arr(system.classes)
-  ].map(value => String(value ?? "").trim()).find(Boolean) || "Mag";
+  const raw = [system.liste, system.list, system.spellList, system.classe, system.class, system.sourceClasse, system.casterClass, ...arr(system.lists), ...arr(system.listes), ...arr(system.classes)]
+    .map(value => String(value ?? "").trim()).find(Boolean) || "Mag";
   const normalized = norm(raw);
   if (normalized.includes("clerc") || normalized.includes("pretre") || normalized.includes("priest")) return "Clerc";
   if (normalized.includes("druid") || normalized.includes("druide")) return "Dru";
@@ -448,10 +451,7 @@ function effectDisplayName(effect) {
   if (["activeeffect", "active effect", "effet actif", "effect"].includes(lower(name))) return "";
   return name;
 }
-function finiteNumber(value) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
-}
+function finiteNumber(value) { const numeric = Number(value); return Number.isFinite(numeric) ? numeric : null; }
 function formatDurationSeconds(totalSeconds) {
   const total = Math.max(0, Math.ceil(Number(totalSeconds) || 0));
   if (total <= 0) return "0 s";
@@ -474,28 +474,19 @@ function effectDurationLabel(effect) {
   const duration = effect?.duration ?? {};
   const label = String(flags.remainingLabel ?? flags.durationLabel ?? duration.label ?? duration.remainingLabel ?? "").trim();
   if (label) return `Durée ${label}`;
-
   const remainingFlag = finiteNumber(flags.remainingSeconds ?? flags.remaining ?? flags.remainingDuration);
   if (remainingFlag !== null) return `Durée ${formatDurationSeconds(remainingFlag)}`;
-
   const remainingRoundsFlag = finiteNumber(flags.remainingRounds ?? flags.roundsRemaining);
   if (remainingRoundsFlag !== null) return `Durée ${formatDurationRounds(remainingRoundsFlag, finiteNumber(flags.remainingTurns ?? flags.turnsRemaining) ?? 0)}`;
-
   const remaining = finiteNumber(duration.remaining);
-  if (remaining !== null) {
-    if (duration.type === "turns" || duration.type === "rounds") return `Durée ${formatDurationRounds(remaining)}`;
-    return `Durée ${formatDurationSeconds(remaining)}`;
-  }
-
+  if (remaining !== null) return (duration.type === "turns" || duration.type === "rounds") ? `Durée ${formatDurationRounds(remaining)}` : `Durée ${formatDurationSeconds(remaining)}`;
   const rounds = finiteNumber(duration.rounds);
   if (rounds !== null) {
     const startRound = finiteNumber(duration.startRound);
     const currentRound = finiteNumber(game.combat?.round);
     const elapsedRounds = startRound !== null && currentRound !== null ? Math.max(0, currentRound - startRound) : 0;
-    const turns = finiteNumber(duration.turns) ?? 0;
-    return `Durée ${formatDurationRounds(Math.max(0, rounds - elapsedRounds), turns)}`;
+    return `Durée ${formatDurationRounds(Math.max(0, rounds - elapsedRounds), finiteNumber(duration.turns) ?? 0)}`;
   }
-
   const seconds = finiteNumber(duration.seconds);
   if (seconds !== null) {
     const startTime = finiteNumber(duration.startTime);
@@ -503,7 +494,6 @@ function effectDurationLabel(effect) {
     const elapsedSeconds = startTime !== null && worldTime !== null ? Math.max(0, worldTime - startTime) : 0;
     return `Durée ${formatDurationSeconds(Math.max(0, seconds - elapsedSeconds))}`;
   }
-
   const turns = finiteNumber(duration.turns);
   if (turns !== null) return `Durée ${formatDurationRounds(0, turns)}`;
   return "Durée —";
@@ -516,7 +506,7 @@ function effectOriginItem(actor, effect) {
   const matches = [...origin.matchAll(/Item\.([A-Za-z0-9]+)/g)].map(match => match[1]);
   candidates.push(...matches.reverse());
   for (const id of candidates) {
-    const item = actor?.items?.get?.(id);
+    const item = getItem(actor, id);
     if (item) return item;
   }
   return null;
@@ -529,14 +519,13 @@ function effectIsFromRaceOrClass(actor, effect) {
   return itemType === "race" || itemType === "classe" || sourceType === "race" || sourceType === "classe" || flags.race === true || flags.classe === true || flags.classFeature === true || flags.racial === true;
 }
 function isHudActiveEffect(actor, effect) {
-  if (!effect) return false;
-  if (!effectDisplayName(effect)) return false;
+  if (!effect || !effectDisplayName(effect)) return false;
   if (effect.disabled === true || effect.isSuppressed === true || effect.active === false) return false;
   if (effectIsFromRaceOrClass(actor, effect)) return false;
   return true;
 }
 function addActorEmbeddedEffects(map, actor) {
-  for (const effect of arr(actor?.effects)) {
+  for (const effect of actorEffects(actor)) {
     if (!isHudActiveEffect(actor, effect)) continue;
     map.set(effectKey(effect), effect);
   }
@@ -574,54 +563,30 @@ function injectStyle() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-#${HUD_ID}{position:fixed;z-index:100;right:auto!important;top:auto!important;min-width:360px;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;user-select:none;touch-action:none}
+#${HUD_ID}{position:fixed;z-index:100;right:auto!important;top:auto!important;min-width:380px;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;user-select:none;touch-action:none}
 #${HUD_ID}.collapsed .a2e-hud-panel{display:none!important}
 #${HUD_ID} .a2e-hud-shell{border:1px solid #8a611d;border-radius:14px;overflow:hidden;background:linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48)}
-#${HUD_ID} .a2e-hud-panel{max-height:var(--a2e-hud-menu-max,360px);overflow:auto;padding:9px;border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.13)}
-#${HUD_ID} section{display:none}
-#${HUD_ID} section.active{display:grid;gap:7px}
-#${HUD_ID} .a2e-hud-tabs{display:grid;grid-template-columns:repeat(6,1fr);background:rgba(0,0,0,.18);border-bottom:1px solid rgba(184,137,36,.45)}
-#${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.74em;font-weight:900;cursor:pointer}
+#${HUD_ID} .a2e-hud-panel{max-height:var(--a2e-hud-menu-max,380px);overflow:auto;padding:9px;border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.13)}
+#${HUD_ID} section{display:none}#${HUD_ID} section.active{display:grid;gap:7px}
+#${HUD_ID} .a2e-hud-tabs{display:grid;grid-template-columns:repeat(7,1fr);background:rgba(0,0,0,.18);border-bottom:1px solid rgba(184,137,36,.45)}
+#${HUD_ID} .a2e-hud-tab{min-height:34px;border:0;border-right:1px solid rgba(184,137,36,.32);background:transparent;color:#d8bd78;font-size:.69em;font-weight:900;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #${HUD_ID} .a2e-hud-tab.active{color:#211307;background:linear-gradient(180deg,#f0c66d,#c78d2e)}
 #${HUD_ID} .a2e-hud-header{display:grid;grid-template-columns:74px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px;background:linear-gradient(180deg,rgba(78,48,18,.78),rgba(36,26,14,.62));cursor:move;touch-action:none}
 #${HUD_ID} .portrait{width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid #c4973f;background:#111}
-#${HUD_ID} .name{color:#fff4cf;font-size:1.12em;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#${HUD_ID} .sub{color:#d8bd78;font-size:.82em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#${HUD_ID} .pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
-#${HUD_ID} .pill{display:inline-flex;min-height:22px;padding:2px 7px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.78em;font-weight:850}
-#${HUD_ID} .icon{width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}
-#${HUD_ID} .resize{cursor:nwse-resize!important}
+#${HUD_ID} .name{color:#fff4cf;font-size:1.12em;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#${HUD_ID} .sub{color:#d8bd78;font-size:.82em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#${HUD_ID} .pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}#${HUD_ID} .pill{display:inline-flex;min-height:22px;padding:2px 7px;border:1px solid rgba(214,176,90,.75);border-radius:999px;background:rgba(255,244,201,.12);color:#fff0bd;font-size:.78em;font-weight:850}
+#${HUD_ID} .icon{width:30px;height:30px;border:1px solid rgba(214,176,90,.75);border-radius:9px;background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .resize{cursor:nwse-resize!important}
 #${HUD_ID} .row{display:grid;grid-template-columns:42px minmax(0,1fr);gap:8px;align-items:center;min-height:50px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07)}
-#${HUD_ID} .row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px}
-#${HUD_ID} .row.effect-row{grid-template-columns:42px minmax(0,1fr) auto}
+#${HUD_ID} .row.compact{grid-template-columns:minmax(0,1fr) auto;min-height:38px}#${HUD_ID} .row.effect-row,#${HUD_ID} .row.equipment-row{grid-template-columns:42px minmax(0,1fr) auto}
 #${HUD_ID} .row img{width:36px;height:36px;border-radius:7px;object-fit:cover;border:1px solid rgba(214,176,90,.65);background:rgba(0,0,0,.25)}
-#${HUD_ID} .img-act{width:38px;height:38px;padding:0;border:1px solid rgba(214,176,90,.75);border-radius:8px;background:rgba(0,0,0,.22);cursor:pointer;display:flex;align-items:center;justify-content:center}
-#${HUD_ID} .img-act:hover{filter:brightness(1.22)}
-#${HUD_ID} .img-act img{width:34px;height:34px;border:0;border-radius:7px}
-#${HUD_ID} .title{color:#fff4cf;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#${HUD_ID} .meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px}
-#${HUD_ID} .component-title{color:#ffe4a1;border:1px solid rgba(214,176,90,.42);background:rgba(214,176,90,.12);padding:1px 6px;border-radius:999px}
-#${HUD_ID} .component-ok{color:#b8ffb8;border:1px solid rgba(80,180,80,.55);background:rgba(35,100,35,.35);padding:1px 6px;border-radius:999px}
-#${HUD_ID} .component-bad{color:#ffb1a8;border:1px solid rgba(190,55,45,.62);background:rgba(110,25,20,.42);padding:1px 6px;border-radius:999px}
-#${HUD_ID} .ammo{display:inline-flex;align-items:center;gap:4px;color:#b8ffb8}
-#${HUD_ID} .ammo-missing{color:#ffb1a8}
-#${HUD_ID} .ammo-free{color:#ffe4a1;border:1px solid rgba(214,176,90,.4);border-radius:999px;padding:1px 6px;background:rgba(214,176,90,.12)}
-#${HUD_ID} .ammo img{width:18px;height:18px;border-radius:4px;border:1px solid rgba(214,176,90,.4)}
-#${HUD_ID} .act{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap}
-#${HUD_ID} .danger{min-width:36px;width:36px;color:#ffd0c8;border-color:#b94735;background:linear-gradient(180deg,#7d241b,#42120d)}
-#${HUD_ID} .empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center}
-#${HUD_ID} .spell-layout{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}
-#${HUD_ID} .spell-levels{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;border-bottom:1px solid rgba(214,176,90,.28)}
-#${HUD_ID} .spell-level{min-height:30px;padding:5px 10px;border:1px solid rgba(214,176,90,.55);border-radius:999px;background:rgba(214,176,90,.12);color:#ffe4a1;font-weight:950;font-size:.82em;cursor:pointer}
-#${HUD_ID} .spell-level.active{background:linear-gradient(180deg,#f0c66d,#c78d2e);color:#211307}
-#${HUD_ID} .spell-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;padding-right:3px}
-#${HUD_ID} .spell-list-title{color:#ffe4a1;font-weight:950;font-size:.82em;margin:0 0 2px 2px}
-#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-#${HUD_ID} .cell{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;min-height:48px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}
-#${HUD_ID} .cell b{display:block;color:#ffe4a1;font-size:1.32em;font-weight:950;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.45)}
-#${HUD_ID} .roll-icon{width:36px;height:36px;min-width:36px;padding:0;border-radius:10px;border:1px solid rgba(214,176,90,.65);background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}
-#${HUD_ID} .roll-icon:hover{filter:brightness(1.2)}
-#${HUD_ID} button,#${HUD_ID} [data-action],#${HUD_ID} [data-tab]{user-select:auto;touch-action:auto}`;
+#${HUD_ID} .img-act{width:38px;height:38px;padding:0;border:1px solid rgba(214,176,90,.75);border-radius:8px;background:rgba(0,0,0,.22);cursor:pointer;display:flex;align-items:center;justify-content:center}#${HUD_ID} .img-act:hover{filter:brightness(1.22)}#${HUD_ID} .img-act img{width:34px;height:34px;border:0;border-radius:7px}
+#${HUD_ID} .title{color:#fff4cf;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#${HUD_ID} .meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c8ad6e;font-size:.76em;font-weight:750;margin-top:2px}
+#${HUD_ID} .component-title{color:#ffe4a1;border:1px solid rgba(214,176,90,.42);background:rgba(214,176,90,.12);padding:1px 6px;border-radius:999px}#${HUD_ID} .component-ok{color:#b8ffb8;border:1px solid rgba(80,180,80,.55);background:rgba(35,100,35,.35);padding:1px 6px;border-radius:999px}#${HUD_ID} .component-bad{color:#ffb1a8;border:1px solid rgba(190,55,45,.62);background:rgba(110,25,20,.42);padding:1px 6px;border-radius:999px}
+#${HUD_ID} .ammo{display:inline-flex;align-items:center;gap:4px;color:#b8ffb8}#${HUD_ID} .ammo-missing{color:#ffb1a8}#${HUD_ID} .ammo-free{color:#ffe4a1;border:1px solid rgba(214,176,90,.4);border-radius:999px;padding:1px 6px;background:rgba(214,176,90,.12)}#${HUD_ID} .ammo img{width:18px;height:18px;border-radius:4px;border:1px solid rgba(214,176,90,.4)}
+#${HUD_ID} .money-row{display:flex;flex-wrap:wrap;gap:5px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(0,0,0,.18)}#${HUD_ID} .money-title{color:#ffe4a1;font-weight:950;margin-right:3px}#${HUD_ID} .money-pill{border:1px solid rgba(214,176,90,.55);border-radius:999px;padding:2px 7px;background:rgba(214,176,90,.12);color:#fff0bd;font-weight:900;font-size:.78em}#${HUD_ID} .equip-ok{color:#b8ffb8}#${HUD_ID} .equip-off{color:#ffcf91}
+#${HUD_ID} .act{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap}#${HUD_ID} .danger{min-width:36px;width:36px;color:#ffd0c8;border-color:#b94735;background:linear-gradient(180deg,#7d241b,#42120d)}#${HUD_ID} .empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center}
+#${HUD_ID} .spell-layout{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}#${HUD_ID} .spell-levels{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;border-bottom:1px solid rgba(214,176,90,.28)}#${HUD_ID} .spell-level{min-height:30px;padding:5px 10px;border:1px solid rgba(214,176,90,.55);border-radius:999px;background:rgba(214,176,90,.12);color:#ffe4a1;font-weight:950;font-size:.82em;cursor:pointer}#${HUD_ID} .spell-level.active{background:linear-gradient(180deg,#f0c66d,#c78d2e);color:#211307}#${HUD_ID} .spell-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;padding-right:3px}#${HUD_ID} .spell-list-title{color:#ffe4a1;font-weight:950;font-size:.82em;margin:0 0 2px 2px}
+#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${HUD_ID} .cell{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;min-height:48px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}#${HUD_ID} .cell b{display:block;color:#ffe4a1;font-size:1.32em;font-weight:950;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.45)}#${HUD_ID} .roll-icon{width:36px;height:36px;min-width:36px;padding:0;border-radius:10px;border:1px solid rgba(214,176,90,.65);background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .roll-icon:hover{filter:brightness(1.2)}#${HUD_ID} button,#${HUD_ID} [data-action],#${HUD_ID} [data-tab]{user-select:auto;touch-action:auto}`;
   document.head.appendChild(style);
 }
 
@@ -634,15 +599,12 @@ function weaponRows(actor) {
     const dmg = propelled && projectile ? `Dégâts projectile ${damage(projectile)}` : `Dégâts ${damage(item)}`;
     const ammo = propelled
       ? (usesProjectileInventory(actor)
-        ? (projectile
-          ? `<span class="ammo"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>`
-          : `<span class="ammo-missing">Aucune munition équipée</span>`)
+        ? (projectile ? `<span class="ammo"><img src="${esc(projectile.img || "icons/svg/target.svg")}" alt="">${esc(projectile.name)} ×${esc(quantity(projectile))}</span>` : `<span class="ammo-missing">Aucune munition équipée</span>`)
         : `<span class="ammo-free">Munition PNJ non suivie</span>`)
       : "";
     return `<div class="row"><button type="button" class="img-act" data-action="attack" data-item-id="${esc(item.id)}" title="Attaquer avec ${esc(item.name)}"><img src="${esc(item.img || "icons/svg/sword.svg")}" alt=""></button><div><div class="title">${esc(item.name)}</div><div class="meta"><span>${esc(dmg)}</span><span>Portée ${esc(range(item))}</span>${ammo}</div></div></div>`;
   }).join("");
 }
-
 function spellRows(actor) {
   const rows = spells(actor).sort((a, b) => String(spellListLabel(a)).localeCompare(String(spellListLabel(b))) || spellLevel(a) - spellLevel(b) || String(a.name).localeCompare(String(b.name)));
   if (!rows.length) return `<div class="empty">Aucun sort mémorisé.</div>`;
@@ -659,39 +621,33 @@ function spellRows(actor) {
   const spellsHtml = active.items.map(spell => `<div class="row"><button type="button" class="img-act" data-action="cast-spell" data-item-id="${esc(spell.id)}" title="Lancer ${esc(spell.name)}"><img src="${esc(spell.img || "icons/svg/book.svg")}" alt=""></button><div><div class="title">${esc(spell.name)}</div><div class="meta"><span>Mémorisé ${preparedCount(spell)}</span>${spellComponentBadges(actor, spell)}</div></div></div>`).join("");
   return `<div class="spell-layout"><div class="spell-levels">${buttons}</div><div class="spell-list"><div class="spell-list-title">${esc(active.label)} niveau ${esc(active.level || "—")}</div>${spellsHtml}</div></div>`;
 }
-
 function featureRows(actor) {
   const rows = features(actor);
   if (!rows.length) return `<div class="empty">Aucune capacité utilisable.</div>`;
   return rows.map((feature, index) => `<div class="row compact"><div><div class="title">${esc(globalThis.add2eFeatureName?.(feature) || feature.name || feature.label || feature.nom || `Capacité ${index + 1}`)}</div><div class="meta"><span>Capacité de classe</span></div></div><button type="button" class="act" data-action="use-feature" data-feature-index="${index}">Utiliser</button></div>`).join("");
 }
-
 function effectRows(actor) {
   const rows = effects(actor);
   if (!rows.length) return `<div class="empty">Aucun effet actif.</div>`;
   return rows.map(effect => `<div class="row effect-row"><img src="${esc(effect.img || effect.icon || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(effectDisplayName(effect))}</div><div class="meta"><span>${esc(effectDurationLabel(effect))}</span></div></div><button type="button" class="act danger" data-action="remove-effect" data-effect-id="${esc(effect.id ?? effect._id ?? "")}"><i class="fas fa-trash"></i></button></div>`).join("");
 }
-
 function saveRows(actor) {
   const values = savingThrows(actor);
   return `<div class="grid">${SAVES.map((save, index) => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-save" data-save-index="${index}" title="Jet ${esc(save[1])}"><i class="fas ${save[2]}"></i></button><div><b>${esc(save[1])} ${esc(values[index] || "—")}</b></div></div>`).join("")}</div>`;
 }
-
 function abilityRows(actor) {
   return `<div class="grid">${CARACS.map(carac => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-ability" data-ability="${carac[0]}" title="Jet ${esc(carac[1])}"><i class="fas ${carac[3]}"></i></button><div><b>${carac[1]} ${esc(ability(actor, carac[0]))}</b></div></div>`).join("")}</div>`;
 }
-
 function hudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
   const isMonster = isMonsterActor(actor);
-  const race = isMonster ? (actor.system?.type ?? "Monstre") : (actor.system?.race || actor.system?.details_race?.label || actor.items?.find?.(item => item.type === "race")?.name || "Race");
-  const classe = isMonster ? (actor.system?.taille ?? actor.system?.size ?? "MJ") : (actor.system?.classe || actor.system?.details_classe?.label || actor.items?.find?.(item => item.type === "classe")?.name || "Classe");
+  const race = isMonster ? (actor.system?.type ?? "Monstre") : (actor.system?.race || actor.system?.details_race?.label || actorItems(actor).find(item => item.type === "race")?.name || "Race");
+  const classe = isMonster ? (actor.system?.taille ?? actor.system?.size ?? "MJ") : (actor.system?.classe || actor.system?.details_classe?.label || actorItems(actor).find(item => item.type === "classe")?.name || "Classe");
   const niveau = isMonster ? (actor.system?.dv ?? actor.system?.hitDice ?? actor.system?.niveau ?? "—") : (actor.system?.niveau ?? "—");
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${activeTab === key ? "active" : ""}" data-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="${activeTab === key ? "active" : ""}" data-section="${key}">${html}</section>`;
-  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellRows(actor))}${section("capacites", featureRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
+  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellRows(actor))}${section("capacites", featureRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
 }
-
 function renderHud(actor = null, token = null, { reason = "render" } = {}) {
   if (dragging || resizing) return false;
   injectStyle();
@@ -714,7 +670,6 @@ function renderHud(actor = null, token = null, { reason = "render" } = {}) {
   bindHudEvents(element, actor);
   return true;
 }
-
 function refreshHud(reason = "refresh", options = {}) {
   const target = options?.token?.actor && relevant(options.token.actor)
     ? { actor: options.token.actor, token: options.token, ambiguous: false }
@@ -726,15 +681,13 @@ function refreshHud(reason = "refresh", options = {}) {
   return renderHud(target.actor, target.token, { reason });
 }
 function closeHud() { hud()?.remove(); hudActor = null; hudToken = null; }
-
 function bindDirectHudPointerEvents(element) {
-  if (!element || element.__add2eDirectDragBindingV46) return;
-  element.__add2eDirectDragBindingV46 = true;
+  if (!element || element.__add2eDirectDragBindingV50) return;
+  element.__add2eDirectDragBindingV50 = true;
   element.addEventListener("pointerdown", pointerDown, true);
   element.addEventListener("mousedown", pointerDown, true);
   element.addEventListener("touchstart", pointerDown, { capture: true, passive: false });
 }
-
 function bindHudEvents(element, actor) {
   bindDirectHudPointerEvents(element);
   element.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", event => {
@@ -748,7 +701,6 @@ function bindHudEvents(element, actor) {
   }));
   element.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", event => handleAction(event, actor, button)));
 }
-
 async function handleAction(event, actor, button) {
   event.preventDefault();
   event.stopPropagation();
@@ -759,6 +711,7 @@ async function handleAction(event, actor, button) {
     if (action === "attack") return sheetAttack(actor, button.dataset.itemId);
     if (action === "cast-spell") return sheetCastSpell(actor, button.dataset.itemId);
     if (action === "use-feature") return sheetUseFeature(actor, Number(button.dataset.featureIndex));
+    if (action === "toggle-equipment") return toggleEquipment(actor, button.dataset.itemId);
     if (action === "remove-effect") return removeEffect(actor, button.dataset.effectId);
     if (action === "roll-save") return sheetRollSave(actor, Number(button.dataset.saveIndex));
     if (action === "roll-ability") return sheetRollAbility(actor, button.dataset.ability);
@@ -767,15 +720,14 @@ async function handleAction(event, actor, button) {
     ui.notifications.error(`ADD2E HUD | Erreur action ${action}`);
   }
 }
-
 async function sheetAttack(actor, itemId) {
-  const arme = actor?.items?.get?.(itemId);
+  const arme = getItem(actor, itemId);
   if (!arme) return ui.notifications.warn("Arme introuvable.");
   if (typeof globalThis.add2eAttackRoll !== "function") return ui.notifications.error("Fonction add2eAttackRoll introuvable.");
   return globalThis.add2eAttackRoll({ actor, arme });
 }
 async function sheetCastSpell(actor, itemId) {
-  const sort = actor?.items?.get?.(itemId);
+  const sort = getItem(actor, itemId);
   if (!sort) return ui.notifications.warn("Sort introuvable.");
   if (typeof globalThis.add2eCastSpell !== "function") return ui.notifications.error("Fonction add2eCastSpell introuvable.");
   return globalThis.add2eCastSpell({ actor, sort });
@@ -794,6 +746,18 @@ async function sheetUseFeature(actor, index) {
   if (typeof globalThis.add2eExecuteClassFeatureOnUse !== "function") return ui.notifications.error("Fonction add2eExecuteClassFeatureOnUse introuvable.");
   return globalThis.add2eExecuteClassFeatureOnUse(actor, feature, null);
 }
+async function toggleEquipment(actor, itemId) {
+  const item = getItem(actor, itemId);
+  if (!item) return ui.notifications.warn("Équipement introuvable.");
+  const next = !itemEquipped(item);
+  await item.update({
+    "system.equipee": next,
+    "system.equipped": next,
+    "system.estEquipee": next,
+    "system.worn": next
+  }, { add2eReason: "hud-toggle-equipment" });
+  return renderHud(actor, hudToken, { reason: "toggle-equipment" });
+}
 async function removeEffect(actor, effectId) {
   const effect = actor?.effects?.get?.(effectId) ?? effects(actor).find(e => String(e.id ?? e._id ?? "") === String(effectId));
   if (!effect) return ui.notifications.warn("Effet introuvable.");
@@ -809,7 +773,6 @@ async function removeEffect(actor, effectId) {
   else if (typeof effect.delete === "function") await effect.delete();
   return renderHud(actor, hudToken, { reason: "remove-effect" });
 }
-
 function primary(event) { return event.button === undefined || event.button === 0; }
 function pointerClient(event) {
   const touch = event.touches?.[0] ?? event.changedTouches?.[0] ?? null;
@@ -835,7 +798,7 @@ function startResize(event) {
     moveEvent.preventDefault?.();
     const point = pointerClient(moveEvent);
     const current = loadState();
-    current.width = clamp(start.width + point.x - start.x, 360, Math.max(420, window.innerWidth));
+    current.width = clamp(start.width + point.x - start.x, 380, Math.max(420, window.innerWidth));
     current.maxMenuHeight = clamp(start.maxMenuHeight + point.y - start.y, 120, Math.max(160, window.innerHeight - 60));
     current.bottom = start.bottom;
     applyGeometry(element, true);
@@ -868,7 +831,7 @@ function startDrag(event) {
     moveEvent.preventDefault?.();
     const point = pointerClient(moveEvent);
     const current = loadState();
-    const width = element.offsetWidth || current.width || 640;
+    const width = element.offsetWidth || current.width || 680;
     const height = element.offsetHeight || 110;
     const minLeft = Math.min(EDGE_PAD, window.innerWidth - HANDLE_VISIBLE);
     const maxLeft = Math.max(EDGE_PAD, window.innerWidth - Math.min(width, HANDLE_VISIBLE));
@@ -894,7 +857,6 @@ function pointerDown(event) {
   if (startResize(event)) return;
   startDrag(event);
 }
-
 function tokenFromCanvasPointer(event) {
   let object = event?.target ?? null;
   for (let guard = 0; object && guard < 12; guard += 1) {
@@ -918,7 +880,6 @@ function bindCanvasControlledTokenClick() {
   canvasTokenClickBound = true;
   canvas.stage.on("pointerdown", onCanvasTokenPointerDown);
 }
-
 function currentCombatant(combat = game.combat) {
   if (!combat) return null;
   const id = combat.current?.combatantId ?? combat.combatantId ?? null;
@@ -936,9 +897,7 @@ Hooks.once("init", () => {
   game.add2e = game.add2e ?? {};
   game.add2e.actionHudVersion = ADD2E_ACTION_HUD_VERSION;
   game.add2e.openActionHud = (actor = null) => {
-    const target = actor
-      ? { actor, token: tokenFor(actor) }
-      : hudTargetFromControlledSelection({ allowCharacterFallback: true });
+    const target = actor ? { actor, token: tokenFor(actor) } : hudTargetFromControlledSelection({ allowCharacterFallback: true });
     return renderHud(target.actor, target.token, { reason: "api-open" });
   };
   game.add2e.closeActionHud = closeHud;
@@ -966,7 +925,6 @@ Hooks.once("init", () => {
   });
   console.log(`${TAG}[INIT]`, ADD2E_ACTION_HUD_VERSION);
 });
-
 Hooks.once("ready", () => {
   document.addEventListener("pointerdown", pointerDown, true);
   document.addEventListener("mousedown", pointerDown, true);
