@@ -49,7 +49,9 @@ import {
   registerSockets as registerConsumablesSockets
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-14-shop-orchestration-v5-lazy-stock";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-14-shop-orchestration-v6-shop-hp-one";
+const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
+const ADD2E_SHOP_HP = 1;
 
 function isShopActor(actor) {
   return isVendorActor(actor) || isArmorerActor(actor);
@@ -57,6 +59,52 @@ function isShopActor(actor) {
 
 function shopTokenDisplayAlwaysValue() {
   return CONST?.TOKEN_DISPLAY_MODES?.ALWAYS ?? 50;
+}
+
+function shopHitPointUpdate() {
+  return {
+    "system.pdv": ADD2E_SHOP_HP,
+    "system.pv": ADD2E_SHOP_HP,
+    "system.points_de_coup": ADD2E_SHOP_HP,
+    "system.points_de_vie": ADD2E_SHOP_HP,
+    "system.pv_max": ADD2E_SHOP_HP,
+    "system.hp.value": ADD2E_SHOP_HP,
+    "system.hp.max": ADD2E_SHOP_HP,
+    "system.attributes.hp.value": ADD2E_SHOP_HP,
+    "system.attributes.hp.max": ADD2E_SHOP_HP,
+    "flags.add2e.shopHpVersion": ADD2E_SHOP_HP_VERSION
+  };
+}
+
+function shopActorNeedsHitPointUpdate(actor) {
+  const sys = actor?.system ?? {};
+  const values = [
+    sys.pdv,
+    sys.pv,
+    sys.points_de_coup,
+    sys.points_de_vie,
+    sys.pv_max,
+    sys.hp?.value,
+    sys.hp?.max,
+    sys.attributes?.hp?.value,
+    sys.attributes?.hp?.max
+  ];
+  return actor?.getFlag?.("add2e", "shopHpVersion") !== ADD2E_SHOP_HP_VERSION
+    || values.some(value => Number(value) !== ADD2E_SHOP_HP);
+}
+
+async function enforceShopHitPoints() {
+  if (!game.user?.isGM) return false;
+
+  for (const actor of game.actors ?? []) {
+    if (!isShopActor(actor) || !shopActorNeedsHitPointUpdate(actor)) continue;
+    await actor.update(shopHitPointUpdate(), { add2eReason: "shop-hit-points-one" });
+  }
+
+  game.add2e = game.add2e ?? {};
+  game.add2e.shopHpVersion = ADD2E_SHOP_HP_VERSION;
+  globalThis.ADD2E_SHOP_HP_VERSION = ADD2E_SHOP_HP_VERSION;
+  return true;
 }
 
 async function enforceShopActors() {
@@ -163,6 +211,7 @@ Hooks.once("ready", async () => {
   registerConsumablesSockets();
 
   await enforceShopActors().catch(err => console.warn("[ADD2E][SHOP][ENSURE_ACTORS]", err));
+  await enforceShopHitPoints().catch(err => console.warn("[ADD2E][SHOP][HIT_POINTS]", err));
   await enforceShopTokenPresentation().catch(err => console.warn("[ADD2E][SHOP][TOKEN_PRESENTATION]", err));
 
   registerRecoveryHooks();
@@ -178,6 +227,7 @@ Hooks.once("ready", async () => {
     vendor: ADD2E_VENDOR_VERSION,
     armorer: ADD2E_ARMORER_VERSION,
     consumables: ADD2E_CONSUMABLES_VERSION,
-    orchestration: ADD2E_SHOP_ORCHESTRATION_VERSION
+    orchestration: ADD2E_SHOP_ORCHESTRATION_VERSION,
+    hp: ADD2E_SHOP_HP_VERSION
   });
 });
