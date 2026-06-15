@@ -1,13 +1,13 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-06-14-v45-direct-hud-drag-binding
+// Version : 2026-06-15-v46-bottom-anchor-active-effects
 // Le HUD reste une interface : les actions délèguent aux fonctions système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-06-14-v45-direct-hud-drag-binding";
+const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v46-bottom-anchor-active-effects";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
-const STORAGE_KEY = "add2e.actionHud.state.v45";
-const LEGACY_STORAGE_KEYS = [];
+const STORAGE_KEY = "add2e.actionHud.state.v46";
+const LEGACY_STORAGE_KEYS = ["add2e.actionHud.state.v45", "add2e.actionHud.state.v44", "add2e.actionHud.state.v43"];
 const TAG = "[ADD2E][ACTION_HUD]";
 const EDGE_PAD = 0;
 const HANDLE_VISIBLE = 42;
@@ -39,9 +39,8 @@ const SAVES = [
 ];
 
 function esc(value) {
-  try {
-    return foundry.utils.escapeHTML(String(value ?? ""));
-  } catch (_e) {
+  try { return foundry.utils.escapeHTML(String(value ?? "")); }
+  catch (_e) {
     return String(value ?? "")
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
@@ -69,23 +68,19 @@ function num(value, fallback = 0) {
   return Number.isFinite(numeric) ? numeric : fallback;
 }
 
-function norm(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9:_-]+/g, "_")
-    .replace(/^_|_$/g, "");
-}
-
 function lower(value) {
   return String(value ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function norm(value) {
+  return lower(value)
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9:_-]+/g, "_")
+    .replace(/^_|_$/g, "");
 }
 
 function slug(value) {
@@ -95,40 +90,14 @@ function slug(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function hud() {
-  return document.getElementById(HUD_ID);
-}
-
-function currentActor() {
-  return hudActor ?? canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null;
-}
-
-function tokenFor(actor) {
-  return canvas?.tokens?.controlled?.find?.(token => token.actor?.id === actor?.id)
-    ?? actor?.getActiveTokens?.()[0]
-    ?? null;
-}
-
-function actorType(actor) {
-  return norm(actor?.type ?? actor?._source?.type ?? actor?.baseActor?.type ?? "");
-}
-
-function canUse(actor) {
-  return !!actor && (game.user?.isGM || actor.isOwner || actor.testUserPermission?.(game.user, "OWNER"));
-}
-
-function isMonsterActor(actor) {
-  return actorType(actor) === "monster";
-}
-
-function usesProjectileInventory(actor) {
-  return actorType(actor) === "personnage";
-}
-
+function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+function hud() { return document.getElementById(HUD_ID); }
+function currentActor() { return hudActor ?? canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null; }
+function tokenFor(actor) { return canvas?.tokens?.controlled?.find?.(t => t.actor?.id === actor?.id) ?? actor?.getActiveTokens?.()[0] ?? null; }
+function actorType(actor) { return norm(actor?.type ?? actor?._source?.type ?? actor?.baseActor?.type ?? ""); }
+function canUse(actor) { return !!actor && (game.user?.isGM || actor.isOwner || actor.testUserPermission?.(game.user, "OWNER")); }
+function isMonsterActor(actor) { return actorType(actor) === "monster"; }
+function usesProjectileInventory(actor) { return actorType(actor) === "personnage"; }
 function relevant(actor) {
   const type = actorType(actor);
   if (type === "personnage") return canUse(actor);
@@ -137,34 +106,29 @@ function relevant(actor) {
 }
 
 function defaultState() {
-  return { left: 80, top: 80, bottom: null, width: 640, maxMenuHeight: 360, collapsed: false };
+  return { left: 80, bottom: 80, top: null, width: 640, maxMenuHeight: 360, collapsed: false };
 }
 
 function normalizeLoadedState(raw = {}) {
   const normalized = { ...defaultState(), ...(raw || {}) };
+  const viewportHeight = Math.max(1, window.innerHeight || document.documentElement?.clientHeight || 1);
   normalized.width = num(normalized.width, 640);
   normalized.maxMenuHeight = num(normalized.maxMenuHeight ?? normalized.menuHeight, 360);
   normalized.left = num(normalized.left, 80);
-  normalized.top = Number.isFinite(Number(normalized.top)) ? Number(normalized.top) : 80;
-  normalized.bottom = null;
+  if (Number.isFinite(Number(normalized.bottom))) normalized.bottom = Number(normalized.bottom);
+  else if (Number.isFinite(Number(normalized.top))) normalized.bottom = Math.max(EDGE_PAD, viewportHeight - Number(normalized.top) - 110);
+  else normalized.bottom = 80;
+  normalized.top = null;
   return normalized;
 }
 
 function loadState() {
   if (state) return state;
   let raw = null;
-  try {
-    raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-  } catch (_e) {
-    raw = null;
-  }
+  try { raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_e) { raw = null; }
   if (!raw) {
     for (const key of LEGACY_STORAGE_KEYS) {
-      try {
-        raw = JSON.parse(localStorage.getItem(key) || "null");
-      } catch (_e) {
-        raw = null;
-      }
+      try { raw = JSON.parse(localStorage.getItem(key) || "null"); } catch (_e) { raw = null; }
       if (raw) break;
     }
   }
@@ -174,9 +138,7 @@ function loadState() {
 
 function saveState(partial = {}) {
   Object.assign(loadState(), partial);
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (_e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_e) {}
 }
 
 function resetHudPosition() {
@@ -196,18 +158,17 @@ function applyGeometry(element = hud(), force = false) {
   const elementHeight = element.offsetHeight || 110;
   const minLeft = Math.min(EDGE_PAD, viewportWidth - HANDLE_VISIBLE);
   const maxLeft = Math.max(EDGE_PAD, viewportWidth - Math.min(elementWidth, HANDLE_VISIBLE));
-  const minTop = EDGE_PAD;
-  const maxTop = Math.max(EDGE_PAD, viewportHeight - Math.min(elementHeight, HANDLE_VISIBLE));
+  const maxBottom = Math.max(EDGE_PAD, viewportHeight - Math.min(elementHeight, HANDLE_VISIBLE));
 
   current.width = clamp(num(current.width, 640), 360, Math.max(420, viewportWidth));
   current.left = clamp(num(current.left, 80), minLeft, maxLeft);
-  current.top = clamp(Number.isFinite(Number(current.top)) ? Number(current.top) : 80, minTop, maxTop);
-  current.bottom = null;
+  current.bottom = clamp(num(current.bottom, 80), EDGE_PAD, maxBottom);
+  current.top = null;
   current.maxMenuHeight = clamp(num(current.maxMenuHeight, 360), 120, Math.max(160, viewportHeight - 60));
 
   element.style.left = `${Math.round(current.left)}px`;
-  element.style.top = `${Math.round(current.top)}px`;
-  element.style.bottom = "auto";
+  element.style.top = "auto";
+  element.style.bottom = `${Math.round(current.bottom)}px`;
   element.style.right = "auto";
   element.style.width = `${Math.round(current.width)}px`;
   element.style.setProperty("--a2e-hud-menu-max", `${Math.round(current.maxMenuHeight)}px`);
@@ -218,35 +179,20 @@ function setCollapsed(value, persist = true) {
   if (!element) return;
   element.classList.toggle("collapsed", !!value);
   if (persist) saveState({ collapsed: !!value });
+  applyGeometry(element, true);
 }
 
 function itemEquipped(item) {
   const system = item?.system ?? {};
-  return system.equipee === true
-    || system.equipped === true
-    || system.portee === true
-    || system.worn === true
-    || system.estEquipee === true;
+  return system.equipee === true || system.equipped === true || system.portee === true || system.worn === true || system.estEquipee === true;
 }
 
 function itemTags(item) {
   const system = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
   return [
-    item?.name,
-    system.nom,
-    system.categorie,
-    system.category,
-    system.type,
-    system.sousType,
-    system.sous_type,
-    system.type_arme,
-    system.famille,
-    system.famille_arme,
-    system.tags,
-    system.effectTags,
-    flags.tags,
-    flags.effectTags
+    item?.name, system.nom, system.categorie, system.category, system.type, system.sousType, system.sous_type,
+    system.type_arme, system.famille, system.famille_arme, system.tags, system.effectTags, flags.tags, flags.effectTags
   ].flatMap(arr).map(norm).filter(Boolean);
 }
 
@@ -254,26 +200,10 @@ function itemTextFields(item) {
   const system = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
   return [
-    item?.name,
-    system.categorie,
-    system.category,
-    system.sousType,
-    system.sous_type,
-    system.type,
-    system.subtype,
-    system.kind,
-    system.slot,
-    system.slug,
-    system.composant,
-    system.component,
-    flags.vendorKind,
-    flags.kind,
-    flags.slug,
-    flags.componentSlug,
-    ...arr(system.tags),
-    ...arr(system.effectTags),
-    ...arr(flags.tags),
-    ...arr(flags.effectTags)
+    item?.name, system.categorie, system.category, system.sousType, system.sous_type, system.type,
+    system.subtype, system.kind, system.slot, system.slug, system.composant, system.component,
+    flags.vendorKind, flags.kind, flags.slug, flags.componentSlug,
+    ...arr(system.tags), ...arr(system.effectTags), ...arr(flags.tags), ...arr(flags.effectTags)
   ].map(lower).filter(Boolean);
 }
 
@@ -286,12 +216,12 @@ function isContainerLike(item) {
 function isSpellComponentItem(item) {
   if (!item) return false;
   const fields = itemTextFields(item);
-  if (fields.some(value => value === "component" || value === "composant" || value === "composants")) return true;
-  if (fields.some(value => value === "composant_sort" || value === "composants_sort" || value === "composant_de_sort" || value === "composants_de_sort")) return true;
-  if (fields.some(value => value === "spell_component" || value === "spell_components" || value === "material_component" || value === "material_components")) return true;
-  if (fields.some(value => value.startsWith("composant:") || value.startsWith("component:") || value.startsWith("spell_component:"))) return true;
-  if (fields.some(value => value.includes("composant") && value.includes("sort"))) return true;
-  if (fields.some(value => value.includes("spell") && value.includes("component"))) return true;
+  if (fields.some(v => v === "component" || v === "composant" || v === "composants")) return true;
+  if (fields.some(v => v === "composant_sort" || v === "composants_sort" || v === "composant_de_sort" || v === "composants_de_sort")) return true;
+  if (fields.some(v => v === "spell_component" || v === "spell_components" || v === "material_component" || v === "material_components")) return true;
+  if (fields.some(v => v.startsWith("composant:") || v.startsWith("component:") || v.startsWith("spell_component:"))) return true;
+  if (fields.some(v => v.includes("composant") && v.includes("sort"))) return true;
+  if (fields.some(v => v.includes("spell") && v.includes("component"))) return true;
   return isContainerLike(item);
 }
 
@@ -342,27 +272,17 @@ function componentRequirements(sort) {
   const flags = sort?.flags?.add2e ?? {};
   const out = [];
   const fields = [
-    system.composants_requis,
-    system.composantsMateriels,
-    system.composants_materiels,
-    system.composantsMateriel,
-    system.composant_materiel,
-    system.composantMateriel,
-    system.requiredComponents,
-    system.componentsRequired,
-    flags.composants_requis,
-    flags.requiredComponents
+    system.composants_requis, system.composantsMateriels, system.composants_materiels,
+    system.composantsMateriel, system.composant_materiel, system.composantMateriel,
+    system.requiredComponents, system.componentsRequired, flags.composants_requis, flags.requiredComponents
   ];
-
   for (const field of fields) collectComponentRequirement(out, field);
-
   for (const tag of [...arr(system.tags), ...arr(system.effectTags), ...arr(flags.tags), ...arr(flags.effectTags)]) {
     const text = String(tag ?? "").trim();
     if (/^composant[:_]/i.test(text)) addComponentRequirement(out, text.replace(/^composant[:_]/i, ""), 1);
     if (/^component[:_]/i.test(text)) addComponentRequirement(out, text.replace(/^component[:_]/i, ""), 1);
     if (/^spell_component[:_]/i.test(text)) addComponentRequirement(out, text.replace(/^spell_component[:_]/i, ""), 1);
   }
-
   return out;
 }
 
@@ -393,11 +313,7 @@ function isPropelledWeapon(item) {
   const tags = itemTags(item);
   const name = norm(item?.name);
   const system = item?.system ?? {};
-  return system.projectile_propulse === true
-    || system.arme_a_projectile === true
-    || tags.includes("projectile_propulse")
-    || tags.includes("usage_projectile_propulse")
-    || ["arc", "arbalete", "fronde"].some(key => name.includes(key));
+  return system.projectile_propulse === true || system.arme_a_projectile === true || tags.includes("projectile_propulse") || tags.includes("usage_projectile_propulse") || ["arc", "arbalete", "fronde"].some(key => name.includes(key));
 }
 
 function projectileKeys(item) {
@@ -455,18 +371,9 @@ function preparedCount(sort) {
   const flags = sort?.flags?.add2e ?? {};
   const system = sort?.system ?? {};
   const directValues = [
-    sort?.getFlag?.("add2e", "memorizedCount"),
-    flags.memorizedCount,
-    flags.preparedCount,
-    system.memorizedCount,
-    system.preparedCount,
-    system.prepared,
-    system.memorise,
-    system.memorized,
-    system.memorisation?.value,
-    system.memorisation,
-    system.slots?.prepared,
-    system.slots?.value
+    sort?.getFlag?.("add2e", "memorizedCount"), flags.memorizedCount, flags.preparedCount,
+    system.memorizedCount, system.preparedCount, system.prepared, system.memorise, system.memorized,
+    system.memorisation?.value, system.memorisation, system.slots?.prepared, system.slots?.value
   ];
   let best = 0;
   for (const value of directValues) {
@@ -491,34 +398,20 @@ function preparedCount(sort) {
 function isObjectPowerSpell(sort) {
   const system = sort?.system ?? {};
   if (system.isPower === true || system.isObjectPower === true || system.sourceWeaponId || system.sourceItemId || system.powerIndex !== undefined) return true;
-  try {
-    return globalThis.add2eIsObjectMagicSpellForPreparation?.(sort) === true;
-  } catch (_e) {
-    return false;
-  }
+  try { return globalThis.add2eIsObjectMagicSpellForPreparation?.(sort) === true; }
+  catch (_e) { return false; }
 }
 
 function spells(actor) {
   return actor?.items?.filter?.(item => String(item.type ?? "").toLowerCase() === "sort" && !isObjectPowerSpell(item) && preparedCount(item) > 0) ?? [];
 }
 
-function spellLevel(sort) {
-  return Math.max(0, num(sort?.system?.niveau ?? sort?.system?.level ?? sort?.system?.niveau_sort, 0));
-}
-
+function spellLevel(sort) { return Math.max(0, num(sort?.system?.niveau ?? sort?.system?.level ?? sort?.system?.niveau_sort, 0)); }
 function spellListLabel(sort) {
   const system = sort?.system ?? {};
   const raw = [
-    system.liste,
-    system.list,
-    system.spellList,
-    system.classe,
-    system.class,
-    system.sourceClasse,
-    system.casterClass,
-    ...arr(system.lists),
-    ...arr(system.listes),
-    ...arr(system.classes)
+    system.liste, system.list, system.spellList, system.classe, system.class, system.sourceClasse, system.casterClass,
+    ...arr(system.lists), ...arr(system.listes), ...arr(system.classes)
   ].map(value => String(value ?? "").trim()).find(Boolean) || "Mag";
   const normalized = norm(raw);
   if (normalized.includes("clerc") || normalized.includes("pretre") || normalized.includes("priest")) return "Clerc";
@@ -528,46 +421,69 @@ function spellListLabel(sort) {
   if (normalized.includes("mag") || normalized.includes("wizard") || normalized.includes("mage")) return "Mag";
   return String(raw).slice(0, 6);
 }
-
-function spellGroupKey(sort) {
-  return `${spellListLabel(sort)}|${spellLevel(sort)}`;
-}
-
+function spellGroupKey(sort) { return `${spellListLabel(sort)}|${spellLevel(sort)}`; }
 function features(actor) {
   if (typeof globalThis.add2eGetActorActivableClassFeatures === "function") return globalThis.add2eGetActorActivableClassFeatures(actor, { includeLocked: false }) ?? [];
   return [];
 }
 
+function effectKey(effect) { return effect?.uuid ?? effect?.id ?? effect?._id ?? effect?.name ?? String(Math.random()); }
+function effectOriginItem(actor, effect) {
+  const origin = String(effect?.origin ?? effect?.sourceName ?? "");
+  const itemId = origin.match(/Item\.([A-Za-z0-9]+)/)?.[1] ?? effect?.parent?.id ?? null;
+  if (!itemId) return null;
+  return actor?.items?.get?.(itemId) ?? null;
+}
+function effectHasDuration(effect) {
+  const d = effect?.duration ?? {};
+  return [d.seconds, d.rounds, d.turns, d.startTime, d.startRound, d.combat, d.remaining].some(value => value !== undefined && value !== null && value !== "");
+}
+function isClassOrRacePassiveEffect(actor, effect) {
+  const item = effectOriginItem(actor, effect);
+  const itemType = String(item?.type ?? "").toLowerCase();
+  const flags = effect?.flags?.add2e ?? {};
+  return itemType === "race" || itemType === "classe" || flags.race === true || flags.classe === true || flags.classFeature === true || flags.racial === true;
+}
+function isHudActiveEffect(actor, effect, fromTemporary = false) {
+  if (!effect) return false;
+  if (effect.disabled === true || effect.isSuppressed === true) return false;
+  if (effect.active === false) return false;
+  if (fromTemporary) return true;
+  if (isClassOrRacePassiveEffect(actor, effect) && effectHasDuration(effect) !== true) return false;
+  if (effect.transfer === true && effectHasDuration(effect) !== true) return false;
+  return true;
+}
+function addEffectSource(map, actor, values, fromTemporary = false) {
+  for (const effect of arr(values)) {
+    if (!isHudActiveEffect(actor, effect, fromTemporary)) continue;
+    map.set(effectKey(effect), effect);
+  }
+}
 function effects(actor) {
   const map = new Map();
-  for (const effect of arr(actor?.effects)) if (effect && effect.disabled !== true) map.set(effect.id, effect);
-  return [...map.values()];
+  const tokenActor = tokenFor(actor)?.actor ?? null;
+  for (const sourceActor of [actor, tokenActor].filter(Boolean)) {
+    addEffectSource(map, sourceActor, sourceActor.effects, false);
+    addEffectSource(map, sourceActor, sourceActor.appliedEffects, true);
+    addEffectSource(map, sourceActor, sourceActor.temporaryEffects, true);
+    try { addEffectSource(map, sourceActor, sourceActor.allApplicableEffects?.(), true); } catch (_e) {}
+  }
+  return [...map.values()].sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? "")));
 }
 
 function ability(actor, key) {
   const direct = Number(actor?.system?.[key]);
   return Number.isFinite(direct) ? direct : num(actor?.system?.[`${key}_base`], 10);
 }
-
 function savingThrows(actor) {
   const level = Math.max(1, num(actor?.system?.niveau, 1));
   const row = actor?.system?.details_classe?.progression?.[level - 1];
   const values = arr(row?.savingThrows || actor?.system?.sauvegardes || actor?.system?.savingThrows || []).map(value => num(value, 0));
   return values.length >= 5 ? values.slice(0, 5) : [0, 0, 0, 0, 0];
 }
-
-function hp(actor) {
-  return num(actor?.system?.pdv ?? actor?.system?.pv?.value ?? actor?.system?.hp?.value ?? actor?.system?.hp, 0);
-}
-
-function hpMax(actor) {
-  return num(actor?.system?.points_de_coup ?? actor?.system?.pv?.max ?? actor?.system?.hp?.max ?? actor?.system?.hpMax, hp(actor));
-}
-
-function armorClass(actor) {
-  return actor?.system?.ca_total ?? actor?.system?.ca ?? actor?.system?.armorClass ?? actor?.system?.ac ?? "—";
-}
-
+function hp(actor) { return num(actor?.system?.pdv ?? actor?.system?.pv?.value ?? actor?.system?.hp?.value ?? actor?.system?.hp, 0); }
+function hpMax(actor) { return num(actor?.system?.points_de_coup ?? actor?.system?.pv?.max ?? actor?.system?.hp?.max ?? actor?.system?.hpMax, hp(actor)); }
+function armorClass(actor) { return actor?.system?.ca_total ?? actor?.system?.ca ?? actor?.system?.armorClass ?? actor?.system?.ac ?? "—"; }
 function thaco(actor) {
   const direct = actor?.system?.thac0 ?? actor?.system?.thaco ?? actor?.system?.combat?.thac0;
   if (direct !== undefined && direct !== null && direct !== "") return direct;
@@ -580,7 +496,7 @@ function injectStyle() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-#${HUD_ID}{position:fixed;z-index:100;right:auto!important;bottom:auto!important;min-width:360px;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;user-select:none;touch-action:none}
+#${HUD_ID}{position:fixed;z-index:100;right:auto!important;top:auto!important;min-width:360px;color:#f6e8bd;font-family:var(--font-primary,Signika,sans-serif);pointer-events:auto;user-select:none;touch-action:none}
 #${HUD_ID}.collapsed .a2e-hud-panel{display:none!important}
 #${HUD_ID} .a2e-hud-shell{border:1px solid #8a611d;border-radius:14px;overflow:hidden;background:linear-gradient(145deg,rgba(32,25,16,.97),rgba(18,14,10,.96));box-shadow:0 8px 26px rgba(0,0,0,.48)}
 #${HUD_ID} .a2e-hud-panel{max-height:var(--a2e-hud-menu-max,360px);overflow:auto;padding:9px;border-bottom:1px solid rgba(184,137,36,.45);background:rgba(0,0,0,.13)}
@@ -652,14 +568,12 @@ function weaponRows(actor) {
 function spellRows(actor) {
   const rows = spells(actor).sort((a, b) => String(spellListLabel(a)).localeCompare(String(spellListLabel(b))) || spellLevel(a) - spellLevel(b) || String(a.name).localeCompare(String(b.name)));
   if (!rows.length) return `<div class="empty">Aucun sort mémorisé.</div>`;
-
   const groups = new Map();
   for (const spell of rows) {
     const key = spellGroupKey(spell);
     if (!groups.has(key)) groups.set(key, { key, label: spellListLabel(spell), level: spellLevel(spell), items: [] });
     groups.get(key).items.push(spell);
   }
-
   const list = [...groups.values()];
   if (!selectedSpellGroup || !groups.has(selectedSpellGroup)) selectedSpellGroup = list[0].key;
   const active = groups.get(selectedSpellGroup) ?? list[0];
@@ -677,7 +591,7 @@ function featureRows(actor) {
 function effectRows(actor) {
   const rows = effects(actor);
   if (!rows.length) return `<div class="empty">Aucun effet actif.</div>`;
-  return rows.map(effect => `<div class="row effect-row"><img src="${esc(effect.img || effect.icon || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(effect.name)}</div><div class="meta"><span>Effet actif</span></div></div><button type="button" class="act danger" data-action="remove-effect" data-effect-id="${esc(effect.id)}"><i class="fas fa-trash"></i></button></div>`).join("");
+  return rows.map(effect => `<div class="row effect-row"><img src="${esc(effect.img || effect.icon || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(effect.name)}</div><div class="meta"><span>Effet actif</span></div></div><button type="button" class="act danger" data-action="remove-effect" data-effect-id="${esc(effect.id ?? effect._id ?? "")}"><i class="fas fa-trash"></i></button></div>`).join("");
 }
 
 function saveRows(actor) {
@@ -692,18 +606,11 @@ function abilityRows(actor) {
 function hudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
   const isMonster = isMonsterActor(actor);
-  const race = isMonster
-    ? (actor.system?.type ?? "Monstre")
-    : (actor.system?.race || actor.system?.details_race?.label || actor.items?.find?.(item => item.type === "race")?.name || "Race");
-  const classe = isMonster
-    ? (actor.system?.taille ?? actor.system?.size ?? "MJ")
-    : (actor.system?.classe || actor.system?.details_classe?.label || actor.items?.find?.(item => item.type === "classe")?.name || "Classe");
-  const niveau = isMonster
-    ? (actor.system?.dv ?? actor.system?.hitDice ?? actor.system?.niveau ?? "—")
-    : (actor.system?.niveau ?? "—");
+  const race = isMonster ? (actor.system?.type ?? "Monstre") : (actor.system?.race || actor.system?.details_race?.label || actor.items?.find?.(item => item.type === "race")?.name || "Race");
+  const classe = isMonster ? (actor.system?.taille ?? actor.system?.size ?? "MJ") : (actor.system?.classe || actor.system?.details_classe?.label || actor.items?.find?.(item => item.type === "classe")?.name || "Classe");
+  const niveau = isMonster ? (actor.system?.dv ?? actor.system?.hitDice ?? actor.system?.niveau ?? "—") : (actor.system?.niveau ?? "—");
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${activeTab === key ? "active" : ""}" data-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="${activeTab === key ? "active" : ""}" data-section="${key}">${html}</section>`;
-
   return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellRows(actor))}${section("capacites", featureRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
 }
 
@@ -717,11 +624,9 @@ function renderHud(actor = null, token = null, { reason = "render" } = {}) {
     hudToken = null;
     return false;
   }
-
   hudActor = actor;
   hudToken = token ?? tokenFor(actor);
   if (!TABS.includes(activeTab)) activeTab = "attaques";
-
   const element = existing ?? document.createElement("div");
   element.id = HUD_ID;
   element.innerHTML = hudHtml(actor, hudToken);
@@ -736,16 +641,11 @@ function refreshHud(reason = "refresh") {
   const token = canvas?.tokens?.controlled?.[0] ?? null;
   return renderHud(token?.actor ?? game.user?.character ?? null, token, { reason });
 }
-
-function closeHud() {
-  hud()?.remove();
-  hudActor = null;
-  hudToken = null;
-}
+function closeHud() { hud()?.remove(); hudActor = null; hudToken = null; }
 
 function bindDirectHudPointerEvents(element) {
-  if (!element || element.__add2eDirectDragBindingV45) return;
-  element.__add2eDirectDragBindingV45 = true;
+  if (!element || element.__add2eDirectDragBindingV46) return;
+  element.__add2eDirectDragBindingV46 = true;
   element.addEventListener("pointerdown", pointerDown, true);
   element.addEventListener("mousedown", pointerDown, true);
   element.addEventListener("touchstart", pointerDown, { capture: true, passive: false });
@@ -771,10 +671,7 @@ async function handleAction(event, actor, button) {
   const action = button.dataset.action;
   try {
     if (action === "toggle-collapse") return setCollapsed(!hud()?.classList.contains("collapsed"), true);
-    if (action === "select-spell-group") {
-      selectedSpellGroup = button.dataset.spellGroup || selectedSpellGroup;
-      return renderHud(actor, tokenFor(actor), { reason: "select-spell-group" });
-    }
+    if (action === "select-spell-group") { selectedSpellGroup = button.dataset.spellGroup || selectedSpellGroup; return renderHud(actor, tokenFor(actor), { reason: "select-spell-group" }); }
     if (action === "attack") return sheetAttack(actor, button.dataset.itemId);
     if (action === "cast-spell") return sheetCastSpell(actor, button.dataset.itemId);
     if (action === "use-feature") return sheetUseFeature(actor, Number(button.dataset.featureIndex));
@@ -793,63 +690,52 @@ async function sheetAttack(actor, itemId) {
   if (typeof globalThis.add2eAttackRoll !== "function") return ui.notifications.error("Fonction add2eAttackRoll introuvable.");
   return globalThis.add2eAttackRoll({ actor, arme });
 }
-
 async function sheetCastSpell(actor, itemId) {
   const sort = actor?.items?.get?.(itemId);
   if (!sort) return ui.notifications.warn("Sort introuvable.");
   if (typeof globalThis.add2eCastSpell !== "function") return ui.notifications.error("Fonction add2eCastSpell introuvable.");
   return globalThis.add2eCastSpell({ actor, sort });
 }
-
 async function sheetRollAbility(actor, carac) {
   if (typeof globalThis.add2eRollCharacteristicCard !== "function") return ui.notifications.error("Fonction add2eRollCharacteristicCard introuvable.");
   return globalThis.add2eRollCharacteristicCard(actor, carac);
 }
-
 async function sheetRollSave(actor, index) {
   if (typeof globalThis.add2eRollSaveCard !== "function") return ui.notifications.error("Fonction add2eRollSaveCard introuvable.");
   return globalThis.add2eRollSaveCard(actor, index);
 }
-
 async function sheetUseFeature(actor, index) {
   const feature = features(actor)[index];
   if (!feature) return ui.notifications.warn("Capacité introuvable.");
   if (typeof globalThis.add2eExecuteClassFeatureOnUse !== "function") return ui.notifications.error("Fonction add2eExecuteClassFeatureOnUse introuvable.");
   return globalThis.add2eExecuteClassFeatureOnUse(actor, feature, null);
 }
-
 async function removeEffect(actor, effectId) {
-  const effect = actor?.effects?.get?.(effectId);
+  const effect = actor?.effects?.get?.(effectId) ?? effects(actor).find(e => String(e.id ?? e._id ?? "") === String(effectId));
   if (!effect) return ui.notifications.warn("Effet introuvable.");
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  const ok = DialogV2?.confirm
-    ? await DialogV2.confirm({
-      window: { title: "Supprimer l'effet" },
-      content: `<p>Supprimer <strong>${esc(effect.name)}</strong> ?</p>`,
-      yes: { label: "Supprimer", icon: "fas fa-trash" },
-      no: { label: "Annuler" }
-    })
-    : true;
+  const ok = DialogV2?.confirm ? await DialogV2.confirm({
+    window: { title: "Supprimer l'effet" },
+    content: `<p>Supprimer <strong>${esc(effect.name)}</strong> ?</p>`,
+    yes: { label: "Supprimer", icon: "fas fa-trash" },
+    no: { label: "Annuler" }
+  }) : true;
   if (!ok) return false;
-  await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
+  if (actor?.effects?.get?.(effect.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
+  else if (typeof effect.delete === "function") await effect.delete();
   return renderHud(actor, hudToken, { reason: "remove-effect" });
 }
 
-function primary(event) {
-  return event.button === undefined || event.button === 0;
-}
-
+function primary(event) { return event.button === undefined || event.button === 0; }
 function pointerClient(event) {
   const touch = event.touches?.[0] ?? event.changedTouches?.[0] ?? null;
   return { x: touch?.clientX ?? event.clientX ?? 0, y: touch?.clientY ?? event.clientY ?? 0 };
 }
-
 function dragEvents(event) {
   if (event.type === "mousedown") return { move: "mousemove", up: "mouseup" };
   if (event.type === "touchstart") return { move: "touchmove", up: "touchend" };
   return { move: "pointermove", up: "pointerup" };
 }
-
 function startResize(event) {
   const handle = event.target?.closest?.("[data-resize-handle]");
   const element = event.target?.closest?.(`#${HUD_ID}`);
@@ -860,31 +746,28 @@ function startResize(event) {
   const events = dragEvents(event);
   const startState = loadState();
   const startPoint = pointerClient(event);
-  const start = { x: startPoint.x, y: startPoint.y, width: startState.width, maxMenuHeight: startState.maxMenuHeight, left: startState.left, top: startState.top };
-
+  const start = { x: startPoint.x, y: startPoint.y, width: startState.width, maxMenuHeight: startState.maxMenuHeight, left: startState.left, bottom: startState.bottom };
   const move = moveEvent => {
     moveEvent.preventDefault?.();
     const point = pointerClient(moveEvent);
     const current = loadState();
     current.width = clamp(start.width + point.x - start.x, 360, Math.max(420, window.innerWidth));
     current.maxMenuHeight = clamp(start.maxMenuHeight + point.y - start.y, 120, Math.max(160, window.innerHeight - 60));
+    current.bottom = start.bottom;
     applyGeometry(element, true);
   };
-
   const up = () => {
     window.removeEventListener(events.move, move, true);
     window.removeEventListener(events.up, up, true);
     resizing = false;
     const current = loadState();
-    saveState({ width: element.offsetWidth || current.width, maxMenuHeight: current.maxMenuHeight, left: current.left, top: current.top });
+    saveState({ width: element.offsetWidth || current.width, maxMenuHeight: current.maxMenuHeight, left: current.left, bottom: current.bottom, top: null });
     applyGeometry(element, true);
   };
-
   window.addEventListener(events.move, move, true);
   window.addEventListener(events.up, up, true);
   return true;
 }
-
 function startDrag(event) {
   const element = event.target?.closest?.(`#${HUD_ID}`);
   const handle = event.target?.closest?.("[data-drag-handle]");
@@ -896,8 +779,7 @@ function startDrag(event) {
   const events = dragEvents(event);
   const state0 = loadState();
   const startPoint = pointerClient(event);
-  const start = { x: startPoint.x, y: startPoint.y, left: state0.left, top: state0.top };
-
+  const start = { x: startPoint.x, y: startPoint.y, left: state0.left, bottom: state0.bottom };
   const move = moveEvent => {
     moveEvent.preventDefault?.();
     const point = pointerClient(moveEvent);
@@ -906,25 +788,23 @@ function startDrag(event) {
     const height = element.offsetHeight || 110;
     const minLeft = Math.min(EDGE_PAD, window.innerWidth - HANDLE_VISIBLE);
     const maxLeft = Math.max(EDGE_PAD, window.innerWidth - Math.min(width, HANDLE_VISIBLE));
-    const maxTop = Math.max(EDGE_PAD, window.innerHeight - Math.min(height, HANDLE_VISIBLE));
+    const maxBottom = Math.max(EDGE_PAD, window.innerHeight - Math.min(height, HANDLE_VISIBLE));
     current.left = clamp(start.left + point.x - start.x, minLeft, maxLeft);
-    current.top = clamp(start.top + point.y - start.y, EDGE_PAD, maxTop);
+    current.bottom = clamp(start.bottom - (point.y - start.y), EDGE_PAD, maxBottom);
+    current.top = null;
     applyGeometry(element, true);
-    saveState({ left: Math.round(current.left), top: Math.round(current.top), bottom: null });
+    saveState({ left: Math.round(current.left), bottom: Math.round(current.bottom), top: null });
   };
-
   const up = () => {
     window.removeEventListener(events.move, move, true);
     window.removeEventListener(events.up, up, true);
     dragging = false;
     applyGeometry(element, true);
   };
-
   window.addEventListener(events.move, move, true);
   window.addEventListener(events.up, up, true);
   return true;
 }
-
 function pointerDown(event) {
   if (dragging || resizing) return;
   if (startResize(event)) return;
@@ -936,11 +816,7 @@ function currentCombatant(combat = game.combat) {
   const id = combat.current?.combatantId ?? combat.combatantId ?? null;
   return (id ? combat.combatants?.get?.(id) : null) ?? combat.combatant ?? combat.turns?.[Number(combat.current?.turn ?? combat.turn)] ?? null;
 }
-
-function tokenFromCombatant(combatant) {
-  return combatant?.token?.object ?? (combatant?.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? null;
-}
-
+function tokenFromCombatant(combatant) { return combatant?.token?.object ?? (combatant?.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? null; }
 function followCombat(combat = game.combat, forceOpen = false) {
   if (Date.now() < manualIntentUntil) return false;
   const combatant = currentCombatant(combat);
@@ -987,18 +863,12 @@ Hooks.once("ready", () => {
   window.addEventListener("resize", () => applyGeometry(hud(), true));
   setTimeout(() => refreshHud("ready"), 300);
 });
-
-Hooks.on("controlToken", () => {
-  manualIntentUntil = Date.now() + 500;
-  setTimeout(() => refreshHud("controlToken"), 60);
-});
+Hooks.on("controlToken", () => { manualIntentUntil = Date.now() + 500; setTimeout(() => refreshHud("controlToken"), 60); });
 Hooks.on("canvasReady", () => setTimeout(() => refreshHud("canvasReady"), 150));
 Hooks.on("updateCombat", combat => setTimeout(() => followCombat(combat, false), 80));
 Hooks.on("combatTurn", combat => setTimeout(() => followCombat(combat, false), 80));
 Hooks.on("combatRound", combat => setTimeout(() => followCombat(combat, false), 80));
-Hooks.on("updateActor", actor => {
-  if (actor?.id === hudActor?.id && !dragging && !resizing) setTimeout(() => renderHud(actor, hudToken, { reason: "updateActor" }), 80);
-});
+Hooks.on("updateActor", actor => { if (actor?.id === hudActor?.id && !dragging && !resizing) setTimeout(() => renderHud(actor, hudToken, { reason: "updateActor" }), 80); });
 for (const hookName of ["createItem", "updateItem", "deleteItem", "createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
   Hooks.on(hookName, doc => {
     const actor = doc?.parent;
