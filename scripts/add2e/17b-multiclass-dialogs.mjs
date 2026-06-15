@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage : DialogV2
-// Version : 2026-06-13-multiclass-dialogs-v2-level-cap-ok
+// Version : 2026-06-15-multiclass-dialogs-class-drop-choices-v1
 
 import { classItems, classSlug, esc, itemLabel, norm, systemRace } from "./17b-multiclass-core.mjs";
 import { classRaceMaxLevel, monoClassOptionsForDroppedClass, raceCandidatesForClass, raceCompatibleForMulticlass, raceMatchesClassRules, raceAllowsClassSet, classPrerequisitesOk } from "./17b-multiclass-rules.mjs";
@@ -75,6 +75,11 @@ function tileHtml({ value, classesText, raceText, checked = false }) {
   return `<label style="position:relative;display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;min-height:58px;padding:8px 9px;border:2px solid ${border};border-radius:12px;background:linear-gradient(135deg,${bg1},${bg2});color:${color};cursor:pointer;"><input type="radio" name="add2eChoice" value="${esc(value)}" ${checked ? "checked" : ""} style="width:20px;height:20px;margin:0;accent-color:${selected};cursor:pointer;"><span style="display:grid;gap:1px;text-align:left;"><strong style="font-size:1rem;line-height:1.08;">${esc(classesText)}</strong><span style="font-size:.84rem;line-height:1.05;font-weight:900;text-transform:uppercase;letter-spacing:.04em;">${esc(raceText)}</span></span></label>`;
 }
 
+function sectionHtml(title, tiles) {
+  if (!tiles.length) return "";
+  return `<div style="display:grid;gap:6px;"><div style="font-weight:900;color:#5b3512;text-transform:uppercase;font-size:.78rem;letter-spacing:.04em;">${esc(title)}</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:7px;">${tiles.join("\n")}</div></div>`;
+}
+
 function replacementClassNames(actor, droppedClassData, replaceSlug) {
   return classItems(actor).filter(cls => classSlug(cls) !== replaceSlug).map(cls => cls.name).concat(itemLabel(droppedClassData, "Classe")).filter((name, index, arr) => arr.findIndex(other => norm(other) === norm(name)) === index);
 }
@@ -118,23 +123,61 @@ function finalClassTextForReplace(actor, option) {
 }
 
 export async function showClassDropChoiceDialog(actor, droppedClassData, currentRaceOrCompatibleAlternatives) {
-  const current = classItems(actor).map(c => c.name).join(" / ") || actor.system?.classe || "Aucune";
+  const existingClasses = classItems(actor);
+  const isAlreadyMulticlass = existingClasses.length > 1;
+  const current = existingClasses.map(c => c.name).join(" / ") || actor.system?.classe || "Aucune";
   const raceName = itemLabel(systemRace(actor), "Race");
   const droppedName = itemLabel(droppedClassData, "Classe");
-  const options = raceCandidatesForClass(actor, droppedClassData).map(raceData => ({ classData: droppedClassData, raceData }));
-  const replacementOptions = classItems(actor).length > 1 ? replacementOptionsForDroppedClass(actor, droppedClassData, currentRaceOrCompatibleAlternatives) : [];
+
+  const addOptions = isAlreadyMulticlass
+    ? []
+    : raceCandidatesForClass(actor, droppedClassData).map(raceData => ({ classData: droppedClassData, raceData }));
+  const replacementOptions = isAlreadyMulticlass ? replacementOptionsForDroppedClass(actor, droppedClassData, currentRaceOrCompatibleAlternatives) : [];
   const monoOptions = monoClassOptionsForDroppedClass(actor, droppedClassData);
-  const tiles = [];
-  for (let i = 0; i < options.length; i++) tiles.push(tileHtml({ value: `multiclass:${i}`, classesText: finalClassTextForAdd(actor, options[i].classData), raceText: itemLabel(options[i].raceData, "Race"), checked: i === 0 }));
-  for (let i = 0; i < replacementOptions.length; i++) tiles.push(tileHtml({ value: `replace:${i}`, classesText: finalClassTextForReplace(actor, replacementOptions[i]), raceText: itemLabel(replacementOptions[i].raceData, "Race"), checked: !tiles.length && i === 0 }));
-  for (let i = 0; i < monoOptions.length; i++) tiles.push(tileHtml({ value: `monoclass:${i}`, classesText: droppedName, raceText: itemLabel(monoOptions[i].raceData, "Race"), checked: !tiles.length && i === 0 }));
-  const body = tiles.length ? tiles.join("\n") : `<div style="padding:12px;border:1px solid #8f2a20;border-radius:10px;background:#f0c6b4;color:#6b1b12;font-weight:900;">Aucune option valide pour cette classe.</div>`;
-  const content = `<div class="add2e-multiclass-choice" style="display:grid;gap:8px;min-width:580px;max-width:720px;color:#2b1c0d;"><div style="border:1px solid #5c3b12;border-radius:12px;background:linear-gradient(180deg,#3b2612,#1c1208);padding:8px 11px;"><h2 style="margin:0;color:#f9df9a;font-size:1rem;text-transform:uppercase;border:0;">Choisis ton évolution</h2></div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;"><div><b>Classe actuelle</b><br>${esc(current)}</div><div><b>Classe déposée</b><br>${esc(droppedName)}</div><div><b>Race actuelle</b><br>${esc(raceName)}</div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:7px;">${body}</div></div>`;
+
+  let checked = false;
+  const markChecked = () => {
+    if (checked) return false;
+    checked = true;
+    return true;
+  };
+
+  const replacementTiles = replacementOptions.map((option, i) => tileHtml({
+    value: `replace:${i}`,
+    classesText: finalClassTextForReplace(actor, option),
+    raceText: itemLabel(option.raceData, "Race"),
+    checked: markChecked()
+  }));
+  const monoTiles = monoOptions.map((option, i) => tileHtml({
+    value: `monoclass:${i}`,
+    classesText: droppedName,
+    raceText: itemLabel(option.raceData, "Race"),
+    checked: markChecked()
+  }));
+  const addTiles = addOptions.map((option, i) => tileHtml({
+    value: `multiclass:${i}`,
+    classesText: finalClassTextForAdd(actor, option.classData),
+    raceText: itemLabel(option.raceData, "Race"),
+    checked: markChecked()
+  }));
+
+  const sections = [
+    sectionHtml("Remplacer une classe du multiclassage", replacementTiles),
+    sectionHtml("Passer en monoclasse", monoTiles),
+    sectionHtml("Ajouter en multiclassage", addTiles)
+  ].filter(Boolean).join("\n");
+
+  const body = sections || `<div style="padding:12px;border:1px solid #8f2a20;border-radius:10px;background:#f0c6b4;color:#6b1b12;font-weight:900;">Aucune option valide pour cette classe.</div>`;
+  const hint = isAlreadyMulticlass
+    ? "Ce personnage est déjà multiclassé : choisis soit une classe à remplacer, soit une bascule en monoclasse."
+    : "Choisis une évolution : monoclasse ou multiclassage si la race le permet.";
+
+  const content = `<div class="add2e-multiclass-choice" style="display:grid;gap:8px;min-width:580px;max-width:720px;color:#2b1c0d;"><div style="border:1px solid #5c3b12;border-radius:12px;background:linear-gradient(180deg,#3b2612,#1c1208);padding:8px 11px;"><h2 style="margin:0;color:#f9df9a;font-size:1rem;text-transform:uppercase;border:0;">Choisis ton évolution</h2><p style="margin:4px 0 0;color:#fff2c4;font-weight:800;">${esc(hint)}</p></div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;"><div><b>Classe actuelle</b><br>${esc(current)}</div><div><b>Classe déposée</b><br>${esc(droppedName)}</div><div><b>Race actuelle</b><br>${esc(raceName)}</div></div>${body}</div>`;
   const readChoice = (_event, button, dialog) => {
     const form = button?.form ?? dialog?.element?.querySelector?.("form") ?? document.querySelector?.(".add2e-multiclass-choice")?.closest?.("form");
     const raw = form?.elements?.add2eChoice?.value ?? dialog?.element?.querySelector?.('input[name="add2eChoice"]:checked')?.value ?? "cancel";
     if (raw.startsWith("monoclass:")) return { action: "monoclass", option: monoOptions[Number(raw.split(":")[1]) || 0] ?? null };
-    if (raw.startsWith("multiclass:")) return { action: "multiclass", option: options[Number(raw.split(":")[1]) || 0] ?? null };
+    if (raw.startsWith("multiclass:")) return { action: "multiclass", option: addOptions[Number(raw.split(":")[1]) || 0] ?? null };
     if (raw.startsWith("replace:")) return { action: "replace-class", option: replacementOptions[Number(raw.split(":")[1]) || 0] ?? null };
     return { action: "cancel" };
   };
