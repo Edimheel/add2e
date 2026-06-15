@@ -9,8 +9,8 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="intelligence" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="intelligence"
-                       title="Base : {{actor.system.intelligence_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.intelligence}}&#10;Total effectif : {{actor.system.int_aff}}">
-                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{actor.system.int_aff}}</span>
+                       title="Base : {{actor.system.intelligence_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.intelligence}}&#10;Total : {{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}</span>
                     {{#if actor.system.bonus_caracteristiques.intelligence}}
                       <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.intelligence 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.intelligence}})</span>
                     {{/if}}
