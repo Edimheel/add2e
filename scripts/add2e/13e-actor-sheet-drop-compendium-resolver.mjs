@@ -1,10 +1,10 @@
 // ADD2E — Résolution compendium-first des drops personnage
-// Version : 2026-06-15-drop-compendium-first-split-v1
+// Version : 2026-06-15-drop-compendium-first-split-v2
 //
 // Module court chargé après le drop historique. Il force la résolution depuis
 // le compendium avant que les validateurs race/classe ne lisent raw.data.
 
-const ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = "2026-06-15-drop-compendium-first-split-v1";
+const ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = "2026-06-15-drop-compendium-first-split-v2";
 globalThis.ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION;
 
 function add2eDropResolverNormalize(value) {
@@ -122,12 +122,14 @@ function add2eInstallDropCompendiumFirstWrapper() {
   return true;
 }
 
-Hooks.once("ready", () => {
-  if (!add2eInstallDropCompendiumFirstWrapper()) {
-    setTimeout(add2eInstallDropCompendiumFirstWrapper, 250);
-    setTimeout(add2eInstallDropCompendiumFirstWrapper, 1000);
-  }
-});
+if (!add2eInstallDropCompendiumFirstWrapper()) {
+  Hooks.once("ready", () => {
+    if (!add2eInstallDropCompendiumFirstWrapper()) {
+      setTimeout(add2eInstallDropCompendiumFirstWrapper, 250);
+      setTimeout(add2eInstallDropCompendiumFirstWrapper, 1000);
+    }
+  });
+}
 
 try { globalThis.add2eResolveDropItemDataCompendiumFirst = add2eResolveDropItemDataCompendiumFirst; } catch (_e) {}
 try { globalThis.add2eInstallDropCompendiumFirstWrapper = add2eInstallDropCompendiumFirstWrapper; } catch (_e) {}
