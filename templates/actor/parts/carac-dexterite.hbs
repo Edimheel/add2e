@@ -9,8 +9,8 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="dexterite" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="dexterite"
-                       title="Base : {{actor.system.dexterite_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.dexterite}}&#10;Total effectif : {{actor.system.dex_aff}}">
-                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{actor.system.dex_aff}}</span>
+                       title="Base : {{actor.system.dexterite_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.dexterite}}&#10;Total : {{add actor.system.dexterite_base actor.system.bonus_caracteristiques.dexterite}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.dexterite_base actor.system.bonus_caracteristiques.dexterite}}</span>
                     {{#if actor.system.bonus_caracteristiques.dexterite}}
                       <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.dexterite 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.dexterite}})</span>
                     {{/if}}
