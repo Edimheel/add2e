@@ -67,6 +67,7 @@
                       <td>
                         <div class="a2e-actions">
                           <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if arme.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{arme._id}}" title="{{#if arme.system.equipee}}Équipée — cliquer pour retirer{{else}}Non équipée — cliquer pour équiper{{/if}}"><i class="fas fa-swords"></i></a>
+                          <a class="item-control a2e-action-icon" data-action="trade-item" data-item-id="{{arme._id}}" title="Échanger avec un autre personnage"><i class="fas fa-handshake"></i></a>
                           <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{arme._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
                           <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{arme._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
                         </div>
@@ -106,6 +107,7 @@
                              title="{{#if munition.system.equipee}}Projectile équipé — cliquer pour retirer{{else}}Équiper ce projectile{{/if}}">
                             <i class="fas fa-bullseye"></i>
                           </a>
+                          <a class="item-control a2e-action-icon" data-action="trade-item" data-item-id="{{munition._id}}" title="Échanger avec un autre personnage"><i class="fas fa-handshake"></i></a>
                           <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{munition._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
                           <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{munition._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
                         </div>
@@ -136,6 +138,7 @@
                       <td>
                         <div class="a2e-actions">
                           <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if armure.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{armure._id}}" title="{{#if armure.system.equipee}}Équipée — cliquer pour retirer{{else}}Non équipée — cliquer pour équiper{{/if}}"><i class="fas fa-shield-alt"></i></a>
+                          <a class="item-control a2e-action-icon" data-action="trade-item" data-item-id="{{armure._id}}" title="Échanger avec un autre personnage"><i class="fas fa-handshake"></i></a>
                           <a class="item-control item-edit a2e-action-icon a2e-action-edit" data-action="edit" data-item-id="{{armure._id}}" title="Éditer"><i class="fas fa-edit"></i></a>
                           <a class="item-control item-delete a2e-action-icon a2e-action-delete" data-action="delete" data-item-id="{{armure._id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
                         </div>
