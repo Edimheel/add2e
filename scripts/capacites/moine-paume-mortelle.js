@@ -4,7 +4,7 @@
  * Script exécuté via on_use d'une classFeature.
  * Paramètres attendus par le lanceur : actor, item, sort.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-06-12-v5-clear-stale-combat-flag";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-06-15-v6-compact-chat-card";
 const ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS = 24 * 60;
 
 globalThis.ADD2E_MOINE_PAUME_MORTELLE_VERSION = ADD2E_MOINE_PAUME_MORTELLE_VERSION;
@@ -21,6 +21,20 @@ function a2eNorm(v) {
 function a2eNum(v, fallback = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function a2eEsc(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function a2eChatStyleData() {
+  if (CONST.CHAT_MESSAGE_STYLES) return { style: CONST.CHAT_MESSAGE_STYLES.OTHER };
+  return { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 }
 
 function a2eGetWorldTimeTick() {
@@ -95,6 +109,34 @@ function a2eFindPaumeMortelleWeapon(actor, weaponId = null) {
   ) ?? null;
 }
 
+function a2ePaumeMortelleChatCard({ actor, img, damage, currentTick, nextAvailableTick }) {
+  const actorName = a2eEsc(actor?.name ?? "Acteur");
+  const safeImg = a2eEsc(img || "icons/skills/melee/strike-palm-light-orange.webp");
+  const safeDamage = a2eEsc(damage?.raw ?? "");
+  return `
+    <div class="add2e-chat-card add2e-paume-mortelle-card"
+         style="border:1px solid #8a5a22;border-radius:8px;overflow:hidden;background:#fff8e7;color:#2f210d;font-family:var(--font-primary);font-size:13px;line-height:1.35;">
+      <div style="display:flex;align-items:center;gap:8px;background:#5b2f14;color:#fff;padding:7px 9px;">
+        <img src="${safeImg}" style="width:34px;height:34px;object-fit:cover;border-radius:4px;border:1px solid #d7b56d;background:#fff;" />
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:900;font-size:14px;line-height:1.1;">Paume mortelle</div>
+          <div style="font-size:11px;opacity:.9;line-height:1.15;">Capacité de moine préparée</div>
+        </div>
+      </div>
+      <div style="padding:8px 10px;background:#fff8e7;">
+        <div style="background:#fff;border:1px solid #d6b66e;border-radius:6px;padding:7px 8px;">
+          <div><b>${actorName}</b> prépare une tentative de <b>Paume mortelle</b>.</div>
+          <div style="margin-top:4px;">Une arme temporaire a été créée dans l’onglet <b>Combat</b>.</div>
+          <div style="margin-top:4px;"><b>Dégâts de base :</b> ${safeDamage}.</div>
+          <div style="margin-top:4px;"><b>Usage :</b> 1 tentative par jour.</div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:#6b4a1a;text-align:center;">
+          Temps ADD2E : tick <b>${Number(currentTick) || 0}</b> → prochaine utilisation au tick <b>${Number(nextAvailableTick) || 0}</b>.
+        </div>
+      </div>
+    </div>`;
+}
+
 if (!actor) {
   ui.notifications.error("Paume mortelle : acteur introuvable.");
   return false;
@@ -147,6 +189,7 @@ const damage = a2eDamageParts(
 );
 
 const img = "icons/skills/melee/strike-palm-light-orange.webp";
+const nextTick = currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS;
 
 const system = {
   nom: "Paume mortelle",
@@ -216,7 +259,7 @@ if (existing) {
         useLimit: "day",
         dayRounds: ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS,
         preparedAtTick: currentTick,
-        nextAvailableTick: currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS
+        nextAvailableTick: nextTick
       }
     }
   }, { add2eInternal: true });
@@ -237,7 +280,7 @@ if (existing) {
         useLimit: "day",
         dayRounds: ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS,
         preparedAtTick: currentTick,
-        nextAvailableTick: currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS
+        nextAvailableTick: nextTick
       }
     }
   }], { add2eInternal: true });
@@ -252,7 +295,7 @@ await actor.setFlag("add2e", dailyFlagKey, {
   level,
   damage: damage.raw,
   usedAtTick: currentTick,
-  nextAvailableTick: currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS,
+  nextAvailableTick: nextTick,
   dayRounds: ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS,
   version: ADD2E_MOINE_PAUME_MORTELLE_VERSION
 });
@@ -265,20 +308,24 @@ await actor.setFlag("add2e", flagKey, {
   damage: damage.raw,
   at: Date.now(),
   preparedAtTick: currentTick,
-  nextAvailableTick: currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS
+  nextAvailableTick: nextTick
 });
 
 await ChatMessage.create({
   speaker: ChatMessage.getSpeaker({ actor }),
-  content: `
-    <div class="add2e-chat-card">
-      <h3>Paume mortelle</h3>
-      <p><b>${actor.name}</b> prépare une tentative de Paume mortelle.</p>
-      <p>Une arme temporaire <b>Paume mortelle</b> a été créée dans l’onglet Combat.</p>
-      <p><b>Dégâts de base :</b> ${damage.raw}. <b>Usage :</b> 1 tentative par jour.</p>
-      <p><b>Temps ADD2E :</b> tick ${currentTick} → prochaine utilisation au tick ${currentTick + ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS}.</p>
-    </div>
-  `
+  content: a2ePaumeMortelleChatCard({ actor, img, damage, currentTick, nextAvailableTick: nextTick }),
+  flags: {
+    add2e: {
+      paumeMortellePrepared: true,
+      actorId: actor.id ?? null,
+      actorUuid: actor.uuid ?? null,
+      weaponId: weapon?.id ?? null,
+      currentTick,
+      nextAvailableTick: nextTick,
+      version: ADD2E_MOINE_PAUME_MORTELLE_VERSION
+    }
+  },
+  ...a2eChatStyleData()
 });
 
 ui.notifications.info("Paume mortelle prête : arme temporaire créée dans l’onglet Combat. Prochaine utilisation après 24 heures de temps ADD2E.");
