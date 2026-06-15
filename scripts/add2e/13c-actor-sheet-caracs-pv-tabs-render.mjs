@@ -2,7 +2,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
-const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-06-15-effective-racial-total-cap-v1";
+const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-05-29-force-ex-input-v2";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 
 function add2eV2Root(source) {
@@ -50,15 +50,6 @@ function add2eActorCanUseExceptionalStrength(actor) {
   return classText.includes("guerrier") || classText.includes("paladin") || classText.includes("ranger");
 }
 
-function add2eEffectiveAbilityTotal(base, racialBonus = 0) {
-  const b = Number(base);
-  const r = Number(racialBonus);
-  const total = (Number.isFinite(b) ? b : 10) + (Number.isFinite(r) ? r : 0);
-  return Math.max(3, Math.min(18, Math.floor(total)));
-}
-
-globalThis.add2eEffectiveAbilityTotal = add2eEffectiveAbilityTotal;
-
 globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
   if (this._autoSetCaracsInProgress) return;
   if (!this.actor?.system) return;
@@ -85,7 +76,7 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
       const legacyRace = Number(this.actor.system?.[`${c}_race`] ?? s[`${c}_race`] ?? 0) || 0;
       const bonusCaracs = this.actor.system?.bonus_caracteristiques || s.bonus_caracteristiques || {};
       const bonusRace = Number(bonusCaracs?.[c] ?? 0) || 0;
-      totalCaracs[c] = add2eEffectiveAbilityTotal(base, bonusRace || legacyRace);
+      totalCaracs[c] = base + (bonusRace || legacyRace);
     }
 
     const allowExceptional =
@@ -110,12 +101,6 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
     const chaBonus = (typeof CHARISME_TABLE !== "undefined" && CHARISME_TABLE?.[totalCaracs.charisme]) || { compagnons: 0, loy: 0, react: 0 };
 
     const fullUpdate = {
-      "system.force": totalCaracs.force,
-      "system.dexterite": totalCaracs.dexterite,
-      "system.constitution": totalCaracs.constitution,
-      "system.intelligence": totalCaracs.intelligence,
-      "system.sagesse": totalCaracs.sagesse,
-      "system.charisme": totalCaracs.charisme,
       "system.for_aff": totalCaracs.force,
       "system.dex_aff": totalCaracs.dexterite,
       "system.con_aff": totalCaracs.constitution,
