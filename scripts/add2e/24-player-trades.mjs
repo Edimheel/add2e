@@ -1,7 +1,7 @@
 // ADD2E — Échanges entre personnages joueurs — DialogV2 / Foundry V13-V15
-// Version : 2026-06-15-player-trades-ui-v5-dialogv2-position
+// Version : 2026-06-15-player-trades-ui-v6-money-delta
 
-const ADD2E_PLAYER_TRADES_VERSION = "2026-06-15-player-trades-ui-v5-dialogv2-position";
+const ADD2E_PLAYER_TRADES_VERSION = "2026-06-15-player-trades-ui-v6-money-delta";
 const ADD2E_PLAYER_TRADES_SOCKET = "system.add2e";
 const ADD2E_TRADE_STYLE_ID = "add2e-player-trades-style";
 const ADD2E_TRADE_DIALOG_WIDTH = 220;
@@ -27,6 +27,11 @@ function add2eTradeInt(value, min = 0) {
   const n = Math.floor(Number(value));
   if (!Number.isFinite(n)) return min;
   return Math.max(min, n);
+}
+
+function add2eTradeSignedInt(value, fallback = 0) {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n) ? n : fallback;
 }
 
 function add2eTradeUuid() {
@@ -261,7 +266,9 @@ function add2eTradeCanPay(actor, requested) {
 
 function add2eTradeApplyMoneyDelta(money, delta) {
   const out = { ...money };
-  for (const coin of ADD2E_TRADE_COINS) out[coin] = add2eTradeInt(out[coin], 0) + add2eTradeInt(delta?.[coin], 0);
+  for (const coin of ADD2E_TRADE_COINS) {
+    out[coin] = Math.max(0, add2eTradeInt(out[coin], 0) + add2eTradeSignedInt(delta?.[coin], 0));
+  }
   return out;
 }
 
