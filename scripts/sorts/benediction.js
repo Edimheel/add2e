@@ -1,7 +1,7 @@
 /**
  * ADD2E — Sort BÉNÉDICTION / MALÉDICTION
  * Clerc niveau 1 — Conjuration/Appel
- * Version : 2026-06-14-benediction-selected-component-v3-exact-only
+ * Version : 2026-06-15-benediction-malediction-expiration-label-v1
  *
  * Effet : +1 au moral et +1 aux jets d'attaque des alliés dans la zone.
  * Inverse : Malédiction, -1 au moral et -1 aux jets d'attaque.
@@ -9,7 +9,7 @@
  */
 
 const __add2eOnUseResult = await (async () => {
-  const VERSION = "2026-06-14-benediction-selected-component-v3-exact-only";
+  const VERSION = "2026-06-15-benediction-malediction-expiration-label-v1";
   console.log(`%c[ADD2E][BENEDICTION] ${VERSION}`, "color:#b88924;font-weight:bold;");
 
   const ADD2E_CLERIC_CHAT = {
@@ -141,7 +141,7 @@ const __add2eOnUseResult = await (async () => {
       unit: "round",
       endMessage: isCurse ? "La malédiction de {actor} prend fin." : "La bénédiction de {actor} prend fin.",
       extra: {
-        spellName: sourceItem?.name ?? effectName,
+        spellName: effectName,
         spellKey: isCurse ? "malediction" : "benediction",
         sourceItemUuid: sourceItem?.uuid ?? null,
         casterId: caster?.id ?? null,
@@ -152,7 +152,7 @@ const __add2eOnUseResult = await (async () => {
       timeEngine: { managed: true, unit: "round", totalRounds: durationRounds },
       roundEngine: { managed: true, unit: "round", totalRounds: durationRounds, endMessage: isCurse ? "La malédiction de {actor} prend fin." : "La bénédiction de {actor} prend fin." },
       endMessage: isCurse ? "La malédiction de {actor} prend fin." : "La bénédiction de {actor} prend fin.",
-      spellName: sourceItem?.name ?? effectName,
+      spellName: effectName,
       spellKey: isCurse ? "malediction" : "benediction",
       sourceItemUuid: sourceItem?.uuid ?? null,
       casterId: caster?.id ?? null,
