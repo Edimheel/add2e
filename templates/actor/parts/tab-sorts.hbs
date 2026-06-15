@@ -30,8 +30,10 @@
                       {{#each listeSacocheComposants as |component|}}
                         <tr class="item add2e-component-row" data-item-id="{{component._id}}">
                           <td>
-                            <img src="{{component.img}}" alt="{{component.name}}" style="width:26px;height:26px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:6px;">
-                            <b>{{component.name}}</b>
+                            <div class="add2e-component-cell" style="display:flex;align-items:center;gap:6px;min-width:0;white-space:normal;">
+                              <img src="{{component.img}}" alt="{{component.name}}" style="width:26px;height:26px;min-width:26px;max-width:26px;border-radius:4px;object-fit:cover;display:inline-block;flex:0 0 26px;vertical-align:middle;">
+                              <b style="display:inline;line-height:1.15;">{{component.name}}</b>
+                            </div>
                           </td>
                           <td>{{component.system.quantite}}</td>
                           <td>{{componentSpellNames component ../sortsParNiveau}}</td>
@@ -238,7 +240,3 @@
               {{/each}}
             {{else}}
               <p class="a2e-muted">Aucun sort disponible.</p>
-            {{/if}}
-          </div>
-        </div>
-      </section>
