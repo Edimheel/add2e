@@ -1,9 +1,9 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-06-15-v50-equipment-tab-money
+// Version : 2026-06-15-v51-equipment-sheet-objects-only
 // Le HUD reste une interface : les actions délèguent aux fonctions système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v50-equipment-tab-money";
+const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v51-equipment-sheet-objects-only";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
 const STORAGE_KEY = "add2e.actionHud.state.v46";
@@ -318,6 +318,23 @@ function isPropelledWeapon(item) {
   const system = item?.system ?? {};
   return system.projectile_propulse === true || system.arme_a_projectile === true || tags.includes("projectile_propulse") || tags.includes("usage_projectile_propulse") || ["arc", "arbalete", "fronde"].some(key => name.includes(key));
 }
+function isAmmunitionItem(item) {
+  const system = item?.system ?? {};
+  const name = lower(item?.name);
+  const fields = [system.categorie, system.category, system.sousType, system.sous_type, system.type, system.subtype, system.kind, system.slot].map(lower).filter(Boolean);
+  const tags = itemTags(item);
+  const accepted = new Set([
+    "munition", "munitions", "projectile", "projectiles", "ammo", "ammunition",
+    "trait:munition", "trait:projectile", "categorie:munition", "categorie:projectile",
+    "type:munition", "type:projectile"
+  ]);
+  if (/\b(carquois|quiver|etui|etuis|étui|étuis|sac|sacoche|container|contenant|boite|boîte|bourse)\b/.test(name)) return false;
+  if (fields.some(value => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(value))) return false;
+  if (tags.some(value => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(value))) return false;
+  if (fields.some(value => accepted.has(value))) return true;
+  if (tags.some(value => accepted.has(value) || value.startsWith("munition:") || value.startsWith("projectile:"))) return true;
+  return /\b(fleche|fleches|flèche|flèches|carreau|carreaux|trait|traits|bille|billes|pierre de fronde|pierres de fronde)\b/.test(name);
+}
 function projectileKeys(item) {
   const text = `${norm(item?.name)} ${itemTags(item).join(" ")}`;
   if (text.includes("arbalete")) return ["carreau", "carreaux", "bolt"];
@@ -368,10 +385,14 @@ function equipmentTypeLabel(item) {
   if (type === "armure") return "Armure";
   return "Équipement";
 }
+function isSheetEquipmentObject(item) {
+  if (String(item?.type ?? "").toLowerCase() !== "objet") return false;
+  return !isAmmunitionItem(item) && !isSpellComponentItem(item);
+}
 function equipmentItems(actor) {
   return actorItems(actor)
-    .filter(item => ["objet", "arme", "armure"].includes(String(item.type ?? "").toLowerCase()))
-    .sort((a, b) => equipmentTypeLabel(a).localeCompare(equipmentTypeLabel(b)) || String(a.name).localeCompare(String(b.name)));
+    .filter(isSheetEquipmentObject)
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)));
 }
 function equipmentRows(actor) {
   const rows = equipmentItems(actor);
@@ -682,8 +703,8 @@ function refreshHud(reason = "refresh", options = {}) {
 }
 function closeHud() { hud()?.remove(); hudActor = null; hudToken = null; }
 function bindDirectHudPointerEvents(element) {
-  if (!element || element.__add2eDirectDragBindingV50) return;
-  element.__add2eDirectDragBindingV50 = true;
+  if (!element || element.__add2eDirectDragBindingV51) return;
+  element.__add2eDirectDragBindingV51 = true;
   element.addEventListener("pointerdown", pointerDown, true);
   element.addEventListener("mousedown", pointerDown, true);
   element.addEventListener("touchstart", pointerDown, { capture: true, passive: false });
