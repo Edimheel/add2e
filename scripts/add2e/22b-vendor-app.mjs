@@ -1,5 +1,5 @@
 // ADD2E — Marchand V2 compact.
-// Version : 2026-06-16-merchant-bazaar-full-width-accordion-v3
+// Version : 2026-06-16-merchant-compact-icon-buttons-v4
 
 import {
   findVendor,
@@ -25,7 +25,7 @@ import {
 } from "./22a-vendor-core.mjs";
 import { normalizeShopCurrency, ADD2E_VENDOR_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-16-merchant-bazaar-full-width-accordion-v3";
+const VERSION = "2026-06-16-merchant-compact-icon-buttons-v4";
 const DIAG = "[ADD2E][MERCHANT_APP][BUY_DIAG]";
 
 const arr = v => Array.isArray(v)
@@ -191,12 +191,18 @@ function rowTabs(item, use) {
   return tabs;
 }
 
+function iconButton(action, icon, title, disabled = false, extraClass = "") {
+  return `<button class="add2e-vendor-icon-btn ${extraClass}" data-action="${action}" title="${esc(title)}" aria-label="${esc(title)}" ${disabled ? "disabled" : ""}><i class="fas ${icon}"></i></button>`;
+}
+
 function rowHtml(item, ctx, use, visible = true) {
   const kind = vendorKind(item);
+  const itemQty = quantity(item);
+  const disabled = !ctx.buyer || itemQty <= 0;
   const gm = ctx.isGM
-    ? `<td><input class="s" type="number" min="0" value="${quantity(item)}"><button data-action="stock" title="Définir le stock">Stock</button><button data-action="assign" title="Donner à l’acheteur" ${!ctx.buyer || quantity(item) <= 0 ? "disabled" : ""}>Donner</button></td>`
+    ? `<td class="col-mj add2e-vendor-gm-actions"><input class="s stock-input" type="number" min="0" value="${itemQty}" title="Stock"><span class="vendor-icon-group">${iconButton("stock", "fa-boxes-stacked", "Définir le stock", false, "stock")} ${iconButton("assign", "fa-gift", "Donner à l’acheteur", disabled, "assign")}</span></td>`
     : "";
-  return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td title="${esc(item.name)}">${esc(item.name)}</td><td title="${esc(kind)}">${esc(kind)}</td><td title="${esc(use.names.length ? use.names.join(", ") : "—")}">${esc(use.names.length ? use.names.join(", ") : "—")}</td><td>${esc(priceLabel(item))}</td><td>${quantity(item)}</td><td><input class="q" type="number" min="1" value="1"></td><td><button data-action="buy" title="Acheter" ${!ctx.buyer || quantity(item) <= 0 ? "disabled" : ""}>Acheter</button></td>${gm}</tr>`;
+  return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td class="col-article" title="${esc(item.name)}">${esc(item.name)}</td><td class="col-type" title="${esc(kind)}"><span class="type-pill">${esc(kind)}</span></td><td class="col-sorts" title="${esc(use.names.length ? use.names.join(", ") : "—")}">${esc(use.names.length ? use.names.join(", ") : "—")}</td><td class="col-prix">${esc(priceLabel(item))}</td><td class="col-stock">${itemQty}</td><td class="col-qty"><input class="q" type="number" min="1" value="1" title="Quantité"></td><td class="col-action">${iconButton("buy", "fa-cart-shopping", "Acheter", disabled, "buy")}</td>${gm}</tr>`;
 }
 
 function itemVisibleForContext(item, ctx, use) {
@@ -206,11 +212,11 @@ function itemVisibleForContext(item, ctx, use) {
 }
 
 function tableHeader(ctx) {
-  return `<thead><tr><th>Article</th><th>Type</th><th>Sorts</th><th>Prix</th><th>Stock</th><th>Qté</th><th></th>${ctx.isGM ? "<th>MJ</th>" : ""}</tr></thead>`;
+  return `<thead><tr><th class="col-article">Article</th><th class="col-type">Type</th><th class="col-sorts">Sorts</th><th class="col-prix">Prix</th><th class="col-stock">Stock</th><th class="col-qty">Qté</th><th class="col-action"></th>${ctx.isGM ? "<th class=\"col-mj\">MJ</th>" : ""}</tr></thead>`;
 }
 
 function renderFlatTable(ctx, rows) {
-  return `<div class="add2e-vendor-scroll"><table>${tableHeader(ctx)}<tbody>${rows}</tbody></table></div>`;
+  return `<div class="add2e-vendor-scroll"><table class="add2e-vendor-table">${tableHeader(ctx)}<tbody>${rows}</tbody></table></div>`;
 }
 
 function renderBazaarAccordion(ctx) {
@@ -230,19 +236,51 @@ function renderBazaarAccordion(ctx) {
   return `<div class="add2e-vendor-scroll add2e-vendor-bazaar-list">${sections.map(([section, entries]) => {
     entries.sort((a, b) => String(a.item.name).localeCompare(String(b.item.name)));
     const rows = entries.map(entry => rowHtml(entry.item, ctx, entry.use, true)).join("");
-    return `<details class="add2e-vendor-bazaar-section"><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table>${tableHeader(ctx)}<tbody>${rows}</tbody></table></details>`;
+    return `<details class="add2e-vendor-bazaar-section"><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table class="add2e-vendor-table">${tableHeader(ctx)}<tbody>${rows}</tbody></table></details>`;
   }).join("")}</div>`;
 }
 
 function vendorStyle() {
   return `<style>
-    .add2e-merchant-app .add2e-vendor-scroll{max-height:430px;overflow-y:auto;padding-right:6px;margin-top:6px;}
+    .add2e-merchant-app{background:linear-gradient(180deg,#f1d88e,#e3c36f);color:#30220d;}
+    .add2e-merchant-app section{background:linear-gradient(180deg,#f6e7b6,#e5c875);}
+    .add2e-merchant-app p{margin:.35rem 0 .45rem 0;padding:.35rem .5rem;border-radius:6px;background:rgba(255,250,230,.72);}
+    .add2e-merchant-app select.buyer,.add2e-merchant-app input.search{border:1px solid #8b611f;border-radius:6px;background:#fff9e7;color:#2d210f;font-weight:800;}
+    .add2e-merchant-app input.search{width:100%;box-sizing:border-box;margin:.35rem 0 .55rem 0;padding:.35rem .55rem;}
+    .add2e-merchant-app button[data-tab],.add2e-merchant-app button[data-action="restock"]{margin:0 .22rem .32rem 0;border:1px solid #8e611c;border-radius:7px;background:linear-gradient(180deg,#82581a,#5b3608);color:#ffe9aa;font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.16);}
+    .add2e-merchant-app button[data-tab]:hover,.add2e-merchant-app button[data-action="restock"]:hover{filter:brightness(1.12);}
+    .add2e-merchant-app .add2e-vendor-scroll{max-height:430px;overflow-y:auto;padding-right:6px;margin-top:6px;scrollbar-color:#7a0245 #dfc46f;}
     .add2e-merchant-app .add2e-vendor-bazaar-list{display:block;width:100%;}
     .add2e-merchant-app .add2e-vendor-bazaar-section{display:block;width:100%;box-sizing:border-box;margin:0 0 8px 0;border:1px solid rgba(80,60,25,.45);border-radius:8px;background:rgba(255,240,190,.18);overflow:hidden;}
-    .add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;width:100%;box-sizing:border-box;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;background:#2d2413;color:#ffe4a1;font-weight:900;list-style:revert;}
+    .add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;width:100%;box-sizing:border-box;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;background:linear-gradient(90deg,#2d2413,#4c310c);color:#ffe4a1;font-weight:900;list-style:revert;}
     .add2e-merchant-app .add2e-vendor-bazaar-section>summary strong{border:1px solid rgba(255,228,161,.45);border-radius:999px;padding:1px 8px;background:rgba(0,0,0,.22);}
     .add2e-merchant-app .add2e-vendor-bazaar-section:not([open]) table{display:none;}
     .add2e-merchant-app .add2e-vendor-bazaar-section table{margin:0;width:100%;}
+    .add2e-merchant-app .add2e-vendor-table{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff7dc;}
+    .add2e-merchant-app .add2e-vendor-table thead th{position:sticky;top:0;z-index:1;background:linear-gradient(180deg,#6f4309,#4e2d04);color:#ffe8a7;text-transform:uppercase;font-size:.78em;letter-spacing:.03em;padding:.32rem .45rem;}
+    .add2e-merchant-app .add2e-vendor-table tbody tr:nth-child(odd){background:#fff9e8;}
+    .add2e-merchant-app .add2e-vendor-table tbody tr:nth-child(even){background:#f4e9c8;}
+    .add2e-merchant-app .add2e-vendor-table tbody tr:hover{background:#ffe7a4;}
+    .add2e-merchant-app .add2e-vendor-table td{padding:.22rem .42rem;border-bottom:1px solid rgba(115,83,27,.22);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
+    .add2e-merchant-app .col-article{width:31%;font-weight:900;}
+    .add2e-merchant-app .col-type{width:11%;}
+    .add2e-merchant-app .col-sorts{width:6%;max-width:6%;text-align:center;color:#69522a;}
+    .add2e-merchant-app .col-prix{width:8%;font-weight:900;color:#4f3207;}
+    .add2e-merchant-app .col-stock{width:6%;text-align:center;font-weight:900;}
+    .add2e-merchant-app .col-qty{width:6%;text-align:center;}
+    .add2e-merchant-app .col-action{width:5%;text-align:center;}
+    .add2e-merchant-app .col-mj{width:17%;text-align:right;}
+    .add2e-merchant-app .type-pill{display:inline-flex;max-width:100%;padding:1px 7px;border-radius:999px;background:#ead088;color:#352408;font-size:.86em;font-weight:900;overflow:hidden;text-overflow:ellipsis;}
+    .add2e-merchant-app .q,.add2e-merchant-app .s{height:24px;min-height:24px;text-align:center;border:1px solid #b9822d;border-radius:6px;background:#fffdf0;color:#2d210f;font-weight:900;}
+    .add2e-merchant-app .q{width:42px;}
+    .add2e-merchant-app .stock-input{width:52px;margin-right:4px;}
+    .add2e-merchant-app .vendor-icon-group{display:inline-flex;gap:4px;vertical-align:middle;}
+    .add2e-merchant-app .add2e-vendor-icon-btn{width:28px;height:26px;min-width:28px;padding:0;border:1px solid #8d611c;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#f7e0a0,#c98c2d);color:#241404;font-weight:900;box-shadow:0 1px 2px rgba(0,0,0,.18);}
+    .add2e-merchant-app .add2e-vendor-icon-btn.buy{background:linear-gradient(180deg,#79c58b,#228449);color:#061e0d;border-color:#1e6e3a;}
+    .add2e-merchant-app .add2e-vendor-icon-btn.stock{background:linear-gradient(180deg,#f6d17b,#c07a14);}
+    .add2e-merchant-app .add2e-vendor-icon-btn.assign{background:linear-gradient(180deg,#8bb8ff,#2f69b8);color:#06162d;border-color:#25599d;}
+    .add2e-merchant-app .add2e-vendor-icon-btn:disabled{opacity:.42;filter:grayscale(.5);cursor:not-allowed;}
+    .add2e-merchant-app .add2e-vendor-icon-btn:not(:disabled):hover{filter:brightness(1.12);transform:translateY(-1px);}
   </style>`;
 }
 
@@ -317,7 +355,7 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
 
     const buyer = ctx.isGM ? `<select class="buyer">${buyerOptions(ctx.buyer?.id)}</select>` : `<b>${esc(ctx.buyer?.name ?? "aucun")}</b>`;
     const div = document.createElement("section");
-    div.innerHTML = `${vendorStyle()}<p><span>Acheteur :</span> ${buyer} <strong>${ctx.buyer ? esc(formatMoney(getMoney(ctx.buyer))) : ""}</strong></p><div>${nav}${ctx.isGM ? `<button data-action="restock">Restock global</button>` : ""}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche">${list}`;
+    div.innerHTML = `${vendorStyle()}<p><span>Acheteur :</span> ${buyer} <strong>${ctx.buyer ? esc(formatMoney(getMoney(ctx.buyer))) : ""}</strong></p><div>${nav}${ctx.isGM ? `<button data-action="restock" title="Restock global"><i class="fas fa-rotate"></i></button>` : ""}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche">${list}`;
     return div;
   }
 
