@@ -4,7 +4,7 @@
 
 Préparer les sorts pour une future génération d'objets magiques sans modifier immédiatement les exports Foundry.
 
-Un objet magique ne doit pas copier aveuglément un script `onUse`. Il doit réutiliser un effet identifié dans la référence du sort, avec ses limites, sa cible, sa durée, ses tags et son niveau d'automatisation.
+Un objet magique ne doit pas copier aveuglément un script `onUse`. Il doit réutiliser un effet identifié dans la référence du sort, avec ses limites, ses tags et son niveau d'automatisation.
 
 ## Portée initiale
 
@@ -36,34 +36,57 @@ ou, si une contrainte technique apparaît plus tard :
 
 Le choix recommandé reste `system.effectProfile`, car il s'agit d'une donnée métier du système ADD2E.
 
-## Structure cible
+## Principe d'héritage
+
+Le profil d'effet ne répète pas les champs déjà présents dans la référence principale.
+
+Les champs suivants sont hérités depuis `audit/reference/manuel-joueurs-clerc-niveau-1.json` :
+
+- `ordre`
+- `nom`
+- `niveau`
+- `portee`
+- `duree`
+- `zone_effet`
+- `composantes`
+- `temps_incantation`
+- `jet_sauvegarde`
+- `description`
+
+Le profil ne définit une surcharge que si l'effet diffère réellement du sort principal :
+
+- `durationOverride`
+- `targetOverride`
+
+Exemples :
+
+- l'inverse `Ténèbres` de `Lumière` utilise `durationOverride`, car sa durée est la moitié de celle du sort normal ;
+- l'effet offensif `Aveuglement par lumière` utilise `targetOverride`, car il vise spécifiquement les yeux ou le visage d'une créature ;
+- `Soins mineurs` n'a pas besoin de répéter `portee`, `duree` ou `zone_effet`, car ces champs sont identiques à la référence principale.
+
+## Structure cible allégée
 
 ```json
-"effectProfile": {
-  "version": "2026-06-16-add2e-effect-profile-v1",
-  "source": "codex_reference",
-  "exportTarget": "system.effectProfile",
+{
   "sourceSpellSlug": "benediction",
   "effects": [
     {
-      "id": "benediction_bonus_moral_toucher",
+      "id": "bonus_moral_toucher",
       "label": "Bénédiction",
       "kind": "active_bonus",
-      "target": "creatures_amicales_zone",
-      "duration": {
-        "raw": "6 rounds"
-      },
+      "targetOverride": "creatures_amicales_zone_non_engagees",
       "automation": "active_effect_or_mj_aid",
       "tags": [
         "effet:benediction",
         "bonus:moral:1",
-        "bonus:toucher:1"
+        "bonus:toucher:1",
+        "condition:non_engage_combat"
       ],
       "objectMagic": {
         "allowed": true,
         "defaultActivation": "activation",
         "defaultChargeCost": 1,
-        "notes": "Objet possible si les limites du sort sont respectées."
+        "notes": "Respecter la condition des cibles non engagées."
       }
     }
   ]
@@ -72,11 +95,12 @@ Le choix recommandé reste `system.effectProfile`, car il s'agit d'une donnée m
 
 ## Règles de remplissage
 
-- `id` doit rester stable, en minuscules sans accents.
+- `sourceSpellSlug` relie le profil à la référence principale.
+- `id` est local au sort ; il ne répète pas le slug du sort.
 - `label` est lisible par le MJ.
 - `kind` classe l'effet sans imposer une automatisation.
-- `target` décrit la cible selon la règle du sort, pas selon une UI future inventée.
-- `duration.raw` conserve la durée textuelle de la référence.
+- `targetOverride` est absent si la cible du sort principal suffit.
+- `durationOverride` est absent si la durée du sort principal suffit.
 - `automation` indique le niveau de traitement possible.
 - `tags` préparent la mécanique future mais ne doivent pas déclencher de cumul automatique tant qu'un moteur centralisé ne les lit pas.
 - `objectMagic.allowed` indique si un générateur d'objet magique pourra proposer cet effet.
@@ -110,7 +134,7 @@ Le générateur devra :
   "name": "Bénédiction",
   "mode": "spell_effect",
   "linkedSpellSlug": "benediction",
-  "linkedSpellEffectId": "benediction_bonus_moral_toucher",
+  "linkedSpellEffectId": "bonus_moral_toucher",
   "activation": "activation",
   "chargeCost": 1,
   "onUseSource": "linked_spell_effect",
