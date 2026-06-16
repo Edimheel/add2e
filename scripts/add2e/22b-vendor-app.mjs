@@ -1,5 +1,5 @@
 // ADD2E — Marchand V2 compact.
-// Version : 2026-06-16-merchant-compact-icon-buttons-v4
+// Version : 2026-06-16-merchant-sober-visual-redesign-v5
 
 import {
   findVendor,
@@ -25,7 +25,7 @@ import {
 } from "./22a-vendor-core.mjs";
 import { normalizeShopCurrency, ADD2E_VENDOR_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-16-merchant-compact-icon-buttons-v4";
+const VERSION = "2026-06-16-merchant-sober-visual-redesign-v5";
 const DIAG = "[ADD2E][MERCHANT_APP][BUY_DIAG]";
 
 const arr = v => Array.isArray(v)
@@ -200,7 +200,7 @@ function rowHtml(item, ctx, use, visible = true) {
   const itemQty = quantity(item);
   const disabled = !ctx.buyer || itemQty <= 0;
   const gm = ctx.isGM
-    ? `<td class="col-mj add2e-vendor-gm-actions"><input class="s stock-input" type="number" min="0" value="${itemQty}" title="Stock"><span class="vendor-icon-group">${iconButton("stock", "fa-boxes-stacked", "Définir le stock", false, "stock")} ${iconButton("assign", "fa-gift", "Donner à l’acheteur", disabled, "assign")}</span></td>`
+    ? `<td class="col-mj add2e-vendor-gm-actions"><input class="s stock-input" type="number" min="0" value="${itemQty}" title="Stock"><span class="vendor-icon-group">${iconButton("stock", "fa-boxes-stacked", "Définir le stock", false, "stock")} ${iconButton("assign", "fa-hand-holding", "Donner à l’acheteur", disabled, "assign")}</span></td>`
     : "";
   return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td class="col-article" title="${esc(item.name)}">${esc(item.name)}</td><td class="col-type" title="${esc(kind)}"><span class="type-pill">${esc(kind)}</span></td><td class="col-sorts" title="${esc(use.names.length ? use.names.join(", ") : "—")}">${esc(use.names.length ? use.names.join(", ") : "—")}</td><td class="col-prix">${esc(priceLabel(item))}</td><td class="col-stock">${itemQty}</td><td class="col-qty"><input class="q" type="number" min="1" value="1" title="Quantité"></td><td class="col-action">${iconButton("buy", "fa-cart-shopping", "Acheter", disabled, "buy")}</td>${gm}</tr>`;
 }
@@ -242,45 +242,48 @@ function renderBazaarAccordion(ctx) {
 
 function vendorStyle() {
   return `<style>
-    .add2e-merchant-app{background:linear-gradient(180deg,#f1d88e,#e3c36f);color:#30220d;}
-    .add2e-merchant-app section{background:linear-gradient(180deg,#f6e7b6,#e5c875);}
-    .add2e-merchant-app p{margin:.35rem 0 .45rem 0;padding:.35rem .5rem;border-radius:6px;background:rgba(255,250,230,.72);}
-    .add2e-merchant-app select.buyer,.add2e-merchant-app input.search{border:1px solid #8b611f;border-radius:6px;background:#fff9e7;color:#2d210f;font-weight:800;}
-    .add2e-merchant-app input.search{width:100%;box-sizing:border-box;margin:.35rem 0 .55rem 0;padding:.35rem .55rem;}
-    .add2e-merchant-app button[data-tab],.add2e-merchant-app button[data-action="restock"]{margin:0 .22rem .32rem 0;border:1px solid #8e611c;border-radius:7px;background:linear-gradient(180deg,#82581a,#5b3608);color:#ffe9aa;font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.16);}
-    .add2e-merchant-app button[data-tab]:hover,.add2e-merchant-app button[data-action="restock"]:hover{filter:brightness(1.12);}
-    .add2e-merchant-app .add2e-vendor-scroll{max-height:430px;overflow-y:auto;padding-right:6px;margin-top:6px;scrollbar-color:#7a0245 #dfc46f;}
+    .add2e-merchant-app{--a2e-bg:#e7d29a;--a2e-panel:#f4e8c4;--a2e-paper:#fff9e9;--a2e-line:rgba(92,62,20,.22);--a2e-brown:#3b2a12;--a2e-brown2:#5a3b13;--a2e-gold:#c99a3b;--a2e-gold2:#f1d88e;--a2e-text:#2b2113;background:#e7d29a;color:var(--a2e-text);}
+    .add2e-merchant-app section{background:linear-gradient(180deg,#f0dfab 0%,#e4c985 100%);padding:0 .65rem .65rem .65rem;}
+    .add2e-merchant-app p{margin:.45rem 0 .5rem 0;padding:.42rem .6rem;border:1px solid rgba(110,76,23,.22);border-radius:8px;background:rgba(255,250,236,.76);box-shadow:inset 0 1px 0 rgba(255,255,255,.45);}
+    .add2e-merchant-app select.buyer,.add2e-merchant-app input.search{border:1px solid rgba(88,56,13,.45);border-radius:7px;background:#fffbf0;color:#2d210f;font-weight:800;box-shadow:inset 0 1px 2px rgba(0,0,0,.08);}
+    .add2e-merchant-app input.search{width:100%;box-sizing:border-box;margin:.35rem 0 .6rem 0;padding:.4rem .6rem;}
+    .add2e-merchant-app button[data-tab],.add2e-merchant-app button[data-action="restock"]{height:28px;margin:0 .22rem .38rem 0;padding:0 .7rem;border:1px solid rgba(81,52,16,.42);border-radius:7px;background:linear-gradient(180deg,#6a4518,#49300f);color:#f8e7b4;font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 1px 2px rgba(0,0,0,.16);}
+    .add2e-merchant-app button[data-action="restock"]{width:34px;padding:0;}
+    .add2e-merchant-app button[data-tab]:hover,.add2e-merchant-app button[data-action="restock"]:hover{background:linear-gradient(180deg,#7d541f,#523613);}
+    .add2e-merchant-app button[data-tab][style*="outline"]{background:linear-gradient(180deg,#d8ad56,#9a6d23)!important;color:#201506;outline:2px solid rgba(255,255,255,.9)!important;}
+    .add2e-merchant-app .add2e-vendor-scroll{max-height:420px;overflow-y:auto;padding-right:6px;margin-top:6px;scrollbar-color:#6b2147 #dfc884;}
     .add2e-merchant-app .add2e-vendor-bazaar-list{display:block;width:100%;}
-    .add2e-merchant-app .add2e-vendor-bazaar-section{display:block;width:100%;box-sizing:border-box;margin:0 0 8px 0;border:1px solid rgba(80,60,25,.45);border-radius:8px;background:rgba(255,240,190,.18);overflow:hidden;}
-    .add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;width:100%;box-sizing:border-box;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;background:linear-gradient(90deg,#2d2413,#4c310c);color:#ffe4a1;font-weight:900;list-style:revert;}
-    .add2e-merchant-app .add2e-vendor-bazaar-section>summary strong{border:1px solid rgba(255,228,161,.45);border-radius:999px;padding:1px 8px;background:rgba(0,0,0,.22);}
+    .add2e-merchant-app .add2e-vendor-bazaar-section{display:block;width:100%;box-sizing:border-box;margin:0 0 8px 0;border:1px solid rgba(76,51,16,.32);border-radius:9px;background:rgba(255,248,226,.56);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.10);}
+    .add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;width:100%;box-sizing:border-box;align-items:center;justify-content:space-between;gap:12px;padding:8px 11px;background:linear-gradient(180deg,#4a3418,#33240f);color:#f4dc9d;font-weight:900;list-style:revert;}
+    .add2e-merchant-app .add2e-vendor-bazaar-section>summary:hover{background:linear-gradient(180deg,#5b3d1b,#3a2912);}
+    .add2e-merchant-app .add2e-vendor-bazaar-section>summary strong{min-width:24px;text-align:center;border:1px solid rgba(244,220,157,.35);border-radius:999px;padding:1px 8px;background:rgba(0,0,0,.18);font-size:.9em;}
     .add2e-merchant-app .add2e-vendor-bazaar-section:not([open]) table{display:none;}
     .add2e-merchant-app .add2e-vendor-bazaar-section table{margin:0;width:100%;}
-    .add2e-merchant-app .add2e-vendor-table{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff7dc;}
-    .add2e-merchant-app .add2e-vendor-table thead th{position:sticky;top:0;z-index:1;background:linear-gradient(180deg,#6f4309,#4e2d04);color:#ffe8a7;text-transform:uppercase;font-size:.78em;letter-spacing:.03em;padding:.32rem .45rem;}
-    .add2e-merchant-app .add2e-vendor-table tbody tr:nth-child(odd){background:#fff9e8;}
-    .add2e-merchant-app .add2e-vendor-table tbody tr:nth-child(even){background:#f4e9c8;}
-    .add2e-merchant-app .add2e-vendor-table tbody tr:hover{background:#ffe7a4;}
-    .add2e-merchant-app .add2e-vendor-table td{padding:.22rem .42rem;border-bottom:1px solid rgba(115,83,27,.22);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
-    .add2e-merchant-app .col-article{width:31%;font-weight:900;}
-    .add2e-merchant-app .col-type{width:11%;}
-    .add2e-merchant-app .col-sorts{width:6%;max-width:6%;text-align:center;color:#69522a;}
-    .add2e-merchant-app .col-prix{width:8%;font-weight:900;color:#4f3207;}
+    .add2e-merchant-app .add2e-vendor-table{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff7df;border:1px solid rgba(88,60,22,.16);}
+    .add2e-merchant-app .add2e-vendor-table thead th{position:sticky;top:0;z-index:1;background:#5a3a12;color:#f5e1a9;text-transform:uppercase;font-size:.74em;letter-spacing:.04em;padding:.34rem .42rem;border-bottom:1px solid rgba(0,0,0,.22);}
+    .add2e-merchant-app .add2e-vendor-table tbody tr:nth-child(odd){background:#fffaf0;}
+    .add2e-merchant-app .add2e-vendor-table tbody tr:nth-child(even){background:#f6edcf;}
+    .add2e-merchant-app .add2e-vendor-table tbody tr:hover{background:#f3dda2;}
+    .add2e-merchant-app .add2e-vendor-table td{padding:.24rem .42rem;border-bottom:1px solid rgba(99,70,24,.16);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;}
+    .add2e-merchant-app .col-article{width:35%;font-weight:900;}
+    .add2e-merchant-app .col-type{width:10%;}
+    .add2e-merchant-app .col-sorts{width:5%;max-width:5%;text-align:center;color:#6d5c3c;font-size:.88em;}
+    .add2e-merchant-app .col-prix{width:8%;font-weight:900;color:#4d3107;}
     .add2e-merchant-app .col-stock{width:6%;text-align:center;font-weight:900;}
     .add2e-merchant-app .col-qty{width:6%;text-align:center;}
     .add2e-merchant-app .col-action{width:5%;text-align:center;}
-    .add2e-merchant-app .col-mj{width:17%;text-align:right;}
-    .add2e-merchant-app .type-pill{display:inline-flex;max-width:100%;padding:1px 7px;border-radius:999px;background:#ead088;color:#352408;font-size:.86em;font-weight:900;overflow:hidden;text-overflow:ellipsis;}
-    .add2e-merchant-app .q,.add2e-merchant-app .s{height:24px;min-height:24px;text-align:center;border:1px solid #b9822d;border-radius:6px;background:#fffdf0;color:#2d210f;font-weight:900;}
+    .add2e-merchant-app .col-mj{width:15%;text-align:right;}
+    .add2e-merchant-app .type-pill{display:inline-flex;max-width:100%;padding:1px 7px;border:1px solid rgba(96,67,25,.16);border-radius:999px;background:#ead79b;color:#352408;font-size:.82em;font-weight:900;overflow:hidden;text-overflow:ellipsis;}
+    .add2e-merchant-app .q,.add2e-merchant-app .s{height:23px;min-height:23px;text-align:center;border:1px solid rgba(120,82,28,.42);border-radius:6px;background:#fffdf2;color:#2d210f;font-weight:900;}
     .add2e-merchant-app .q{width:42px;}
-    .add2e-merchant-app .stock-input{width:52px;margin-right:4px;}
-    .add2e-merchant-app .vendor-icon-group{display:inline-flex;gap:4px;vertical-align:middle;}
-    .add2e-merchant-app .add2e-vendor-icon-btn{width:28px;height:26px;min-width:28px;padding:0;border:1px solid #8d611c;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#f7e0a0,#c98c2d);color:#241404;font-weight:900;box-shadow:0 1px 2px rgba(0,0,0,.18);}
-    .add2e-merchant-app .add2e-vendor-icon-btn.buy{background:linear-gradient(180deg,#79c58b,#228449);color:#061e0d;border-color:#1e6e3a;}
-    .add2e-merchant-app .add2e-vendor-icon-btn.stock{background:linear-gradient(180deg,#f6d17b,#c07a14);}
-    .add2e-merchant-app .add2e-vendor-icon-btn.assign{background:linear-gradient(180deg,#8bb8ff,#2f69b8);color:#06162d;border-color:#25599d;}
-    .add2e-merchant-app .add2e-vendor-icon-btn:disabled{opacity:.42;filter:grayscale(.5);cursor:not-allowed;}
-    .add2e-merchant-app .add2e-vendor-icon-btn:not(:disabled):hover{filter:brightness(1.12);transform:translateY(-1px);}
+    .add2e-merchant-app .stock-input{width:48px;margin-right:5px;}
+    .add2e-merchant-app .vendor-icon-group{display:inline-flex;gap:5px;vertical-align:middle;}
+    .add2e-merchant-app .add2e-vendor-icon-btn{width:26px;height:24px;min-width:26px;padding:0;border:1px solid rgba(82,55,16,.38);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:#f4e2ad;color:#38250b;font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 1px 1px rgba(0,0,0,.12);}
+    .add2e-merchant-app .add2e-vendor-icon-btn.buy{background:#dcebcf;color:#18421f;border-color:rgba(41,98,48,.35);}
+    .add2e-merchant-app .add2e-vendor-icon-btn.stock{background:#ead79b;color:#3a270b;}
+    .add2e-merchant-app .add2e-vendor-icon-btn.assign{background:#d7e1ee;color:#17314e;border-color:rgba(45,80,115,.35);}
+    .add2e-merchant-app .add2e-vendor-icon-btn:disabled{opacity:.36;filter:grayscale(.45);cursor:not-allowed;}
+    .add2e-merchant-app .add2e-vendor-icon-btn:not(:disabled):hover{filter:brightness(1.05);transform:translateY(-1px);}
   </style>`;
 }
 
