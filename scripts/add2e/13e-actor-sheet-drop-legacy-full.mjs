@@ -1,12 +1,12 @@
 // ADD2E — Actor sheet drop — implémentation compacte legacy
-// Version : 2026-06-15-actor-drop-split-compact-v1
+// Version : 2026-06-16-actor-drop-projectile-normalize-before-create-v1
 //
 // Ce fichier remplace l'ancien 13e monolithique par une implémentation plus courte.
 // Le fichier 13e-actor-sheet-drop.mjs reste un chargeur court.
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-15-actor-drop-split-compact-v1";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-16-actor-drop-projectile-normalize-before-create-v1";
 globalThis.ADD2E_ACTOR_SHEET_DROP_VERSION = ADD2E_ACTOR_SHEET_DROP_VERSION;
 console.log("[ADD2E][DROP][VERSION]", ADD2E_ACTOR_SHEET_DROP_VERSION);
 
@@ -18,9 +18,10 @@ function add2eDropClone(value) {
 }
 
 function add2eDropArray(value) {
-  if (Array.isArray(value)) return value;
-  if (value === null || value === undefined) return [];
-  if (typeof value === "string") return value.split(/[,;|]/g).map(v => v.trim()).filter(Boolean);
+  if (Array.isArray(value)) return value.flatMap(add2eDropArray).filter(v => v !== null && v !== undefined && String(v).trim() !== "");
+  if (value === null || value === undefined || value === "") return [];
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(v => v.trim()).filter(Boolean);
+  if (typeof value === "object") return Object.values(value).flatMap(add2eDropArray).filter(v => v !== null && v !== undefined && String(v).trim() !== "");
   return [value];
 }
 
@@ -102,6 +103,144 @@ function add2eDropIsBoutiqueConsumable(item) {
     || tags.includes("trait:munition")
     || tags.some(t => t.startsWith("composant:"))
     || flags.purchasedFromVendor === true;
+}
+
+function add2eDropSlug(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9:]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eDropItemTextFields(itemData) {
+  const sys = itemData?.system ?? {};
+  const flags = itemData?.flags?.add2e ?? {};
+  return [
+    itemData?.type,
+    itemData?.name,
+    sys.nom,
+    sys.categorie,
+    sys.category,
+    sys.type,
+    sys.sousType,
+    sys.sous_type,
+    sys.subtype,
+    sys.kind,
+    sys.slot,
+    sys.type_arme,
+    sys.famille_arme,
+    sys.munitionType,
+    sys.munition_type,
+    sys.tags,
+    sys.effectTags,
+    sys.effecttags,
+    flags.tags,
+    flags.effectTags,
+    flags.effecttags,
+    flags.kind,
+    flags.vendorKind,
+    flags.category,
+    flags.categorie,
+    flags.type,
+    flags.sousType,
+    flags.sous_type
+  ].flatMap(add2eDropArray).map(add2eDropSlug).filter(Boolean);
+}
+
+function add2eDropAmmoName(value) {
+  const text = add2eDropSlug(value);
+  return /(^|_)(fleche|fleches|carreau|carreaux|trait|traits|bille|billes|pierre_de_fronde|pierres_de_fronde)(_|$)/.test(text);
+}
+
+function add2eDropAmmoType(itemData) {
+  const fields = add2eDropItemTextFields(itemData);
+  const joined = fields.join(" ");
+  const explicit = add2eDropSlug(itemData?.system?.munitionType ?? itemData?.system?.munition_type ?? itemData?.system?.sousType ?? itemData?.system?.sous_type ?? "");
+  if (explicit && !["munition", "munitions", "projectile", "projectiles"].includes(explicit)) return explicit;
+  if (/(^|_)(carreau|carreaux)(_|$)/.test(joined)) return "carreau";
+  if (/(^|_)(bille|billes|pierre_de_fronde|pierres_de_fronde)(_|$)/.test(joined)) return "bille";
+  if (/(^|_)(trait|traits)(_|$)/.test(joined)) return "trait";
+  if (/(^|_)(fleche|fleches)(_|$)/.test(joined)) return "fleche";
+  return "projectile";
+}
+
+function add2eDropIsThrownWeapon(itemData) {
+  if (String(itemData?.type ?? "").toLowerCase() !== "arme") return false;
+  if (add2eDropAmmoName(itemData?.name)) return false;
+  const sys = itemData?.system ?? {};
+  const fields = add2eDropItemTextFields(itemData);
+  const name = add2eDropSlug(itemData?.name);
+  return sys.arme_de_jet === true
+    || sys.jet === true
+    || fields.some(field => ["arme_de_jet", "usage_lancer", "usage:lancer", "usage_jet", "arme:jet", "type_arme:jet", "type_arme:arme_de_jet"].includes(field))
+    || /(dague|poignard|javelot|javeline|hache_de_jet|marteau_de_jet|couteau_de_jet|lance)/.test(name);
+}
+
+function add2eDropLooksLikeProjectile(itemData) {
+  if (!itemData) return false;
+  const documentType = String(itemData.type ?? "").toLowerCase();
+  if (!["arme", "objet"].includes(documentType)) return false;
+  if (add2eDropIsThrownWeapon(itemData)) return false;
+  const fields = add2eDropItemTextFields(itemData);
+  if (add2eDropAmmoName(itemData.name)) return true;
+  return fields.some(field =>
+    field === "munition" ||
+    field === "munitions" ||
+    field === "projectile" ||
+    field === "projectiles" ||
+    field === "ammo" ||
+    field === "ammunition" ||
+    field === "trait:munition" ||
+    field === "trait:projectile" ||
+    field === "categorie:munition" ||
+    field === "categorie:projectile" ||
+    field === "type:munition" ||
+    field === "type:projectile" ||
+    field === "type_arme:munition" ||
+    field.startsWith("munition:") ||
+    field.startsWith("projectile:")
+  );
+}
+
+function add2eDropNormalizeProjectileItemData(itemData) {
+  if (!add2eDropLooksLikeProjectile(itemData)) return itemData;
+  const data = add2eDropClone(itemData);
+  const ammoType = add2eDropAmmoType(data);
+  data.type = "objet";
+  data.system = data.system ?? {};
+  data.flags = data.flags ?? {};
+  data.flags.add2e = data.flags.add2e ?? {};
+
+  const tags = new Set([
+    ...add2eDropArray(data.system.tags),
+    ...add2eDropArray(data.system.effectTags),
+    ...add2eDropArray(data.flags.add2e.tags),
+    "munition",
+    "projectile",
+    "trait:munition",
+    `munition:${ammoType}`,
+    `projectile:${ammoType}`
+  ].map(String).filter(Boolean));
+
+  data.system.categorie = "munition";
+  data.system.category = "munition";
+  data.system.type = "munition";
+  data.system.sousType = ammoType;
+  data.system.sous_type = ammoType;
+  data.system.munitionType = ammoType;
+  data.system.munition_type = ammoType;
+  data.system.tags = [...tags];
+  data.flags.add2e.kind = "projectile";
+  data.flags.add2e.vendorKind = "projectile";
+  data.flags.add2e.category = "munition";
+  data.flags.add2e.projectile = true;
+  data.flags.add2e.ammunition = true;
+  data.flags.add2e.sourceItemType = String(itemData.type ?? "");
+  data.flags.add2e.tags = [...tags];
+  return data;
 }
 
 function add2eShouldDeleteEffectForClassPurgeSafe(effect, itemsToDelete) {
@@ -273,6 +412,42 @@ async function add2eDropApplyItemEffects(actor, itemDoc) {
   if (actorEffects.length) await actor.createEmbeddedDocuments("ActiveEffect", actorEffects, { add2eInternal: true });
 }
 
+function add2eDropGetRoot(sheet) {
+  const element = sheet?.element;
+  if (!element) return null;
+  return element.jquery ? element[0] : element;
+}
+
+function add2eDropIsItemDrag(event) {
+  try {
+    const raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}");
+    return raw?.type === "Item";
+  } catch (_e) {
+    return false;
+  }
+}
+
+function add2eBindDropAnywhere(sheet) {
+  const root = add2eDropGetRoot(sheet);
+  if (!root || root.dataset.add2eDropAnywhereBound === "1") return;
+  root.dataset.add2eDropAnywhereBound = "1";
+
+  root.addEventListener("dragover", event => {
+    if (!add2eDropIsItemDrag(event)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  }, true);
+
+  root.addEventListener("drop", async event => {
+    if (!add2eDropIsItemDrag(event)) return;
+    if (event.__add2eDropAnywhereHandled) return;
+    event.__add2eDropAnywhereHandled = true;
+    event.preventDefault();
+    event.stopPropagation();
+    await sheet._onDrop(event);
+  }, true);
+}
+
 globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
   event.preventDefault?.();
   event.stopPropagation?.();
@@ -292,6 +467,8 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
     console.warn("[ADD2E] _onDrop impossible de reconstruire itemData", raw);
     return false;
   }
+
+  itemData = add2eDropNormalizeProjectileItemData(itemData);
 
   const VALID = ["arme", "armure", "sort", "classe", "race", "objet"];
   if (!VALID.includes(itemData.type)) return false;
@@ -351,7 +528,18 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
   return true;
 };
 
+if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundV1) {
+  globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundV1 = true;
+  const previousOnRender = globalThis.Add2eActorSheet.prototype._onRender;
+  globalThis.Add2eActorSheet.prototype._onRender = async function add2eDropAnywhereOnRender(context, options = {}) {
+    const result = await previousOnRender.call(this, context, options);
+    add2eBindDropAnywhere(this);
+    return result;
+  };
+}
+
 try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_e) {}
 try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_e) {}
 try { globalThis.add2eDropIsBoutiqueConsumable = add2eDropIsBoutiqueConsumable; } catch (_e) {}
 try { globalThis.add2eDropLearnSpellListOnExisting = add2eDropLearnSpellListOnExisting; } catch (_e) {}
+try { globalThis.add2eDropNormalizeProjectileItemData = add2eDropNormalizeProjectileItemData; } catch (_e) {}
