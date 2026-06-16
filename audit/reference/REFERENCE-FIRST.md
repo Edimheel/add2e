@@ -43,7 +43,28 @@ Chaque sort de reference doit contenir, autant que possible :
 - `description`
 - `notes_regles`
 - `onuse_strategy`
+- `effectProfile`
 - `status`
+
+## effectProfile
+
+`effectProfile` est une donnee de reference preparatoire. Elle decrit les effets mecaniques qu'un sort peut produire sans modifier immediatement les exports Foundry.
+
+Le champ doit rester dans le codex tant que le modele n'est pas stabilise. Le transfert vers les items Foundry se fera plus tard, de preference vers `system.effectProfile`, par importeur ou macro de synchronisation dediee.
+
+Un `effectProfile` doit pouvoir indiquer :
+
+- un identifiant stable d'effet ;
+- un libelle lisible ;
+- le type d'effet : bonus, malus, soin, degat, detection, lumiere, resistance, controle, protection, creation de ressource ;
+- la cible ;
+- la duree ;
+- les tags techniques non destructifs ;
+- le niveau d'automatisation retenu ;
+- si l'effet est reutilisable par un futur generateur d'objet magique ;
+- les limites qui doivent rester arbitrees par le MJ.
+
+Un `effectProfile` ne doit pas inventer une mecanique absente du Manuel. Quand l'automatisation est incertaine, le champ doit marquer l'effet comme aide MJ plutot que comme application automatique.
 
 ## Regle de patch JSON
 
@@ -53,7 +74,8 @@ Un patch JSON peut ajouter ou corriger :
 - les champs vides ;
 - les chemins `onUse`, `onuse`, `on_use` ;
 - les composants si la reference est complete ;
-- les tags techniques non destructifs.
+- les tags techniques non destructifs ;
+- `effectProfile` seulement quand le profil d'effet a ete valide dans le codex.
 
 Un patch JSON ne doit jamais ecraser :
 
