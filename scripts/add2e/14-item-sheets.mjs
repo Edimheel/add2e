@@ -1,4 +1,4 @@
-const ADD2E_ITEM_SHEETS_VERSION = "2026-05-24-item-sheets-application-v2-layout-v2";
+const ADD2E_ITEM_SHEETS_VERSION = "2026-06-16-item-sheets-sort-canonical-display-v1";
 globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -88,6 +88,75 @@ function add2eToArrayForSheet(value) {
   if (typeof value === "object") return Object.values(value).filter(v => v !== undefined && v !== null && String(v).trim() !== "");
   if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
   return [];
+}
+
+function add2eIsFilledSheetValue(value) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value).length > 0;
+  return true;
+}
+
+function add2eSheetGetProperty(source, path) {
+  if (!source || !path) return undefined;
+  try {
+    if (foundry?.utils?.getProperty) return foundry.utils.getProperty(source, path);
+  } catch (_err) {}
+  const parts = String(path).split(".");
+  let cur = source;
+  for (const part of parts) {
+    if (cur === undefined || cur === null) return undefined;
+    cur = cur[part];
+  }
+  return cur;
+}
+
+function add2eFormatSheetFieldValue(value) {
+  if (!add2eIsFilledSheetValue(value)) return "";
+  if (Array.isArray(value)) return value.map(v => add2eFormatSheetFieldValue(v)).filter(Boolean).join(", ");
+  if (typeof value === "object") {
+    const raw = value.raw ?? value.texte ?? value.text ?? value.label ?? value.nom ?? value.name;
+    if (add2eIsFilledSheetValue(raw)) return String(raw).trim();
+    const valeur = value.valeur ?? value.value ?? value.nombre ?? value.number ?? "";
+    const unite = value.unite ?? value.unit ?? "";
+    const joined = `${valeur ?? ""}${unite ? ` ${unite}` : ""}`.trim();
+    if (joined) return joined;
+    return Object.values(value).map(v => add2eFormatSheetFieldValue(v)).filter(Boolean).join(", ");
+  }
+  return String(value).trim();
+}
+
+function add2eFirstSheetField(system, aliases, fallback = "") {
+  for (const alias of aliases) {
+    const value = add2eSheetGetProperty(system, alias);
+    if (add2eIsFilledSheetValue(value)) return add2eFormatSheetFieldValue(value);
+  }
+  return fallback;
+}
+
+function add2eCloneSheetSystem(system) {
+  try {
+    if (foundry?.utils?.deepClone) return foundry.utils.deepClone(system ?? {});
+    if (foundry?.utils?.duplicate) return foundry.utils.duplicate(system ?? {});
+  } catch (_err) {}
+  try { return JSON.parse(JSON.stringify(system ?? {})); }
+  catch (_err) { return { ...(system ?? {}) }; }
+}
+
+function add2eBuildSortSheetSystem(system) {
+  const source = system ?? {};
+  const sheet = add2eCloneSheetSystem(source);
+  sheet.ecole = add2eFirstSheetField(source, ["ecole", "école", "school"], sheet.ecole ?? "");
+  sheet.portee = add2eFirstSheetField(source, ["portee", "portée", "range"], sheet.portee ?? "");
+  sheet.duree = add2eFirstSheetField(source, ["duree", "durée", "duration"], sheet.duree ?? "");
+  sheet.temps_incantation = add2eFirstSheetField(source, ["temps_incantation", "tempsIncantation", "castingTime", "casting_time"], sheet.temps_incantation ?? "");
+  sheet.zone_effet = add2eFirstSheetField(source, ["zone_effet", "zoneEffet", "area", "areaOfEffect"], sheet.zone_effet ?? "");
+  sheet.composantes = add2eFirstSheetField(source, ["composantes", "components", "componentes", "composants"], sheet.composantes ?? "");
+  sheet.jet_sauvegarde = add2eFirstSheetField(source, ["jet_sauvegarde", "jetSauvegarde", "savingThrow", "saving_throw"], sheet.jet_sauvegarde ?? "");
+  sheet.onUse = add2eFirstSheetField(source, ["onUse", "onuse", "on_use"], sheet.onUse ?? "");
+  sheet.description = add2eFirstSheetField(source, ["description", "description_reelle", "description_texte", "description_html"], sheet.description ?? "");
+  return sheet;
 }
 
 function add2eRootFromContent(content) {
@@ -366,6 +435,7 @@ class Add2eSortSheet extends Add2eItemSheetV2 {
 
   async getData(options = {}) {
     const data = await super.getData(options);
+    data.system = add2eBuildSortSheetSystem(data.system ?? {});
     data.system.number ??= "";
     data.system.diet ??= "";
     data.system.encounterTable ??= "";
@@ -390,6 +460,7 @@ class Add2eSortSheet extends Add2eItemSheetV2 {
     data.sortsParNiveau = sortsParNiveau;
     data.niveauxSorts = Object.keys(sortsParNiveau).map(Number).sort((a, b) => a - b);
     data.sortsMemorizedByLevel = {};
+    data.descriptionHTML = await add2eEnrichDescription(data.system?.description, this.item);
     return data;
   }
 }
