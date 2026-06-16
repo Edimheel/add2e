@@ -1,0 +1,321 @@
+{
+  "source": {
+    "referenceFile": "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "classe": "Clerc",
+    "niveau": 1
+  },
+  "status": "effect_profile_preparatoire",
+  "version": "2026-06-16-add2e-effect-profile-v1",
+  "exportTarget": "system.effectProfile",
+  "notes": "Profils préparatoires pour futur générateur d'objets magiques. Aucun export Foundry n'est modifié par ce fichier.",
+  "profiles": [
+    {
+      "ordre": 1,
+      "nom": "Apaisement",
+      "sourceSpellSlug": "apaisement",
+      "effects": [
+        {
+          "id": "apaisement_courage_peur",
+          "label": "Courage contre la peur",
+          "kind": "save_bonus",
+          "target": "creature_touchee",
+          "duration": { "raw": "1 tour" },
+          "automation": "active_effect_or_mj_aid",
+          "tags": ["effet:apaisement", "bonus:jp:peur:4", "protection:peur"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Charme, talisman ou relique activable." }
+        },
+        {
+          "id": "apaisement_relance_peur",
+          "label": "Nouveau jet contre une peur active",
+          "kind": "save_retry",
+          "target": "creature_touchee",
+          "duration": { "raw": "instantané" },
+          "automation": "mj_aid",
+          "tags": ["effet:apaisement", "relance:jp:peur", "bonus:jp:peur:niveau_lanceur"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Le bonus dépend du niveau magique retenu pour l'objet." }
+        },
+        {
+          "id": "epouvante_fuite",
+          "label": "Épouvante",
+          "kind": "fear",
+          "target": "creature_touchee",
+          "duration": { "raw": "1 round/niveau" },
+          "automation": "mj_aid",
+          "tags": ["effet:epouvante", "etat:peur", "controle:fuite"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Pouvoir offensif possible ; nécessite le toucher sur cible non consentante." }
+        }
+      ]
+    },
+    {
+      "ordre": 2,
+      "nom": "Aquagenèse",
+      "sourceSpellSlug": "aquagenese",
+      "effects": [
+        {
+          "id": "aquagenese_creation_eau",
+          "label": "Création d'eau potable",
+          "kind": "resource_creation",
+          "target": "volume_eau",
+          "duration": { "raw": "permanente" },
+          "automation": "mj_aid",
+          "tags": ["effet:aquagenese", "creation:eau", "ressource:eau_potable", "quantite:15_litres_par_niveau"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Objet utilitaire ; la création dans la scène reste arbitrée par le MJ." }
+        },
+        {
+          "id": "deshydratation_destruction_eau",
+          "label": "Destruction d'eau",
+          "kind": "resource_destruction",
+          "target": "volume_eau",
+          "duration": { "raw": "instantané" },
+          "automation": "mj_aid",
+          "tags": ["effet:deshydratation", "destruction:eau", "quantite:15_litres_par_niveau"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Pouvoir inverse ; ne doit jamais cibler l'intérieur d'une créature vivante." }
+        }
+      ]
+    },
+    {
+      "ordre": 3,
+      "nom": "Bénédiction",
+      "sourceSpellSlug": "benediction",
+      "effects": [
+        {
+          "id": "benediction_bonus_moral_toucher",
+          "label": "Bénédiction",
+          "kind": "active_bonus",
+          "target": "creatures_amicales_zone",
+          "duration": { "raw": "6 rounds" },
+          "automation": "active_effect_or_mj_aid",
+          "tags": ["effet:benediction", "bonus:moral:1", "bonus:toucher:1", "condition:non_engage_combat"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Bannière, relique ou symbole activable ; respecter la condition des cibles non engagées." }
+        },
+        {
+          "id": "malediction_malus_moral_toucher",
+          "label": "Malédiction",
+          "kind": "active_malus",
+          "target": "ennemis_zone",
+          "duration": { "raw": "6 rounds" },
+          "automation": "active_effect_or_mj_aid",
+          "tags": ["effet:malediction", "malus:moral:1", "malus:toucher:1"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Pouvoir inverse offensif, plutôt pour objet maudit ou maléfique." }
+        }
+      ]
+    },
+    {
+      "ordre": 4,
+      "nom": "Détection de la magie",
+      "sourceSpellSlug": "detection-de-la-magie",
+      "effects": [
+        {
+          "id": "detection_magie_cone",
+          "label": "Détection de la magie",
+          "kind": "detection",
+          "target": "cone_directionnel",
+          "duration": { "raw": "1 tour" },
+          "automation": "mj_aid",
+          "tags": ["effet:detection_magie", "detection:magie", "zone:cone_1x3", "rotation:60_deg_par_round"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Objet de détection ; le moteur n'invente pas les auras." }
+        }
+      ]
+    },
+    {
+      "ordre": 5,
+      "nom": "Détection du mal",
+      "sourceSpellSlug": "detection-du-mal",
+      "effects": [
+        {
+          "id": "detection_mal",
+          "label": "Détection du mal",
+          "kind": "detection",
+          "target": "ligne_directionnelle",
+          "duration": { "raw": "1 tour + 1/2 tour par niveau" },
+          "automation": "mj_aid",
+          "tags": ["effet:detection_mal", "detection:mal", "aura:degre_mal", "chance:tendance:10_pct_par_niveau"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Objet de détection ; degré et tendance restent arbitrés par le MJ." }
+        },
+        {
+          "id": "detection_bien",
+          "label": "Détection du bien",
+          "kind": "detection",
+          "target": "ligne_directionnelle",
+          "duration": { "raw": "1 tour + 1/2 tour par niveau" },
+          "automation": "mj_aid",
+          "tags": ["effet:detection_bien", "detection:bien", "aura:degre_bien"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Pouvoir inverse possible." }
+        }
+      ]
+    },
+    {
+      "ordre": 6,
+      "nom": "Injonction",
+      "sourceSpellSlug": "injonction",
+      "effects": [
+        {
+          "id": "injonction_ordre_un_mot",
+          "label": "Ordre d'un mot",
+          "kind": "control",
+          "target": "une_creature",
+          "duration": { "raw": "1 round" },
+          "savingThrow": { "type": "sorts", "condition": "Intelligence 13+ ou 6 DV/niveaux et plus" },
+          "automation": "mj_aid",
+          "tags": ["effet:injonction", "controle:ordre_un_mot", "exclusion:mort_vivant", "condition:langue_comprise"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Objet de commandement ; nécessite saisie de l'ordre et arbitrage MJ." }
+        }
+      ]
+    },
+    {
+      "ordre": 7,
+      "nom": "Lumière",
+      "sourceSpellSlug": "lumiere",
+      "effects": [
+        {
+          "id": "lumiere_zone",
+          "label": "Lumière",
+          "kind": "light",
+          "target": "point_objet_creature_ou_air",
+          "duration": { "raw": "6 tours + 1 tour/niveau" },
+          "automation": "scene_effect_or_mj_aid",
+          "tags": ["effet:lumiere", "lumiere:torche", "zone:rayon_2_pouces", "diametre:4_pouces"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Objet lumineux ; pourra devenir lumière de token ou de scène." }
+        },
+        {
+          "id": "lumiere_aveuglement",
+          "label": "Aveuglement par lumière",
+          "kind": "active_malus",
+          "target": "creature_visee_yeux_visage",
+          "duration": { "raw": "selon durée du sort" },
+          "savingThrow": { "type": "sorts", "condition": "si lancé sur une créature" },
+          "automation": "active_effect_or_mj_aid",
+          "tags": ["effet:lumiere", "etat:aveuglement_lumiere", "malus:toucher:4", "malus:jp:4", "malus:ca:4"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Effet offensif possible ; nécessite résistance à la magie et jet de protection si applicable." }
+        },
+        {
+          "id": "tenebres_zone",
+          "label": "Ténèbres",
+          "kind": "darkness",
+          "target": "point_objet_creature_ou_air",
+          "duration": { "raw": "moitié de la durée de Lumière" },
+          "automation": "scene_effect_or_mj_aid",
+          "tags": ["effet:tenebres", "obscurite", "zone:rayon_2_pouces"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Pouvoir inverse possible." }
+        }
+      ]
+    },
+    {
+      "ordre": 8,
+      "nom": "Protection contre le mal",
+      "sourceSpellSlug": "protection-contre-le-mal",
+      "effects": [
+        {
+          "id": "protection_mal_defense",
+          "label": "Protection contre le mal",
+          "kind": "active_defense",
+          "target": "creature_touchee",
+          "duration": { "raw": "3 rounds/niveau" },
+          "automation": "active_effect_or_mj_aid",
+          "tags": ["effet:protection_contre_le_mal", "barriere:creatures_enchantees_invoquees", "malus:toucher:attaquant_mauvais:2", "bonus:jp:2"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Très adapté aux objets de protection ; les blocages de contact restent à gérer par moteur ou MJ." }
+        },
+        {
+          "id": "protection_bien_defense",
+          "label": "Protection contre le bien",
+          "kind": "active_defense",
+          "target": "creature_touchee",
+          "duration": { "raw": "3 rounds/niveau" },
+          "automation": "active_effect_or_mj_aid",
+          "tags": ["effet:protection_contre_le_bien", "barriere:creatures_enchantees_invoquees", "malus:toucher:attaquant_bon:2", "bonus:jp:2"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Pouvoir inverse possible pour objets maléfiques ou maudits." }
+        }
+      ]
+    },
+    {
+      "ordre": 9,
+      "nom": "Purification de l'eau et des aliments",
+      "sourceSpellSlug": "purification-de-l-eau-et-des-aliments",
+      "effects": [
+        {
+          "id": "purification_eau_aliments",
+          "label": "Purification de l'eau et des aliments",
+          "kind": "resource_purification",
+          "target": "eau_ou_nourriture",
+          "duration": { "raw": "permanente" },
+          "automation": "mj_aid",
+          "tags": ["effet:purification", "purification:eau", "purification:nourriture", "neutralise:poison_alimentaire"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Objet utilitaire ; modification d'inventaire seulement après confirmation MJ." }
+        },
+        {
+          "id": "putrefaction_eau_aliments",
+          "label": "Putréfaction de l'eau et des aliments",
+          "kind": "resource_corruption",
+          "target": "eau_ou_nourriture",
+          "duration": { "raw": "permanente" },
+          "automation": "mj_aid",
+          "tags": ["effet:putrefaction", "corruption:eau", "corruption:nourriture", "profane:eau_benite"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Pouvoir inverse ; plutôt pour objets maudits ou maléfiques." }
+        }
+      ]
+    },
+    {
+      "ordre": 10,
+      "nom": "Résistance au froid",
+      "sourceSpellSlug": "resistance-au-froid",
+      "effects": [
+        {
+          "id": "resistance_froid",
+          "label": "Résistance au froid",
+          "kind": "resistance",
+          "target": "creature_touchee",
+          "duration": { "raw": "1 tour/niveau" },
+          "automation": "active_effect_or_mj_aid",
+          "tags": ["effet:resistance_au_froid", "resistance:froid", "temperature:min:-18c", "bonus:jp:froid:3", "degats:froid:moitie_si_jp_rate", "degats:froid:quart_si_jp_reussi"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Très adapté aux objets portés ou activables ; la réduction de dégâts demande un moteur centralisé." }
+        }
+      ]
+    },
+    {
+      "ordre": 11,
+      "nom": "Sanctuaire",
+      "sourceSpellSlug": "sanctuaire",
+      "effects": [
+        {
+          "id": "sanctuaire_protection",
+          "label": "Sanctuaire",
+          "kind": "attack_gate",
+          "target": "une_creature",
+          "duration": { "raw": "2 rounds + 1 round/niveau" },
+          "savingThrow": { "type": "sorts", "condition": "chaque adversaire qui veut attaquer le bénéficiaire" },
+          "automation": "active_effect_or_mj_aid",
+          "tags": ["effet:sanctuaire", "attaque:requiert_jp_sorts", "restriction:beneficiaire_pas_action_offensive", "zone:ne_bloque_pas_effets_zone"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Objet possible mais strict : l'effet doit être signalé si le bénéficiaire agit offensivement." }
+        }
+      ]
+    },
+    {
+      "ordre": 12,
+      "nom": "Soins mineurs",
+      "sourceSpellSlug": "soins-mineurs",
+      "effects": [
+        {
+          "id": "soins_mineurs_1d8",
+          "label": "Soins mineurs",
+          "kind": "healing",
+          "target": "creature_touchee",
+          "duration": { "raw": "permanente" },
+          "automation": "direct_actor_update_or_mj_aid",
+          "tags": ["effet:soins_mineurs", "soin:1d8", "exclusion:mort_vivant", "exclusion:sans_enveloppe_corporelle", "exclusion:uniquement_touche_fer_argent_magique"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Très adapté aux objets à charges ; le soin direct doit respecter permissions et relais MJ." }
+        },
+        {
+          "id": "blessures_mineures_1d8",
+          "label": "Blessures mineures",
+          "kind": "damage",
+          "target": "creature_touchee",
+          "duration": { "raw": "permanente" },
+          "automation": "attack_or_mj_aid",
+          "tags": ["effet:blessures_mineures", "degats:1d8", "requiert:toucher_si_cible_evite"],
+          "objectMagic": { "allowed": true, "defaultActivation": "activation", "defaultChargeCost": 1, "notes": "Pouvoir inverse possible ; nécessite un jet de toucher si la cible évite le contact." }
+        }
+      ]
+    }
+  ]
+}
