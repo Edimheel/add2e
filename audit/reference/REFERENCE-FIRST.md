@@ -67,14 +67,34 @@ Un `effectProfile` doit pouvoir indiquer :
 - un identifiant stable d'effet ;
 - un libelle lisible ;
 - le type d'effet : bonus, malus, soin, degat, detection, lumiere, resistance, controle, protection, creation de ressource ;
-- la cible ;
-- la duree ;
 - les tags techniques non destructifs ;
 - le niveau d'automatisation retenu ;
 - si l'effet est reutilisable par un futur generateur d'objet magique ;
 - les limites qui doivent rester arbitrees par le MJ.
 
 Un `effectProfile` ne doit pas inventer une mecanique absente du Manuel. Quand l'automatisation est incertaine, le champ doit marquer l'effet comme aide MJ plutot que comme application automatique.
+
+### Heritages et surcharges
+
+Un profil d'effet ne doit pas repeter les champs deja presents dans la reference principale du sort. Sauf cas particulier, il herite de :
+
+- `ordre`
+- `nom`
+- `niveau`
+- `portee`
+- `duree`
+- `zone_effet`
+- `composantes`
+- `temps_incantation`
+- `jet_sauvegarde`
+- `description`
+
+Les champs suivants ne doivent etre presents que si l'effet differe vraiment du sort principal :
+
+- `durationOverride`
+- `targetOverride`
+
+Exemple : l'inverse d'un sort peut avoir une duree differente ; dans ce cas seulement, `durationOverride` est justifie.
 
 ## Regle de patch JSON
 
