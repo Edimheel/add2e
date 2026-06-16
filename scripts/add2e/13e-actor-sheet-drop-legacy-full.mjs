@@ -1,12 +1,12 @@
 // ADD2E — Actor sheet drop — implémentation compacte legacy
-// Version : 2026-06-16-actor-drop-projectile-normalize-before-create-v1
+// Version : 2026-06-16-actor-drop-projectile-tags-only-v1
 //
 // Ce fichier remplace l'ancien 13e monolithique par une implémentation plus courte.
 // Le fichier 13e-actor-sheet-drop.mjs reste un chargeur court.
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-16-actor-drop-projectile-normalize-before-create-v1";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-16-actor-drop-projectile-tags-only-v1";
 globalThis.ADD2E_ACTOR_SHEET_DROP_VERSION = ADD2E_ACTOR_SHEET_DROP_VERSION;
 console.log("[ADD2E][DROP][VERSION]", ADD2E_ACTOR_SHEET_DROP_VERSION);
 
@@ -115,25 +115,23 @@ function add2eDropSlug(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-function add2eDropItemTextFields(itemData) {
+function add2eDropRawTags(itemData) {
   const sys = itemData?.system ?? {};
   const flags = itemData?.flags?.add2e ?? {};
   return [
-    itemData?.type,
-    itemData?.name,
-    sys.nom,
-    sys.categorie,
-    sys.category,
-    sys.type,
-    sys.sousType,
-    sys.sous_type,
-    sys.subtype,
-    sys.kind,
-    sys.slot,
-    sys.type_arme,
-    sys.famille_arme,
-    sys.munitionType,
-    sys.munition_type,
+    sys.tags,
+    sys.effectTags,
+    sys.effecttags,
+    flags.tags,
+    flags.effectTags,
+    flags.effecttags
+  ].flatMap(add2eDropArray).map(add2eDropSlug).filter(Boolean);
+}
+
+function add2eDropTechnicalTags(itemData) {
+  const sys = itemData?.system ?? {};
+  const flags = itemData?.flags?.add2e ?? {};
+  return [
     sys.tags,
     sys.effectTags,
     sys.effecttags,
@@ -150,33 +148,52 @@ function add2eDropItemTextFields(itemData) {
   ].flatMap(add2eDropArray).map(add2eDropSlug).filter(Boolean);
 }
 
-function add2eDropAmmoName(value) {
-  const text = add2eDropSlug(value);
-  return /(^|_)(fleche|fleches|carreau|carreaux|trait|traits|bille|billes|pierre_de_fronde|pierres_de_fronde)(_|$)/.test(text);
+function add2eDropTagMarksAmmo(tag) {
+  return tag === "munition"
+    || tag === "munitions"
+    || tag === "projectile"
+    || tag === "projectiles"
+    || tag === "ammo"
+    || tag === "ammunition"
+    || tag === "trait:munition"
+    || tag === "trait:projectile"
+    || tag === "categorie:munition"
+    || tag === "categorie:projectile"
+    || tag === "type:munition"
+    || tag === "type:projectile"
+    || tag === "type_arme:munition"
+    || tag === "type_arme:projectile"
+    || tag.startsWith("munition:")
+    || tag.startsWith("projectile:");
+}
+
+function add2eDropTagMarksThrownWeapon(tag) {
+  return tag === "arme_de_jet"
+    || tag === "usage_lancer"
+    || tag === "usage:lancer"
+    || tag === "usage_jet"
+    || tag === "arme:jet"
+    || tag === "type_arme:jet"
+    || tag === "type_arme:arme_de_jet";
+}
+
+function add2eDropTagValue(tags, prefixes) {
+  for (const tag of tags) {
+    for (const prefix of prefixes) {
+      if (tag.startsWith(prefix) && tag.length > prefix.length) return tag.slice(prefix.length);
+    }
+  }
+  return "";
 }
 
 function add2eDropAmmoType(itemData) {
-  const fields = add2eDropItemTextFields(itemData);
-  const joined = fields.join(" ");
-  const explicit = add2eDropSlug(itemData?.system?.munitionType ?? itemData?.system?.munition_type ?? itemData?.system?.sousType ?? itemData?.system?.sous_type ?? "");
-  if (explicit && !["munition", "munitions", "projectile", "projectiles"].includes(explicit)) return explicit;
-  if (/(^|_)(carreau|carreaux)(_|$)/.test(joined)) return "carreau";
-  if (/(^|_)(bille|billes|pierre_de_fronde|pierres_de_fronde)(_|$)/.test(joined)) return "bille";
-  if (/(^|_)(trait|traits)(_|$)/.test(joined)) return "trait";
-  if (/(^|_)(fleche|fleches)(_|$)/.test(joined)) return "fleche";
-  return "projectile";
+  const tags = add2eDropRawTags(itemData);
+  return add2eDropTagValue(tags, ["munition:", "projectile:", "ammo:", "ammunition:"]) || "projectile";
 }
 
 function add2eDropIsThrownWeapon(itemData) {
   if (String(itemData?.type ?? "").toLowerCase() !== "arme") return false;
-  if (add2eDropAmmoName(itemData?.name)) return false;
-  const sys = itemData?.system ?? {};
-  const fields = add2eDropItemTextFields(itemData);
-  const name = add2eDropSlug(itemData?.name);
-  return sys.arme_de_jet === true
-    || sys.jet === true
-    || fields.some(field => ["arme_de_jet", "usage_lancer", "usage:lancer", "usage_jet", "arme:jet", "type_arme:jet", "type_arme:arme_de_jet"].includes(field))
-    || /(dague|poignard|javelot|javeline|hache_de_jet|marteau_de_jet|couteau_de_jet|lance)/.test(name);
+  return add2eDropTechnicalTags(itemData).some(add2eDropTagMarksThrownWeapon);
 }
 
 function add2eDropLooksLikeProjectile(itemData) {
@@ -184,25 +201,7 @@ function add2eDropLooksLikeProjectile(itemData) {
   const documentType = String(itemData.type ?? "").toLowerCase();
   if (!["arme", "objet"].includes(documentType)) return false;
   if (add2eDropIsThrownWeapon(itemData)) return false;
-  const fields = add2eDropItemTextFields(itemData);
-  if (add2eDropAmmoName(itemData.name)) return true;
-  return fields.some(field =>
-    field === "munition" ||
-    field === "munitions" ||
-    field === "projectile" ||
-    field === "projectiles" ||
-    field === "ammo" ||
-    field === "ammunition" ||
-    field === "trait:munition" ||
-    field === "trait:projectile" ||
-    field === "categorie:munition" ||
-    field === "categorie:projectile" ||
-    field === "type:munition" ||
-    field === "type:projectile" ||
-    field === "type_arme:munition" ||
-    field.startsWith("munition:") ||
-    field.startsWith("projectile:")
-  );
+  return add2eDropRawTags(itemData).some(add2eDropTagMarksAmmo);
 }
 
 function add2eDropNormalizeProjectileItemData(itemData) {
