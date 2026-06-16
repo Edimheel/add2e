@@ -43,14 +43,24 @@ Chaque sort de reference doit contenir, autant que possible :
 - `description`
 - `notes_regles`
 - `onuse_strategy`
-- `effectProfile`
+- `effectProfile` ou un profil associe dans `audit/reference/effect-profiles/`
 - `status`
 
 ## effectProfile
 
 `effectProfile` est une donnee de reference preparatoire. Elle decrit les effets mecaniques qu'un sort peut produire sans modifier immediatement les exports Foundry.
 
-Le champ doit rester dans le codex tant que le modele n'est pas stabilise. Le transfert vers les items Foundry se fera plus tard, de preference vers `system.effectProfile`, par importeur ou macro de synchronisation dediee.
+Pendant la phase de stabilisation, les profils peuvent etre conserves dans un fichier associe sous `audit/reference/effect-profiles/`. Une fois le modele valide, ils pourront etre reintegres dans chaque entree de sort du fichier `audit/reference/manuel-joueurs-*.json`, puis seulement ensuite synchronises vers Foundry.
+
+Le transfert futur vers Foundry devra viser :
+
+- `system.effectProfile`
+
+ou, si une contrainte technique apparaît plus tard :
+
+- `flags.add2e.effectProfile`
+
+Le choix recommande reste `system.effectProfile`, car il s'agit d'une donnee metier du systeme ADD2E.
 
 Un `effectProfile` doit pouvoir indiquer :
 
