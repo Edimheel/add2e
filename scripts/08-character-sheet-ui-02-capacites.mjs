@@ -1,5 +1,6 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 02 capacités
+// Version : 2026-06-16-thief-leather-armor-warning-v1
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
@@ -142,9 +143,25 @@ function classSlug(actor) {
   );
 }
 
+function actorClassSlugs(actor) {
+  const values = [];
+  const sys = actor?.system ?? {};
+  values.push(sys.classe, sys.class, sys.details_classe?.label, sys.details_classe?.name, sys.details_classe?.nom, sys.details_classe?.slug);
+  for (const item of actor?.items ?? []) {
+    if (String(item?.type ?? "").toLowerCase() !== "classe") continue;
+    values.push(item.name, item.system?.label, item.system?.name, item.system?.nom, item.system?.classe, item.system?.slug);
+  }
+  return values.map(value => slug(value)).filter(Boolean);
+}
+
+function hasVoleurClass(actor) {
+  return actorClassSlugs(actor).some(s => s.includes("voleur"));
+}
+
 function isThiefSkillClass(actor) {
+  const slugs = actorClassSlugs(actor);
   const s = classSlug(actor);
-  return s.includes("voleur") || s.includes("assassin") || s.includes("moine");
+  return s.includes("voleur") || s.includes("assassin") || s.includes("moine") || slugs.some(x => x.includes("voleur") || x.includes("assassin") || x.includes("moine"));
 }
 
 function thiefSkillPanelTitle(actor) {
@@ -152,6 +169,7 @@ function thiefSkillPanelTitle(actor) {
   if (s.includes("moine")) return "Compétences spéciales du moine";
   if (s.includes("assassin")) return "Compétences de voleur / assassin";
   if (s.includes("voleur")) return "Compétences de voleur";
+  if (actorClassSlugs(actor).some(x => x.includes("voleur"))) return "Compétences de voleur";
   return "Compétences de voleur";
 }
 
@@ -245,6 +263,90 @@ function isThiefSkillFeature(feature) {
   ].some(token => joined.includes(token));
 }
 
+function itemEquipText(item) {
+  const sys = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return [
+    item?.name,
+    sys.nom,
+    sys.categorie,
+    sys.category,
+    sys.type,
+    sys.type_armure,
+    sys.sousType,
+    sys.sous_type,
+    sys.subtype,
+    sys.kind,
+    sys.slot,
+    sys.tags,
+    sys.effectTags,
+    sys.effecttags,
+    flags.tags,
+    flags.effectTags,
+    flags.effecttags
+  ].flatMap(value => Array.isArray(value) ? value : (value && typeof value === "object" ? Object.values(value) : [value]))
+    .map(value => slug(value))
+    .filter(Boolean)
+    .join(" ");
+}
+
+function itemEquipped(item) {
+  const sys = item?.system ?? {};
+  return sys.equipee === true || sys.equipped === true || sys.portee === true || sys.worn === true || sys.estEquipee === true;
+}
+
+function isShieldOrHelmet(item) {
+  const text = itemEquipText(item);
+  try {
+    if (globalThis.add2eIsShield?.(item) === true || globalThis.add2eIsHelmet?.(item) === true) return true;
+  } catch (_e) {}
+  return text.includes("bouclier") || text.includes("heaume") || text.includes("casque");
+}
+
+function equippedBodyArmor(actor) {
+  return Array.from(actor?.items ?? []).find(item =>
+    String(item?.type ?? "").toLowerCase() === "armure" &&
+    itemEquipped(item) &&
+    !isShieldOrHelmet(item)
+  ) ?? null;
+}
+
+function isLeatherArmor(item) {
+  if (!item) return false;
+  const text = itemEquipText(item);
+  return text.includes("cuir") || text.includes("leather");
+}
+
+function thiefArmorRestriction(actor) {
+  if (!hasVoleurClass(actor)) return { ok: true, armor: null };
+  const skills = getThiefSkills(actor);
+  if (!skills.length) return { ok: true, armor: null };
+  const armor = equippedBodyArmor(actor);
+  return { ok: !!armor && isLeatherArmor(armor), armor };
+}
+
+function buildThiefArmorWarningPanel(actor, armor) {
+  const armorLabel = armor
+    ? `Armure actuellement portée : <strong>${escapeHtml(armor.name)}</strong>.`
+    : "Aucune armure de cuir n’est actuellement portée.";
+
+  return `
+    <div class="a2e-panel add2e-thief-skills-panel">
+      <h2>${escapeHtml(thiefSkillPanelTitle(actor))}</h2>
+      <div
+        class="a2e-panel-body a2e-thief-armor-warning"
+        style="border:2px solid #b00020;background:rgba(176,0,32,.18);color:#ffd7dd;border-radius:12px;padding:18px;text-align:center;font-size:1.25em;font-weight:900;line-height:1.35;"
+      >
+        <div style="font-size:1.45em;color:#ff6b6b;margin-bottom:8px;">
+          <i class="fas fa-triangle-exclamation"></i>
+          Capacités de voleur indisponibles
+        </div>
+        <div>L’armure portée doit être en cuir pour utiliser les capacités de voleur.</div>
+        <div style="font-size:.85em;margin-top:8px;color:#ffe3e7;">${armorLabel}</div>
+      </div>
+    </div>`;
+}
+
 function visibleFeatures(actor) {
   const level = Number(actor?.system?.niveau ?? 1) || 1;
   const thiefSkills = getThiefSkills(actor);
@@ -272,6 +374,9 @@ function buildThiefSkillsPanel(actor) {
     .filter(skill => level >= readLevel(skill?.minLevel ?? skill?.niveauMin ?? skill?.requiredLevel ?? skill?.level ?? skill?.niveau, 1));
 
   if (!skills.length) return "";
+
+  const armorCheck = thiefArmorRestriction(actor);
+  if (!armorCheck.ok) return buildThiefArmorWarningPanel(actor, armorCheck.armor);
 
   const cards = skills.map(skill => {
     const bonus = Number(skill.bonusTotal ?? 0) || 0;
@@ -378,4 +483,5 @@ expose("add2eUiFeatureName", featureName);
 expose("add2eUiAllClassFeatures", allClassFeatures);
 expose("add2eUiGetThiefSkills", getThiefSkills);
 expose("add2eUiBuildThiefSkillsPanel", buildThiefSkillsPanel);
+expose("add2eUiCheckThiefArmorRestriction", thiefArmorRestriction);
 expose("add2eUiInjectCapacitesTab", injectCapacitesTab);
