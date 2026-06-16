@@ -10,10 +10,10 @@ export {
 } from "./add2e-action-hud/core.mjs";
 
 // ADD2E — Sous-onglets équipement intégrés au HUD.
-// Version : 2026-06-16-hud-equipment-subtabs-v2
+// Version : 2026-06-16-hud-equipment-subtabs-v3-tags-only-ammo
 // L'onglet principal Armes reste unique ; Armes / Projectiles / Armures sont des sous-onglets.
 
-const ADD2E_HUD_EQUIPMENT_SUBTABS_VERSION = "2026-06-16-hud-equipment-subtabs-v2";
+const ADD2E_HUD_EQUIPMENT_SUBTABS_VERSION = "2026-06-16-hud-equipment-subtabs-v3-tags-only-ammo";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_EQUIPMENT_STYLE_ID = "add2e-action-hud-equipment-subtabs-style";
 let add2eHudEquipmentSubtab = "armes";
@@ -50,7 +50,13 @@ function add2eHudEquipNum(value, fallback = 0) {
 function add2eHudEquipActorItems(actor) { return Array.from(actor?.items ?? []).filter(item => item && item.type); }
 function add2eHudEquipGetItem(actor, id) { return actor?.items?.get?.(id) ?? add2eHudEquipActorItems(actor).find(item => item.id === id || item._id === id) ?? null; }
 function add2eHudEquipItemEquipped(item) { const s = item?.system ?? {}; return s.equipee === true || s.equipped === true || s.portee === true || s.worn === true || s.estEquipee === true; }
-function add2eHudEquipItemTags(item) {
+function add2eHudEquipRawTags(item) {
+  const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
+  const tags = [s.tags, s.effectTags, s.effecttags, f.tags, f.effectTags, f.effecttags].flatMap(add2eHudEquipArr).map(add2eHudEquipNorm).filter(Boolean);
+  try { tags.push(...(globalThis.add2eGetItemEquipTags?.(item) ?? []).map(add2eHudEquipNorm)); } catch (_e) {}
+  return [...new Set(tags)].filter(Boolean);
+}
+function add2eHudEquipAllTags(item) {
   const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
   const tags = [
     item?.type, item?.name, s.nom, s.categorie, s.category, s.type, s.sousType, s.sous_type, s.subtype, s.kind, s.slot,
@@ -60,66 +66,72 @@ function add2eHudEquipItemTags(item) {
   try { tags.push(...(globalThis.add2eGetItemEquipTags?.(item) ?? []).map(add2eHudEquipNorm)); } catch (_e) {}
   return [...new Set(tags)].filter(Boolean);
 }
+function add2eHudEquipItemTags(item) { return add2eHudEquipAllTags(item); }
 function add2eHudEquipIsContainerLike(item) {
-  const text = add2eHudEquipItemTags(item).join(" ");
-  const name = add2eHudEquipNorm(item?.name);
-  return text.includes("carquois") || text.includes("quiver") || text.includes("container") || text.includes("contenant") || text.includes("sacoche") || name.includes("carquois") || name.includes("sacoche");
-}
-function add2eHudEquipAmmoName(item) {
-  return /\b(fleche|fleches|flèche|flèches|carreau|carreaux|trait|traits|bille|billes|pierre de fronde|pierres de fronde)\b/.test(add2eHudEquipLower(item?.name));
+  const text = add2eHudEquipAllTags(item).join(" ");
+  return text.includes("carquois") || text.includes("quiver") || text.includes("container") || text.includes("contenant") || text.includes("sacoche");
 }
 function add2eHudEquipIsPropelledWeapon(item) {
-  const s = item?.system ?? {}, tags = add2eHudEquipItemTags(item), name = add2eHudEquipNorm(item?.name);
+  const s = item?.system ?? {}, tags = add2eHudEquipAllTags(item), name = add2eHudEquipNorm(item?.name);
   return s.projectile_propulse === true || s.arme_a_projectile === true || tags.includes("projectile_propulse") || tags.includes("usage_projectile_propulse") || ["arc", "arbalete", "fronde"].some(key => name.includes(key));
 }
 function add2eHudEquipIsThrownWeapon(item) {
   if (String(item?.type ?? "").toLowerCase() !== "arme") return false;
   if (add2eHudEquipIsPropelledWeapon(item)) return false;
-  if (add2eHudEquipAmmoName(item)) return false;
   const s = item?.system ?? {};
-  const tags = add2eHudEquipItemTags(item);
-  const name = add2eHudEquipNorm(item?.name);
-  return s.arme_de_jet === true || s.jet === true || tags.some(tag => ["arme_de_jet", "usage_lancer", "usage:lancer", "usage_jet", "arme:jet", "type_arme:jet", "type_arme:arme_de_jet"].includes(tag)) || /(dague|poignard|javelot|javeline|hache_de_jet|marteau_de_jet|couteau_de_jet|lance)/.test(name);
+  const tags = add2eHudEquipAllTags(item);
+  return s.arme_de_jet === true || s.jet === true || tags.some(tag => ["arme_de_jet", "usage_lancer", "usage:lancer", "usage_jet", "arme:jet", "type_arme:jet", "type_arme:arme_de_jet"].includes(tag));
+}
+function add2eHudEquipTagMarksAmmo(tag) {
+  return tag === "munition"
+    || tag === "munitions"
+    || tag === "projectile"
+    || tag === "projectiles"
+    || tag === "ammo"
+    || tag === "ammunition"
+    || tag === "trait:munition"
+    || tag === "trait:projectile"
+    || tag === "categorie:munition"
+    || tag === "categorie:projectile"
+    || tag === "type:munition"
+    || tag === "type:projectile"
+    || tag === "type_arme:munition"
+    || tag === "type_arme:projectile"
+    || tag.startsWith("munition:")
+    || tag.startsWith("projectile:");
 }
 function add2eHudEquipIsAmmunition(item) {
   if (!item || add2eHudEquipIsContainerLike(item)) return false;
-  const documentType = String(item.type ?? "").toLowerCase();
-  const ammoName = add2eHudEquipAmmoName(item);
-  if (documentType === "arme" && add2eHudEquipIsThrownWeapon(item)) return false;
-  if (documentType === "arme" && ammoName) return true;
-  try { if (globalThis.add2eIsArmorerAmmunition?.(item) === true && !add2eHudEquipIsThrownWeapon(item)) return true; } catch (_e) {}
-  const tags = add2eHudEquipItemTags(item);
-  const accepted = new Set(["munition", "munitions", "projectile", "projectiles", "ammo", "ammunition", "trait:munition", "trait:projectile", "categorie:munition", "categorie:projectile", "type:munition", "type:projectile"]);
-  if (documentType === "arme" && !ammoName) return false;
-  if (tags.some(value => accepted.has(value) || value.startsWith("munition:") || value.startsWith("projectile:") || value.includes("munition"))) return true;
-  return ammoName;
+  if (add2eHudEquipIsThrownWeapon(item)) return false;
+  return add2eHudEquipRawTags(item).some(add2eHudEquipTagMarksAmmo);
 }
 function add2eHudEquipWeapons(actor) { return add2eHudEquipActorItems(actor).filter(item => String(item.type ?? "").toLowerCase() === "arme" && !add2eHudEquipIsAmmunition(item)).sort((a, b) => Number(add2eHudEquipItemEquipped(b)) - Number(add2eHudEquipItemEquipped(a)) || String(a.name).localeCompare(String(b.name))); }
 function add2eHudEquipProjectiles(actor) { return add2eHudEquipActorItems(actor).filter(add2eHudEquipIsAmmunition).sort((a, b) => Number(add2eHudEquipItemEquipped(b)) - Number(add2eHudEquipItemEquipped(a)) || String(a.name).localeCompare(String(b.name))); }
 function add2eHudEquipArmors(actor) { return add2eHudEquipActorItems(actor).filter(item => String(item.type ?? "").toLowerCase() === "armure").sort((a, b) => Number(add2eHudEquipItemEquipped(b)) - Number(add2eHudEquipItemEquipped(a)) || String(a.name).localeCompare(String(b.name))); }
-function add2eHudEquipWeaponIsRanged(item) { const s = item?.system ?? {}, tags = add2eHudEquipItemTags(item); return add2eHudEquipIsPropelledWeapon(item) || add2eHudEquipIsThrownWeapon(item) || s.arme_de_jet === true || !!s.portee_courte || !!s.portee_moyenne || !!s.portee_longue || tags.includes("usage:distance") || tags.includes("usage_lancer") || tags.includes("usage:lancer"); }
+function add2eHudEquipWeaponIsRanged(item) { const s = item?.system ?? {}, tags = add2eHudEquipAllTags(item); return add2eHudEquipIsPropelledWeapon(item) || add2eHudEquipIsThrownWeapon(item) || s.arme_de_jet === true || !!s.portee_courte || !!s.portee_moyenne || !!s.portee_longue || tags.includes("usage:distance") || tags.includes("usage_lancer") || tags.includes("usage:lancer"); }
+function add2eHudEquipTagValue(tags, prefixes) { for (const tag of tags) for (const prefix of prefixes) if (tag.startsWith(prefix) && tag.length > prefix.length) return tag.slice(prefix.length); return ""; }
 function add2eHudEquipProjectileKeys(item) {
-  const text = `${add2eHudEquipNorm(item?.name)} ${add2eHudEquipItemTags(item).join(" ")}`;
-  const explicit = add2eHudEquipNorm(item?.system?.munition_requise ?? item?.system?.munitionRequise ?? item?.system?.ammoType ?? item?.system?.ammunitionType ?? "");
-  if (explicit) return [explicit, explicit.replace(/s$/, "")];
-  if (text.includes("arbalete")) return ["carreau", "carreaux", "bolt"];
-  if (text.includes("arc")) return ["fleche", "fleches", "arrow"];
-  if (text.includes("fronde")) return ["bille", "billes", "pierre", "pierres", "bullet"];
-  return ["munition", "projectile", "ammo"];
+  const tags = add2eHudEquipAllTags(item);
+  const explicit = add2eHudEquipNorm(item?.system?.munition_requise ?? item?.system?.munitionRequise ?? item?.system?.ammoType ?? item?.system?.ammunitionType ?? "") || add2eHudEquipTagValue(tags, ["munition_requise:", "ammo_type:", "ammunition_type:"]);
+  return explicit ? [explicit] : ["munition", "projectile", "ammo"];
 }
-function add2eHudEquipAmmoType(item) { const s = item?.system ?? {}; return add2eHudEquipSlug(s.munitionType ?? s.munition_type ?? s.sousType ?? s.sous_type ?? s.categorie ?? item?.name ?? ""); }
+function add2eHudEquipAmmoType(item) {
+  const tags = add2eHudEquipRawTags(item);
+  return add2eHudEquipTagValue(tags, ["munition:", "projectile:", "ammo:", "ammunition:"]) || add2eHudEquipSlug(item?.system?.munitionType ?? item?.system?.munition_type ?? item?.system?.sousType ?? item?.system?.sous_type ?? item?.system?.categorie ?? item?.system?.category ?? "projectile");
+}
 function add2eHudEquipProjectileCompatible(projectile, weapon) {
   const keys = add2eHudEquipProjectileKeys(weapon).map(add2eHudEquipNorm);
-  const text = `${add2eHudEquipNorm(projectile?.name)} ${add2eHudEquipAmmoType(projectile)} ${add2eHudEquipItemTags(projectile).join(" ")}`;
-  return keys.some(key => text.includes(key) || key.includes(add2eHudEquipAmmoType(projectile)) || add2eHudEquipAmmoType(projectile).includes(key));
+  const ammo = add2eHudEquipAmmoType(projectile);
+  const tags = add2eHudEquipRawTags(projectile);
+  return keys.some(key => key === "munition" || key === "projectile" || key === "ammo" || ammo === key || tags.includes(`munition:${key}`) || tags.includes(`projectile:${key}`));
 }
 function add2eHudEquipEquippedProjectile(actor, weapon) {
   if (!add2eHudEquipIsPropelledWeapon(weapon)) return null;
   const equipped = add2eHudEquipProjectiles(actor).filter(p => add2eHudEquipItemEquipped(p) && add2eHudEquipQuantity(p) !== "0");
   return equipped.find(p => add2eHudEquipProjectileCompatible(p, weapon)) ?? (equipped.length === 1 ? equipped[0] : null);
 }
-function add2eHudEquipIsShield(item) { try { if (globalThis.add2eIsShield?.(item)) return true; } catch (_e) {} const tags = add2eHudEquipItemTags(item), name = add2eHudEquipNorm(item?.name); return tags.includes("bouclier") || tags.includes("type_armure:bouclier") || name.includes("bouclier"); }
-function add2eHudEquipIsHelmet(item) { try { if (globalThis.add2eIsHelmet?.(item)) return true; } catch (_e) {} const tags = add2eHudEquipItemTags(item), name = add2eHudEquipNorm(item?.name); return tags.includes("heaume") || tags.includes("casque") || name.includes("heaume") || name.includes("casque"); }
+function add2eHudEquipIsShield(item) { try { if (globalThis.add2eIsShield?.(item)) return true; } catch (_e) {} const tags = add2eHudEquipAllTags(item), name = add2eHudEquipNorm(item?.name); return tags.includes("bouclier") || tags.includes("type_armure:bouclier") || name.includes("bouclier"); }
+function add2eHudEquipIsHelmet(item) { try { if (globalThis.add2eIsHelmet?.(item)) return true; } catch (_e) {} const tags = add2eHudEquipAllTags(item), name = add2eHudEquipNorm(item?.name); return tags.includes("heaume") || tags.includes("casque") || name.includes("heaume") || name.includes("casque"); }
 function add2eHudEquipQuantity(item) { const s = item?.system ?? {}; const value = s.quantite ?? s.quantity ?? s.qty ?? s.nombre ?? s.nb ?? s.uses?.value ?? s.charges?.value; return value === undefined || value === null || value === "" ? "—" : String(value); }
 function add2eHudEquipQuantityNumber(item, fallback = 1) { const q = add2eHudEquipQuantity(item); return q === "—" ? fallback : add2eHudEquipNum(q, fallback); }
 function add2eHudEquipDamage(item) { const s = item?.system ?? {}; return s?.dégâts?.contre_moyen ?? s?.degats?.contre_moyen ?? s?.degats_moyen ?? s?.damage ?? s?.degats ?? s?.dmg ?? "—"; }
@@ -137,10 +149,7 @@ function add2eHudEquipCheckEquipment(actor, item, kind) {
   return { ok: true, classeLabel: actor?.system?.classe || "classe", reason: "fallback" };
 }
 function add2eHudEquipStateHtml(item) { return `<span class="state ${add2eHudEquipItemEquipped(item) ? "equip-ok" : "equip-bad"}">${add2eHudEquipItemEquipped(item) ? "Équipé" : "Rangé"}</span>`; }
-function add2eHudEquipProjectileBadge(projectile) {
-  if (!projectile) return "";
-  return `<span class="ammo-inline" title="Projectile équipé">${add2eHudEquipEsc(projectile.name)} ×${add2eHudEquipEsc(add2eHudEquipQuantity(projectile))}</span>`;
-}
+function add2eHudEquipProjectileBadge(projectile) { if (!projectile) return ""; return `<span class="ammo-inline" title="Projectile équipé">${add2eHudEquipEsc(projectile.name)} ×${add2eHudEquipEsc(add2eHudEquipQuantity(projectile))}</span>`; }
 function add2eHudEquipWeaponRow(actor, item) {
   const projectile = add2eHudEquipEquippedProjectile(actor, item);
   const propelled = add2eHudEquipIsPropelledWeapon(item);
@@ -214,7 +223,7 @@ async function add2eHudEquipToggleWeapon(actor, item) {
   if (!already) {
     const check = add2eHudEquipCheckEquipment(actor, item, "arme");
     if (!check.ok) return ui.notifications.error(`⚠️ Cette arme (« ${item.name} ») est interdite pour votre classe (${check.classeLabel}) — ${check.reason ?? "restriction de classe"}.`);
-    const twoHands = item.system?.deuxMains === true || add2eHudEquipItemTags(item).includes("usage:deux_mains") || add2eHudEquipItemTags(item).includes("trait:deux_mains");
+    const twoHands = item.system?.deuxMains === true || add2eHudEquipAllTags(item).includes("usage:deux_mains") || add2eHudEquipAllTags(item).includes("trait:deux_mains");
     if (twoHands) { const shield = add2eHudEquipArmors(actor).find(i => add2eHudEquipItemEquipped(i) && add2eHudEquipIsShield(i)); if (shield) return ui.notifications.error(`⚠️ Impossible d'équiper une arme à deux mains si un bouclier est équipé (${shield.name}).`); }
   }
   const ranged = add2eHudEquipWeaponIsRanged(item);
@@ -239,7 +248,7 @@ async function add2eHudEquipToggleArmor(actor, item) {
   if (!already) {
     const check = add2eHudEquipCheckEquipment(actor, item, "armure");
     if (!check.ok) return ui.notifications.error(`⚠️ ${shield ? "Ce bouclier" : helmet ? "Ce heaume" : "Cette armure"} (« ${item.name} ») est interdit pour votre classe (${check.classeLabel}) — ${check.reason ?? "restriction de classe"}.`);
-    if (shield) { const twoHanded = add2eHudEquipWeapons(actor).find(w => add2eHudEquipItemEquipped(w) && (w.system?.deuxMains === true || add2eHudEquipItemTags(w).includes("usage:deux_mains") || add2eHudEquipItemTags(w).includes("trait:deux_mains"))); if (twoHanded) return ui.notifications.error(`⚠️ Impossible d'équiper un bouclier avec une arme à deux mains (${twoHanded.name}) déjà équipée.`); }
+    if (shield) { const twoHanded = add2eHudEquipWeapons(actor).find(w => add2eHudEquipItemEquipped(w) && (w.system?.deuxMains === true || add2eHudEquipAllTags(w).includes("usage:deux_mains") || add2eHudEquipAllTags(w).includes("trait:deux_mains"))); if (twoHanded) return ui.notifications.error(`⚠️ Impossible d'équiper un bouclier avec une arme à deux mains (${twoHanded.name}) déjà équipée.`); }
   }
   const updates = [];
   if (already) updates.push({ _id: item.id, "system.equipee": false });
