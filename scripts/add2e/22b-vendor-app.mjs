@@ -1,5 +1,5 @@
 // ADD2E — Marchand V2 compact.
-// Version : 2026-06-16-merchant-sober-visual-redesign-v5
+// Version : 2026-06-16-merchant-plain-action-icons-v6
 
 import {
   findVendor,
@@ -25,7 +25,7 @@ import {
 } from "./22a-vendor-core.mjs";
 import { normalizeShopCurrency, ADD2E_VENDOR_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-16-merchant-sober-visual-redesign-v5";
+const VERSION = "2026-06-16-merchant-plain-action-icons-v6";
 const DIAG = "[ADD2E][MERCHANT_APP][BUY_DIAG]";
 
 const arr = v => Array.isArray(v)
@@ -191,8 +191,9 @@ function rowTabs(item, use) {
   return tabs;
 }
 
-function iconButton(action, icon, title, disabled = false, extraClass = "") {
-  return `<button class="add2e-vendor-icon-btn ${extraClass}" data-action="${action}" title="${esc(title)}" aria-label="${esc(title)}" ${disabled ? "disabled" : ""}><i class="fas ${icon}"></i></button>`;
+function actionIcon(action, icon, title, disabled = false, extraClass = "") {
+  const disabledAttrs = disabled ? `aria-disabled="true" data-disabled="1"` : `data-action="${action}" role="button" tabindex="0"`;
+  return `<i class="fas ${icon} add2e-vendor-action-icon ${extraClass} ${disabled ? "disabled" : ""}" title="${esc(title)}" aria-label="${esc(title)}" ${disabledAttrs}></i>`;
 }
 
 function rowHtml(item, ctx, use, visible = true) {
@@ -200,9 +201,9 @@ function rowHtml(item, ctx, use, visible = true) {
   const itemQty = quantity(item);
   const disabled = !ctx.buyer || itemQty <= 0;
   const gm = ctx.isGM
-    ? `<td class="col-mj add2e-vendor-gm-actions"><input class="s stock-input" type="number" min="0" value="${itemQty}" title="Stock"><span class="vendor-icon-group">${iconButton("stock", "fa-boxes-stacked", "Définir le stock", false, "stock")} ${iconButton("assign", "fa-hand-holding", "Donner à l’acheteur", disabled, "assign")}</span></td>`
+    ? `<td class="col-mj add2e-vendor-gm-actions"><input class="s stock-input" type="number" min="0" value="${itemQty}" title="Stock"><span class="vendor-icon-group">${actionIcon("stock", "fa-boxes-stacked", "Définir le stock", false, "stock")} ${actionIcon("assign", "fa-hand-holding", "Donner à l’acheteur", disabled, "assign")}</span></td>`
     : "";
-  return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td class="col-article" title="${esc(item.name)}">${esc(item.name)}</td><td class="col-type" title="${esc(kind)}"><span class="type-pill">${esc(kind)}</span></td><td class="col-sorts" title="${esc(use.names.length ? use.names.join(", ") : "—")}">${esc(use.names.length ? use.names.join(", ") : "—")}</td><td class="col-prix">${esc(priceLabel(item))}</td><td class="col-stock">${itemQty}</td><td class="col-qty"><input class="q" type="number" min="1" value="1" title="Quantité"></td><td class="col-action">${iconButton("buy", "fa-cart-shopping", "Acheter", disabled, "buy")}</td>${gm}</tr>`;
+  return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td class="col-article" title="${esc(item.name)}">${esc(item.name)}</td><td class="col-type" title="${esc(kind)}"><span class="type-pill">${esc(kind)}</span></td><td class="col-sorts" title="${esc(use.names.length ? use.names.join(", ") : "—")}">${esc(use.names.length ? use.names.join(", ") : "—")}</td><td class="col-prix">${esc(priceLabel(item))}</td><td class="col-stock">${itemQty}</td><td class="col-qty"><input class="q" type="number" min="1" value="1" title="Quantité"></td><td class="col-action">${actionIcon("buy", "fa-cart-shopping", "Acheter", disabled, "buy")}</td>${gm}</tr>`;
 }
 
 function itemVisibleForContext(item, ctx, use) {
@@ -247,10 +248,11 @@ function vendorStyle() {
     .add2e-merchant-app p{margin:.45rem 0 .5rem 0;padding:.42rem .6rem;border:1px solid rgba(110,76,23,.22);border-radius:8px;background:rgba(255,250,236,.76);box-shadow:inset 0 1px 0 rgba(255,255,255,.45);}
     .add2e-merchant-app select.buyer,.add2e-merchant-app input.search{border:1px solid rgba(88,56,13,.45);border-radius:7px;background:#fffbf0;color:#2d210f;font-weight:800;box-shadow:inset 0 1px 2px rgba(0,0,0,.08);}
     .add2e-merchant-app input.search{width:100%;box-sizing:border-box;margin:.35rem 0 .6rem 0;padding:.4rem .6rem;}
-    .add2e-merchant-app button[data-tab],.add2e-merchant-app button[data-action="restock"]{height:28px;margin:0 .22rem .38rem 0;padding:0 .7rem;border:1px solid rgba(81,52,16,.42);border-radius:7px;background:linear-gradient(180deg,#6a4518,#49300f);color:#f8e7b4;font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 1px 2px rgba(0,0,0,.16);}
-    .add2e-merchant-app button[data-action="restock"]{width:34px;padding:0;}
-    .add2e-merchant-app button[data-tab]:hover,.add2e-merchant-app button[data-action="restock"]:hover{background:linear-gradient(180deg,#7d541f,#523613);}
+    .add2e-merchant-app button[data-tab]{height:28px;margin:0 .22rem .38rem 0;padding:0 .7rem;border:1px solid rgba(81,52,16,.42);border-radius:7px;background:linear-gradient(180deg,#6a4518,#49300f);color:#f8e7b4;font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 1px 2px rgba(0,0,0,.16);}
+    .add2e-merchant-app button[data-tab]:hover{background:linear-gradient(180deg,#7d541f,#523613);}
     .add2e-merchant-app button[data-tab][style*="outline"]{background:linear-gradient(180deg,#d8ad56,#9a6d23)!important;color:#201506;outline:2px solid rgba(255,255,255,.9)!important;}
+    .add2e-merchant-app .add2e-vendor-toolbar-icon{display:inline-flex;align-items:center;justify-content:center;margin:0 0 .38rem .28rem;color:#4b3210;font-size:1.05rem;cursor:pointer;vertical-align:middle;}
+    .add2e-merchant-app .add2e-vendor-toolbar-icon:hover{color:#111;filter:drop-shadow(0 0 2px rgba(255,232,160,.9));}
     .add2e-merchant-app .add2e-vendor-scroll{max-height:420px;overflow-y:auto;padding-right:6px;margin-top:6px;scrollbar-color:#6b2147 #dfc884;}
     .add2e-merchant-app .add2e-vendor-bazaar-list{display:block;width:100%;}
     .add2e-merchant-app .add2e-vendor-bazaar-section{display:block;width:100%;box-sizing:border-box;margin:0 0 8px 0;border:1px solid rgba(76,51,16,.32);border-radius:9px;background:rgba(255,248,226,.56);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.10);}
@@ -277,13 +279,13 @@ function vendorStyle() {
     .add2e-merchant-app .q,.add2e-merchant-app .s{height:23px;min-height:23px;text-align:center;border:1px solid rgba(120,82,28,.42);border-radius:6px;background:#fffdf2;color:#2d210f;font-weight:900;}
     .add2e-merchant-app .q{width:42px;}
     .add2e-merchant-app .stock-input{width:48px;margin-right:5px;}
-    .add2e-merchant-app .vendor-icon-group{display:inline-flex;gap:5px;vertical-align:middle;}
-    .add2e-merchant-app .add2e-vendor-icon-btn{width:26px;height:24px;min-width:26px;padding:0;border:1px solid rgba(82,55,16,.38);border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:#f4e2ad;color:#38250b;font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.42),0 1px 1px rgba(0,0,0,.12);}
-    .add2e-merchant-app .add2e-vendor-icon-btn.buy{background:#dcebcf;color:#18421f;border-color:rgba(41,98,48,.35);}
-    .add2e-merchant-app .add2e-vendor-icon-btn.stock{background:#ead79b;color:#3a270b;}
-    .add2e-merchant-app .add2e-vendor-icon-btn.assign{background:#d7e1ee;color:#17314e;border-color:rgba(45,80,115,.35);}
-    .add2e-merchant-app .add2e-vendor-icon-btn:disabled{opacity:.36;filter:grayscale(.45);cursor:not-allowed;}
-    .add2e-merchant-app .add2e-vendor-icon-btn:not(:disabled):hover{filter:brightness(1.05);transform:translateY(-1px);}
+    .add2e-merchant-app .vendor-icon-group{display:inline-flex;gap:8px;vertical-align:middle;align-items:center;}
+    .add2e-merchant-app .add2e-vendor-action-icon{display:inline-flex;align-items:center;justify-content:center;min-width:16px;padding:0;border:0;background:transparent;box-shadow:none;font-size:1.02rem;line-height:1;color:#4b3210;cursor:pointer;vertical-align:middle;}
+    .add2e-merchant-app .add2e-vendor-action-icon.buy{color:#1f6b37;}
+    .add2e-merchant-app .add2e-vendor-action-icon.stock{color:#704914;}
+    .add2e-merchant-app .add2e-vendor-action-icon.assign{color:#235a8d;}
+    .add2e-merchant-app .add2e-vendor-action-icon.disabled{opacity:.28;cursor:not-allowed;filter:grayscale(.6);}
+    .add2e-merchant-app .add2e-vendor-action-icon:not(.disabled):hover{color:#111;transform:scale(1.12);filter:drop-shadow(0 0 2px rgba(255,232,160,.9));}
   </style>`;
 }
 
@@ -357,8 +359,9 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
       : renderFlatTable(ctx, visibleRows || `<tr><td colspan="${ctx.isGM ? 8 : 7}" class="a2e-muted">Aucun article.</td></tr>`);
 
     const buyer = ctx.isGM ? `<select class="buyer">${buyerOptions(ctx.buyer?.id)}</select>` : `<b>${esc(ctx.buyer?.name ?? "aucun")}</b>`;
+    const restock = ctx.isGM ? `<i class="fas fa-rotate add2e-vendor-toolbar-icon" data-action="restock" role="button" tabindex="0" title="Restock global" aria-label="Restock global"></i>` : "";
     const div = document.createElement("section");
-    div.innerHTML = `${vendorStyle()}<p><span>Acheteur :</span> ${buyer} <strong>${ctx.buyer ? esc(formatMoney(getMoney(ctx.buyer))) : ""}</strong></p><div>${nav}${ctx.isGM ? `<button data-action="restock" title="Restock global"><i class="fas fa-rotate"></i></button>` : ""}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche">${list}`;
+    div.innerHTML = `${vendorStyle()}<p><span>Acheteur :</span> ${buyer} <strong>${ctx.buyer ? esc(formatMoney(getMoney(ctx.buyer))) : ""}</strong></p><div>${nav}${restock}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche">${list}`;
     return div;
   }
 
@@ -370,7 +373,7 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
     r.querySelector(".buyer")?.addEventListener("change", e => { this.buyer = game.actors.get(e.currentTarget.value) ?? this.buyer; this.render({ force: true }); });
     r.querySelector(".search")?.addEventListener("input", e => { this.search = e.currentTarget.value ?? ""; this.render({ force: true }); });
     r.querySelectorAll("button[data-tab]").forEach(b => b.addEventListener("click", e => { this.tab = e.currentTarget.dataset.tab; this.render({ force: true }); }));
-    r.querySelectorAll("button[data-action]").forEach(b => b.addEventListener("click", e => this.click(e)));
+    r.querySelectorAll("[data-action]").forEach(b => b.addEventListener("click", e => this.click(e)));
   }
 
   async playerBuy(item, qty) {
@@ -386,6 +389,7 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
   }
 
   async click(e) {
+    if (e.currentTarget?.dataset?.disabled === "1") return;
     const a = e.currentTarget.dataset.action;
     diag("CLICK", { action: a, isGM: game.user?.isGM });
     if (a === "restock") { await restockAll(this.vendor); return this.render({ force: true }); }
