@@ -1,12 +1,34 @@
 // ============================================================
 // ADD2E — Auto-compatibilité race / classe au drop — wrapper
-// Version : 2026-06-15-race-class-drop-split-v2-compendium-first
+// Version : 2026-06-16-race-class-drop-split-v3-race-choice
 // ============================================================
 
 import {
   ADD2E_RACE_CLASS_DROP_VERSION,
-  add2eResolveDropCompatibilityWithPopup
+  add2eResolveDropCompatibilityWithPopup,
+  checkClassStatMin,
+  add2eApplyRaceItemDataToActor,
+  add2eRaceCandidateLabel
 } from "./09a-race-class-drop-core.mjs";
+
+function add2eDropWrapperNorm(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eDropWrapperCloneItemData(itemLike) {
+  if (!itemLike) return null;
+  const data = typeof itemLike.toObject === "function" ? itemLike.toObject() : foundry.utils.deepClone(itemLike);
+  if (!data || typeof data !== "object") return null;
+  delete data._id;
+  delete data._stats;
+  return data;
+}
 
 async function add2eResolveRaceClassDropItemData(raw) {
   if (!raw || raw.type !== "Item") return null;
@@ -28,14 +50,14 @@ async function add2eResolveRaceClassDropItemData(raw) {
   }
 
   const fallbackType = String(raw.data?.type ?? "").toLowerCase();
-  const fallbackName = String(raw.data?.name ?? "").trim().toLowerCase();
+  const fallbackName = add2eDropWrapperNorm(raw.data?.name ?? "");
   if (fallbackName && ["race", "classe"].includes(fallbackType)) {
     const packIds = fallbackType === "race" ? ["add2e.races"] : ["add2e.classes"];
     for (const packId of packIds) {
       const pack = game.packs.get(packId);
       if (!pack) continue;
-      const index = await pack.getIndex();
-      const entry = index.find(e => String(e.name ?? "").trim().toLowerCase() === fallbackName);
+      const index = await pack.getIndex({ fields: ["name", "type", "system.slug", "system.label"] });
+      const entry = index.find(e => add2eDropWrapperNorm(e.name) === fallbackName);
       if (!entry) continue;
       const ent = await pack.getDocument(entry._id);
       if (ent instanceof Item) return ent.toObject();
@@ -48,6 +70,140 @@ async function add2eResolveRaceClassDropItemData(raw) {
   }
 
   return raw.data ?? null;
+}
+
+async function add2eLoadRaceCandidatesFromCompendium() {
+  const pack = game.packs.get("add2e.races");
+  if (!pack) {
+    console.warn("[ADD2E][DROP][RACE_CLASSE][RACES_PACK_MISSING] add2e.races introuvable.");
+    return [];
+  }
+
+  const races = [];
+  const index = await pack.getIndex({ fields: ["name", "type", "system.slug", "system.label"] });
+  for (const entry of index) {
+    if (entry.type && String(entry.type).toLowerCase() !== "race") continue;
+    const doc = await pack.getDocument(entry._id);
+    if (!(doc instanceof Item)) continue;
+    const data = doc.toObject();
+    data.flags = data.flags ?? {};
+    data.flags.add2e = data.flags.add2e ?? {};
+    data.flags.add2e.dropResolvedFromCompendium = true;
+    data.flags.add2e.dropResolvedUuid = doc.uuid;
+    data.pack = doc.pack;
+    data.uuid = doc.uuid;
+    races.push(data);
+  }
+
+  const seen = new Set();
+  return races.filter(race => {
+    const key = add2eDropWrapperNorm(race.name ?? race.system?.label ?? race.system?.slug ?? "");
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function add2eActorCurrentRaceData(actor) {
+  const raceItem = actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "race");
+  if (raceItem) return add2eDropWrapperCloneItemData(raceItem);
+
+  const details = actor?.system?.details_race;
+  if (details && typeof details === "object" && (actor.system?.race || details.name || details.label)) {
+    return {
+      name: actor.system?.race || details.name || details.label,
+      type: "race",
+      system: foundry.utils.deepClone(details),
+      flags: {}
+    };
+  }
+
+  return null;
+}
+
+function add2eRacePassesClassDrop(actor, classData, raceData, alignmentCandidate) {
+  if (!raceData) return false;
+  try {
+    return checkClassStatMin(actor, classData, raceData, alignmentCandidate, { silent: true, ignoreLevelMax: true }) === true;
+  } catch (err) {
+    console.warn("[ADD2E][DROP][RACE_CLASSE][RACE_CHECK_ERROR]", { actor: actor?.name, classe: classData?.name, race: raceData?.name, err });
+    return false;
+  }
+}
+
+async function add2eDialogChooseCompatibleRace(actor, classData, candidates, reason) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) {
+    ui.notifications.error("DialogV2 est indisponible : impossible de choisir une race compatible.");
+    return null;
+  }
+
+  const buttons = candidates.map((race, index) => ({
+    action: `race-${index}`,
+    label: add2eRaceCandidateLabel(race),
+    callback: () => index
+  }));
+  buttons.push({ action: "cancel", label: "Annuler", default: true, callback: () => null });
+
+  const list = candidates
+    .map(race => `<li><strong>${foundry.utils.escapeHTML(add2eRaceCandidateLabel(race))}</strong></li>`)
+    .join("");
+
+  const selectedIndex = await DialogV2.wait({
+    window: { title: `Choisir une race pour ${classData.name}` },
+    content: `
+      <div class="add2e-race-class-choice" style="min-width:360px;max-width:520px;">
+        <p>La classe <strong>${foundry.utils.escapeHTML(classData.name)}</strong> nécessite une race compatible.</p>
+        <p>${reason === "missing-race" ? "Aucune race n’est présente sur l’acteur." : "La race actuelle n’est pas compatible avec cette classe."}</p>
+        <p>Races compatibles trouvées dans le compendium <strong>add2e.races</strong> :</p>
+        <ul>${list}</ul>
+      </div>
+    `,
+    buttons,
+    modal: true,
+    rejectClose: false
+  });
+
+  return Number.isInteger(selectedIndex) ? candidates[selectedIndex] : null;
+}
+
+async function add2eEnsureCompatibleRaceForClassDrop(actor, classData, sheet) {
+  if (!actor || !classData || classData.type !== "classe") return { ok: true, handled: false };
+
+  const alignmentCandidate = typeof globalThis.add2ePickClassAlignment === "function"
+    ? globalThis.add2ePickClassAlignment(actor, classData.system ?? {})
+    : actor.system?.alignement ?? "";
+
+  const currentRace = add2eActorCurrentRaceData(actor);
+  if (add2eRacePassesClassDrop(actor, classData, currentRace, alignmentCandidate)) {
+    return { ok: true, handled: false, currentRaceOk: true };
+  }
+
+  const races = await add2eLoadRaceCandidatesFromCompendium();
+  const candidates = races.filter(race => add2eRacePassesClassDrop(actor, classData, race, alignmentCandidate));
+
+  console.log("[ADD2E][DROP][RACE_CLASSE][COMPATIBLE_RACES]", {
+    actor: actor.name,
+    classe: classData.name,
+    currentRace: currentRace?.name ?? null,
+    pack: "add2e.races",
+    candidates: candidates.map(r => ({ name: r.name, uuid: r.flags?.add2e?.dropResolvedUuid ?? r.uuid ?? null }))
+  });
+
+  if (!candidates.length) {
+    ui.notifications.warn(`Aucune race compatible trouvée dans le compendium pour ${classData.name}.`);
+    return { ok: false, handled: true, reason: "no-compatible-race" };
+  }
+
+  const selectedRace = await add2eDialogChooseCompatibleRace(actor, classData, candidates, currentRace ? "incompatible-race" : "missing-race");
+  if (!selectedRace) return { ok: false, handled: true, reason: "cancelled" };
+
+  await add2eApplyRaceItemDataToActor(actor, selectedRace, sheet, {
+    notify: true,
+    reason: currentRace ? "class-drop-race-replace-compatible" : "class-drop-race-missing-compatible"
+  });
+
+  return { ok: true, handled: false, selectedRace };
 }
 
 function add2eInstallDropCompatibilityPopupWrapper() {
@@ -64,6 +220,15 @@ function add2eInstallDropCompatibilityPopupWrapper() {
       itemData = await add2eResolveRaceClassDropItemData(raw);
     } catch (e) {
       console.warn("[ADD2E][DROP][RACE_CLASSE] Impossible de lire les données de drop.", e);
+    }
+
+    if (itemData?.type === "classe") {
+      const raceResult = await add2eEnsureCompatibleRaceForClassDrop(this.actor, itemData, this);
+      if (!raceResult.ok || raceResult.handled) {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+      }
     }
 
     if (itemData && ["classe", "race"].includes(itemData.type)) {
@@ -84,7 +249,7 @@ function add2eInstallDropCompatibilityPopupWrapper() {
   };
 
   SheetClass.prototype._add2eDropCompatPopupWrapped = true;
-  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe installé.", ADD2E_RACE_CLASS_DROP_VERSION, "compendium-first");
+  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe installé.", ADD2E_RACE_CLASS_DROP_VERSION, "compendium-first", "race-choice");
   return true;
 }
 
@@ -96,4 +261,6 @@ Hooks.once("ready", () => {
 });
 
 try { globalThis.add2eResolveRaceClassDropItemData = add2eResolveRaceClassDropItemData; } catch (_e) {}
+try { globalThis.add2eLoadRaceCandidatesFromCompendium = add2eLoadRaceCandidatesFromCompendium; } catch (_e) {}
+try { globalThis.add2eEnsureCompatibleRaceForClassDrop = add2eEnsureCompatibleRaceForClassDrop; } catch (_e) {}
 try { globalThis.add2eInstallDropCompatibilityPopupWrapper = add2eInstallDropCompatibilityPopupWrapper; } catch (_e) {}
