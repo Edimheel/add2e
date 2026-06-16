@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Auto-compatibilité race / classe au drop — wrapper
-// Version : 2026-06-16-race-class-drop-split-v3-race-choice
+// Version : 2026-06-16-race-class-drop-split-v4-restricted-race-choice
 // ============================================================
 
 import {
@@ -28,6 +28,11 @@ function add2eDropWrapperCloneItemData(itemLike) {
   delete data._id;
   delete data._stats;
   return data;
+}
+
+function add2eClassHasRaceRestrictions(classData) {
+  const races = (classData?.system ?? classData ?? {})?.raceRestriction?.races;
+  return !!(races && typeof races === "object" && Object.keys(races).length);
 }
 
 async function add2eResolveRaceClassDropItemData(raw) {
@@ -175,8 +180,12 @@ async function add2eEnsureCompatibleRaceForClassDrop(actor, classData, sheet) {
     : actor.system?.alignement ?? "";
 
   const currentRace = add2eActorCurrentRaceData(actor);
-  if (add2eRacePassesClassDrop(actor, classData, currentRace, alignmentCandidate)) {
+  if (currentRace && add2eRacePassesClassDrop(actor, classData, currentRace, alignmentCandidate)) {
     return { ok: true, handled: false, currentRaceOk: true };
+  }
+
+  if (!add2eClassHasRaceRestrictions(classData)) {
+    return { ok: true, handled: false, noRaceRestriction: true };
   }
 
   const races = await add2eLoadRaceCandidatesFromCompendium();
