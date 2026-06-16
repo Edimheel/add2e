@@ -1,7 +1,7 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs et composants.
 
-import { formatSortChamp } from "./01-core-helpers.mjs";
+import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
 
 /**
@@ -25,9 +25,7 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     sortId: sort.id,
     sortType: sort.type,
     isPower: !!sort.system?.isPower,
-    onUse: sort.system?.onUse,
-    onuse: sort.system?.onuse,
-    on_use: sort.system?.on_use
+    onUsePath: add2eGetSortOnUsePath(sort)
   });
 
   let canCast = false;
@@ -35,17 +33,6 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   let spellToUse = sort;
   let reservedCost = null;
   let componentReservation = null;
-
-  function add2eExtractScriptPath(raw) {
-    if (!raw) return "";
-    let value = raw;
-    if (Array.isArray(value)) value = value.find(v => typeof v === "string" && v.includes(".js")) ?? value[0] ?? "";
-    value = String(value ?? "").trim();
-    if (value.includes(",")) {
-      value = value.split(",").map(s => s.trim()).find(s => s.endsWith(".js")) ?? value.split(",")[0].trim();
-    }
-    return value;
-  }
 
   function add2eGetCasterToken(actorDoc) {
     return canvas?.tokens?.controlled?.[0] ?? actorDoc?.getActiveTokens?.()?.[0] ?? null;
@@ -268,12 +255,13 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     const info = sortDoc.system ?? {};
     const niveauPerso = Number(actorDoc.system?.niveau) || Number(info.niveau) || 1;
     const details = [
-      { label: "Portée", val: formatSortChamp(info.portee, niveauPerso) },
-      { label: "Durée", val: formatSortChamp(info.duree, niveauPerso) },
-      { label: "Cible", val: formatSortChamp(info.cible, niveauPerso) },
-      { label: "Incant.", val: formatSortChamp(info.temps_incantation, niveauPerso) }
+      { label: "Portée", val: formatSortChamp(add2eGetSortField(info, "portee"), niveauPerso) },
+      { label: "Durée", val: formatSortChamp(add2eGetSortField(info, "duree"), niveauPerso) },
+      { label: "Cible", val: formatSortChamp(add2eGetSortField(info, "cible"), niveauPerso) },
+      { label: "Incant.", val: formatSortChamp(add2eGetSortField(info, "temps_incantation"), niveauPerso) }
     ];
-    const htmlMsg = `<div class="add2e-spell-card" style="border-radius:12px;box-shadow:0 2px 10px #715aab33;background:linear-gradient(100deg,#f8f6fc 90%,#e8def8 100%);border:1.5px solid #9373c7;margin:0.3em 0 0.2em 0;max-width:440px;padding:0.5em 1.3em 0.5em 1em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:0.7em;"><img src="${sortDoc.img || "icons/svg/book.svg"}" alt="" style="width:46px;height:46px;border-radius:7px;box-shadow:0 1px 4px #0002;object-fit:contain;"><span style="font-size:1.18em;font-weight:bold;color:#6841a2;">${sortDoc.name}</span><span style="margin-left:auto;color:#8e44ad;font-size:0.97em;font-weight:600;">Niv. ${info.niveau || "-"}</span><span style="font-size:0.9em;font-weight:bold;margin-left:5px;">${chargeLabel}</span></div><table style="margin:0.3em 0 0.3em 0;width:100%;font-size:0.98em;">${details.map(d => `<tr><td style="color:#8571a5;font-weight:600;width:120px;">${d.label}</td><td style="color:#222;font-weight:500;">${d.val || "-"}</td></tr>`).join("")}</table><details open style="margin-top:0.2em;background:#eee8fa;border-radius:6px;border:1px solid #e1d2fb;"><summary style="cursor:pointer;color:#6a3c99;font-size:1em;font-weight:600;">Description</summary><div style="color:#48307a;font-size:0.99em;margin-top:0.3em;margin-bottom:0.2em;padding:0.15em 0.4em 0.25em 0.2em;">${info.description || "<em>Aucune description.</em>"}</div></details></div>`;
+    const description = add2eGetSortField(info, "description", "");
+    const htmlMsg = `<div class="add2e-spell-card" style="border-radius:12px;box-shadow:0 2px 10px #715aab33;background:linear-gradient(100deg,#f8f6fc 90%,#e8def8 100%);border:1.5px solid #9373c7;margin:0.3em 0 0.2em 0;max-width:440px;padding:0.5em 1.3em 0.5em 1em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:0.7em;"><img src="${sortDoc.img || "icons/svg/book.svg"}" alt="" style="width:46px;height:46px;border-radius:7px;box-shadow:0 1px 4px #0002;object-fit:contain;"><span style="font-size:1.18em;font-weight:bold;color:#6841a2;">${sortDoc.name}</span><span style="margin-left:auto;color:#8e44ad;font-size:0.97em;font-weight:600;">Niv. ${info.niveau || "-"}</span><span style="font-size:0.9em;font-weight:bold;margin-left:5px;">${chargeLabel}</span></div><table style="margin:0.3em 0 0.3em 0;width:100%;font-size:0.98em;">${details.map(d => `<tr><td style="color:#8571a5;font-weight:600;width:120px;">${d.label}</td><td style="color:#222;font-weight:500;">${d.val || "-"}</td></tr>`).join("")}</table><details open style="margin-top:0.2em;background:#eee8fa;border-radius:6px;border:1px solid #e1d2fb;"><summary style="cursor:pointer;color:#6a3c99;font-size:1em;font-weight:600;">Description</summary><div style="color:#48307a;font-size:0.99em;margin-top:0.3em;margin-bottom:0.2em;padding:0.15em 0.4em 0.25em 0.2em;">${description || "<em>Aucune description.</em>"}</div></details></div>`;
     await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: actorDoc }), content: htmlMsg, ...(CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 }) });
   }
 
@@ -326,8 +314,7 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   if (!canCast) return false;
   if (!await add2eReserveComponentsAfterCost()) return false;
 
-  const info = spellToUse.system ?? {};
-  const scriptPath = add2eExtractScriptPath(info.onUse || info.onuse || info.on_use);
+  const scriptPath = add2eGetSortOnUsePath(spellToUse);
   let launched = true;
   let scriptExecuted = false;
 
