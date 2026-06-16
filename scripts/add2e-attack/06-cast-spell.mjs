@@ -2,7 +2,7 @@
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs et composants.
 // Version : 2026-06-14-cast-spell-reversible-component-selection-v1
 
-import { formatSortChamp } from "./01-core-helpers.mjs";
+import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
 
 const style = () => CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
@@ -55,13 +55,6 @@ function resolveActorSpell(actorDoc, sortDoc) {
 }
 
 function getCasterToken(actorDoc) { return canvas?.tokens?.controlled?.[0] ?? actorDoc?.getActiveTokens?.()?.[0] ?? null; }
-function extractScriptPath(raw) {
-  if (!raw) return "";
-  let value = Array.isArray(raw) ? raw.find(v => typeof v === "string" && v.includes(".js")) ?? raw[0] ?? "" : raw;
-  value = String(value ?? "").trim();
-  if (value.includes(",")) value = value.split(",").map(s => s.trim()).find(s => s.endsWith(".js")) ?? value.split(",")[0].trim();
-  return value;
-}
 function onUseManagesSpellComponents(scriptPath, sortDoc) {
   const explicit = sortDoc?.flags?.add2e?.componentManagement ?? sortDoc?.system?.componentManagement ?? sortDoc?.system?.gestionComposants;
   if (["onUse", "onuse", "script", "manual", "manuel"].includes(String(explicit ?? "").trim())) return true;
@@ -172,8 +165,9 @@ async function setMemorizedCount(actorDoc, sortDoc, value, reason = "") {
 }
 async function fallbackChat(actorDoc, sortDoc, chargeLabel = "") {
   const info = sortDoc.system ?? {}, level = Number(actorDoc.system?.niveau) || Number(info.niveau) || 1;
-  const rows = ["portee", "duree", "cible", "temps_incantation"].map(k => `<tr><td>${k}</td><td>${formatSortChamp(info[k], level) || "-"}</td></tr>`).join("");
-  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: actorDoc }), content: `<div class="add2e-spell-card"><h3>${sortDoc.name} ${chargeLabel}</h3><table>${rows}</table><div>${info.description || ""}</div></div>`, ...style() });
+  const rows = ["portee", "duree", "cible", "temps_incantation"].map(k => `<tr><td>${k}</td><td>${formatSortChamp(add2eGetSortField(info, k), level) || "-"}</td></tr>`).join("");
+  const description = add2eGetSortField(info, "description", "");
+  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: actorDoc }), content: `<div class="add2e-spell-card"><h3>${sortDoc.name} ${chargeLabel}</h3><table>${rows}</table><div>${description || ""}</div></div>`, ...style() });
 }
 
 export async function add2eCastSpell({ actor, sort } = {}) {
@@ -183,12 +177,12 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   if (!sort) { ui.notifications.warn("Sort introuvable sur l'acteur."); return false; }
 
   const tags = globalThis.Add2eEffectsEngine?.getActiveTags?.(actor) ?? [];
-  const components = String(sort.system?.composantes ?? sort.system?.components ?? sort.system?.componentes ?? "");
+  const components = add2eGetSortComponentsText(sort);
   const requiresVerbal = /(^|[,;\s])V([,;\s]|$)/i.test(components);
   const silenced = tags.some(tag => ["etat:silence", "silence:verbal", "anti_sort:verbal"].includes(String(tag)));
   if (requiresVerbal && silenced) { ui.notifications.warn(`${sort.name} exige une composante verbale et le lanceur est sous Silence.`); return false; }
 
-  console.log("[ADD2E][CAST_SPELL][ENTER]", { actor: actor.name, inputSort: inputSort.name, inputSortId: inputSort.id, sort: sort.name, sortId: sort.id, resolvedOnActor: sort.parent?.id === actor.id });
+  console.log("[ADD2E][CAST_SPELL][ENTER]", { actor: actor.name, inputSort: inputSort.name, inputSortId: inputSort.id, sort: sort.name, sortId: sort.id, resolvedOnActor: sort.parent?.id === actor.id, onUsePath: add2eGetSortOnUsePath(sort) });
 
   let spellToUse = sort, reservedCost = null, componentReservation = null, labelCharge = "";
   async function refundComponents(reason = "") {
@@ -219,7 +213,7 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     if (sort.system?.isPower) return true;
     const api = globalThis.ADD2E_CONSUMABLES;
     if (!api?.add2eReserveSpellComponents) return true;
-    const scriptPath = extractScriptPath(spellToUse.system?.onUse || spellToUse.system?.onuse || spellToUse.system?.on_use);
+    const scriptPath = add2eGetSortOnUsePath(spellToUse);
     if (onUseManagesSpellComponents(scriptPath, spellToUse)) return true;
     componentReservation = await api.add2eReserveSpellComponents(actor, spellToUse);
     if (componentReservation?.blocked) { await refundCost("composants manquants"); ui.notifications.warn(componentReservation.message || "Composant matériel manquant."); return false; }
@@ -253,7 +247,7 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   }
 
   if (!await reserveComponents()) return false;
-  const scriptPath = extractScriptPath(spellToUse.system?.onUse || spellToUse.system?.onuse || spellToUse.system?.on_use);
+  const scriptPath = add2eGetSortOnUsePath(spellToUse);
   let launched = true, scriptExecuted = false;
   if (scriptPath) {
     scriptExecuted = true;
