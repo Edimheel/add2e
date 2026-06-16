@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Auto-compatibilité race / classe au drop — wrapper
-// Version : 2026-06-16-race-class-drop-split-v6-class-race-tiles
+// Version : 2026-06-16-race-class-drop-split-v7-stat-dialog
 // ============================================================
 
 import {
@@ -174,9 +174,23 @@ function add2eDropMissingCaracs(actor, classData, raceData) {
   return Object.entries(mins).map(([carac, rawMin]) => {
     const min = Number(rawMin);
     if (!Number.isFinite(min)) return null;
-    const total = add2eDropStatValue(actor, carac) + add2eDropRaceBonusValue(raceData, carac);
-    return total < min ? { carac, total, min } : null;
+    const base = add2eDropStatValue(actor, carac);
+    const bonus = add2eDropRaceBonusValue(raceData, carac);
+    const total = base + bonus;
+    return total < min ? { carac, base, bonus, total, min, manque: min - total } : null;
   }).filter(Boolean);
+}
+
+function add2eCaracLabel(carac) {
+  const labels = {
+    force: "FOR",
+    dexterite: "DEX",
+    constitution: "CON",
+    intelligence: "INT",
+    sagesse: "SAG",
+    charisme: "CHA"
+  };
+  return labels[add2eDropWrapperNorm(carac)] ?? String(carac ?? "").toUpperCase();
 }
 
 function add2eRacePalette(raceName) {
@@ -198,26 +212,57 @@ function add2eClassRaceTileHtml({ value, className, raceName, checked = false })
   return `<label style="position:relative;display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;min-height:58px;padding:8px 9px;border:2px solid ${border};border-radius:12px;background:linear-gradient(135deg,${bg1},${bg2});color:${color};cursor:pointer;"><input type="radio" name="add2eChoice" value="${add2eDropWrapperEsc(value)}" ${checked ? "checked" : ""} style="width:20px;height:20px;margin:0;accent-color:${selected};cursor:pointer;"><span style="display:grid;gap:1px;text-align:left;"><strong style="font-size:1rem;line-height:1.08;">${add2eDropWrapperEsc(className)}</strong><span style="font-size:.84rem;line-height:1.05;font-weight:900;text-transform:uppercase;letter-spacing:.04em;">${add2eDropWrapperEsc(raceName)}</span></span></label>`;
 }
 
-async function add2eDialogStatFailure(actor, classData, races) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  const rows = races.map(race => {
-    const missing = add2eDropMissingCaracs(actor, classData, race);
-    const detail = missing.length
-      ? missing.map(m => `${add2eDropWrapperEsc(m.carac)} ${m.total} / ${m.min}`).join(", ")
-      : "prérequis non satisfaits";
-    return `<li><strong>${add2eDropWrapperEsc(add2eRaceCandidateLabel(race))}</strong> : caractéristiques insuffisantes (${detail}).</li>`;
+function add2eStatFailureCard(actor, classData, race) {
+  const raceName = add2eRaceCandidateLabel(race);
+  const missing = add2eDropMissingCaracs(actor, classData, race);
+  const [color, bg1, bg2, border] = add2eRacePalette(raceName);
+  const chips = missing.map(m => {
+    const bonusText = m.bonus ? `<span style="font-size:.72rem;font-weight:800;color:#6a4b16;">base ${m.base} ${m.bonus > 0 ? "+" : ""}${m.bonus}</span>` : `<span style="font-size:.72rem;font-weight:800;color:#6a4b16;">actuel ${m.total}</span>`;
+    return `<div style="border:1px solid #b98224;border-radius:10px;background:#fff8e4;padding:7px 8px;display:grid;gap:2px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;"><strong style="font-size:1rem;">${add2eDropWrapperEsc(add2eCaracLabel(m.carac))}</strong><span style="font-weight:900;color:#8a1f16;">${m.total} → ${m.min}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">${bonusText}<span style="font-size:.78rem;font-weight:900;color:#8a1f16;">+${m.manque} requis</span></div>
+    </div>`;
   }).join("");
 
+  return `<div style="border:2px solid ${border};border-radius:13px;background:linear-gradient(135deg,${bg1},${bg2});color:${color};padding:10px;display:grid;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.16);">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;"><strong style="font-size:1.08rem;">${add2eDropWrapperEsc(classData.name)}</strong><span style="font-size:.86rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;">${add2eDropWrapperEsc(raceName)}</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;">${chips}</div>
+  </div>`;
+}
+
+async function add2eDialogStatFailure(actor, classData, races) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  const cards = races.map(race => add2eStatFailureCard(actor, classData, race)).join("\n");
+  const raceNames = races.map(r => add2eRaceCandidateLabel(r)).join(" / ");
+
   const content = `
-    <div class="add2e-race-class-choice" style="min-width:420px;max-width:620px;">
-      <p><strong>La classe ${add2eDropWrapperEsc(classData.name)} possède au moins une race compatible.</strong></p>
-      <p>Le blocage vient des caractéristiques actuelles de l’acteur, pas de la compatibilité raciale.</p>
-      <ul>${rows}</ul>
+    <div class="add2e-multiclass-choice" style="display:grid;gap:9px;min-width:600px;max-width:760px;color:#2b1c0d;">
+      <div style="border:1px solid #5c3b12;border-radius:12px;background:linear-gradient(180deg,#3b2612,#1c1208);padding:9px 12px;">
+        <h2 style="margin:0;color:#f9df9a;font-size:1rem;text-transform:uppercase;border:0;">Prérequis insuffisants</h2>
+        <p style="margin:4px 0 0;color:#fff2c4;font-weight:800;">La compatibilité raciale existe, mais les caractéristiques actuelles ne permettent pas encore de créer cette classe.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;">
+        <div style="border:1px solid #c59a3d;border-radius:10px;background:#fffaf0;padding:8px;"><b>Acteur</b><br>${add2eDropWrapperEsc(actor.name)}</div>
+        <div style="border:1px solid #c59a3d;border-radius:10px;background:#fffaf0;padding:8px;"><b>Classe déposée</b><br>${add2eDropWrapperEsc(classData.name)}</div>
+        <div style="border:1px solid #c59a3d;border-radius:10px;background:#fffaf0;padding:8px;"><b>Races compatibles</b><br>${add2eDropWrapperEsc(raceNames)}</div>
+      </div>
+      <div style="border:1px solid #9d6b18;border-radius:10px;background:#fff1c9;color:#5d3607;padding:9px 11px;font-weight:800;">
+        Augmente les caractéristiques indiquées ci-dessous, puis redépose la classe. La fenêtre suivante proposera les tuiles classe/race et appliquera les deux en une seule fois.
+      </div>
+      <div style="display:grid;gap:8px;">${cards}</div>
     </div>
   `;
 
-  if (DialogV2?.alert) return DialogV2.alert({ window: { title: "ADD2E — Prérequis insuffisants" }, content, ok: { label: "OK" }, modal: true });
-  if (DialogV2?.wait) return DialogV2.wait({ window: { title: "ADD2E — Prérequis insuffisants" }, content, buttons: [{ action: "ok", label: "OK", default: true, callback: () => true }], modal: true, rejectClose: false });
+  if (DialogV2?.wait) return DialogV2.wait({
+    classes: ["add2e-multiclass-dialog"],
+    window: { title: "ADD2E — Prérequis insuffisants" },
+    content,
+    buttons: [{ action: "ok", label: "Corriger les caractéristiques", default: true, callback: () => true }],
+    modal: true,
+    rejectClose: false,
+    close: () => true
+  });
+  if (DialogV2?.alert) return DialogV2.alert({ window: { title: "ADD2E — Prérequis insuffisants" }, content, ok: { label: "Corriger les caractéristiques" }, modal: true });
   ui.notifications.warn(`Race compatible trouvée pour ${classData.name}, mais caractéristiques insuffisantes.`);
   return false;
 }
@@ -367,7 +412,7 @@ function add2eInstallDropCompatibilityPopupWrapper() {
   };
 
   SheetClass.prototype._add2eDropCompatPopupWrapped = true;
-  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe installé.", ADD2E_RACE_CLASS_DROP_VERSION, "class-race-tiles");
+  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe installé.", ADD2E_RACE_CLASS_DROP_VERSION, "class-race-tiles", "stat-dialog-v7");
   return true;
 }
 
