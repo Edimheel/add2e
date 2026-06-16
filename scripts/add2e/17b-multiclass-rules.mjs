@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage : règles, progression et payload
-// Version : 2026-06-16-multiclass-rules-compendium-aliases-v2
+// Version : 2026-06-15-multiclass-rules-all-compatible-races-v1
 
 import { classItems, classSlug, cloneItemData, itemLabel, norm, num, pickClassAlignment, systemRace, warn } from "./17b-multiclass-core.mjs";
 
@@ -13,22 +13,9 @@ const MULTICLASS_CANDIDATE_CACHE = {
   classe: null
 };
 
-function mNorm(value) {
-  const n = norm(value);
-  const aliases = {
-    illusioniste: "illusionniste",
-    illusionnist: "illusionniste",
-    illusionniste: "illusionniste",
-    demi_orc: "demi_orque",
-    demi_orque: "demi_orque",
-    half_orc: "demi_orque"
-  };
-  return aliases[n] ?? n;
-}
-
 function candidateKey(data) {
   const sys = data?.system ?? {};
-  return mNorm(data?.name ?? sys.slug ?? sys.label ?? sys.name ?? sys.nom ?? data?.id ?? "");
+  return norm(data?.name ?? sys.slug ?? sys.label ?? sys.name ?? sys.nom ?? data?.id ?? "");
 }
 
 function dedupeCandidates(items) {
@@ -61,15 +48,7 @@ async function loadCandidatePack(type) {
         const doc = await pack.getDocument(entry._id);
         if (!doc) continue;
         const data = cloneItemData(doc);
-        if (data) {
-          data.flags = data.flags ?? {};
-          data.flags.add2e = data.flags.add2e ?? {};
-          data.flags.add2e.dropResolvedFromCompendium = true;
-          data.flags.add2e.dropResolvedUuid = doc.uuid;
-          data.pack = doc.pack;
-          data.uuid = doc.uuid;
-          docs.push(data);
-        }
+        if (data) docs.push(data);
       }
     } catch (err) {
       warn("[MULTICLASS][COMPENDIUM_LOAD_ERROR]", { type: wanted, packId, err });
@@ -94,9 +73,9 @@ Hooks.once("ready", () => {
 });
 
 export function comboTokens(combo) {
-  if (Array.isArray(combo)) return combo.map(mNorm).filter(Boolean);
-  if (typeof combo === "string") return combo.split(/[+/;,|\n]+/).map(mNorm).filter(Boolean);
-  if (combo && typeof combo === "object" && Array.isArray(combo.classes)) return combo.classes.map(mNorm).filter(Boolean);
+  if (Array.isArray(combo)) return combo.map(norm).filter(Boolean);
+  if (typeof combo === "string") return combo.split(/[+/;,|\n]+/).map(norm).filter(Boolean);
+  if (combo && typeof combo === "object" && Array.isArray(combo.classes)) return combo.classes.map(norm).filter(Boolean);
   return [];
 }
 
@@ -107,30 +86,16 @@ export function allowedCombosFromRace(raceData) {
 }
 
 export function raceAllowsClassSet(raceData, names) {
-  const wanted = [...new Set(names.map(mNorm).filter(Boolean))];
+  const wanted = [...new Set(names.map(norm).filter(Boolean))];
   if (wanted.length <= 1) return true;
-  const combos = allowedCombosFromRace(raceData);
-  const ok = combos.some(combo => wanted.every(c => combo.includes(c)));
-  if (!ok && globalThis.ADD2E_DEBUG_MULTICLASS === true) {
-    console.warn("[ADD2E][MULTICLASSE][COMBO_REFUSED]", { race: itemLabel(raceData, "Race"), wanted, combos });
-  }
-  return ok;
-}
-
-function raceRuleKeys(raceData) {
-  const label = itemLabel(raceData, "Race");
-  const key = mNorm(label);
-  return [...new Set([key, `race:${key}`, `race_${key}`])];
+  return allowedCombosFromRace(raceData).some(combo => wanted.every(c => combo.includes(c)));
 }
 
 export function classRaceMaxLevel(classData, raceData) {
   const sys = classData?.system ?? classData ?? {};
   const rules = sys.raceRestriction?.races ?? {};
-  let rule = null;
-  for (const key of raceRuleKeys(raceData)) {
-    rule = rules[key] ?? rules[norm(key)] ?? null;
-    if (rule) break;
-  }
+  const raceKey = `race:${norm(itemLabel(raceData, "Race"))}`;
+  const rule = rules[raceKey] ?? rules[norm(raceKey)] ?? null;
   const value = Number(rule?.maxLevel ?? rule?.niveauMax ?? rule?.max ?? 0);
   return Number.isFinite(value) && value > 0 ? value : 0;
 }
@@ -142,11 +107,9 @@ export function raceMatchesClassRules(raceData, classData) {
   const sys = classData?.system ?? classData ?? {};
   const rules = sys.raceRestriction?.races ?? null;
   if (!rules || typeof rules !== "object" || !Object.keys(rules).length) return true;
-  for (const key of raceRuleKeys(raceData)) {
-    const rule = rules[key] ?? rules[norm(key)] ?? null;
-    if (rule) return rule.allowed === true;
-  }
-  return false;
+  const raceKey = `race:${norm(itemLabel(raceData, "Race"))}`;
+  const rule = rules[raceKey] ?? rules[norm(raceKey)] ?? null;
+  return rule?.allowed === true;
 }
 
 export function classPrerequisitesOk(actor, classData, raceData = null, options = {}) {
@@ -174,7 +137,7 @@ export function uniqueRaces(actor) {
   const current = actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "race") ?? null;
   const seen = new Set();
   return [...(current ? [cloneItemData(current)] : []), ...worldItemsByType("race")].filter(Boolean).filter(race => {
-    const key = mNorm(itemLabel(race, "Race"));
+    const key = norm(itemLabel(race, "Race"));
     if (!key || seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -183,11 +146,12 @@ export function uniqueRaces(actor) {
 
 export function currentRaceOrCompatibleAlternatives(actor, predicate) {
   const current = systemRace(actor);
+  const currentKey = norm(itemLabel(current, "Race"));
   const ordered = [];
   const seen = new Set();
 
   const pushIfValid = race => {
-    const key = mNorm(itemLabel(race, "Race"));
+    const key = norm(itemLabel(race, "Race"));
     if (!race || !key || seen.has(key)) return;
     if (!predicate(race)) return;
     seen.add(key);
@@ -302,21 +266,36 @@ export function multiclassUpdatePayload(actor, extraClassDoc = null, xpByClass =
 
   return {
     "system.classe": label,
-    "system.details_classe": entries[0]?.system ?? {},
-    "system.classes": entries,
-    "system.multiclasse.enabled": true,
-    "system.multiclasse.classes": entries,
-    "system.multiclasse.label": label,
-    "system.multiclasse.race": itemLabel(raceData, "Race"),
-    "system.niveau": maxLevel,
-    "system.niveau_par_classe": levelMap,
-    "system.xp_par_classe": xpMap,
-    "system.titre_par_classe": titleMap,
-    "system.xp_prochain_par_classe": nextMap,
-    "system.niveau_max_par_classe": maxMap,
+    "system.classes": entries.map(e => ({ id: e.id, uuid: e.uuid, name: e.name, slug: e.slug, niveau: e.level, level: e.level, xp: e.xp, titre: e.title, title: e.title, hitDie: e.hitDie, spellcasting: e.spellcasting, levelMaxRace: e.levelMaxRace })),
+    "system.details_classes": entries.map(e => ({ ...e.system, name: e.name, label: e.name, slug: e.slug, sourceItemId: e.id, sourceItemUuid: e.uuid, niveau: e.level, level: e.level, xp: e.xp, title: e.title, levelMaxRace: e.levelMaxRace })),
+    "system.details_classe": { ...entries[0].system, name: entries[0].name, label: entries[0].name, slug: entries[0].slug, sourceItemId: entries[0].id, sourceItemUuid: entries[0].uuid },
+    "system.multiclasse": { enabled: true, mode: "racial", xpSplit: "equal", classes: entries.map(e => e.slug), label },
     "system.xp": totalXp,
-    "system.xp_prochain": nextXp,
-    "system.titre": entries.map(e => e.title).filter(Boolean).join(" / "),
-    "system.spellcasting": spellLists.length ? { enabled: true, lists: spellLists } : entries[0]?.spellcasting ?? null
+    "system.xp_par_classe": xpMap,
+    "system.niveaux_par_classe": levelMap,
+    "system.titres_par_classe": titleMap,
+    "system.xp_next_par_classe": nextMap,
+    "system.niveau_max_par_classe": maxMap,
+    "system.niveau": maxLevel,
+    "system.niveau_suggere": maxLevel,
+    "system.titre": entries.map(e => `${e.name} ${e.level}${e.title ? ` (${e.title})` : ""}`).join(" / "),
+    "system.progression_xp": entries.map(e => `${e.name} ${e.xp.toLocaleString()}${nextMap[e.slug] ? ` / ${nextMap[e.slug].toLocaleString()} XP` : " XP"}${e.levelMaxRace ? ` — max racial ${e.levelMaxRace}` : ""}`).join(" — "),
+    "system.xp_next": nextXp,
+    "system.xp_to_next": nextXp ? Math.max(0, nextXp - Math.min(...entries.map(e => e.xp))) : 0,
+    "system.xp_percent": 0,
+    "system.spellcasting": spellLists.length ? { enabled: true, mode: "multiclass", type: "prepared", lists: spellLists, usesSlots: true, usesPreparation: true, preparationSource: "multiclasse.details_classes" } : null
+  };
+}
+
+export function monoClassCleanupPayload() {
+  return {
+    "system.multiclasse": { enabled: false, mode: "mono", xpSplit: "none", classes: [], label: "" },
+    "system.classes": [],
+    "system.details_classes": [],
+    "system.xp_par_classe": {},
+    "system.niveaux_par_classe": {},
+    "system.titres_par_classe": {},
+    "system.xp_next_par_classe": {},
+    "system.niveau_max_par_classe": {}
   };
 }
