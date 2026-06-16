@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage : drop classe/race
-// Version : 2026-06-16-multiclass-drop-compendium-first-v3
+// Version : 2026-06-13-multiclass-drop-v2-candidates-export
 
 import { classItems, classSlug, cloneItemData, itemLabel } from "./17b-multiclass-core.mjs";
 import { currentRaceOrCompatibleAlternatives, raceCompatibleForMulticlass, worldItemsByType } from "./17b-multiclass-rules.mjs";
@@ -19,55 +19,26 @@ export function compatibleMulticlassClassCandidates(actor, preferredClassData = 
 }
 
 async function resolveDroppedItemData(event, data = null) {
-  const raw = data ?? TextEditor.getDragEventData(event);
+  const raw = data ?? globalThis.TextEditor?.getDragEventData?.(event) ?? null;
   if (!raw) return null;
-
-  if (typeof globalThis.add2eResolveDropItemDataCompendiumFirst === "function") {
-    const resolved = await globalThis.add2eResolveDropItemDataCompendiumFirst(raw);
-    if (resolved && ["classe", "race"].includes(resolved.type)) return cloneItemData(resolved);
+  if (raw.system && ["classe", "race"].includes(raw.type)) return cloneItemData(raw);
+  if (raw.data?.system && ["classe", "race"].includes(raw.data.type)) return cloneItemData(raw.data);
+  if (raw.uuid) {
+    const doc = await fromUuid(raw.uuid).catch(() => null);
+    if (doc instanceof Item) return cloneItemData(doc);
   }
-
   if (raw.pack && (raw.id || raw._id)) {
     const pack = game.packs.get(raw.pack);
     const doc = pack ? await pack.getDocument(raw.id ?? raw._id).catch(() => null) : null;
-    if (doc instanceof Item && ["classe", "race"].includes(doc.type)) return cloneItemData(doc);
+    if (doc instanceof Item) return cloneItemData(doc);
   }
-
-  if (raw.uuid && String(raw.uuid).startsWith("Compendium.")) {
-    const doc = await fromUuid(raw.uuid).catch(() => null);
-    if (doc instanceof Item && ["classe", "race"].includes(doc.type)) return cloneItemData(doc);
-  }
-
-  if (raw.data?.system && ["classe", "race"].includes(raw.data.type)) {
-    const fallbackType = String(raw.data.type).toLowerCase();
-    const fallbackName = String(raw.data.name ?? "").trim().toLowerCase();
-    const packId = fallbackType === "race" ? "add2e.races" : "add2e.classes";
-    const pack = game.packs.get(packId);
-    if (pack && fallbackName) {
-      const index = await pack.getIndex({ fields: ["name", "type", "system.slug", "system.label"] });
-      const entry = index.find(e => String(e.name ?? "").trim().toLowerCase() === fallbackName);
-      if (entry) {
-        const doc = await pack.getDocument(entry._id).catch(() => null);
-        if (doc instanceof Item) return cloneItemData(doc);
-      }
-    }
-    return cloneItemData(raw.data);
-  }
-
-  if (raw.system && ["classe", "race"].includes(raw.type)) return cloneItemData(raw);
-
-  if (raw.uuid) {
-    const doc = await fromUuid(raw.uuid).catch(() => null);
-    if (doc instanceof Item && ["classe", "race"].includes(doc.type)) return cloneItemData(doc);
-  }
-
   return null;
 }
 
 export function installDropWrapper() {
   const SheetClass = globalThis.Add2eActorSheet;
   if (!SheetClass?.prototype?._onDrop) return false;
-  if (SheetClass.prototype._add2eMulticlassWrapped === "split-v3-compendium-first") return true;
+  if (SheetClass.prototype._add2eMulticlassWrapped === "split-v1") return true;
   const original = SheetClass.prototype._onDrop;
   SheetClass.prototype._onDrop = async function add2eMulticlassDropWrapped(event, data = null) {
     const actor = this.actor;
@@ -91,7 +62,7 @@ export function installDropWrapper() {
     }
     return original.call(this, event, data);
   };
-  SheetClass.prototype._add2eMulticlassWrapped = "split-v3-compendium-first";
+  SheetClass.prototype._add2eMulticlassWrapped = "split-v1";
   return true;
 }
 
