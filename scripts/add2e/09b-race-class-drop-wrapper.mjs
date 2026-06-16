@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Auto-compatibilité race / classe au drop — wrapper
-// Version : 2026-06-16-race-class-drop-split-v4-restricted-race-choice
+// Version : 2026-06-16-race-class-drop-split-v5-stat-explain
 // ============================================================
 
 import {
@@ -8,7 +8,8 @@ import {
   add2eResolveDropCompatibilityWithPopup,
   checkClassStatMin,
   add2eApplyRaceItemDataToActor,
-  add2eRaceCandidateLabel
+  add2eRaceCandidateLabel,
+  add2eRaceMatchesClassRules
 } from "./09a-race-class-drop-core.mjs";
 
 function add2eDropWrapperNorm(value) {
@@ -113,17 +114,27 @@ function add2eActorCurrentRaceData(actor) {
   const raceItem = actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "race");
   if (raceItem) return add2eDropWrapperCloneItemData(raceItem);
 
-  const details = actor?.system?.details_race;
-  if (details && typeof details === "object" && (actor.system?.race || details.name || details.label)) {
+  const sys = actor?.system ?? {};
+  const raceName = sys.race ?? sys.details_race?.name ?? sys.details_race?.label ?? "";
+  if (raceName) {
     return {
-      name: actor.system?.race || details.name || details.label,
+      name: raceName,
       type: "race",
-      system: foundry.utils.deepClone(details),
+      system: foundry.utils.deepClone(sys.details_race ?? { name: raceName, label: raceName }),
       flags: {}
     };
   }
 
   return null;
+}
+
+function add2eRaceRuleAllowsClass(raceData, classData) {
+  if (!raceData) return false;
+  try { return add2eRaceMatchesClassRules(raceData, classData) === true; }
+  catch (err) {
+    console.warn("[ADD2E][DROP][RACE_CLASSE][RACE_RULE_ERROR]", { classe: classData?.name, race: raceData?.name, err });
+    return false;
+  }
 }
 
 function add2eRacePassesClassDrop(actor, classData, raceData, alignmentCandidate) {
@@ -134,6 +145,53 @@ function add2eRacePassesClassDrop(actor, classData, raceData, alignmentCandidate
     console.warn("[ADD2E][DROP][RACE_CLASSE][RACE_CHECK_ERROR]", { actor: actor?.name, classe: classData?.name, race: raceData?.name, err });
     return false;
   }
+}
+
+function add2eDropStatValue(actor, carac) {
+  const sys = actor?.system ?? {};
+  const raw = sys[`${carac}_base`] ?? sys[carac] ?? 10;
+  const value = Number(raw?.value ?? raw?.total ?? raw);
+  return Number.isFinite(value) ? value : 10;
+}
+
+function add2eDropRaceBonusValue(raceData, carac) {
+  const raw = (raceData?.system ?? {})?.bonus_caracteristiques?.[carac] ?? 0;
+  const value = Number(raw?.value ?? raw?.total ?? raw);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function add2eDropMissingCaracs(actor, classData, raceData) {
+  const mins = (classData?.system ?? {})?.caracs_min ?? {};
+  return Object.entries(mins).map(([carac, rawMin]) => {
+    const min = Number(rawMin);
+    if (!Number.isFinite(min)) return null;
+    const total = add2eDropStatValue(actor, carac) + add2eDropRaceBonusValue(raceData, carac);
+    return total < min ? { carac, total, min } : null;
+  }).filter(Boolean);
+}
+
+async function add2eDialogStatFailure(actor, classData, races) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  const rows = races.map(race => {
+    const missing = add2eDropMissingCaracs(actor, classData, race);
+    const detail = missing.length
+      ? missing.map(m => `${foundry.utils.escapeHTML(m.carac)} ${m.total} / ${m.min}`).join(", ")
+      : "prérequis non satisfaits";
+    return `<li><strong>${foundry.utils.escapeHTML(add2eRaceCandidateLabel(race))}</strong> : caractéristiques insuffisantes (${detail}).</li>`;
+  }).join("");
+
+  const content = `
+    <div class="add2e-race-class-choice" style="min-width:420px;max-width:620px;">
+      <p><strong>La classe ${foundry.utils.escapeHTML(classData.name)} possède au moins une race compatible.</strong></p>
+      <p>Le blocage vient des caractéristiques actuelles de l’acteur, pas de la compatibilité raciale.</p>
+      <ul>${rows}</ul>
+    </div>
+  `;
+
+  if (DialogV2?.alert) return DialogV2.alert({ window: { title: "ADD2E — Prérequis insuffisants" }, content, ok: { label: "OK" }, modal: true });
+  if (DialogV2?.wait) return DialogV2.wait({ window: { title: "ADD2E — Prérequis insuffisants" }, content, buttons: [{ action: "ok", label: "OK", default: true, callback: () => true }], modal: true, rejectClose: false });
+  ui.notifications.warn(`Race compatible trouvée pour ${classData.name}, mais caractéristiques insuffisantes.`);
+  return false;
 }
 
 async function add2eDialogChooseCompatibleRace(actor, classData, candidates, reason) {
@@ -189,15 +247,22 @@ async function add2eEnsureCompatibleRaceForClassDrop(actor, classData, sheet) {
   }
 
   const races = await add2eLoadRaceCandidatesFromCompendium();
-  const candidates = races.filter(race => add2eRacePassesClassDrop(actor, classData, race, alignmentCandidate));
+  const raciallyCompatible = races.filter(race => add2eRaceRuleAllowsClass(race, classData));
+  const candidates = raciallyCompatible.filter(race => add2eRacePassesClassDrop(actor, classData, race, alignmentCandidate));
 
   console.log("[ADD2E][DROP][RACE_CLASSE][COMPATIBLE_RACES]", {
     actor: actor.name,
     classe: classData.name,
     currentRace: currentRace?.name ?? null,
     pack: "add2e.races",
+    raciallyCompatible: raciallyCompatible.map(r => r.name),
     candidates: candidates.map(r => ({ name: r.name, uuid: r.flags?.add2e?.dropResolvedUuid ?? r.uuid ?? null }))
   });
+
+  if (!candidates.length && raciallyCompatible.length) {
+    await add2eDialogStatFailure(actor, classData, raciallyCompatible);
+    return { ok: false, handled: true, reason: "stat-prerequisites" };
+  }
 
   if (!candidates.length) {
     ui.notifications.warn(`Aucune race compatible trouvée dans le compendium pour ${classData.name}.`);
@@ -258,7 +323,7 @@ function add2eInstallDropCompatibilityPopupWrapper() {
   };
 
   SheetClass.prototype._add2eDropCompatPopupWrapped = true;
-  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe installé.", ADD2E_RACE_CLASS_DROP_VERSION, "compendium-first", "race-choice");
+  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe installé.", ADD2E_RACE_CLASS_DROP_VERSION, "compendium-first", "race-choice", "stat-explain");
   return true;
 }
 
