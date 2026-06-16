@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Capacités activables de classe : exécution on_use
-// Version : 2026-06-11-multiclass-class-abilities-v2-no-dom-injection
+// Version : 2026-06-16-active-class-abilities-source-filter-v3
 // Format accepté pour les objets classe :
 // - system.activeClassFeatures : boutons / capacités utilisables
 // - system.classFeatures       : capacités passives ou mixtes
@@ -8,7 +8,7 @@
 // - anciens alias conservés : capacitesClasse, classFeaturesDebloquees
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-11-multiclass-class-abilities-v2-no-dom-injection";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-16-active-class-abilities-source-filter-v3";
 globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION;
 console.log("[ADD2E][CAPACITES][VERSION]", ADD2E_CLASS_ACTIVE_ABILITIES_VERSION);
 
@@ -102,12 +102,30 @@ function add2eGetActorClassSystems(actor) {
   const classItem = classItems[0] ?? null;
   const itemSystem = classItem?.system ?? null;
   const monoLevel = Number(sys.niveau ?? 1) || 1;
+  const sources = [];
 
-  return [
-    add2eClassSystemEntry(details, { name: details?.label ?? details?.name ?? sys.classe ?? "Classe", slug: add2eClassSlugFromSystem(details, sys.classe), level: monoLevel }),
-    add2eClassSystemEntry(itemSystem, { name: classItem?.name ?? sys.classe ?? "Classe", slug: add2eClassSlugFromSystem(itemSystem, classItem?.name ?? sys.classe), level: monoLevel, itemId: classItem?.id ?? null }),
-    add2eClassSystemEntry(sys, { name: sys.classe ?? "Acteur", slug: add2eClassSlugFromSystem(sys, sys.classe), level: monoLevel })
-  ].filter(Boolean);
+  if (details) sources.push(add2eClassSystemEntry(details, {
+    name: details?.label ?? details?.name ?? sys.classe ?? "Classe",
+    slug: add2eClassSlugFromSystem(details, sys.classe),
+    level: monoLevel
+  }));
+
+  if (itemSystem) sources.push(add2eClassSystemEntry(itemSystem, {
+    name: classItem?.name ?? sys.classe ?? "Classe",
+    slug: add2eClassSlugFromSystem(itemSystem, classItem?.name ?? sys.classe),
+    level: monoLevel,
+    itemId: classItem?.id ?? null
+  }));
+
+  // Secours uniquement pour les acteurs anciens qui n'ont ni details_classe ni item de classe.
+  // Cela évite qu'un reliquat actor.system.capacitesClasse d'une ancienne classe pollue le HUD.
+  if (!sources.length) sources.push(add2eClassSystemEntry(sys, {
+    name: sys.classe ?? "Acteur",
+    slug: add2eClassSlugFromSystem(sys, sys.classe),
+    level: monoLevel
+  }));
+
+  return sources.filter(Boolean);
 }
 
 function add2eGetActorClassFeatures(actor) {
