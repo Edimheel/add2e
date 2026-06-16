@@ -1,5 +1,5 @@
 // ADD2E — Marchand V2 compact.
-// Version : 2026-06-16-merchant-bazaar-tab-v1
+// Version : 2026-06-16-merchant-bazaar-accordion-v2
 
 import {
   findVendor,
@@ -25,7 +25,7 @@ import {
 } from "./22a-vendor-core.mjs";
 import { normalizeShopCurrency, ADD2E_VENDOR_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-16-merchant-bazaar-tab-v1";
+const VERSION = "2026-06-16-merchant-bazaar-accordion-v2";
 const DIAG = "[ADD2E][MERCHANT_APP][BUY_DIAG]";
 
 const arr = v => Array.isArray(v)
@@ -116,35 +116,71 @@ function usage(actor, item) {
 
 function itemTags(item) {
   const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
-  return [
-    s.tags,
-    s.effectTags,
-    s.effecttags,
-    f.tags,
-    f.effectTags,
-    f.effecttags
-  ].flatMap(arr).map(v => lower(v)).filter(Boolean);
+  return [s.tags, s.effectTags, s.effecttags, f.tags, f.effectTags, f.effecttags]
+    .flatMap(arr)
+    .map(v => lower(v))
+    .filter(Boolean);
 }
 
 function isBazaarItem(item) {
   return isStockItem(item) && !isComponent(item) && !isAmmunition(item) && vendorKind(item) !== "Composant" && vendorKind(item) !== "Projectile";
 }
 
+function normalizeSectionLabel(raw = "") {
+  const value = String(raw ?? "").trim();
+  const s = lower(value);
+  if (!s) return "Divers";
+  if (/herbe|herbor|plante|ingredient|ingrédient|epice|épice|aromate|racine|baie|graine|feuille|fleur/.test(s)) return "Herbes et ingrédients";
+  if (/outil|tools?|artisan|craft|metier|métier|crochet|corde|grappin/.test(s)) return "Outils et matériel";
+  if (/vetement|vêtement|habit|robe|botte|chaussure|ceinture|cape/.test(s)) return "Vêtements";
+  if (/nourriture|ration|vivre|eau|boisson|repas/.test(s)) return "Vivres";
+  if (/lumiere|lumière|torche|lanterne|huile|bougie/.test(s)) return "Éclairage";
+  if (/contenant|sac|sacoche|coffre|bourse|etui|étui|carquois|boite|boîte/.test(s)) return "Contenants";
+  if (/monture|cheval|animal|chariot|charrette|selle|bride/.test(s)) return "Transport et montures";
+  if (/service|logement|auberge/.test(s)) return "Services";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function bazaarSection(item) {
   const s = item?.system ?? {};
-  const values = [s.categorie, s.category, s.sousType, s.sous_type, s.subtype, s.kind, s.slot, ...itemTags(item)].map(v => lower(v)).filter(Boolean);
-  const text = values.join(" ");
+  const values = [
+    s.categorie,
+    s.category,
+    s.sousType,
+    s.sous_type,
+    s.subtype,
+    s.kind,
+    s.slot,
+    ...itemTags(item)
+  ].map(v => String(v ?? "").trim()).filter(Boolean);
+  const text = values.map(lower).join(" ");
 
+  if (/herbe|herbor|plante|ingredient|ingrédient|epice|épice|aromate|racine|baie|graine|feuille|fleur/.test(text)) return "Herbes et ingrédients";
   if (/outil|tools?|artisan|craft|metier|métier|crochet|corde|grappin/.test(text)) return "Outils et matériel";
   if (/vetement|vêtement|habit|robe|botte|chaussure|ceinture|cape/.test(text)) return "Vêtements";
   if (/nourriture|ration|vivre|eau|boisson|repas/.test(text)) return "Vivres";
   if (/lumiere|lumière|torche|lanterne|huile|bougie/.test(text)) return "Éclairage";
-  if (/contenant|sac|sacoche|coffre|bourse|etui|étui|carquois/.test(text)) return "Contenants";
+  if (/contenant|sac|sacoche|coffre|bourse|etui|étui|carquois|boite|boîte/.test(text)) return "Contenants";
   if (/monture|cheval|animal|chariot|charrette|selle|bride/.test(text)) return "Transport et montures";
-  if (/service|logement|repas|auberge/.test(text)) return "Services";
+  if (/service|logement|auberge/.test(text)) return "Services";
 
-  const raw = String(s.categorie ?? s.category ?? s.sousType ?? s.sous_type ?? "").trim();
-  return raw ? raw : "Divers";
+  return normalizeSectionLabel(s.categorie ?? s.category ?? s.sousType ?? s.sous_type ?? "Divers");
+}
+
+function sectionRank(name) {
+  const order = [
+    "Outils et matériel",
+    "Herbes et ingrédients",
+    "Vivres",
+    "Éclairage",
+    "Contenants",
+    "Vêtements",
+    "Transport et montures",
+    "Services",
+    "Divers"
+  ];
+  const i = order.indexOf(name);
+  return i >= 0 ? i : 500;
 }
 
 function rowTabs(item, use) {
@@ -155,12 +191,58 @@ function rowTabs(item, use) {
   return tabs;
 }
 
-function rowHtml(item, ctx, use, visible) {
+function rowHtml(item, ctx, use, visible = true) {
   const kind = vendorKind(item);
   const gm = ctx.isGM
     ? `<td><input class="s" type="number" min="0" value="${quantity(item)}"><button data-action="stock" title="Définir le stock">Stock</button><button data-action="assign" title="Donner à l’acheteur" ${!ctx.buyer || quantity(item) <= 0 ? "disabled" : ""}>Donner</button></td>`
     : "";
   return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td title="${esc(item.name)}">${esc(item.name)}</td><td title="${esc(kind)}">${esc(kind)}</td><td title="${esc(use.names.length ? use.names.join(", ") : "—")}">${esc(use.names.length ? use.names.join(", ") : "—")}</td><td>${esc(priceLabel(item))}</td><td>${quantity(item)}</td><td><input class="q" type="number" min="1" value="1"></td><td><button data-action="buy" title="Acheter" ${!ctx.buyer || quantity(item) <= 0 ? "disabled" : ""}>Acheter</button></td>${gm}</tr>`;
+}
+
+function itemVisibleForContext(item, ctx, use) {
+  const tabs = rowTabs(item, use);
+  const txt = lower(`${item.name} ${vendorKind(item)} ${bazaarSection(item)} ${use.names.join(" ")}`);
+  return (ctx.tab === "all" || tabs.includes(ctx.tab)) && (!ctx.search || txt.includes(lower(ctx.search)));
+}
+
+function tableHeader(ctx) {
+  return `<thead><tr><th>Article</th><th>Type</th><th>Sorts</th><th>Prix</th><th>Stock</th><th>Qté</th><th></th>${ctx.isGM ? "<th>MJ</th>" : ""}</tr></thead>`;
+}
+
+function renderFlatTable(ctx, rows) {
+  return `<div class="add2e-vendor-scroll"><table>${tableHeader(ctx)}<tbody>${rows}</tbody></table></div>`;
+}
+
+function renderBazaarAccordion(ctx) {
+  const groups = new Map();
+  for (const item of ctx.items) {
+    if (!isBazaarItem(item)) continue;
+    const use = usage(ctx.buyer, item);
+    if (!itemVisibleForContext(item, ctx, use)) continue;
+    const section = bazaarSection(item);
+    if (!groups.has(section)) groups.set(section, []);
+    groups.get(section).push({ item, use });
+  }
+
+  const sections = [...groups.entries()].sort(([a], [b]) => sectionRank(a) - sectionRank(b) || a.localeCompare(b));
+  if (!sections.length) return `<div class="add2e-vendor-scroll"><p class="a2e-muted">Aucun article dans le bazard.</p></div>`;
+
+  return `<div class="add2e-vendor-scroll add2e-vendor-bazaar-list">${sections.map(([section, entries], index) => {
+    entries.sort((a, b) => String(a.item.name).localeCompare(String(b.item.name)));
+    const rows = entries.map(entry => rowHtml(entry.item, ctx, entry.use, true)).join("");
+    return `<details class="add2e-vendor-bazaar-section" ${index === 0 ? "open" : ""}><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table>${tableHeader(ctx)}<tbody>${rows}</tbody></table></details>`;
+  }).join("")}</div>`;
+}
+
+function vendorStyle() {
+  return `<style>
+    .add2e-merchant-app .add2e-vendor-scroll{max-height:430px;overflow-y:auto;padding-right:6px;margin-top:6px;}
+    .add2e-merchant-app .add2e-vendor-bazaar-list{display:grid;gap:8px;}
+    .add2e-merchant-app .add2e-vendor-bazaar-section{border:1px solid rgba(80,60,25,.45);border-radius:8px;background:rgba(255,240,190,.18);overflow:hidden;}
+    .add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;background:#2d2413;color:#ffe4a1;font-weight:900;}
+    .add2e-merchant-app .add2e-vendor-bazaar-section>summary strong{border:1px solid rgba(255,228,161,.45);border-radius:999px;padding:1px 8px;background:rgba(0,0,0,.22);}
+    .add2e-merchant-app .add2e-vendor-bazaar-section table{margin:0;width:100%;}
+  </style>`;
 }
 
 async function confirmPlayerBuy(item, qty) {
@@ -207,24 +289,12 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
     if (ctx.tab === "equipment") ctx.tab = "bazaar";
     let prepCount = 0;
     let knownCount = 0;
-    let currentSection = "";
 
-    const rows = ctx.items.map(i => {
-      const use = usage(ctx.buyer, i);
-      const tabs = rowTabs(i, use);
-      if (use.prep > 0) prepCount++;
-      if (use.known > 0) knownCount++;
-      const txt = lower(`${i.name} ${vendorKind(i)} ${bazaarSection(i)} ${use.names.join(" ")}`);
-      const visible = (ctx.tab === "all" || tabs.includes(ctx.tab)) && (!ctx.search || txt.includes(lower(ctx.search)));
-      if (!visible) return rowHtml(i, ctx, use, false);
-      const row = rowHtml(i, ctx, use, true);
-      if (ctx.tab !== "bazaar" || !isBazaarItem(i)) return row;
-      const section = bazaarSection(i);
-      if (section === currentSection) return row;
-      currentSection = section;
-      const colspan = ctx.isGM ? 8 : 7;
-      return `<tr class="add2e-vendor-section"><th colspan="${colspan}" style="text-align:left;background:#2d2413;color:#ffe4a1;padding:.35rem .5rem;">${esc(section)}</th></tr>${row}`;
-    }).join("");
+    const computed = ctx.items.map(item => ({ item, use: usage(ctx.buyer, item) }));
+    for (const entry of computed) {
+      if (entry.use.prep > 0) prepCount++;
+      if (entry.use.known > 0) knownCount++;
+    }
 
     const nav = [
       ["all", "Tous"],
@@ -235,9 +305,18 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
       ["bazaar", "Bazard"]
     ].map(([id, lab]) => `<button data-tab="${id}" ${ctx.tab === id ? "style='outline:2px solid #fff'" : ""}>${lab}</button>`).join("");
 
+    const visibleRows = computed
+      .filter(({ item, use }) => ctx.tab !== "bazaar" && itemVisibleForContext(item, ctx, use))
+      .map(({ item, use }) => rowHtml(item, ctx, use, true))
+      .join("");
+
+    const list = ctx.tab === "bazaar"
+      ? renderBazaarAccordion(ctx)
+      : renderFlatTable(ctx, visibleRows || `<tr><td colspan="${ctx.isGM ? 8 : 7}" class="a2e-muted">Aucun article.</td></tr>`);
+
     const buyer = ctx.isGM ? `<select class="buyer">${buyerOptions(ctx.buyer?.id)}</select>` : `<b>${esc(ctx.buyer?.name ?? "aucun")}</b>`;
     const div = document.createElement("section");
-    div.innerHTML = `<p><span>Acheteur :</span> ${buyer} <strong>${ctx.buyer ? esc(formatMoney(getMoney(ctx.buyer))) : ""}</strong></p><div>${nav}${ctx.isGM ? `<button data-action="restock">Restock global</button>` : ""}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche"><table><thead><tr><th>Article</th><th>Type</th><th>Sorts</th><th>Prix</th><th>Stock</th><th>Qté</th><th></th>${ctx.isGM ? "<th>MJ</th>" : ""}</tr></thead><tbody>${rows}</tbody></table>`;
+    div.innerHTML = `${vendorStyle()}<p><span>Acheteur :</span> ${buyer} <strong>${ctx.buyer ? esc(formatMoney(getMoney(ctx.buyer))) : ""}</strong></p><div>${nav}${ctx.isGM ? `<button data-action="restock">Restock global</button>` : ""}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche">${list}`;
     return div;
   }
 
