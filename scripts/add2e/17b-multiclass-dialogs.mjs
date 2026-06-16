@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage : DialogV2
-// Version : 2026-06-15-multiclass-dialogs-class-drop-choices-v1
+// Version : 2026-06-16-multiclass-dialogs-stat-failure-explain-v2
 
 import { classItems, classSlug, esc, itemLabel, norm, systemRace } from "./17b-multiclass-core.mjs";
 import { classRaceMaxLevel, monoClassOptionsForDroppedClass, raceCandidatesForClass, raceCompatibleForMulticlass, raceMatchesClassRules, raceAllowsClassSet, classPrerequisitesOk } from "./17b-multiclass-rules.mjs";
@@ -122,6 +122,66 @@ function finalClassTextForReplace(actor, option) {
   return names.filter((name, index, arr) => arr.findIndex(n => norm(n) === norm(name)) === index).join(" - ");
 }
 
+function add2eStatValue(actor, carac) {
+  const sys = actor?.system ?? {};
+  const raw = sys[`${carac}_base`] ?? sys[carac] ?? 10;
+  const value = Number(raw?.value ?? raw?.total ?? raw);
+  return Number.isFinite(value) ? value : 10;
+}
+
+function add2eRaceBonusValue(raceData, carac) {
+  const raw = (raceData?.system ?? {})?.bonus_caracteristiques?.[carac] ?? 0;
+  const value = Number(raw?.value ?? raw?.total ?? raw);
+  return Number.isFinite(value) ? value : 0;
+}
+
+function add2eMissingCaracs(actor, classData, raceData) {
+  const mins = (classData?.system ?? {})?.caracs_min ?? {};
+  return Object.entries(mins).map(([carac, rawMin]) => {
+    const min = Number(rawMin);
+    if (!Number.isFinite(min)) return null;
+    const total = add2eStatValue(actor, carac) + add2eRaceBonusValue(raceData, carac);
+    return total < min ? { carac, total, min } : null;
+  }).filter(Boolean);
+}
+
+function add2eStatFailureBody(actor, droppedClassData, currentRaceOrCompatibleAlternatives, isAlreadyMulticlass) {
+  const existingNames = classItems(actor).map(c => c.name);
+  const droppedName = itemLabel(droppedClassData, "Classe");
+  const rejected = [];
+  const seen = new Set();
+
+  const addRejected = (mode, raceData, names) => {
+    const raceName = itemLabel(raceData, "Race");
+    const key = `${mode}|${raceName}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    const missing = add2eMissingCaracs(actor, droppedClassData, raceData);
+    if (!missing.length) return;
+    rejected.push({ mode, raceName, names, missing });
+  };
+
+  for (const raceData of currentRaceOrCompatibleAlternatives(actor, race => raceMatchesClassRules(race, droppedClassData))) {
+    if (!classPrerequisitesOk(actor, droppedClassData, raceData, { notify: false })) addRejected("Monoclasse", raceData, [droppedName]);
+  }
+
+  if (!isAlreadyMulticlass) {
+    const names = [...existingNames, droppedName].filter((name, index, arr) => arr.findIndex(n => norm(n) === norm(name)) === index);
+    for (const raceData of currentRaceOrCompatibleAlternatives(actor, race => raceAllowsClassSet(race, names) && raceMatchesClassRules(race, droppedClassData))) {
+      if (!classPrerequisitesOk(actor, droppedClassData, raceData, { notify: false })) addRejected("Multiclassage", raceData, names);
+    }
+  }
+
+  if (!rejected.length) return `<div style="padding:12px;border:1px solid #8f2a20;border-radius:10px;background:#f0c6b4;color:#6b1b12;font-weight:900;">Aucune option valide pour cette classe.</div>`;
+
+  const rows = rejected.map(entry => {
+    const miss = entry.missing.map(m => `${esc(m.carac)} ${esc(m.total)} / ${esc(m.min)}`).join(", ");
+    return `<li><strong>${esc(entry.mode)}</strong> — ${esc(entry.names.join(" - "))} avec <strong>${esc(entry.raceName)}</strong> : caractéristiques insuffisantes (${miss}).</li>`;
+  }).join("");
+
+  return `<div style="padding:12px;border:1px solid #9d6b18;border-radius:10px;background:#fff1c9;color:#5d3607;font-weight:800;"><p style="margin:0 0 8px 0;"><strong>La compatibilité raciale existe, mais les caractéristiques de l’acteur sont insuffisantes.</strong></p><ul style="margin:0;padding-left:18px;">${rows}</ul></div>`;
+}
+
 export async function showClassDropChoiceDialog(actor, droppedClassData, currentRaceOrCompatibleAlternatives) {
   const existingClasses = classItems(actor);
   const isAlreadyMulticlass = existingClasses.length > 1;
@@ -167,7 +227,7 @@ export async function showClassDropChoiceDialog(actor, droppedClassData, current
     sectionHtml("Ajouter en multiclassage", addTiles)
   ].filter(Boolean).join("\n");
 
-  const body = sections || `<div style="padding:12px;border:1px solid #8f2a20;border-radius:10px;background:#f0c6b4;color:#6b1b12;font-weight:900;">Aucune option valide pour cette classe.</div>`;
+  const body = sections || add2eStatFailureBody(actor, droppedClassData, currentRaceOrCompatibleAlternatives, isAlreadyMulticlass);
   const hint = isAlreadyMulticlass
     ? "Ce personnage est déjà multiclassé : choisis soit une classe à remplacer, soit une bascule en monoclasse."
     : "Choisis une évolution : monoclasse ou multiclassage si la race le permet.";
