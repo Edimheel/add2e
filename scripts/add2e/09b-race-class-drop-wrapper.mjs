@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Auto-compatibilité race / classe au drop — wrapper
-// Version : 2026-06-16-race-class-drop-split-v5-stat-explain
+// Version : 2026-06-16-race-class-drop-split-v6-class-race-tiles
 // ============================================================
 
 import {
@@ -8,6 +8,7 @@ import {
   add2eResolveDropCompatibilityWithPopup,
   checkClassStatMin,
   add2eApplyRaceItemDataToActor,
+  add2eApplyClassItemDataToActor,
   add2eRaceCandidateLabel,
   add2eRaceMatchesClassRules
 } from "./09a-race-class-drop-core.mjs";
@@ -22,6 +23,10 @@ function add2eDropWrapperNorm(value) {
     .replace(/^_+|_+$/g, "");
 }
 
+function add2eDropWrapperEsc(value) {
+  return foundry?.utils?.escapeHTML ? foundry.utils.escapeHTML(String(value ?? "")) : String(value ?? "");
+}
+
 function add2eDropWrapperCloneItemData(itemLike) {
   if (!itemLike) return null;
   const data = typeof itemLike.toObject === "function" ? itemLike.toObject() : foundry.utils.deepClone(itemLike);
@@ -34,6 +39,10 @@ function add2eDropWrapperCloneItemData(itemLike) {
 function add2eClassHasRaceRestrictions(classData) {
   const races = (classData?.system ?? classData ?? {})?.raceRestriction?.races;
   return !!(races && typeof races === "object" && Object.keys(races).length);
+}
+
+function add2eActorHasClass(actor) {
+  return actor?.items?.some?.(i => String(i.type || "").toLowerCase() === "classe") === true;
 }
 
 async function add2eResolveRaceClassDropItemData(raw) {
@@ -170,19 +179,38 @@ function add2eDropMissingCaracs(actor, classData, raceData) {
   }).filter(Boolean);
 }
 
+function add2eRacePalette(raceName) {
+  const key = add2eDropWrapperNorm(raceName);
+  const palettes = {
+    humain: ["#10291c", "#9ee7a8", "#2f9e54", "#176034", "#0b3d20"],
+    demi_elfe: ["#10253a", "#a7ddff", "#3d8ee6", "#1c5a9a", "#0c345d"],
+    elfe: ["#12280f", "#c8f58b", "#64b83b", "#2e6f1d", "#183f10"],
+    gnome: ["#2c1837", "#e2b6ff", "#a45bd8", "#67308c", "#3b1456"],
+    nain: ["#2d2110", "#f1c77d", "#bd7834", "#744114", "#3d230b"],
+    demi_orque: ["#2b1a0a", "#ffb25f", "#d45b1f", "#823113", "#451807"],
+    halfelin: ["#2c2609", "#e7dd72", "#b69b2f", "#6d5b17", "#3b320c"]
+  };
+  return palettes[key] ?? ["#261500", "#f6e7a8", "#d7a94d", "#7b4300", "#3b2308"];
+}
+
+function add2eClassRaceTileHtml({ value, className, raceName, checked = false }) {
+  const [color, bg1, bg2, border, selected] = add2eRacePalette(raceName);
+  return `<label style="position:relative;display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;min-height:58px;padding:8px 9px;border:2px solid ${border};border-radius:12px;background:linear-gradient(135deg,${bg1},${bg2});color:${color};cursor:pointer;"><input type="radio" name="add2eChoice" value="${add2eDropWrapperEsc(value)}" ${checked ? "checked" : ""} style="width:20px;height:20px;margin:0;accent-color:${selected};cursor:pointer;"><span style="display:grid;gap:1px;text-align:left;"><strong style="font-size:1rem;line-height:1.08;">${add2eDropWrapperEsc(className)}</strong><span style="font-size:.84rem;line-height:1.05;font-weight:900;text-transform:uppercase;letter-spacing:.04em;">${add2eDropWrapperEsc(raceName)}</span></span></label>`;
+}
+
 async function add2eDialogStatFailure(actor, classData, races) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   const rows = races.map(race => {
     const missing = add2eDropMissingCaracs(actor, classData, race);
     const detail = missing.length
-      ? missing.map(m => `${foundry.utils.escapeHTML(m.carac)} ${m.total} / ${m.min}`).join(", ")
+      ? missing.map(m => `${add2eDropWrapperEsc(m.carac)} ${m.total} / ${m.min}`).join(", ")
       : "prérequis non satisfaits";
-    return `<li><strong>${foundry.utils.escapeHTML(add2eRaceCandidateLabel(race))}</strong> : caractéristiques insuffisantes (${detail}).</li>`;
+    return `<li><strong>${add2eDropWrapperEsc(add2eRaceCandidateLabel(race))}</strong> : caractéristiques insuffisantes (${detail}).</li>`;
   }).join("");
 
   const content = `
     <div class="add2e-race-class-choice" style="min-width:420px;max-width:620px;">
-      <p><strong>La classe ${foundry.utils.escapeHTML(classData.name)} possède au moins une race compatible.</strong></p>
+      <p><strong>La classe ${add2eDropWrapperEsc(classData.name)} possède au moins une race compatible.</strong></p>
       <p>Le blocage vient des caractéristiques actuelles de l’acteur, pas de la compatibilité raciale.</p>
       <ul>${rows}</ul>
     </div>
@@ -194,58 +222,78 @@ async function add2eDialogStatFailure(actor, classData, races) {
   return false;
 }
 
-async function add2eDialogChooseCompatibleRace(actor, classData, candidates, reason) {
+async function add2eDialogChooseClassRaceTile(actor, classData, candidates, reason) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.wait) {
-    ui.notifications.error("DialogV2 est indisponible : impossible de choisir une race compatible.");
+    ui.notifications.error("DialogV2 est indisponible : impossible de choisir une combinaison classe/race.");
     return null;
   }
 
-  const buttons = candidates.map((race, index) => ({
-    action: `race-${index}`,
-    label: add2eRaceCandidateLabel(race),
-    callback: () => index
-  }));
-  buttons.push({ action: "cancel", label: "Annuler", default: true, callback: () => null });
+  let checked = false;
+  const tiles = candidates.map((race, index) => {
+    const raceName = add2eRaceCandidateLabel(race);
+    const tile = add2eClassRaceTileHtml({ value: `race-${index}`, className: classData.name, raceName, checked: !checked });
+    checked = true;
+    return tile;
+  }).join("\n");
 
-  const list = candidates
-    .map(race => `<li><strong>${foundry.utils.escapeHTML(add2eRaceCandidateLabel(race))}</strong></li>`)
-    .join("");
-
-  const selectedIndex = await DialogV2.wait({
-    window: { title: `Choisir une race pour ${classData.name}` },
-    content: `
-      <div class="add2e-race-class-choice" style="min-width:360px;max-width:520px;">
-        <p>La classe <strong>${foundry.utils.escapeHTML(classData.name)}</strong> nécessite une race compatible.</p>
-        <p>${reason === "missing-race" ? "Aucune race n’est présente sur l’acteur." : "La race actuelle n’est pas compatible avec cette classe."}</p>
-        <p>Races compatibles trouvées dans le compendium <strong>add2e.races</strong> :</p>
-        <ul>${list}</ul>
+  const content = `
+    <div class="add2e-multiclass-choice" style="display:grid;gap:8px;min-width:580px;max-width:720px;color:#2b1c0d;">
+      <div style="border:1px solid #5c3b12;border-radius:12px;background:linear-gradient(180deg,#3b2612,#1c1208);padding:8px 11px;">
+        <h2 style="margin:0;color:#f9df9a;font-size:1rem;text-transform:uppercase;border:0;">Choisis ton évolution</h2>
+        <p style="margin:4px 0 0;color:#fff2c4;font-weight:800;">La classe déposée nécessite une race compatible. Le choix applique directement la race et la classe.</p>
       </div>
-    `,
-    buttons,
-    modal: true,
-    rejectClose: false
-  });
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;">
+        <div><b>Acteur</b><br>${add2eDropWrapperEsc(actor.name)}</div>
+        <div><b>Classe déposée</b><br>${add2eDropWrapperEsc(classData.name)}</div>
+        <div><b>Situation</b><br>${reason === "missing-race" ? "Aucune race" : "Race à choisir"}</div>
+      </div>
+      <div style="display:grid;gap:6px;">
+        <div style="font-weight:900;color:#5b3512;text-transform:uppercase;font-size:.78rem;letter-spacing:.04em;">Créer le personnage</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:7px;">${tiles}</div>
+      </div>
+    </div>
+  `;
 
-  return Number.isInteger(selectedIndex) ? candidates[selectedIndex] : null;
+  const readChoice = (_event, button, dialog) => {
+    const form = button?.form ?? dialog?.element?.querySelector?.("form") ?? document.querySelector?.(".add2e-multiclass-choice")?.closest?.("form");
+    const raw = form?.elements?.add2eChoice?.value ?? dialog?.element?.querySelector?.('input[name="add2eChoice"]:checked')?.value ?? "cancel";
+    if (!raw.startsWith("race-")) return null;
+    return candidates[Number(raw.split("-")[1]) || 0] ?? null;
+  };
+
+  return DialogV2.wait({
+    classes: ["add2e-multiclass-dialog"],
+    window: { title: "ADD2E — Classe et race" },
+    content,
+    buttons: [
+      { action: "validate", label: "Valider", default: true, callback: readChoice },
+      { action: "cancel", label: "Annuler", callback: () => null }
+    ],
+    modal: true,
+    rejectClose: false,
+    close: () => null
+  });
+}
+
+async function add2eApplyRaceAndClassFromChoice(actor, classData, raceData, sheet, alignmentCandidate) {
+  await add2eApplyRaceItemDataToActor(actor, raceData, sheet, { notify: true, reason: "class-drop-tile-race-choice" });
+  await add2eApplyClassItemDataToActor(actor, classData, sheet, { notify: true, reason: "class-drop-tile-class-choice", alignmentCandidate });
+  sheet?.render?.(false);
 }
 
 async function add2eEnsureCompatibleRaceForClassDrop(actor, classData, sheet) {
   if (!actor || !classData || classData.type !== "classe") return { ok: true, handled: false };
 
+  if (add2eActorHasClass(actor)) return { ok: true, handled: false, existingClass: true };
+
   const alignmentCandidate = typeof globalThis.add2ePickClassAlignment === "function"
     ? globalThis.add2ePickClassAlignment(actor, classData.system ?? {})
     : actor.system?.alignement ?? "";
 
+  if (!add2eClassHasRaceRestrictions(classData)) return { ok: true, handled: false, noRaceRestriction: true };
+
   const currentRace = add2eActorCurrentRaceData(actor);
-  if (currentRace && add2eRacePassesClassDrop(actor, classData, currentRace, alignmentCandidate)) {
-    return { ok: true, handled: false, currentRaceOk: true };
-  }
-
-  if (!add2eClassHasRaceRestrictions(classData)) {
-    return { ok: true, handled: false, noRaceRestriction: true };
-  }
-
   const races = await add2eLoadRaceCandidatesFromCompendium();
   const raciallyCompatible = races.filter(race => add2eRaceRuleAllowsClass(race, classData));
   const candidates = raciallyCompatible.filter(race => add2eRacePassesClassDrop(actor, classData, race, alignmentCandidate));
@@ -269,15 +317,11 @@ async function add2eEnsureCompatibleRaceForClassDrop(actor, classData, sheet) {
     return { ok: false, handled: true, reason: "no-compatible-race" };
   }
 
-  const selectedRace = await add2eDialogChooseCompatibleRace(actor, classData, candidates, currentRace ? "incompatible-race" : "missing-race");
+  const selectedRace = await add2eDialogChooseClassRaceTile(actor, classData, candidates, currentRace ? "incompatible-race" : "missing-race");
   if (!selectedRace) return { ok: false, handled: true, reason: "cancelled" };
 
-  await add2eApplyRaceItemDataToActor(actor, selectedRace, sheet, {
-    notify: true,
-    reason: currentRace ? "class-drop-race-replace-compatible" : "class-drop-race-missing-compatible"
-  });
-
-  return { ok: true, handled: false, selectedRace };
+  await add2eApplyRaceAndClassFromChoice(actor, classData, selectedRace, sheet, alignmentCandidate);
+  return { ok: true, handled: true, selectedRace, appliedClass: true };
 }
 
 function add2eInstallDropCompatibilityPopupWrapper() {
@@ -301,7 +345,7 @@ function add2eInstallDropCompatibilityPopupWrapper() {
       if (!raceResult.ok || raceResult.handled) {
         event.preventDefault();
         event.stopPropagation();
-        return false;
+        return raceResult.ok === true;
       }
     }
 
@@ -323,7 +367,7 @@ function add2eInstallDropCompatibilityPopupWrapper() {
   };
 
   SheetClass.prototype._add2eDropCompatPopupWrapped = true;
-  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe installé.", ADD2E_RACE_CLASS_DROP_VERSION, "compendium-first", "race-choice", "stat-explain");
+  console.log("[ADD2E][DROP][POPUP] Wrapper compatibilité race/classe installé.", ADD2E_RACE_CLASS_DROP_VERSION, "class-race-tiles");
   return true;
 }
 
