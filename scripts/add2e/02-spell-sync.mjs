@@ -1,11 +1,40 @@
 // ============================================================
 // ADD2E — Synchronisation automatique des sorts
 // Source stricte : compendium add2e.sorts
-// Version : 2026-06-14-spell-sync-cleric-druid-only-reset-on-level-down-v2
+// Version : 2026-06-16-spell-sync-class-specific-canonical-v1
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-06-14-spell-sync-cleric-druid-only-reset-on-level-down-v2";
+const ADD2E_SPELL_SYNC_VERSION = "2026-06-16-spell-sync-class-specific-canonical-v1";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
+
+const ADD2E_SPELL_SYNC_LEGACY_SYSTEM_KEYS = Object.freeze([
+  "école",
+  "portée",
+  "durée",
+  "onuse",
+  "on_use",
+  "description_reelle",
+  "description_source",
+  "description_texte",
+  "description_html",
+  "composants",
+  "source_composants",
+  "composants_materiels_objets",
+  "components",
+  "componentes",
+  "school",
+  "range",
+  "duration",
+  "castingTime",
+  "casting_time",
+  "area",
+  "areaOfEffect",
+  "level",
+  "lvl",
+  "spellLevel",
+  "niveau_sort",
+  "niveauSort"
+]);
 
 const ADD2E_SPELL_SYNC_PREUPDATE_LEVELS = globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS instanceof Map ? globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS : new Map();
 globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS = ADD2E_SPELL_SYNC_PREUPDATE_LEVELS;
@@ -109,16 +138,91 @@ function add2eSpellSyncFirstCleanText(...values) {
   return "";
 }
 
+function add2eSpellSyncTextValue(value) {
+  value = add2eSpellSyncMaybeJson(value);
+  if (value === undefined || value === null) return "";
+  if (add2eSpellSyncIsPlaceholder(value)) return "";
+  if (Array.isArray(value)) return value.map(add2eSpellSyncTextValue).filter(Boolean).join(", ");
+  if (typeof value === "object") {
+    const raw = value.raw ?? value.texte ?? value.text ?? value.label ?? value.nom ?? value.name;
+    if (raw !== undefined && raw !== null && !add2eSpellSyncIsPlaceholder(raw) && String(raw).trim()) return String(raw).trim();
+    const valeur = value.valeur ?? value.value ?? value.nombre ?? value.number ?? "";
+    const unite = value.unite ?? value.unit ?? "";
+    const joined = `${valeur ?? ""}${unite ? ` ${unite}` : ""}`.trim();
+    if (joined && !add2eSpellSyncIsPlaceholder(joined)) return joined;
+    return Object.values(value).map(add2eSpellSyncTextValue).filter(Boolean).join(", ");
+  }
+  return String(value ?? "").trim();
+}
+
+function add2eSpellSyncFirstText(...values) {
+  for (const value of values) {
+    const text = add2eSpellSyncTextValue(value);
+    if (text) return text;
+  }
+  return "";
+}
+
+function add2eSpellSyncMaterialComponents(...values) {
+  const result = [];
+  for (const value of values) {
+    const arr = add2eSpellSyncArray(value).map(add2eSpellSyncTextValue).flatMap(v => String(v ?? "").split(/[,;|\n]+/)).map(v => v.trim()).filter(Boolean);
+    for (const entry of arr) if (!result.some(v => add2eSpellSyncNormalize(v) === add2eSpellSyncNormalize(entry))) result.push(entry);
+  }
+  return result;
+}
+
+function add2eSpellSyncOnUsePath(...values) {
+  const raw = add2eSpellSyncFirstText(...values);
+  if (!raw) return "";
+  let path = raw.split(/[,;|\n]+/).map(v => v.trim()).find(v => v.endsWith(".js") || v.includes("/sorts/")) ?? raw.trim();
+  if (path.startsWith("scripts/sorts/")) path = `systems/add2e/${path}`;
+  if (path.startsWith("/systems/add2e/")) path = path.slice(1);
+  return path;
+}
+
 function add2eSpellSyncSanitizeData(data) {
   const clean = add2eSpellSyncCleanPlaceholders(data);
   const system = clean.system ?? {};
   clean.system = system;
-  const ecole = add2eSpellSyncFirstCleanText(system["école"], system.ecole, system.school);
-  if (!add2eSpellSyncFirstCleanText(system["école"]) && ecole) system["école"] = ecole;
-  if (!add2eSpellSyncFirstCleanText(system.ecole) && ecole) system.ecole = ecole;
-  const componentTypes = add2eSpellSyncFirstCleanText(system.type, system.composantes, system.composants, system.components);
-  if (!add2eSpellSyncFirstCleanText(system.type) && componentTypes) system.type = componentTypes;
-  if (!add2eSpellSyncFirstCleanText(system.composantes) && componentTypes) system.composantes = componentTypes;
+
+  const ecole = add2eSpellSyncFirstText(system.ecole, system["école"], system.school);
+  if (ecole) system.ecole = ecole;
+
+  const portee = add2eSpellSyncFirstText(system.portee, system["portée"], system.range);
+  if (portee) system.portee = portee;
+
+  const duree = add2eSpellSyncFirstText(system.duree, system["durée"], system.duration);
+  if (duree) system.duree = duree;
+
+  const zoneEffet = add2eSpellSyncFirstText(system.zone_effet, system.zoneEffet, system.area, system.areaOfEffect);
+  if (zoneEffet) system.zone_effet = zoneEffet;
+
+  const tempsIncantation = add2eSpellSyncFirstText(system.temps_incantation, system.tempsIncantation, system.castingTime, system.casting_time);
+  if (tempsIncantation) system.temps_incantation = tempsIncantation;
+
+  const componentTypes = add2eSpellSyncFirstText(system.composantes, system.composants, system.components, system.componentes, system.type);
+  if (componentTypes) system.composantes = componentTypes;
+
+  const materiels = add2eSpellSyncMaterialComponents(system.composants_materiels, system.composants_materiels_objets, system.materialComponents, system.material_components);
+  if (materiels.length) system.composants_materiels = materiels;
+  else if (!Array.isArray(system.composants_materiels)) system.composants_materiels = [];
+
+  const materielSource = add2eSpellSyncFirstText(system.composants_materiels_source, system.source_composants);
+  if (materielSource) system.composants_materiels_source = materielSource;
+
+  const description = add2eSpellSyncFirstText(system.description, system.description_reelle, system.description_texte, system.description_html);
+  if (description) system.description = description;
+
+  const onUse = add2eSpellSyncOnUsePath(system.onUse, system.onuse, system.on_use);
+  if (onUse) system.onUse = onUse;
+
+  const niveau = add2eSpellSyncNumber(system.niveau ?? system.niveau_sort ?? system.niveauSort ?? system.spellLevel ?? system.level ?? system.lvl, NaN);
+  if (Number.isFinite(niveau) && niveau > 0) system.niveau = niveau;
+
+  system.type = "sort";
+
+  for (const key of ADD2E_SPELL_SYNC_LEGACY_SYSTEM_KEYS) delete system[key];
   return clean;
 }
 
@@ -207,10 +311,14 @@ function add2eSpellSyncReadSlotValue(raw, spellLevelOrIndex, listKey = "") {
   return null;
 }
 
-function add2eSpellSyncStableKey(name, system = {}) {
+function add2eSpellSyncStableKey(name, system = {}, listOverride = "") {
   const spellName = add2eSpellSyncNormalize(name ?? system.nom ?? system.name ?? "");
   const spellLevel = add2eSpellSyncSpellLevel(system ?? {});
-  return `${spellLevel}|${spellName}`;
+  const lists = listOverride
+    ? [listOverride]
+    : add2eSpellSyncSpellLists(system ?? {});
+  const listKey = [...new Set(lists.map(add2eSpellSyncNormalize).filter(Boolean))].sort().join("+") || "liste_inconnue";
+  return `${listKey}|${spellLevel}|${spellName}`;
 }
 
 function add2eSpellSyncCacheKeySet(cache) {
@@ -228,7 +336,7 @@ function add2eSpellSyncExistingKeys(actor, cache = null, options = {}) {
   const compendiumKeys = cache ? add2eSpellSyncCacheKeySet(cache) : null;
   for (const item of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
     const key = add2eSpellSyncStableKey(item.name, item.system ?? {});
-    if (!key || key === "0|") continue;
+    if (!key) continue;
     if (options.sourceTruth === true && compendiumKeys?.has(key) && !add2eSpellSyncIsCompendiumOwnedActorSpell(item)) continue;
     keys.add(key);
   }
@@ -419,7 +527,7 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
     const level = add2eSpellSyncSpellLevel(system);
     const lists = add2eSpellSyncSpellLists(system);
     const stableKey = add2eSpellSyncStableKey(data.name, system);
-    if (!stableKey || stableKey === "0|" || level < 1 || !lists.length) { skipped.push({ name: data.name, level, lists, reason: "invalid-compendium-entry" }); continue; }
+    if (!stableKey || level < 1 || !lists.length) { skipped.push({ name: data.name, level, lists, reason: "invalid-compendium-entry" }); continue; }
     if (byKey.has(stableKey)) {
       const kept = byKey.get(stableKey);
       kept.lists = [...new Set([...kept.lists, ...lists])].sort();
@@ -432,11 +540,12 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
     data.folder = null;
     foundry.utils.setProperty(data, "system.spellLists", lists);
     foundry.utils.setProperty(data, "flags.add2e.spellListsResolved", lists);
+    foundry.utils.setProperty(data, "flags.add2e.stableSpellKey", stableKey);
     const entry = { name: data.name, img: data.img, type: data.type, level, lists, stableKey, data };
     byKey.set(stableKey, entry);
     entries.push(entry);
   }
-  entries.sort((a, b) => a.level - b.level || String(a.name).localeCompare(String(b.name), "fr"));
+  entries.sort((a, b) => a.level - b.level || String(a.name).localeCompare(String(b.name), "fr") || a.stableKey.localeCompare(b.stableKey, "fr"));
   const cache = { cacheKey, builtAt: Date.now(), entries, count: entries.length, docsCount: docs.length, nonSortDocuments, duplicateCount: duplicateKeys.length, duplicateKeys, skippedCount: skipped.length, skipped, sanitizedDocuments, byStableKey: byKey };
   globalThis.ADD2E_SPELL_SYNC_CACHE = cache;
   console.info("[ADD2E][SPELL_SYNC][CACHE_READY]", { version: ADD2E_SPELL_SYNC_VERSION, entries: entries.length, docs: docs.length, duplicateCount: duplicateKeys.length, skipped: skipped.length, sanitizedDocuments });
@@ -516,6 +625,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClassId", classItem.id);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedSpellSync", true);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedAtActorLevel", actorLevel);
+      foundry.utils.setProperty(data, "flags.add2e.stableSpellKey", entry.stableKey);
       const preserved = memoryByKey.get(entry.stableKey);
       if (preserved && options.preserveMemorization !== false) {
         foundry.utils.setProperty(data, "flags.add2e.memorizedCount", preserved.count);
