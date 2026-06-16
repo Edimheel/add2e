@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 02 capacités
-// Version : 2026-06-16-thief-leather-armor-warning-v1
+// Version : 2026-06-16-thief-leather-armor-warning-v2
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
@@ -322,27 +322,27 @@ function thiefArmorRestriction(actor) {
   const skills = getThiefSkills(actor);
   if (!skills.length) return { ok: true, armor: null };
   const armor = equippedBodyArmor(actor);
-  return { ok: !!armor && isLeatherArmor(armor), armor };
+  return { ok: !armor || isLeatherArmor(armor), armor };
 }
 
 function buildThiefArmorWarningPanel(actor, armor) {
   const armorLabel = armor
     ? `Armure actuellement portée : <strong>${escapeHtml(armor.name)}</strong>.`
-    : "Aucune armure de cuir n’est actuellement portée.";
+    : "Aucune armure de corps n’est actuellement portée.";
 
   return `
     <div class="a2e-panel add2e-thief-skills-panel">
       <h2>${escapeHtml(thiefSkillPanelTitle(actor))}</h2>
       <div
         class="a2e-panel-body a2e-thief-armor-warning"
-        style="border:2px solid #b00020;background:rgba(176,0,32,.18);color:#ffd7dd;border-radius:12px;padding:18px;text-align:center;font-size:1.25em;font-weight:900;line-height:1.35;"
+        style="border:2px solid #8b0000;background:rgba(255,70,70,.82);color:#111;border-radius:12px;padding:18px;text-align:center;font-size:1.25em;font-weight:900;line-height:1.35;"
       >
-        <div style="font-size:1.45em;color:#ff6b6b;margin-bottom:8px;">
+        <div style="font-size:1.45em;color:#111;margin-bottom:8px;">
           <i class="fas fa-triangle-exclamation"></i>
           Capacités de voleur indisponibles
         </div>
-        <div>L’armure portée doit être en cuir pour utiliser les capacités de voleur.</div>
-        <div style="font-size:.85em;margin-top:8px;color:#ffe3e7;">${armorLabel}</div>
+        <div>L’armure portée doit être de type cuir, ou aucune armure ne doit être portée, pour utiliser les capacités de voleur.</div>
+        <div style="font-size:.85em;margin-top:8px;color:#111;">${armorLabel}</div>
       </div>
     </div>`;
 }
