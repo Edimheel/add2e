@@ -1,5 +1,5 @@
 // ADD2E — Marchand V2 compact.
-// Version : 2026-06-16-merchant-bazaar-accordion-v2
+// Version : 2026-06-16-merchant-bazaar-full-width-accordion-v3
 
 import {
   findVendor,
@@ -25,7 +25,7 @@ import {
 } from "./22a-vendor-core.mjs";
 import { normalizeShopCurrency, ADD2E_VENDOR_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-16-merchant-bazaar-accordion-v2";
+const VERSION = "2026-06-16-merchant-bazaar-full-width-accordion-v3";
 const DIAG = "[ADD2E][MERCHANT_APP][BUY_DIAG]";
 
 const arr = v => Array.isArray(v)
@@ -227,20 +227,21 @@ function renderBazaarAccordion(ctx) {
   const sections = [...groups.entries()].sort(([a], [b]) => sectionRank(a) - sectionRank(b) || a.localeCompare(b));
   if (!sections.length) return `<div class="add2e-vendor-scroll"><p class="a2e-muted">Aucun article dans le bazard.</p></div>`;
 
-  return `<div class="add2e-vendor-scroll add2e-vendor-bazaar-list">${sections.map(([section, entries], index) => {
+  return `<div class="add2e-vendor-scroll add2e-vendor-bazaar-list">${sections.map(([section, entries]) => {
     entries.sort((a, b) => String(a.item.name).localeCompare(String(b.item.name)));
     const rows = entries.map(entry => rowHtml(entry.item, ctx, entry.use, true)).join("");
-    return `<details class="add2e-vendor-bazaar-section" ${index === 0 ? "open" : ""}><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table>${tableHeader(ctx)}<tbody>${rows}</tbody></table></details>`;
+    return `<details class="add2e-vendor-bazaar-section"><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table>${tableHeader(ctx)}<tbody>${rows}</tbody></table></details>`;
   }).join("")}</div>`;
 }
 
 function vendorStyle() {
   return `<style>
     .add2e-merchant-app .add2e-vendor-scroll{max-height:430px;overflow-y:auto;padding-right:6px;margin-top:6px;}
-    .add2e-merchant-app .add2e-vendor-bazaar-list{display:grid;gap:8px;}
-    .add2e-merchant-app .add2e-vendor-bazaar-section{border:1px solid rgba(80,60,25,.45);border-radius:8px;background:rgba(255,240,190,.18);overflow:hidden;}
-    .add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;background:#2d2413;color:#ffe4a1;font-weight:900;}
+    .add2e-merchant-app .add2e-vendor-bazaar-list{display:block;width:100%;}
+    .add2e-merchant-app .add2e-vendor-bazaar-section{display:block;width:100%;box-sizing:border-box;margin:0 0 8px 0;border:1px solid rgba(80,60,25,.45);border-radius:8px;background:rgba(255,240,190,.18);overflow:hidden;}
+    .add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;width:100%;box-sizing:border-box;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;background:#2d2413;color:#ffe4a1;font-weight:900;list-style:revert;}
     .add2e-merchant-app .add2e-vendor-bazaar-section>summary strong{border:1px solid rgba(255,228,161,.45);border-radius:999px;padding:1px 8px;background:rgba(0,0,0,.22);}
+    .add2e-merchant-app .add2e-vendor-bazaar-section:not([open]) table{display:none;}
     .add2e-merchant-app .add2e-vendor-bazaar-section table{margin:0;width:100%;}
   </style>`;
 }
