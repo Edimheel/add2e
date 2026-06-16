@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage : DialogV2
-// Version : 2026-06-16-multiclass-dialogs-stat-failure-explain-v2
+// Version : 2026-06-16-multiclass-dialogs-class-minimum-tiles-v3
 
 import { classItems, classSlug, esc, itemLabel, norm, systemRace } from "./17b-multiclass-core.mjs";
 import { classRaceMaxLevel, monoClassOptionsForDroppedClass, raceCandidatesForClass, raceCompatibleForMulticlass, raceMatchesClassRules, raceAllowsClassSet, classPrerequisitesOk } from "./17b-multiclass-rules.mjs";
@@ -129,57 +129,45 @@ function add2eStatValue(actor, carac) {
   return Number.isFinite(value) ? value : 10;
 }
 
-function add2eRaceBonusValue(raceData, carac) {
-  const raw = (raceData?.system ?? {})?.bonus_caracteristiques?.[carac] ?? 0;
-  const value = Number(raw?.value ?? raw?.total ?? raw);
-  return Number.isFinite(value) ? value : 0;
+function add2eCaracLabel(carac) {
+  const labels = { force: "FOR", dexterite: "DEX", constitution: "CON", intelligence: "INT", sagesse: "SAG", charisme: "CHA" };
+  return labels[norm(carac)] ?? String(carac ?? "").toUpperCase();
 }
 
-function add2eMissingCaracs(actor, classData, raceData) {
+function add2eClassMinimumRows(actor, classData) {
   const mins = (classData?.system ?? {})?.caracs_min ?? {};
   return Object.entries(mins).map(([carac, rawMin]) => {
     const min = Number(rawMin);
     if (!Number.isFinite(min)) return null;
-    const total = add2eStatValue(actor, carac) + add2eRaceBonusValue(raceData, carac);
-    return total < min ? { carac, total, min } : null;
+    const current = add2eStatValue(actor, carac);
+    return { carac, current, min, ok: current >= min, manque: Math.max(0, min - current) };
   }).filter(Boolean);
 }
 
-function add2eStatFailureBody(actor, droppedClassData, currentRaceOrCompatibleAlternatives, isAlreadyMulticlass) {
-  const existingNames = classItems(actor).map(c => c.name);
-  const droppedName = itemLabel(droppedClassData, "Classe");
-  const rejected = [];
-  const seen = new Set();
+function add2eMinimumTile(row) {
+  const ok = row.ok;
+  const border = ok ? "#2e6f1d" : "#9d2d25";
+  const bg = ok ? "#e7f5df" : "#fff1c9";
+  const valueColor = ok ? "#176034" : "#8a1f16";
+  const status = ok ? "OK" : `+${row.manque} requis`;
+  return `<div style="border:2px solid ${border};border-radius:12px;background:${bg};padding:9px 10px;display:grid;gap:4px;box-shadow:0 1px 4px rgba(0,0,0,.12);">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;"><strong style="font-size:1.05rem;color:#2b1c0d;">${esc(add2eCaracLabel(row.carac))}</strong><span style="font-weight:900;color:${valueColor};font-size:1.02rem;">${esc(row.current)} → ${esc(row.min)}</span></div>
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;"><span style="font-size:.76rem;font-weight:800;color:#6a4b16;">actuel ${esc(row.current)}</span><span style="font-size:.82rem;font-weight:900;color:${valueColor};">${esc(status)}</span></div>
+  </div>`;
+}
 
-  const addRejected = (mode, raceData, names) => {
-    const raceName = itemLabel(raceData, "Race");
-    const key = `${mode}|${raceName}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    const missing = add2eMissingCaracs(actor, droppedClassData, raceData);
-    if (!missing.length) return;
-    rejected.push({ mode, raceName, names, missing });
-  };
-
-  for (const raceData of currentRaceOrCompatibleAlternatives(actor, race => raceMatchesClassRules(race, droppedClassData))) {
-    if (!classPrerequisitesOk(actor, droppedClassData, raceData, { notify: false })) addRejected("Monoclasse", raceData, [droppedName]);
-  }
-
-  if (!isAlreadyMulticlass) {
-    const names = [...existingNames, droppedName].filter((name, index, arr) => arr.findIndex(n => norm(n) === norm(name)) === index);
-    for (const raceData of currentRaceOrCompatibleAlternatives(actor, race => raceAllowsClassSet(race, names) && raceMatchesClassRules(race, droppedClassData))) {
-      if (!classPrerequisitesOk(actor, droppedClassData, raceData, { notify: false })) addRejected("Multiclassage", raceData, names);
-    }
-  }
-
-  if (!rejected.length) return `<div style="padding:12px;border:1px solid #8f2a20;border-radius:10px;background:#f0c6b4;color:#6b1b12;font-weight:900;">Aucune option valide pour cette classe.</div>`;
-
-  const rows = rejected.map(entry => {
-    const miss = entry.missing.map(m => `${esc(m.carac)} ${esc(m.total)} / ${esc(m.min)}`).join(", ");
-    return `<li><strong>${esc(entry.mode)}</strong> — ${esc(entry.names.join(" - "))} avec <strong>${esc(entry.raceName)}</strong> : caractéristiques insuffisantes (${miss}).</li>`;
-  }).join("");
-
-  return `<div style="padding:12px;border:1px solid #9d6b18;border-radius:10px;background:#fff1c9;color:#5d3607;font-weight:800;"><p style="margin:0 0 8px 0;"><strong>La compatibilité raciale existe, mais les caractéristiques de l’acteur sont insuffisantes.</strong></p><ul style="margin:0;padding-left:18px;">${rows}</ul></div>`;
+function add2eStatFailureBody(actor, droppedClassData, _currentRaceOrCompatibleAlternatives, _isAlreadyMulticlass) {
+  const rows = add2eClassMinimumRows(actor, droppedClassData);
+  if (!rows.length) return `<div style="padding:12px;border:1px solid #8f2a20;border-radius:10px;background:#f0c6b4;color:#6b1b12;font-weight:900;">Aucune option valide pour cette classe.</div>`;
+  const missingRows = rows.filter(r => !r.ok);
+  const tiles = rows.map(add2eMinimumTile).join("\n");
+  const message = missingRows.length
+    ? "Les caractéristiques de l’acteur ne remplissent pas les minimums de la classe déposée."
+    : "Les minimums de caractéristiques sont remplis, mais aucune option valide n’a été trouvée.";
+  return `<div style="display:grid;gap:8px;padding:12px;border:1px solid #9d6b18;border-radius:10px;background:#fff1c9;color:#5d3607;font-weight:800;">
+    <p style="margin:0;"><strong>${esc(message)}</strong></p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:7px;">${tiles}</div>
+  </div>`;
 }
 
 export async function showClassDropChoiceDialog(actor, droppedClassData, currentRaceOrCompatibleAlternatives) {
