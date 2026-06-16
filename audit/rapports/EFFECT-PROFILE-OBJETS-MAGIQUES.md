@@ -16,9 +16,15 @@ Un objet magique ne doit pas copier aveuglément un script `onUse`. Il doit réu
 
 ## Emplacement retenu
 
-Pendant la phase de codex, les profils d'effets sont placés dans les fichiers de référence :
+Pendant la phase de stabilisation, les profils d'effets sont conservés dans un fichier associé :
+
+- `audit/reference/effect-profiles/manuel-joueurs-clerc-niveau-1.json`
+
+Le fichier de référence principal reste la source du texte et des champs de règles :
 
 - `audit/reference/manuel-joueurs-clerc-niveau-1.json`
+
+Une fois le modèle validé, les profils pourront être réintégrés dans chaque entrée de sort du fichier principal, puis synchronisés vers Foundry.
 
 Le transfert futur vers Foundry devra viser :
 
@@ -89,7 +95,7 @@ Le choix recommandé reste `system.effectProfile`, car il s'agit d'une donnée m
 Le générateur devra :
 
 1. sélectionner un sort source validé ;
-2. lire `effectProfile.effects` ;
+2. lire `effectProfile.effects` ou le profil associé du sort ;
 3. filtrer les effets dont `objectMagic.allowed` vaut `true` ;
 4. créer un pouvoir dans `system.pouvoirs[]` de l'objet ;
 5. conserver `linkedSpell` ou au minimum `linkedSpellSlug` et `linkedSpellEffectId` ;
