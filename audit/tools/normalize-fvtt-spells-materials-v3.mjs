@@ -6,12 +6,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-17-normalize-spell-materials-v3-full-scan-v3";
+const VERSION = "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
-
 const EFFECT_PROFILE_VERSION = "2026-06-16-add2e-spell-effects-v1";
+
 const SYSTEM_KEYS = [
   "nom", "type", "classe", "spellLists", "niveau", "ecole", "portee", "duree", "zone_effet", "cible",
   "temps_incantation", "jet_sauvegarde", "composantes", "composants_materiels", "composants_materiels_source",
@@ -21,14 +21,59 @@ const SYSTEM_KEYS = [
 
 const WATCHED_NAMES = new Set([
   "aquagenese", "benediction", "resistance_au_froid", "sanctuaire", "augure", "retardement_du_poison", "paralysie",
-  "marteau_spirituel", "divination", "exorcisme", "langage_des_plantes", "changement_de_plan", "communion", "dissipation_du_mal"
+  "marteau_spirituel", "divination", "exorcisme", "langage_des_plantes", "changement_de_plan", "communion", "dissipation_du_mal",
+  "glyphe_de_garde", "vision_reelle", "orientation"
 ]);
+
+const SPELL_MATERIAL_OVERRIDES = new Map(Object.entries({
+  orientation: ["jeu d’objets divinatoires"],
+  changement_de_plan: ["petite baguette fourchue métallique"],
+  glyphe_de_garde: ["encens"],
+  vision_reelle: ["safran", "graisse", "huile"],
+  divination: ["encens", "symbole sacré du clerc"],
+  marteau_spirituel: ["marteau de guerre normal"]
+}));
+
+const EXACT_NOISE = new Set([
+  "", "true", "false", "oui", "non", "consomme", "non consomme", "non_consomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs",
+  "source", "aucun", "null", "undefined", "a completer", "à compléter", "liquide", "liquide consomme", "consommation",
+  "clerc", "clerc non mauvais", "clerc mauvais", "creature", "créature", "petite creature", "petite créature", "createur", "créateur",
+  "dons", "don", "dons requis", "don requis", "dons eventuellement requis", "dons éventuellement requis", "le", "la", "les",
+  "en ivoire", "en os", "de runes gravees", "de runes gravées", "runes gravees", "runes gravées", "sous forme de batonnets", "sous forme de bâtonnets"
+]);
+
+const STARTS_NOISE = [
+  "requise", "requis", "necessaire", "nécessaire", "alternative", "variante", "composant requis", "ingredient materiel", "ingrédient matériel",
+  "formulation source", "source du manuel", "sort normal", "sort inverse", "sort inversé", "selon la regle", "selon la règle", "regle d arbitrage", "règle d’arbitrage",
+  "la fiole", "son contenu", "disparait", "disparaît", "aux ", "au ", "a la ", "à la ", "a l'", "à l'", "a l’", "à l’",
+  "en ", "sous forme", "de runes", "description indique", "cette methode", "cette méthode", "ce procede", "ce procédé", "place", "placée", "placées",
+  "ajoute", "ajoutée", "ajoutées", "pour lancer le sort", "clerc le lance", "le lance", "lance en meme temps", "lance en même temps", "lance une priere", "lance une prière",
+  "dons requis", "dons eventuellement requis", "dons éventuellement requis", "si ", "type de metal", "type de métal", "taille determine", "taille détermine",
+  "taille determinent", "taille déterminent", "plan d arrivee", "plan d’arrivée", "sorte de diapason", "non mauvais", "mauvais"
+];
+
+const CONTAINS_NOISE = [
+  "manuel des joueurs", "formulation source", "regle d arbitrage add2e", "règle d’arbitrage add2e", "ayant servi", "avant consommation",
+  "quand le sort est lance", "quand le sort est lancé", "est tentee", "est tentée", "est tente", "est tenté", "divination puissante",
+  "dons requis", "dons eventuellement requis", "dons éventuellement requis", "determine le plan", "détermine le plan", "determine l arrivee", "détermine l’arrivée",
+  "disparait", "disparaît", "quand le sort", "lance en meme temps", "lancé en même temps", "clerc non mauvais", "clerc mauvais", "description indique", "saupoudree", "saupoudrée",
+  "pour lancer le sort"
+];
 
 function clone(value) { return value === undefined ? undefined : JSON.parse(JSON.stringify(value)); }
 function text(value) { return String(value ?? "").replace(/\s+/g, " ").trim(); }
-function norm(value) { return text(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim(); }
+function norm(value) {
+  return text(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "'")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 function slug(value) { return norm(value).replace(/\s+/g, "_"); }
-function wordCount(value) { return norm(value).split(/\s+/).filter(Boolean).length; }
+function wordCount(value) { return norm(value).split(" ").filter(Boolean).length; }
 
 function getItems(json) {
   if (Array.isArray(json)) return json;
@@ -37,65 +82,43 @@ function getItems(json) {
 }
 
 function normalizeLabel(value) {
-  return text(value)
-    .replace(/[_-]+/g, " ")
-    .replace(/^d['’]\s*/i, "")
-    .replace(/^(un|une)?\s*peu\s+de\s+/i, "")
-    .replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "")
-    .replace(/^(quelques|plusieurs)\s+/i, "")
-    .replace(/^petit morceau de\s+/i, "")
-    .replace(/^morceau de\s+/i, "")
-    .replace(/^feuille d['’]infusion encore humides$/i, "feuilles d’infusion encore humides")
-    .replace(/\s+/g, " ")
-    .replace(/[.!?;:]+$/g, "")
-    .replace(/^symbole sacre$/i, "symbole sacré")
-    .replace(/^gousse ail$/i, "gousse d’ail")
-    .replace(/^poudre argent$/i, "poudre d’argent")
-    .replace(/^eau benite$/i, "eau bénite")
-    .replace(/^eau maudite$/i, "eau maudite")
-    .trim();
+  let out = text(value).replaceAll("_", "-").replace(/-/g, " ");
+  out = out.replace(/^(jeu d[’']objets divinatoires) en (os|ivoire)$/i, "$1");
+  out = out.replace(/^d['’]\s*/i, "");
+  out = out.replace(/^(un|une)?\s*peu\s+de\s+/i, "");
+  out = out.replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
+  out = out.replace(/^(quelques|plusieurs)\s+/i, "");
+  out = out.replace(/^petit morceau de\s+/i, "");
+  out = out.replace(/^morceau de\s+/i, "");
+  out = out.replace(/^feuille d['’]infusion encore humides$/i, "feuilles d’infusion encore humides");
+  out = out.replace(/[.!?;:]+$/g, "").replace(/\s+/g, " ").trim();
+  out = out.replace(/^symbole sacre$/i, "symbole sacré");
+  out = out.replace(/^gousse ail$/i, "gousse d’ail");
+  out = out.replace(/^poudre argent$/i, "poudre d’argent");
+  out = out.replace(/^eau benite$/i, "eau bénite");
+  out = out.replace(/^eau maudite$/i, "eau maudite");
+  return out;
 }
 
-function isExactNoise(value) {
-  const n = norm(value);
-  return [
-    "true", "false", "oui", "non", "consomme", "non consomme", "nonconsomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs",
-    "source", "aucun", "null", "undefined", "a completer", "liquide", "liquide consomme", "consommation", "clerc", "clerc non mauvais",
-    "clerc mauvais", "creature", "createur", "dons", "don", "dons requis", "don requis", "dons eventuellement requis", "don eventuellement requis",
-    "sorte de diapason"
-  ].includes(n);
-}
-
-function isInstructionOrNote(value) {
-  const n = norm(value);
+function isNoise(value) {
+  const raw = text(value);
+  const clean = normalizeLabel(raw);
+  const n = norm(clean);
   if (!n) return true;
-  if (/^-?\d+(?:[.,]\d+)?$/.test(n)) return true;
-  if (isExactNoise(n)) return true;
-
-  return /^(requi[st]e?s?|necessaire|alternative|variante|composant requis|ingredient materiel|formulation source|source du manuel|sort normal|sort inverse|liquide consomme|selon la regle|regle d arbitrage|la fiole est|son contenu est|disparait quand|disparait quand|aux\b|au\b|a la\b|a l\b|cette methode|ce procede|places?\b|placees?\b|ajoutee?\b|ajoutes?\b|clerc le lance|le lance|lance en meme temps|lance une priere|dons? requis|dons? eventuellement requis|si\b|type de metal|taille determine|taille determinent|plan d arrivee|plan d arrive|sorte de diapason|non mauvais|mauvais\b)\b/.test(n)
-    || /\b(manuel des joueurs|formulation source|regle d arbitrage add2e|règle d’arbitrage add2e|ayant servi|avant consommation|quand le sort est lance|quand le sort est lancé|est tentee|est tentée|est tente|est tenté|divination puissante|dons requis|dons eventuellement requis|determin(e|ent|ant)|determine le plan|determine l arrivee|disparait|disparaît|quand le sort|lance en meme temps|lancé en même temps|clerc non mauvais|clerc mauvais)\b/.test(n);
-}
-
-function isSuspiciousFinalComponent(value) {
-  const label = normalizeLabel(value);
-  const n = norm(label);
-  if (!label || isInstructionOrNote(label)) return true;
-  if (/[.!?;:]/.test(label)) return true;
-  if (wordCount(label) > 9) return true;
-  if (/\b(requiert|necessite|nécessite|requis|requise|requis[e]?|determine|détermine|tent[eé]e?|lance|lanc[eé]|dispara[iî]t|plac[eé]e?|ajout[eé]e?|consomm[eé]|doit|peut|plan d['’]arriv[eé]e|taille|type de m[eé]tal)\b/i.test(label)) return true;
-  if (/^(aux|au|a la|à la|a l['’]|à l['’]|cette|ce|ces|dons?|sort|clerc|creature|créature)\b/i.test(label)) return true;
+  if (EXACT_NOISE.has(n) || EXACT_NOISE.has(clean.toLowerCase())) return true;
+  if (/^\d+(?:[,.]\d+)?\s*(m2|m|m²|case|cases|po|pa|pp|pc)?$/i.test(clean)) return true;
+  if (STARTS_NOISE.some(prefix => n.startsWith(norm(prefix)))) return true;
+  if (CONTAINS_NOISE.some(part => n.includes(norm(part)))) return true;
   return false;
 }
 
-function splitNameAndNote(value) {
-  const raw = text(value);
-  const match = raw.match(/\b(?:optionnel|alternative\s*:|ingr[eé]dient\s+mat[eé]riel|consomm[eé]|consomme|non[_\s-]*consomm[eé]|formulation\s+source|manuel\s+(?:du|des)\s+joueurs?|source\s*:|r[eé]f[eé]rence\s*:|r[eè]gle\s+d['’]arbitrage|selon\s+la\s+r[eè]gle|requi[st]e?s?\s+pour|sort\s+normal|sort\s+invers[eé]|clerc\s+le\s+lance|dispara[iî]t\s+quand|quand\s+le\s+sort\s+est\s+lanc[eé]|dons?\s+requis|dons?\s+[eé]ventuellement\s+requis|type\s+de\s+m[eé]tal|taille\s+d[eé]termine|taille\s+d[eé]terminent|sorte\s+de\s+diapason|clerc\s+non\s+mauvais|clerc\s+mauvais).*$/i);
-  if (!match) return { name: raw, note: "" };
-  const idx = match.index ?? raw.length;
-  return {
-    name: raw.slice(0, idx).replace(/[,;:\s]+$/g, "").trim(),
-    note: raw.slice(idx).replace(/^[,;:\s]+/g, "").trim()
-  };
+function isSuspiciousFinalComponent(value) {
+  const clean = normalizeLabel(value);
+  if (!clean || isNoise(clean)) return true;
+  if (/[.!?;:]/.test(clean)) return true;
+  if (wordCount(clean) > 9) return true;
+  const n = norm(clean);
+  return ["requiert", "necessite", "nécessite", "requis", "requise", "determine", "détermine", "tente", "tenté", "tentée", "lance", "lancé", "disparait", "disparaît", "place", "ajoute", "consomme", "consommé", "doit", "peut", "taille", "type de metal", "type de métal", "description"].some(v => n.includes(norm(v)));
 }
 
 function addNote(notes, value) {
@@ -110,38 +133,57 @@ function addUnique(list, value) {
   if (!label || isSuspiciousFinalComponent(label)) return;
   const key = slug(label);
   if (!key) return;
-
   for (let i = list.length - 1; i >= 0; i -= 1) {
-    const existing = list[i];
-    const existingKey = slug(existing);
+    const existingKey = slug(list[i]);
     if (existingKey === key) return;
-    if (existingKey && key.includes(existingKey) && wordCount(label) <= 9) {
-      list.splice(i, 1);
-      continue;
-    }
-    if (existingKey && existingKey.includes(key)) return;
+    if (key.includes(existingKey) && wordCount(label) <= 9) list.splice(i, 1);
+    else if (existingKey.includes(key)) return;
   }
-
   list.push(label);
+}
+
+function splitTechnicalNote(raw) {
+  const lower = raw.toLowerCase();
+  const markers = [
+    " optionnel", " alternative", " ingrédient matériel", " ingredient materiel", " consomm", " formulation source", " manuel des joueurs",
+    " source:", " référence:", " reference:", " règle d", " regle d", " requise pour", " requis pour", " sort normal", " sort inversé",
+    " description indique", " clerc le lance", " disparaît quand", " disparait quand", " dons requis", " dons éventuellement requis", " type de métal", " taille détermine",
+    " sorte de diapason", " clerc non mauvais", " clerc mauvais", " pour lancer le sort"
+  ];
+  let index = -1;
+  for (const marker of markers) {
+    const i = lower.indexOf(marker);
+    if (i >= 0 && (index < 0 || i < index)) index = i;
+  }
+  if (index < 0) return { name: raw, note: "" };
+  return { name: raw.slice(0, index).replace(/[,;:\s]+$/g, "").trim(), note: raw.slice(index).trim() };
 }
 
 function extractComponentFromNoise(value) {
   const raw = text(value);
-  const match = raw.match(/\b(?:requiert|n[eé]cessite)\s+(?:aussi\s+)?(?:un|une|des|du|de la|de l['’])\s+(.+)$/i);
-  if (!match) return "";
-  return match[1]
-    .replace(/[,;:]\s*(?:plac[eé]e?s?|ajout[eé]e?s?|ayant servi|avant consommation).*$/i, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  if (/^cr[eè]me\s+faite\s+d['’]huile$/i.test(raw)) return "huile";
+  const lower = raw.toLowerCase();
+  for (const verb of ["requiert ", "nécessite ", "necessite "]) {
+    const idx = lower.indexOf(verb);
+    if (idx < 0) continue;
+    let tail = raw.slice(idx + verb.length).replace(/^(aussi\s+)?(un|une|des|du|de la|de l['’])\s+/i, "");
+    tail = tail.replace(/[,;:]\s*(plac[eé]e?s?|ajout[eé]e?s?|ayant servi|avant consommation).*$/i, "").trim();
+    return tail;
+  }
+  return "";
 }
 
-function splitMaterialAlternatives(value) {
-  const raw = text(value);
-  if (!raw) return [];
-  return raw
+function splitAlternatives(value) {
+  return text(value)
     .split(/\s+ou\s+(?:des\s+|de la\s+|du\s+|de l['’]\s+|d['’]\s+|un\s+|une\s+)?/i)
     .map(normalizeLabel)
     .filter(Boolean);
+}
+
+function splitAndList(value) {
+  const raw = text(value);
+  const m = raw.match(/^de\s+(.+?)\s+et\s+de\s+(.+)$/i) || raw.match(/^(.+?)\s+et\s+(.+)$/i);
+  return m ? [normalizeLabel(m[1]), normalizeLabel(m[2])].filter(Boolean) : [];
 }
 
 function collect(value, names, notes) {
@@ -158,9 +200,7 @@ function collect(value, names, notes) {
     }
     const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or;
     if (Array.isArray(alternatives) && alternatives.length) {
-      const alt = [];
-      for (const entry of alternatives) collect(entry, alt, notes);
-      for (const entry of alt) addUnique(names, entry);
+      for (const entry of alternatives) collect(entry, names, notes);
       return;
     }
     const direct = value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
@@ -176,28 +216,36 @@ function collect(value, names, notes) {
   }
 
   const raw = text(value);
-  const { name, note } = splitNameAndNote(raw);
+  const { name, note } = splitTechnicalNote(raw);
   if (note) addNote(notes, note);
 
-  if (isInstructionOrNote(name)) {
-    const extracted = extractComponentFromNoise(name || raw);
-    if (extracted) addUnique(names, extracted);
-    addNote(notes, raw);
-    return;
-  }
-
-  for (const part of name.split(/[,;|\n]+/g).map(normalizeLabel).filter(Boolean)) {
-    if (isInstructionOrNote(part)) {
-      const extracted = extractComponentFromNoise(part);
-      if (extracted) addUnique(names, extracted);
-      addNote(notes, part);
+  const pieces = name.split(/[,;|\n]+/g).map(normalizeLabel).filter(Boolean);
+  for (const piece of pieces) {
+    const andParts = splitAndList(piece);
+    if (andParts.length) {
+      for (const entry of andParts) addUnique(names, entry);
       continue;
     }
-    for (const alt of splitMaterialAlternatives(part)) {
-      if (isInstructionOrNote(alt)) addNote(notes, alt);
+    if (isNoise(piece)) {
+      const extracted = extractComponentFromNoise(piece || raw);
+      if (extracted) addUnique(names, extracted);
+      addNote(notes, piece);
+      continue;
+    }
+    for (const alt of splitAlternatives(piece)) {
+      if (isNoise(alt)) addNote(notes, alt);
       else addUnique(names, alt);
     }
   }
+}
+
+function applySpellOverride(item, system, notes) {
+  const key = slug(item?.name ?? system?.nom);
+  const override = SPELL_MATERIAL_OVERRIDES.get(key);
+  if (!override) return false;
+  addNote(notes, `Normalisation marchand appliquée : ${system.composants_materiels.join(", ")}`);
+  system.composants_materiels = clone(override);
+  return true;
 }
 
 function ensureSystem(system) {
@@ -210,7 +258,8 @@ function ensureSystem(system) {
   }
 }
 
-function normalizeMaterials(system) {
+function normalizeMaterials(item) {
+  const system = item.system ?? {};
   const before = clone(system.composants_materiels ?? []);
   const names = [];
   const notes = [];
@@ -219,8 +268,9 @@ function normalizeMaterials(system) {
   if (!names.length) collect(system.composants_requis, names, notes);
   if (text(system.composants_materiels_note)) addNote(notes, system.composants_materiels_note);
   system.composants_materiels = names;
+  applySpellOverride(item, system, notes);
   system.composants_materiels_note = notes.join("\n");
-  return { before, after: clone(names), notes: clone(notes), changed: JSON.stringify(before) !== JSON.stringify(names) };
+  return { before, after: clone(system.composants_materiels), notes: clone(notes), changed: JSON.stringify(before) !== JSON.stringify(system.composants_materiels) };
 }
 
 function main() {
@@ -251,7 +301,7 @@ function main() {
     if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") continue;
     item.system ??= {};
     ensureSystem(item.system);
-    const result = normalizeMaterials(item.system);
+    const result = normalizeMaterials(item);
     control.spells += 1;
     if (!item.system.composants_materiels.length) control.emptyMaterialSpells += 1;
     if (result.changed) {
