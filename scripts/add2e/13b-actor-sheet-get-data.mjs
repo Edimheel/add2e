@@ -1,6 +1,6 @@
 // ADD2E — Actor sheet getData ApplicationV2
 // Full V2 : aucun appel ActorSheet.prototype.
-// Version : 2026-06-12-spell-row-material-components-v1
+// Version : 2026-06-17-spell-row-material-components-display-v2
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
@@ -338,6 +338,76 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     return s.isCapacity === true || s.isCapacite === true || s.usageType === "classFeature" || s.sourceCapacite || s.sourceFeature || flags.sourceType === "capacite" || flags.sourceType === "capacity";
   };
 
+  const add2eNormalizeMaterialLabel = (value) => String(value ?? "")
+    .trim()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/^symbole sacre$/i, "symbole sacré")
+    .replace(/^gousse ail$/i, "gousse d’ail")
+    .replace(/^poudre argent$/i, "poudre d’argent")
+    .replace(/^eau benite$/i, "eau bénite")
+    .replace(/^eau maudite$/i, "eau maudite")
+    .trim();
+
+  const add2eIsTechnicalMaterialValue = (value) => {
+    const text = String(value ?? "").trim();
+    if (!text) return true;
+    const normalized = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[_-]+/g, " ").trim();
+    if (/^-?\d+(?:[.,]\d+)?$/.test(normalized)) return true;
+    if (["true", "false", "oui", "non", "consomme", "consomme true", "consomme false", "consume", "consumed", "non consomme", "ne pas consommer", "manuel", "manuel du joueur", "manuel des joueurs", "source", "a completer", "aucun", "null", "undefined"].includes(normalized)) return true;
+    if (normalized.startsWith("formulation source")) return true;
+    if (normalized.startsWith("source ")) return true;
+    if (normalized.includes("manuel des joueurs")) return true;
+    return false;
+  };
+
+  const add2eCollectMaterialNames = (value, out = []) => {
+    if (value === undefined || value === null || value === "") return out;
+    if (Array.isArray(value)) {
+      for (const entry of value) add2eCollectMaterialNames(entry, out);
+      return out;
+    }
+    if (typeof value === "object") {
+      const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or;
+      if (Array.isArray(alternatives) && alternatives.length) {
+        const alt = [];
+        for (const entry of alternatives) add2eCollectMaterialNames(entry, alt);
+        if (alt.length) out.push(alt.join(" ou "));
+        return out;
+      }
+      const direct = value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
+      if (direct !== undefined && direct !== null && String(direct).trim()) {
+        const label = add2eNormalizeMaterialLabel(direct);
+        if (!add2eIsTechnicalMaterialValue(label)) out.push(label);
+        return out;
+      }
+      for (const [key, entry] of Object.entries(value)) {
+        if (["quantite", "quantity", "qty", "nombre", "count", "consomme", "consume", "consumption", "consommation", "source", "reference", "note", "notes", "description", "condition", "conditions"].includes(String(key))) continue;
+        add2eCollectMaterialNames(entry, out);
+      }
+      return out;
+    }
+    for (const part of String(value).split(/[,;|\n]+/g).map(v => add2eNormalizeMaterialLabel(v)).filter(Boolean)) {
+      if (!add2eIsTechnicalMaterialValue(part)) out.push(part);
+    }
+    return out;
+  };
+
+  const add2eSpellRowMaterialDisplay = (system = {}) => {
+    const names = add2eCollectMaterialNames(system.composants_materiels ?? []);
+    if (!names.length) add2eCollectMaterialNames(system.composants_materiels_objets ?? [], names);
+    if (!names.length) add2eCollectMaterialNames(system.composants_requis ?? [], names);
+    const seen = new Set();
+    const clean = [];
+    for (const name of names) {
+      const key = String(name).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_");
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      clean.push(name);
+    }
+    return clean.length ? clean.join(", ") : "—";
+  };
+
   const add2eBuildSpellRowForHbs = (sort, spellLevel) => {
     const spellLists = add2eGetSpellListsFromItem(sort);
     const allowedEntries = add2eSpellEntriesForHbs.filter(entry => {
@@ -363,7 +433,8 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
       ecole: s?.école || s?.ecole || s?.school || "",
       description: s?.description || "",
       composantes: s?.composantes || "",
-      composants_materiels: foundry.utils.deepClone(s?.composants_materiels ?? []),
+      composants_materiels: add2eSpellRowMaterialDisplay(s),
+      composants_materiels_brut: foundry.utils.deepClone(s?.composants_materiels ?? []),
       composants_materiels_objets: foundry.utils.deepClone(s?.composants_materiels_objets ?? []),
       composants_materiels_source: s?.composants_materiels_source || "",
       composants_requis: foundry.utils.deepClone(s?.composants_requis ?? []),
