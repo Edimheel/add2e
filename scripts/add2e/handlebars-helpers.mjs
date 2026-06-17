@@ -1,6 +1,6 @@
 // scripts/add2e/handlebars-helpers.mjs
 // ADD2E — Helpers Handlebars partagés.
-// Version : 2026-06-12-spell-components-shop-names-v4-dedup-alternatives
+// Version : 2026-06-17-real-multiclass-header-helper-v1
 
 if (typeof Handlebars !== "undefined" && !Handlebars.helpers.json) {
   Handlebars.registerHelper("json", ctx => JSON.stringify(ctx, null, 2));
@@ -65,13 +65,14 @@ function add2eHbsSpellComponentTypes(sort) { const s = sort?.system ?? sort ?? {
 function add2eHbsSigned(value) { const n = Number(value || 0); return `${n >= 0 ? "+" : ""}${n}`; }
 function add2eHbsNumeric(value) { const n = Number(value ?? 0); return Number.isFinite(n) ? n : 0; }
 function add2eHbsClassItems(actor) { return add2eHbsAsArray(actor?.items?.contents ?? actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe"); }
+function add2eHbsShowMulticlassHeader(actor) { return actor?.system?.multiclasse?.enabled === true && add2eHbsClassItems(actor).length > 1; }
 function add2eHbsClassSlug(cls) { const sys = cls?.system ?? {}; return add2eHbsSlug(sys.slug ?? sys.label ?? sys.nom ?? sys.name ?? cls?.name ?? "classe"); }
 function add2eHbsClassLevel(actor, cls) { const slug = add2eHbsClassSlug(cls); const map = actor?.system?.niveaux_par_classe ?? {}; return Math.max(1, add2eHbsNumeric(map[slug] ?? cls?.system?.niveau ?? cls?.system?.level ?? actor?.system?.niveau ?? 1)); }
 function add2eHbsProgressionRowForClass(actor, cls) { const level = add2eHbsClassLevel(actor, cls); const progression = Array.isArray(cls?.system?.progression) ? cls.system.progression : []; if (!progression.length) return null; return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null; }
 function add2eHbsRowThaco(row) { return add2eHbsNumeric(row?.thac0 ?? row?.thaco ?? row?.THAC0 ?? 20); }
-function add2eHbsBestThaco(actor, fallback = 20) { const classes = add2eHbsClassItems(actor); if (!classes.length || actor?.system?.multiclasse?.enabled !== true) return add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20); const values = classes.map(cls => add2eHbsRowThaco(add2eHbsProgressionRowForClass(actor, cls))).filter(v => Number.isFinite(v) && v > 0); return values.length ? Math.min(...values) : add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20); }
+function add2eHbsBestThaco(actor, fallback = 20) { const classes = add2eHbsClassItems(actor); if (!classes.length || !add2eHbsShowMulticlassHeader(actor)) return add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20); const values = classes.map(cls => add2eHbsRowThaco(add2eHbsProgressionRowForClass(actor, cls))).filter(v => Number.isFinite(v) && v > 0); return values.length ? Math.min(...values) : add2eHbsNumeric(fallback ?? actor?.system?.thaco ?? 20); }
 function add2eHbsReadSave(row, idx) { const s = row?.savingThrows ?? row?.saves ?? row?.jets_sauvegarde ?? row?.sauvegardes ?? null; if (Array.isArray(s)) return add2eHbsNumeric(s[idx] ?? NaN); if (s && typeof s === "object") { const keys = [["paralysie", "poison", "mort", "death", "save0"], ["petrification", "pétrification", "polymorphose", "polymorph", "save1"], ["baguettes", "batons", "badines", "wand", "wands", "save2"], ["souffles", "breath", "souffle", "save3"], ["sorts", "sortileges", "sortilèges", "spell", "spells", "save4"]][Number(idx) || 0] ?? []; for (const key of keys) if (s[key] !== undefined) return add2eHbsNumeric(s[key]); } return NaN; }
-function add2eHbsBestSave(actor, idx, fallbackRow = null) { const classes = add2eHbsClassItems(actor); if (!classes.length || actor?.system?.multiclasse?.enabled !== true) { const v = add2eHbsReadSave(fallbackRow, idx); return Number.isFinite(v) ? v : "—"; } const values = classes.map(cls => add2eHbsReadSave(add2eHbsProgressionRowForClass(actor, cls), idx)).filter(v => Number.isFinite(v) && v > 0); return values.length ? Math.min(...values) : "—"; }
+function add2eHbsBestSave(actor, idx, fallbackRow = null) { const classes = add2eHbsClassItems(actor); if (!classes.length || !add2eHbsShowMulticlassHeader(actor)) { const v = add2eHbsReadSave(fallbackRow, idx); return Number.isFinite(v) ? v : "—"; } const values = classes.map(cls => add2eHbsReadSave(add2eHbsProgressionRowForClass(actor, cls), idx)).filter(v => Number.isFinite(v) && v > 0); return values.length ? Math.min(...values) : "—"; }
 function add2eHbsWeaponMagicBonus(arme, kind) { try { if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function") return Number(Add2eEffectsEngine.getMagicWeaponBonus(arme, kind)) || 0; } catch (_e) {} return kind === "damage" ? add2eHbsNumeric(arme?.system?.bonus_dom) : add2eHbsNumeric(arme?.system?.bonus_hit); }
 function add2eHbsEquippedArmorPieces(actor) { const items = add2eHbsAsArray(actor?.items?.contents ?? actor?.items ?? []); return items.filter(item => String(item?.type ?? "") === "armure" && add2eHbsItemEquipped(item)); }
 function add2eHbsArmorOtherBonus(actor, key) { return add2eHbsEquippedArmorPieces(actor).reduce((sum, item) => sum + add2eHbsNumeric(item?.system?.[key]), 0); }
@@ -82,6 +83,7 @@ if (typeof Handlebars !== "undefined") {
   Handlebars.registerHelper("add2eBestThaco", add2eHbsBestThaco);
   Handlebars.registerHelper("add2eBestSave", add2eHbsBestSave);
   Handlebars.registerHelper("add2eEquippedWeaponRows", add2eHbsEquippedWeaponRows);
+  Handlebars.registerHelper("add2eShowMulticlassHeader", add2eHbsShowMulticlassHeader);
   Handlebars.registerHelper("capitalize", str => (str && typeof str === "string") ? str.charAt(0).toUpperCase() + str.slice(1) : str);
   Handlebars.registerHelper("uppercase", str => (str && typeof str === "string") ? str.toUpperCase() : str);
   Handlebars.registerHelper("substr", (str, start, len) => (str && typeof str === "string") ? str.substr(start, len) : str);
@@ -104,3 +106,4 @@ if (typeof Handlebars !== "undefined" && !Handlebars.helpers.length) Handlebars.
 
 globalThis.add2eHbsBestThaco = add2eHbsBestThaco;
 globalThis.add2eHbsBestSave = add2eHbsBestSave;
+globalThis.add2eHbsShowMulticlassHeader = add2eHbsShowMulticlassHeader;
