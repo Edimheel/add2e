@@ -1,0 +1,1091 @@
+{
+  "version": "2026-06-17-normalize-spell-materials-v3-strict",
+  "input": "fvtt-spells-all-normalise-mecanique-v1.json",
+  "output": "fvtt-spells-all-normalise-mecanique-v3.json",
+  "totalItems": 411,
+  "spells": 411,
+  "changedSpells": 186,
+  "emptyMaterialSpells": 225,
+  "examples": [
+    {
+      "name": "Abaissement des eaux",
+      "before": [
+        "petite fiole d’eau",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "La fiole est le contenant réutilisable",
+        "son contenu est consommé.",
+        "petite fiole de poussière",
+        "fiole d’eau",
+        "son contenu est consommé. Formulation source du Manuel : « petite fiole d’eau ».",
+        "fiole de poussière",
+        "son contenu est consommé. Formulation source du Manuel : « petite fiole de poussière »."
+      ],
+      "after": [
+        "petite fiole d’eau",
+        "petite fiole de poussière",
+        "fiole d’eau",
+        "fiole de poussière"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "La fiole est le contenant réutilisable",
+        "son contenu est consommé.",
+        "consommé. Formulation source du Manuel : « petite fiole d’eau ».",
+        "son contenu est consommé. Formulation source du Manuel : « petite fiole d’eau ».",
+        "consommé. Formulation source du Manuel : « petite fiole de poussière ».",
+        "son contenu est consommé. Formulation source du Manuel : « petite fiole de poussière »."
+      ]
+    },
+    {
+      "name": "Abaissement des Eaux",
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "pincée de poussière",
+        "consomme",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+      ],
+      "after": [
+        "symbole sacré du clerc",
+        "pincée de poussière"
+      ],
+      "notes": [
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "consomme",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+      ]
+    },
+    {
+      "name": "Agrandissement",
+      "before": [
+        "pincée de poudre de fer",
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ],
+      "after": [
+        "pincée de poudre de fer"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ]
+    },
+    {
+      "name": "Amitié animale",
+      "before": [
+        "du gui et un peu de nourriture appréciée par l’animal",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "gui et un peu de nourriture appréciée par l’animal",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et un peu de nourriture appréciée par l’animal »."
+      ],
+      "after": [
+        "gui et un peu de nourriture appréciée par l’animal"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et un peu de nourriture appréciée par l’animal »."
+      ]
+    },
+    {
+      "name": "Antipathie/sympathie",
+      "before": [
+        "un morceau d’alun trempé dans du vinaigre",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Composant requis selon l’alternative ou la variante choisie.",
+        "Alternative ou variante explicitement indiquée par le Manuel.",
+        "morceau d’alun trempé dans du vinaigre",
+        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « un morceau d’alun trempé dans du vinaigre »."
+      ],
+      "after": [
+        "morceau d’alun trempé dans du vinaigre"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Composant requis selon l’alternative ou la variante choisie.",
+        "Alternative ou variante explicitement indiquée par le Manuel.",
+        "Formulation source du Manuel : « un morceau d’alun trempé dans du vinaigre ».",
+        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « un morceau d’alun trempé dans du vinaigre »."
+      ]
+    },
+    {
+      "name": "Aquagenèse",
+      "before": [
+        "goutte d’eau",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Requise pour la création d’eau.",
+        "Alternative à une pincée de poussière.",
+        "pincée de poussière",
+        "Requise pour la destruction d’eau.",
+        "Alternative à une goutte d’eau."
+      ],
+      "after": [
+        "goutte d’eau",
+        "pincée de poussière"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Requise pour la création d’eau.",
+        "Alternative à une pincée de poussière.",
+        "Requise pour la destruction d’eau.",
+        "Alternative à une goutte d’eau."
+      ]
+    },
+    {
+      "name": "Arbre",
+      "before": [
+        "du gui et une petite branche d’arbre",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "gui et une petite branche d’arbre",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et une petite branche d’arbre »."
+      ],
+      "after": [
+        "gui et une petite branche d’arbre"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et une petite branche d’arbre »."
+      ]
+    },
+    {
+      "name": "Arme enchantée",
+      "before": [
+        "du carbone et du citron réduits en poudre",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Consommation explicitement indiquée dans la description.",
+        "carbone et du citron réduits en poudre",
+        "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « du carbone et du citron réduits en poudre »."
+      ],
+      "after": [
+        "carbone et du citron réduits en poudre",
+        "Consommation explicitement indiquée dans la description"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Formulation source du Manuel : « du carbone et du citron réduits en poudre »."
+      ]
+    },
+    {
+      "name": "Augure",
+      "before": [
+        "jeu de baguettes serties de gemmes",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative : utiliser ce composant",
+        "des os de dragon",
+        "des objets divinatoires similaires ou des feuilles d’infusion encore humides.",
+        "Alternative aux os de dragon",
+        "aux objets similaires et aux feuilles d’infusion.",
+        "os de dragon",
+        "un jeu de baguettes serties de gemmes",
+        "Alternative au jeu de baguettes serties de gemmes",
+        "objets divinatoires similaires",
+        "des os de dragon ou des feuilles d’infusion encore humides.",
+        "aux os de dragon et aux feuilles d’infusion.",
+        "feuille d’infusion encore humides",
+        "Alternative aux objets divinatoires",
+        "cette méthode requiert aussi une perle écrasée d’au moins 100 po.",
+        "placées dans le récipient ayant servi pour l’infusion. Formulation source du Manuel : « feuilles d’infusion encore humides ».",
+        "perle écrasée d’au moins 100 po",
+        "100",
+        "Requise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.",
+        "Requise uniquement avec la méthode des feuilles d’infusion",
+        "ajoutée à la boisson avant consommation."
+      ],
+      "after": [
+        "jeu de baguettes serties de gemmes",
+        "os de dragon",
+        "objets divinatoires similaires ou des feuilles d’infusion encore humides",
+        "aux objets similaires et aux feuilles d’infusion",
+        "objets divinatoires similaires",
+        "os de dragon ou des feuilles d’infusion encore humides",
+        "aux os de dragon et aux feuilles d’infusion",
+        "feuille d’infusion encore humides",
+        "cette méthode requiert aussi une perle écrasée d’au moins 100 po",
+        "placées dans le récipient ayant servi pour l’infusion",
+        "perle écrasée d’au moins 100 po",
+        "ajoutée à la boisson avant consommation"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative : utiliser ce composant",
+        "Alternative aux os de dragon",
+        "Alternative au jeu de baguettes serties de gemmes",
+        "Alternative aux objets divinatoires",
+        "Formulation source du Manuel : « feuilles d’infusion encore humides ».",
+        "100",
+        "Requise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.",
+        "Requise uniquement avec la méthode des feuilles d’infusion"
+      ]
+    },
+    {
+      "name": "Aura magique de Nystul",
+      "before": [
+        "un petit morceau de soie que le magicien doit passer sur l’objet affecté",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "morceau de soie que le magicien doit passer sur l’objet affecté",
+        "Formulation source du Manuel : « un petit morceau de soie que le magicien doit passer sur l’objet affecté »."
+      ],
+      "after": [
+        "soie que le magicien doit passer sur l’objet affecté"
+      ],
+      "notes": [
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "Formulation source du Manuel : « un petit morceau de soie que le magicien doit passer sur l’objet affecté »."
+      ]
+    },
+    {
+      "name": "Bâtons à serpents",
+      "before": [
+        "petit morceau d’écorce",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "écailles de serpent",
+        "morceau d’écorce",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+      ],
+      "after": [
+        "petit morceau d’écorce",
+        "écailles de serpent",
+        "morceau d’écorce"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+      ]
+    },
+    {
+      "name": "Bâtons à serpents",
+      "before": [
+        "gui",
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ],
+      "after": [
+        "gui"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ]
+    },
+    {
+      "name": "Bénédiction",
+      "before": [
+        "eau bénite",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Sort normal.",
+        "Liquide consommé.",
+        "eau maudite",
+        "Sort inversé : malédiction."
+      ],
+      "after": [
+        "eau bénite",
+        "Liquide",
+        "eau maudite"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Sort normal.",
+        "consommé.",
+        "Sort inversé : malédiction."
+      ]
+    },
+    {
+      "name": "Bouche magique",
+      "before": [
+        "un petit morceau de rayon de miel",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "morceau de rayon de miel",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit morceau de rayon de miel »."
+      ],
+      "after": [
+        "rayon de miel"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit morceau de rayon de miel »."
+      ]
+    },
+    {
+      "name": "Bouclier de feu",
+      "before": [
+        "luciole vivante",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative au vert luisant vivant ou aux quatre queues.",
+        "vert luisant vivant",
+        "Alternative à la luciole vivante ou aux quatre queues.",
+        "queue de lucioles ou de verts luisants morts",
+        "Alternative aux créatures vivantes. Quantité : 4.",
+        "Formulation source du Manuel : « queues de lucioles ou de verts luisants morts »."
+      ],
+      "after": [
+        "luciole vivante",
+        "vert luisant vivant",
+        "queue de lucioles ou de verts luisants morts"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative au vert luisant vivant ou aux quatre queues.",
+        "Alternative à la luciole vivante ou aux quatre queues.",
+        "Alternative aux créatures vivantes. Quantité : 4.",
+        "Formulation source du Manuel : « queues de lucioles ou de verts luisants morts »."
+      ]
+    },
+    {
+      "name": "Boule de feu",
+      "before": [
+        "une petite boule composée de fiente de chauve-souris et de souffre",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "boule composée de fiente de chauve-souris et de souffre",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une petite boule composée de fiente de chauve-souris et de souffre »."
+      ],
+      "after": [
+        "petite boule composée de fiente de chauve souris et de souffre",
+        "boule composée de fiente de chauve souris et de souffre"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une petite boule composée de fiente de chauve-souris et de souffre »."
+      ]
+    },
+    {
+      "name": "Bruitage",
+      "before": [
+        "morceau de laine",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative à la cire.",
+        "cire",
+        "Alternative au morceau de laine."
+      ],
+      "after": [
+        "laine",
+        "cire"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative à la cire.",
+        "Alternative au morceau de laine."
+      ]
+    },
+    {
+      "name": "Cacodémon",
+      "before": [
+        "cinq chandelles noires allumées",
+        "un brasero de charbons ardents dans lequel le magicien doit brûler du soufre",
+        "des fourrures de chauves-souris",
+        "du saindoux",
+        "de la suie",
+        "des cristaux d’acide mercuro-nitrique",
+        "une racine de mandragore",
+        "de l’alcool",
+        "un parchemin sur lequel est inscrit le nom du démon",
+        "sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Consommation explicitement indiquée dans la description."
+      ],
+      "after": [
+        "cinq chandelles noires allumées",
+        "brasero de charbons ardents dans lequel le magicien doit brûler du soufre",
+        "fourrures de chauves souris",
+        "saindoux",
+        "suie",
+        "cristaux d’acide mercuro nitrique",
+        "racine de mandragore",
+        "de l’alcool",
+        "parchemin sur lequel est inscrit le nom du démon",
+        "sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon",
+        "Consommation explicitement indiquée dans la description"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ]
+    },
+    {
+      "name": "Catalepsie",
+      "before": [
+        "pincée de poussière d’un cimetière",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "symbole sacré du clerc",
+        "non_consomme"
+      ],
+      "after": [
+        "pincée de poussière d’un cimetière",
+        "symbole sacré du clerc"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "non_consomme"
+      ]
+    },
+    {
+      "name": "Catalepsie",
+      "before": [
+        "une feuille morte de chêne et du gui",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "feuille morte de chêne et du gui",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui »."
+      ],
+      "after": [
+        "feuille morte de chêne et du gui"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui »."
+      ]
+    },
+    {
+      "name": "Changement de Plan",
+      "before": [
+        "petite baguette fourchue métallique",
+        "sorte de diapason",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "Le type de métal et la taille déterminent le plan d’arrivée.",
+        "baguette fourchue métallique",
+        "Le type de métal et la taille déterminent le plan d’arrivée. Formulation source du Manuel : « petite baguette fourchue métallique"
+      ],
+      "after": [
+        "petite baguette fourchue métallique",
+        "sorte de diapason",
+        "type de métal et la taille déterminent le plan d’arrivée",
+        "baguette fourchue métallique"
+      ],
+      "notes": [
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "Formulation source du Manuel : « petite baguette fourchue métallique"
+      ]
+    },
+    {
+      "name": "Chaos",
+      "before": [
+        "disque de bronze",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "Formulation source du Manuel : « petit disque de bronze ».",
+        "tige de fer",
+        "Formulation source du Manuel : « petite tige de fer »."
+      ],
+      "after": [
+        "disque de bronze",
+        "tige de fer"
+      ],
+      "notes": [
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "Formulation source du Manuel : « petit disque de bronze ».",
+        "Formulation source du Manuel : « petite tige de fer »."
+      ]
+    },
+    {
+      "name": "Charme-monstres",
+      "before": [
+        "un jeu de 3 coquilles de noisettes",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "jeu de 3 coquilles de noisettes",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un jeu de 3 coquilles de noisettes »."
+      ],
+      "after": [
+        "jeu de 3 coquilles de noisettes"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un jeu de 3 coquilles de noisettes »."
+      ]
+    },
+    {
+      "name": "Charme-plantes",
+      "before": [
+        "une pincée d’humus",
+        "une goutte d’eau et une feuille ou une brindille",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Composant requis selon l’alternative ou la variante choisie.",
+        "Alternative ou variante explicitement indiquée par le Manuel.",
+        "pincée d’humus",
+        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée d’humus"
+      ],
+      "after": [
+        "pincée d’humus",
+        "goutte d’eau et une feuille ou une brindille"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Composant requis selon l’alternative ou la variante choisie.",
+        "Alternative ou variante explicitement indiquée par le Manuel.",
+        "Formulation source du Manuel : « une pincée d’humus",
+        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée d’humus"
+      ]
+    },
+    {
+      "name": "Chasseur invisible",
+      "before": [
+        "encens",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Brûlé.",
+        "bout de corne taillé en forme de croissant",
+        "non_consomme"
+      ],
+      "after": [
+        "encens",
+        "Brûlé",
+        "bout de corne taillé en forme de croissant"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "non_consomme"
+      ]
+    },
+    {
+      "name": "Chaumière de Léomund",
+      "before": [
+        "une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Consommation explicitement indiquée dans la description.",
+        "perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
+        "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite »."
+      ],
+      "after": [
+        "petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
+        "Consommation explicitement indiquée dans la description",
+        "perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Formulation source du Manuel : « une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite »."
+      ]
+    },
+    {
+      "name": "Chien fidèle de Mordenkainen",
+      "before": [
+        "petit sifflet en argent",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "morceau d’os",
+        "consomme",
+        "fil",
+        "sifflet en argent",
+        "Formulation source du Manuel : « petit sifflet en argent »."
+      ],
+      "after": [
+        "petit sifflet en argent",
+        "morceau d’os",
+        "fil",
+        "sifflet en argent"
+      ],
+      "notes": [
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "consomme",
+        "Formulation source du Manuel : « petit sifflet en argent »."
+      ]
+    },
+    {
+      "name": "Chute de plume",
+      "before": [
+        "petite plume",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative à un peu de duvet",
+        "le magicien doit l’avoir sur lui.",
+        "duvet",
+        "Alternative à une petite plume",
+        "plume",
+        "Formulation source du Manuel : « petite plume »."
+      ],
+      "after": [
+        "petite plume",
+        "magicien doit l’avoir sur lui",
+        "duvet",
+        "plume"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative à un peu de duvet",
+        "Alternative à une petite plume",
+        "Formulation source du Manuel : « petite plume »."
+      ]
+    },
+    {
+      "name": "Clairaudience",
+      "before": [
+        "une petite corne d’argent d’une valeur minimale de 100 po",
+        "qui disparaît quand le sort est lancé",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Consommation explicitement indiquée dans la description.",
+        "corne d’argent d’une valeur minimale de 100 po",
+        "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une petite corne d’argent d’une valeur minimale de 100 po"
+      ],
+      "after": [
+        "petite corne d’argent d’une valeur minimale de 100 po",
+        "qui disparaît quand le sort est lancé",
+        "Consommation explicitement indiquée dans la description",
+        "corne d’argent d’une valeur minimale de 100 po"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Formulation source du Manuel : « une petite corne d’argent d’une valeur minimale de 100 po"
+      ]
+    },
+    {
+      "name": "Clairvoyance",
+      "before": [
+        "une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Composant requis selon l’alternative ou la variante choisie.",
+        "Alternative ou variante explicitement indiquée par le Manuel.",
+        "pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde",
+        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde »."
+      ],
+      "after": [
+        "pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Composant requis selon l’alternative ou la variante choisie.",
+        "Alternative ou variante explicitement indiquée par le Manuel.",
+        "Formulation source du Manuel : « une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde ».",
+        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde »."
+      ]
+    },
+    {
+      "name": "Clone",
+      "before": [
+        "un morceau de chair de l’original",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "morceau de chair de l’original",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un morceau de chair de l’original »."
+      ],
+      "after": [
+        "chair de l’original"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un morceau de chair de l’original »."
+      ]
+    },
+    {
+      "name": "Communion",
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "eau bénite",
+        "consomme",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "encens"
+      ],
+      "after": [
+        "symbole sacré du clerc",
+        "eau bénite",
+        "encens"
+      ],
+      "notes": [
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "consomme",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+      ]
+    },
+    {
+      "name": "Compréhension des langues",
+      "before": [
+        "une pincée de suie et quelques grains de sel",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "pincée de suie et quelques grains de sel",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une pincée de suie et quelques grains de sel »."
+      ],
+      "after": [
+        "pincée de suie et quelques grains de sel"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une pincée de suie et quelques grains de sel »."
+      ]
+    },
+    {
+      "name": "Cône de froid",
+      "before": [
+        "petit cône de verre",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative à un petit cône de cristal.",
+        "petit cône de cristal",
+        "Alternative à un petit cône de verre.",
+        "cône de verre",
+        "Formulation source du Manuel : « petit cône de verre ».",
+        "cône de cristal",
+        "Formulation source du Manuel : « petit cône de cristal »."
+      ],
+      "after": [
+        "petit cône de verre",
+        "petit cône de cristal",
+        "cône de verre",
+        "cône de cristal"
+      ],
+      "notes": [
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative à un petit cône de cristal.",
+        "Alternative à un petit cône de verre.",
+        "Formulation source du Manuel : « petit cône de verre ».",
+        "Formulation source du Manuel : « petit cône de cristal »."
+      ]
+    },
+    {
+      "name": "Contrôle du climat",
+      "before": [
+        "encens à brûler",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "mélange de terre",
+        "de bois et d’eau"
+      ],
+      "after": [
+        "encens à brûler",
+        "mélange de terre",
+        "de bois et d’eau"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ]
+    },
+    {
+      "name": "Contrôle du Climat",
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "chapelet de prière",
+        "optionnel",
+        "Alternative à un objet similaire.",
+        "objet similaire au chapelet de prière",
+        "Alternative au chapelet de prière."
+      ],
+      "after": [
+        "symbole sacré du clerc",
+        "chapelet de prière",
+        "objet similaire au chapelet de prière"
+      ],
+      "notes": [
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "optionnel",
+        "Alternative à un objet similaire.",
+        "Alternative au chapelet de prière."
+      ]
+    },
+    {
+      "name": "Corde enchantée",
+      "before": [
+        "de la poudre de blé et un parchemin torsadé en forme de boucle",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "poudre de blé et un parchemin torsadé en forme de boucle",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « de la poudre de blé et un parchemin torsadé en forme de boucle »."
+      ],
+      "after": [
+        "poudre de blé et un parchemin torsadé en forme de boucle"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « de la poudre de blé et un parchemin torsadé en forme de boucle »."
+      ]
+    },
+    {
+      "name": "Création mineure",
+      "before": [
+        "tout petit morceau de la même matière que l’objet à créer",
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ],
+      "after": [
+        "tout petit morceau de la même matière que l’objet à créer"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ]
+    },
+    {
+      "name": "Cristairain",
+      "before": [
+        "un petit morceau de verre et un petit morceau d’acier",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "morceau de verre et un petit morceau d’acier",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit morceau de verre et un petit morceau d’acier »."
+      ],
+      "after": [
+        "verre et un petit morceau d’acier"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit morceau de verre et un petit morceau d’acier »."
+      ]
+    },
+    {
+      "name": "Croissance animale",
+      "before": [
+        "pincée de poudre d’os",
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ],
+      "after": [
+        "pincée de poudre d’os"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ]
+    }
+  ],
+  "watched": {
+    "Aquagenèse": {
+      "composants_materiels": [
+        "goutte d’eau",
+        "pincée de poussière"
+      ],
+      "note": "1\noptionnel\nManuel des joueurs\nRequise pour la création d’eau.\nAlternative à une pincée de poussière.\nRequise pour la destruction d’eau.\nAlternative à une goutte d’eau."
+    },
+    "Augure": {
+      "composants_materiels": [
+        "jeu de baguettes serties de gemmes",
+        "os de dragon",
+        "objets divinatoires similaires ou des feuilles d’infusion encore humides",
+        "aux objets similaires et aux feuilles d’infusion",
+        "objets divinatoires similaires",
+        "os de dragon ou des feuilles d’infusion encore humides",
+        "aux os de dragon et aux feuilles d’infusion",
+        "feuille d’infusion encore humides",
+        "cette méthode requiert aussi une perle écrasée d’au moins 100 po",
+        "placées dans le récipient ayant servi pour l’infusion",
+        "perle écrasée d’au moins 100 po",
+        "ajoutée à la boisson avant consommation"
+      ],
+      "note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\nAlternative au jeu de baguettes serties de gemmes\nAlternative aux objets divinatoires\nFormulation source du Manuel : « feuilles d’infusion encore humides ».\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.\nRequise uniquement avec la méthode des feuilles d’infusion"
+    },
+    "Bénédiction": {
+      "composants_materiels": [
+        "eau bénite",
+        "Liquide",
+        "eau maudite"
+      ],
+      "note": "1\noptionnel\nManuel des joueurs\nSort normal.\nconsommé.\nSort inversé : malédiction."
+    },
+    "Paralysie": {
+      "composants_materiels": [
+        "petite tige de métal droite et rigide",
+        "tige de métal droite et rigide"
+      ],
+      "note": "1\nconsomme\nManuel des joueurs\nFormulation source du Manuel : « petite tige de métal droite et rigide »."
+    },
+    "Résistance au Froid": {
+      "composants_materiels": [
+        "pincée de souffre"
+      ],
+      "note": "1\nconsomme\nManuel des joueurs\nIngrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+    },
+    "Retardement du Poison": {
+      "composants_materiels": [
+        "symbole sacré",
+        "gousse d’ail",
+        "Symbole sacré du clerc",
+        "Écrasée et répandue sur les pieds nus de la victime"
+      ],
+      "note": "1\nfalse\ntrue\nnon_consomme\nManuel des joueurs\nconsomme"
+    },
+    "Sanctuaire": {
+      "composants_materiels": [
+        "symbole sacré du clerc",
+        "petit miroir en argent"
+      ],
+      "note": "1\nnon_consomme\nManuel des joueurs"
+    }
+  },
+  "sameSystemFieldsForAllSpells": true,
+  "canonicalFields": [
+    "nom",
+    "type",
+    "classe",
+    "spellLists",
+    "niveau",
+    "ecole",
+    "portee",
+    "duree",
+    "zone_effet",
+    "cible",
+    "temps_incantation",
+    "jet_sauvegarde",
+    "composantes",
+    "composants_materiels",
+    "composants_materiels_source",
+    "composants_materiels_reference",
+    "composants_materiels_verification_recommandee",
+    "composants_materiels_note",
+    "composants_materiels_a_renseigner",
+    "description",
+    "onUse",
+    "onUseCode",
+    "tags",
+    "effectTags",
+    "effectProfile"
+  ]
+}
