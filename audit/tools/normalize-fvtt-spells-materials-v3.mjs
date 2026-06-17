@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-17-normalize-spell-materials-v3-druid-material-cleanup-v1";
+const VERSION = "2026-06-17-normalize-spell-materials-v3-druid-material-audit-v2";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -20,6 +20,21 @@ const SYSTEM_KEYS = [
   "composants_materiels_reference", "composants_materiels_verification_recommandee", "composants_materiels_note",
   "composants_materiels_a_renseigner", "description", "onUse", "onUseCode", "tags", "effectTags", "effectProfile"
 ];
+
+function text(value) { return String(value ?? "").replace(/\s+/g, " ").trim(); }
+function norm(value) { return text(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim(); }
+function slug(value) { return norm(value).replace(/\s+/g, "_"); }
+function clone(value) { return value === undefined ? undefined : JSON.parse(JSON.stringify(value)); }
+function spellLevel(system = {}) { const m = String(system.niveau ?? system.niveau_sort ?? system.level ?? "").match(/\d+/); return m ? Number(m[0]) || 0 : 0; }
+function spellLists(system = {}) { const raw = Array.isArray(system.spellLists) ? system.spellLists : String(system.spellLists ?? system.classe ?? "").split(/[,;|/]+/g); return raw.map(slug).filter(Boolean); }
+function isClassSpellLevel(item, classSlug, level) { const system = item?.system ?? {}; const c = slug(system.classe); const lists = spellLists(system); return spellLevel(system) === level && (c.includes(classSlug) || lists.includes(classSlug)); }
+function isClercSpellLevel(item, level) { return isClassSpellLevel(item, "clerc", level); }
+function isDruideSpellLevel(item, level) { return isClassSpellLevel(item, "druide", level); }
+function isDruideSpell(item) { const level = spellLevel(item?.system ?? {}); return DRUID_LEVELS.includes(level) && isDruideSpellLevel(item, level); }
+function getItems(json) { if (Array.isArray(json)) return json; for (const key of ["items", "Item", "Items", "documents", "data", "entries"]) if (Array.isArray(json?.[key])) return json[key]; return []; }
+function unique(list) { const seen = new Set(); return list.filter(v => { const key = slug(v); if (!key || seen.has(key)) return false; seen.add(key); return true; }); }
+function fx(id, label, kind, tags, notes, extra = {}) { return { id, label, kind, automation: extra.automation ?? "active_effect_or_mj_aid", tags, notes, ...extra }; }
+function ep(effects, level, classSlug) { return { version: EFFECT_PROFILE_VERSION, source: `manual-normalized-${classSlug}-n${level}`, effects: clone(effects) }; }
 
 const MATERIAL_CANON = new Map(Object.entries({
   symbole_sacre: "symbole sacré du clerc",
@@ -63,7 +78,10 @@ const MATERIAL_CANON = new Map(Object.entries({
   motte_de_terre: "motte de terre",
   gui_sacre: "gui",
   gui_druidique: "gui",
+  feuille_de_gui: "gui",
+  feuilles_de_gui: "gui",
   typiquement_druidique_a_savoir_du_gui: "gui",
+  houx_avec_lequel_le_druide_doit_se_frotter: "houx",
   nourriture_appreciee_par_l_animal: "nourriture appréciée par l’animal",
   nourriture_appréciée_par_l_animal: "nourriture appréciée par l’animal",
   feuille_de_trefle: "feuille de trèfle",
@@ -120,6 +138,8 @@ const CLERIC_MATERIAL_OVERRIDES = new Map(Object.entries({
 
 const DRUID_MATERIAL_OVERRIDES = new Map(Object.entries({
   amitie_animale: ["gui", "nourriture appréciée par l’animal"],
+  invisibilite_aux_animaux: ["houx"],
+  passage_sans_trace: ["gui", "aiguille de pin"],
   shillelagh: ["massue en chêne", "gui", "feuille de trèfle"],
   langage_des_plantes: ["gui"]
 }));
@@ -127,37 +147,25 @@ const DRUID_MATERIAL_OVERRIDES = new Map(Object.entries({
 const NOISE = new Set([
   "", "true", "false", "oui", "non", "consomme", "consommé", "non consomme", "non consommé", "non_consomme",
   "optionnel", "manuel", "manuel du joueur", "manuel des joueurs", "source", "aucun", "null", "undefined", "liquide",
-  "consommation", "ingredient materiel", "ingrédient matériel", "composant materiel", "composant matériel",
-  "clerc", "clerc non mauvais", "clerc mauvais", "druide", "druidique", "créature", "petite créature", "le", "la", "les"
+  "consommation", "ingredient materiel", "ingrédient matériel", "composant materiel", "composant matériel", "composant requis",
+  "clerc", "clerc non mauvais", "clerc mauvais", "druide", "druidique", "créature", "petite créature", "le", "la", "les",
+  "brulee", "brûlée", "ses cendres sont eparpillees", "ses cendres sont éparpillées", "autre conifere", "autre conifère"
 ]);
-
 const NOISE_STARTS = [
   "requise", "requis", "alternative", "formulation source", "source du manuel", "sort normal", "sort inverse", "selon la règle",
   "description indique", "pour lancer", "dons requis", "type de métal", "taille détermine", "sorte de diapason",
-  "ingrédient matériel", "ingredient materiel", "composant matériel", "composant materiel", "non consommé", "non consomme"
+  "ingrédient matériel", "ingredient materiel", "composant matériel", "composant materiel", "composant requis", "non consommé", "non consomme",
+  "brûlée", "brulee", "ses cendres", "avec lequel", "le druide doit", "doit se frotter"
 ];
 const NOISE_CONTAINS = [
   "manuel des joueurs", "formulation source", "règle d arbitrage", "ayant servi", "avant consommation", "quand le sort est",
-  "description indique", "saupoudrée", "pour lancer le sort"
+  "description indique", "saupoudrée", "pour lancer le sort", "ses cendres", "est éparpillée", "sont éparpillées",
+  "avec lequel le druide doit", "composant requis selon"
 ];
-
-function text(value) { return String(value ?? "").replace(/\s+/g, " ").trim(); }
-function norm(value) { return text(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim(); }
-function slug(value) { return norm(value).replace(/\s+/g, "_"); }
-function clone(value) { return value === undefined ? undefined : JSON.parse(JSON.stringify(value)); }
-function spellLevel(system = {}) { const m = String(system.niveau ?? system.niveau_sort ?? system.level ?? "").match(/\d+/); return m ? Number(m[0]) || 0 : 0; }
-function spellLists(system = {}) { const raw = Array.isArray(system.spellLists) ? system.spellLists : String(system.spellLists ?? system.classe ?? "").split(/[,;|/]+/g); return raw.map(slug).filter(Boolean); }
-function isClassSpellLevel(item, classSlug, level) { const system = item?.system ?? {}; const c = slug(system.classe); const lists = spellLists(system); return spellLevel(system) === level && (c.includes(classSlug) || lists.includes(classSlug)); }
-function isClercSpellLevel(item, level) { return isClassSpellLevel(item, "clerc", level); }
-function isDruideSpellLevel(item, level) { return isClassSpellLevel(item, "druide", level); }
-function isDruideSpell(item) { const level = spellLevel(item?.system ?? {}); return DRUID_LEVELS.includes(level) && isDruideSpellLevel(item, level); }
-function getItems(json) { if (Array.isArray(json)) return json; for (const key of ["items", "Item", "Items", "documents", "data", "entries"]) if (Array.isArray(json?.[key])) return json[key]; return []; }
-function unique(list) { const seen = new Set(); return list.filter(v => { const key = slug(v); if (!key || seen.has(key)) return false; seen.add(key); return true; }); }
-function fx(id, label, kind, tags, notes, extra = {}) { return { id, label, kind, automation: extra.automation ?? "active_effect_or_mj_aid", tags, notes, ...extra }; }
-function ep(effects, level, classSlug) { return { version: EFFECT_PROFILE_VERSION, source: `manual-normalized-${classSlug}-n${level}`, effects: clone(effects) }; }
 
 function cleanMaterial(value) {
   let out = text(value).replaceAll("_", "-").replace(/-/g, " ");
+  if (/houx\s+avec\s+lequel\s+le\s+druide\s+doit\s+se\s+frotter/i.test(out)) out = "houx";
   if (/à\s+savoir\s+du\s+gui/i.test(out)) out = "gui";
   out = out.replace(/^typiquement\s+druidique\s*\((.*?)\)$/i, "$1");
   out = out.replace(/^à\s+savoir\s+/i, "");
@@ -177,7 +185,7 @@ function rejectMaterial(value) {
   if (/^\d+(?:[,.]\d+)?\s*(m2|m|m²|case|cases|po|pa|pp|pc)?$/i.test(cleaned)) return true;
   if (NOISE_STARTS.some(v => n.startsWith(norm(v)))) return true;
   if (NOISE_CONTAINS.some(v => n.includes(norm(v)))) return true;
-  if (n.split(" ").length > 9) return true;
+  if (n.split(" ").length > 8) return true;
   return false;
 }
 function collectMaterials(value, out = [], notes = []) {
@@ -192,7 +200,7 @@ function collectMaterials(value, out = [], notes = []) {
     return { out, notes };
   }
   const raw = text(value);
-  const main = raw.split(/\s*(?:optionnel|alternative|ingrédient matériel|ingredient materiel|composant matériel|composant materiel|consomm|formulation source|manuel des joueurs|requise pour|requis pour|sort normal|sort inversé|description indique|pour lancer le sort)\b/i)[0];
+  const main = raw.split(/\s*(?:optionnel|alternative|ingrédient matériel|ingredient materiel|composant matériel|composant materiel|composant requis|consomm|formulation source|manuel des joueurs|requise pour|requis pour|sort normal|sort inversé|description indique|pour lancer le sort)\b/i)[0];
   for (const part of main.split(/[,;|\n]+|\s+et\s+/gi).map(cleanMaterial).filter(Boolean)) {
     const alternatives = part.split(/\s+ou\s+/i).map(cleanMaterial).filter(Boolean);
     for (const candidate of alternatives) {
@@ -263,6 +271,12 @@ function ensureSystem(system) {
   }
 }
 function makeBucket() { return { applied: [], missing: [] }; }
+function druidMaterialWarning(item) {
+  const materials = item?.system?.composants_materiels ?? [];
+  const bad = materials.filter(v => rejectMaterial(v) || norm(v).includes("druide doit") || norm(v).includes("cendres") || norm(v).includes("composant requis"));
+  if (!bad.length) return null;
+  return { name: item.name, niveau: item.system?.niveau, components: bad, allComponents: clone(materials) };
+}
 
 function main() {
   const input = path.resolve(repoRoot, process.argv[2] || DEFAULT_INPUT);
@@ -285,6 +299,8 @@ function main() {
     examples: [],
     watched: {},
     suspiciousMaterialComponents: [],
+    druideMaterialAudit: [],
+    druideMaterialWarnings: [],
     sameSystemFieldsForAllSpells: true,
     canonicalFields: SYSTEM_KEYS
   };
@@ -314,6 +330,9 @@ function main() {
       const bucket = control[`druideLevel${level}EffectProfiles`];
       if (profile.applied && profile.level === level && profile.classSlug === "druide") bucket.applied.push(item.name);
       else bucket.missing.push(item.name);
+      control.druideMaterialAudit.push({ name: item.name, niveau: item.system.niveau, composants: clone(item.system.composants_materiels) });
+      const warning = druidMaterialWarning(item);
+      if (warning) control.druideMaterialWarnings.push(warning);
     }
     const suspicious = (item.system.composants_materiels ?? []).filter(rejectMaterial);
     if (suspicious.length) control.suspiciousMaterialComponents.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, components: suspicious, allComponents: clone(item.system.composants_materiels) });
@@ -330,6 +349,7 @@ function main() {
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`);
   for (const level of CLERIC_LEVELS) { const bucket = control[`clercLevel${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} clerc: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
   for (const level of DRUID_LEVELS) { const bucket = control[`druideLevel${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} druide: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Druid material warnings: ${control.druideMaterialWarnings.length}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Suspicious: ${control.suspiciousMaterialComponents.length}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Output: ${path.relative(repoRoot, output)}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Control: ${path.relative(repoRoot, controlOutput)}`);
