@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-17-normalize-spell-materials-v3-strict";
+const VERSION = "2026-06-17-normalize-spell-materials-v3-strict-fragments-v2";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -39,6 +39,7 @@ function normalizeLabel(value) {
     .replace(/^(quelques|plusieurs)\s+/i, "")
     .replace(/^petit morceau de\s+/i, "")
     .replace(/^morceau de\s+/i, "")
+    .replace(/^feuille d['’]infusion encore humides$/i, "feuilles d’infusion encore humides")
     .replace(/\s+/g, " ")
     .replace(/[.!?;:]+$/g, "")
     .replace(/^symbole sacre$/i, "symbole sacré")
@@ -55,15 +56,15 @@ function isNoise(value) {
   if (/^-?\d+(?:[.,]\d+)?$/.test(n)) return true;
   if ([
     "true", "false", "oui", "non", "consomme", "non consomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs",
-    "source", "aucun", "null", "undefined", "a completer"
+    "source", "aucun", "null", "undefined", "a completer", "liquide", "liquide consomme", "consommation"
   ].includes(n)) return true;
-  return /^(requi[st]e?s?|necessaire|alternative|variante|composant requis|ingredient materiel|formulation source|source du manuel|sort normal|sort inverse|liquide consomme|selon la regle|regle d arbitrage|la fiole est|son contenu est|disparait quand|disparaît quand)\b/.test(n)
-    || /\b(manuel des joueurs|formulation source|regle d arbitrage add2e|règle d’arbitrage add2e)\b/.test(n);
+  return /^(requi[st]e?s?|necessaire|alternative|variante|composant requis|ingredient materiel|formulation source|source du manuel|sort normal|sort inverse|liquide consomme|selon la regle|regle d arbitrage|la fiole est|son contenu est|disparait quand|disparait quand|aux\b|au\b|a la\b|a l\b|cette methode|ce procede|places?\b|placees?\b|ajoutee?\b|ajoutes?\b|clerc le lance|le lance|lance en meme temps|lance une priere)\b/.test(n)
+    || /\b(manuel des joueurs|formulation source|regle d arbitrage add2e|règle d’arbitrage add2e|ayant servi|avant consommation|quand le sort est lance|quand le sort est lancé)\b/.test(n);
 }
 
 function splitNameAndNote(value) {
   const raw = text(value);
-  const match = raw.match(/\b(?:optionnel|alternative\s*:|ingr[eé]dient\s+mat[eé]riel|consomm[eé]|consomme|non[_\s-]*consomm[eé]|formulation\s+source|manuel\s+(?:du|des)\s+joueurs?|source\s*:|r[eé]f[eé]rence\s*:|r[eè]gle\s+d['’]arbitrage|selon\s+la\s+r[eè]gle|requi[st]e?s?\s+pour|sort\s+normal|sort\s+invers[eé]).*$/i);
+  const match = raw.match(/\b(?:optionnel|alternative\s*:|ingr[eé]dient\s+mat[eé]riel|consomm[eé]|consomme|non[_\s-]*consomm[eé]|formulation\s+source|manuel\s+(?:du|des)\s+joueurs?|source\s*:|r[eé]f[eé]rence\s*:|r[eè]gle\s+d['’]arbitrage|selon\s+la\s+r[eè]gle|requi[st]e?s?\s+pour|sort\s+normal|sort\s+invers[eé]|clerc\s+le\s+lance|dispara[iî]t\s+quand|quand\s+le\s+sort\s+est\s+lanc[eé]).*$/i);
   if (!match) return { name: raw, note: "" };
   const idx = match.index ?? raw.length;
   return {
@@ -87,6 +88,26 @@ function addNote(notes, value) {
   notes.push(note);
 }
 
+function extractComponentFromNoise(value) {
+  const raw = text(value);
+  const match = raw.match(/\b(?:requiert|n[eé]cessite)\s+(?:aussi\s+)?(?:un|une|des|du|de la|de l['’])\s+(.+)$/i);
+  if (!match) return "";
+  const extracted = match[1]
+    .replace(/[,;:]\s*(?:plac[eé]e?s?|ajout[eé]e?s?|ayant servi|avant consommation).*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return extracted;
+}
+
+function splitMaterialAlternatives(value) {
+  const raw = text(value);
+  if (!raw) return [];
+  return raw
+    .split(/\s+ou\s+(?:des\s+|de la\s+|du\s+|de l['’]\s+|d['’]\s+|un\s+|une\s+)?/i)
+    .map(normalizeLabel)
+    .filter(Boolean);
+}
+
 function collect(value, names, notes) {
   if (value === undefined || value === null || value === "") return;
 
@@ -103,7 +124,7 @@ function collect(value, names, notes) {
     if (Array.isArray(alternatives) && alternatives.length) {
       const alt = [];
       for (const entry of alternatives) collect(entry, alt, notes);
-      if (alt.length) addUnique(names, alt.join(" ou "));
+      for (const entry of alt) addUnique(names, entry);
       return;
     }
     const direct = value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
@@ -118,16 +139,28 @@ function collect(value, names, notes) {
     return;
   }
 
-  const { name, note } = splitNameAndNote(value);
+  const raw = text(value);
+  const { name, note } = splitNameAndNote(raw);
   if (note) addNote(notes, note);
+
   if (isNoise(name)) {
-    addNote(notes, value);
+    const extracted = extractComponentFromNoise(name || raw);
+    if (extracted) addUnique(names, extracted);
+    addNote(notes, raw);
     return;
   }
 
   for (const part of name.split(/[,;|\n]+/g).map(normalizeLabel).filter(Boolean)) {
-    if (isNoise(part)) addNote(notes, part);
-    else addUnique(names, part);
+    if (isNoise(part)) {
+      const extracted = extractComponentFromNoise(part);
+      if (extracted) addUnique(names, extracted);
+      addNote(notes, part);
+      continue;
+    }
+    for (const alt of splitMaterialAlternatives(part)) {
+      if (isNoise(alt)) addNote(notes, alt);
+      else addUnique(names, alt);
+    }
   }
 }
 
@@ -176,7 +209,7 @@ function main() {
     canonicalFields: SYSTEM_KEYS
   };
   const expected = JSON.stringify([...SYSTEM_KEYS].sort());
-  const watchedNames = new Set(["aquagenese", "benediction", "resistance_au_froid", "sanctuaire", "augure", "retardement_du_poison", "paralysie"]);
+  const watchedNames = new Set(["aquagenese", "benediction", "resistance_au_froid", "sanctuaire", "augure", "retardement_du_poison", "paralysie", "marteau_spirituel"]);
 
   for (const item of items) {
     if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") continue;
