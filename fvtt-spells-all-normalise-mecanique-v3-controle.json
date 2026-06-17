@@ -1,11 +1,11 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4",
+  "version": "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4b",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
   "spells": 411,
   "changedSpells": 187,
-  "emptyMaterialSpells": 233,
+  "emptyMaterialSpells": 231,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -403,7 +403,7 @@
       ],
       "after": [
         "petite boule composée de fiente de chauve souris",
-        "de souffre"
+        "souffre"
       ],
       "notes": [
         "1",
@@ -630,10 +630,10 @@
         "non_consomme"
       ],
       "after": [
+        "encens",
         "Brûlé"
       ],
       "notes": [
-        "encens",
         "1",
         "consomme",
         "Manuel des joueurs",
@@ -683,7 +683,6 @@
         "non consomme",
         "Manuel des joueurs",
         "consomme",
-        "sifflet en argent",
         "Formulation source du Manuel : « petit sifflet en argent »"
       ]
     },
@@ -798,7 +797,8 @@
       ],
       "after": [
         "symbole sacré du clerc",
-        "eau bénite"
+        "eau bénite",
+        "encens"
       ],
       "notes": [
         "1",
@@ -806,8 +806,7 @@
         "Manuel des joueurs",
         "consomme",
         "consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "Ingrédient matériel",
-        "encens"
+        "Ingrédient matériel"
       ]
     },
     {
@@ -874,12 +873,12 @@
         "de bois et d’eau"
       ],
       "after": [
+        "encens à brûler",
         "mélange de terre",
         "de bois",
         "eau"
       ],
       "notes": [
-        "encens à brûler",
         "1",
         "consomme",
         "Manuel des joueurs"
@@ -1026,9 +1025,10 @@
     "Communion": {
       "composants_materiels": [
         "symbole sacré du clerc",
-        "eau bénite"
+        "eau bénite",
+        "encens"
       ],
-      "note": "1\nnon consomme\nManuel des joueurs\nconsomme\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nencens"
+      "note": "1\nnon consomme\nManuel des joueurs\nconsomme\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel"
     },
     "Dissipation du Mal": {
       "composants_materiels": [
@@ -1043,7 +1043,7 @@
         "encens",
         "symbole sacré du clerc"
       ],
-      "note": "petite créature\n1\nconsomme\nManuel des joueurs\npour lancer le sort.\nencens\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nnon consomme\noptionnel\nDons requis si une divination puissante est tentée\nDons éventuellement requis si une divination puissante est tentée\ncréature\npour lancer le sort. Formulation source du Manuel : « petite créature ».\nNormalisation marchand appliquée : Sacrifiée, symbole sacré du clerc, pierres précieuses, objets magiques"
+      "note": "petite créature\n1\nconsomme\nManuel des joueurs\npour lancer le sort.\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nnon consomme\noptionnel\nDons requis si une divination puissante est tentée\nDons éventuellement requis si une divination puissante est tentée\ncréature\npour lancer le sort. Formulation source du Manuel : « petite créature ».\nNormalisation marchand appliquée : Sacrifiée, encens, symbole sacré du clerc, pierres précieuses, objets magiques"
     },
     "Exorcisme": {
       "composants_materiels": [
@@ -1057,7 +1057,7 @@
       "composants_materiels": [
         "encens"
       ],
-      "note": "encens\n1\nconsomme\nManuel des joueurs\ndescription indique que l’endroit doit être encensé.\nLa\n2000\nRequise si la zone à protéger excède 4\n5 m²\ndescription indique que la poudre est saupoudrée.\nNormalisation marchand appliquée :"
+      "note": "1\nconsomme\nManuel des joueurs\ndescription indique que l’endroit doit être encensé.\nLa\n2000\nRequise si la zone à protéger excède 4\n5 m²\ndescription indique que la poudre est saupoudrée.\nNormalisation marchand appliquée : encens"
     },
     "Langage des plantes": {
       "composants_materiels": [
@@ -1123,31 +1123,7 @@
       "note": "Normalisation marchand appliquée :"
     }
   },
-  "suspiciousMaterialComponents": [
-    {
-      "name": "Divination",
-      "classe": "Clerc",
-      "niveau": 4,
-      "components": [
-        "encens"
-      ],
-      "allComponents": [
-        "encens",
-        "symbole sacré du clerc"
-      ]
-    },
-    {
-      "name": "Glyphe de Garde",
-      "classe": "Clerc",
-      "niveau": 3,
-      "components": [
-        "encens"
-      ],
-      "allComponents": [
-        "encens"
-      ]
-    }
-  ],
+  "suspiciousMaterialComponents": [],
   "sameSystemFieldsForAllSpells": true,
   "canonicalFields": [
     "nom",

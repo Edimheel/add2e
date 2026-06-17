@@ -5877,7 +5877,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petite boule composée de fiente de chauve souris",
-          "de souffre"
+          "souffre"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une petite boule composée de fiente de chauve-souris et de souffre.",
         "composants_materiels_reference": "",
@@ -9116,12 +9116,13 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
+          "encens",
           "Brûlé"
         ],
         "composants_materiels_source": "Les composantes matérielles sont de l’encens à faire brûler et un bout de corne taillé en forme de croissant.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "encens\n1\nconsomme\nManuel des joueurs\nnon consomme",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nnon consomme",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort permet de conjurer un chasseur invisible, originaire du plan élémentaire de l’air. Ce monstre à 8 dés de vie obéira au magicien et le servira. Cependant, la créature est obligée de le servir et ne le fait pas de son plein gré. Ainsi, le chasseur invisible s’offensera de missions prolongées ou de tâches compliquées et il essayera de détourner de leur but les instructions reçues. (Pour les détails complets, voir Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, chasseur invisible). La créature conjurée suivra les instructions, même à des milliers de kilomètres de distance. Les composantes matérielles sont de l’encens à faire brûler et un bout de corne taillé en forme de croissant.",
         "onUse": "systems/add2e/scripts/sorts/magicien-chasseur-invisible.js",
@@ -9383,7 +9384,7 @@
         "composants_materiels_source": "Les composantes matérielles sont un petit sifflet en argent, un morceau d’os et un fil.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\nconsomme\nsifflet en argent\nFormulation source du Manuel : « petit sifflet en argent »",
+        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\nconsomme\nFormulation source du Manuel : « petit sifflet en argent »",
         "composants_materiels_a_renseigner": false,
         "description": "en lançant ce sort, le magicien invoque un chien de garde fantomatique que lui seul peut voir. Il peut alors lui ordonner de garder une porte, un passage, une pièce ou tout autre lieu similaire. Le chien aboiera immédiatement avec force si une créature plus grosse qu’un chat s’approche de l’endroit qu’il garde. Il peut détecter les créatures invisibles, astrales, éthérées, hors de phase, à deux dimensions ou non-visibles; c’est un excellent gardien! De plus, si la créature (ou les créatures) intruse tourne le dos au chien, ce dernier portera une attaque brutale comme s’il possédait 10 dés de vie et infligera 3 à 18 (3d6) points de dégâts. Le chien peut attaquer n’importe quelle créature, même celles qui ne peuvent être touchées que par des armes magiques +3 ou plus. Le chien ne peut pas être attaqué mais on peut le dissiper. Le magicien ne doit jamais se trouver à plus de 3\" de l’endroit que garde le chien ou le sort est annulé. Les composantes matérielles sont un petit sifflet en argent, un morceau d’os et un fil.",
         "onUse": "systems/add2e/scripts/sorts/chien-fidele-de-mordenkainen.js",
@@ -10111,12 +10112,13 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "symbole sacré du clerc",
-          "eau bénite"
+          "eau bénite",
+          "encens"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont le symbole sacré du clerc, de l’eau bénite et de l’encens.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\nconsomme\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nencens",
+        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\nconsomme\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel",
         "composants_materiels_a_renseigner": false,
         "description": "avec ce sort, le clerc peut entrer en contact avec son dieu, ou ses agents, et demander des informations sous la forme de questions auxquelles il ne sera répondu que par «oui» ou «non». Le clerc est autorisé à poser une question pour chacun de ses niveaux. Les réponses données seront correctes et si la divinité n’est pas omnisciente, elle pourra répondre «je ne sais pas». Il est cependant probable que le MD limitera le nombre de communions à une par aventure, une par semaine ou même une par mois, car les dieux n’apprécient pas les dérangements trop fréquents. Les composantes matérielles de ce sort sont le symbole sacré du clerc, de l’eau bénite et de l’encens.",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/communion.js",
@@ -11718,6 +11720,7 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
+          "encens à brûler",
           "mélange de terre",
           "de bois",
           "eau"
@@ -11725,7 +11728,7 @@
         "composants_materiels_source": "excepté ci-dessus et le fait que les composantes ma- térielles soient de l’encens à brûler et un mélange de terre, de bois et d’eau, ce sort est le même que le sort de niveau 7 de clerc contrôle du climat (voir p.52).",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "encens à brûler\n1\nconsomme\nManuel des joueurs",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus et le fait que les composantes matérielles soient de l’encens à brûler et un mélange de terre, de bois et d’eau, ce sort est le même que le sort de niveau 7 de clerc contrôle du climat (voir p.52).",
         "onUse": "systems/add2e/scripts/sorts/controle-du-climat.js",
@@ -17515,7 +17518,7 @@
         "composants_materiels_source": "sacrifice d’une petite créature, de l’encens et le symbole sacré du clerc",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "petite créature\n1\nconsomme\nManuel des joueurs\npour lancer le sort.\nencens\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nnon consomme\noptionnel\nDons requis si une divination puissante est tentée\nDons éventuellement requis si une divination puissante est tentée\ncréature\npour lancer le sort. Formulation source du Manuel : « petite créature ».\nNormalisation marchand appliquée : Sacrifiée, symbole sacré du clerc, pierres précieuses, objets magiques",
+        "composants_materiels_note": "petite créature\n1\nconsomme\nManuel des joueurs\npour lancer le sort.\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nnon consomme\noptionnel\nDons requis si une divination puissante est tentée\nDons éventuellement requis si une divination puissante est tentée\ncréature\npour lancer le sort. Formulation source du Manuel : « petite créature ».\nNormalisation marchand appliquée : Sacrifiée, encens, symbole sacré du clerc, pierres précieuses, objets magiques",
         "composants_materiels_a_renseigner": false,
         "description": "similaire au sort d’augure, le sort divination est utilisé pour obtenir des informations sur une zone. Cette zone peut être un petit bois, une grande bâtisse ou une partie d’un niveau d’un donjon. Dans tous les cas, son emplacement doit être connu du clerc. Ce sort donne des informations sur la force relative des créatures qui s’y trouvent, sur l’importance des richesses et sur les chances éventuelles de s’attirer le courroux d’êtres surpuissants, surnaturels, bons ou mauvais, si la zone est envahie ou attaquée. Les chances de base pour réussir une divination sont de 60 % + 1 % par niveau du clerc (le MD peut appliquer des ajustements dans des cas particuliers). Si le tirage de pourcentage, effectué par le MD, échoue, le clerc obtiendra des informations erronées. Les composantes matérielles de ce sort sont le sacrifice d’une petite créature, de l’encens et le symbole sacré du clerc. Si une divination puissante est tentée, il faut faire des dons de pierres précieuses et même d’objets magiques.",
         "onUse": "systems/add2e/scripts/sorts/divination.js",
@@ -18268,11 +18271,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "encre fine faite de substances rares"
+        ],
         "composants_materiels_source": "surface d’écriture et encre fine faite de substances rares, coût minimum 200 po par flacon",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "encre fine faite de substances rares\n1\nconsomme\n200\nManuel des joueurs",
+        "composants_materiels_note": "1\nconsomme\n200\nManuel des joueurs",
         "composants_materiels_a_renseigner": false,
         "description": "avec ce sort, le magicien est capable d’inscrire un sort qu’il ne peut comprendre à cet instant (soit à cause de son niveau, soit à cause d’un manque d’intelligence) sur son livre ou sur un autre objet qu’il utilise pour inscrire les sorts qu’il connait. Le magicien doit lancer un jet de protection contre les sorts pour essayer la transcription; ce jet de protection obtient un bonus de +2 si le sort à transcrire est supérieur de seulement 1 niveau à ceux qu’il peut utiliser; si le sort est supérieur de 2 niveaux, le jet de protection est normal et il y a un malus de –1 pour chaque niveau supérieur à partir de 3 niveaux au-dessus. Si ce jet de protection est raté, le magicien subit 1d4 points de dégâts pour chaque niveau du sort qu’il tente de transcrire; de plus il tombe inconscient pour un nombre égal de tours. Ces dégâts, s’ils n’ont pas été fatals, ne peuvent être soignés qu’au rythme de 1 à 4 points de vie par jour, car ce sont des dégâts corporels et mentaux. La transcription du sort prend une heure par niveau du sort et pendant cette période, le magicien est en état de transe et peut toujours se faire surprendre par un ennemi. En plus de la surface d’écriture, le magicien doit utiliser une encre fine faite de substances rares (coût minimum 200 po par flacon, si le magicien ne l’a pas fabriquée lui-même).",
         "onUse": "systems/add2e/scripts/sorts/magicien-ecriture.js",
@@ -18397,11 +18402,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "encre fabriquée à base de plomb par un alchimiste"
+        ],
         "composants_materiels_source": "La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "encre fabriquée à base de plomb par un alchimiste\n1\nconsomme\n100\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel",
+        "composants_materiels_note": "1\nconsomme\n100\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js",
@@ -20419,12 +20426,13 @@
         "composants_materiels": [
           "symbole sacré du clerc",
           "chapelet",
-          "livre de prière"
+          "livre de prière",
+          "Encens à brûler"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont le symbole sacré du clerc, son chapelet ou son livre de prière et de l’encens à brûler.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\noptionnel\nAlternative au livre de prière\nAlternative au chapelet\nencens\nconsomme\nEncens à brûler",
+        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\noptionnel\nAlternative au livre de prière\nAlternative au chapelet\nconsomme",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort est utilisé par le clerc pour ôter à une personne la responsabilité d’un acte ignoré ou involontaire. Il peut également annuler les effets d’un changement magique d’alignement. À moins que la personne concernée ne dispose pas de son libre arbitre, elle doit être sincèrement repentante. Éventuellement, la divinité pourra demander un sacrifice minime en échange de l’expiation (de quelques piécettes dans un tronc jusqu’à la quête d’une relique). Le MD prendra en compte tous les éléments qu’il jugera utiles pour la résolution de ce sort. Un méfait délibéré ou un acte commis en toute connaissance de cause et de plein gré ne peut être le sujet d’un sort d’expiation. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes matérielles de ce sort sont le symbole sacré du clerc, son chapelet ou son livre de prière et de l’encens à brûler.",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/penitence.js",
@@ -21763,12 +21771,13 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "goutte d’huile"
+          "goutte d’huile",
+          "silex"
         ],
         "composants_materiels_source": "poudre de feu ou composant pyrotechnique du projectile selon la version du sort",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nsilex\nnon consomme\nFormulation source du Manuel : « petit morceau de silex »",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nnon consomme\nFormulation source du Manuel : « petit morceau de silex »",
         "composants_materiels_a_renseigner": false,
         "description": "une fois que le magicien a lancé ce sort, il peut toucher à chaque segment une flèche ou un carreau qui devient alors magique, bien qu’il n’ait aucun bonus pour toucher les adversaires. Chaque projectile touché doit être envoyé moins d’un round plus tard car après cette période les flammes le consument entièrement et la magie est perdue. Ces projectiles enflammés auront une chance normale d’enflammer ce qu'ils touchent et toute créature sujette à des dégâts supplémentaires dus au feu subira 1 point de dégât en plus pour chaque flèche de feu la touchant. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes sont une goutte d’huile et un petit morceau de silex.",
         "onUse": "systems/add2e/scripts/sorts/magicien-fleche-de-feu.js",
@@ -23307,7 +23316,7 @@
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "encens\n1\nconsomme\nManuel des joueurs\ndescription indique que l’endroit doit être encensé.\nLa\n2000\nRequise si la zone à protéger excède 4\n5 m²\ndescription indique que la poudre est saupoudrée.\nNormalisation marchand appliquée :",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\ndescription indique que l’endroit doit être encensé.\nLa\n2000\nRequise si la zone à protéger excède 4\n5 m²\ndescription indique que la poudre est saupoudrée.\nNormalisation marchand appliquée : encens",
         "composants_materiels_a_renseigner": false,
         "description": "un glyphe de garde est une inscription puissante tracée magiquement pour se garder des créatures hostiles, pour les empêcher de passer, d’entrer quelque part ou d’ouvrir quelque chose. Il peut être utilisé pour garder un petit pont, le pas d’une porte, un coffre, etc. Quand le sort est lancé, le clerc trace des lignes légèrement brillantes devant le lieu ou l’objet à protéger. Quand l’incantation est terminée, la marque devient invisible, mais toute créature touchant la zone gardée sans prononcer le nom du glyphe sera victime de la magie placée dans ce glyphe, magie qu’aura lui-même instaurée le clerc selon les pouvoirs qu’il possède. Un jet de protection réduit les effets de moitié ou les annule selon la magie placée dans le glyphe. Pour chaque portion de 30 cm x 30 cm de la zone à protéger, un segment est nécessaire pour tracer le glyphe, plus un segment initial pour préparer la zone. Une surface maximale de 1,5 x 1,5 mètre par niveau du clerc peut être protégée. Le clerc doit encenser l’endroit à protéger et, si cette zone excède 4,5 m², il doit également la saupoudrer avec la poudre d’un diamant d’une valeur d’au moins 2.000 po. Les glyphes les plus courants infligent une décharge électrique ou infligent des dégâts par le feu, causant la perte de 2 points de vie par niveau du clerc, ou rendent aveugles, paralysent ou même drainent un niveau d’énergie si le clerc est assez puissant.",
         "onUse": "systems/add2e/scripts/sorts/glyphe-de-garde.js",
@@ -27687,6 +27696,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
+          "encens à faire brûler",
           "Invocation d’un élémental de l’air",
           "Invocation d’un élémental de l’eau",
           "sable",
@@ -27699,7 +27709,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "encens à faire brûler\n1\nconsomme\nManuel des joueurs",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
         "composants_materiels_a_renseigner": true,
         "description": "il y a en fait 4 sorts en un dans ce sort de conjuration. Le magicien peut invoquer un élémental de l’air, de l’eau, de terre ou du feu, à condition qu’il possède les composantes matérielles appropriées. Pour invoquer l’élémental du feu, une grande source de feu doit se trouver dans la portée du sort. Pour celui de l’eau, il faut une grande quantité de ce liquide dans la portée. Les élémentaux conjurés sont très puissants — cf. règles AVANCÉES de DONJONS & DRAGONS, MANUEL DES MONSTRES — ils ont généralement 16 dés de vie (16d8). Il est possible d’invoquer plusieurs élémentaux différents à la suite si le magicien a mémorisé plusieurs fois le sort. Le type d’élémental invoqué devra être choisi avant la mémorisation du sort. L’élémental conjuré doit être contrôlé par le magicien, c.-à-d. que le lanceur de sort doit se concentrer sur les faits et gestes de l’élémental ou bien celui-ci se retournera contre le magicien pour l’attaquer. Cependant, si l’élémental est déjà engagé dans un combat, il ne cessera pas de combattre pour aller l’attaquer; mais sinon, il évitera ses adversaires pour rechercher le contact avec son invocateur. Si le magicien est blessé ou physiquement immobilisé, sa concentration est rompue. Il existe tout de même une probabilité de 5 % que l’élémental se retourne malgré tout contre son invocateur, même ci celui-ci se concentre: ce jet se fait à la fin du deuxième round et à chaque round suivant. Un magicien peut contrôler un élémental jusqu’à 3\" de distance par niveau. L’élémental reste jusqu’à l’expiration du sort ou jusqu’à ce que sa forme matérielle ait subi assez de dégâts pour qu’il soit détruit. Un élémental de l’eau sera détruit s’il s’éloigne à plus de 6\" d’une étendue d’eau. Les composantes de ce sort, mis à par la quantité d’éléments à portée de main, sont: Élémental de l’air: encens à faire brûler Élémental de l’eau: eau et sable Élémental du feu: souffre et phosphore Élémental de terre: argile",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-d-elemental.js",
@@ -36857,7 +36867,7 @@
         "composants_materiels_source": "cire d’abeille",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nAlternative à la baguette de cristal\nconsommé pendant l’incantation. Formulation source du Manuel : « bâtonnet d’encens allumé ».\nEncens\nAlternative au bâtonnet d’encens allumé\nRequises lorsque la baguette de cristal est utilisée\nconsommé de la baguette.",
+        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nAlternative à la baguette de cristal\nconsommé pendant l’incantation. Formulation source du Manuel : « bâtonnet d’encens allumé ».\nAlternative au bâtonnet d’encens allumé\nRequises lorsque la baguette de cristal est utilisée\nconsommé de la baguette.",
         "composants_materiels_a_renseigner": false,
         "description": "quand l’illusionniste lance ce sort, il crée un jeu de formes colorées, mouvantes et tournoyantes dans l’air. Les créatures qui regardent ces formes et qui ont raté leur jet de protection sont fascinées et continuent de fixer ce motif aussi longtemps que l’illusionniste le maintient dans l’air. Le lanceur du sort peut hypnotiser un maximum de 24 DV, c'est-à-dire 24 créatures avec 1 DV chacune, 12 créatures avec 2 DV chacune, etc. Toutes les créatures doivent se trouver dans la zone d’effet et chacune a droit à un jet de protection. L’illusionniste n’a pas besoin de parler, mais il doit faire des gestes appropriés en même temps qu’il doit tenir un bâtonnet d’encens allumé ou une baguette de cristal remplie de matières phosphorescentes.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-motif-hypnotique.js",
@@ -36986,8 +36996,9 @@
         "composants_materiels": [
           "ficelle",
           "plaque d’ivoire",
-          "de sang de dragon noir",
-          "de suc digestif de limace géante"
+          "encre composée de sécrétion de calmar",
+          "sang de dragon noir",
+          "suc digestif de limace géante"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante.",
         "composants_materiels_reference": "",
@@ -38898,6 +38909,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "symbole sacré du clerc",
+          "encens",
           "Brûlé au dessus du corps",
           "restes",
           "partie concernés"
@@ -38905,7 +38917,7 @@
         "composants_materiels_source": "a besoin de son symbole sacré | il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\nencens\nconsomme",
+        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\nconsomme",
         "composants_materiels_a_renseigner": false,
         "description": "en lançant ce sort, le clerc peut poser plusieurs questions à une créature morte depuis une période de temps précise et recevoir des réponses en fonction des connaissances de la créature morte. Le clerc doit être capable de converser dans la langue de la créature morte. Le temps depuis lequel la créature est morte est un facteur à prendre en compte car seuls les clercs les plus puissants peuvent parler avec des créatures décédées depuis longtemps. De la même manière, le nombre de questions et la durée du sort dépendent aussi du niveau du clerc. Ce dernier a besoin de son symbole sacré; il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés. Niveau d'expérience Temps maximum écoulé depuis la mort Durée du sort Nombre de questions 6e et moins 1 semaine 1 round 2 7e-8e 1 mois 3 rounds 3 9e-12e 1 année 1 tour 4 13e-15e 10 ans 2 tours 5 16e-20e 100 ans 3 tours 6 21e et plus 1.000 ans 6 tours 7",
         "onUse": "systems/add2e/scripts/sorts/communication-avec-les-morts.js",
@@ -41789,12 +41801,13 @@
           "feuille de gui",
           "Brûlée",
           "ses cendres sont éparpillées",
-          "aiguille de pin"
+          "aiguille de pin",
+          "autre conifère"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nautre conifère\noptionnel\nComposant requis selon l’alternative ou la variante choisie\nAlternative ou variante explicitement indiquée par le Manuel",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\noptionnel\nComposant requis selon l’alternative ou la variante choisie\nAlternative ou variante explicitement indiquée par le Manuel",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce sort est lancé, le destinataire peut marcher sur n’importe quel type de terrain (boue, neige, poussière, etc.) en ne laissant ni trace, ni odeur. Ainsi, le pistage d’une créature sous l’effet de ce sort est impossible. Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère. Note: la zone sur laquelle le destinataire du sort marche irradie une aura de magie, pendant 6 à 36 tours (6d6) après le passage de cette créature.",
         "onUse": "systems/add2e/scripts/sorts/druide-passage-sans-trace.js",
@@ -60409,6 +60422,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4",
-  "normalizedAt": "2026-06-17T15:19:38.265Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4b",
+  "normalizedAt": "2026-06-17T15:30:28.381Z"
 }
