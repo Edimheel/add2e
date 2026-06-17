@@ -3660,53 +3660,7 @@
         },
         "ecole": "Divination",
         "on_use": "systems/add2e/scripts/sorts/augure.js",
-        "composants_materiels": [
-          {
-            "nom": "jeu de baguettes serties de gemmes",
-            "quantite": 1,
-            "consommation": "optionnel",
-            "cout_po": null,
-            "source": "Manuel des joueurs",
-            "condition": "Alternative : utiliser ce composant, des os de dragon, des objets divinatoires similaires ou des feuilles d’infusion encore humides.",
-            "notes": "Alternative aux os de dragon, aux objets similaires et aux feuilles d’infusion."
-          },
-          {
-            "nom": "os de dragon",
-            "quantite": 1,
-            "consommation": "optionnel",
-            "cout_po": null,
-            "source": "Manuel des joueurs",
-            "condition": "Alternative : utiliser ce composant, un jeu de baguettes serties de gemmes, des objets divinatoires similaires ou des feuilles d’infusion encore humides.",
-            "notes": "Alternative au jeu de baguettes serties de gemmes, aux objets similaires et aux feuilles d’infusion."
-          },
-          {
-            "nom": "objets divinatoires similaires",
-            "quantite": 1,
-            "consommation": "optionnel",
-            "cout_po": null,
-            "source": "Manuel des joueurs",
-            "condition": "Alternative : utiliser ce composant, un jeu de baguettes serties de gemmes, des os de dragon ou des feuilles d’infusion encore humides.",
-            "notes": "Alternative au jeu de baguettes serties de gemmes, aux os de dragon et aux feuilles d’infusion."
-          },
-          {
-            "nom": "feuilles d’infusion encore humides",
-            "quantite": 1,
-            "consommation": "optionnel",
-            "cout_po": null,
-            "source": "Manuel des joueurs",
-            "condition": "Alternative aux objets divinatoires ; cette méthode requiert aussi une perle écrasée d’au moins 100 po.",
-            "notes": "Alternative aux objets divinatoires ; placées dans le récipient ayant servi pour l’infusion."
-          },
-          {
-            "nom": "perle écrasée d’au moins 100 po",
-            "quantite": 1,
-            "consommation": "optionnel",
-            "cout_po": 100,
-            "source": "Manuel des joueurs",
-            "condition": "Requise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.",
-            "notes": "Requise uniquement avec la méthode des feuilles d’infusion ; ajoutée à la boisson avant consommation."
-          }
-        ],
+        "composants_materiels": [],
         "composants_materiels_a_renseigner": false,
         "description_source": "Manuel des joueurs AD&D 2e",
         "composants_materiels_source": "Composants alternatifs selon la methode choisie: baguettes serties de gemmes, os de dragon, objets similaires ou feuilles d'infusion humides; si la methode de l'infusion est utilisee, une perle ecrasee d'au moins 100 po est ajoutee a la boisson avant consommation.",
@@ -54177,20 +54131,16 @@
         "on_use": "systems/add2e/scripts/sorts/ralentissement-du-poison.js",
         "composants_materiels": [
           {
-            "nom": "symbole sacré",
+            "slug": "symbole_sacre",
+            "nom": "Symbole sacré",
             "quantite": 1,
-            "consommation": "non_consomme",
-            "cout_po": null,
-            "source": "Manuel des joueurs",
-            "notes": "Symbole sacré du clerc."
+            "consomme": false
           },
           {
-            "nom": "gousse d’ail",
+            "slug": "gousse_ail",
+            "nom": "Gousse d’ail",
             "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null,
-            "source": "Manuel des joueurs",
-            "notes": "Écrasée et répandue sur les pieds nus de la victime."
+            "consomme": true
           }
         ],
         "composants_materiels_a_renseigner": false,
