@@ -803,9 +803,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petite fiole d’eau",
-          "petite fiole de poussière",
-          "fiole d’eau",
-          "fiole de poussière"
+          "petite fiole de poussière"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une petite fiole d’eau et une petite fiole de poussière.",
         "composants_materiels_reference": "",
@@ -1834,9 +1832,7 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "gui et un peu de nourriture appréciée par l’animal"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -4014,9 +4010,7 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "soie que le magicien doit passer sur l’objet affecté"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "La composante matérielle de ce sort est un petit morceau de soie que le magicien doit passer sur l’objet affecté.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -4576,8 +4570,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petit morceau d’écorce",
-          "écailles de serpent",
-          "morceau d’écorce"
+          "écailles de serpent"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un petit morceau d’écorce et plusieurs écailles de serpent.",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
@@ -5877,10 +5870,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "petite boule composée de fiente de chauve souris et de souffre",
-          "boule composée de fiente de chauve souris et de souffre"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "La composante matérielle de ce sort est une petite boule composée de fiente de chauve-souris et de souffre.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -6492,7 +6482,6 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "cinq chandelles noires allumées",
-          "brasero de charbons ardents dans lequel le magicien doit brûler du soufre",
           "fourrures de chauves souris",
           "saindoux",
           "suie",
@@ -6500,7 +6489,6 @@
           "racine de mandragore",
           "de l’alcool",
           "parchemin sur lequel est inscrit le nom du démon",
-          "sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon",
           "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "Les composantes matérielles sont cinq chandelles noires allumées, un brasero de charbons ardents dans lequel le magicien doit brûler du soufre, des fourrures de chauves-souris, du saindoux, de la suie, des cristaux d’acide mercuro-nitrique, une racine de mandragore, de l’alcool, un parchemin sur lequel est inscrit le nom du démon, sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon.",
@@ -7598,14 +7586,12 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petite baguette fourchue métallique",
-          "sorte de diapason",
-          "type de métal et la taille déterminent le plan d’arrivée",
-          "baguette fourchue métallique"
+          "Le"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une petite baguette fourchue métallique, sorte de diapason, dont le type de métal et la taille déterminent sur quel plan la ou les personnes concernées vont aller.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon_consomme\nManuel des joueurs\nFormulation source du Manuel : « petite baguette fourchue métallique",
+        "composants_materiels_note": "sorte de diapason\n1\nnon_consomme\nManuel des joueurs\ntype de métal et la taille déterminent le plan d’arrivée.\ntype de métal et la taille déterminent le plan d’arrivée. Formulation source du Manuel : « petite baguette fourchue métallique",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce sort est lancé, le clerc se déplace ou envoie une autre personne sur un autre plan d’existence. Le destinataire du sort reste sur ce nouveau plan jusqu’à ce qu’il en parte par un moyen similaire. Si plusieurs personnes (7 personnes maximum) forment un cercle en se tenant par la main, elles peuvent ainsi changer de plan en même temps. La composante matérielle de ce sort est une petite baguette fourchue métallique, sorte de diapason, dont le type de métal et la taille déterminent sur quel plan la ou les personnes concernées vont aller. (Le MD déterminera les détails concernant le plan d’arrivée). Une créature non consentante doit être touchée par le clerc et a le droit à un jet de protection, qui, s’il est réussi, annule les effets du sort.",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/changement-de-plan.js",
@@ -9256,15 +9242,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite perle de cristal qui se brisera à la fin du sort",
-          "si la chaumière est détruite",
-          "Consommation explicitement indiquée dans la description",
-          "perle de cristal qui se brisera à la fin du sort"
+          "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nFormulation source du Manuel : « une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite ».",
+        "composants_materiels_note": "si la chaumière est détruite\n1\nconsomme\nManuel des joueurs\nFormulation source du Manuel : « une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite ».",
         "composants_materiels_a_renseigner": false,
         "description": "quand le magicien lance ce sort, il crée une sphère de force opaque autour de lui, la moitié de cette sphère se trouvant en dessous du sol et l’autre au-dessus de la surface où se trouve le lanceur du sort. Le champ de force fait que la température intérieure se maintient à 21°C quand la température extérieure va de –18°C à 41°C. Un froid en dessous de –18°C abaisse la température intérieure de 1°C par baisse de 2°C à l’extérieur; une chaleur supérieure à 41°C augmente la température interne selon le même ratio. La chaumière peut résister à un vent de 80 km/h mais un vent plus fort détruira le champ de force. Le magicien peut éclairer sur commande l’intérieur de l’hémisphère dans laquelle il se trouve; il peut l’éteindre de la même manière. Si cette demi-sphère est opaque pour ceux qui sont à l’extérieur, elle est en revanche transparente pour ceux qui sont à l’intérieur. En aucun cas la chaumière de Léomund ne protège des projectiles, des armes et des sorts, etc. Elle peut contenir jusqu’à 6 autres créatures de taille humaine, en plus du magicien, qui peuvent y entrer et en sortir librement, mais si ce dernier sort de la chaumière, elle disparaît. La composante matérielle est une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite.",
         "onUse": "systems/add2e/scripts/sorts/magicien-chaumiere-de-leomund.js",
@@ -9392,8 +9375,7 @@
         "composants_materiels": [
           "petit sifflet en argent",
           "morceau d’os",
-          "fil",
-          "sifflet en argent"
+          "fil"
         ],
         "composants_materiels_source": "Les composantes matérielles sont un petit sifflet en argent, un morceau d’os et un fil.",
         "composants_materiels_reference": "",
@@ -9472,9 +9454,7 @@
         "composantes": "V, M",
         "composants_materiels": [
           "petite plume",
-          "magicien doit l’avoir sur lui",
-          "duvet",
-          "plume"
+          "duvet"
         ],
         "composants_materiels_source": "La composante matérielle est une petite plume ou un peu de duvet que le magicien doit avoir quelque part sur lui.",
         "composants_materiels_reference": "",
@@ -9605,10 +9585,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite corne d’argent d’une valeur minimale de 100 po",
           "qui",
-          "Consommation explicitement indiquée dans la description",
-          "corne d’argent d’une valeur minimale de 100 po"
+          "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "composants_materiels_reference": "",
@@ -9739,7 +9717,6 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poudre faite à partir de la glande pinéale d’un humain",
           "humanoïde"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.",
@@ -10624,9 +10601,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petit cône de verre",
-          "petit cône de cristal",
-          "cône de verre",
-          "cône de cristal"
+          "petit cône de cristal"
         ],
         "composants_materiels_source": "cône de verre ou de cristal de très petite taille",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -11836,7 +11811,6 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "symbole sacré du clerc",
-          "chapelet de prière",
           "objet similaire au chapelet de prière"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire.",
@@ -12156,9 +12130,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "poudre de blé et un parchemin torsadé en forme de boucle"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "Les composantes matérielles sont de la poudre de blé et un parchemin torsadé en forme de boucle.",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
@@ -12416,9 +12388,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "tout petit morceau de la même matière que l’objet à créer"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -14105,8 +14075,7 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "symbole sacré du clerc",
-          "Source JSON : symbole sacré requis"
+          "symbole sacré du clerc"
         ],
         "composants_materiels_source": "Pour lancer ce sort, le clerc a besoin de son symbole sacré.",
         "composants_materiels_reference": "",
@@ -15854,8 +15823,7 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "symbole sacré du clerc",
-          "Source JSON : symbole sacré tenu devant le lanceur"
+          "symbole sacré du clerc"
         ],
         "composants_materiels_source": "a besoin de son symbole sacré, qu’il tient devant lui",
         "composants_materiels_reference": "",
@@ -17540,15 +17508,12 @@
           "encens",
           "symbole sacré du clerc",
           "pierres précieuses",
-          "Dons requis si une divination puissante est tentée",
-          "objets magiques",
-          "Dons éventuellement requis si une divination puissante est tentée",
-          "créature"
+          "objets magiques"
         ],
         "composants_materiels_source": "sacrifice d’une petite créature, de l’encens et le symbole sacré du clerc",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nIngrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nnon_consomme\noptionnel\nFormulation source du Manuel : « petite créature ».",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nIngrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nnon_consomme\noptionnel\nDons requis si une divination puissante est tentée.\nDons éventuellement requis si une divination puissante est tentée.\ncréature\nFormulation source du Manuel : « petite créature ».",
         "composants_materiels_a_renseigner": false,
         "description": "similaire au sort d’augure, le sort divination est utilisé pour obtenir des informations sur une zone. Cette zone peut être un petit bois, une grande bâtisse ou une partie d’un niveau d’un donjon. Dans tous les cas, son emplacement doit être connu du clerc. Ce sort donne des informations sur la force relative des créatures qui s’y trouvent, sur l’importance des richesses et sur les chances éventuelles de s’attirer le courroux d’êtres surpuissants, surnaturels, bons ou mauvais, si la zone est envahie ou attaquée. Les chances de base pour réussir une divination sont de 60 % + 1 % par niveau du clerc (le MD peut appliquer des ajustements dans des cas particuliers). Si le tirage de pourcentage, effectué par le MD, échoue, le clerc obtiendra des informations erronées. Les composantes matérielles de ce sort sont le sacrifice d’une petite créature, de l’encens et le symbole sacré du clerc. Si une divination puissante est tentée, il faut faire des dons de pierres précieuses et même d’objets magiques.",
         "onUse": "systems/add2e/scripts/sorts/divination.js",
@@ -17908,13 +17873,12 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "figurine en ivoire représentant le magicien",
-          "Disparaît pour toujours",
           "parchemin"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une figurine plate et fine en ivoire représentant le magicien (de très belle facture, filigranée d’or, émaillée et sertie de gemmes, le tout pour une valeur de 5.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\n5000\nManuel des joueurs",
+        "composants_materiels_note": "1\nconsomme\n5000\nManuel des joueurs\nDisparaît pour toujours.",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort réduit le nombre de dimensions du magicien à 2: hauteur et largeur, mais plus d’épaisseur. Il devient ainsi invisible lorsqu’il se met de profil; cette invisibilité ne peut être détectée que par un sort de vision réelle ou par des moyens similaires. Ce sort permet au magicien de passer par les espaces les plus restreints du moment que les deux dimensions restantes le permettent; il peut par exemple passer entre une porte et son encadrement. Le lanceur de sort peut agir comme à l’accoutumée; il peut se mettre de profil et devenir invisible, se déplacer dans cet état et réapparaître le round suivant et lancer un sort, disparaitre le round suivant. Quand le magicien est de profil, il ne peut être attaqué, quelque soit le moyen utilisé; par contre, visible, il subira le triple des dégâts s’il est attaqué, c.-à-d. qu’une dague infligera 3 à 12 points de dommages à un magicien en duo-dimension. De plus, une partie du magicien se trouve sur le plan astral où des créatures peuvent l’y repérer. Si c’est le cas et que cette créature astrale l'attaque, il y a alors 25% de chances que son corps en entier soit amené sur le plan astral. Les composantes matérielles sont une figurine plate et fine en ivoire représentant le magicien (de très belle facture, filigranée d’or, émaillée et sertie de gemmes, le tout pour une valeur de 5.000 à 10.000 po) et une bande de parchemin. Quand l’incantation est prononcée, le parchemin se courbe et les deux extrémités se rejoignent. La figurine est alors passée dans la bande de parchemin en forme de cylindre et les deux éléments disparaissent pour toujours.",
         "onUse": "systems/add2e/scripts/sorts/magicien-duo-dimension.js",
@@ -18172,8 +18136,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petite poignée de sels alcalins",
-          "de bromure",
-          "poignée de sels alcalins"
+          "de bromure"
         ],
         "composants_materiels_source": "petite poignée de sels alcalins ou de bromure",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -19914,9 +19877,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "épée miniature en platine avec poignée et pommeau en cuivre et zinc"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -20181,8 +20142,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "pelle miniature",
-          "petit baquet",
-          "baquet"
+          "petit baquet"
         ],
         "composants_materiels_source": "pelle miniature et un petit baquet que le magicien doit tenir pendant l’excavation",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -20315,14 +20275,12 @@
         "composants_materiels": [
           "symbole sacré du clerc",
           "eau bénite",
-          "Clerc non mauvais",
-          "eau maudite",
-          "Clerc mauvais"
+          "eau maudite"
         ],
         "composants_materiels_source": "Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais).",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon_consomme\nManuel des joueurs\noptionnel\nconsommé.\nLiquide consommé.",
+        "composants_materiels_note": "1\nnon_consomme\nManuel des joueurs\noptionnel\nClerc non mauvais.\nconsommé.\nLiquide consommé.\nClerc mauvais.",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort annule toute possession d’un objet ou d’une créature par une forme extérieure ou surnaturelle. Cela inclut le contrôle d’une créature par une force contenue dans un objet, la possession par le sort métempsycose, la possession démoniaque, les envoûtements et même les charmes; ce sort est en fait basé sur le même principe que le sort dissipation de la magie. Si un objet envoûté subit un exorcisme, la force vitale de la créature concernée retourne complètement dans son enveloppe matérielle (voir Manuel des Monstres, Démon). Une fois commencé, l’exorcisme ne doit pas être interrompu, sinon ses effets sont annulés. La chance de base de succès est déterminée par le jet d’un d100, donnant donc une base entre 1 % et 100 %. La chance de base est diminuée de 1 % par niveau de la force à exorciser et augmentée de 1 % par niveau du clerc exorcisant, le résultat donnant la chance d’exorciser Le MD peut ajuster cette chance d’exorciser selon des cas particulier, s’il y a lieu. À chaque tour de l’exorcisme, un d100 est lancé et si le résultat est inférieur ou égal à la chance d’exorciser, le sort est réussi. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais). Une relique ou un objet sacré puissant peut augmenter la chance de réussite de 1 à 50 %, selon la puissance de l’objet.",
         "onUse": "systems/add2e/scripts/sorts/exorcisme.js",
@@ -20461,7 +20419,6 @@
           "symbole sacré du clerc",
           "chapelet",
           "livre de prière",
-          "encens",
           "Encens à brûler"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont le symbole sacré du clerc, son chapelet ou son livre de prière et de l’encens à brûler.",
@@ -21213,7 +21170,6 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu",
           "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu",
@@ -21475,7 +21431,6 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gui",
           "Composant principal",
           "houx",
           "Substitut au gui",
@@ -22956,8 +22911,7 @@
           "terreau",
           "sable",
           "petit sac",
-          "lame en fer",
-          "sac"
+          "lame en fer"
         ],
         "composants_materiels_source": "Les composantes matérielles sont un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer.",
         "composants_materiels_reference": "",
@@ -23352,8 +23306,6 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "encens",
-          "description indique que l’endroit doit être encensé",
-          "poudre d’un diamant d’au moins 2 000 po",
           "5 m²",
           "description indique que la poudre est saupoudrée"
         ],
@@ -23588,7 +23540,6 @@
         "jet_sauvegarde": "1/2",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "glands de chêne",
           "Application utilisant des glands de chêne",
           "combinable avec les baies de houx",
           "baie de houx",
@@ -24512,8 +24463,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petite couronne de jade",
-          "Se brise pendant l’incantation",
-          "couronne de jade"
+          "Se brise pendant l’incantation"
         ],
         "composants_materiels_source": "petite couronne de jade d’une valeur minimale de 5",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -24775,8 +24725,7 @@
         "composants_materiels": [
           "petite réplique (poupée) du magicien",
           "Objet durable",
-          "focus utilisé sans destruction indiquée",
-          "réplique (poupée) du magicien"
+          "focus utilisé sans destruction indiquée"
         ],
         "composants_materiels_source": "La composante matérielle est une petite réplique (poupée) du magicien.",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -25001,11 +24950,9 @@
         "composants_materiels": [
           "perle",
           "plume de hibou trempée dans du vin",
-          "vin",
           "carpe miniature vivante",
           "pierre porte bonheur réduite en poudre",
-          "Option permettant d’augmenter la chance de succès",
-          "Réduite en poudre et ajoutée à l’infusion"
+          "Option permettant d’augmenter la chance de succès"
         ],
         "composants_materiels_source": "Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin.",
         "composants_materiels_reference": "",
@@ -25617,8 +25564,7 @@
         "composants_materiels": [
           "diamant réduit en poudre",
           "Réduit en poudre et répandu",
-          "diamant intact",
-          "Chaque destinataire doit en posséder un"
+          "diamant intact"
         ],
         "composants_materiels_source": "La composante matérielle est un diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille.",
         "composants_materiels_reference": "",
@@ -25749,8 +25695,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "perle noire écrasée",
-          "Écrasée"
+          "perle noire écrasée"
         ],
         "composants_materiels_source": "La composante matérielle est une perle noire écrasée d’une valeur minimale de 1.",
         "composants_materiels_reference": "",
@@ -26881,9 +26826,7 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "S, M",
-        "composants_materiels": [
-          "houx avec lequel le druide doit se frotter"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -27752,7 +27695,6 @@
         "composants_materiels": [
           "encens à faire brûler",
           "Invocation d’un élémental de l’air",
-          "eau",
           "Invocation d’un élémental de l’eau",
           "sable",
           "soufre",
@@ -31414,8 +31356,7 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "typiquement druidique (à savoir du gui)",
-          "ce sort est le même que le sort de niveau 4 de clerc langage des plantes"
+          "typiquement druidique (à savoir du gui)"
         ],
         "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
@@ -31954,13 +31895,12 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "cristal clair",
-          "prisme minéral",
-          "Cette composante ne disparaît pas avec l’utilisation"
+          "prisme minéral"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un cristal clair ou un prisme minéral ; cette composante ne disparaît pas avec l’utilisation.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nnon_consomme\nManuel des joueurs",
+        "composants_materiels_note": "1\nnon_consomme\nManuel des joueurs\nCette composante ne disparaît pas avec l’utilisation.",
         "composants_materiels_a_renseigner": false,
         "description": "en lançant ce sort, le magicien est capable de lire les inscriptions magiques sur les objets, livres, parchemins, armes, etc., qui seraient incompréhensibles sans cela (le livre de magie personnel du magicien et les inscriptions déjà lues magiquement restent compréhensibles et lisibles ensuite). Cette lecture ne provoque généralement pas la mise en action de la magie contenue, bien que cela puisse être le cas avec un parchemin maudit. De plus, une fois que le sort lecture de la magie est lancé et que le magicien a lu l’inscription magique, il est capable de relire cette même inscription ultérieurement sans avoir recourt à ce sort. Le sort dure 2 rounds par niveau du magicien. La composante matérielle de ce sort est un cristal clair ou un prisme minéral; cette composante ne disparaît pas avec l’utilisation. L’inverse du sort, obscurcissement de la magie, fait que les écrits magiques deviennent illisibles même avec le sort de lecture de la magie, jusqu’à ce que le sort soit terminé ou que soit lancée une dissipation de la magie. Les composantes matérielles pour l’inverse du sort sont une pincée de poussière et une goutte d’eau.",
         "onUse": "systems/add2e/scripts/sorts/magicien-lecture-de-la-magie.js",
@@ -35123,14 +35063,12 @@
         "composants_materiels": [
           "feu",
           "eau bénite",
-          "Clerc non mauvais",
-          "eau maudite",
-          "Clerc mauvais"
+          "eau maudite"
         ],
         "composants_materiels_source": "feu et de l’eau bénite/maudite",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\noptionnel\nLiquide consommé.",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\noptionnel\nClerc non mauvais.\nLiquide consommé.\nClerc mauvais.",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6\"/tour et 60\"/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite.",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js",
@@ -35358,8 +35296,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "marteau de guerre normal",
-          "Le",
-          "marteau"
+          "Le"
         ],
         "composants_materiels_source": "marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -35748,8 +35685,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite pièce de cuivre finement ciselée",
-          "pièce de cuivre finement ciselée"
+          "petite pièce de cuivre finement ciselée"
         ],
         "composants_materiels_source": "petite pièce de cuivre, finement ciselée",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -36918,7 +36854,6 @@
         "composantes": "S, M",
         "composants_materiels": [
           "bâtonnet d’encens",
-          "Encens",
           "baguette de cristal",
           "Focus durable",
           "non détruit",
@@ -37057,9 +36992,7 @@
         "composants_materiels": [
           "ficelle",
           "Toutes les composantes disparaissent",
-          "plaque d’ivoire",
-          "encre composée de sécrétion de calmar et de sang de dragon noir",
-          "encre composée de sécrétion de calmar et de suc digestif de limace géante"
+          "plaque d’ivoire"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante.",
         "composants_materiels_reference": "",
@@ -38072,8 +38005,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit bloc de granit",
-          "bloc de granit"
+          "petit bloc de granit"
         ],
         "composants_materiels_source": "petit bloc de granit",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -38335,17 +38267,15 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "de l’encens et des morceaux d’ivoire",
-          "mais le magicien doit en plus sacrifier quelque chose (une potion",
           "parchemin",
           "objet magique",
-          "créature",
           "etc",
           "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle ; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "placés en forme de rectangle\n1\nconsomme\nManuel des joueurs",
+        "composants_materiels_note": "placés en forme de rectangle\ncréature\n1\nconsomme\nManuel des joueurs",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort est utilisé pour obtenir des informations sur une personne, un endroit ou un objet, lequel ou laquelle doit être connu. Si la personne ou l’objet est auprès du magicien, ou si ce dernier se trouve à l’endroit concerné, la probabilité de résultat est importante et le temps d’incantation n’est que de 1 à 4 tours. Si le magicien ne connait que des informations détaillées, le temps d’incantation est de 1 à 10 jours. Et si les seules sources d’information sont des rumeurs, le temps d’incantation est de 2 à 12 semaines. Pendant le temps d’incantation, le magicien ne peut rien entreprendre d’autre que les actions de tous les jours: manger, dormir, etc. À la fin du temps d’incantation, la divination révélera si des informations légendaires sont disponibles. Elle révélera souvent l’endroit où ces informations pourront être trouvées: par un nom de lieu, sous forme de vers, d’énigme. Parfois, lorsque la personne, l'endroit ou l'objet est proche du magicien, une certaine information le concernant sera révélée, mais ce sera toujours sous une forme énigmatique (vers, devinette, anagramme, message chiffré, etc.). Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.). Naturellement, une mythomancie ne donnera des informations que si la personne, le lieu ou l’objet est légendaire ou très connu.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mythomancie.js",
@@ -40261,7 +40191,6 @@
           "Réduite en poudre et répartie sur le métal",
           "pierre d’ambre",
           "Gemme non détruite",
-          "topaze",
           "topaze orientale (corindon)"
         ],
         "composants_materiels_source": "",
@@ -41017,8 +40946,7 @@
         "jet_sauvegarde": "annule",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite tige de métal droite et rigide",
-          "tige de métal droite et rigide"
+          "petite tige de métal droite et rigide"
         ],
         "composants_materiels_source": "petite tige de métal droite et rigide",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
@@ -41245,8 +41173,7 @@
           "petite barre de métal",
           "pour chaque monstre visé",
           "Objet durable",
-          "focus utilisé sans destruction indiquée",
-          "barre de métal"
+          "focus utilisé sans destruction indiquée"
         ],
         "composants_materiels_source": "petite barre de métal, une pour chaque monstre visé",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -43494,9 +43421,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à «piéger»"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "morceau de fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à « piéger »",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
@@ -44252,7 +44177,6 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gant en cuir et un petit objet fait de 4 anneaux reliés entre eux",
           "formant une ligne légèrement courbe",
           "tout attaché par une barrette en forme de «I»",
           "Objet durable",
@@ -44907,7 +44831,6 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poudre de cuivre qui doit être soufflée de la paume de la main",
           "avant de pointer le doigt vers l’objectif visé",
           "Consommation explicitement indiquée dans la description"
         ],
@@ -45866,7 +45789,6 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "poudre de fer",
-          "Source JSON : poudre de fer et d’argent pour tracer le cercle de protection",
           "poudre d’argent"
         ],
         "composants_materiels_source": "la poudre de fer et d’argent pour tracer le cercle de protection",
@@ -49120,8 +49042,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petit tambour",
-          "goutte de sang",
-          "tambour"
+          "goutte de sang"
         ],
         "composants_materiels_source": "Les composantes matérielles sont un petit tambour et une goutte de sang.",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
@@ -49481,7 +49402,6 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gui et l’un des éléments suivants: plusieurs soucis écrasés",
           "poireau écrasé",
           "7 feuilles de navet écrasées",
           "résine d’arbre à camphre",
@@ -50479,8 +50399,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petit roseau",
-          "brin de paille",
-          "roseau"
+          "brin de paille"
         ],
         "composants_materiels_source": "La composante matérielle est un petit roseau ou un brin de paille.",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -51030,10 +50949,8 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "symbole sacré",
           "gousse d’ail",
-          "Symbole sacré du clerc",
-          "Écrasée et répandue sur les pieds nus de la victime"
+          "Symbole sacré du clerc"
         ],
         "composants_materiels_source": "Symbole sacre du clerc et gousse d'ail ecrasee repandue sur les pieds nus de la victime.",
         "composants_materiels_reference": "",
@@ -51891,7 +51808,6 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué",
           "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué",
@@ -56534,9 +56450,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "diamant réduit en poudre",
-          "Réduit en poudre",
-          "opale noire réduite en poudre",
-          "Réduite en poudre"
+          "opale noire réduite en poudre"
         ],
         "composants_materiels_source": "Les composantes maté- rielles sont un diamant et une opale noire réduits en poudre, d’une valeur minimale de 5.000 po chacun.",
         "composants_materiels_reference": "",
@@ -58523,8 +58437,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "pincée de terre et une goutte de sang",
-          "chaux",
-          "de l’eau et de la terre sont nécessaires pour l’inverse"
+          "chaux"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de terre et une goutte de sang ; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.",
         "composants_materiels_reference": "",
@@ -58918,8 +58831,7 @@
         "composants_materiels": [
           "pincée de poussière",
           "petit caillou",
-          "motte de terre",
-          "caillou"
+          "motte de terre"
         ],
         "composants_materiels_source": "Les composantes matérielles pour ce sort sont une pincée de poussière, un petit caillou et une motte de terre.",
         "composants_materiels_reference": "",
@@ -59409,8 +59321,7 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, M",
         "composants_materiels": [
-          "petit parchemin mis en cône",
-          "parchemin mis en cône"
+          "petit parchemin mis en cône"
         ],
         "composants_materiels_source": "La composante matérielle est un petit parchemin mis en cône.",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -59764,7 +59675,6 @@
           "de l’encens à brûler",
           "soufre et d’huile",
           "cordelette à nœuds",
-          "sang d’ombre des roches et une petite baguette d’argent",
           "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "Les composantes matérielles sont de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent.",
@@ -59896,13 +59806,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "sacrifice de quelque chose ayant de la valeur",
-          "Sacrifice déterminé selon la valeur accordée par le lanceur et le pouvoir invoqué"
+          "sacrifice de quelque chose ayant de la valeur"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nSacrifice déterminé selon la valeur accordée par le lanceur et le pouvoir invoqué.",
         "composants_materiels_a_renseigner": false,
         "description": "quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés; un objet extrêmement précieux ajoutera +2 au tirage; enfin, un objet sans prix, quasiment unique, ajoutera +3.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-vision.js",
@@ -60029,11 +59938,8 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "crème pour les yeux faite de poudre de champignons très rares",
           "de safran et de graisse",
-          "crème doit être vieille de 1 à 6 mois",
-          "crème faite d’huile",
-          "de poudre de pavot et d’essence d’orchidée rose"
+          "crème faite d’huile"
         ],
         "composants_materiels_source": "Ce sort requiert une crème pour les yeux comme composante matérielle ; cette crème est faite d’une poudre de champignons très rares, de safran et de graisse.",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
@@ -60496,6 +60402,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-strict-fragments-v2",
-  "normalizedAt": "2026-06-17T11:04:34.120Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-full-scan-v3",
+  "normalizedAt": "2026-06-17T13:44:40.826Z"
 }

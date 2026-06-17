@@ -1,11 +1,11 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-strict-fragments-v2",
+  "version": "2026-06-17-normalize-spell-materials-v3-full-scan-v3",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
   "spells": 411,
   "changedSpells": 186,
-  "emptyMaterialSpells": 225,
+  "emptyMaterialSpells": 233,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -24,9 +24,7 @@
       ],
       "after": [
         "petite fiole d’eau",
-        "petite fiole de poussière",
-        "fiole d’eau",
-        "fiole de poussière"
+        "petite fiole de poussière"
       ],
       "notes": [
         "1",
@@ -91,9 +89,7 @@
         "gui et un peu de nourriture appréciée par l’animal",
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et un peu de nourriture appréciée par l’animal »."
       ],
-      "after": [
-        "gui et un peu de nourriture appréciée par l’animal"
-      ],
+      "after": [],
       "notes": [
         "1",
         "consomme",
@@ -262,9 +258,7 @@
         "morceau de soie que le magicien doit passer sur l’objet affecté",
         "Formulation source du Manuel : « un petit morceau de soie que le magicien doit passer sur l’objet affecté »."
       ],
-      "after": [
-        "soie que le magicien doit passer sur l’objet affecté"
-      ],
+      "after": [],
       "notes": [
         "1",
         "non_consomme",
@@ -286,8 +280,7 @@
       ],
       "after": [
         "petit morceau d’écorce",
-        "écailles de serpent",
-        "morceau d’écorce"
+        "écailles de serpent"
       ],
       "notes": [
         "1",
@@ -403,10 +396,7 @@
         "boule composée de fiente de chauve-souris et de souffre",
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une petite boule composée de fiente de chauve-souris et de souffre »."
       ],
-      "after": [
-        "petite boule composée de fiente de chauve souris et de souffre",
-        "boule composée de fiente de chauve souris et de souffre"
-      ],
+      "after": [],
       "notes": [
         "1",
         "consomme",
@@ -458,7 +448,6 @@
       ],
       "after": [
         "cinq chandelles noires allumées",
-        "brasero de charbons ardents dans lequel le magicien doit brûler du soufre",
         "fourrures de chauves souris",
         "saindoux",
         "suie",
@@ -466,7 +455,6 @@
         "racine de mandragore",
         "de l’alcool",
         "parchemin sur lequel est inscrit le nom du démon",
-        "sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon",
         "Consommation explicitement indiquée dans la description"
       ],
       "notes": [
@@ -534,15 +522,15 @@
       ],
       "after": [
         "petite baguette fourchue métallique",
-        "sorte de diapason",
-        "type de métal et la taille déterminent le plan d’arrivée",
-        "baguette fourchue métallique"
+        "Le"
       ],
       "notes": [
+        "sorte de diapason",
         "1",
         "non_consomme",
         "Manuel des joueurs",
-        "Formulation source du Manuel : « petite baguette fourchue métallique"
+        "type de métal et la taille déterminent le plan d’arrivée.",
+        "type de métal et la taille déterminent le plan d’arrivée. Formulation source du Manuel : « petite baguette fourchue métallique"
       ]
     },
     {
@@ -653,12 +641,10 @@
         "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite »."
       ],
       "after": [
-        "petite perle de cristal qui se brisera à la fin du sort",
-        "si la chaumière est détruite",
-        "Consommation explicitement indiquée dans la description",
-        "perle de cristal qui se brisera à la fin du sort"
+        "Consommation explicitement indiquée dans la description"
       ],
       "notes": [
+        "si la chaumière est détruite",
         "1",
         "consomme",
         "Manuel des joueurs",
@@ -681,8 +667,7 @@
       "after": [
         "petit sifflet en argent",
         "morceau d’os",
-        "fil",
-        "sifflet en argent"
+        "fil"
       ],
       "notes": [
         "1",
@@ -708,9 +693,7 @@
       ],
       "after": [
         "petite plume",
-        "magicien doit l’avoir sur lui",
-        "duvet",
-        "plume"
+        "duvet"
       ],
       "notes": [
         "1",
@@ -734,10 +717,8 @@
         "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une petite corne d’argent d’une valeur minimale de 100 po"
       ],
       "after": [
-        "petite corne d’argent d’une valeur minimale de 100 po",
         "qui",
-        "Consommation explicitement indiquée dans la description",
-        "corne d’argent d’une valeur minimale de 100 po"
+        "Consommation explicitement indiquée dans la description"
       ],
       "notes": [
         "disparaît quand le sort est lancé",
@@ -760,7 +741,6 @@
         "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde »."
       ],
       "after": [
-        "pincée de poudre faite à partir de la glande pinéale d’un humain",
         "humanoïde"
       ],
       "notes": [
@@ -859,9 +839,7 @@
       ],
       "after": [
         "petit cône de verre",
-        "petit cône de cristal",
-        "cône de verre",
-        "cône de cristal"
+        "petit cône de cristal"
       ],
       "notes": [
         "1",
@@ -909,7 +887,6 @@
       ],
       "after": [
         "symbole sacré du clerc",
-        "chapelet de prière",
         "objet similaire au chapelet de prière"
       ],
       "notes": [
@@ -932,9 +909,7 @@
         "poudre de blé et un parchemin torsadé en forme de boucle",
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « de la poudre de blé et un parchemin torsadé en forme de boucle »."
       ],
-      "after": [
-        "poudre de blé et un parchemin torsadé en forme de boucle"
-      ],
+      "after": [],
       "notes": [
         "1",
         "consomme",
@@ -951,9 +926,7 @@
         "consomme",
         "Manuel des joueurs"
       ],
-      "after": [
-        "tout petit morceau de la même matière que l’objet à créer"
-      ],
+      "after": [],
       "notes": [
         "1",
         "consomme",
@@ -1025,18 +998,72 @@
       ],
       "note": "1\noptionnel\nManuel des joueurs\nSort normal.\nconsommé.\nLiquide consommé.\nSort inversé : malédiction."
     },
+    "Changement de Plan": {
+      "composants_materiels": [
+        "petite baguette fourchue métallique",
+        "Le"
+      ],
+      "note": "sorte de diapason\n1\nnon_consomme\nManuel des joueurs\ntype de métal et la taille déterminent le plan d’arrivée.\ntype de métal et la taille déterminent le plan d’arrivée. Formulation source du Manuel : « petite baguette fourchue métallique"
+    },
+    "Communion": {
+      "composants_materiels": [
+        "symbole sacré du clerc",
+        "eau bénite",
+        "encens"
+      ],
+      "note": "1\nnon_consomme\nManuel des joueurs\nconsomme\nIngrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+    },
+    "Dissipation du Mal": {
+      "composants_materiels": [
+        "symbole sacré du clerc",
+        "eau bénite",
+        "eau maudite"
+      ],
+      "note": "1\nnon_consomme\nManuel des joueurs\noptionnel\nRequise pour dissipation du mal\nalternative à l’eau maudite.\nRequise pour dissipation du bien\nalternative à l’eau bénite."
+    },
+    "Divination": {
+      "composants_materiels": [
+        "petite créature",
+        "Sacrifiée pour lancer le sort",
+        "encens",
+        "symbole sacré du clerc",
+        "pierres précieuses",
+        "objets magiques"
+      ],
+      "note": "1\nconsomme\nManuel des joueurs\nIngrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nnon_consomme\noptionnel\nDons requis si une divination puissante est tentée.\nDons éventuellement requis si une divination puissante est tentée.\ncréature\nFormulation source du Manuel : « petite créature »."
+    },
+    "Exorcisme": {
+      "composants_materiels": [
+        "symbole sacré du clerc",
+        "eau bénite",
+        "eau maudite"
+      ],
+      "note": "1\nnon_consomme\nManuel des joueurs\noptionnel\nClerc non mauvais.\nconsommé.\nLiquide consommé.\nClerc mauvais."
+    },
+    "Langage des plantes": {
+      "composants_materiels": [
+        "typiquement druidique (à savoir du gui)"
+      ],
+      "note": "1\nconsomme\nManuel des joueurs\nIngrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+    },
+    "Langage des Plantes": {
+      "composants_materiels": [
+        "goutte d’eau",
+        "pincée de bouse",
+        "flamme"
+      ],
+      "note": "1\nconsomme\nManuel des joueurs\nIngrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+    },
     "Marteau Spirituel": {
       "composants_materiels": [
         "marteau de guerre normal",
-        "Le",
-        "marteau"
+        "Le"
       ],
       "note": "1\nconsomme\nManuel des joueurs\nclerc le lance sur son ennemi en récitant une prière à son dieu\ndisparaît quand le sort est lancé."
     },
     "Paralysie": {
       "composants_materiels": [
-        "petite tige de métal droite et rigide",
-        "tige de métal droite et rigide"
+        "petite tige de métal droite et rigide"
       ],
       "note": "1\nconsomme\nManuel des joueurs\nFormulation source du Manuel : « petite tige de métal droite et rigide »."
     },
@@ -1048,10 +1075,8 @@
     },
     "Retardement du Poison": {
       "composants_materiels": [
-        "symbole sacré",
         "gousse d’ail",
-        "Symbole sacré du clerc",
-        "Écrasée et répandue sur les pieds nus de la victime"
+        "Symbole sacré du clerc"
       ],
       "note": "1\nfalse\ntrue\nnon_consomme\nManuel des joueurs\nconsomme"
     },
@@ -1063,6 +1088,7 @@
       "note": "1\nnon_consomme\nManuel des joueurs"
     }
   },
+  "suspiciousMaterialComponents": [],
   "sameSystemFieldsForAllSpells": true,
   "canonicalFields": [
     "nom",
