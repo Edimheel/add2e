@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-17-normalize-spell-materials-v3-clerc-n2-effectprofile-v1";
+const VERSION = "2026-06-17-normalize-spell-materials-v3-clerc-n3-effectprofile-v1";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -23,7 +23,9 @@ const WATCHED_NAMES = new Set([
   "aquagenese", "benediction", "resistance_au_froid", "sanctuaire", "augure", "retardement_du_poison", "paralysie",
   "marteau_spirituel", "divination", "exorcisme", "langage_des_plantes", "changement_de_plan", "communion", "dissipation_du_mal",
   "glyphe_de_garde", "vision_reelle", "orientation", "detection_des_charmes", "detection_des_pieges", "langage_animal",
-  "cantique", "charme_serpents", "silence_sur_5_metres", "perception_des_alignements", "resistance_au_feu"
+  "cantique", "charme_serpents", "silence_sur_5_metres", "perception_des_alignements", "resistance_au_feu",
+  "catalepsie", "desenvoutement", "dissipation_de_la_magie", "lumiere_eternelle", "guerison_de_la_cecite", "manne",
+  "guerison_des_maladies", "necro_animation", "localisation_d_objets", "batons_a_serpents", "necromancie", "priere"
 ]);
 
 const SPELL_MATERIAL_OVERRIDES = new Map(Object.entries({
@@ -36,7 +38,13 @@ const SPELL_MATERIAL_OVERRIDES = new Map(Object.entries({
   augure: ["jeu d’objets divinatoires", "feuilles d’infusion encore humides", "perle écrasée d’au moins 100 po"],
   paralysie: ["petite tige de métal droite et rigide"],
   resistance_au_feu: ["goutte de mercure"],
-  retardement_du_poison: ["symbole sacré du clerc", "gousse d’ail"]
+  retardement_du_poison: ["symbole sacré du clerc", "gousse d’ail"],
+  catalepsie: ["pincée de poussière de cimetière", "symbole sacré du clerc"],
+  localisation_d_objets: ["pierre aimantée"],
+  necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"],
+  batons_a_serpents: ["écorce", "écailles de serpent"],
+  necromancie: ["symbole sacré du clerc", "encens"],
+  priere: ["symbole religieux en argent", "chapelet de prière"]
 }));
 
 const CANONICAL_MATERIALS = new Map(Object.entries({
@@ -64,7 +72,26 @@ const CANONICAL_MATERIALS = new Map(Object.entries({
   poudre_d_argent: "poudre d’argent",
   eau_benite: "eau bénite",
   eau_bénite: "eau bénite",
-  eau_maudite: "eau maudite"
+  eau_maudite: "eau maudite",
+  pierre_aimantee: "pierre aimantée",
+  pierre_aimantée: "pierre aimantée",
+  pincee_de_poussiere_de_cimetiere: "pincée de poussière de cimetière",
+  pincée_de_poussiere_de_cimetiere: "pincée de poussière de cimetière",
+  pincee_de_poussière_de_cimetière: "pincée de poussière de cimetière",
+  goutte_de_sang: "goutte de sang",
+  morceau_de_chair_humaine: "morceau de chair humaine",
+  os_en_poudre: "os en poudre",
+  echarde_d_os: "os en poudre",
+  écharde_d_os: "os en poudre",
+  ecorce: "écorce",
+  écorce: "écorce",
+  ecaille_de_serpent: "écailles de serpent",
+  ecaille_de_serpents: "écailles de serpent",
+  ecailles_de_serpent: "écailles de serpent",
+  écailles_de_serpent: "écailles de serpent",
+  symbole_religieux_en_argent: "symbole religieux en argent",
+  chapelet_de_priere: "chapelet de prière",
+  chapelet_de_prière: "chapelet de prière"
 }));
 
 const CLERIC_LEVEL_2_EFFECT_PROFILES = new Map(Object.entries({
@@ -248,6 +275,245 @@ CLERIC_LEVEL_2_EFFECT_PROFILES.set("perception_de_l_alignement", CLERIC_LEVEL_2_
 CLERIC_LEVEL_2_EFFECT_PROFILES.set("detection_des_alignements", CLERIC_LEVEL_2_EFFECT_PROFILES.get("perception_des_alignements"));
 CLERIC_LEVEL_2_EFFECT_PROFILES.set("detection_de_l_alignement", CLERIC_LEVEL_2_EFFECT_PROFILES.get("perception_des_alignements"));
 
+const CLERIC_LEVEL_3_EFFECT_PROFILES = new Map(Object.entries({
+  catalepsie: [
+    {
+      id: "etat_catalepsie",
+      label: "Catalepsie",
+      kind: "status_control",
+      targetOverride: "une_personne_touchee",
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:catalepsie", "etat:mort_apparente", "duree:1_tour_plus_1_round_par_niveau", "exception:personnage_niveau_superieur_possible"],
+      notes: "Plonge la cible dans un état de mort apparente similaire au sort de magicien, avec la particularité clerc d’affecter aussi une personne de niveau supérieur."
+    }
+  ],
+  desenvoutement: [
+    {
+      id: "leve_malediction",
+      label: "Désenvoûtement",
+      kind: "curse_removal",
+      targetOverride: "objet_personne_ou_presence_maudite_touchee",
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:desenvoutement", "retire:malediction", "permanent", "limite:objets_maudits_portes"],
+      notes: "Lève une malédiction sur un objet, une personne ou une présence indésirable ; permet à une personne de se débarrasser d’un objet maudit porté."
+    },
+    {
+      id: "envoûtement_inverse",
+      label: "Envoûtement",
+      kind: "curse",
+      targetOverride: "personne_touchee",
+      savingThrow: { type: "sorts", condition: "annule" },
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:envoutement", "inverse", "malus:caracteristique_3", "malus:toucher_jp:4", "contrainte:lacher_objet"],
+      notes: "Inverse : impose une malédiction déterminée par pourcentage, avec jet de protection si la cible est touchée."
+    }
+  ],
+  dissipation_de_la_magie: [
+    {
+      id: "dissipation_magie_zone",
+      label: "Dissipation de la magie",
+      kind: "dispell_magic",
+      targetOverride: "cube_de_3_pouces_d_arete",
+      automation: "mj_aid",
+      tags: ["effet:dissipation_de_la_magie", "chance:50_pct", "modificateur:+5_pct_par_niveau_superieur", "modificateur:-2_pct_par_niveau_inferieur", "auto:magie_du_clerc"],
+      notes: "Annule ou neutralise des effets magiques dans la zone selon le différentiel de niveau ; automatique pour les effets du clerc lui-même."
+    },
+    {
+      id: "neutralisation_objet_magique_round",
+      label: "Neutralisation temporaire d’objet magique",
+      kind: "item_magic_suppression",
+      targetOverride: "un_objet_magique_unique",
+      savingThrow: { type: "objet", condition: "si porté ou possédé" },
+      automation: "mj_aid",
+      tags: ["effet:dissipation_de_la_magie", "objet_magique:neutralise_1_round", "limite:un_objet"],
+      notes: "Sur un objet magique ciblé seul, annule ses pouvoirs pour le round suivant, avec jet de protection d’objet si applicable."
+    }
+  ],
+  glyphe_de_garde: [
+    {
+      id: "glyphe_zone_gardee",
+      label: "Glyphe de garde",
+      kind: "ward_glyph",
+      targetOverride: "surface_2_25_m2_par_niveau",
+      savingThrow: { type: "special", condition: "réduit de moitié ou annule selon le glyphe" },
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:glyphe_de_garde", "zone:gardee", "declencheur:intrusion", "duree:permanent_jusqua_decharge", "degats:2_pv_par_niveau_ou_effet_special"],
+      notes: "Trace une inscription magique protégeant une zone ou un objet ; le glyphe se déclenche contre les créatures non autorisées."
+    }
+  ],
+  lumiere_eternelle: [
+    {
+      id: "lumiere_permanente",
+      label: "Lumière éternelle",
+      kind: "light",
+      targetOverride: "sphere_de_6_pouces_de_rayon",
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:lumiere_eternelle", "lumiere:permanente", "annulation:tenebres_eternelles_ou_dissipation"],
+      notes: "Crée une lumière permanente, très vive, jusqu’à annulation."
+    },
+    {
+      id: "tenebres_eternelles",
+      label: "Ténèbres éternelles",
+      kind: "darkness",
+      targetOverride: "sphere_de_6_pouces_de_rayon",
+      savingThrow: { type: "sorts", condition: "si lancé sur une créature ; aveuglement si échec" },
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:tenebres_eternelles", "inverse", "obscurite:totale", "etat:aveugle_si_jp_rate"],
+      notes: "Inverse : crée une obscurité totale ; peut aveugler une créature si elle rate son jet de protection."
+    }
+  ],
+  guerison_de_la_cecite: [
+    {
+      id: "soin_cecite",
+      label: "Guérison de la cécité",
+      kind: "condition_removal",
+      targetOverride: "creature_touchee",
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:guerison_de_la_cecite", "retire:aveugle", "permanent", "limite:ne_regenere_pas_organe_detruit"],
+      notes: "Rend la vue et guérit la plupart des formes de cécité, sans régénérer les organes détruits."
+    },
+    {
+      id: "cecite_inverse",
+      label: "Cécité",
+      kind: "condition_apply",
+      targetOverride: "creature_touchee",
+      savingThrow: { type: "sorts", condition: "annule" },
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:cecite", "inverse", "etat:aveugle", "attaque:toucher_requise"],
+      notes: "Inverse : rend une victime aveugle si le clerc la touche et si elle rate son jet de protection."
+    }
+  ],
+  manne: [
+    {
+      id: "creation_nourriture_eau",
+      label: "Manne",
+      kind: "creation",
+      targetOverride: "27_dm3_par_niveau",
+      automation: "mj_aid",
+      tags: ["effet:manne", "creation:nourriture", "creation:eau", "quantite:3_humains_par_niveau_par_jour", "permanent"],
+      notes: "Crée nourriture et eau nourrissantes ; chaque niveau du clerc nourrit 3 créatures de taille humaine ou une créature de taille cheval pour une journée."
+    }
+  ],
+  guerison_des_maladies: [
+    {
+      id: "soin_maladie",
+      label: "Guérison des maladies",
+      kind: "condition_removal",
+      targetOverride: "creature_touchee",
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:guerison_des_maladies", "retire:maladie", "permanent", "delai_guerison:1_tour_a_1_semaine"],
+      notes: "Guérit la plupart des maladies bactériennes, virales ou parasitaires, avec délai selon gravité et stade."
+    },
+    {
+      id: "contamination_inverse",
+      label: "Contamination",
+      kind: "disease_apply",
+      targetOverride: "creature_touchee",
+      savingThrow: { type: "sorts", condition: "annule" },
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:contamination", "inverse", "maladie:infligee", "perte:1_pv_par_tour", "perte:1_force_par_heure"],
+      notes: "Inverse : inflige une maladie après toucher, avec début des effets en 1 à 6 tours si le jet de protection échoue."
+    }
+  ],
+  necro_animation: [
+    {
+      id: "anime_squelettes_zombies",
+      label: "Nécro-animation",
+      kind: "summon_undead",
+      targetOverride: "os_ou_corps_humains_morts",
+      automation: "actor_creation_or_mj_aid",
+      tags: ["effet:necro_animation", "creation:squelette", "creation:zombie", "quantite:1_mort_vivant_par_niveau", "duree:permanent_jusqua_destruction_ou_dissipation"],
+      notes: "Anime des squelettes ou zombies obéissant au clerc, jusqu’à destruction ou dissipation de la magie."
+    }
+  ],
+  localisation_d_objets: [
+    {
+      id: "localisation_objet",
+      label: "Localisation d’objets",
+      kind: "detection",
+      targetOverride: "objet_connu_ou_familier_dans_la_portee",
+      automation: "mj_aid",
+      tags: ["effet:localisation_d_objets", "detection:objet", "directionnel", "exclusion:etre_vivant", "duree:1_round_par_niveau"],
+      notes: "Indique la direction d’un objet connu ou familier tant qu’il est dans la portée."
+    },
+    {
+      id: "dissimulation_objet",
+      label: "Dissimulation d’objets",
+      kind: "protection_detection",
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:dissimulation_objets", "inverse", "protection:localisation_objet", "protection:boule_de_cristal"],
+      notes: "Inverse : protège un objet contre la localisation et les moyens similaires."
+    }
+  ],
+  batons_a_serpents: [
+    {
+      id: "batons_en_serpents",
+      label: "Bâtons à serpents",
+      kind: "transformation_summon",
+      targetOverride: "batons_ou_objets_en_bois_dans_27_m3",
+      automation: "actor_creation_or_mj_aid",
+      tags: ["effet:batons_a_serpents", "transformation:bois_en_serpent", "quantite:1_par_niveau", "chance:venimeux_5_pct_par_niveau", "duree:2_rounds_par_niveau"],
+      notes: "Transforme des bâtons ou objets en bois similaires en serpents obéissant au clerc ; chaque serpent a 5 % par niveau d’être venimeux."
+    },
+    {
+      id: "serpents_en_batons",
+      label: "Serpents à bâtons",
+      kind: "transformation_reverse",
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:serpents_a_batons", "inverse", "transformation:serpent_en_baton", "annule:batons_a_serpents"],
+      notes: "Inverse : transforme des serpents en bâtons ou annule bâtons à serpents selon le niveau du clerc."
+    }
+  ],
+  necromancie: [
+    {
+      id: "parler_aux_morts",
+      label: "Nécromancie",
+      kind: "communication_dead",
+      targetOverride: "corps_restes_ou_partie_de_creature_morte",
+      automation: "mj_aid",
+      tags: ["effet:necromancie", "communication:mort", "questions:selon_niveau", "temps_depuis_mort:selon_niveau", "langue:connue_requise"],
+      notes: "Permet de poser des questions à une créature morte, selon l’ancienneté du décès et le niveau du clerc."
+    }
+  ],
+  priere: [
+    {
+      id: "bonus_allies_priere",
+      label: "Prière — alliés",
+      kind: "active_bonus",
+      targetOverride: "amis_dans_rayon_6_pouces",
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:priere", "bonus:toucher:1", "bonus:degats:1", "bonus:jp:1", "duree:1_round_par_niveau"],
+      notes: "Les alliés gagnent +1 aux attaques, dégâts et jets de protection dans le rayon d’effet."
+    },
+    {
+      id: "malus_ennemis_priere",
+      label: "Prière — ennemis",
+      kind: "active_malus",
+      targetOverride: "ennemis_dans_rayon_6_pouces",
+      automation: "active_effect_or_mj_aid",
+      tags: ["effet:priere", "malus:toucher:1", "malus:degats:1", "malus:jp:1", "duree:1_round_par_niveau"],
+      notes: "Les ennemis subissent -1 aux attaques, dégâts et jets de protection dans le rayon d’effet."
+    }
+  ]
+}));
+
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("desenvoutement", CLERIC_LEVEL_3_EFFECT_PROFILES.get("desenvoutement"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("desenvoûtement", CLERIC_LEVEL_3_EFFECT_PROFILES.get("desenvoutement"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("désenvoûtement", CLERIC_LEVEL_3_EFFECT_PROFILES.get("desenvoutement"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("envoutement", CLERIC_LEVEL_3_EFFECT_PROFILES.get("desenvoutement"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("dissipation_magie", CLERIC_LEVEL_3_EFFECT_PROFILES.get("dissipation_de_la_magie"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("guerison_cecite", CLERIC_LEVEL_3_EFFECT_PROFILES.get("guerison_de_la_cecite"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("guérison_de_la_cécité", CLERIC_LEVEL_3_EFFECT_PROFILES.get("guerison_de_la_cecite"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("guerison_des_maladie", CLERIC_LEVEL_3_EFFECT_PROFILES.get("guerison_des_maladies"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("necro_animation", CLERIC_LEVEL_3_EFFECT_PROFILES.get("necro_animation"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("nécro_animation", CLERIC_LEVEL_3_EFFECT_PROFILES.get("necro_animation"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("animation_des_morts", CLERIC_LEVEL_3_EFFECT_PROFILES.get("necro_animation"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("localisation_d_objet", CLERIC_LEVEL_3_EFFECT_PROFILES.get("localisation_d_objets"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("localisation_objets", CLERIC_LEVEL_3_EFFECT_PROFILES.get("localisation_d_objets"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("batons_a_serpent", CLERIC_LEVEL_3_EFFECT_PROFILES.get("batons_a_serpents"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("bâtons_a_serpents", CLERIC_LEVEL_3_EFFECT_PROFILES.get("batons_a_serpents"));
+CLERIC_LEVEL_3_EFFECT_PROFILES.set("batons_serpents", CLERIC_LEVEL_3_EFFECT_PROFILES.get("batons_a_serpents"));
+
 const EXACT_NOISE = new Set([
   "", "true", "false", "oui", "non", "consomme", "non consomme", "non_consomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs",
   "source", "aucun", "null", "undefined", "a completer", "à compléter", "liquide", "liquide consomme", "consommation",
@@ -297,10 +563,12 @@ function spellLists(system = {}) {
   const raw = Array.isArray(system.spellLists) ? system.spellLists : String(system.spellLists ?? system.classe ?? "").split(/[,;|/]+/g);
   return raw.map(slug).filter(Boolean);
 }
-function isClercLevel2(item) {
+function isClercSpellLevel(item, level) {
   const system = item?.system ?? {};
-  return spellLevel(system) === 2 && (slug(system.classe).includes("clerc") || spellLists(system).includes("clerc"));
+  return spellLevel(system) === level && (slug(system.classe).includes("clerc") || spellLists(system).includes("clerc"));
 }
+function isClercLevel2(item) { return isClercSpellLevel(item, 2); }
+function isClercLevel3(item) { return isClercSpellLevel(item, 3); }
 
 function getItems(json) {
   if (Array.isArray(json)) return json;
@@ -495,9 +763,17 @@ function effectProfile(effects, source = "manual-normalized-clerc-n2") {
 function applyEffectProfileOverride(item) {
   const system = item.system ?? {};
   const key = slug(item?.name ?? system.nom);
-  const effects = CLERIC_LEVEL_2_EFFECT_PROFILES.get(key);
-  if (!effects || !isClercLevel2(item)) return { applied: false, changed: false };
-  const next = effectProfile(effects);
+  let effects = null;
+  let source = "manual-normalized";
+  if (isClercLevel2(item)) {
+    effects = CLERIC_LEVEL_2_EFFECT_PROFILES.get(key);
+    source = "manual-normalized-clerc-n2";
+  } else if (isClercLevel3(item)) {
+    effects = CLERIC_LEVEL_3_EFFECT_PROFILES.get(key);
+    source = "manual-normalized-clerc-n3";
+  }
+  if (!effects) return { applied: false, changed: false };
+  const next = effectProfile(effects, source);
   const before = JSON.stringify(system.effectProfile ?? {});
   system.effectProfile = next;
   return { applied: true, changed: before !== JSON.stringify(next) };
@@ -553,6 +829,11 @@ function main() {
       missing: [],
       expectedAliases: [...CLERIC_LEVEL_2_EFFECT_PROFILES.keys()].sort()
     },
+    clercLevel3EffectProfiles: {
+      applied: [],
+      missing: [],
+      expectedAliases: [...CLERIC_LEVEL_3_EFFECT_PROFILES.keys()].sort()
+    },
     sameSystemFieldsForAllSpells: true,
     canonicalFields: SYSTEM_KEYS
   };
@@ -574,6 +855,10 @@ function main() {
     if (isClercLevel2(item)) {
       if (profile.applied) control.clercLevel2EffectProfiles.applied.push(item.name);
       else control.clercLevel2EffectProfiles.missing.push(item.name);
+    }
+    if (isClercLevel3(item)) {
+      if (profile.applied) control.clercLevel3EffectProfiles.applied.push(item.name);
+      else control.clercLevel3EffectProfiles.missing.push(item.name);
     }
 
     const suspicious = (item.system.composants_materiels ?? []).filter(isSuspiciousFinalComponent);
@@ -604,6 +889,7 @@ function main() {
   fs.writeFileSync(controlOutput, `${JSON.stringify(control, null, 2)}\n`, "utf8");
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N2 clerc: ${control.clercLevel2EffectProfiles.applied.length} appliqué(s), ${control.clercLevel2EffectProfiles.missing.length} manquant(s).`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N3 clerc: ${control.clercLevel3EffectProfiles.applied.length} appliqué(s), ${control.clercLevel3EffectProfiles.missing.length} manquant(s).`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Suspicious: ${control.suspiciousMaterialComponents.length}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Output: ${path.relative(repoRoot, output)}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Control: ${path.relative(repoRoot, controlOutput)}`);
