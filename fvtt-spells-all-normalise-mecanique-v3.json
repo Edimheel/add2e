@@ -3506,7 +3506,7 @@
         "composants_materiels": [
           "jeu de baguettes serties de gemmes",
           "os de dragon",
-          "objets divinatoires similaires",
+          "jeu d’objets divinatoires",
           "feuilles d’infusion encore humides",
           "perle écrasée d’au moins 100 po"
         ],
@@ -11816,7 +11816,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "symbole sacré du clerc",
-          "objet similaire au chapelet de prière"
+          "chapelet de prière"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont le symbole sacré du clerc et son chapelet de prière, ou tout autre objet similaire.",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -45100,8 +45100,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "symbole religieux en argent",
-          "chapelet de prière",
-          "objet similaire ayant la même utilisation"
+          "chapelet de prière"
         ],
         "composants_materiels_source": "a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation",
         "composants_materiels_reference": "",
@@ -50956,8 +50955,8 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
+          "symbole sacré du clerc",
           "gousse d’ail",
-          "Symbole sacré du clerc",
           "Écrasée",
           "répandue sur les pieds nus de la victime"
         ],
@@ -60422,6 +60421,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4b",
-  "normalizedAt": "2026-06-17T16:26:52.983Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-canonical-names-v5",
+  "normalizedAt": "2026-06-17T16:31:49.631Z"
 }

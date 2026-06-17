@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4b",
+  "version": "2026-06-17-normalize-spell-materials-v3-canonical-names-v5",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
@@ -229,7 +229,7 @@
       "after": [
         "jeu de baguettes serties de gemmes",
         "os de dragon",
-        "objets divinatoires similaires",
+        "jeu d’objets divinatoires",
         "feuilles d’infusion encore humides",
         "perle écrasée d’au moins 100 po"
       ],
@@ -899,7 +899,7 @@
       ],
       "after": [
         "symbole sacré du clerc",
-        "objet similaire au chapelet de prière"
+        "chapelet de prière"
       ],
       "notes": [
         "1",
@@ -1003,7 +1003,7 @@
       "composants_materiels": [
         "jeu de baguettes serties de gemmes",
         "os de dragon",
-        "objets divinatoires similaires",
+        "jeu d’objets divinatoires",
         "feuilles d’infusion encore humides",
         "perle écrasée d’au moins 100 po"
       ],
@@ -1100,8 +1100,8 @@
     },
     "Retardement du Poison": {
       "composants_materiels": [
+        "symbole sacré du clerc",
         "gousse d’ail",
-        "Symbole sacré du clerc",
         "Écrasée",
         "répandue sur les pieds nus de la victime"
       ],
