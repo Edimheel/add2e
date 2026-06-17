@@ -1,11 +1,12 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-canonical-names-v5",
+  "version": "2026-06-17-normalize-spell-materials-v3-clerc-n3-effectprofile-v1",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
   "spells": 411,
-  "changedSpells": 187,
-  "emptyMaterialSpells": 231,
+  "changedSpells": 191,
+  "changedEffectProfiles": 24,
+  "emptyMaterialSpells": 227,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -227,8 +228,6 @@
         "ajoutée à la boisson avant consommation."
       ],
       "after": [
-        "jeu de baguettes serties de gemmes",
-        "os de dragon",
         "jeu d’objets divinatoires",
         "feuilles d’infusion encore humides",
         "perle écrasée d’au moins 100 po"
@@ -248,7 +247,8 @@
         "Requise uniquement si la méthode des feuilles d’infusion encore humides est utilisée",
         "Requise uniquement avec la méthode des feuilles d’infusion",
         "consommation.",
-        "ajoutée à la boisson avant"
+        "ajoutée à la boisson avant",
+        "Normalisation marchand appliquée : jeu d’objets divinatoires, feuilles d’infusion encore humides, perle écrasée d’au moins 100 po"
       ]
     },
     {
@@ -282,7 +282,7 @@
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
       ],
       "after": [
-        "petit morceau d’écorce",
+        "écorce",
         "écailles de serpent"
       ],
       "notes": [
@@ -291,7 +291,8 @@
         "Manuel des joueurs",
         "consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
         "Ingrédient matériel",
-        "consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+        "consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce ».",
+        "Normalisation marchand appliquée : petit morceau d’écorce, écailles de serpent"
       ]
     },
     {
@@ -303,12 +304,14 @@
         "Manuel des joueurs"
       ],
       "after": [
-        "gui"
+        "écorce",
+        "écailles de serpent"
       ],
       "notes": [
         "1",
         "consomme",
-        "Manuel des joueurs"
+        "Manuel des joueurs",
+        "Normalisation marchand appliquée : gui"
       ]
     },
     {
@@ -473,6 +476,17 @@
     },
     {
       "name": "Catalepsie",
+      "before": [],
+      "after": [
+        "pincée de poussière de cimetière",
+        "symbole sacré du clerc"
+      ],
+      "notes": [
+        "Normalisation marchand appliquée :"
+      ]
+    },
+    {
+      "name": "Catalepsie",
       "before": [
         "pincée de poussière d’un cimetière",
         "1",
@@ -483,7 +497,7 @@
         "non_consomme"
       ],
       "after": [
-        "pincée de poussière d’un cimetière",
+        "pincée de poussière de cimetière",
         "symbole sacré du clerc"
       ],
       "notes": [
@@ -492,7 +506,8 @@
         "Manuel des joueurs",
         "consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
         "Ingrédient matériel",
-        "non consomme"
+        "non consomme",
+        "Normalisation marchand appliquée : pincée de poussière d’un cimetière, symbole sacré du clerc"
       ]
     },
     {
@@ -507,8 +522,8 @@
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui »."
       ],
       "after": [
-        "feuille morte de chêne",
-        "gui"
+        "pincée de poussière de cimetière",
+        "symbole sacré du clerc"
       ],
       "notes": [
         "1",
@@ -516,7 +531,8 @@
         "Manuel des joueurs",
         "consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
         "Ingrédient matériel",
-        "consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui »."
+        "consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui ».",
+        "Normalisation marchand appliquée : feuille morte de chêne, gui"
       ]
     },
     {
@@ -972,23 +988,6 @@
         "Ingrédient matériel",
         "consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit morceau de verre et un petit morceau d’acier »."
       ]
-    },
-    {
-      "name": "Croissance animale",
-      "before": [
-        "pincée de poudre d’os",
-        "1",
-        "consomme",
-        "Manuel des joueurs"
-      ],
-      "after": [
-        "pincée de poudre d’os"
-      ],
-      "notes": [
-        "1",
-        "consomme",
-        "Manuel des joueurs"
-      ]
     }
   ],
   "watched": {
@@ -997,30 +996,212 @@
         "goutte d’eau",
         "pincée de poussière"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": [
+          {
+            "id": "creation_eau_potable",
+            "label": "Création d'eau potable",
+            "kind": "resource_creation",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:aquagenese",
+              "creation:eau",
+              "ressource:eau_potable",
+              "quantite:15_litres_par_niveau"
+            ],
+            "notes": "Création de l'eau selon le volume autorisé par le sort."
+          },
+          {
+            "id": "destruction_eau",
+            "label": "Destruction d'eau",
+            "kind": "resource_destruction",
+            "durationOverride": {
+              "raw": "instantané"
+            },
+            "automation": "mj_aid",
+            "tags": [
+              "effet:deshydratation",
+              "destruction:eau",
+              "quantite:15_litres_par_niveau"
+            ],
+            "notes": "Effet inverse ; ne s'applique pas à l'intérieur d'une créature vivante."
+          }
+        ]
+      },
       "note": "1\noptionnel\nManuel des joueurs\nRequise pour la création d’eau\nAlternative à une pincée de poussière\nRequise pour la destruction d’eau\nAlternative à une goutte d’eau"
     },
     "Augure": {
       "composants_materiels": [
-        "jeu de baguettes serties de gemmes",
-        "os de dragon",
         "jeu d’objets divinatoires",
         "feuilles d’infusion encore humides",
         "perle écrasée d’au moins 100 po"
       ],
-      "note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\nAlternative au jeu de baguettes serties de gemmes\nAlternative aux objets divinatoires\ncette méthode requiert aussi une perle écrasée d’au moins 100 po\nFormulation source du Manuel : « feuilles d’infusion encore humides ».\nplacées dans le récipient ayant servi pour l’infusion\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée\nRequise uniquement avec la méthode des feuilles d’infusion\nconsommation.\najoutée à la boisson avant"
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "presage_benefique_malefique",
+            "label": "Augure",
+            "kind": "divination",
+            "targetOverride": "action_future_immediate",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:augure",
+              "divination:benefique_malefique",
+              "chance:70_plus_1_pct_par_niveau",
+              "fenetre:3_tours"
+            ],
+            "notes": "Indique si une action dans le futur immédiat sera bénéfique ou maléfique, avec chance de base 70 % + 1 % par niveau du clerc."
+          }
+        ]
+      },
+      "note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\nAlternative au jeu de baguettes serties de gemmes\nAlternative aux objets divinatoires\ncette méthode requiert aussi une perle écrasée d’au moins 100 po\nFormulation source du Manuel : « feuilles d’infusion encore humides ».\nplacées dans le récipient ayant servi pour l’infusion\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée\nRequise uniquement avec la méthode des feuilles d’infusion\nconsommation.\najoutée à la boisson avant\nNormalisation marchand appliquée : jeu d’objets divinatoires, feuilles d’infusion encore humides, perle écrasée d’au moins 100 po"
+    },
+    "Bâtons à serpents": {
+      "composants_materiels": [
+        "écorce",
+        "écailles de serpent"
+      ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
+      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : gui"
     },
     "Bénédiction": {
       "composants_materiels": [
         "eau bénite",
         "eau maudite"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": [
+          {
+            "id": "bonus_moral_toucher",
+            "label": "Bénédiction",
+            "kind": "active_bonus",
+            "targetOverride": "creatures_amicales_zone_non_engagees",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:benediction",
+              "bonus:moral:1",
+              "bonus:toucher:1",
+              "condition:non_engage_combat"
+            ],
+            "notes": "Bonus moral au toucher pour les créatures amicales non engagées dans la zone."
+          },
+          {
+            "id": "malediction_malus_moral_toucher",
+            "label": "Malédiction",
+            "kind": "active_malus",
+            "targetOverride": "ennemis_zone",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:malediction",
+              "malus:moral:1",
+              "malus:toucher:1"
+            ],
+            "notes": "Effet inverse appliquant un malus moral au toucher."
+          }
+        ]
+      },
       "note": "1\noptionnel\nManuel des joueurs\nSort normal\nconsommé.\nLiquide\nSort inversé : malédiction"
+    },
+    "Cantique": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "bonus_allies_cantique",
+            "label": "Cantique — alliés",
+            "kind": "active_bonus",
+            "targetOverride": "amis_dans_rayon_3_pouces",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:cantique",
+              "bonus:toucher:1",
+              "bonus:degats:1",
+              "bonus:jp:1",
+              "condition:clerc_chante_immobile"
+            ],
+            "notes": "Les alliés du clerc gagnent +1 aux attaques, dégâts et jets de protection tant que le clerc chante et reste immobile."
+          },
+          {
+            "id": "malus_ennemis_cantique",
+            "label": "Cantique — ennemis",
+            "kind": "active_malus",
+            "targetOverride": "ennemis_dans_rayon_3_pouces",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:cantique",
+              "malus:toucher:1",
+              "malus:degats:1",
+              "malus:jp:1",
+              "condition:clerc_chante_immobile"
+            ],
+            "notes": "Les ennemis subissent -1 aux attaques, dégâts et jets de protection tant que le clerc chante et reste immobile."
+          }
+        ]
+      },
+      "note": ""
+    },
+    "Catalepsie": {
+      "composants_materiels": [
+        "pincée de poussière de cimetière",
+        "symbole sacré du clerc"
+      ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
+      "note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui ».\nNormalisation marchand appliquée : feuille morte de chêne, gui"
     },
     "Changement de Plan": {
       "composants_materiels": [
         "petite baguette fourchue métallique"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
       "note": "sorte de diapason\n1\nnon consomme\nManuel des joueurs\ntype de métal et la taille déterminent le plan d’arrivée.\nLe\ntype de métal et la taille déterminent le plan d’arrivée. Formulation source du Manuel : « petite baguette fourchue métallique\nNormalisation marchand appliquée : petite baguette fourchue métallique"
+    },
+    "Charme-Serpents": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "charme_ophidiens",
+            "label": "Charme-serpents",
+            "kind": "control",
+            "targetOverride": "serpents_ou_ophidiens",
+            "savingThrow": {
+              "type": "special",
+              "condition": "résistance à la magie et jets de protection selon créature"
+            },
+            "automation": "mj_aid",
+            "tags": [
+              "effet:charme_serpents",
+              "controle:serpents",
+              "limite:pv_serpents_inferieurs_ou_egaux_pv_clerc",
+              "duree:selon_etat_serpents"
+            ],
+            "notes": "Calme ou charme des serpents dont le total de points de vie n’excède pas ceux du clerc ; durée selon leur état."
+          }
+        ]
+      },
+      "note": ""
     },
     "Communion": {
       "composants_materiels": [
@@ -1028,7 +1209,133 @@
         "eau bénite",
         "encens"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
       "note": "1\nnon consomme\nManuel des joueurs\nconsomme\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel"
+    },
+    "Désenvoûtement": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
+      "note": ""
+    },
+    "Détection des Charmes": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "detection_charme",
+            "label": "Détection des charmes",
+            "kind": "detection",
+            "targetOverride": "une_creature_a_la_fois_jusqua_10",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:detection_des_charmes",
+              "detection:charme",
+              "limite:10_creatures",
+              "duree:1_tour"
+            ],
+            "notes": "Détermine si une personne ou un monstre est sous l’influence d’un charme."
+          },
+          {
+            "id": "dissimulation_charme",
+            "label": "Dissimulation des charmes",
+            "kind": "protection_detection",
+            "targetOverride": "une_creature",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:dissimulation_des_charmes",
+              "protection:detection_charme",
+              "inverse"
+            ],
+            "notes": "Effet inverse protégeant une créature contre la détection des charmes."
+          }
+        ]
+      },
+      "note": ""
+    },
+    "Détection des Pièges": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "detection_pieges_directionnelle",
+            "label": "Détection des pièges",
+            "kind": "detection",
+            "targetOverride": "direction_1_pouce_de_large",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:detection_des_pieges",
+              "detection:piege",
+              "directionnel",
+              "chance:type_magie:10_pct_par_niveau"
+            ],
+            "notes": "Révèle les pièges mécaniques ou magiques dans la direction regardée ; type de magie détectable à 10 % par niveau."
+          }
+        ]
+      },
+      "note": ""
+    },
+    "Dissipation de la magie": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
+      "note": ""
+    },
+    "Dissipation de la Magie": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "dissipation_magie_zone",
+            "label": "Dissipation de la magie",
+            "kind": "dispell_magic",
+            "targetOverride": "cube_de_3_pouces_d_arete",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:dissipation_de_la_magie",
+              "chance:50_pct",
+              "modificateur:+5_pct_par_niveau_superieur",
+              "modificateur:-2_pct_par_niveau_inferieur",
+              "auto:magie_du_clerc"
+            ],
+            "notes": "Annule ou neutralise des effets magiques dans la zone selon le différentiel de niveau ; automatique pour les effets du clerc lui-même."
+          },
+          {
+            "id": "neutralisation_objet_magique_round",
+            "label": "Neutralisation temporaire d’objet magique",
+            "kind": "item_magic_suppression",
+            "targetOverride": "un_objet_magique_unique",
+            "savingThrow": {
+              "type": "objet",
+              "condition": "si porté ou possédé"
+            },
+            "automation": "mj_aid",
+            "tags": [
+              "effet:dissipation_de_la_magie",
+              "objet_magique:neutralise_1_round",
+              "limite:un_objet"
+            ],
+            "notes": "Sur un objet magique ciblé seul, annule ses pouvoirs pour le round suivant, avec jet de protection d’objet si applicable."
+          }
+        ]
+      },
+      "note": ""
     },
     "Dissipation du Mal": {
       "composants_materiels": [
@@ -1036,6 +1343,11 @@
         "eau bénite",
         "eau maudite"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
       "note": "1\nnon consomme\nManuel des joueurs\noptionnel\nRequise pour dissipation du mal\nalternative à l’eau maudite\nRequise pour dissipation du bien\nalternative à l’eau bénite"
     },
     "Divination": {
@@ -1043,6 +1355,11 @@
         "encens",
         "symbole sacré du clerc"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
       "note": "petite créature\n1\nconsomme\nManuel des joueurs\npour lancer le sort.\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nnon consomme\noptionnel\nDons requis si une divination puissante est tentée\nDons éventuellement requis si une divination puissante est tentée\ncréature\npour lancer le sort. Formulation source du Manuel : « petite créature ».\nNormalisation marchand appliquée : Sacrifiée, encens, symbole sacré du clerc, pierres précieuses, objets magiques"
     },
     "Exorcisme": {
@@ -1051,18 +1368,156 @@
         "eau bénite",
         "eau maudite"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
       "note": "1\nnon consomme\nManuel des joueurs\noptionnel\nClerc non mauvais\nconsommé.\nLiquide\nClerc mauvais"
     },
     "Glyphe de Garde": {
       "composants_materiels": [
         "encens"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "glyphe_zone_gardee",
+            "label": "Glyphe de garde",
+            "kind": "ward_glyph",
+            "targetOverride": "surface_2_25_m2_par_niveau",
+            "savingThrow": {
+              "type": "special",
+              "condition": "réduit de moitié ou annule selon le glyphe"
+            },
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:glyphe_de_garde",
+              "zone:gardee",
+              "declencheur:intrusion",
+              "duree:permanent_jusqua_decharge",
+              "degats:2_pv_par_niveau_ou_effet_special"
+            ],
+            "notes": "Trace une inscription magique protégeant une zone ou un objet ; le glyphe se déclenche contre les créatures non autorisées."
+          }
+        ]
+      },
       "note": "1\nconsomme\nManuel des joueurs\ndescription indique que l’endroit doit être encensé.\nLa\n2000\nRequise si la zone à protéger excède 4\n5 m²\ndescription indique que la poudre est saupoudrée.\nNormalisation marchand appliquée : encens"
+    },
+    "Guérison de la Cécité": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "soin_cecite",
+            "label": "Guérison de la cécité",
+            "kind": "condition_removal",
+            "targetOverride": "creature_touchee",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:guerison_de_la_cecite",
+              "retire:aveugle",
+              "permanent",
+              "limite:ne_regenere_pas_organe_detruit"
+            ],
+            "notes": "Rend la vue et guérit la plupart des formes de cécité, sans régénérer les organes détruits."
+          },
+          {
+            "id": "cecite_inverse",
+            "label": "Cécité",
+            "kind": "condition_apply",
+            "targetOverride": "creature_touchee",
+            "savingThrow": {
+              "type": "sorts",
+              "condition": "annule"
+            },
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:cecite",
+              "inverse",
+              "etat:aveugle",
+              "attaque:toucher_requise"
+            ],
+            "notes": "Inverse : rend une victime aveugle si le clerc la touche et si elle rate son jet de protection."
+          }
+        ]
+      },
+      "note": ""
+    },
+    "Guérison des maladies": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
+      "note": ""
+    },
+    "Guérison des Maladies": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "soin_maladie",
+            "label": "Guérison des maladies",
+            "kind": "condition_removal",
+            "targetOverride": "creature_touchee",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:guerison_des_maladies",
+              "retire:maladie",
+              "permanent",
+              "delai_guerison:1_tour_a_1_semaine"
+            ],
+            "notes": "Guérit la plupart des maladies bactériennes, virales ou parasitaires, avec délai selon gravité et stade."
+          },
+          {
+            "id": "contamination_inverse",
+            "label": "Contamination",
+            "kind": "disease_apply",
+            "targetOverride": "creature_touchee",
+            "savingThrow": {
+              "type": "sorts",
+              "condition": "annule"
+            },
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:contamination",
+              "inverse",
+              "maladie:infligee",
+              "perte:1_pv_par_tour",
+              "perte:1_force_par_heure"
+            ],
+            "notes": "Inverse : inflige une maladie après toucher, avec début des effets en 1 à 6 tours si le jet de protection échoue."
+          }
+        ]
+      },
+      "note": ""
+    },
+    "Langage animal": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
+      "note": ""
     },
     "Langage des plantes": {
       "composants_materiels": [
         "typiquement druidique (à savoir du gui)"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
       "note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel"
     },
     "Langage des Plantes": {
@@ -1071,48 +1526,469 @@
         "pincée de bouse",
         "flamme"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
       "note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel"
+    },
+    "Localisation d'objets": {
+      "composants_materiels": [
+        "pierre aimantée"
+      ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "localisation_objet",
+            "label": "Localisation d’objets",
+            "kind": "detection",
+            "targetOverride": "objet_connu_ou_familier_dans_la_portee",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:localisation_d_objets",
+              "detection:objet",
+              "directionnel",
+              "exclusion:etre_vivant",
+              "duree:1_round_par_niveau"
+            ],
+            "notes": "Indique la direction d’un objet connu ou familier tant qu’il est dans la portée."
+          },
+          {
+            "id": "dissimulation_objet",
+            "label": "Dissimulation d’objets",
+            "kind": "protection_detection",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:dissimulation_objets",
+              "inverse",
+              "protection:localisation_objet",
+              "protection:boule_de_cristal"
+            ],
+            "notes": "Inverse : protège un objet contre la localisation et les moyens similaires."
+          }
+        ]
+      },
+      "note": "1\nnon consomme\nManuel des joueurs\nNormalisation marchand appliquée : pierre aimantée"
+    },
+    "Localisation d’objets": {
+      "composants_materiels": [
+        "pierre aimantée"
+      ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
+      "note": "Normalisation marchand appliquée :"
+    },
+    "Lumière éternelle": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
+      "note": ""
+    },
+    "Manne": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "creation_nourriture_eau",
+            "label": "Manne",
+            "kind": "creation",
+            "targetOverride": "27_dm3_par_niveau",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:manne",
+              "creation:nourriture",
+              "creation:eau",
+              "quantite:3_humains_par_niveau_par_jour",
+              "permanent"
+            ],
+            "notes": "Crée nourriture et eau nourrissantes ; chaque niveau du clerc nourrit 3 créatures de taille humaine ou une créature de taille cheval pour une journée."
+          }
+        ]
+      },
+      "note": ""
     },
     "Marteau Spirituel": {
       "composants_materiels": [
         "marteau de guerre normal"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "arme_force_marteau",
+            "label": "Marteau spirituel",
+            "kind": "summoned_weapon",
+            "targetOverride": "un_ennemi_dans_la_portee",
+            "automation": "attack_or_mj_aid",
+            "tags": [
+              "effet:marteau_spirituel",
+              "arme:force",
+              "degats:1d6_pm",
+              "degats:1d4_g",
+              "concentration",
+              "arme_magique:plus_1_par_3_niveaux_pour_creatures"
+            ],
+            "notes": "Crée un champ de force en forme de marteau ; frappe au niveau du clerc, sans bonus au toucher ni aux dégâts, mais compte comme arme magique pour toucher certaines créatures."
+          }
+        ]
+      },
       "note": "1\nconsomme\nManuel des joueurs\nclerc le lance sur son ennemi en récitant une prière à son dieu\nLe\ndisparaît quand le sort est lancé.\nNormalisation marchand appliquée : marteau de guerre normal"
+    },
+    "Nécro animation": {
+      "composants_materiels": [
+        "goutte de sang",
+        "chair humaine",
+        "os en poudre"
+      ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "anime_squelettes_zombies",
+            "label": "Nécro-animation",
+            "kind": "summon_undead",
+            "targetOverride": "os_ou_corps_humains_morts",
+            "automation": "actor_creation_or_mj_aid",
+            "tags": [
+              "effet:necro_animation",
+              "creation:squelette",
+              "creation:zombie",
+              "quantite:1_mort_vivant_par_niveau",
+              "duree:permanent_jusqua_destruction_ou_dissipation"
+            ],
+            "notes": "Anime des squelettes ou zombies obéissant au clerc, jusqu’à destruction ou dissipation de la magie."
+          }
+        ]
+      },
+      "note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\noptionnel\nAlternative à une écharde d’os\nAlternative à une pincée d’os en poudre\nNormalisation marchand appliquée : goutte de sang, chair humaine, pincée d’os en poudre"
+    },
+    "Nécro-animation": {
+      "composants_materiels": [
+        "goutte de sang",
+        "chair humaine",
+        "os en poudre"
+      ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
+      "note": "Normalisation marchand appliquée :"
+    },
+    "Nécromancie": {
+      "composants_materiels": [
+        "symbole sacré du clerc",
+        "encens"
+      ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "parler_aux_morts",
+            "label": "Nécromancie",
+            "kind": "communication_dead",
+            "targetOverride": "corps_restes_ou_partie_de_creature_morte",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:necromancie",
+              "communication:mort",
+              "questions:selon_niveau",
+              "temps_depuis_mort:selon_niveau",
+              "langue:connue_requise"
+            ],
+            "notes": "Permet de poser des questions à une créature morte, selon l’ancienneté du décès et le niveau du clerc."
+          }
+        ]
+      },
+      "note": "1\nnon consomme\nManuel des joueurs\nconsomme\nNormalisation marchand appliquée : symbole sacré du clerc, encens, Brûlé au dessus du corps, restes, partie concernés"
     },
     "Orientation": {
       "composants_materiels": [
         "jeu d’objets divinatoires"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
       "note": "en ivoire\nsous forme de bâtonnets ou de runes gravées\n1\nnon consomme\nManuel des joueurs\nNormalisation marchand appliquée : jeu d’objets divinatoires"
     },
     "Paralysie": {
       "composants_materiels": [
-        "petite tige de métal droite",
-        "rigide"
+        "petite tige de métal droite et rigide"
       ],
-      "note": "1\nconsomme\nManuel des joueurs"
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "immobilisation_humanoides",
+            "label": "Paralysie",
+            "kind": "control",
+            "targetOverride": "1_a_3_humains_ou_humanoides",
+            "savingThrow": {
+              "type": "sorts",
+              "condition": "annule ; malus -2 si une cible, -1 si deux cibles, normal si trois cibles"
+            },
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:paralysie",
+              "etat:paralyse",
+              "cibles:1_3",
+              "duree:4_rounds_plus_1_par_niveau",
+              "jp:annule"
+            ],
+            "notes": "Immobilise 1 à 3 humains ou humanoïdes ; les cibles qui réussissent leur jet ne ressentent aucun effet."
+          }
+        ]
+      },
+      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : petite tige de métal droite, rigide"
+    },
+    "Perception des Alignements": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "lecture_alignement",
+            "label": "Perception des alignements",
+            "kind": "detection",
+            "targetOverride": "une_creature_par_round_jusqua_10",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:perception_des_alignements",
+              "detection:alignement",
+              "limite:10_creatures",
+              "duree:1_tour"
+            ],
+            "notes": "Permet de connaître l’alignement exact d’une personne ou créature, une cible par round jusqu’à dix."
+          },
+          {
+            "id": "confusion_alignement",
+            "label": "Confusion de l’alignement",
+            "kind": "protection_detection",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:confusion_alignement",
+              "protection:detection_alignement",
+              "inverse"
+            ],
+            "notes": "Effet inverse cachant totalement l’alignement pendant la durée indiquée."
+          }
+        ]
+      },
+      "note": ""
+    },
+    "Prière": {
+      "composants_materiels": [
+        "symbole religieux en argent",
+        "chapelet de prière"
+      ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "bonus_allies_priere",
+            "label": "Prière — alliés",
+            "kind": "active_bonus",
+            "targetOverride": "amis_dans_rayon_6_pouces",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:priere",
+              "bonus:toucher:1",
+              "bonus:degats:1",
+              "bonus:jp:1",
+              "duree:1_round_par_niveau"
+            ],
+            "notes": "Les alliés gagnent +1 aux attaques, dégâts et jets de protection dans le rayon d’effet."
+          },
+          {
+            "id": "malus_ennemis_priere",
+            "label": "Prière — ennemis",
+            "kind": "active_malus",
+            "targetOverride": "ennemis_dans_rayon_6_pouces",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:priere",
+              "malus:toucher:1",
+              "malus:degats:1",
+              "malus:jp:1",
+              "duree:1_round_par_niveau"
+            ],
+            "notes": "Les ennemis subissent -1 aux attaques, dégâts et jets de protection dans le rayon d’effet."
+          }
+        ]
+      },
+      "note": "1\noptionnel\nManuel des joueurs\nAlternative au chapelet de prière ou à un objet similaire\nAlternative au symbole religieux en argent ou à un objet similaire\nAlternative au symbole religieux en argent ou au chapelet de prière\nNormalisation marchand appliquée : symbole religieux en argent, chapelet de prière"
+    },
+    "Résistance au feu": {
+      "composants_materiels": [
+        "goutte de mercure"
+      ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "resistance_feu",
+            "label": "Résistance au feu",
+            "kind": "resistance",
+            "targetOverride": "creature_touchee",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:resistance_au_feu",
+              "resistance:feu",
+              "bonus:jp:feu:3",
+              "degats:feu:moitie_si_jp_rate",
+              "degats:feu:quart_si_jp_reussi"
+            ],
+            "notes": "Protège contre chaleur et feu ; bonus de +3 au jet de protection, dégâts réduits à la moitié si le jet échoue et au quart s’il réussit."
+          }
+        ]
+      },
+      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : goutte de mercure"
     },
     "Résistance au Froid": {
       "composants_materiels": [
         "pincée de souffre"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": [
+          {
+            "id": "resistance_froid",
+            "label": "Résistance au froid",
+            "kind": "resistance",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:resistance_au_froid",
+              "resistance:froid",
+              "temperature:min:-18c",
+              "bonus:jp:froid:3",
+              "degats:froid:moitie_si_jp_rate",
+              "degats:froid:quart_si_jp_reussi"
+            ],
+            "notes": "Résistance au froid naturel et réduction des dégâts de froid selon le jet de protection."
+          }
+        ]
+      },
       "note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel"
     },
     "Retardement du Poison": {
       "composants_materiels": [
         "symbole sacré du clerc",
-        "gousse d’ail",
-        "Écrasée",
-        "répandue sur les pieds nus de la victime"
+        "gousse d’ail"
       ],
-      "note": "1\nfalse\ntrue\nnon consomme\nManuel des joueurs\nconsomme"
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "ralentissement_poison",
+            "label": "Retardement du poison",
+            "kind": "poison_delay",
+            "targetOverride": "creature_touchee",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:retardement_du_poison",
+              "poison:ralenti",
+              "perte:1_pv_par_tour",
+              "minimum:1_pv",
+              "duree:1_heure_par_niveau"
+            ],
+            "notes": "Ralentit fortement le poison ; la victime perd 1 PV par tour sans descendre sous 1 PV."
+          },
+          {
+            "id": "rappel_temporaire_mort_poison",
+            "label": "Rappel temporaire après poison",
+            "kind": "revival_temporary",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:retardement_du_poison",
+              "mort:poison",
+              "fenetre:1_tour_par_niveau"
+            ],
+            "notes": "Peut temporairement sauver une personne morte par poison si lancé dans la limite d’un tour par niveau du clerc."
+          }
+        ]
+      },
+      "note": "1\nfalse\ntrue\nnon consomme\nManuel des joueurs\nconsomme\nNormalisation marchand appliquée : symbole sacré du clerc, gousse d’ail, Écrasée, répandue sur les pieds nus de la victime"
     },
     "Sanctuaire": {
       "composants_materiels": [
         "symbole sacré du clerc",
         "petit miroir en argent"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": [
+          {
+            "id": "protection_sanctuaire",
+            "label": "Sanctuaire",
+            "kind": "attack_gate",
+            "savingThrow": {
+              "type": "sorts",
+              "condition": "chaque adversaire qui veut attaquer le bénéficiaire"
+            },
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:sanctuaire",
+              "attaque:requiert_jp_sorts",
+              "restriction:beneficiaire_pas_action_offensive",
+              "zone:ne_bloque_pas_effets_zone"
+            ],
+            "notes": "Empêche l'attaque directe si le jet de sauvegarde échoue ; cesse si le bénéficiaire attaque."
+          }
+        ]
+      },
       "note": "1\nnon consomme\nManuel des joueurs"
+    },
+    "Silence sur 5 mètres": {
+      "composants_materiels": [],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "zone_silence",
+            "label": "Silence sur 5 mètres",
+            "kind": "area_silence",
+            "targetOverride": "sphere_9m_diametre",
+            "savingThrow": {
+              "type": "special",
+              "condition": "si lancé sur une créature non consentante"
+            },
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:silence",
+              "zone:sphere_9m",
+              "bloque:bruit",
+              "bloque:composante_verbale",
+              "duree:2_rounds_par_niveau"
+            ],
+            "notes": "Crée une zone de silence empêchant conversation, bruit et sorts à composante verbale ; la zone peut suivre un objet ou une créature."
+          }
+        ]
+      },
+      "note": ""
     },
     "Vision réelle": {
       "composants_materiels": [
@@ -1120,10 +1996,100 @@
         "graisse",
         "huile"
       ],
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "canonical-system",
+        "effects": []
+      },
       "note": "Normalisation marchand appliquée :"
     }
   },
   "suspiciousMaterialComponents": [],
+  "clercLevel2EffectProfiles": {
+    "applied": [
+      "Augure",
+      "Cantique",
+      "Charme-Serpents",
+      "Détection des Charmes",
+      "Détection des Pièges",
+      "Langage animal",
+      "Marteau Spirituel",
+      "Paralysie",
+      "Perception des Alignements",
+      "Résistance au feu",
+      "Retardement du Poison",
+      "Silence sur 5 mètres"
+    ],
+    "missing": [],
+    "expectedAliases": [
+      "augure",
+      "cantique",
+      "charme_serpents",
+      "detection_de_charme",
+      "detection_de_l_alignement",
+      "detection_de_pieges",
+      "detection_des_alignements",
+      "detection_des_charmes",
+      "detection_des_pieges",
+      "dissimulation_des_charmes",
+      "langage_animal",
+      "marteau_spirituel",
+      "paralysie",
+      "perception_de_l_alignement",
+      "perception_des_alignements",
+      "resistance_au_feu",
+      "retardement_du_poison",
+      "silence_sur_5_m",
+      "silence_sur_5_metre",
+      "silence_sur_5_metres"
+    ]
+  },
+  "clercLevel3EffectProfiles": {
+    "applied": [
+      "Catalepsie",
+      "Désenvoûtement",
+      "Dissipation de la Magie",
+      "Glyphe de Garde",
+      "Guérison de la Cécité",
+      "Guérison des Maladies",
+      "Localisation d'objets",
+      "Lumière éternelle",
+      "Manne",
+      "Nécro animation",
+      "Nécromancie",
+      "Prière"
+    ],
+    "missing": [],
+    "expectedAliases": [
+      "animation_des_morts",
+      "batons_a_serpent",
+      "batons_a_serpents",
+      "batons_serpents",
+      "bâtons_a_serpents",
+      "catalepsie",
+      "desenvoutement",
+      "desenvoûtement",
+      "dissipation_de_la_magie",
+      "dissipation_magie",
+      "désenvoûtement",
+      "envoutement",
+      "glyphe_de_garde",
+      "guerison_cecite",
+      "guerison_de_la_cecite",
+      "guerison_des_maladie",
+      "guerison_des_maladies",
+      "guérison_de_la_cécité",
+      "localisation_d_objet",
+      "localisation_d_objets",
+      "localisation_objets",
+      "lumiere_eternelle",
+      "manne",
+      "necro_animation",
+      "necromancie",
+      "nécro_animation",
+      "priere"
+    ]
+  },
   "sameSystemFieldsForAllSpells": true,
   "canonicalFields": [
     "nom",

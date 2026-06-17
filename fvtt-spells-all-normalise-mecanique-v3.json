@@ -3504,8 +3504,6 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "jeu de baguettes serties de gemmes",
-          "os de dragon",
           "jeu d’objets divinatoires",
           "feuilles d’infusion encore humides",
           "perle écrasée d’au moins 100 po"
@@ -3513,7 +3511,7 @@
         "composants_materiels_source": "Composants alternatifs selon la methode choisie: baguettes serties de gemmes, os de dragon, objets similaires ou feuilles d'infusion humides; si la methode de l'infusion est utilisee, une perle ecrasee d'au moins 100 po est ajoutee a la boisson avant consommation.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\nAlternative au jeu de baguettes serties de gemmes\nAlternative aux objets divinatoires\ncette méthode requiert aussi une perle écrasée d’au moins 100 po\nFormulation source du Manuel : « feuilles d’infusion encore humides ».\nplacées dans le récipient ayant servi pour l’infusion\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée\nRequise uniquement avec la méthode des feuilles d’infusion\nconsommation.\najoutée à la boisson avant",
+        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\nAlternative au jeu de baguettes serties de gemmes\nAlternative aux objets divinatoires\ncette méthode requiert aussi une perle écrasée d’au moins 100 po\nFormulation source du Manuel : « feuilles d’infusion encore humides ».\nplacées dans le récipient ayant servi pour l’infusion\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée\nRequise uniquement avec la méthode des feuilles d’infusion\nconsommation.\najoutée à la boisson avant\nNormalisation marchand appliquée : jeu d’objets divinatoires, feuilles d’infusion encore humides, perle écrasée d’au moins 100 po",
         "composants_materiels_a_renseigner": false,
         "description": "Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.",
         "onUse": "systems/add2e/scripts/sorts/augure.js",
@@ -3522,8 +3520,23 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "presage_benefique_malefique",
+              "label": "Augure",
+              "kind": "divination",
+              "targetOverride": "action_future_immediate",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:augure",
+                "divination:benefique_malefique",
+                "chance:70_plus_1_pct_par_niveau",
+                "fenetre:3_tours"
+              ],
+              "notes": "Indique si une action dans le futur immédiat sera bénéfique ou maléfique, avec chance de base 70 % + 1 % par niveau du clerc."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -4574,13 +4587,13 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit morceau d’écorce",
+          "écorce",
           "écailles de serpent"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un petit morceau d’écorce et plusieurs écailles de serpent.",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce ».",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce ».\nNormalisation marchand appliquée : petit morceau d’écorce, écailles de serpent",
         "composants_materiels_a_renseigner": false,
         "description": "avec ce sort, le clerc est capable de transformer un bâton en serpent pour chaque niveau d’expérience atteint; c.-à-d. un clerc de niveau 9 pourra changer 9 bâtons en 9 serpents. Ces serpents attaquent sur ordre du clerc. Il doit bien sûr y avoir des bâtons ou des objets en bois similaires (torches, lances de fantassin, etc.) à transformer en serpents. Seuls les morceaux de bois qui sont dans la zone d’effet seront transformés. Les objets magiques comme les bâtons magiques ou les lances de fantassin magiques ne sont pas affectés. Il y a 5 % de chance par niveau du clerc que chaque serpent soit venimeux. Chaque bâton transformé en serpent par un clerc de niveau 11 aura 55 % de chance d’être venimeux. Les effets durent 2 rounds par niveau du clerc. Les composantes matérielles de ce sort sont un petit morceau d’écorce et plusieurs écailles de serpent. L’inverse, serpents à bâtons, a donc l’effet contraire, pour la même durée, ou permet d’annuler les effets de bâtons à serpents en tenant compte du niveau du clerc (c.-à-d. un clerc de niveau 10 lançant serpents à bâtons pourra transformer 10 serpents en bâtons).",
         "onUse": "systems/add2e/scripts/sorts/batons-a-serpents.js",
@@ -4667,12 +4680,13 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gui"
+          "écorce",
+          "écailles de serpent"
         ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : gui",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus et le fait que le druide doive utiliser du gui comme composante matérielle, ce sort est le même que le sort de niveau 4 de clerc bâtons à serpents (voir p.48).",
         "onUse": "systems/add2e/scripts/sorts/druide-batons-a-serpents.js",
@@ -6639,8 +6653,39 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "bonus_allies_cantique",
+              "label": "Cantique — alliés",
+              "kind": "active_bonus",
+              "targetOverride": "amis_dans_rayon_3_pouces",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:cantique",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:jp:1",
+                "condition:clerc_chante_immobile"
+              ],
+              "notes": "Les alliés du clerc gagnent +1 aux attaques, dégâts et jets de protection tant que le clerc chante et reste immobile."
+            },
+            {
+              "id": "malus_ennemis_cantique",
+              "label": "Cantique — ennemis",
+              "kind": "active_malus",
+              "targetOverride": "ennemis_dans_rayon_3_pouces",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:cantique",
+                "malus:toucher:1",
+                "malus:degats:1",
+                "malus:jp:1",
+                "condition:clerc_chante_immobile"
+              ],
+              "notes": "Les ennemis subissent -1 aux attaques, dégâts et jets de protection tant que le clerc chante et reste immobile."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -7025,11 +7070,14 @@
         "temps_incantation": "1 segment",
         "jet_sauvegarde": "aucun",
         "composantes": "V, S",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "pincée de poussière de cimetière",
+          "symbole sacré du clerc"
+        ],
         "composants_materiels_source": "—",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "",
+        "composants_materiels_note": "Normalisation marchand appliquée :",
         "composants_materiels_a_renseigner": false,
         "description": "grâce à ce sort, le magicien, ou toute créature dont le niveau d’expérience ou les dés de vie n’excèdent pas ceux du lanceur de sort, peut être placé dans un état de catalepsie, indiscernable de la mort. Cependant la créature affectée peut sentir, entendre et savoir ce qui se passe autour d’elle; mais la vue et les sensations ne sont pas possibles. Ainsi une blessure ou un mauvais traitement corporel ne sera pas ressenti, la créature n’aura aucune réaction et les dégâts subis seront divisés par 2. De plus, une personne en état de catalepsie sera insensible aux effets de la paralysie, du poison ou d’une perte d’énergie. Cependant, un poison injecté dans une personne en état de catalepsie deviendra effectif quand cette personne sortira de cet état cataleptique, bien qu’un jet de protection soit autorisé. Seule une personne consentante peut être affectée par ce sort. Le destinataire du sort consomme 100 fois moins d’air que la normale. Le lanceur de sort est capable de mettre fin au sort quand il le désire; mais il faudra un round complet à la créature sortant de la catalepsie pour retrouver toutes ses fonctions corporelles.",
         "onUse": "systems/add2e/scripts/sorts/catalepsie.js",
@@ -7118,13 +7166,13 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poussière d’un cimetière",
+          "pincée de poussière de cimetière",
           "symbole sacré du clerc"
         ],
         "composants_materiels_source": "pincée de poussière d’un cimetière et symbole sacré du clerc",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nnon consomme",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nnon consomme\nNormalisation marchand appliquée : pincée de poussière d’un cimetière, symbole sacré du clerc",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien catalepsie (voir p.73). À noter néanmoins que même un personnage de niveau supérieur à celui du clerc qui lance ce sort peut être affecté. Les composantes matérielles de ce sort sont une pincée de poussière d’un cimetière et le symbole sacré du clerc.",
         "onUse": "systems/add2e/scripts/sorts/catalepsie.js",
@@ -7140,8 +7188,23 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "etat_catalepsie",
+              "label": "Catalepsie",
+              "kind": "status_control",
+              "targetOverride": "une_personne_touchee",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:catalepsie",
+                "etat:mort_apparente",
+                "duree:1_tour_plus_1_round_par_niveau",
+                "exception:personnage_niveau_superieur_possible"
+              ],
+              "notes": "Plonge la cible dans un état de mort apparente similaire au sort de magicien, avec la particularité clerc d’affecter aussi une personne de niveau supérieur."
+            }
+          ]
         }
       },
       "folder": "fK2Z3ixIZ7GbAUYV",
@@ -7197,13 +7260,13 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "feuille morte de chêne",
-          "gui"
+          "pincée de poussière de cimetière",
+          "symbole sacré du clerc"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont une feuille morte de chêne et du gui.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui ».",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui ».\nNormalisation marchand appliquée : feuille morte de chêne, gui",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que celui de niveau 3 de magicien catalepsie (voir p.73). Les composantes matérielles de ce sort sont une feuille morte de chêne et du gui.",
         "onUse": "systems/add2e/scripts/sorts/druide-catalepsie.js",
@@ -8747,8 +8810,27 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "charme_ophidiens",
+              "label": "Charme-serpents",
+              "kind": "control",
+              "targetOverride": "serpents_ou_ophidiens",
+              "savingThrow": {
+                "type": "special",
+                "condition": "résistance à la magie et jets de protection selon créature"
+              },
+              "automation": "mj_aid",
+              "tags": [
+                "effet:charme_serpents",
+                "controle:serpents",
+                "limite:pv_serpents_inferieurs_ou_egaux_pv_clerc",
+                "duree:selon_etat_serpents"
+              ],
+              "notes": "Calme ou charme des serpents dont le total de points de vie n’excède pas ceux du clerc ; durée selon leur état."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -13376,8 +13458,42 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "leve_malediction",
+              "label": "Désenvoûtement",
+              "kind": "curse_removal",
+              "targetOverride": "objet_personne_ou_presence_maudite_touchee",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:desenvoutement",
+                "retire:malediction",
+                "permanent",
+                "limite:objets_maudits_portes"
+              ],
+              "notes": "Lève une malédiction sur un objet, une personne ou une présence indésirable ; permet à une personne de se débarrasser d’un objet maudit porté."
+            },
+            {
+              "id": "envoûtement_inverse",
+              "label": "Envoûtement",
+              "kind": "curse",
+              "targetOverride": "personne_touchee",
+              "savingThrow": {
+                "type": "sorts",
+                "condition": "annule"
+              },
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:envoutement",
+                "inverse",
+                "malus:caracteristique_3",
+                "malus:toucher_jp:4",
+                "contrainte:lacher_objet"
+              ],
+              "notes": "Inverse : impose une malédiction déterminée par pourcentage, avec jet de protection si la cible est touchée."
+            }
+          ]
         }
       },
       "effects": [
@@ -14491,8 +14607,36 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "detection_charme",
+              "label": "Détection des charmes",
+              "kind": "detection",
+              "targetOverride": "une_creature_a_la_fois_jusqua_10",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:detection_des_charmes",
+                "detection:charme",
+                "limite:10_creatures",
+                "duree:1_tour"
+              ],
+              "notes": "Détermine si une personne ou un monstre est sous l’influence d’un charme."
+            },
+            {
+              "id": "dissimulation_charme",
+              "label": "Dissimulation des charmes",
+              "kind": "protection_detection",
+              "targetOverride": "une_creature",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:dissimulation_des_charmes",
+                "protection:detection_charme",
+                "inverse"
+              ],
+              "notes": "Effet inverse protégeant une créature contre la détection des charmes."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -15241,8 +15385,23 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "detection_pieges_directionnelle",
+              "label": "Détection des pièges",
+              "kind": "detection",
+              "targetOverride": "direction_1_pouce_de_large",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:detection_des_pieges",
+                "detection:piege",
+                "directionnel",
+                "chance:type_magie:10_pct_par_niveau"
+              ],
+              "notes": "Révèle les pièges mécaniques ou magiques dans la direction regardée ; type de magie détectable à 10 % par niveau."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -16667,8 +16826,41 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "dissipation_magie_zone",
+              "label": "Dissipation de la magie",
+              "kind": "dispell_magic",
+              "targetOverride": "cube_de_3_pouces_d_arete",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:dissipation_de_la_magie",
+                "chance:50_pct",
+                "modificateur:+5_pct_par_niveau_superieur",
+                "modificateur:-2_pct_par_niveau_inferieur",
+                "auto:magie_du_clerc"
+              ],
+              "notes": "Annule ou neutralise des effets magiques dans la zone selon le différentiel de niveau ; automatique pour les effets du clerc lui-même."
+            },
+            {
+              "id": "neutralisation_objet_magique_round",
+              "label": "Neutralisation temporaire d’objet magique",
+              "kind": "item_magic_suppression",
+              "targetOverride": "un_objet_magique_unique",
+              "savingThrow": {
+                "type": "objet",
+                "condition": "si porté ou possédé"
+              },
+              "automation": "mj_aid",
+              "tags": [
+                "effet:dissipation_de_la_magie",
+                "objet_magique:neutralise_1_round",
+                "limite:un_objet"
+              ],
+              "notes": "Sur un objet magique ciblé seul, annule ses pouvoirs pour le round suivant, avec jet de protection d’objet si applicable."
+            }
+          ]
         }
       },
       "effects": [
@@ -23325,8 +23517,28 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "glyphe_zone_gardee",
+              "label": "Glyphe de garde",
+              "kind": "ward_glyph",
+              "targetOverride": "surface_2_25_m2_par_niveau",
+              "savingThrow": {
+                "type": "special",
+                "condition": "réduit de moitié ou annule selon le glyphe"
+              },
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:glyphe_de_garde",
+                "zone:gardee",
+                "declencheur:intrusion",
+                "duree:permanent_jusqua_decharge",
+                "degats:2_pv_par_niveau_ou_effet_special"
+              ],
+              "notes": "Trace une inscription magique protégeant une zone ou un objet ; le glyphe se déclenche contre les créatures non autorisées."
+            }
+          ]
         }
       },
       "folder": "fK2Z3ixIZ7GbAUYV",
@@ -23922,8 +24134,41 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "soin_cecite",
+              "label": "Guérison de la cécité",
+              "kind": "condition_removal",
+              "targetOverride": "creature_touchee",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:guerison_de_la_cecite",
+                "retire:aveugle",
+                "permanent",
+                "limite:ne_regenere_pas_organe_detruit"
+              ],
+              "notes": "Rend la vue et guérit la plupart des formes de cécité, sans régénérer les organes détruits."
+            },
+            {
+              "id": "cecite_inverse",
+              "label": "Cécité",
+              "kind": "condition_apply",
+              "targetOverride": "creature_touchee",
+              "savingThrow": {
+                "type": "sorts",
+                "condition": "annule"
+              },
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:cecite",
+                "inverse",
+                "etat:aveugle",
+                "attaque:toucher_requise"
+              ],
+              "notes": "Inverse : rend une victime aveugle si le clerc la touche et si elle rate son jet de protection."
+            }
+          ]
         }
       },
       "folder": "fK2Z3ixIZ7GbAUYV",
@@ -24248,8 +24493,42 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "soin_maladie",
+              "label": "Guérison des maladies",
+              "kind": "condition_removal",
+              "targetOverride": "creature_touchee",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:guerison_des_maladies",
+                "retire:maladie",
+                "permanent",
+                "delai_guerison:1_tour_a_1_semaine"
+              ],
+              "notes": "Guérit la plupart des maladies bactériennes, virales ou parasitaires, avec délai selon gravité et stade."
+            },
+            {
+              "id": "contamination_inverse",
+              "label": "Contamination",
+              "kind": "disease_apply",
+              "targetOverride": "creature_touchee",
+              "savingThrow": {
+                "type": "sorts",
+                "condition": "annule"
+              },
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:contamination",
+                "inverse",
+                "maladie:infligee",
+                "perte:1_pv_par_tour",
+                "perte:1_force_par_heure"
+              ],
+              "notes": "Inverse : inflige une maladie après toucher, avec début des effets en 1 à 6 tours si le jet de protection échoue."
+            }
+          ]
         }
       },
       "effects": [
@@ -30633,8 +30912,23 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "communication_animaux",
+              "label": "Langage animal",
+              "kind": "communication",
+              "targetOverride": "animal_dans_un_rayon_de_3_pouces",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:langage_animal",
+                "communication:animal",
+                "reaction:animal",
+                "exclusion:monstres"
+              ],
+              "notes": "Permet de parler avec un animal doté d’un esprit ; réactions et services éventuels sous arbitrage MJ."
+            }
+          ]
         }
       },
       "effects": [
@@ -32626,7 +32920,7 @@
         "composants_materiels_source": "pierre aimantée",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs",
+        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\nNormalisation marchand appliquée : pierre aimantée",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort aide à localiser un objet connu ou familier. Le clerc lance le sort, tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet à découvrir, tant que cet objet se trouve dans la portée du sort. Ce sort demande une pierre aimantée comme composante matérielle. On peut localiser des objets tels que: un bijou, un outil, une arme ou même une échelle ou un escalier. L’inverse de ce sort, dissimulation d'objets, permet au clerc de protéger un objet d’une telle détection, d’une localisation par boule de cristal ou par des moyens similaires. Aucune application du sort ne fonctionne sur un être vivant.",
         "onUse": "systems/add2e/scripts/sorts/localisation-dobjets.js",
@@ -32642,8 +32936,37 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "localisation_objet",
+              "label": "Localisation d’objets",
+              "kind": "detection",
+              "targetOverride": "objet_connu_ou_familier_dans_la_portee",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:localisation_d_objets",
+                "detection:objet",
+                "directionnel",
+                "exclusion:etre_vivant",
+                "duree:1_round_par_niveau"
+              ],
+              "notes": "Indique la direction d’un objet connu ou familier tant qu’il est dans la portée."
+            },
+            {
+              "id": "dissimulation_objet",
+              "label": "Dissimulation d’objets",
+              "kind": "protection_detection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:dissimulation_objets",
+                "inverse",
+                "protection:localisation_objet",
+                "protection:boule_de_cristal"
+              ],
+              "notes": "Inverse : protège un objet contre la localisation et les moyens similaires."
+            }
+          ]
         }
       },
       "effects": [],
@@ -32712,11 +33035,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "pierre aimantée"
+        ],
         "composants_materiels_source": "fourchette d’argent ou baguette fourchue selon version du sort",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "",
+        "composants_materiels_note": "Normalisation marchand appliquée :",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc localisation d’objets (voir p.47).",
         "onUse": "systems/add2e/scripts/sorts/magicien-localisation-d-objets.js",
@@ -33352,8 +33677,40 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "lumiere_permanente",
+              "label": "Lumière éternelle",
+              "kind": "light",
+              "targetOverride": "sphere_de_6_pouces_de_rayon",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:lumiere_eternelle",
+                "lumiere:permanente",
+                "annulation:tenebres_eternelles_ou_dissipation"
+              ],
+              "notes": "Crée une lumière permanente, très vive, jusqu’à annulation."
+            },
+            {
+              "id": "tenebres_eternelles",
+              "label": "Ténèbres éternelles",
+              "kind": "darkness",
+              "targetOverride": "sphere_de_6_pouces_de_rayon",
+              "savingThrow": {
+                "type": "sorts",
+                "condition": "si lancé sur une créature ; aveuglement si échec"
+              },
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:tenebres_eternelles",
+                "inverse",
+                "obscurite:totale",
+                "etat:aveugle_si_jp_rate"
+              ],
+              "notes": "Inverse : crée une obscurité totale ; peut aveugler une créature si elle rate son jet de protection."
+            }
+          ]
         }
       },
       "effects": [
@@ -34844,8 +35201,24 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "creation_nourriture_eau",
+              "label": "Manne",
+              "kind": "creation",
+              "targetOverride": "27_dm3_par_niveau",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:manne",
+                "creation:nourriture",
+                "creation:eau",
+                "quantite:3_humains_par_niveau_par_jour",
+                "permanent"
+              ],
+              "notes": "Crée nourriture et eau nourrissantes ; chaque niveau du clerc nourrit 3 créatures de taille humaine ou une créature de taille cheval pour une journée."
+            }
+          ]
         }
       },
       "folder": "fK2Z3ixIZ7GbAUYV",
@@ -35314,8 +35687,25 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "arme_force_marteau",
+              "label": "Marteau spirituel",
+              "kind": "summoned_weapon",
+              "targetOverride": "un_ennemi_dans_la_portee",
+              "automation": "attack_or_mj_aid",
+              "tags": [
+                "effet:marteau_spirituel",
+                "arme:force",
+                "degats:1d6_pm",
+                "degats:1d4_g",
+                "concentration",
+                "arme_magique:plus_1_par_3_niveaux_pour_creatures"
+              ],
+              "notes": "Crée un champ de force en forme de marteau ; frappe au niveau du clerc, sans bonus au toucher ni aux dégâts, mais compte comme arme magique pour toucher certaines créatures."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -38539,13 +38929,12 @@
         "composants_materiels": [
           "goutte de sang",
           "chair humaine",
-          "pincée d’os en poudre",
-          "écharde d’os"
+          "os en poudre"
         ],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\noptionnel\nAlternative à une écharde d’os\nAlternative à une pincée d’os en poudre",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nconsommé au lancement selon la règle d’arbitrage ADD2E appliquée.\nIngrédient matériel\noptionnel\nAlternative à une écharde d’os\nAlternative à une pincée d’os en poudre\nNormalisation marchand appliquée : goutte de sang, chair humaine, pincée d’os en poudre",
         "composants_materiels_a_renseigner": false,
         "description": "à partir des os et des corps d’humains morts, ce sort crée les plus faibles des morts-vivants: des squelettes et des zombies. Le sort anime ces «restes» qui obéissent alors au clerc qui a lancé le sort. Les morts-vivants suivront le clerc ou défendront une place qu’il aura désignée (ou alors attaqueront une créature spécifique). Le sort animera les morts-vivants jusqu’à ce qu’ils soient détruits ou jusqu’à ce que la magie soit dissipée (voir le sort dissipation de la magie p.46). Le clerc peut animer un squelette ou un zombie pour chaque niveau d’expérience qu’il a atteint. Ainsi, un clerc de niveau 2 peut animer 2 de ces morts-vivants, un clerc de niveau 3 peut en animer 3, etc. L’acte d’animer des morts n’est pas bon en soi et doit être utilisé avec précaution par des clercs d’alignement bon. Comme composantes matérielles, ce sort demande une goutte de sang, un morceau de chair humaine et une pincée d’os en poudre ou une écharde d’os.",
         "onUse": "systems/add2e/scripts/sorts/animation-des-morts.js",
@@ -38554,8 +38943,24 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "anime_squelettes_zombies",
+              "label": "Nécro-animation",
+              "kind": "summon_undead",
+              "targetOverride": "os_ou_corps_humains_morts",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:necro_animation",
+                "creation:squelette",
+                "creation:zombie",
+                "quantite:1_mort_vivant_par_niveau",
+                "duree:permanent_jusqua_destruction_ou_dissipation"
+              ],
+              "notes": "Anime des squelettes ou zombies obéissant au clerc, jusqu’à destruction ou dissipation de la magie."
+            }
+          ]
         }
       },
       "folder": "fK2Z3ixIZ7GbAUYV",
@@ -38778,11 +39183,15 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "goutte de sang",
+          "chair humaine",
+          "os en poudre"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "",
+        "composants_materiels_note": "Normalisation marchand appliquée :",
         "composants_materiels_a_renseigner": true,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc nécro-animation (voir p.47).",
         "onUse": "systems/add2e/scripts/sorts/magicien-necro-animation.js",
@@ -38909,15 +39318,12 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "symbole sacré du clerc",
-          "encens",
-          "Brûlé au dessus du corps",
-          "restes",
-          "partie concernés"
+          "encens"
         ],
         "composants_materiels_source": "a besoin de son symbole sacré | il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\nconsomme",
+        "composants_materiels_note": "1\nnon consomme\nManuel des joueurs\nconsomme\nNormalisation marchand appliquée : symbole sacré du clerc, encens, Brûlé au dessus du corps, restes, partie concernés",
         "composants_materiels_a_renseigner": false,
         "description": "en lançant ce sort, le clerc peut poser plusieurs questions à une créature morte depuis une période de temps précise et recevoir des réponses en fonction des connaissances de la créature morte. Le clerc doit être capable de converser dans la langue de la créature morte. Le temps depuis lequel la créature est morte est un facteur à prendre en compte car seuls les clercs les plus puissants peuvent parler avec des créatures décédées depuis longtemps. De la même manière, le nombre de questions et la durée du sort dépendent aussi du niveau du clerc. Ce dernier a besoin de son symbole sacré; il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés. Niveau d'expérience Temps maximum écoulé depuis la mort Durée du sort Nombre de questions 6e et moins 1 semaine 1 round 2 7e-8e 1 mois 3 rounds 3 9e-12e 1 année 1 tour 4 13e-15e 10 ans 2 tours 5 16e-20e 100 ans 3 tours 6 21e et plus 1.000 ans 6 tours 7",
         "onUse": "systems/add2e/scripts/sorts/communication-avec-les-morts.js",
@@ -38926,8 +39332,24 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "parler_aux_morts",
+              "label": "Nécromancie",
+              "kind": "communication_dead",
+              "targetOverride": "corps_restes_ou_partie_de_creature_morte",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:necromancie",
+                "communication:mort",
+                "questions:selon_niveau",
+                "temps_depuis_mort:selon_niveau",
+                "langue:connue_requise"
+              ],
+              "notes": "Permet de poser des questions à une créature morte, selon l’ancienneté du décès et le niveau du clerc."
+            }
+          ]
         }
       },
       "folder": "fK2Z3ixIZ7GbAUYV",
@@ -40817,11 +41239,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "petite tige de métal droite et rigide"
+        ],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "",
+        "composants_materiels_note": "Normalisation marchand appliquée :",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort est le même que le sort de niveau 1 protection contre le mal, sauf en ce qui concerne la zone d’effet. Voir p.44 le sort de niveau 1 de clerc protection contre le mal pour plus d’informations.",
         "onUse": "systems/add2e/scripts/sorts/magicien-paralysie.js",
@@ -40949,13 +41373,12 @@
         "jet_sauvegarde": "annule",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite tige de métal droite",
-          "rigide"
+          "petite tige de métal droite et rigide"
         ],
         "composants_materiels_source": "petite tige de métal droite et rigide",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : petite tige de métal droite, rigide",
         "composants_materiels_a_renseigner": false,
         "description": "Ce sort permet d’immobiliser sur place 1 à 3 humains ou créatures humanoïdes (voir ci-dessous), pour 5 rounds ou plus. La durée de ce sort est de 4 rounds plus le niveau du clerc. Si le sort est dirigé contre 3 cibles, chacune des trois obtient un jet de protection normal ; si seulement 2 cibles sont visées, leur jet de protection subit un malus de -1 ; si le clerc ne veut paralyser qu’une seule cible, le jet de protection de cette dernière subit un malus de -2. Les victimes réussissant leur jet de protection ne ressentent absolument rien. Les créatures affectées par ce sort sont : demi-elfes, demi-orques, dryades, elfes, esprits follets, génies des eaux, gnolls, gnomes, gobelins, hobgobelins, hommes-lézards, humains, kobolds, lutins, nains, orques, petites-gens, pixies, troglodytes et autres humanoïdes bipèdes de taille humaine ou plus petite (P-M). Le clerc a besoin d’une petite tige de métal droite et rigide.",
         "onUse": "systems/add2e/scripts/sorts/paralysie.js",
@@ -40971,8 +41394,28 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "immobilisation_humanoides",
+              "label": "Paralysie",
+              "kind": "control",
+              "targetOverride": "1_a_3_humains_ou_humanoides",
+              "savingThrow": {
+                "type": "sorts",
+                "condition": "annule ; malus -2 si une cible, -1 si deux cibles, normal si trois cibles"
+              },
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:paralysie",
+                "etat:paralyse",
+                "cibles:1_3",
+                "duree:4_rounds_plus_1_par_niveau",
+                "jp:annule"
+              ],
+              "notes": "Immobilise 1 à 3 humains ou humanoïdes ; les cibles qui réussissent leur jet ne ressentent aucun effet."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -42340,8 +42783,35 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "lecture_alignement",
+              "label": "Perception des alignements",
+              "kind": "detection",
+              "targetOverride": "une_creature_par_round_jusqua_10",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:perception_des_alignements",
+                "detection:alignement",
+                "limite:10_creatures",
+                "duree:1_tour"
+              ],
+              "notes": "Permet de connaître l’alignement exact d’une personne ou créature, une cible par round jusqu’à dix."
+            },
+            {
+              "id": "confusion_alignement",
+              "label": "Confusion de l’alignement",
+              "kind": "protection_detection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:confusion_alignement",
+                "protection:detection_alignement",
+                "inverse"
+              ],
+              "notes": "Effet inverse cachant totalement l’alignement pendant la durée indiquée."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -45105,7 +45575,7 @@
         "composants_materiels_source": "a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nAlternative au chapelet de prière ou à un objet similaire\nAlternative au symbole religieux en argent ou à un objet similaire\nAlternative au symbole religieux en argent ou au chapelet de prière",
+        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nAlternative au chapelet de prière ou à un objet similaire\nAlternative au symbole religieux en argent ou à un objet similaire\nAlternative au symbole religieux en argent ou au chapelet de prière\nNormalisation marchand appliquée : symbole religieux en argent, chapelet de prière",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort a les mêmes effets que le sort cantique en ce qui concerne le bonus de +1 pour les amis et –1 pour les ennemis pour les probabilités de toucher, la détermination des dommages et les jets de protection. Cependant, le clerc peut entreprendre autre chose une fois que la prière est terminée (c'est-à-dire l’incantation). Le clerc a besoin de son symbole religieux en argent, son chapelet de prière ou alors un objet similaire ayant la même utilisation.",
         "onUse": "systems/add2e/scripts/sorts/priere.js",
@@ -45114,8 +45584,39 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n3",
+          "effects": [
+            {
+              "id": "bonus_allies_priere",
+              "label": "Prière — alliés",
+              "kind": "active_bonus",
+              "targetOverride": "amis_dans_rayon_6_pouces",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:priere",
+                "bonus:toucher:1",
+                "bonus:degats:1",
+                "bonus:jp:1",
+                "duree:1_round_par_niveau"
+              ],
+              "notes": "Les alliés gagnent +1 aux attaques, dégâts et jets de protection dans le rayon d’effet."
+            },
+            {
+              "id": "malus_ennemis_priere",
+              "label": "Prière — ennemis",
+              "kind": "active_malus",
+              "targetOverride": "ennemis_dans_rayon_6_pouces",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:priere",
+                "malus:toucher:1",
+                "malus:degats:1",
+                "malus:jp:1",
+                "duree:1_round_par_niveau"
+              ],
+              "notes": "Les ennemis subissent -1 aux attaques, dégâts et jets de protection dans le rayon d’effet."
+            }
+          ]
         }
       },
       "folder": "fK2Z3ixIZ7GbAUYV",
@@ -49678,7 +50179,7 @@
         "composants_materiels_source": "La composante matérielle est une goutte de mercure.",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : goutte de mercure",
         "composants_materiels_a_renseigner": false,
         "description": "Quand ce sort est lancé, la personne touchée est capable de résister à des chaleurs importantes : brûlures ou canicule. Elle peut même supporter des chaleurs très importantes, tels que des feux magiques brûlants, des incendies, des braises incandescentes, de l’huile bouillante en grande quantité, des épées langues de feu, des tempêtes de feu, des boules de feu, des nuées de météores ou le souffle de dragons rouges. Cependant, la personne en question subira quand même des dommages, mais moindres que si elle ne bénéficiait pas du sort. Avec un jet de protection réussi, la victime ne subira que le quart des dégâts ; si le jet de protection est raté, elle subira la moitié des dégâts. De plus, le jet de protection obtient un bonus de +3. La résistance dure 1 tour pour chaque niveau d’expérience atteint par le clerc qui lance le sort. Le lanceur du sort a besoin d’une goutte de mercure comme composante matérielle.",
         "onUse": "systems/add2e/scripts/sorts/resistance-au-feu-resistance-au-froid.js",
@@ -49687,8 +50188,24 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "resistance_feu",
+              "label": "Résistance au feu",
+              "kind": "resistance",
+              "targetOverride": "creature_touchee",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:resistance_au_feu",
+                "resistance:feu",
+                "bonus:jp:feu:3",
+                "degats:feu:moitie_si_jp_rate",
+                "degats:feu:quart_si_jp_reussi"
+              ],
+              "notes": "Protège contre chaleur et feu ; bonus de +3 au jet de protection, dégâts réduits à la moitié si le jet échoue et au quart s’il réussit."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -50956,14 +51473,12 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "symbole sacré du clerc",
-          "gousse d’ail",
-          "Écrasée",
-          "répandue sur les pieds nus de la victime"
+          "gousse d’ail"
         ],
         "composants_materiels_source": "Symbole sacre du clerc et gousse d'ail ecrasee repandue sur les pieds nus de la victime.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nfalse\ntrue\nnon consomme\nManuel des joueurs\nconsomme",
+        "composants_materiels_note": "1\nfalse\ntrue\nnon consomme\nManuel des joueurs\nconsomme\nNormalisation marchand appliquée : symbole sacré du clerc, gousse d’ail, Écrasée, répandue sur les pieds nus de la victime",
         "composants_materiels_a_renseigner": false,
         "description": "Quand ce sort est lancé sur une personne empoisonnée, il ralentit très sensiblement les effets du poison. Il peut même redonner la vie à un individu mort par empoisonnement s’il est lancé sur la victime dans un laps de temps inférieur ou égal à 1 tour par niveau du clerc ; par exemple, un clerc de niveau 10 pourra temporairement sauver une personne empoisonnée et morte depuis un maximum de 10 tours. Si ce sort ne neutralise pas le poison, il empêche toutefois de subir des dégâts importants. La victime, cependant, perdra 1 point de vie par tour, sans pourtant ne jamais descendre au dessous de 1 point de vie. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
         "onUse": "systems/add2e/scripts/sorts/ralentissement-du-poison.js",
@@ -50972,8 +51487,36 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "ralentissement_poison",
+              "label": "Retardement du poison",
+              "kind": "poison_delay",
+              "targetOverride": "creature_touchee",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:retardement_du_poison",
+                "poison:ralenti",
+                "perte:1_pv_par_tour",
+                "minimum:1_pv",
+                "duree:1_heure_par_niveau"
+              ],
+              "notes": "Ralentit fortement le poison ; la victime perd 1 PV par tour sans descendre sous 1 PV."
+            },
+            {
+              "id": "rappel_temporaire_mort_poison",
+              "label": "Rappel temporaire après poison",
+              "kind": "revival_temporary",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:retardement_du_poison",
+                "mort:poison",
+                "fenetre:1_tour_par_niveau"
+              ],
+              "notes": "Peut temporairement sauver une personne morte par poison si lancé dans la limite d’un tour par niveau du clerc."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -52994,8 +53537,28 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-clerc-n2",
+          "effects": [
+            {
+              "id": "zone_silence",
+              "label": "Silence sur 5 mètres",
+              "kind": "area_silence",
+              "targetOverride": "sphere_9m_diametre",
+              "savingThrow": {
+                "type": "special",
+                "condition": "si lancé sur une créature non consentante"
+              },
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:silence",
+                "zone:sphere_9m",
+                "bloque:bruit",
+                "bloque:composante_verbale",
+                "duree:2_rounds_par_niveau"
+              ],
+              "notes": "Crée une zone de silence empêchant conversation, bruit et sorts à composante verbale ; la zone peut suivre un objet ou une créature."
+            }
+          ]
         }
       },
       "folder": "zhS3hj194HreJBAh",
@@ -60421,6 +60984,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-canonical-names-v5",
-  "normalizedAt": "2026-06-17T16:31:49.631Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-clerc-n3-effectprofile-v1",
+  "normalizedAt": "2026-06-17T17:39:29.734Z"
 }
