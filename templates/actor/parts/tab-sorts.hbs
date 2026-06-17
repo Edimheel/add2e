@@ -207,7 +207,7 @@
                                     </td>
                                     <td>{{sort.ecole}}</td>
                                     <td>{{spellComponentTypes sort}}</td>
-                                    <td>{{spellMaterialComponents sort}}</td>
+                                    <td>{{sort.composants_materiels}}</td>
                                     <td>
                                       <div class="a2e-actions">
                                         <a class="a2e-action-icon a2e-action-edit sort-edit" data-sort-id="{{sort.id}}" title="Éditer"><i class="fas fa-edit"></i></a>
@@ -220,7 +220,7 @@
                                       <div class="a2e-small sort-description-content">
                                         {{{sort.description}}}
                                         {{#if sort.composantes}}<div><b>Composantes :</b> {{sort.composantes}}</div>{{/if}}
-                                        <div><b>Composants requis :</b> {{spellMaterialComponents sort}}</div>
+                                        <div><b>Composants requis :</b> {{sort.composants_materiels}}</div>
                                         {{#if sort.temps_incantation}}<div><b>Incantation :</b> {{sort.temps_incantation}}</div>{{/if}}
                                         {{#if sort.portee}}<div><b>Portée :</b> {{formatSortChamp sort.portee}}</div>{{/if}}
                                         {{#if sort.duree}}<div><b>Durée :</b> {{formatSortChamp sort.duree}}</div>{{/if}}
