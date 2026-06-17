@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4b";
+const VERSION = "2026-06-17-normalize-spell-materials-v3-canonical-names-v5";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -32,6 +32,32 @@ const SPELL_MATERIAL_OVERRIDES = new Map(Object.entries({
   vision_reelle: ["safran", "graisse", "huile"],
   divination: ["encens", "symbole sacré du clerc"],
   marteau_spirituel: ["marteau de guerre normal"]
+}));
+
+const CANONICAL_MATERIALS = new Map(Object.entries({
+  symbole_sacre: "symbole sacré du clerc",
+  symbole_sacre_du_clerc: "symbole sacré du clerc",
+  objet_divinatoire_similaire: "jeu d’objets divinatoires",
+  objets_divinatoires_similaires: "jeu d’objets divinatoires",
+  jeu_d_objets_divinatoires: "jeu d’objets divinatoires",
+  jeu_objets_divinatoires: "jeu d’objets divinatoires",
+  feuille_d_infusion_encore_humide: "feuilles d’infusion encore humides",
+  feuille_d_infusion_encore_humides: "feuilles d’infusion encore humides",
+  feuilles_d_infusion_encore_humide: "feuilles d’infusion encore humides",
+  feuilles_d_infusion_encore_humides: "feuilles d’infusion encore humides",
+  objet_similaire_au_chapelet_de_priere: "chapelet de prière",
+  objet_similaire_au_chapelet_de_prière: "chapelet de prière",
+  objet_similaire_ayant_la_meme_utilisation: "chapelet de prière",
+  objet_similaire_ayant_la_même_utilisation: "chapelet de prière",
+  livre_de_priere: "livre de prière",
+  livre_de_prière: "livre de prière",
+  gousse_ail: "gousse d’ail",
+  gousse_d_ail: "gousse d’ail",
+  poudre_argent: "poudre d’argent",
+  poudre_d_argent: "poudre d’argent",
+  eau_benite: "eau bénite",
+  eau_bénite: "eau bénite",
+  eau_maudite: "eau maudite"
 }));
 
 const EXACT_NOISE = new Set([
@@ -74,6 +100,7 @@ function norm(value) {
 }
 function slug(value) { return norm(value).replace(/\s+/g, "_"); }
 function wordCount(value) { return norm(value).split(" ").filter(Boolean).length; }
+function canonicalMaterial(value) { return CANONICAL_MATERIALS.get(slug(value)) ?? value; }
 
 function getItems(json) {
   if (Array.isArray(json)) return json;
@@ -97,7 +124,7 @@ function normalizeLabel(value) {
   out = out.replace(/^poudre argent$/i, "poudre d’argent");
   out = out.replace(/^eau benite$/i, "eau bénite");
   out = out.replace(/^eau maudite$/i, "eau maudite");
-  return out;
+  return canonicalMaterial(out);
 }
 
 function hasNoisePrefix(clean, normalized) {
@@ -257,7 +284,7 @@ function applySpellOverride(item, system, notes) {
   const override = SPELL_MATERIAL_OVERRIDES.get(key);
   if (!override) return false;
   addNote(notes, `Normalisation marchand appliquée : ${system.composants_materiels.join(", ")}`);
-  system.composants_materiels = clone(override);
+  system.composants_materiels = clone(override).map(normalizeLabel);
   return true;
 }
 
@@ -280,7 +307,7 @@ function normalizeMaterials(item) {
   if (!names.length) collect(system.composants_materiels_objets, names, notes);
   if (!names.length) collect(system.composants_requis, names, notes);
   if (text(system.composants_materiels_note)) addNote(notes, system.composants_materiels_note);
-  system.composants_materiels = names;
+  system.composants_materiels = names.map(normalizeLabel);
   applySpellOverride(item, system, notes);
   system.composants_materiels_note = notes.join("\n");
   return { before, after: clone(system.composants_materiels), notes: clone(notes), changed: JSON.stringify(before) !== JSON.stringify(system.composants_materiels) };
