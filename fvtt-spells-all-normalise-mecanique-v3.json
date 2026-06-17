@@ -1862,8 +1862,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "amitie_animale",
+              "label": "Amitié animale",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:amitie_animale",
+                "classe:druide",
+                "communication_ou_controle",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -1992,8 +2006,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "animation_de_la_roche",
+              "label": "Animation de la roche",
+              "kind": "elemental_or_weather_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:animation_de_la_roche",
+                "classe:druide",
+                "element_ou_climat",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -2793,8 +2821,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "aquagenese",
+              "label": "Aquagenèse",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:aquagenese",
+                "classe:druide",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -3156,8 +3197,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "arbre",
+              "label": "Arbre",
+              "kind": "plant_or_nature_control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:arbre",
+                "classe:druide",
+                "plante_ou_nature",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -3940,8 +3995,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "aura_feerique",
+              "label": "Aura féérique",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:aura_feerique",
+                "classe:druide",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -4739,13 +4807,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "écorce",
-          "écailles de serpent"
+          "gui"
         ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : gui",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus et le fait que le druide doive utiliser du gui comme composante matérielle, ce sort est le même que le sort de niveau 4 de clerc bâtons à serpents (voir p.48).",
         "onUse": "systems/add2e/scripts/sorts/druide-batons-a-serpents.js",
@@ -4754,8 +4821,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "batons_a_serpents",
+              "label": "Bâtons à serpents",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:batons_a_serpents",
+                "classe:druide",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -5568,8 +5648,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "bouclier_anti_animal",
+              "label": "Bouclier anti-animal",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:bouclier_anti_animal",
+                "classe:druide",
+                "protection",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -5698,8 +5792,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "bouclier_anti_plantes",
+              "label": "Bouclier anti-plantes",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:bouclier_anti_plantes",
+                "classe:druide",
+                "protection",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -7318,13 +7426,14 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poussière de cimetière",
-          "symbole sacré du clerc"
+          "feuille morte de chêne",
+          "gui",
+          "Ingrédient matériel"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont une feuille morte de chêne et du gui.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : feuille morte de chêne, gui, Ingrédient matériel, feuille morte de chêne, gui, Ingrédient matériel",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que celui de niveau 3 de magicien catalepsie (voir p.73). Les composantes matérielles de ce sort sont une feuille morte de chêne et du gui.",
         "onUse": "systems/add2e/scripts/sorts/druide-catalepsie.js",
@@ -7333,8 +7442,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "catalepsie",
+              "label": "Catalepsie",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:catalepsie",
+                "classe:druide",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "cjJqAUlxKsGQObyM",
@@ -8103,8 +8225,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "chariot_de_sustarre",
+              "label": "Chariot de Sustarre",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:chariot_de_sustarre",
+                "classe:druide",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -8620,8 +8755,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "charme_personnes_ou_mammiferes",
+              "label": "Charme-personnes ou mammifères",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:charme_personnes_ou_mammiferes",
+                "classe:druide",
+                "communication_ou_controle",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -10532,8 +10681,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "communion_avec_la_nature",
+              "label": "Communion avec la nature",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:communion_avec_la_nature",
+                "classe:druide",
+                "detection_ou_divination",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -10936,8 +11099,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "confusion",
+              "label": "Confusion",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:confusion",
+                "classe:druide",
+                "controle",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "qMEnp2akD5cLOQgQ",
@@ -11458,8 +11635,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "contre_poison",
+              "label": "Contre-poison",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:contre_poison",
+                "classe:druide",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "ZJ8exyeNEa9LVOV5",
@@ -11590,8 +11780,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "controle_de_la_temperature_sur_3_m",
+              "label": "Contrôle de la température sur 3 m",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:controle_de_la_temperature_sur_3_m",
+                "classe:druide",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -11720,8 +11923,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "controle_des_vents",
+              "label": "Contrôle des vents",
+              "kind": "elemental_or_weather_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:controle_des_vents",
+                "classe:druide",
+                "element_ou_climat",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -11837,10 +12054,7 @@
         "temps_incantation": "1 tour",
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "encens",
-          "chapelet de prière"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -11860,8 +12074,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "controle_du_climat",
+              "label": "Contrôle du climat",
+              "kind": "elemental_or_weather_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:controle_du_climat",
+                "classe:druide",
+                "element_ou_climat",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "qMEnp2akD5cLOQgQ",
@@ -12880,8 +13108,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "croc_en_jambe",
+              "label": "Croc-en-jambe",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:croc_en_jambe",
+                "classe:druide",
+                "controle",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -13017,8 +13259,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "croissance_animale",
+              "label": "Croissance animale",
+              "kind": "summon_or_animal_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:croissance_animale",
+                "classe:druide",
+                "invocation_ou_animaux",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -13368,8 +13624,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "debilite_mentale",
+              "label": "Débilité mentale",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:debilite_mentale",
+                "classe:druide",
+                "controle",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -14598,8 +14868,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "detection_de_la_magie",
+              "label": "Détection de la magie",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:detection_de_la_magie",
+                "classe:druide",
+                "detection_ou_divination",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "xSnnSUxevmqNFhpL",
@@ -15902,8 +16186,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "detection_des_pieges_sylvestres",
+              "label": "Détection des pièges sylvestres",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:detection_des_pieges_sylvestres",
+                "classe:druide",
+                "detection_ou_divination",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -16881,8 +17179,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "dissipation_de_la_magie",
+              "label": "Dissipation de la magie",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:dissipation_de_la_magie",
+                "classe:druide",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "NyPgyE7fEqGki3vE",
@@ -17704,8 +18015,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "distorsion_du_bois",
+              "label": "Distorsion du bois",
+              "kind": "plant_or_nature_control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:distorsion_du_bois",
+                "classe:druide",
+                "plante_ou_nature",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -18080,8 +18405,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "doigt_de_mort",
+              "label": "Doigt de mort",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:doigt_de_mort",
+                "classe:druide",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -19227,8 +19565,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "embrasement",
+              "label": "Embrasement",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:embrasement",
+                "classe:druide",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -19493,8 +19844,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "embroussaillement",
+              "label": "Embroussaillement",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:embroussaillement",
+                "classe:druide",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -20094,8 +20458,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "enchevetrement",
+              "label": "Enchevêtrement",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:enchevetrement",
+                "classe:druide",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -21678,8 +22055,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "flamme",
+              "label": "Flamme",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:flamme",
+                "classe:druide",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -21796,12 +22186,16 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "symbole sacré du clerc"
+          "gui",
+          "Composant principal ou",
+          "houx",
+          "Substitut au gui",
+          "feuille de chêne"
         ],
         "composants_materiels_source": "excepté ci-dessus et le fait que la composante maté- rielle soit du gui ou son substitut, le houx ou les feuilles de chêne, ce sort est le même que le sort de niveau 5 de clerc fléau d’insectes (voir p.50).",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nFormulation source du Manuel : « feuilles de chêne »\nNormalisation marchand appliquée : gui, Composant principal ou, houx, Substitut au gui, feuille de chêne",
+        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nFormulation source du Manuel : « feuilles de chêne »",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus et le fait que la composante matérielle soit du gui ou son substitut, le houx ou les feuilles de chêne, ce sort est le même que le sort de niveau 5 de clerc fléau d’insectes (voir p.50).",
         "onUse": "systems/add2e/scripts/sorts/fleau-dinsectes.js",
@@ -21817,8 +22211,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "fleau_d_insectes",
+              "label": "Fléau d’insectes",
+              "kind": "summon_or_animal_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:fleau_d_insectes",
+                "classe:druide",
+                "invocation_ou_animaux",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -22900,8 +23308,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "foret_hallucinatoire",
+              "label": "Forêt hallucinatoire",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:foret_hallucinatoire",
+                "classe:druide",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -23952,8 +24373,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "graines_de_feu",
+              "label": "Graines de feu",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:graines_de_feu",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -24579,8 +25014,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "guerison_des_maladies",
+              "label": "Guérison des maladies",
+              "kind": "healing_or_restoration",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:guerison_des_maladies",
+                "classe:druide",
+                "soin_ou_restauration",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -27286,8 +27735,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "invisibilite_aux_animaux",
+              "label": "Invisibilité aux animaux",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:invisibilite_aux_animaux",
+                "classe:druide",
+                "protection",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -27765,8 +28228,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "invocation_animale_i",
+              "label": "Invocation animale I",
+              "kind": "summon_or_animal_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_animale_i",
+                "classe:druide",
+                "invocation_ou_animaux",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -27894,8 +28371,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "invocation_animale_ii",
+              "label": "Invocation animale II",
+              "kind": "summon_or_animal_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_animale_ii",
+                "classe:druide",
+                "invocation_ou_animaux",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -28023,8 +28514,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "invocation_animale_iii",
+              "label": "Invocation animale III",
+              "kind": "summon_or_animal_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_animale_iii",
+                "classe:druide",
+                "invocation_ou_animaux",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -28298,8 +28803,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "invocation_d_insectes",
+              "label": "Invocation d'insectes",
+              "kind": "summon_or_animal_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_d_insectes",
+                "classe:druide",
+                "invocation_ou_animaux",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -28428,8 +28947,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "invocation_d_un_elemental_de_terre",
+              "label": "Invocation d'un élémental de terre",
+              "kind": "summon_or_animal_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_d_un_elemental_de_terre",
+                "classe:druide",
+                "invocation_ou_animaux",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -28558,8 +29091,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "invocation_d_un_elemental_du_feu",
+              "label": "Invocation d'un élémental du feu",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:invocation_d_un_elemental_du_feu",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -28818,8 +29365,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "invocation_de_la_foudre",
+              "label": "Invocation de la foudre",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:invocation_de_la_foudre",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -30090,8 +30651,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "invocation_des_creatures_sylvestres",
+              "label": "Invocation des créatures sylvestres",
+              "kind": "summon_or_animal_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_des_creatures_sylvestres",
+                "classe:druide",
+                "invocation_ou_animaux",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -30352,8 +30927,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "invocation_du_temps",
+              "label": "Invocation du temps",
+              "kind": "summon_or_animal_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_du_temps",
+                "classe:druide",
+                "invocation_ou_animaux",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -31491,8 +32080,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "langage_animal",
+              "label": "Langage animal",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:langage_animal",
+                "classe:druide",
+                "communication_ou_controle",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -31848,14 +32451,13 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "goutte d’eau",
-          "pincée de bouse",
-          "flamme"
+          "typiquement druidique (à savoir du gui)",
+          "Ingrédient matériel"
         ],
         "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "ce sort est le même que le sort de niveau 4 de clerc langage des plantes\n1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : typiquement druidique (à savoir du gui), Ingrédient matériel",
+        "composants_materiels_note": "ce sort est le même que le sort de niveau 4 de clerc langage des plantes\n1\nconsomme\nManuel des joueurs",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus et le fait que la composante matérielle est typiquement druidique (à savoir du gui), ce sort est le même que le sort de niveau 4 de clerc langage des plantes.",
         "onUse": "systems/add2e/scripts/sorts/langage-des-plantes.js",
@@ -31871,8 +32473,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "langage_des_plantes",
+              "label": "Langage des plantes",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:langage_des_plantes",
+                "classe:druide",
+                "communication_ou_controle",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -33032,8 +33648,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "lithomorphose",
+              "label": "Lithomorphose",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:lithomorphose",
+                "classe:druide",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -33398,8 +34027,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "localisation_des_animaux",
+              "label": "Localisation des animaux",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:localisation_des_animaux",
+                "classe:druide",
+                "detection_ou_divination",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -33528,8 +34171,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "localisation_des_plantes",
+              "label": "Localisation des plantes",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:localisation_des_plantes",
+                "classe:druide",
+                "detection_ou_divination",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -36442,8 +37099,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "metal_brulant",
+              "label": "Métal brûlant",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:metal_brulant",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -36963,8 +37634,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "mort_rampante",
+              "label": "Mort rampante",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:mort_rampante",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -37753,8 +38438,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "mur_d_epines",
+              "label": "Mur d'épines",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:mur_d_epines",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -38151,8 +38850,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "mur_de_feu",
+              "label": "Mur de feu",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:mur_de_feu",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -40462,8 +41175,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "obscurcissement",
+              "label": "Obscurcissement",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:obscurcissement",
+                "classe:druide",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -41742,8 +42468,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "paralysie_animale",
+              "label": "Paralysie animale",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:paralysie_animale",
+                "classe:druide",
+                "controle",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -42138,8 +42878,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "paralysie_vegetale",
+              "label": "Paralysie végétale",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:paralysie_vegetale",
+                "classe:druide",
+                "controle",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -42531,8 +43285,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "passage_sans_trace",
+              "label": "Passage sans trace",
+              "kind": "druidic_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:passage_sans_trace",
+                "classe:druide",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -42793,8 +43560,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "passe_plantes",
+              "label": "Passe-plantes",
+              "kind": "plant_or_nature_control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:passe_plantes",
+                "classe:druide",
+                "plante_ou_nature",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -42926,8 +43707,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "peau_d_ecorce",
+              "label": "Peau d'écorce",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:peau_d_ecorce",
+                "classe:druide",
+                "protection",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -44087,8 +44882,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "piege_a_feu",
+              "label": "Piège à feu",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:piege_a_feu",
+                "classe:druide",
+                "controle",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -44305,8 +45114,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "piege_sylvestre",
+              "label": "Piège sylvestre",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:piege_sylvestre",
+                "classe:druide",
+                "controle",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -45470,8 +46293,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "porte_vegetale",
+              "label": "Porte végétale",
+              "kind": "plant_or_nature_control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:porte_vegetale",
+                "classe:druide",
+                "plante_ou_nature",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -45732,8 +46569,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "prevision_du_temps",
+              "label": "Prévision du temps",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:prevision_du_temps",
+                "classe:druide",
+                "detection_ou_divination",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -46205,8 +47056,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "protection_contre_la_foudre",
+              "label": "Protection contre la foudre",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:protection_contre_la_foudre",
+                "classe:druide",
+                "protection",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -46336,8 +47201,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "protection_contre_le_feu",
+              "label": "Protection contre le feu",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:protection_contre_le_feu",
+                "classe:druide",
+                "protection",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -47570,8 +48449,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "purification_de_l_eau",
+              "label": "Purification de l'eau",
+              "kind": "elemental_or_weather_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:purification_de_l_eau",
+                "classe:druide",
+                "element_ou_climat",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -47813,8 +48706,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "pyrotechnie",
+              "label": "Pyrotechnie",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:pyrotechnie",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -49781,8 +50688,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "reincarnation",
+              "label": "Réincarnation",
+              "kind": "healing_or_restoration",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:reincarnation",
+                "classe:druide",
+                "soin_ou_restauration",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -50282,8 +51203,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "repulsion_des_insectes",
+              "label": "Répulsion des insectes",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:repulsion_des_insectes",
+                "classe:druide",
+                "controle",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -50412,8 +51347,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "repulsion_du_bois",
+              "label": "Répulsion du bois",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:repulsion_du_bois",
+                "classe:druide",
+                "controle",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -51157,8 +52106,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n3",
+          "effects": [
+            {
+              "id": "respiration_aquatique",
+              "label": "Respiration aquatique",
+              "kind": "elemental_or_weather_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:respiration_aquatique",
+                "classe:druide",
+                "element_ou_climat",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -53824,8 +54787,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n1",
+          "effects": [
+            {
+              "id": "shillelagh",
+              "label": "Shillelagh",
+              "kind": "plant_or_nature_control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:shillelagh",
+                "classe:druide",
+                "plante_ou_nature",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -54574,12 +55551,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "symbole sacré du clerc"
+          "gui"
         ],
         "composants_materiels_source": "gui de n’importe quelle sorte",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : gui",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort est le même que le sort de niveau 5 de clerc, soin ultime (voir p.50), mais le druide doit utiliser du gui de n’importe quelle sorte comme composante matérielle.",
         "onUse": "systems/add2e/scripts/sorts/druide-soin-ultime.js",
@@ -54588,8 +55565,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "soin_ultime",
+              "label": "Soin ultime",
+              "kind": "healing_or_restoration",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:soin_ultime",
+                "classe:druide",
+                "soin_ou_restauration",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -54726,8 +55717,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n4",
+          "effects": [
+            {
+              "id": "soins_majeurs",
+              "label": "Soins majeurs",
+              "kind": "healing_or_restoration",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:soins_majeurs",
+                "classe:druide",
+                "soin_ou_restauration",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -55183,8 +56188,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n2",
+          "effects": [
+            {
+              "id": "soins_mineurs",
+              "label": "Soins mineurs",
+              "kind": "healing_or_restoration",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:soins_mineurs",
+                "classe:druide",
+                "soin_ou_restauration",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -57859,8 +58878,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "tempete_de_feu",
+              "label": "Tempête de feu",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:tempete_de_feu",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -59148,8 +60181,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n6",
+          "effects": [
+            {
+              "id": "transit_vegetal",
+              "label": "Transit végétal",
+              "kind": "plant_or_nature_control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:transit_vegetal",
+                "classe:druide",
+                "plante_ou_nature",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -59278,8 +60325,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n5",
+          "effects": [
+            {
+              "id": "transmutation_de_pierre_en_boue",
+              "label": "Transmutation de pierre en boue",
+              "kind": "elemental_or_weather_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:transmutation_de_pierre_en_boue",
+                "classe:druide",
+                "element_ou_climat",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -59640,8 +60701,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-druide-n7",
+          "effects": [
+            {
+              "id": "transmutation_du_metal_en_bois",
+              "label": "Transmutation du métal en bois",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:transmutation_du_metal_en_bois",
+                "classe:druide",
+                "degats_ou_zone",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -61501,6 +62576,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-clerc-n7-effectprofile-v1",
-  "normalizedAt": "2026-06-17T19:40:16.623Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-clerc-druide-n7-effectprofile-v1",
+  "normalizedAt": "2026-06-17T20:18:24.611Z"
 }
