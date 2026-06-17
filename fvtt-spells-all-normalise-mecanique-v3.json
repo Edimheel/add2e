@@ -2384,8 +2384,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau d’alun trempé dans du vinaigre",
-          "Composant requis selon l’"
+          "morceau d’alun trempé dans du vinaigre"
         ],
         "composants_materiels_source": "La composante matérielle est un morceau d’alun trempé dans du vinaigre. | Les composantes matérielles sont des perles écrasées pour une valeur minimale de 1.",
         "composants_materiels_reference": "",
@@ -6680,14 +6679,13 @@
           "cristaux d’acide mercuro nitrique",
           "racine de mandragore",
           "de l’alcool",
-          "parchemin sur lequel est inscrit le nom du démon",
           "sous formes de runes entourées d’un pentacle",
           "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "Les composantes matérielles sont cinq chandelles noires allumées, un brasero de charbons ardents dans lequel le magicien doit brûler du soufre, des fourrures de chauves-souris, du saindoux, de la suie, des cristaux d’acide mercuro-nitrique, une racine de mandragore, de l’alcool, un parchemin sur lequel est inscrit le nom du démon, sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "brasero de charbons ardents dans lequel le magicien doit brûler du soufre\ncoupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon\n1\nconsomme",
+        "composants_materiels_note": "brasero de charbons ardents dans lequel le magicien doit brûler du soufre\nparchemin sur lequel est inscrit le nom du démon\ncoupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon\n1\nconsomme",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort, dangereux, invoque un puissant démon de type IV, V ou VI, selon le nom du démon que connait le magicien. Le pouvoir du sort n’est pas suffisant pour invoquer des démons plus puissants et ceux de moindre envergure ne peuvent pas être conjurés, ne possédant pas de nom connu. Dans tous les cas, le magicien doit connaitre le nom du démon qu’il conjure. Ce dernier sera dans de mauvaises dispositions et en colère. Le lanceur de sort doit se placer dans un cercle de protection (ou dans un triangle thaumaturgique avec une protection contre le mal); le démon, quant à lui, doit être confiné dans un pentagramme (pentacle cerclé) si le magicien ne veut pas être tué ou emmené par le démon conjuré. Le démon appelé peut être traité des façons suivantes: A) Le magicien peut forcer le démon à accomplir une série d’actions en le menaçant de souffrir d’un sort tel que punition spirituelle (voir p.85), lui accordant la liberté après l’accomplissement total de sa tâche et en le forçant à s’engager sur l’honneur. Ceci peut être excessivement dangereux, car la moindre faille dans un tel accord sera exploitée par la créature pour inverser le résultat désiré ou tout simplement pour tuer et dévorer le conjurateur. De plus, le démon considérera à jamais le magicien comme son ennemi juré, après avoir été contraint de la sorte. Le magicien a intérêt à être puissant et efficace. B) En lui promettant du sang humain frais et au moins un sacrifice humain, le magicien peut se mettre d’accord avec le démon pour que ce dernier lui rende un service. Encore une fois, il est préférable que le conjurateur ait de bonnes protections et soit puissant pour se défendre, au cas où le démon jugerait l’offre insuffisante (ou que la mort lente du conjurateur serait plus amusante) et décide de refuser les termes du marché. Bien que le démon doive rester fidèle à sa parole donnée, du fait que son nom soit connu, il se contentera de respecter à la lettre les mots de l’accord sans être tenu d’en respecter l’esprit. Seuls les magiciens profondément mauvais sont susceptibles de tenter de parvenir à une telle forme d’accord, et le démon conjuré devrait être plus favorablement disposé à l’égard d’un tel personnage, spécialement s’il est aussi chaotique. C) Le démon conjuré peut être sujet au sort emprisonnement de l’âme. Dans ce cas, le magicien ne lui parlera pas. Il ne lui demandera pas de service, bien que le cacodémon puisse lui-même essayer d’obtenir un accord, avant son emprisonnement. Un tel emprisonnement n’est risqué que si les précautions nécessaires n’ont pas été prises, car un échec signifie seulement que le démon s’échappe pour retourner sur son plan. Une fois emprisonné, le démon le reste jusqu’à ce que le possesseur de l’objet de confinement le brise et le libère, lui demandant alors de lui rendre un service. Si l’individu (ou les individus) qui libère le démon oublie de lui demander un service alors que le démon lui demande ce qu’on attend de lui, plus rien n’empêche le démon de tuer son (ou ses) libérateur(s) immédiatement. Mais si un service est demandé, le démon doit s’en acquitter du mieux qu’il pourra, avant de retourner ensuite dans les abysses. La durée du service d’un démon doit être limitée, à moins que le démon luimême accepte de servir pendant une période plus longue. Toute suite d’actions ou service requérant une durée inhabituelle ou alors simplement impossible à accomplir, donne au démon 50 % de chances de se libérer de ses obligations et d’assouvir sa vengeance envers le lanceur du sort, si ce dernier n’est pas protégé de façon continue, puisqu’un démon peut rester sur le plan où à lieu la conjuration pendant 666 jours. Le démon appelé sera extrêmement puissant: 8 points de vie par dé de vie. Le temps d’incantation est de 1 heure par type de démon appelé (4 heures pour un démon de type IV, 5 pour un type V, 6 pour un type VI). Si cette incantation est interrompue, le sort est annulé. En cas d’interruption après l’appel du cacodémon, il y a 10 % de chances cumulatives par round d’interruption contigu que le démon échappe à la puissance du sort et attaque le magicien. Chaque démon a le droit à un jet de protection spécial: si un score supérieur au niveau du magicien est obtenu avec 3d6 (2d10 pour les démons de type VI), le sort échoue. Si cela arrive, cela signifie souvent que le démon invoqué est déjà mort ou emprisonné ou alors que le nom prononcé n’était pas correct. Le conjurateur devra se procurer un autre nom pour appeler un autre cacodémon. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes matérielles sont cinq chandelles noires allumées, un brasero de charbons ardents dans lequel le magicien doit brûler du soufre, des fourrures de chauves-souris, du saindoux, de la suie, des cristaux d’acide mercuro-nitrique, une racine de mandragore, de l’alcool, un parchemin sur lequel est inscrit le nom du démon, sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon.",
         "onUse": "systems/add2e/scripts/sorts/magicien-cacodemon.js",
@@ -8874,8 +8872,7 @@
           "pincée d’humus",
           "goutte d’eau",
           "feuille",
-          "brindille",
-          "Composant requis selon l’"
+          "brindille"
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -10012,8 +10009,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "humanoïde",
-          "Composant requis selon l’"
+          "humanoïde"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.",
         "composants_materiels_reference": "",
@@ -13691,8 +13687,7 @@
           "poignée de petites sphères d’argile",
           "de cristal",
           "de verre",
-          "minérales",
-          "Composant requis selon l’"
+          "minérales"
         ],
         "composants_materiels_source": "poignée de petites sphères d’argile, de cristal, de verre ou minérales",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -18115,7 +18110,7 @@
         "composants_materiels_source": "sacrifice d’une petite créature, de l’encens et le symbole sacré du clerc",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nnon consomme\nDons requis si une divination puissante est tentée",
+        "composants_materiels_note": "1\nconsomme\nnon consomme\nDons requis si une divination puissante est tentée\nDons éventuellement requis si une divination puissante est tentée",
         "composants_materiels_a_renseigner": false,
         "description": "similaire au sort d’augure, le sort divination est utilisé pour obtenir des informations sur une zone. Cette zone peut être un petit bois, une grande bâtisse ou une partie d’un niveau d’un donjon. Dans tous les cas, son emplacement doit être connu du clerc. Ce sort donne des informations sur la force relative des créatures qui s’y trouvent, sur l’importance des richesses et sur les chances éventuelles de s’attirer le courroux d’êtres surpuissants, surnaturels, bons ou mauvais, si la zone est envahie ou attaquée. Les chances de base pour réussir une divination sont de 60 % + 1 % par niveau du clerc (le MD peut appliquer des ajustements dans des cas particuliers). Si le tirage de pourcentage, effectué par le MD, échoue, le clerc obtiendra des informations erronées. Les composantes matérielles de ce sort sont le sacrifice d’une petite créature, de l’encens et le symbole sacré du clerc. Si une divination puissante est tentée, il faut faire des dons de pierres précieuses et même d’objets magiques.",
         "onUse": "systems/add2e/scripts/sorts/divination.js",
@@ -18767,7 +18762,6 @@
         "composants_materiels": [
           "petite poignée de sels alcalins",
           "de bromure",
-          "Composant requis selon l’",
           "poignée de sels alcalins"
         ],
         "composants_materiels_source": "petite poignée de sels alcalins ou de bromure",
@@ -19029,13 +19023,11 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "encre fabriquée à base de plomb par un alchimiste"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme\n100",
+        "composants_materiels_note": "encre fabriquée à base de plomb par un alchimiste\n1\nconsomme\n100",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js",
@@ -22639,16 +22631,14 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "cheveux",
-          "peu d’excrément d’un animal particulièrement fort — singe",
           "ours",
           "bœuf",
-          "etc",
-          "Composant requis selon l’"
+          "etc"
         ],
         "composants_materiels_source": "La composante matérielle est quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1",
+        "composants_materiels_note": "peu d’excrément d’un animal particulièrement fort — singe\n1",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort augmente la force de la personne touchée d’un nombre de points (ou de dixièmes de points si la personne est de la classe des guerriers et a déjà 18 en force) dépendant de sa classe, et ce pendant toute la durée du sort. Cependant, les restrictions de force dues à la classe, race et sexe sont toujours à prendre en compte. Classe Points de force en plus Clerc, druide 1-6 (d6) Guerrier, paladin, ranger, barde 1-8 (d8) Magicien, illusionniste 1-4 (d4) Voleur, assassin 1-6 (d6) Moine 1-4 (d4 Si un guerrier (ou un paladin ou un ranger) a déjà 18 en force, le sort lui ajoutera de 10 % à 80 % de force exceptionnelle. Toute addition de force au dessus de 18 doit être traitée comme ceci: 1 = 10 %. La composante matérielle est quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc.",
         "onUse": "systems/add2e/scripts/sorts/magicien-force.js",
@@ -27673,7 +27663,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "S, M",
         "composants_materiels": [
-          "houx avec lequel le druide doit se frotter"
+          "houx"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.",
         "composants_materiels_reference": "",
@@ -39150,8 +39140,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "quartz",
-          "pierre cristalline de même type",
-          "Composant requis selon l’"
+          "pierre cristalline de même type"
         ],
         "composants_materiels_source": "La composante matérielle est un petit morceau de quartz ou une pierre cristalline de même type.",
         "composants_materiels_reference": "",
@@ -43189,17 +43178,13 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "feuille de gui",
-          "Brûlée",
-          "ses cendres sont éparpillées",
-          "aiguille de pin",
-          "autre conifère",
-          "Composant requis selon l’"
+          "gui",
+          "aiguille de pin"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme",
+        "composants_materiels_note": "1\nconsomme\nBrûlée\nses cendres sont éparpillées\nautre conifère",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce sort est lancé, le destinataire peut marcher sur n’importe quel type de terrain (boue, neige, poussière, etc.) en ne laissant ni trace, ni odeur. Ainsi, le pistage d’une créature sous l’effet de ce sort est impossible. Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère. Note: la zone sur laquelle le destinataire du sort marche irradie une aura de magie, pendant 6 à 36 tours (6d6) après le passage de cette créature.",
         "onUse": "systems/add2e/scripts/sorts/druide-passage-sans-trace.js",
@@ -44295,8 +44280,7 @@
           "zombie",
           "goule",
           "ghast",
-          "momie)",
-          "Composant requis selon l’"
+          "momie)"
         ],
         "composants_materiels_source": "La composante matérielle est un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie).",
         "composants_materiels_reference": "",
@@ -45672,16 +45656,14 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "gant en cuir",
-          "petit objet fait de 4 anneaux reliés entre eux",
           "formant une ligne légèrement courbe",
-          "tout attaché par une barrette en forme de «I»",
           "Objet durable",
           "focus utilisé sans destruction indiquée"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de « I ».",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon consomme",
+        "composants_materiels_note": "petit objet fait de 4 anneaux reliés entre eux\ntout attaché par une barrette en forme de «I»\n1\nnon consomme",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort fait apparaître un énorme poing. Ce poing est sous le contrôle mental du magicien qui peut lui faire frapper un adversaire à chaque round. Le lanceur du sort ne peut entreprendre aucune autre activité magique, ni lancer des sortilèges pendant toute la durée du sort. Le poing ne rate jamais sa cible, mais son efficacité varie de round en round. Résultat sur 1d20 Effets 1-12 Coup faible: 1 à 6 points de dégâts 13-16 Coup solide: 2 à 12 points de dégâts 17-19 Coup violent: 3 à 18 points de dégâts, ennemi étourdi au round suivant 20 Coup critique: 4 à 24 points de dégâts, ennemi étourdi pour les 3 rounds suivants Note: le fait qu’un ennemi soit étourdi permet au magicien d’ajouter un bonus de +4 sur le d20 d’efficacité du poing, car l’adversaire n’est alors pas capable d’esquiver efficacement. Ce sort peut être utilisé avec n’importe quelle autre application du sort de l’archimage Bigby: main, poigne... Les composantes matérielles de ce sort sont un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de «I». L’objet est fait d’un alliage de cuivre et de zinc (cela ressemble à un poing américain). Le poing est détruit s’il subit autant de dégâts que le nombre de points de vie que possède le magicien.",
         "onUse": "systems/add2e/scripts/sorts/magicien-poing-de-bigby.js",
@@ -46342,13 +46324,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "avant de pointer le doigt vers l’objectif visé",
           "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "pincée de poudre de cuivre qui doit être soufflée de la paume de la main\n1\nconsomme",
+        "composants_materiels_note": "pincée de poudre de cuivre qui doit être soufflée de la paume de la main\navant de pointer le doigt vers l’objectif visé\n1\nconsomme",
         "composants_materiels_a_renseigner": false,
         "description": "en prononçant les syllabes de ce sort, le magicien crée une force invisible qui frappe l’objectif qu’il montre du doigt. La force de la poussée n’est pas grande, 1 pied-livre par niveau du magicien (1 pied-livre étant la force nécessaire qu’il faut exercer pour déplacer un objet de 0,5 kg de 0,30 m), mais elle peut faire bouger de petits objets sur 0,30 m maximum dans la direction opposée au magicien, faire tomber un objet ou faire perdre l’équilibre à une créature. Exemple pour ce dernier cas: la force peut faire perdre l’équilibre à une créature qui attaque: si la créature rate son jet de protection, elle ne pourra pas frapper ce round ci. Bien sûr la masse de la créature qui attaque ne doit pas dépasser 50 fois la force de poussée, c'est-à-dire qu’un magicien de niveau 1 ne pourra pas affecter une créature pesant plus de 25 kg (50 x 0,5 kg). Une poussée employée sur un objet tenu par une créature fait que la force en pied-livre (1/niveau) sera soustraite de la probabilité de toucher de l’adversaire si ce dernier a raté son jet de protection. La composante matérielle de ce sort est une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé.",
         "onUse": "systems/add2e/scripts/sorts/magicien-poussee.js",
@@ -52145,7 +52126,6 @@
         "composants_materiels": [
           "petit roseau",
           "brin de paille",
-          "Composant requis selon l’",
           "roseau"
         ],
         "composants_materiels_source": "La composante matérielle est un petit roseau ou un brin de paille.",
@@ -59536,8 +59516,7 @@
           "brindille",
           "plante verte",
           "feuille",
-          "brin d’herbe",
-          "Composant requis selon l’"
+          "brin d’herbe"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe.",
         "composants_materiels_reference": "",
@@ -60452,8 +60431,7 @@
           "goutte de sang",
           "chaux",
           "de l’eau",
-          "terre sont nécessaires pour l’inverse",
-          "Composant requis selon l’"
+          "terre sont nécessaires pour l’inverse"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de terre et une goutte de sang ; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.",
         "composants_materiels_reference": "",
@@ -61855,13 +61833,12 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "sacrifice de quelque chose ayant de la valeur",
-          "Sacrifice déterminé selon la valeur accordée par le lanceur",
           "pouvoir invoqué"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme",
+        "composants_materiels_note": "1\nconsomme\nSacrifice déterminé selon la valeur accordée par le lanceur",
         "composants_materiels_a_renseigner": false,
         "description": "quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés; un objet extrêmement précieux ajoutera +2 au tirage; enfin, un objet sans prix, quasiment unique, ajoutera +3.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-vision.js",
@@ -61995,7 +61972,7 @@
         "composants_materiels_source": "Ce sort requiert une crème pour les yeux comme composante matérielle ; cette crème est faite d’une poudre de champignons très rares, de safran et de graisse.",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "crème pour les yeux faite de poudre de champignons très rares\n1",
+        "composants_materiels_note": "crème pour les yeux faite de poudre de champignons très rares\n1\ncrème doit être vieille de 1 à 6 mois",
         "composants_materiels_a_renseigner": false,
         "description": "quand le clerc lance ce sort, toute chose dans la zone d’effet apparaît comme ce qu’elle est vraiment. Les portes secrètes deviennent visibles pour le clerc, la place des choses déplacées devient évidente, les choses invisibles, éthérées et astrales deviennent également visibles. Les choses métamorphosées et transformées magiquement apparaissent sous leur vrai jour. Même une aura émise par des créatures devient visible, ainsi le clerc peut-il savoir si elles sont bonnes, mauvaises, ou entre les deux. Ce sort requiert une crème pour les yeux comme composante matérielle; cette crème est faite d’une poudre de champignons très rares, de safran et de graisse. L’inverse du sort, vision erronée, fait que la créature affectée voit les choses comme elles ne le sont pas réellement: ce qui est cher devient sans valeur, le rugueux devient lisse, la beauté devient laide, etc. La crème pour l’inverse du sort est faite d’huile, de poudre de pavot et d’essence d’orchidée rose. Pour les deux versions du sort, la crème doit être vieille de 1 à 6 mois.",
         "onUse": "systems/add2e/scripts/sorts/vision-reelle.js",
@@ -62470,6 +62447,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-druid-material-cleanup-v1",
-  "normalizedAt": "2026-06-17T20:48:18.833Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-druid-material-audit-v2",
+  "normalizedAt": "2026-06-17T21:06:43.722Z"
 }

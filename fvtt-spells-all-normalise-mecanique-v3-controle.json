@@ -1,12 +1,12 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-druid-material-cleanup-v1",
+  "version": "2026-06-17-normalize-spell-materials-v3-druid-material-audit-v2",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
   "spells": 411,
   "changedSpells": 207,
   "changedEffectProfiles": 142,
-  "emptyMaterialSpells": 207,
+  "emptyMaterialSpells": 208,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -122,8 +122,7 @@
         "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « un morceau d’alun trempé dans du vinaigre »."
       ],
       "after": [
-        "morceau d’alun trempé dans du vinaigre",
-        "Composant requis selon l’"
+        "morceau d’alun trempé dans du vinaigre"
       ],
       "notes": [
         "1"
@@ -456,12 +455,12 @@
         "cristaux d’acide mercuro nitrique",
         "racine de mandragore",
         "de l’alcool",
-        "parchemin sur lequel est inscrit le nom du démon",
         "sous formes de runes entourées d’un pentacle",
         "Consommation explicitement indiquée dans la description"
       ],
       "notes": [
         "brasero de charbons ardents dans lequel le magicien doit brûler du soufre",
+        "parchemin sur lequel est inscrit le nom du démon",
         "coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon",
         "1",
         "consomme"
@@ -613,8 +612,7 @@
         "pincée d’humus",
         "goutte d’eau",
         "feuille",
-        "brindille",
-        "Composant requis selon l’"
+        "brindille"
       ],
       "notes": [
         "1"
@@ -761,8 +759,7 @@
         "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde »."
       ],
       "after": [
-        "humanoïde",
-        "Composant requis selon l’"
+        "humanoïde"
       ],
       "notes": [
         "pincée de poudre faite à partir de la glande pinéale d’un humain",
@@ -1964,7 +1961,7 @@
           }
         ]
       },
-      "note": "1\nconsomme\nnon consomme\nDons requis si une divination puissante est tentée"
+      "note": "1\nconsomme\nnon consomme\nDons requis si une divination puissante est tentée\nDons éventuellement requis si une divination puissante est tentée"
     },
     "Doigt de mort": {
       "classe": "Druide",
@@ -2387,7 +2384,7 @@
       "classe": "Druide",
       "niveau": 1,
       "composants_materiels": [
-        "houx avec lequel le druide doit se frotter"
+        "houx"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -3363,12 +3360,8 @@
       "classe": "Druide",
       "niveau": 1,
       "composants_materiels": [
-        "feuille de gui",
-        "Brûlée",
-        "ses cendres sont éparpillées",
-        "aiguille de pin",
-        "autre conifère",
-        "Composant requis selon l’"
+        "gui",
+        "aiguille de pin"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -3388,7 +3381,7 @@
           }
         ]
       },
-      "note": "1\nconsomme"
+      "note": "1\nconsomme\nBrûlée\nses cendres sont éparpillées\nautre conifère"
     },
     "Passe-plantes": {
       "classe": "Druide",
@@ -4519,6 +4512,465 @@
     }
   },
   "suspiciousMaterialComponents": [],
+  "druideMaterialAudit": [
+    {
+      "name": "Amitié animale",
+      "niveau": 1,
+      "composants": [
+        "gui",
+        "nourriture appréciée par l’animal"
+      ]
+    },
+    {
+      "name": "Animation de la roche",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Aquagenèse",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Arbre",
+      "niveau": 3,
+      "composants": [
+        "gui",
+        "petite branche d’arbre"
+      ]
+    },
+    {
+      "name": "Aura féérique",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Bâtons à serpents",
+      "niveau": 5,
+      "composants": [
+        "gui"
+      ]
+    },
+    {
+      "name": "Bouclier anti-animal",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Bouclier anti-plantes",
+      "niveau": 5,
+      "composants": []
+    },
+    {
+      "name": "Catalepsie",
+      "niveau": 2,
+      "composants": [
+        "feuille morte de chêne",
+        "gui"
+      ]
+    },
+    {
+      "name": "Chariot de Sustarre",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Charme-personnes ou mammifères",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Communion avec la nature",
+      "niveau": 5,
+      "composants": []
+    },
+    {
+      "name": "Confusion",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Contre-poison",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Contrôle de la température sur 3 m",
+      "niveau": 4,
+      "composants": []
+    },
+    {
+      "name": "Contrôle des vents",
+      "niveau": 5,
+      "composants": []
+    },
+    {
+      "name": "Contrôle du climat",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Croc-en-jambe",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Croissance animale",
+      "niveau": 5,
+      "composants": []
+    },
+    {
+      "name": "Débilité mentale",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Détection de la magie",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Détection des pièges sylvestres",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Dissipation de la magie",
+      "niveau": 4,
+      "composants": []
+    },
+    {
+      "name": "Distorsion du bois",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Doigt de mort",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Embrasement",
+      "niveau": 4,
+      "composants": []
+    },
+    {
+      "name": "Embroussaillement",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Enchevêtrement",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Flamme",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Fléau d’insectes",
+      "niveau": 5,
+      "composants": [
+        "gui",
+        "Composant principal ou",
+        "houx",
+        "Substitut au gui",
+        "feuille de chêne"
+      ]
+    },
+    {
+      "name": "Forêt hallucinatoire",
+      "niveau": 4,
+      "composants": []
+    },
+    {
+      "name": "Graines de feu",
+      "niveau": 6,
+      "composants": [
+        "glands de chêne",
+        "Application utilisant des glands de chêne",
+        "combinable avec les baies de houx",
+        "baie de houx",
+        "Application utilisant des baies de houx",
+        "combinable avec les glands de chêne"
+      ]
+    },
+    {
+      "name": "Guérison des maladies",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Invisibilité aux animaux",
+      "niveau": 1,
+      "composants": [
+        "houx"
+      ]
+    },
+    {
+      "name": "Invocation animale I",
+      "niveau": 4,
+      "composants": []
+    },
+    {
+      "name": "Invocation animale II",
+      "niveau": 5,
+      "composants": []
+    },
+    {
+      "name": "Invocation animale III",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Invocation d'insectes",
+      "niveau": 3,
+      "composants": [
+        "gui",
+        "pétale de fleur",
+        "boue",
+        "argile humide"
+      ]
+    },
+    {
+      "name": "Invocation d'un élémental de terre",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Invocation d'un élémental du feu",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Invocation de la foudre",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Invocation des créatures sylvestres",
+      "niveau": 4,
+      "composants": [
+        "pomme de pin",
+        "8 baies de houx"
+      ]
+    },
+    {
+      "name": "Invocation du temps",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Langage animal",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Langage des plantes",
+      "niveau": 4,
+      "composants": [
+        "gui"
+      ]
+    },
+    {
+      "name": "Lithomorphose",
+      "niveau": 3,
+      "composants": [
+        "gui"
+      ]
+    },
+    {
+      "name": "Localisation des animaux",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Localisation des plantes",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Métal brûlant",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Mort rampante",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Mur d'épines",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Mur de feu",
+      "niveau": 5,
+      "composants": []
+    },
+    {
+      "name": "Obscurcissement",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Paralysie animale",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Paralysie végétale",
+      "niveau": 4,
+      "composants": []
+    },
+    {
+      "name": "Passage sans trace",
+      "niveau": 1,
+      "composants": [
+        "gui",
+        "aiguille de pin"
+      ]
+    },
+    {
+      "name": "Passe-plantes",
+      "niveau": 5,
+      "composants": []
+    },
+    {
+      "name": "Peau d'écorce",
+      "niveau": 2,
+      "composants": [
+        "gui",
+        "poignée d’écorce de chêne"
+      ]
+    },
+    {
+      "name": "Piège à feu",
+      "niveau": 2,
+      "composants": [
+        "baie de houx",
+        "charbon"
+      ]
+    },
+    {
+      "name": "Piège sylvestre",
+      "niveau": 3,
+      "composants": [
+        "gui",
+        "peau de serpent",
+        "morceau d’une créature forte"
+      ]
+    },
+    {
+      "name": "Porte végétale",
+      "niveau": 4,
+      "composants": []
+    },
+    {
+      "name": "Prévision du temps",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Protection contre la foudre",
+      "niveau": 4,
+      "composants": []
+    },
+    {
+      "name": "Protection contre le feu",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Purification de l'eau",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Pyrotechnie",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Réincarnation",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Répulsion des insectes",
+      "niveau": 4,
+      "composants": [
+        "gui",
+        "l’un des éléments suivants: plusieurs soucis écrasés",
+        "poireau écrasé",
+        "7 feuilles de navet écrasées",
+        "résine d’arbre à camphre",
+        "Consommation explicitement indiquée dans la description"
+      ]
+    },
+    {
+      "name": "Répulsion du bois",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Respiration aquatique",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Shillelagh",
+      "niveau": 1,
+      "composants": [
+        "massue en chêne",
+        "gui",
+        "feuille de trèfle"
+      ]
+    },
+    {
+      "name": "Soin ultime",
+      "niveau": 6,
+      "composants": [
+        "gui"
+      ]
+    },
+    {
+      "name": "Soins majeurs",
+      "niveau": 4,
+      "composants": [
+        "gui"
+      ]
+    },
+    {
+      "name": "Soins mineurs",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Tempête de feu",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Transit végétal",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Transmutation de pierre en boue",
+      "niveau": 5,
+      "composants": []
+    },
+    {
+      "name": "Transmutation du métal en bois",
+      "niveau": 7,
+      "composants": []
+    }
+  ],
+  "druideMaterialWarnings": [],
   "sameSystemFieldsForAllSpells": true,
   "canonicalFields": [
     "nom",
