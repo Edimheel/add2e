@@ -95,175 +95,18 @@ const CANONICAL_MATERIALS = new Map(Object.entries({
 }));
 
 const CLERIC_LEVEL_2_EFFECT_PROFILES = new Map(Object.entries({
-  detection_des_charmes: [
-    {
-      id: "detection_charme",
-      label: "Détection des charmes",
-      kind: "detection",
-      targetOverride: "une_creature_a_la_fois_jusqua_10",
-      automation: "mj_aid",
-      tags: ["effet:detection_des_charmes", "detection:charme", "limite:10_creatures", "duree:1_tour"],
-      notes: "Détermine si une personne ou un monstre est sous l’influence d’un charme."
-    },
-    {
-      id: "dissimulation_charme",
-      label: "Dissimulation des charmes",
-      kind: "protection_detection",
-      targetOverride: "une_creature",
-      automation: "active_effect_or_mj_aid",
-      tags: ["effet:dissimulation_des_charmes", "protection:detection_charme", "inverse"],
-      notes: "Effet inverse protégeant une créature contre la détection des charmes."
-    }
-  ],
-  augure: [
-    {
-      id: "presage_benefique_malefique",
-      label: "Augure",
-      kind: "divination",
-      targetOverride: "action_future_immediate",
-      automation: "mj_aid",
-      tags: ["effet:augure", "divination:benefique_malefique", "chance:70_plus_1_pct_par_niveau", "fenetre:3_tours"],
-      notes: "Indique si une action dans le futur immédiat sera bénéfique ou maléfique, avec chance de base 70 % + 1 % par niveau du clerc."
-    }
-  ],
-  detection_des_pieges: [
-    {
-      id: "detection_pieges_directionnelle",
-      label: "Détection des pièges",
-      kind: "detection",
-      targetOverride: "direction_1_pouce_de_large",
-      automation: "mj_aid",
-      tags: ["effet:detection_des_pieges", "detection:piege", "directionnel", "chance:type_magie:10_pct_par_niveau"],
-      notes: "Révèle les pièges mécaniques ou magiques dans la direction regardée ; type de magie détectable à 10 % par niveau."
-    }
-  ],
-  langage_animal: [
-    {
-      id: "communication_animaux",
-      label: "Langage animal",
-      kind: "communication",
-      targetOverride: "animal_dans_un_rayon_de_3_pouces",
-      automation: "mj_aid",
-      tags: ["effet:langage_animal", "communication:animal", "reaction:animal", "exclusion:monstres"],
-      notes: "Permet de parler avec un animal doté d’un esprit ; réactions et services éventuels sous arbitrage MJ."
-    }
-  ],
-  cantique: [
-    {
-      id: "bonus_allies_cantique",
-      label: "Cantique — alliés",
-      kind: "active_bonus",
-      targetOverride: "amis_dans_rayon_3_pouces",
-      automation: "active_effect_or_mj_aid",
-      tags: ["effet:cantique", "bonus:toucher:1", "bonus:degats:1", "bonus:jp:1", "condition:clerc_chante_immobile"],
-      notes: "Les alliés du clerc gagnent +1 aux attaques, dégâts et jets de protection tant que le clerc chante et reste immobile."
-    },
-    {
-      id: "malus_ennemis_cantique",
-      label: "Cantique — ennemis",
-      kind: "active_malus",
-      targetOverride: "ennemis_dans_rayon_3_pouces",
-      automation: "active_effect_or_mj_aid",
-      tags: ["effet:cantique", "malus:toucher:1", "malus:degats:1", "malus:jp:1", "condition:clerc_chante_immobile"],
-      notes: "Les ennemis subissent -1 aux attaques, dégâts et jets de protection tant que le clerc chante et reste immobile."
-    }
-  ],
-  marteau_spirituel: [
-    {
-      id: "arme_force_marteau",
-      label: "Marteau spirituel",
-      kind: "summoned_weapon",
-      targetOverride: "un_ennemi_dans_la_portee",
-      automation: "attack_or_mj_aid",
-      tags: ["effet:marteau_spirituel", "arme:force", "degats:1d6_pm", "degats:1d4_g", "concentration", "arme_magique:plus_1_par_3_niveaux_pour_creatures"],
-      notes: "Crée un champ de force en forme de marteau ; frappe au niveau du clerc, sans bonus au toucher ni aux dégâts, mais compte comme arme magique pour toucher certaines créatures."
-    }
-  ],
-  charme_serpents: [
-    {
-      id: "charme_ophidiens",
-      label: "Charme-serpents",
-      kind: "control",
-      targetOverride: "serpents_ou_ophidiens",
-      savingThrow: { type: "special", condition: "résistance à la magie et jets de protection selon créature" },
-      automation: "mj_aid",
-      tags: ["effet:charme_serpents", "controle:serpents", "limite:pv_serpents_inferieurs_ou_egaux_pv_clerc", "duree:selon_etat_serpents"],
-      notes: "Calme ou charme des serpents dont le total de points de vie n’excède pas ceux du clerc ; durée selon leur état."
-    }
-  ],
-  paralysie: [
-    {
-      id: "immobilisation_humanoides",
-      label: "Paralysie",
-      kind: "control",
-      targetOverride: "1_a_3_humains_ou_humanoides",
-      savingThrow: { type: "sorts", condition: "annule ; malus -2 si une cible, -1 si deux cibles, normal si trois cibles" },
-      automation: "active_effect_or_mj_aid",
-      tags: ["effet:paralysie", "etat:paralyse", "cibles:1_3", "duree:4_rounds_plus_1_par_niveau", "jp:annule"],
-      notes: "Immobilise 1 à 3 humains ou humanoïdes ; les cibles qui réussissent leur jet ne ressentent aucun effet."
-    }
-  ],
-  silence_sur_5_metres: [
-    {
-      id: "zone_silence",
-      label: "Silence sur 5 mètres",
-      kind: "area_silence",
-      targetOverride: "sphere_9m_diametre",
-      savingThrow: { type: "special", condition: "si lancé sur une créature non consentante" },
-      automation: "active_effect_or_mj_aid",
-      tags: ["effet:silence", "zone:sphere_9m", "bloque:bruit", "bloque:composante_verbale", "duree:2_rounds_par_niveau"],
-      notes: "Crée une zone de silence empêchant conversation, bruit et sorts à composante verbale ; la zone peut suivre un objet ou une créature."
-    }
-  ],
-  perception_des_alignements: [
-    {
-      id: "lecture_alignement",
-      label: "Perception des alignements",
-      kind: "detection",
-      targetOverride: "une_creature_par_round_jusqua_10",
-      automation: "mj_aid",
-      tags: ["effet:perception_des_alignements", "detection:alignement", "limite:10_creatures", "duree:1_tour"],
-      notes: "Permet de connaître l’alignement exact d’une personne ou créature, une cible par round jusqu’à dix."
-    },
-    {
-      id: "confusion_alignement",
-      label: "Confusion de l’alignement",
-      kind: "protection_detection",
-      automation: "active_effect_or_mj_aid",
-      tags: ["effet:confusion_alignement", "protection:detection_alignement", "inverse"],
-      notes: "Effet inverse cachant totalement l’alignement pendant la durée indiquée."
-    }
-  ],
-  resistance_au_feu: [
-    {
-      id: "resistance_feu",
-      label: "Résistance au feu",
-      kind: "resistance",
-      targetOverride: "creature_touchee",
-      automation: "active_effect_or_mj_aid",
-      tags: ["effet:resistance_au_feu", "resistance:feu", "bonus:jp:feu:3", "degats:feu:moitie_si_jp_rate", "degats:feu:quart_si_jp_reussi"],
-      notes: "Protège contre chaleur et feu ; bonus de +3 au jet de protection, dégâts réduits à la moitié si le jet échoue et au quart s’il réussit."
-    }
-  ],
-  retardement_du_poison: [
-    {
-      id: "ralentissement_poison",
-      label: "Retardement du poison",
-      kind: "poison_delay",
-      targetOverride: "creature_touchee",
-      automation: "active_effect_or_mj_aid",
-      tags: ["effet:retardement_du_poison", "poison:ralenti", "perte:1_pv_par_tour", "minimum:1_pv", "duree:1_heure_par_niveau"],
-      notes: "Ralentit fortement le poison ; la victime perd 1 PV par tour sans descendre sous 1 PV."
-    },
-    {
-      id: "rappel_temporaire_mort_poison",
-      label: "Rappel temporaire après poison",
-      kind: "revival_temporary",
-      automation: "mj_aid",
-      tags: ["effet:retardement_du_poison", "mort:poison", "fenetre:1_tour_par_niveau"],
-      notes: "Peut temporairement sauver une personne morte par poison si lancé dans la limite d’un tour par niveau du clerc."
-    }
-  ]
+  detection_des_charmes: [{ id: "detection_charme", label: "Détection des charmes", kind: "detection", targetOverride: "une_creature_a_la_fois_jusqua_10", automation: "mj_aid", tags: ["effet:detection_des_charmes", "detection:charme", "limite:10_creatures", "duree:1_tour"], notes: "Détermine si une personne ou un monstre est sous l’influence d’un charme." }, { id: "dissimulation_charme", label: "Dissimulation des charmes", kind: "protection_detection", targetOverride: "une_creature", automation: "active_effect_or_mj_aid", tags: ["effet:dissimulation_des_charmes", "protection:detection_charme", "inverse"], notes: "Effet inverse protégeant une créature contre la détection des charmes." }],
+  augure: [{ id: "presage_benefique_malefique", label: "Augure", kind: "divination", targetOverride: "action_future_immediate", automation: "mj_aid", tags: ["effet:augure", "divination:benefique_malefique", "chance:70_plus_1_pct_par_niveau", "fenetre:3_tours"], notes: "Indique si une action dans le futur immédiat sera bénéfique ou maléfique, avec chance de base 70 % + 1 % par niveau du clerc." }],
+  detection_des_pieges: [{ id: "detection_pieges_directionnelle", label: "Détection des pièges", kind: "detection", targetOverride: "direction_1_pouce_de_large", automation: "mj_aid", tags: ["effet:detection_des_pieges", "detection:piege", "directionnel", "chance:type_magie:10_pct_par_niveau"], notes: "Révèle les pièges mécaniques ou magiques dans la direction regardée ; type de magie détectable à 10 % par niveau." }],
+  langage_animal: [{ id: "communication_animaux", label: "Langage animal", kind: "communication", targetOverride: "animal_dans_un_rayon_de_3_pouces", automation: "mj_aid", tags: ["effet:langage_animal", "communication:animal", "reaction:animal", "exclusion:monstres"], notes: "Permet de parler avec un animal doté d’un esprit ; réactions et services éventuels sous arbitrage MJ." }],
+  cantique: [{ id: "bonus_allies_cantique", label: "Cantique — alliés", kind: "active_bonus", targetOverride: "amis_dans_rayon_3_pouces", automation: "active_effect_or_mj_aid", tags: ["effet:cantique", "bonus:toucher:1", "bonus:degats:1", "bonus:jp:1", "condition:clerc_chante_immobile"], notes: "Les alliés du clerc gagnent +1 aux attaques, dégâts et jets de protection tant que le clerc chante et reste immobile." }, { id: "malus_ennemis_cantique", label: "Cantique — ennemis", kind: "active_malus", targetOverride: "ennemis_dans_rayon_3_pouces", automation: "active_effect_or_mj_aid", tags: ["effet:cantique", "malus:toucher:1", "malus:degats:1", "malus:jp:1", "condition:clerc_chante_immobile"], notes: "Les ennemis subissent -1 aux attaques, dégâts et jets de protection tant que le clerc chante et reste immobile." }],
+  marteau_spirituel: [{ id: "arme_force_marteau", label: "Marteau spirituel", kind: "summoned_weapon", targetOverride: "un_ennemi_dans_la_portee", automation: "attack_or_mj_aid", tags: ["effet:marteau_spirituel", "arme:force", "degats:1d6_pm", "degats:1d4_g", "concentration", "arme_magique:plus_1_par_3_niveaux_pour_creatures"], notes: "Crée un champ de force en forme de marteau ; frappe au niveau du clerc, sans bonus au toucher ni aux dégâts, mais compte comme arme magique pour toucher certaines créatures." }],
+  charme_serpents: [{ id: "charme_ophidiens", label: "Charme-serpents", kind: "control", targetOverride: "serpents_ou_ophidiens", savingThrow: { type: "special", condition: "résistance à la magie et jets de protection selon créature" }, automation: "mj_aid", tags: ["effet:charme_serpents", "controle:serpents", "limite:pv_serpents_inferieurs_ou_egaux_pv_clerc", "duree:selon_etat_serpents"], notes: "Calme ou charme des serpents dont le total de points de vie n’excède pas ceux du clerc ; durée selon leur état." }],
+  paralysie: [{ id: "immobilisation_humanoides", label: "Paralysie", kind: "control", targetOverride: "1_a_3_humains_ou_humanoides", savingThrow: { type: "sorts", condition: "annule ; malus -2 si une cible, -1 si deux cibles, normal si trois cibles" }, automation: "active_effect_or_mj_aid", tags: ["effet:paralysie", "etat:paralyse", "cibles:1_3", "duree:4_rounds_plus_1_par_niveau", "jp:annule"], notes: "Immobilise 1 à 3 humains ou humanoïdes ; les cibles qui réussissent leur jet ne ressentent aucun effet." }],
+  silence_sur_5_metres: [{ id: "zone_silence", label: "Silence sur 5 mètres", kind: "area_silence", targetOverride: "sphere_9m_diametre", savingThrow: { type: "special", condition: "si lancé sur une créature non consentante" }, automation: "active_effect_or_mj_aid", tags: ["effet:silence", "zone:sphere_9m", "bloque:bruit", "bloque:composante_verbale", "duree:2_rounds_par_niveau"], notes: "Crée une zone de silence empêchant conversation, bruit et sorts à composante verbale ; la zone peut suivre un objet ou une créature." }],
+  perception_des_alignements: [{ id: "lecture_alignement", label: "Perception des alignements", kind: "detection", targetOverride: "une_creature_par_round_jusqua_10", automation: "mj_aid", tags: ["effet:perception_des_alignements", "detection:alignement", "limite:10_creatures", "duree:1_tour"], notes: "Permet de connaître l’alignement exact d’une personne ou créature, une cible par round jusqu’à dix." }, { id: "confusion_alignement", label: "Confusion de l’alignement", kind: "protection_detection", automation: "active_effect_or_mj_aid", tags: ["effet:confusion_alignement", "protection:detection_alignement", "inverse"], notes: "Effet inverse cachant totalement l’alignement pendant la durée indiquée." }],
+  resistance_au_feu: [{ id: "resistance_feu", label: "Résistance au feu", kind: "resistance", targetOverride: "creature_touchee", automation: "active_effect_or_mj_aid", tags: ["effet:resistance_au_feu", "resistance:feu", "bonus:jp:feu:3", "degats:feu:moitie_si_jp_rate", "degats:feu:quart_si_jp_reussi"], notes: "Protège contre chaleur et feu ; bonus de +3 au jet de protection, dégâts réduits à la moitié si le jet échoue et au quart s’il réussit." }],
+  retardement_du_poison: [{ id: "ralentissement_poison", label: "Retardement du poison", kind: "poison_delay", targetOverride: "creature_touchee", automation: "active_effect_or_mj_aid", tags: ["effet:retardement_du_poison", "poison:ralenti", "perte:1_pv_par_tour", "minimum:1_pv", "duree:1_heure_par_niveau"], notes: "Ralentit fortement le poison ; la victime perd 1 PV par tour sans descendre sous 1 PV." }, { id: "rappel_temporaire_mort_poison", label: "Rappel temporaire après poison", kind: "revival_temporary", automation: "mj_aid", tags: ["effet:retardement_du_poison", "mort:poison", "fenetre:1_tour_par_niveau"], notes: "Peut temporairement sauver une personne morte par poison si lancé dans la limite d’un tour par niveau du clerc." }]
 }));
 
 CLERIC_LEVEL_2_EFFECT_PROFILES.set("detection_de_charme", CLERIC_LEVEL_2_EFFECT_PROFILES.get("detection_des_charmes"));
@@ -275,8 +118,6 @@ CLERIC_LEVEL_2_EFFECT_PROFILES.set("perception_de_l_alignement", CLERIC_LEVEL_2_
 CLERIC_LEVEL_2_EFFECT_PROFILES.set("detection_des_alignements", CLERIC_LEVEL_2_EFFECT_PROFILES.get("perception_des_alignements"));
 CLERIC_LEVEL_2_EFFECT_PROFILES.set("detection_de_l_alignement", CLERIC_LEVEL_2_EFFECT_PROFILES.get("perception_des_alignements"));
 
-// Le lot Clerc N3 est inchangé par rapport à la version précédente.
-// Il reste volontairement au format compact pour éviter de modifier à nouveau les profils déjà validés.
 const CLERIC_LEVEL_3_EFFECT_PROFILES = new Map(Object.entries({
   catalepsie: [{ id: "etat_catalepsie", label: "Catalepsie", kind: "status_control", targetOverride: "une_personne_touchee", automation: "active_effect_or_mj_aid", tags: ["effet:catalepsie", "etat:mort_apparente", "duree:1_tour_plus_1_round_par_niveau", "exception:personnage_niveau_superieur_possible"], notes: "Plonge la cible dans un état de mort apparente similaire au sort de magicien, avec la particularité clerc d’affecter aussi une personne de niveau supérieur." }],
   desenvoutement: [{ id: "leve_malediction", label: "Désenvoûtement", kind: "curse_removal", targetOverride: "objet_personne_ou_presence_maudite_touchee", automation: "active_effect_or_mj_aid", tags: ["effet:desenvoutement", "retire:malediction", "permanent", "limite:objets_maudits_portes"], notes: "Lève une malédiction sur un objet, une personne ou une présence indésirable ; permet à une personne de se débarrasser d’un objet maudit porté." }, { id: "envoûtement_inverse", label: "Envoûtement", kind: "curse", targetOverride: "personne_touchee", savingThrow: { type: "sorts", condition: "annule" }, automation: "active_effect_or_mj_aid", tags: ["effet:envoutement", "inverse", "malus:caracteristique_3", "malus:toucher_jp:4", "contrainte:lacher_objet"], notes: "Inverse : impose une malédiction déterminée par pourcentage, avec jet de protection si la cible est touchée." }],
