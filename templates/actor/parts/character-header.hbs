@@ -14,7 +14,7 @@
         </div>
 
         <div class="a2e-id-grid">
-          {{#if actor.system.multiclasse.enabled}}
+          {{#if (add2eShowMulticlassHeader actor)}}
             <div class="a2e-field a2e-multiclass-field">
               <label>Classe</label>
               <input type="text" name="system.classe" value="{{actor.system.classe}}" readonly title="{{actor.system.classe}}">
@@ -31,7 +31,7 @@
             <input type="text" name="system.race" value="{{actor.system.race}}">
           </div>
 
-          {{#if actor.system.multiclasse.enabled}}
+          {{#if (add2eShowMulticlassHeader actor)}}
             <div class="a2e-field a2e-multiclass-field">
               <label>Niveau</label>
               <div class="a2e-multiclass-rows" style="display:grid;gap:3px;">
@@ -50,7 +50,7 @@
             </div>
           {{/if}}
 
-          {{#if actor.system.multiclasse.enabled}}
+          {{#if (add2eShowMulticlassHeader actor)}}
             <div class="a2e-field a2e-xp-field a2e-multiclass-field">
               <label>XP</label>
               <div class="a2e-multiclass-rows" style="display:grid;gap:3px;">
@@ -72,7 +72,7 @@
             </div>
           {{/if}}
 
-          {{#if actor.system.multiclasse.enabled}}
+          {{#if (add2eShowMulticlassHeader actor)}}
             <div class="a2e-field a2e-multiclass-field">
               <label>Titre</label>
               <input type="text" value="{{actor.system.titre}}" readonly title="{{actor.system.titre}}">
