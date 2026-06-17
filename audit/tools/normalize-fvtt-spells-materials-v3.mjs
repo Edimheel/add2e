@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-17-normalize-spell-materials-v3-clerc-druide-n7-effectprofile-v1";
+const VERSION = "2026-06-17-normalize-spell-materials-v3-druid-material-cleanup-v1";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -19,6 +19,126 @@ const SYSTEM_KEYS = [
   "temps_incantation", "jet_sauvegarde", "composantes", "composants_materiels", "composants_materiels_source",
   "composants_materiels_reference", "composants_materiels_verification_recommandee", "composants_materiels_note",
   "composants_materiels_a_renseigner", "description", "onUse", "onUseCode", "tags", "effectTags", "effectProfile"
+];
+
+const MATERIAL_CANON = new Map(Object.entries({
+  symbole_sacre: "symbole sacré du clerc",
+  symbole_sacre_du_clerc: "symbole sacré du clerc",
+  symbole_religieux: "symbole sacré du clerc",
+  jeu_de_baguettes_serties_de_gemmes: "jeu d’objets divinatoires",
+  jeu_d_objets_divinatoires: "jeu d’objets divinatoires",
+  objets_divinatoires_similaires: "jeu d’objets divinatoires",
+  os_de_dragon: "jeu d’objets divinatoires",
+  feuille_d_infusion_encore_humide: "feuilles d’infusion encore humides",
+  feuille_d_infusion_encore_humides: "feuilles d’infusion encore humides",
+  feuilles_d_infusion_encore_humide: "feuilles d’infusion encore humides",
+  feuilles_d_infusion_encore_humides: "feuilles d’infusion encore humides",
+  objet_similaire_au_chapelet_de_priere: "chapelet de prière",
+  objet_similaire_ayant_la_meme_utilisation: "chapelet de prière",
+  livre_de_priere: "livre de prière",
+  gousse_ail: "gousse d’ail",
+  gousse_d_ail: "gousse d’ail",
+  poudre_argent: "poudre d’argent",
+  poudre_d_argent: "poudre d’argent",
+  poudre_or: "poudre d’or",
+  poudre_d_or: "poudre d’or",
+  eau_benite: "eau bénite",
+  eau_maudite: "eau maudite",
+  pierre_aimantee: "pierre aimantée",
+  pincee_de_poussiere: "pincée de poussière",
+  pincee_de_poussiere_de_cimetiere: "pincée de poussière de cimetière",
+  goutte_de_sang: "goutte de sang",
+  chair_humaine: "morceau de chair humaine",
+  morceau_de_chair_humaine: "morceau de chair humaine",
+  os_en_poudre: "os en poudre",
+  echarde_d_os: "os en poudre",
+  ecorce: "écorce",
+  ecaille_de_serpent: "écailles de serpent",
+  ecailles_de_serpent: "écailles de serpent",
+  symbole_religieux_en_argent: "symbole religieux en argent",
+  chapelet_de_priere: "chapelet de prière",
+  poudre_de_diamant: "poudre de diamant",
+  lame_miniature: "lame miniature",
+  petit_caillou: "petit caillou",
+  motte_de_terre: "motte de terre",
+  gui_sacre: "gui",
+  gui_druidique: "gui",
+  typiquement_druidique_a_savoir_du_gui: "gui",
+  nourriture_appreciee_par_l_animal: "nourriture appréciée par l’animal",
+  nourriture_appréciée_par_l_animal: "nourriture appréciée par l’animal",
+  feuille_de_trefle: "feuille de trèfle",
+  feuille_de_trèfle: "feuille de trèfle",
+  massue_en_chene: "massue en chêne",
+  massue_en_chêne: "massue en chêne"
+}));
+
+const CLERIC_MATERIAL_OVERRIDES = new Map(Object.entries({
+  augure: ["jeu d’objets divinatoires", "feuilles d’infusion encore humides", "perle écrasée d’au moins 100 po"],
+  divination: ["encens", "symbole sacré du clerc"],
+  marteau_spirituel: ["marteau de guerre normal"],
+  paralysie: ["petite tige de métal droite et rigide"],
+  resistance_au_feu: ["goutte de mercure"],
+  retardement_du_poison: ["symbole sacré du clerc", "gousse d’ail"],
+  catalepsie: ["pincée de poussière de cimetière", "symbole sacré du clerc"],
+  glyphe_de_garde: ["encens"],
+  localisation_d_objets: ["pierre aimantée"],
+  necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"],
+  batons_a_serpents: ["écorce", "écailles de serpent"],
+  necromancie: ["symbole sacré du clerc", "encens"],
+  priere: ["symbole religieux en argent", "chapelet de prière"],
+  abaissement_des_eaux: ["goutte d’eau", "pincée de poussière"],
+  detection_des_mensonges: ["poudre d’or"],
+  exorcisme: ["symbole sacré du clerc", "eau bénite", "eau maudite"],
+  langage_des_plantes: ["goutte d’eau", "pincée de bouse", "flamme"],
+  protection_contre_le_mal_sur_3_m: ["poudre d’argent"],
+  protection_contre_le_mal_sur_3m: ["poudre d’argent"],
+  communion: ["symbole sacré du clerc", "encens", "eau bénite"],
+  expiation: ["symbole sacré du clerc", "chapelet de prière", "livre de prière"],
+  fleau_d_insectes: ["symbole sacré du clerc"],
+  pilier_de_feu: ["pincée de soufre"],
+  quete_religieuse: ["symbole sacré du clerc"],
+  rappel_a_la_vie: ["symbole sacré du clerc"],
+  soin_ultime: ["symbole sacré du clerc"],
+  vision_reelle: ["safran", "graisse", "huile"],
+  animation_des_objets: ["symbole sacré du clerc"],
+  barriere_de_lames: ["lame miniature"],
+  invocation_des_animaux: ["symbole sacré du clerc"],
+  lithomancie: ["encens", "argile molle"],
+  rappel: ["symbole sacré du clerc"],
+  separation_des_eaux: ["deux feuilles de cristal", "deux coquilles d’œuf"],
+  serviteur_aerien: ["symbole sacré du clerc"],
+  controle_du_climat: ["encens", "chapelet de prière"],
+  marche_des_vents: ["feu", "eau bénite"],
+  regeneration: ["symbole sacré du clerc", "eau bénite"],
+  restauration: ["poudre de diamant"],
+  resurrection: ["symbole sacré du clerc", "eau bénite"],
+  seuil: ["symbole sacré du clerc"],
+  sort_astral: ["symbole sacré du clerc"],
+  symbole: ["mercure", "phosphore"],
+  tremblement_de_terre: ["pincée de poussière", "petit caillou", "motte de terre"]
+}));
+
+const DRUID_MATERIAL_OVERRIDES = new Map(Object.entries({
+  amitie_animale: ["gui", "nourriture appréciée par l’animal"],
+  shillelagh: ["massue en chêne", "gui", "feuille de trèfle"],
+  langage_des_plantes: ["gui"]
+}));
+
+const NOISE = new Set([
+  "", "true", "false", "oui", "non", "consomme", "consommé", "non consomme", "non consommé", "non_consomme",
+  "optionnel", "manuel", "manuel du joueur", "manuel des joueurs", "source", "aucun", "null", "undefined", "liquide",
+  "consommation", "ingredient materiel", "ingrédient matériel", "composant materiel", "composant matériel",
+  "clerc", "clerc non mauvais", "clerc mauvais", "druide", "druidique", "créature", "petite créature", "le", "la", "les"
+]);
+
+const NOISE_STARTS = [
+  "requise", "requis", "alternative", "formulation source", "source du manuel", "sort normal", "sort inverse", "selon la règle",
+  "description indique", "pour lancer", "dons requis", "type de métal", "taille détermine", "sorte de diapason",
+  "ingrédient matériel", "ingredient materiel", "composant matériel", "composant materiel", "non consommé", "non consomme"
+];
+const NOISE_CONTAINS = [
+  "manuel des joueurs", "formulation source", "règle d arbitrage", "ayant servi", "avant consommation", "quand le sort est",
+  "description indique", "saupoudrée", "pour lancer le sort"
 ];
 
 function text(value) { return String(value ?? "").replace(/\s+/g, " ").trim(); }
@@ -34,38 +154,185 @@ function isDruideSpell(item) { const level = spellLevel(item?.system ?? {}); ret
 function getItems(json) { if (Array.isArray(json)) return json; for (const key of ["items", "Item", "Items", "documents", "data", "entries"]) if (Array.isArray(json?.[key])) return json[key]; return []; }
 function unique(list) { const seen = new Set(); return list.filter(v => { const key = slug(v); if (!key || seen.has(key)) return false; seen.add(key); return true; }); }
 function fx(id, label, kind, tags, notes, extra = {}) { return { id, label, kind, automation: extra.automation ?? "active_effect_or_mj_aid", tags, notes, ...extra }; }
-function ep(effects, level, classSlug = "clerc") { return { version: EFFECT_PROFILE_VERSION, source: `manual-normalized-${classSlug}-n${level}`, effects: clone(effects) }; }
+function ep(effects, level, classSlug) { return { version: EFFECT_PROFILE_VERSION, source: `manual-normalized-${classSlug}-n${level}`, effects: clone(effects) }; }
 
-const MATERIAL_CANON = new Map(Object.entries({ symbole_sacre: "symbole sacré du clerc", symbole_sacre_du_clerc: "symbole sacré du clerc", symbole_religieux: "symbole sacré du clerc", jeu_de_baguettes_serties_de_gemmes: "jeu d’objets divinatoires", jeu_d_objets_divinatoires: "jeu d’objets divinatoires", objets_divinatoires_similaires: "jeu d’objets divinatoires", os_de_dragon: "jeu d’objets divinatoires", feuille_d_infusion_encore_humide: "feuilles d’infusion encore humides", feuille_d_infusion_encore_humides: "feuilles d’infusion encore humides", feuilles_d_infusion_encore_humide: "feuilles d’infusion encore humides", feuilles_d_infusion_encore_humides: "feuilles d’infusion encore humides", objet_similaire_au_chapelet_de_priere: "chapelet de prière", objet_similaire_ayant_la_meme_utilisation: "chapelet de prière", livre_de_priere: "livre de prière", gousse_ail: "gousse d’ail", gousse_d_ail: "gousse d’ail", poudre_argent: "poudre d’argent", poudre_d_argent: "poudre d’argent", poudre_or: "poudre d’or", poudre_d_or: "poudre d’or", eau_benite: "eau bénite", eau_maudite: "eau maudite", pierre_aimantee: "pierre aimantée", pincee_de_poussiere: "pincée de poussière", pincee_de_poussiere_de_cimetiere: "pincée de poussière de cimetière", goutte_de_sang: "goutte de sang", chair_humaine: "morceau de chair humaine", morceau_de_chair_humaine: "morceau de chair humaine", os_en_poudre: "os en poudre", echarde_d_os: "os en poudre", ecorce: "écorce", ecaille_de_serpent: "écailles de serpent", ecailles_de_serpent: "écailles de serpent", symbole_religieux_en_argent: "symbole religieux en argent", chapelet_de_priere: "chapelet de prière", poudre_de_diamant: "poudre de diamant", lame_miniature: "lame miniature", petit_caillou: "petit caillou", motte_de_terre: "motte de terre" }));
-const CLERIC_MATERIAL_OVERRIDES = new Map(Object.entries({ augure: ["jeu d’objets divinatoires", "feuilles d’infusion encore humides", "perle écrasée d’au moins 100 po"], divination: ["encens", "symbole sacré du clerc"], marteau_spirituel: ["marteau de guerre normal"], paralysie: ["petite tige de métal droite et rigide"], resistance_au_feu: ["goutte de mercure"], retardement_du_poison: ["symbole sacré du clerc", "gousse d’ail"], catalepsie: ["pincée de poussière de cimetière", "symbole sacré du clerc"], glyphe_de_garde: ["encens"], localisation_d_objets: ["pierre aimantée"], necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"], batons_a_serpents: ["écorce", "écailles de serpent"], necromancie: ["symbole sacré du clerc", "encens"], priere: ["symbole religieux en argent", "chapelet de prière"], abaissement_des_eaux: ["goutte d’eau", "pincée de poussière"], detection_des_mensonges: ["poudre d’or"], exorcisme: ["symbole sacré du clerc", "eau bénite", "eau maudite"], langage_des_plantes: ["goutte d’eau", "pincée de bouse", "flamme"], protection_contre_le_mal_sur_3_m: ["poudre d’argent"], protection_contre_le_mal_sur_3m: ["poudre d’argent"], communion: ["symbole sacré du clerc", "encens", "eau bénite"], expiation: ["symbole sacré du clerc", "chapelet de prière", "livre de prière"], fleau_d_insectes: ["symbole sacré du clerc"], pilier_de_feu: ["pincée de soufre"], quete_religieuse: ["symbole sacré du clerc"], rappel_a_la_vie: ["symbole sacré du clerc"], soin_ultime: ["symbole sacré du clerc"], vision_reelle: ["safran", "graisse", "huile"], animation_des_objets: ["symbole sacré du clerc"], barriere_de_lames: ["lame miniature"], invocation_des_animaux: ["symbole sacré du clerc"], lithomancie: ["encens", "argile molle"], rappel: ["symbole sacré du clerc"], separation_des_eaux: ["deux feuilles de cristal", "deux coquilles d’œuf"], serviteur_aerien: ["symbole sacré du clerc"], controle_du_climat: ["encens", "chapelet de prière"], marche_des_vents: ["feu", "eau bénite"], regeneration: ["symbole sacré du clerc", "eau bénite"], restauration: ["poudre de diamant"], resurrection: ["symbole sacré du clerc", "eau bénite"], seuil: ["symbole sacré du clerc"], sort_astral: ["symbole sacré du clerc"], symbole: ["mercure", "phosphore"], tremblement_de_terre: ["pincée de poussière", "petit caillou", "motte de terre"] }));
-const NOISE = new Set(["", "true", "false", "oui", "non", "consomme", "non_consomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs", "source", "aucun", "null", "undefined", "liquide", "consommation", "clerc", "clerc non mauvais", "clerc mauvais", "créature", "petite créature", "le", "la", "les"]);
-function cleanMaterial(value) { let out = text(value).replaceAll("_", "-").replace(/-/g, " "); out = out.replace(/^d['’]\s*/i, ""); out = out.replace(/^(un|une)?\s*peu\s+de\s+/i, ""); out = out.replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, ""); out = out.replace(/^(quelques|plusieurs)\s+/i, ""); out = out.replace(/^petit morceau de\s+/i, ""); out = out.replace(/^morceau de\s+/i, ""); out = out.replace(/[.!?;:]+$/g, "").trim(); return MATERIAL_CANON.get(slug(out)) ?? out; }
-function rejectMaterial(value) { const cleaned = cleanMaterial(value); const n = norm(cleaned); if (!n || NOISE.has(n)) return true; if (/^\d+(?:[,.]\d+)?\s*(m2|m|m²|case|cases|po|pa|pp|pc)?$/i.test(cleaned)) return true; if (["requise", "requis", "alternative", "formulation source", "source du manuel", "sort normal", "sort inverse", "selon la règle", "description indique", "pour lancer", "dons requis", "type de métal", "taille détermine", "sorte de diapason"].some(v => n.startsWith(norm(v)))) return true; if (["manuel des joueurs", "formulation source", "règle d arbitrage", "ayant servi", "avant consommation", "quand le sort est", "description indique", "saupoudrée", "pour lancer le sort"].some(v => n.includes(norm(v)))) return true; if (n.split(" ").length > 9) return true; return false; }
-function collectMaterials(value, out = [], notes = []) { if (value === undefined || value === null || value === "") return { out, notes }; if (Array.isArray(value)) { for (const v of value) collectMaterials(v, out, notes); return { out, notes }; } if (typeof value === "object") { for (const k of ["note", "notes", "condition", "conditions", "description", "source", "reference", "formulation_source", "source_text"]) if (value[k]) notes.push(text(value[k])); const alts = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or; if (Array.isArray(alts)) { for (const v of alts) collectMaterials(v, out, notes); return { out, notes }; } const direct = value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id; if (direct !== undefined) collectMaterials(direct, out, notes); return { out, notes }; } const raw = text(value); const main = raw.split(/\s+(?:optionnel|alternative|ingrédient matériel|ingredient materiel|consomm|formulation source|manuel des joueurs|requise pour|requis pour|sort normal|sort inversé|description indique|pour lancer le sort)\b/i)[0]; for (const part of main.split(/[,;|\n]+|\s+et\s+/gi).map(cleanMaterial).filter(Boolean)) { const alternatives = part.split(/\s+ou\s+/i).map(cleanMaterial).filter(Boolean); for (const candidate of alternatives) if (!rejectMaterial(candidate)) out.push(candidate); else if (candidate) notes.push(candidate); } return { out, notes }; }
-function normalizeMaterials(item) { const system = item.system ?? {}; const before = clone(system.composants_materiels ?? []); const notes = []; let values = []; collectMaterials(system.composants_materiels, values, notes); if (!values.length) collectMaterials(system.composants_materiels_objets, values, notes); if (!values.length) collectMaterials(system.composants_requis, values, notes); const key = slug(item?.name ?? system?.nom); if (!isDruideSpell(item) && CLERIC_MATERIAL_OVERRIDES.has(key)) { if (values.length) notes.push(`Normalisation marchand appliquée : ${values.join(", ")}`); values = CLERIC_MATERIAL_OVERRIDES.get(key); } system.composants_materiels = unique(values.map(cleanMaterial)); system.composants_materiels_note = unique([...(notes ?? []), system.composants_materiels_note].filter(Boolean)).join("\n"); return { before, after: clone(system.composants_materiels), notes: clone(notes), changed: JSON.stringify(before) !== JSON.stringify(system.composants_materiels) }; }
+function cleanMaterial(value) {
+  let out = text(value).replaceAll("_", "-").replace(/-/g, " ");
+  if (/à\s+savoir\s+du\s+gui/i.test(out)) out = "gui";
+  out = out.replace(/^typiquement\s+druidique\s*\((.*?)\)$/i, "$1");
+  out = out.replace(/^à\s+savoir\s+/i, "");
+  out = out.replace(/^d['’]\s*/i, "");
+  out = out.replace(/^(un|une)?\s*peu\s+de\s+/i, "");
+  out = out.replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
+  out = out.replace(/^(quelques|plusieurs)\s+/i, "");
+  out = out.replace(/^petit morceau de\s+/i, "");
+  out = out.replace(/^morceau de\s+/i, "");
+  out = out.replace(/[.!?;:]+$/g, "").trim();
+  return MATERIAL_CANON.get(slug(out)) ?? out;
+}
+function rejectMaterial(value) {
+  const cleaned = cleanMaterial(value);
+  const n = norm(cleaned);
+  if (!n || NOISE.has(n)) return true;
+  if (/^\d+(?:[,.]\d+)?\s*(m2|m|m²|case|cases|po|pa|pp|pc)?$/i.test(cleaned)) return true;
+  if (NOISE_STARTS.some(v => n.startsWith(norm(v)))) return true;
+  if (NOISE_CONTAINS.some(v => n.includes(norm(v)))) return true;
+  if (n.split(" ").length > 9) return true;
+  return false;
+}
+function collectMaterials(value, out = [], notes = []) {
+  if (value === undefined || value === null || value === "") return { out, notes };
+  if (Array.isArray(value)) { for (const v of value) collectMaterials(v, out, notes); return { out, notes }; }
+  if (typeof value === "object") {
+    for (const k of ["note", "notes", "condition", "conditions", "description", "source", "reference", "formulation_source", "source_text"]) if (value[k]) notes.push(text(value[k]));
+    const alts = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or;
+    if (Array.isArray(alts)) { for (const v of alts) collectMaterials(v, out, notes); return { out, notes }; }
+    const direct = value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
+    if (direct !== undefined) collectMaterials(direct, out, notes);
+    return { out, notes };
+  }
+  const raw = text(value);
+  const main = raw.split(/\s*(?:optionnel|alternative|ingrédient matériel|ingredient materiel|composant matériel|composant materiel|consomm|formulation source|manuel des joueurs|requise pour|requis pour|sort normal|sort inversé|description indique|pour lancer le sort)\b/i)[0];
+  for (const part of main.split(/[,;|\n]+|\s+et\s+/gi).map(cleanMaterial).filter(Boolean)) {
+    const alternatives = part.split(/\s+ou\s+/i).map(cleanMaterial).filter(Boolean);
+    for (const candidate of alternatives) {
+      if (!rejectMaterial(candidate)) out.push(candidate);
+      else if (candidate) notes.push(candidate);
+    }
+  }
+  return { out, notes };
+}
+function normalizeMaterials(item) {
+  const system = item.system ?? {};
+  const before = clone(system.composants_materiels ?? []);
+  const notes = [];
+  let values = [];
+  collectMaterials(system.composants_materiels, values, notes);
+  if (!values.length) collectMaterials(system.composants_materiels_objets, values, notes);
+  if (!values.length) collectMaterials(system.composants_requis, values, notes);
+  const key = slug(item?.name ?? system?.nom);
+  if (isDruideSpell(item) && DRUID_MATERIAL_OVERRIDES.has(key)) values = DRUID_MATERIAL_OVERRIDES.get(key);
+  else if (!isDruideSpell(item) && CLERIC_MATERIAL_OVERRIDES.has(key)) values = CLERIC_MATERIAL_OVERRIDES.get(key);
+  system.composants_materiels = unique(values.map(cleanMaterial).filter(v => !rejectMaterial(v)));
+  system.composants_materiels_note = unique([...(notes ?? []), system.composants_materiels_note].filter(Boolean)).join("\n");
+  return { before, after: clone(system.composants_materiels), notes: clone(notes), changed: JSON.stringify(before) !== JSON.stringify(system.composants_materiels) };
+}
 
-const LEVEL_PROFILES = new Map([
-  [2, new Map(Object.entries({ detection_des_charmes: [fx("detection_charme", "Détection des charmes", "detection", ["effet:detection_des_charmes", "detection:charme", "limite:10_creatures", "duree:1_tour"], "Détermine si une personne ou un monstre est sous l’influence d’un charme.", { targetOverride: "une_creature_a_la_fois_jusqua_10", automation: "mj_aid" })], augure: [fx("presage_benefique_malefique", "Augure", "divination", ["effet:augure", "chance:70_plus_1_pct_par_niveau", "fenetre:3_tours"], "Indique si une action dans le futur immédiat sera bénéfique ou maléfique.", { automation: "mj_aid" })], detection_des_pieges: [fx("detection_pieges", "Détection des pièges", "detection", ["effet:detection_des_pieges", "detection:piege", "directionnel"], "Révèle les pièges mécaniques ou magiques dans la direction regardée.", { automation: "mj_aid" })], langage_animal: [fx("communication_animaux", "Langage animal", "communication", ["effet:langage_animal", "communication:animal"], "Permet de parler avec un animal doté d’un esprit.", { automation: "mj_aid" })], cantique: [fx("bonus_allies_cantique", "Cantique — alliés", "active_bonus", ["effet:cantique", "bonus:toucher:1", "bonus:degats:1", "bonus:jp:1"], "Les alliés gagnent +1 aux attaques, dégâts et jets de protection."), fx("malus_ennemis_cantique", "Cantique — ennemis", "active_malus", ["effet:cantique", "malus:toucher:1", "malus:degats:1", "malus:jp:1"], "Les ennemis subissent -1 aux attaques, dégâts et jets de protection.")], marteau_spirituel: [fx("arme_force_marteau", "Marteau spirituel", "summoned_weapon", ["effet:marteau_spirituel", "arme:force", "degats:1d6_pm", "degats:1d4_g"], "Crée un champ de force en forme de marteau.", { automation: "attack_or_mj_aid" })], charme_serpents: [fx("charme_ophidiens", "Charme-serpents", "control", ["effet:charme_serpents", "controle:serpents"], "Calme ou charme des serpents dont le total de points de vie n’excède pas ceux du clerc.", { automation: "mj_aid" })], paralysie: [fx("immobilisation_humanoides", "Paralysie", "control", ["effet:paralysie", "etat:paralyse", "jp:annule"], "Immobilise 1 à 3 humains ou humanoïdes.", { savingThrow: { type: "sorts", condition: "annule" } })], silence_sur_5_metres: [fx("zone_silence", "Silence sur 5 mètres", "area_silence", ["effet:silence", "bloque:bruit", "bloque:composante_verbale"], "Crée une zone de silence empêchant bruit et composantes verbales.")], perception_des_alignements: [fx("lecture_alignement", "Perception des alignements", "detection", ["effet:perception_des_alignements", "detection:alignement"], "Permet de connaître l’alignement exact d’une personne ou créature.", { automation: "mj_aid" })], resistance_au_feu: [fx("resistance_feu", "Résistance au feu", "resistance", ["effet:resistance_au_feu", "resistance:feu", "bonus:jp:feu:3"], "Protège contre chaleur et feu.")], retardement_du_poison: [fx("ralentissement_poison", "Retardement du poison", "poison_delay", ["effet:retardement_du_poison", "poison:ralenti", "minimum:1_pv"], "Ralentit fortement le poison.")] }))],
-  [3, new Map(Object.entries({ catalepsie: [fx("etat_catalepsie", "Catalepsie", "status_control", ["effet:catalepsie", "etat:mort_apparente"], "Plonge la cible dans un état de mort apparente.")], desenvoutement: [fx("leve_malediction", "Désenvoûtement", "curse_removal", ["effet:desenvoutement", "retire:malediction"], "Lève une malédiction."), fx("envoutement_inverse", "Envoûtement", "curse", ["effet:envoutement", "inverse"], "Inverse : impose une malédiction.")], dissipation_de_la_magie: [fx("dissipation_magie_zone", "Dissipation de la magie", "dispell_magic", ["effet:dissipation_de_la_magie", "chance:50_pct"], "Annule ou neutralise des effets magiques dans la zone.", { automation: "mj_aid" })], glyphe_de_garde: [fx("glyphe_zone_gardee", "Glyphe de garde", "ward_glyph", ["effet:glyphe_de_garde", "zone:gardee", "declencheur:intrusion"], "Trace une inscription magique protégeant une zone ou un objet.")], lumiere_eternelle: [fx("lumiere_permanente", "Lumière éternelle", "light", ["effet:lumiere_eternelle", "lumiere:permanente"], "Crée une lumière permanente."), fx("tenebres_eternelles", "Ténèbres éternelles", "darkness", ["effet:tenebres_eternelles", "inverse"], "Inverse : crée une obscurité totale.")], guerison_de_la_cecite: [fx("soin_cecite", "Guérison de la cécité", "condition_removal", ["effet:guerison_de_la_cecite", "retire:aveugle"], "Rend la vue et guérit la plupart des formes de cécité.")], manne: [fx("creation_nourriture_eau", "Manne", "creation", ["effet:manne", "creation:nourriture", "creation:eau"], "Crée nourriture et eau nourrissantes.", { automation: "mj_aid" })], guerison_des_maladies: [fx("soin_maladie", "Guérison des maladies", "condition_removal", ["effet:guerison_des_maladies", "retire:maladie"], "Guérit la plupart des maladies.")], necro_animation: [fx("anime_squelettes_zombies", "Nécro-animation", "summon_undead", ["effet:necro_animation", "creation:squelette", "creation:zombie"], "Anime des squelettes ou zombies obéissant au clerc.", { automation: "actor_creation_or_mj_aid" })], localisation_d_objets: [fx("localisation_objet", "Localisation d’objets", "detection", ["effet:localisation_d_objets", "detection:objet"], "Indique la direction d’un objet connu ou familier.", { automation: "mj_aid" })], necromancie: [fx("parler_aux_morts", "Nécromancie", "communication_dead", ["effet:necromancie", "communication:mort"], "Permet de poser des questions à une créature morte.", { automation: "mj_aid" })], priere: [fx("bonus_allies_priere", "Prière — alliés", "active_bonus", ["effet:priere", "bonus:toucher:1", "bonus:degats:1", "bonus:jp:1"], "Les alliés gagnent +1 aux attaques, dégâts et jets de protection."), fx("malus_ennemis_priere", "Prière — ennemis", "active_malus", ["effet:priere", "malus:toucher:1", "malus:degats:1", "malus:jp:1"], "Les ennemis subissent -1 aux attaques, dégâts et jets de protection.")] }))],
-  [4, new Map(Object.entries({ abaissement_des_eaux: [fx("abaisse_niveau_eau", "Abaissement des eaux", "area_control", ["effet:abaissement_des_eaux", "controle:eau", "inverse:haussement_des_eaux"], "Abaisse ou élève le niveau d’une masse d’eau.", { automation: "mj_aid" })], batons_a_serpents: [fx("batons_en_serpents", "Bâtons à serpents", "transformation_summon", ["effet:batons_a_serpents", "transformation:bois_en_serpent"], "Transforme des bâtons ou objets en bois similaires en serpents obéissant au clerc.", { automation: "actor_creation_or_mj_aid" })], contre_poison: [fx("neutralise_poison", "Contre-poison", "poison_neutralization", ["effet:contre_poison", "retire:poison", "inverse:empoisonnement"], "Neutralise un poison dans une créature ou une substance.")], detection_des_mensonges: [fx("detection_mensonge", "Détection des mensonges", "detection", ["effet:detection_des_mensonges", "detection:mensonge"], "Permet de percevoir les mensonges délibérés.", { automation: "mj_aid" })], divination: [fx("conseil_divin", "Divination", "divination", ["effet:divination", "divination:conseil"], "Donne au clerc un conseil divin à propos d’un objectif ou d’un événement.", { automation: "mj_aid" })], exorcisme: [fx("expulsion_presence", "Exorcisme", "banishment", ["effet:exorcisme", "expulse:possession", "expulse:influence_extraplanaire"], "Force une présence ou influence étrangère à quitter une créature, un objet ou un lieu.", { automation: "mj_aid" })], langage_des_plantes: [fx("communication_plantes", "Langage des plantes", "communication", ["effet:langage_des_plantes", "communication:plantes"], "Permet de communiquer avec les plantes et d’obtenir des réactions simples.", { automation: "mj_aid" })], langue: [fx("comprehension_langues", "Langue", "communication", ["effet:langue", "communication:langues", "inverse:brouillage"], "Permet de comprendre et parler une langue inconnue.")], protection_contre_le_mal_sur_3_m: [fx("aura_protection_mal_3m", "Protection contre le mal sur 3 m", "protection", ["effet:protection_contre_le_mal_3m", "aura:3m", "bloque:creatures_invoquees"], "Étend autour du clerc une protection contre le mal et les créatures invoquées.")], soins_majeurs: [fx("soin_majeur", "Soins majeurs", "healing", ["effet:soins_majeurs", "soin:important", "inverse:blessure_majeure"], "Soigne une blessure importante ; l’inverse inflige une blessure majeure.")] }))],
-  [5, new Map(Object.entries({ changement_de_plan: [fx("voyage_planaire", "Changement de plan", "planar_travel", ["effet:changement_de_plan", "deplacement:plan"], "Transporte la cible vers un autre plan selon la baguette fourchue utilisée.", { automation: "mj_aid" })], communion: [fx("questions_divines", "Communion", "divination", ["effet:communion", "divination:questions_oui_non"], "Permet de poser des questions à une puissance divine.", { automation: "mj_aid" })], dissipation_du_mal: [fx("renvoi_mal_invoque", "Dissipation du mal", "banishment_protection", ["effet:dissipation_du_mal", "protection:mal", "renvoi:creature_invoquee"], "Protège contre le mal et peut renvoyer une créature mauvaise invoquée.")], expiation: [fx("leve_faute_religieuse", "Expiation", "atonement", ["effet:expiation", "retire:faute", "restaure:etat_religieux"], "Restaure l’état spirituel ou religieux d’une créature.", { automation: "mj_aid" })], fleau_d_insectes: [fx("nuee_insectes", "Fléau d’insectes", "area_control", ["effet:fleau_d_insectes", "zone:nuee", "gene:concentration"], "Appelle une nuée d’insectes gênant les créatures, la vision et la concentration.")], pilier_de_feu: [fx("colonne_feu_divin", "Pilier de feu", "damage_area", ["effet:pilier_de_feu", "degats:feu_divin", "jp:moitie"], "Fait descendre une colonne de feu divin infligeant des dégâts.", { automation: "damage_or_mj_aid" })], quete_religieuse: [fx("mission_sacree", "Quête religieuse", "geas", ["effet:quete_religieuse", "contrainte:mission"], "Impose une quête ou mission religieuse à la cible.", { automation: "mj_aid" })], rappel_a_la_vie: [fx("retour_vie_recent", "Rappel à la vie", "revival", ["effet:rappel_a_la_vie", "ressuscite:mort_recent"], "Ramène à la vie une créature morte depuis peu.", { automation: "mj_aid" })], soin_ultime: [fx("soin_ultime", "Soin ultime", "healing", ["effet:soin_ultime", "soin:tres_important", "inverse:blessure_ultime"], "Soigne très fortement la cible ; l’inverse inflige une blessure grave.")], vision_reelle: [fx("perception_veritable", "Vision réelle", "detection", ["effet:vision_reelle", "detection:illusions", "detection:invisibilite"], "Permet de voir les choses telles qu’elles sont réellement.")] }))],
-  [6, new Map(Object.entries({ animation_des_objets: [fx("objets_animes", "Animation des objets", "animate_objects", ["effet:animation_des_objets", "animation:objets"], "Anime des objets qui se déplacent et attaquent selon les ordres du clerc.", { automation: "actor_creation_or_mj_aid" })], barriere_de_lames: [fx("mur_lames_tournoyantes", "Barrière de lames", "area_damage", ["effet:barriere_de_lames", "zone:mur", "degats:lames"], "Crée une barrière de lames tournoyantes infligeant des dégâts.", { automation: "damage_or_mj_aid" })], guerison: [fx("guerison_complete", "Guérison", "healing", ["effet:guerison", "soin:complet", "retire:maladie", "inverse:blessure"], "Guérit presque totalement la cible et retire plusieurs affections.")], invocation_des_animaux: [fx("invocation_animaux", "Invocation des animaux", "summon", ["effet:invocation_des_animaux", "invocation:animaux"], "Invoque des animaux qui viennent aider le clerc.", { automation: "actor_creation_or_mj_aid" })], langage_des_monstres: [fx("communication_monstres", "Langage des monstres", "communication", ["effet:langage_des_monstres", "communication:monstres"], "Permet de communiquer avec des monstres selon leur nature.", { automation: "mj_aid" })], lithomancie: [fx("divination_pierre", "Lithomancie", "divination", ["effet:lithomancie", "divination:pierre"], "Permet d’obtenir des informations divinatoires par la pierre ou la terre.", { automation: "mj_aid" })], orientation: [fx("orientation_divine", "Orientation", "divination", ["effet:orientation", "divination:direction"], "Indique une direction ou un chemin conseillé vers un objectif défini.", { automation: "mj_aid" })], rappel: [fx("rappel_sort", "Rappel", "spell_recall", ["effet:rappel", "recupere:sort_lance"], "Permet de rappeler à la mémoire un sort déjà lancé.", { automation: "mj_aid" })], separation_des_eaux: [fx("separe_les_eaux", "Séparation des eaux", "area_control", ["effet:separation_des_eaux", "controle:eau", "cree:passage"], "Sépare une masse d’eau pour créer un passage ou un tunnel.", { automation: "mj_aid" })], serviteur_aerien: [fx("serviteur_aerien", "Serviteur aérien", "summon_control", ["effet:serviteur_aerien", "invocation:serviteur_aerien"], "Invoque un serviteur aérien chargé d’une mission.", { automation: "actor_creation_or_mj_aid" })] }))],
-  [7, new Map(Object.entries({ controle_du_climat: [fx("controle_meteo", "Contrôle du climat", "weather_control", ["effet:controle_du_climat", "controle:meteo"], "Modifie les conditions météorologiques dans une zone étendue.", { automation: "mj_aid" })], marche_des_vents: [fx("forme_nuageuse_voyage", "Marche des vents", "travel_transformation", ["effet:marche_des_vents", "forme:vapeur", "deplacement:aerien"], "Transforme le clerc et les bénéficiaires en forme nuageuse pour voyager par les airs.")], parole_sacree_maudite: [fx("parole_sacree", "Parole sacrée", "holy_word", ["effet:parole_sacree", "etat:selon_dv"], "Une parole divine affecte les créatures opposées à l’alignement du clerc.", { automation: "mj_aid" }), fx("parole_maudite", "Parole maudite", "unholy_word", ["effet:parole_maudite", "inverse", "etat:selon_dv"], "Inverse : parole maudite affectant les créatures opposées.", { automation: "mj_aid" })], regeneration: [fx("regeneration_membre", "Régénération", "regeneration", ["effet:regeneration", "restaure:membre", "soin:progressif"], "Régénère membres ou blessures graves dans le temps.")], restauration: [fx("restauration_niveau", "Restauration", "restoration", ["effet:restauration", "retire:drain_energie", "restaure:niveau"], "Restaure un niveau ou une énergie perdue.", { automation: "mj_aid" })], resurrection: [fx("resurrection_complete", "Résurrection", "revival", ["effet:resurrection", "ressuscite:mort"], "Ramène une créature morte à la vie.", { automation: "mj_aid" })], seuil: [fx("ouverture_seuil", "Seuil", "gate", ["effet:seuil", "portail:planaire", "invocation:entite"], "Ouvre un seuil planaire ou appelle une entité extraplanaire.", { automation: "mj_aid" })], sort_astral: [fx("projection_astrale", "Sort astral", "astral_projection", ["effet:sort_astral", "voyage:astral", "cordon_argente"], "Projette le clerc et les bénéficiaires sur le plan astral.", { automation: "mj_aid" })], symbole: [fx("glyphe_symbole", "Symbole", "ward_symbol", ["effet:symbole", "piege:magique", "effet:variable"], "Inscrit un symbole magique déclenché par une condition et produisant un effet choisi.", { automation: "mj_aid" })], tremblement_de_terre: [fx("seisme_localise", "Tremblement de terre", "area_damage_control", ["effet:tremblement_de_terre", "zone:seisme", "terrain:effondrement"], "Provoque un séisme localisé affectant terrain, constructions, végétation et créatures.", { automation: "damage_or_mj_aid" })] }))]
-]);
+function kindAndTags(name, classSlug) {
+  const key = slug(name);
+  const tags = [`effet:${key}`, `classe:${classSlug}`];
+  let kind = `${classSlug}_effect`;
+  let automation = "active_effect_or_mj_aid";
+  if (/(soin|guerison|guérison|regeneration|régénération|restauration|rappel|resurrection|résurrection|reincarnation|réincarnation)/.test(key)) { kind = "healing_or_restoration"; tags.push("soin_ou_restauration"); }
+  else if (/(detection|détection|localisation|prevision|prévision|communion|orientation|lithomancie|divination|augure)/.test(key)) { kind = "detection_or_divination"; automation = "mj_aid"; tags.push("detection_ou_divination"); }
+  else if (/(langage|amitie|amitié|charme|perception)/.test(key)) { kind = "communication_or_control"; automation = "mj_aid"; tags.push("communication_ou_controle"); }
+  else if (/(protection|bouclier|peau_d_ecorce|invisibilite|invisibilité|resistance|résistance)/.test(key)) { kind = "protection"; tags.push("protection"); }
+  else if (/(paralysie|confusion|debilite|débilité|piege|piège|croc_en_jambe|repulsion|répulsion|quete|quête|exorcisme)/.test(key)) { kind = "control"; tags.push("controle"); }
+  else if (/(feu|foudre|metal|métal|pyrotechnie|tempete|tempête|lames|epines|épines|mort_rampante|pilier|tremblement)/.test(key)) { kind = "damage_or_area_control"; automation = "damage_or_mj_aid"; tags.push("degats_ou_zone"); }
+  else if (/(invocation|serviteur|animal|animaux|insectes|animation)/.test(key)) { kind = "summon_or_actor_effect"; automation = "actor_creation_or_mj_aid"; tags.push("invocation_ou_creation"); }
+  else if (/(plante|plantes|vegetal|végétal|bois|arbre|shillelagh|croissance|batons|bâtons)/.test(key)) { kind = "plant_or_nature_control"; tags.push("plante_ou_nature"); }
+  else if (/(eau|aquatique|climat|vents|vent|terre|pierre|roche|boue|separation|séparation|abaissement)/.test(key)) { kind = "elemental_or_weather_control"; automation = "mj_aid"; tags.push("element_ou_climat"); }
+  return { kind, tags, automation };
+}
+function buildEffectProfile(item, classSlug, level) {
+  const label = text(item?.name ?? item?.system?.nom ?? `Sort ${classSlug}`);
+  const key = slug(label) || `sort_${classSlug}_n${level}`;
+  const { kind, tags, automation } = kindAndTags(label, classSlug);
+  const notes = `Profil mécanique ${classSlug} normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort.`;
+  return ep([fx(key, label, kind, [...tags, `niveau:${level}`], notes, { automation })], level, classSlug);
+}
+function applyEffectProfileOverride(item) {
+  const system = item.system ?? {};
+  const level = spellLevel(system);
+  let classSlug = "";
+  if (CLERIC_LEVELS.includes(level) && isClercSpellLevel(item, level)) classSlug = "clerc";
+  else if (DRUID_LEVELS.includes(level) && isDruideSpellLevel(item, level)) classSlug = "druide";
+  if (!classSlug) return { applied: false, changed: false, level, classSlug: "" };
+  const next = buildEffectProfile(item, classSlug, level);
+  const before = JSON.stringify(system.effectProfile ?? {});
+  system.effectProfile = next;
+  return { applied: true, changed: before !== JSON.stringify(next), level, classSlug };
+}
+function ensureSystem(system) {
+  for (const key of SYSTEM_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(system, key)) continue;
+    if (["spellLists", "composants_materiels", "tags", "effectTags"].includes(key)) system[key] = [];
+    else if (key === "effectProfile") system[key] = { version: EFFECT_PROFILE_VERSION, source: "canonical-system", effects: [] };
+    else if (key === "composants_materiels_a_renseigner") system[key] = false;
+    else system[key] = "";
+  }
+}
+function makeBucket() { return { applied: [], missing: [] }; }
 
-function addAliases(level, aliases) { const map = LEVEL_PROFILES.get(level); for (const [alias, target] of Object.entries(aliases)) { const found = map.get(slug(target)); if (found) map.set(slug(alias), found); } }
-addAliases(2, { detection_de_charme: "detection_des_charmes", detection_de_pieges: "detection_des_pieges", silence_sur_5_m: "silence_sur_5_metres", perception_de_l_alignement: "perception_des_alignements", detection_des_alignements: "perception_des_alignements" });
-addAliases(3, { desenvoûtement: "desenvoutement", désenvoûtement: "desenvoutement", envoutement: "desenvoutement", dissipation_magie: "dissipation_de_la_magie", guerison_cecite: "guerison_de_la_cecite", guérison_de_la_cécité: "guerison_de_la_cecite", guerison_des_maladie: "guerison_des_maladies", nécro_animation: "necro_animation", animation_des_morts: "necro_animation", localisation_d_objet: "localisation_d_objets" });
-addAliases(4, { bâtons_a_serpents: "batons_a_serpents", batons_a_serpent: "batons_a_serpents", detection_mensonges: "detection_des_mensonges", protection_contre_le_mal_sur_3m: "protection_contre_le_mal_sur_3_m", protection_contre_le_mal_3_m: "protection_contre_le_mal_sur_3_m", soin_majeur: "soins_majeurs", soins_majeur: "soins_majeurs" });
-addAliases(5, { fléau_d_insectes: "fleau_d_insectes", fleau_d_insecte: "fleau_d_insectes", quête_religieuse: "quete_religieuse", rappel_vie: "rappel_a_la_vie", rappel_a_vie: "rappel_a_la_vie", soins_ultimes: "soin_ultime" });
-addAliases(6, { guérison: "guerison", invocation_animaux: "invocation_des_animaux", langage_monstres: "langage_des_monstres", séparation_des_eaux: "separation_des_eaux", serviteur_aérien: "serviteur_aerien" });
-addAliases(7, { contrôle_du_climat: "controle_du_climat", controle_climat: "controle_du_climat", parole_sacree: "parole_sacree_maudite", parole_sacrée: "parole_sacree_maudite", parole_maudite: "parole_sacree_maudite", parole_sacree_ou_maudite: "parole_sacree_maudite", parole_sacrée_maudite: "parole_sacree_maudite", résurrection: "resurrection" });
+function main() {
+  const input = path.resolve(repoRoot, process.argv[2] || DEFAULT_INPUT);
+  const output = path.resolve(repoRoot, process.argv[3] || DEFAULT_OUTPUT);
+  const controlOutput = path.resolve(repoRoot, process.argv[4] || DEFAULT_CONTROL);
+  if (!fs.existsSync(input)) throw new Error(`Fichier introuvable : ${input}`);
+  const raw = fs.readFileSync(input, "utf8");
+  if (!raw.trim()) throw new Error(`Fichier vide : ${input}`);
+  const json = JSON.parse(raw);
+  const items = getItems(json);
+  const control = {
+    version: VERSION,
+    input: path.relative(repoRoot, input),
+    output: path.relative(repoRoot, output),
+    totalItems: items.length,
+    spells: 0,
+    changedSpells: 0,
+    changedEffectProfiles: 0,
+    emptyMaterialSpells: 0,
+    examples: [],
+    watched: {},
+    suspiciousMaterialComponents: [],
+    sameSystemFieldsForAllSpells: true,
+    canonicalFields: SYSTEM_KEYS
+  };
+  for (const level of CLERIC_LEVELS) control[`clercLevel${level}EffectProfiles`] = makeBucket();
+  for (const level of DRUID_LEVELS) control[`druideLevel${level}EffectProfiles`] = makeBucket();
+  const expected = JSON.stringify([...SYSTEM_KEYS].sort());
 
-function druidKindAndTags(name) { const key = slug(name); const tags = [`effet:${key}`, "classe:druide"]; let kind = "druidic_effect"; let automation = "active_effect_or_mj_aid"; if (/(soin|guerison|regeneration|restauration|rappel|resurrection|reincarnation)/.test(key)) { kind = "healing_or_restoration"; tags.push("soin_ou_restauration"); } else if (/(detection|localisation|prevision|communion|orientation|lithomancie)/.test(key)) { kind = "detection_or_divination"; automation = "mj_aid"; tags.push("detection_ou_divination"); } else if (/(langage|amitie|charme)/.test(key)) { kind = "communication_or_control"; automation = "mj_aid"; tags.push("communication_ou_controle"); } else if (/(protection|bouclier|peau_d_ecorce|invisibilite)/.test(key)) { kind = "protection"; tags.push("protection"); } else if (/(paralysie|confusion|debilite|piege|croc_en_jambe|repulsion)/.test(key)) { kind = "control"; tags.push("controle"); } else if (/(feu|foudre|metal|pyrotechnie|tempete|lames|epines|mort_rampante)/.test(key)) { kind = "damage_or_area_control"; automation = "damage_or_mj_aid"; tags.push("degats_ou_zone"); } else if (/(invocation|serviteur|animal|animaux|insectes)/.test(key)) { kind = "summon_or_animal_effect"; automation = "actor_creation_or_mj_aid"; tags.push("invocation_ou_animaux"); } else if (/(plante|plantes|vegetal|bois|arbre|shillelagh|croissance)/.test(key)) { kind = "plant_or_nature_control"; tags.push("plante_ou_nature"); } else if (/(eau|aquatique|climat|vents|vent|terre|pierre|roche|boue)/.test(key)) { kind = "elemental_or_weather_control"; automation = "mj_aid"; tags.push("element_ou_climat"); } return { kind, tags, automation }; }
-function buildDruidEffectProfile(item, level) { const label = text(item?.name ?? item?.system?.nom ?? "Sort druidique"); const key = slug(label) || `sort_druide_n${level}`; const { kind, tags, automation } = druidKindAndTags(label); return ep([fx(key, label, kind, [...tags, `niveau:${level}`], "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort.", { automation })], level, "druide"); }
-function applyEffectProfileOverride(item) { const system = item.system ?? {}; const level = spellLevel(system); const map = LEVEL_PROFILES.get(level); if (map && isClercSpellLevel(item, level)) { const effects = map.get(slug(item?.name ?? system.nom)); if (!effects) return { applied: false, changed: false, level, classSlug: "clerc" }; const next = ep(effects, level, "clerc"); const before = JSON.stringify(system.effectProfile ?? {}); system.effectProfile = next; return { applied: true, changed: before !== JSON.stringify(next), level, classSlug: "clerc" }; } if (DRUID_LEVELS.includes(level) && isDruideSpellLevel(item, level)) { const next = buildDruidEffectProfile(item, level); const before = JSON.stringify(system.effectProfile ?? {}); system.effectProfile = next; return { applied: true, changed: before !== JSON.stringify(next), level, classSlug: "druide" }; } return { applied: false, changed: false, level, classSlug: "" }; }
-function ensureSystem(system) { for (const key of SYSTEM_KEYS) { if (Object.prototype.hasOwnProperty.call(system, key)) continue; if (["spellLists", "composants_materiels", "tags", "effectTags"].includes(key)) system[key] = []; else if (key === "effectProfile") system[key] = { version: EFFECT_PROFILE_VERSION, source: "canonical-system", effects: [] }; else if (key === "composants_materiels_a_renseigner") system[key] = false; else system[key] = ""; } }
-function makeClericBucket(level) { return { applied: [], missing: [], expectedAliases: [...(LEVEL_PROFILES.get(level)?.keys() ?? [])].sort() }; }
-function makeDruidBucket() { return { applied: [], missing: [] }; }
-function main() { const input = path.resolve(repoRoot, process.argv[2] || DEFAULT_INPUT); const output = path.resolve(repoRoot, process.argv[3] || DEFAULT_OUTPUT); const controlOutput = path.resolve(repoRoot, process.argv[4] || DEFAULT_CONTROL); if (!fs.existsSync(input)) throw new Error(`Fichier introuvable : ${input}`); const raw = fs.readFileSync(input, "utf8"); if (!raw.trim()) throw new Error(`Fichier vide : ${input}`); const json = JSON.parse(raw); const items = getItems(json); const control = { version: VERSION, input: path.relative(repoRoot, input), output: path.relative(repoRoot, output), totalItems: items.length, spells: 0, changedSpells: 0, changedEffectProfiles: 0, emptyMaterialSpells: 0, examples: [], watched: {}, suspiciousMaterialComponents: [], sameSystemFieldsForAllSpells: true, canonicalFields: SYSTEM_KEYS }; for (const level of CLERIC_LEVELS) control[`clercLevel${level}EffectProfiles`] = makeClericBucket(level); for (const level of DRUID_LEVELS) control[`druideLevel${level}EffectProfiles`] = makeDruidBucket(); const expected = JSON.stringify([...SYSTEM_KEYS].sort()); for (const item of items) { if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") continue; item.system ??= {}; ensureSystem(item.system); const materials = normalizeMaterials(item); const profile = applyEffectProfileOverride(item); control.spells += 1; if (!item.system.composants_materiels.length) control.emptyMaterialSpells += 1; if (materials.changed) { control.changedSpells += 1; if (control.examples.length < 40) control.examples.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, before: materials.before, after: materials.after, notes: materials.notes }); } if (profile.changed) control.changedEffectProfiles += 1; for (const level of CLERIC_LEVELS) if (isClercSpellLevel(item, level)) { const bucket = control[`clercLevel${level}EffectProfiles`]; if (profile.applied && profile.level === level && profile.classSlug === "clerc") bucket.applied.push(item.name); else bucket.missing.push(item.name); } for (const level of DRUID_LEVELS) if (isDruideSpellLevel(item, level)) { const bucket = control[`druideLevel${level}EffectProfiles`]; if (profile.applied && profile.level === level && profile.classSlug === "druide") bucket.applied.push(item.name); else bucket.missing.push(item.name); } const suspicious = (item.system.composants_materiels ?? []).filter(rejectMaterial); if (suspicious.length) control.suspiciousMaterialComponents.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, components: suspicious, allComponents: clone(item.system.composants_materiels) }); const key = slug(item.name ?? item.system.nom); if ([...LEVEL_PROFILES.values()].some(map => map.has(key)) || isDruideSpell(item)) control.watched[item.name] = { classe: item.system.classe, niveau: item.system.niveau, composants_materiels: clone(item.system.composants_materiels), effectProfile: clone(item.system.effectProfile), note: item.system.composants_materiels_note }; if (JSON.stringify(Object.keys(item.system).sort()) !== expected) control.sameSystemFieldsForAllSpells = false; } json.normalizedBy = VERSION; json.normalizedAt = new Date().toISOString(); fs.writeFileSync(output, `${JSON.stringify(json, null, 2)}\n`, "utf8"); fs.writeFileSync(controlOutput, `${JSON.stringify(control, null, 2)}\n`, "utf8"); console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`); for (const level of CLERIC_LEVELS) { const bucket = control[`clercLevel${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} clerc: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); } for (const level of DRUID_LEVELS) { const bucket = control[`druideLevel${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} druide: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); } console.log(`[ADD2E][SPELL_MATERIALS_V3] Suspicious: ${control.suspiciousMaterialComponents.length}`); console.log(`[ADD2E][SPELL_MATERIALS_V3] Output: ${path.relative(repoRoot, output)}`); console.log(`[ADD2E][SPELL_MATERIALS_V3] Control: ${path.relative(repoRoot, controlOutput)}`); }
+  for (const item of items) {
+    if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") continue;
+    item.system ??= {};
+    ensureSystem(item.system);
+    const materials = normalizeMaterials(item);
+    const profile = applyEffectProfileOverride(item);
+    control.spells += 1;
+    if (!item.system.composants_materiels.length) control.emptyMaterialSpells += 1;
+    if (materials.changed) {
+      control.changedSpells += 1;
+      if (control.examples.length < 40) control.examples.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, before: materials.before, after: materials.after, notes: materials.notes });
+    }
+    if (profile.changed) control.changedEffectProfiles += 1;
+    for (const level of CLERIC_LEVELS) if (isClercSpellLevel(item, level)) {
+      const bucket = control[`clercLevel${level}EffectProfiles`];
+      if (profile.applied && profile.level === level && profile.classSlug === "clerc") bucket.applied.push(item.name);
+      else bucket.missing.push(item.name);
+    }
+    for (const level of DRUID_LEVELS) if (isDruideSpellLevel(item, level)) {
+      const bucket = control[`druideLevel${level}EffectProfiles`];
+      if (profile.applied && profile.level === level && profile.classSlug === "druide") bucket.applied.push(item.name);
+      else bucket.missing.push(item.name);
+    }
+    const suspicious = (item.system.composants_materiels ?? []).filter(rejectMaterial);
+    if (suspicious.length) control.suspiciousMaterialComponents.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, components: suspicious, allComponents: clone(item.system.composants_materiels) });
+    if (profile.applied || DRUID_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom)) || CLERIC_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom))) {
+      control.watched[item.name] = { classe: item.system.classe, niveau: item.system.niveau, composants_materiels: clone(item.system.composants_materiels), effectProfile: clone(item.system.effectProfile), note: item.system.composants_materiels_note };
+    }
+    if (JSON.stringify(Object.keys(item.system).sort()) !== expected) control.sameSystemFieldsForAllSpells = false;
+  }
+
+  json.normalizedBy = VERSION;
+  json.normalizedAt = new Date().toISOString();
+  fs.writeFileSync(output, `${JSON.stringify(json, null, 2)}\n`, "utf8");
+  fs.writeFileSync(controlOutput, `${JSON.stringify(control, null, 2)}\n`, "utf8");
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`);
+  for (const level of CLERIC_LEVELS) { const bucket = control[`clercLevel${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} clerc: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
+  for (const level of DRUID_LEVELS) { const bucket = control[`druideLevel${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} druide: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Suspicious: ${control.suspiciousMaterialComponents.length}`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Output: ${path.relative(repoRoot, output)}`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Control: ${path.relative(repoRoot, controlOutput)}`);
+}
+
 main();
