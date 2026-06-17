@@ -1,6 +1,6 @@
 # Audit automatique — illusionniste-niveau-6
 
-Généré le : 2026-06-09T17:42:33.509Z
+Généré le : 2026-06-17T05:58:58.961Z
 
 ## Fichiers
 
@@ -12,7 +12,7 @@ Généré le : 2026-06-09T17:42:33.509Z
 - Classe : `illusionniste`
 - Niveau : `6`
 - Sorts dans l’export : `8`
-- Sorts attendus par la référence : `7`
+- Sorts attendus par la référence : `8`
 - Sorts manquants : `0`
 - Écarts de nom : `0`
 
@@ -27,10 +27,7 @@ Généré le : 2026-06-09T17:42:33.509Z
 | Ombres | OK | OK | OK | V, S |
 | Suggestion de masse | OK | OK | OK | V, M |
 | Vision réelle | OK | OK | OK | V, S |
-
-## Sorts présents hors correspondance stricte
-
-- Voile illusoire
+| Voile illusoire | OK | OK | OK | V, S |
 
 ## Statut
 

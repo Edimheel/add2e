@@ -6,913 +6,229 @@
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_complete_description_normalisee",
+  "status": "reference_liste_noms_complete_regles_a_completer",
   "expectedCount": 30,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-1.json",
+  "rules": {
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Agrandissement",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort provoque l’augmentation immédiate d’une créature ou d’un objet. L’agrandissement se fait au niveau de la taille et du poids. Il ne peut être lancé que sur un seul objet ou une seule créature. La portée du sort est de ½\" par niveau du magicien. L’agrandissement sur un être vivant est de 20 % par niveau du lanceur de sort, avec une augmentation maximale de 200 %. L’agrandissement sur un objet est de 10 % par niveau jusqu'à un maximum de 100 %. La créature, ou l’objet, doit être vue pour que le sort soit effectif. Le volume maximum que le magicien peut affecter est de 270 dm³ pour les matières vivantes et de 135 dm³ pour les matières non-vivantes, par niveau du magicien. Les pouvoirs magiques n’augmentent pas avec le sort; une épée +1, par exemple, restera toujours une épée +1, même si elle est plus grande; un bâtonnet magique allongé à la taille d’un bâton ne pourra qu’accomplir ses fonctions normales; une potion de grande taille requerra simplement l’absorption d’une plus grande quantité de liquide pour que ses effets magiques soient effectifs. En revanche, le poids, la taille et la force sont augmentée. Ainsi, une table bloquant une porte sera plus efficace, une pierre lancée sera plus lourde et sans doute plus dangereuse, des chaînes seront plus massives, des portes plus épaisses, une ficelle pourra devenir une corde et ainsi de suite. De la même façon, une personne de 3,60 m de haut pourra être comparée à un ogre; une personne de 5,40 mètres sera semblable à un géant. L’inverse du sort, rétrécissement, annulera les effets d’un sort d’agrandissement ou réduira la taille des objets ou êtres vivants aux mêmes ratios que le sort normal. Les victimes non-consentantes du sort ou de son inverse ont droit à un jet de protection qui, s’il est réussi, indique que les pouvoirs du sort n’ont eu aucun effet. La composante de ce sort est une pincée de poudre de fer.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pincée de poudre de fer",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Agrandissement",
-        "id": "Ql44mewOhfw0CGSS",
-        "img": "systems/add2e/assets/icones/sorts/agrandissement.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-agrandissement.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 2,
       "nom": "Altération des feux normaux",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort permet au magicien de réduire ou d’agrandir une source de feu — aussi petite que celle d’une torche ou d’une lanterne ou aussi grande que celle d’un feu de camp de 90 cm de diamètre maximum — pour donner à sa taille et à sa lumière l’intensité d’une allumette ou d’un sort de lumière. La réduction d’un feu diminue de moitié la consommation du combustible; l’augmentation, quant à elle, double la consommation de la matière qui brûle. À noter que la chaleur dégagée n’est en aucun cas altérée. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Altération des feux normaux",
-        "id": "aYPpwB93lzPfZUka",
-        "img": "systems/add2e/assets/icones/sorts/alteration_feux_normaux.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-alteration-des-feux-normaux.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 3,
       "nom": "Amitié",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort fait augmenter temporairement le charisme du magicien de 2 à 8 points ou le fait baisser de 1 à 4 points, selon que les créatures dans la zone d’effet ont raté ou réussi leur jet de protection contre les sorts. Celles qui le ratent seront très favorablement impressionnées par le magicien et désireront être son ami et l’aider. Celles qui auront réussi leur jet de protection n’apprécieront pas la présence du lanceur de sort et seront irritées. Ce sort n’a absolument aucun effet sur les créatures ayant une intelligence animale ou moins. Le magicien doit étendre sur son visage de la craie (ou de la farine blanche), du noir de fumée (ou de la suie) et du vermillon avant de lancer le sort.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Amitié",
-        "id": "XWJnBEbhnOoQJ3jA",
-        "img": "systems/add2e/assets/icones/sorts/magicien-amitie.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-amitie.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 4,
       "nom": "Aura magique de Nystul",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, tout objet d’un poids maximum de 50 po (2.5 kg) par niveau du magicien peut être entouré d’une aura magique qui fera croire à toute personne faisant une détection de la magie que cet objet est magique. Cependant, si la personne qui effectue la détection tient l’objet, elle a le droit à un jet de protection contre les sorts. Si ce jet est réussi la personne découvre la supercherie. Autrement, l’aura est simplement magique, mais aucun test ne pourra révéler le type de magie. La composante matérielle de ce sort est un petit morceau de soie que le magicien doit passer sur l’objet affecté.",
-      "composants_materiels_objets": [
-        {
-          "nom": "morceau de soie que le magicien doit passer sur l’objet affecté",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Formulation source du Manuel : « un petit morceau de soie que le magicien doit passer sur l’objet affecté »."
-        }
-      ],
-      "foundry": {
-        "nom": "Aura magique de Nystul",
-        "id": "H8oggIty1B5amxPl",
-        "img": "systems/add2e/assets/icones/sorts/magicien-aura-magique-de-nystul.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-aura-magique-de-nystul.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 5,
       "nom": "Bouclier",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, une barrière invisible se crée devant le magicien. Ce bouclier bloque totalement les attaques par projectile magique. Il confère une classe d’armure de 2 contre les armes lancées à la main (hachettes, fléchettes, javelots, lances de fantassin, etc.), une classe d’armure de 3 contre les projectiles à propulsion (flèches, carreaux, billes, dards de manticore, pierres de fronde, etc.) et une classe d’armure de 4 contre toutes les autres formes d’attaque. Le bouclier donne aussi un bonus de +1 aux jets de protection contre les attaques frontales. Les avantages que procure ce sort ne sont valables que quand il y a attaque frontale, là où le bouclier peut être efficace en se déplaçant de lui-même.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Bouclier",
-        "id": "vfbToqj3FmCBkCZY",
-        "img": "systems/add2e/assets/icones/sorts/bouclier.webp",
-        "onUse": "systems/add2e/scripts/sorts/bouclier.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 6,
       "nom": "Charme-personnes",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de druide charmes-personnes ou mammifères (voir p.56), mais le magicien ne peut charmer que des personnes, c'est-à-dire des demi-elfes, demi-orques, elfes, esprits follets, génies des eaux, gnolls, gnomes, gobelins, hobgobelins, hommes-lézards, humains, kobolds, lutins, nains, orques, petites-gens, pixies et troglodytes. Tous les autres commentaires concernant le sort et ses effets s’appliquent donc uniquement aux personnes.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Charme-personnes",
-        "id": "vzsXf3ju8KaPX7gg",
-        "img": "systems/add2e/assets/icones/sorts/charme_personne.webp",
-        "onUse": "systems/add2e/scripts/sorts/charme_personne.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 7,
       "nom": "Chute de plume",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, ce qui peut être affecté — créature(s) ou objet(s) — devient aussi léger qu’une plume. La vitesse de chute est alors instantanément changée et n’est plus que de 60 cm par seconde, ou 3,60 m par segment, et aucun dégât n’est subi à l’arrivée au sol. Cependant, quand la durée du sort s’achève, le poids redevient normal et la chute aussi si elle n’est pas terminée. Le sort peut être lancé sur le magicien lui-même, sur une autre créature ou sur un objet se trouvant à une distance de 1\" maximum par niveau du lanceur de sort. Le sort dure 1 segment par niveau du magicien. Le sort affecte un volume de 27 m³ et un poids maximum de 2.000 po (100 kg) de base, plus 2.000 po par niveau. Exemple: un magicien de niveau 2 pourra lancer son sort avec une portée maximale de 2\" et le poids autorisé sera de 6.000 po (300 kg). Le sort n’est efficace que pour les chutes libres; il ne peut affecter un coup d’épée ou la charge d’une créature; il peut par contre affecter un projectile propulsé. La composante matérielle est une petite plume ou un peu de duvet que le magicien doit avoir quelque part sur lui.",
-      "composants_materiels_objets": [
-        {
-          "nom": "plume",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à un peu de duvet ; le magicien doit l’avoir sur lui.",
-          "notes": "Formulation source du Manuel : « petite plume »."
-        },
-        {
-          "nom": "duvet",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à une petite plume ; le magicien doit l’avoir sur lui.",
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Chute de plume",
-        "id": "eHS5KR95WVarU3pc",
-        "img": "systems/add2e/assets/icones/sorts/magicien-chute-de-plume.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-chute-de-plume.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 8,
       "nom": "Compréhension des langues",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien est capable de lire un message écrit, normalement incompréhensible pour lui, tel qu’une carte aux trésors (sauf les écrits magiques qu’il reconnaîtra comme magiques) ou de comprendre les paroles d’une créature. Dans les deux cas, le magicien doit toucher l’objet à lire ou la créature à comprendre. Le sort n’autorise pas le magicien à écrire ou parler la langue concernée. Les composantes matérielles de ce sort sont une pincée de suie et quelques grains de sel. L’inverse du sort, confusion des langues, empêche toute compréhension ou annule le sort compréhension des langues.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pincée de suie et quelques grains de sel",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une pincée de suie et quelques grains de sel »."
-        }
-      ],
-      "foundry": {
-        "nom": "Compréhension des langues",
-        "id": "87QO92XmR11xX6d8",
-        "img": "systems/add2e/assets/icones/sorts/magicien-comprehension-des-langues.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-comprehension-des-langues.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 9,
       "nom": "Disque flottant de Tenser",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien crée une surface invisible et circulaire de gravité nulle, connue sous le nom de disque flottant de tenser, d’après le fameux sorcier du même nom (dont la capacité à localiser les trésors et l’avidité pour toute pièce trouvée sont proverbiales). Le disque est concave et fait 90 cm de diamètre; il peut porter un poids maximum de 1.000 po (50 kg) par niveau du magicien. Le disque flotte à environ 1 m du sol et reste de lui-même à cette hauteur. Il maintient une distante constante de 1,80 m environ entre lui et le magicien, à moins que celui-ci ne le fasse se déplacer, à la vitesse de 6\", selon les ordres qu’il donne. Si le magicien fait s’éloigner le disque hors de portée ou si le sort prend fin, le disque s’évanouit et tout ce qu’il portait tombe à terre. Le magicien ne peut pas monter sur le disque: le disque reste toujours à côté du magicien. La composante matérielle est une goutte de mercure.",
-      "composants_materiels_objets": [
-        {
-          "nom": "goutte de mercure",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une goutte de mercure »."
-        }
-      ],
-      "foundry": {
-        "nom": "Disque flottant de Tenser",
-        "id": "yg6KwuVZ0LX0iAJR",
-        "img": "systems/add2e/assets/icones/sorts/magicien-disque-flottant-de-tenser.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-disque-flottant-de-tenser.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 10,
       "nom": "Détection de la magie",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc détection de la magie (voir p.43), sauf que le magicien peut détecter si la magie est très faible, faible, moyenne, forte ou très forte. Le magicien a aussi 10% de chance par niveau de découvrir le type de magie (Divination, Appel, Altération, Charme…). Si la magie est de plusieurs types (Enchantement/Charme par exemple) effectuer un tirage pour chacun d’eux.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Détection de la magie",
-        "id": "Sxmmsj8ap",
-        "img": "systems/add2e/assets/icones/sorts/detection-de-la-magie.webp",
-        "onUse": "systems/add2e/scripts/sorts/detection-de-la-magie.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 11,
       "nom": "Écriture",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien est capable d’inscrire un sort qu’il ne peut comprendre à cet instant (soit à cause de son niveau, soit à cause d’un manque d’intelligence) sur son livre ou sur un autre objet qu’il utilise pour inscrire les sorts qu’il connait. Le magicien doit lancer un jet de protection contre les sorts pour essayer la transcription; ce jet de protection obtient un bonus de +2 si le sort à transcrire est supérieur de seulement 1 niveau à ceux qu’il peut utiliser; si le sort est supérieur de 2 niveaux, le jet de protection est normal et il y a un malus de –1 pour chaque niveau supérieur à partir de 3 niveaux au-dessus. Si ce jet de protection est raté, le magicien subit 1d4 points de dégâts pour chaque niveau du sort qu’il tente de transcrire; de plus il tombe inconscient pour un nombre égal de tours. Ces dégâts, s’ils n’ont pas été fatals, ne peuvent être soignés qu’au rythme de 1 à 4 points de vie par jour, car ce sont des dégâts corporels et mentaux. La transcription du sort prend une heure par niveau du sort et pendant cette période, le magicien est en état de transe et peut toujours se faire surprendre par un ennemi. En plus de la surface d’écriture, le magicien doit utiliser une encre fine faite de substances rares (coût minimum 200 po par flacon, si le magicien ne l’a pas fabriquée lui-même).",
-      "composants_materiels_objets": [
-        {
-          "nom": "encre fine faite de substances rares",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": 200,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Écriture",
-        "id": "0xDSJQMk6eczXt8X",
-        "img": "systems/add2e/assets/icones/sorts/magicien-ecriture.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-ecriture.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 12,
       "nom": "Effacement",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort efface les écrits de nature magique ou normale sur un parchemin ou 1 à 2 pages ou feuilles de papier, vélin ou surface similaire. Par contre, il ne peut pas effacer des runes explosives ou un symbole (voir ces sorts plus loin). Il y a une chance de 50 % +2 % par niveau du magicien pour tous les écrits magiques ou +4 % par niveau pour les écrits normaux. Ce tirage de pourcentage se substitue au jet de protection et tout résultat supérieur à la chance calculée indique un échec.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Effacement",
-        "id": "xRkHrKxTwrMBU0S6",
-        "img": "systems/add2e/assets/icones/sorts/magicien-effacement.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-effacement.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 13,
       "nom": "Escalade d’araignée",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort permet à la créature touchée par le magicien de se déplacer sur des surfaces verticales, comme une araignée géante, c'està-dire avec une vitesse de 3\", ou même de se tenir au plafond. La créature affectée doit avoir les mains et les pieds nus pour pouvoir grimper. Pendant la durée du sort, la créature ne peut tenir aucun objet pesant moins de 50 po (2,5 kg) car de tels objets se colleraient à ses mains ou à ses pieds; ainsi, un magicien sera dans l’incapacité de lancer un sort requérant des composantes matérielles s’il est sous le pouvoir d'un sort d’escalade. Les composantes matérielles sont une goutte de bitume et une araignée vivante. Les deux doivent être avalés par le destinataire du sort.",
-      "composants_materiels_objets": [
-        {
-          "nom": "goutte de bitume",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Avalée pendant l’incantation."
-        },
-        {
-          "nom": "araignée vivante",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Avalée pendant l’incantation."
-        }
-      ],
-      "foundry": {
-        "nom": "Escalade d’araignée",
-        "id": "foYtagnFToouiATL",
-        "img": "systems/add2e/assets/icones/sorts/magicien-escalade-d-araignee.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-escalade-d-araignee.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 14,
       "nom": "Fermeture",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort bloque magiquement une porte, un portail, un sas en bois, métal ou pierre. Cette fermeture maintient une porte comme si elle était bloquée et verrouillée. La portée du sort est de 2\" par niveau du magicien et sa durée est de 1 round par niveau. Les créatures extra-dimensionnelles (démons, diables, élémentaux, etc.) briseront cette fermeture. Un magicien de 4 niveaux supérieurs ou plus à celui qui a lancé le sort peut ouvrir une telle porte comme il le veut. Un sort d’ouverture (voir p.72) ou un sort de dissipation de la magie (voir p.46) annulent le pouvoir d’un sort de fermeture. Des portent bloquées avec ce sort peuvent être cassées ou défoncées.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Fermeture",
-        "id": "R2sA71p9mFINt8Rc",
-        "img": "systems/add2e/assets/icones/sorts/magicien-fermeture.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-fermeture.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 15,
       "nom": "Identification",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien peut tenter de découvrir le pouvoir d’un objet. Pour ce faire, il doit porter l’objet en question selon sa fonction (par exemple, un bracelet au poignet, un casque sur la tête, des bottes aux pieds, une dague dans la main, etc.). Il est à noter que le magicien subit pleinement toute conséquence de l’utilisation de l’objet, bien qu’un jet de protection normalement autorisé soit encore un privilège accordé au magicien. Pour chaque segment de la durée du sort, il y a 15 % de chance plus 5 % par niveau du magicien qu’une propriété de l’objet soit découverte — il est possible que l’objet n’ait aucune propriété et soit seulement un leurre (la présence d’une aura magique de Nystul ou d’une bouche magique étant détectée). À chaque fois qu’une propriété est découverte, le MD lance secrètement un jet de protection contre les sorts pour le magicien. S’il est réussi, la propriété est révélée au magicien; s’il est raté de 1 point, un faux pouvoir sera révélé au magicien; s’il est raté de plus d’1 point, le magicien ne découvre rien. Un objet ne révélera jamais ses bonus au toucher et au dégât, bien qu’on puisse découvrir s’ils sont élevés ou pas. Si c’est un objet à charges, il ne révélera pas son nombre de charges exactes; il pourra donner une fourchette de + ou – 25 % par rapport au nombre de charges actuelles, c.-à-d. qu’un bâtonnet ayant 40 charges pourra être considéré comme ayant 30 ou 50 charges, ou entre les deux. Le magicien dispose de 1 heure par niveau d’expérience après la découverte de l’objet pour l’identifier ou alors toutes les impressions détectables se seront mélangées avec celles du personnage qui l’a détenu. Après avoir lancé ce sort, le magicien perd 8 points de constitution; il doit se reposer pendant une heure par point perdu pour pouvoir les récupérer. Si, après la perte de 8 points, sa constitution descend au-dessous de 3, le magicien tombe inconscient. Il ne reprendra conscience qu’après avoir retrouvé toute sa constitution, 24 heures plus tard. Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin. Il faut ensuite boire l’infusion et avaler une carpe miniature vivante, le tout avant de lancer le sort. Si une pierre porte-bonheur est réduite en poudre et ajoutée à l’infusion, la chance de succès augmente de 25 % et tous les jets de protection obtiennent un bonus +4.",
-      "composants_materiels_objets": [
-        {
-          "nom": "perle",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": 100,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "plume de hibou trempée dans du vin",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "vin",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "carpe miniature vivante",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "pierre porte-bonheur réduite en poudre",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Option permettant d’augmenter la chance de succès.",
-          "notes": "Réduite en poudre et ajoutée à l’infusion."
-        }
-      ],
-      "foundry": {
-        "nom": "Identification",
-        "id": "j4mcEDMWWZDmHxVc",
-        "img": "systems/add2e/assets/icones/sorts/magicien-identification.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-identification.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 16,
       "nom": "Invocation d’un familier",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "un familier peut être très avantageux pour un magicien, car il lui apporte ses points de vie et ses pouvoirs sensoriels; il peut lui parler et lui servir d’éclaireur, d’espion et de garde. Cependant, le magicien n’a aucun moyen de choisir le type de familier qu’il aura et le pouvoir de conjuration est tel qu’une seule tentative par an peut être faite. À chaque fois que le magicien tente de trouver un familier, il doit faire du feu dans un brasero en cuivre avec du charbon. Quand le feu a bien pris, il doit rajouter pour au moins 100 po d’encens, d’herbes (basilic, sarriette et herbe à chat) et de graisse. Quand tout ceci est en train de brûler, le magicien commence son incantation et doit la poursuivre jusqu’à ce qu’un familier arrive ou jusqu’à ce que la durée du temps d’incantation expire. Le Maître de Donjon déterminera secrètement tous les résultats. Le magicien n’a absolument aucun contrôle sur le type de familier qui apparaîtra. Ceci est déterminé sur la table suivante: 1d20 Familier Pouvoirs sensoriels 1-4 Chat noir Excellente vision nocturne et ouïe supérieure 5-6 Corbeau Vision excellente 7-8 Faucon Vision de loin exceptionnelle 9-10 Hibou/Chat huant Vision nocturne égale à la vision diurne humaine et ouïe supérieure 11-12 Crapaud Angle de vision très large 13-14 Belette Ouïe supérieure et odorat exceptionnel 15 Spécial Voir la deuxième table 16-20* Aucun familier dans la portée du sort * Ôter 1 au tirage du dé par tranche de 3 niveaux du magicien et si le résultat est inférieur ou égal à 15, relancer un d16: si un 16 est obtenu, le résultat est considéré comme définitif: pas de familier dans la portée du sort. Si un 15 est obtenu au tirage, utiliser la table suivante pour un familier spécial Alignement du magicien Familier spécial Chaotique mauvais ou chaotique neutre Quasit Chaotique bon, neutre ou neutre bon Pseudo-dragon Loyal neutre ou loyal bon Lutin Loyal mauvais ou neutre mauvais Diablotin Les familiers normaux ont de 2 à 4 points de vie et une classe d’armure de 7 (due à la taille, la vitesse, etc.). Chaque familier est plus intelligent que la normale et totalement fidèle au magicien qui l’a invoqué. Le nombre de points de vie du familier est ajouté à ceux du magicien s’il se trouve à 12\" ou moins de son maître, mais si le familier se fait tuer, le magicien perd de façon permanente le double des points de vie de ce dernier. Si un familier spécial est tiré, les détails des pouvoirs qu’il confère sont donnés dans le MANUEL DES MONSTRES des Règles AVANCÉES DE DONJONS & DRAGONS, sauf en ce qui concerne le lutin. Ce dernier devient l’ami et le compagnon du magicien; le magicien obtient 18 en dextérité (celle du lutin) et l’avantage de ne jamais être surpris; il obtient également un bonus de +2 sur tous les jets de protection. À noter que les familiers spéciaux sont autorisés à jeter un jet de protection contre les sorts quand ils sont invoqués, et si ce jet est réussi, ils ignoreront le sort et AUCUN familier ne sera possible pour le magicien pendant une année. Un familier combattra pour la vie du magicien seulement dans les cas de vie ou de mort; les diablotins et les quasits refuseront à 90 % de le faire s’ils risquent leur propre vie. Ce sort ne peut pas être utilisé sous l’eau.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Invocation d’un familier",
-        "id": "uaf9HJHgrTYgwKTG",
-        "img": "systems/add2e/assets/icones/sorts/magicien-invocation-d-un-familier.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-d-un-familier.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 17,
       "nom": "Lecture de la magie",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "en lançant ce sort, le magicien est capable de lire les inscriptions magiques sur les objets, livres, parchemins, armes, etc., qui seraient incompréhensibles sans cela (le livre de magie personnel du magicien et les inscriptions déjà lues magiquement restent compréhensibles et lisibles ensuite). Cette lecture ne provoque généralement pas la mise en action de la magie contenue, bien que cela puisse être le cas avec un parchemin maudit. De plus, une fois que le sort lecture de la magie est lancé et que le magicien a lu l’inscription magique, il est capable de relire cette même inscription ultérieurement sans avoir recourt à ce sort. Le sort dure 2 rounds par niveau du magicien. La composante matérielle de ce sort est un cristal clair ou un prisme minéral; cette composante ne disparaît pas avec l’utilisation. L’inverse du sort, obscurcissement de la magie, fait que les écrits magiques deviennent illisibles même avec le sort de lecture de la magie, jusqu’à ce que le sort soit terminé ou que soit lancée une dissipation de la magie. Les composantes matérielles pour l’inverse du sort sont une pincée de poussière et une goutte d’eau.",
-      "composants_materiels_objets": [
-        {
-          "nom": "cristal clair ou prisme minéral",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Cette composante ne disparaît pas avec l’utilisation."
-        }
-      ],
-      "foundry": {
-        "nom": "Lecture de la magie",
-        "id": "C3BPJmqOmR14lZgX",
-        "img": "systems/add2e/assets/icones/sorts/magicien-lecture-de-la-magie.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-lecture-de-la-magie.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 18,
       "nom": "Lumière",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus et le fait qu’il ne soit pas réversible, ce sort est le même que le sort de niveau 1 de clerc lumière (voir p.44)",
-      "composants_materiels_objets": [],
-      "foundry": null,
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 19,
       "nom": "Lumières dansantes",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien crée, à son choix, 1 à 4 lumières qui ressemblent à: A) des torches et/ou des lanternes (dégageant la même lumière), B) des sphères brillantes de lumière (comme celles des feux follets) ou C) une forme lumineuse, vaguement humaine, quelque chose de similaire à une créature du plan élémentaire du feu. Les lumières dansantes se déplacent là où le magicien le désire, en avant ou en arrière, tout droit ou en tournant, et ceci tant que le magicien se concentre sur ces mouvements. Le sort sera annulé si la portée ou la durée sont dépassées. La portée est de 4\" + 1\" par niveau du magicien et la durée est de 2 rounds par niveau. La composante matérielle est soit un peu de phosphore, soit un ver luisant.",
-      "composants_materiels_objets": [
-        {
-          "nom": "phosphore",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à un ver luisant.",
-          "notes": null
-        },
-        {
-          "nom": "ver luisant",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative au phosphore.",
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Lumières dansantes",
-        "id": "1ZPprzuVFnjKQGVz",
-        "img": "systems/add2e/assets/icones/sorts/magicien-lumieres-dansantes.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-lumieres-dansantes.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 20,
       "nom": "Mains brûlantes",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand le magicien lance ce sort, des flammes brûlantes jaillissent du bout de ses doigts. Les deux pouces du magicien doivent se toucher et les autres doigts doivent être en éventail pour que les flammes puissent jaillir vers l’avant. Ces flammes font environ 1 m de long, sur un arc horizontal de 120° à peu près, devant le magicien. Toute créature dans la zone d’effet des flammes subit 1 point de dégâts pour chaque niveau du magicien; il n’y a aucun jet de protection. Les matières inflammables touchées par les flammes prendront feu (vêtements, papier, parchemin, bois fin, etc.). Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Zone d'effet: 75 cm de large",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Mains brûlantes",
-        "id": "KdSGwTV1VKI5YjDI",
-        "img": "systems/add2e/assets/icones/sorts/magicien-mains-brulantes.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-mains-brulantes.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 21,
       "nom": "Message",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien peut murmurer un message et, secrètement ou ouvertement, pointer son doigt en même temps; le message murmuré ira en ligne droite jusqu’à la créature désignée et lui sera audible. Le message doit tenir dans la durée du sort et, s'il reste du temps, la créature qui a reçu le message peut envoyer une réponse qui sera entendue par le magicien. Il doit y avoir un espace vide entre le magicien et la personne concernée. La composante matérielle est une petite pièce de cuivre, finement ciselée.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pièce de cuivre finement ciselée",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Formulation source du Manuel : « petite pièce de cuivre finement ciselée »."
-        }
-      ],
-      "foundry": {
-        "nom": "Message",
-        "id": "K9mYUPeDhXdXBopk",
-        "img": "systems/add2e/assets/icones/sorts/magicien-message.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-message.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 22,
       "nom": "Poigne électrique",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand un magicien lance ce sort, il développe une puissante charge électrique qui provoque une secousse chez la créature touchée. Ce choc inflige de 1 à 8 points de dégâts (1d8) plus 1 point par niveau du magicien; c.-à-d. qu’un magicien de niveau 2 infligera de 3 à 10 points de dégâts. Le magicien doit juste toucher la victime pour que la décharge électrique ait lieu; mais si la victime touche d’elle-même le magicien, le sort ne se décharge pas.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Poigne électrique",
-        "id": "m9Z8xebP4Od4RlsP",
-        "img": "systems/add2e/assets/icones/sorts/magicien-poigne-electrique.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-poigne-electrique.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 23,
       "nom": "Poussée",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "en prononçant les syllabes de ce sort, le magicien crée une force invisible qui frappe l’objectif qu’il montre du doigt. La force de la poussée n’est pas grande, 1 pied-livre par niveau du magicien (1 pied-livre étant la force nécessaire qu’il faut exercer pour déplacer un objet de 0,5 kg de 0,30 m), mais elle peut faire bouger de petits objets sur 0,30 m maximum dans la direction opposée au magicien, faire tomber un objet ou faire perdre l’équilibre à une créature. Exemple pour ce dernier cas: la force peut faire perdre l’équilibre à une créature qui attaque: si la créature rate son jet de protection, elle ne pourra pas frapper ce round ci. Bien sûr la masse de la créature qui attaque ne doit pas dépasser 50 fois la force de poussée, c'est-à-dire qu’un magicien de niveau 1 ne pourra pas affecter une créature pesant plus de 25 kg (50 x 0,5 kg). Une poussée employée sur un objet tenu par une créature fait que la force en pied-livre (1/niveau) sera soustraite de la probabilité de toucher de l’adversaire si ce dernier a raté son jet de protection. La composante matérielle de ce sort est une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé »."
-        }
-      ],
-      "foundry": {
-        "nom": "Poussée",
-        "id": "ZwE7ceveF3dbKFdF",
-        "img": "systems/add2e/assets/icones/sorts/magicien-poussee.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-poussee.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 24,
       "nom": "Projectile magique",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort crée un ou plusieurs projectiles magiques qui partent du bout des doigts du magicien et touchent à coup sûr leurs cibles. Chaque projectile cause de 2 à 5 (1d4+1) points de dégâts. Quand le magicien peut créer plusieurs projectiles, il peut choisir de tirer sur une ou plusieurs cibles dans les limites de la zone d’effet. Pour chaque niveau du magicien, la portée augmente de 1\". Pour chaque tranche de 2 niveaux, le magicien peut créer un nouveau projectile: 2 au niveau 3, 3 au niveau 5, 4 au niveau 7, 5 au niveau 9, 6 au niveau 11, etc.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Projectile magique",
-        "id": "Sr8hvuf42",
-        "img": "systems/add2e/assets/icones/sorts/projectile-magique.webp",
-        "onUse": "systems/add2e/scripts/sorts/projectile-magique.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 25,
       "nom": "Protection contre le mal",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus et le fait que les composantes matérielles soient de la poudre de fer et d’argent pour tracer le cercle de protection, ce sort est le même que le sort de niveau 1 de clerc protection contre le mal (voir p.44).",
-      "composants_materiels_objets": [
-        {
-          "nom": "poudre de fer",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "poudre d’argent",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Protection contre le mal",
-        "id": "S3owai0q7",
-        "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
-        "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 26,
       "nom": "Réparation",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien peut réparer de petites cassures dans des objets. Il peut souder un anneau, un maillon de chaine, un médaillon ou une dague fine, à condition qu'il n'y ait qu'une seule cassure. De la céramique ou des objets de bois avec de multiples cassures et fêlures peuvent redevenir comme neufs. Un trou dans un sac en cuir ou dans une outre à vin est complètement réparé par ce sort. Ce sort ne permet pas la réparation d’objets magiques. Les composantes matérielles sont deux objets magnétiques de n’importe quel type (pierre aimantée par exemple) ou deux copeaux de métal.",
-      "composants_materiels_objets": [
-        {
-          "nom": "deux objets magnétiques",
-          "quantite": 2,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à deux copeaux de métal.",
-          "notes": null
-        },
-        {
-          "nom": "copeaux de métal",
-          "quantite": 2,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à deux objets magnétiques.",
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Réparation",
-        "id": "JasfW0d6Q6kD6Ocu",
-        "img": "systems/add2e/assets/icones/sorts/magicien-reparation.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-reparation.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 27,
       "nom": "Saut",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le destinataire du sort obtient le pouvoir de sauter jusqu’à 9 mètres en avant, 3 mètres en arrière ou 3 mètres en hauteur. Les sauts horizontaux, en avant et en arrière se font sur un arc faible, à peu près les 2/10 de la distance parcourue. Le sort n’assure aucune protection au moment de la réception du saut. Pour chaque tranche de 3 niveaux après le premier, le magicien obtient un saut supplémentaire, donc 2 sauts à partir du niveau 4, 3 au 7e, 4 au 10e, etc. Tous les sauts doivent être effectués dans une période de 1 tour après le lancement du sort. Passé ce délai, le sort n’est plus actif. La composante matérielle est une patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué.",
-      "composants_materiels_objets": [
-        {
-          "nom": "patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué »."
-        }
-      ],
-      "foundry": {
-        "nom": "Saut",
-        "id": "jrbDmeQEatjKE6n5",
-        "img": "systems/add2e/assets/icones/sorts/magicien-saut.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-saut.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 28,
       "nom": "Serviteur invisible",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "un serviteur invisible est un valet non-visible créé pour rendre service au magicien: ouvrir les portes, nettoyer, porter quelque chose, faire le lit, etc. Ce valet est en fait une force, peu puissante, mais qui obéit aux ordres du magicien. Ce serviteur peut porter 200 pièces d’or (10 kg) au maximum et deux fois plus en tirant sur une surface relativement lisse. Il peut ouvrir seulement les portes, tiroirs, couvercles, etc., normaux. La force créée n’a pas de forme et ne peut donc pas être «habillée». Un serviteur invisible ne combat jamais et ne peut pas être tué car c’est une force plus qu’une créature. Il peut être magiquement dissipé ou éliminé quand il subit 6 points de vie de dégâts magiques. Les composantes matérielles de ce sort sont un bout de ficelle et un morceau de bois.",
-      "composants_materiels_objets": [
-        {
-          "nom": "bout de ficelle et un morceau de bois",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un bout de ficelle et un morceau de bois »."
-        }
-      ],
-      "foundry": {
-        "nom": "Serviteur invisible",
-        "id": "sqe9tEofCRkLumNr",
-        "img": "systems/add2e/assets/icones/sorts/magicien-serviteur-invisible.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-serviteur-invisible.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 29,
       "nom": "Sommeil",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand le magicien lance ce sort, il provoque un état comateux chez une ou plusieurs créatures (autres que les morts-vivants et certaines autres créatures; voir Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES). Toutes les créatures affectées doivent se trouver dans un cercle de 3\" de diamètre. Le nombre de créatures qui peuvent être affectées dépend de leur nombre de dés de vie: Dés de vie des créatures Nombre affecté par le sort Jusqu'à 1 4-16 (4d4) 1+1 à 2 2-8 (2d4) 2+1 à 3 1-4 (1d4) 3+1 à 4 1-2 (½d4) 4+1 à 4+4 0-1 (d4: 1-2 = 0; 3-4 = 1) La zone d’effet est déterminée par la portée et le centre de la zone d’effet que décide le magicien. À moins qu’une seule créature au sein d’un groupe ne soit choisie par le magicien, le sort de sommeil affectera en premier les créatures avec le moins de dés de vie ou de niveau. Des coups ou des blessures réveilleront les créatures endormies, mais pas le bruit. Le réveil demande 1 round de combat entier. Les créatures endormies peuvent être tuées automatiquement au rythme de 1 par round et par «éliminateur». Les composantes matérielles de ce sort sont une pincée de sable fin ou des pétales de rose ou un criquet vivant.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pincée de sable fin",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative aux pétales de rose ou au criquet vivant.",
-          "notes": null
-        },
-        {
-          "nom": "pétales de rose",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative au sable fin ou au criquet vivant.",
-          "notes": null
-        },
-        {
-          "nom": "criquet vivant",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative au sable fin ou aux pétales de rose.",
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Sommeil",
-        "id": "YzvHRmS0SVf0NDfO",
-        "img": "systems/add2e/assets/icones/sorts/sommeil.webp",
-        "onUse": "systems/add2e/scripts/sorts/sommeil.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 30,
       "nom": "Ventriloquie",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort permet au magicien de créer des bruits ou de reproduire une voix à l’endroit qu’il désire; par exemple, sur une statue, sur une autre créature, derrière une porte, en bas d’un passage, etc. Le magicien est capable d’imiter une créature en train de parler ou d’émettre des sons; bien sûr il faut que ce soit dans une langue qu’il connait s’il s’agit de paroles, ou alors un bruit qu’il peut faire lui-même s’il s’agit d’un bruit. Chaque auditeur a 10 % de chances par point d’intelligence au-dessus de 12 de découvrir la supercherie. La composante matérielle est un petit parchemin mis en cône.",
-      "composants_materiels_objets": [
-        {
-          "nom": "parchemin mis en cône",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Formulation source du Manuel : « un petit parchemin mis en cône »."
-        }
-      ],
-      "foundry": {
-        "nom": "Ventriloquie",
-        "id": "Sh0s7nf55",
-        "img": "systems/add2e/assets/icones/sorts/ventriloquie.webp",
-        "onUse": "systems/add2e/scripts/sorts/ventriloquie.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     }
   ]
 }

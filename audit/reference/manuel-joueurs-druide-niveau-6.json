@@ -6,248 +6,89 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_complete_description_normalisee",
+  "status": "reference_liste_noms_complete_regles_a_completer",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-6.json",
+  "rules": {
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Bouclier anti-animal",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "en lançant ce sort, le druide crée un champ de force en forme de demi-sphère immobile qui interdit l’entrée à n’importe quelle matière vivante de nature normale (non magique). Ainsi un géant ou un magicien humain sont arrêtés, mais un mort-vivant peut passer, ainsi que des monstres comme: les démons, diables, serviteurs aériens, etc. Cette protection dure pendant un tour par niveau que le druide a atteint.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Bouclier anti-animal",
-        "id": "YiZsypsA769c8dDS",
-        "img": "systems/add2e/assets/icones/sorts/druide-bouclier-anti-animal.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-bouclier-anti-animal.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 2,
       "nom": "Débilité mentale",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort est uniquement employé contre les personnes et créatures qui utilisent des sorts; il transforme le cerveau de la personne visée en celui d’un enfant mentalement attardé. La victime reste dans cet état à moins qu’un sort de guérison, de restauration, ou de souhait majeur, ne soit lancé pour annuler les effets du sort. La nature de ce sort lui confère une efficacité supérieure, c'est-à-dire que les jets de protection subissent des malus: Types de sorts utilisés par la victime Ajustement du jet de protection Sorts de clerc +1 Sorts de druide –1 Sorts de magicien (humain) –4 Sorts d’illusionniste –5 Combinaison ou non-humain –2 Ce sort ne nécessite pas de composante matérielle.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Débilité mentale",
-        "id": "Sd2vcuep5",
-        "img": "systems/add2e/assets/icones/sorts/debilite-mentale.webp",
-        "onUse": "systems/add2e/scripts/sorts/debilite-mentale.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 3,
       "nom": "Graines de feu",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort crée des projectiles spéciaux ou des foyers incendiaires qui brûlent en dégageant énormément de chaleur. Le druide peut lancer ces graines jusqu’à 4\" (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer où frappe la graine) ou les placer à un endroit puis les enflammer avec un mot de commande. Les glands servent de projectiles, alors que les baies de houx sont utilisées comme foyers incendiaires. Le sort crée jusqu’à 4 glands-graines de feu ou 8 baies de houx-graines de feu. Les glands s’enflamment en frappant la cible, causant 2 à 16 (2d8) points de dégât et enflammant les matières inflammables, dans un diamètre de 1\" autour du point d’impact. Les baies de houx sont trop légères pour en faire des projectiles; elles peuvent être placées ou lancées jusqu’à 1,80 m et elles s’enflamment à la prononciation d’un mot de commande. Les baies causent de 1 à 8 points de dégâts à toute créature se trouvant au maximum à ½\" du foyer et les matières inflammables prennent feu. La portée du mot de commande pour les baies est de 4\". Toutes les graines de feu perdent leur pouvoir après une période de 1 tour par niveau du druide; c'est-à-dire qu’un druide de niveau 13 peut utiliser des graines de feu qui resteront efficaces pendant 13 tours maximum. Les cibles des glands doivent être touchées par eux. Si le jet de protection est réussi, les créatures se trouvant dans la zone d’effet ne subissent que la moitié des dégâts, mais les créatures directement touchées subissent les dégâts sans jet de protection. Ce sort ne peut pas être utilisé sous l’eau. À noter que les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.",
-      "composants_materiels_objets": [
-        {
-          "nom": "glands de chêne",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Application utilisant des glands de chêne ; combinable avec les baies de houx.",
-          "notes": null
-        },
-        {
-          "nom": "baie de houx",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Application utilisant des baies de houx ; combinable avec les glands de chêne.",
-          "notes": "Formulation source du Manuel : « baies de houx »."
-        }
-      ],
-      "foundry": {
-        "nom": "Graines de feu",
-        "id": "xVtsnh3iA6UMGbDy",
-        "img": "systems/add2e/assets/icones/sorts/druide-graines-de-feu.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-graines-de-feu.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 4,
       "nom": "Invocation animale III",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort a la même durée et les mêmes effets que le sort de niveau 4, invocation animale I, sauf que le druide peut invoquer jusqu’à 4 animaux de 16 dés de vie maximum chacun ou 8 animaux de 8 dés de vie maximum chacun ou 16 animaux de 4 dés de vie maximum chacun.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Invocation animale III",
-        "id": "nMNhqWS2kUnSRcTD",
-        "img": "systems/add2e/assets/icones/sorts/druide-invocation-animale-iii.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-iii.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 5,
       "nom": "Invocation d'un élémental du feu",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "en lançant ce sort, le druide ouvre une porte sur le plan élémentaire du feu et un puissant élémental du feu (voir Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES) est invoqué pour venir près du druide. Voici les chances de trouver ces différentes créatures: 01-85 élémental du feu de 16 dés de vie 86-94 2 à 4 salamandres 95-98 un éfrit 99-00 élémental du feu surpuissant: de 21 à 24 dés de vie (d4+20) Du fait des relations entre le druide et les forces naturelles et élémentaires, le lanceur du sort n’a pas à craindre que l’élémental se retourne contre lui; donc la concentration sur les activités de l’élémental du feu (ou des autres créatures invoquées) et la protection d’un cercle magique ne sont pas nécessaires. L’élémental invoqué aidera le druide de toutes ses possibilités, y compris en attaquant les ennemis du jeteur de sort. La créature invoquée reste pour un maximum de 1 tour par niveau du druide, à moins qu’elle ne soit renvoyée dans son plan à cause d’une attaque, d’une dissipation de la magie, d’une parole sacrée/maudite ou par l’inverse du sort, dissipation d’un élémental du feu. Seul un druide peut renvoyer, par le sort inversé, les salamandres, les éfrits ou les élémentaux surpuissants. Ce sort ne peut pas être utilisé sous l’eau.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Invocation d'un élémental du feu",
-        "id": "jxGkK0Nw9BmWs5eu",
-        "img": "systems/add2e/assets/icones/sorts/druide-invocation-d-un-elemental-du-feu.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-invocation-d-un-elemental-du-feu.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 6,
       "nom": "Invocation du temps",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort est similaire au sort de clerc contrôle du climat (voir p.52). En lançant ce sort, le druide est capable de créer des conditions climatiques spéciales, mais en rapport avec la saison et le climat de la région où il se trouve. Ainsi, au printemps, le druide peut créer une tornade, un orage, une tempête de neige fondue ou une vague de froid. En été, il peut créer une pluie torrentielle, une vague de canicule, une averse de grêle, etc. En automne, il peut invoquer une vague de froid ou de chaleur, du brouillard, de la neige, etc. Et en hiver, il peut créer une vague de froid intense, du blizzard, etc. Les vents de puissance exceptionnelle (les ouragans) peuvent être invoqués près des côtes, à la fin de l’hiver ou au début du printemps. Le temps ainsi créé n’est pas sous le contrôle du druide. Une tornade pourra ne durer qu'un tour tandis que d'autres types de phénomènes dureront des heures voire des jours. La zone d’effet est également variable: elle va de 2,6 km2 à 260 km2 ou plus. Plusieurs druides peuvent agir de concert pour que le changement de temps soit plus important. Dans une période de 4 tours après le lancement du sort, le changement du climat commence à se faire sentir; le ciel s’éclaircit, l’air devient plus chaud, le vent se lève, etc. Le temps invoqué par le druide se met définitivement en place 6 à 17 tours (d12+5) après le lancement du sort. Ce sort ne peut pas être utilisé sous l’eau. Tout autre gui que le gui majeur diminuera les effets du sort.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Invocation du temps",
-        "id": "8fZOj9M2oULzHaK1",
-        "img": "systems/add2e/assets/icones/sorts/druide-invocation-du-temps.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-invocation-du-temps.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 7,
       "nom": "Mur d’épines",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort crée une barrière de buissons et de fourrés très épais, remplis de ronces excessivement coupantes et longues comme un doigt humain. Toute créature essayant de passer à travers ce mur (ou simplement le percutant) subit 8 point de dégâts plus un nombre de points égaux à sa classe d’armure en ignorant les bonus dus à la dextérité, soit 10 points ou moins; une classe d’armure négative diminue les points de dégâts. Toute créature se trouvant dans la zone d’effet quand le sort est lancé est considérée comme ayant percuté le mur d’épines et doit en plus s’en extirper. Les dégâts sont exprimés pour une tranche de 1\" d’épaisseur du mur. Il faut au moins 4 tours pour se dégager du mur en le tailladant si ce dernier fait 1\" d’épaisseur. Les feux normaux n’ont aucun effet sur les ronces, mais un feu magique les brûlera en deux tours; mais le mur d’épines deviendra alors un mur de feu, dont la face inoffensive se trouvera du côté du druide (voir le sort mur de feu p.61). Le côté le plus proche du mur peut apparaître jusqu’à une distance de 8\" du druide, selon son désir. Le sort dure 1 tour par niveau du druide. Le mur occupe un volume de 1\" x 1\" x 1\" par niveau du druide; donc, un druide de niveau 14 peut créer un mur de la forme qu’il veut; par exemple: 7\" de long, 2\" de haut (ou de profondeur) et de 1\" de profondeur (ou de hauteur). Le druide forme son mur selon l’utilisation qu’il veut en faire. Niveau: 7 Composantes: V, S, M Portée: 4\" Temps d'incantation: 9 segments Durée: 1 round/niveau Jet de protection: aucun Zone d'effet: 54 dm3/niveau RÉPULSION DU BOIS (Altération) Niveau: 6 Composantes: V, S, M Portée: 0 Temps d'incantation: 8 segments Durée: 4 rounds/niveau Jet de protection: aucun Zone d'effet: 12\" de large sur 2\" de long/niveau",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Mur d'épines",
-        "id": "vvlyNag1pWQlMqqw",
-        "img": "systems/add2e/assets/icones/sorts/druide-mur-d-epines.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-mur-d-epines.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 8,
       "nom": "Répulsion du bois",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, des vagues de force roulent devant le druide, se déplaçant dans la direction à laquelle il fait face. Ces vagues de force écartent du druide et repoussent en dehors de la zone d’effet tous les objets en bois qui s’y trouvent. Les objets en bois de plus de 8 cm de diamètre solidement fixés au sol ne sont pas affectés par le sort, mais les objets mobiles (tours de siège, panneaux mobiles, etc.) reculent. Les objets de moins de 8 cm de diamètre et qui sont fixés se brisent en éclats et les morceaux se déplacent avec la vague de force. Les objets comme les boucliers de bois, les lances de fantassin, les manches d’armes, les flèches et les carreaux d’arbalète seront affectés par ce sort, entraînant ceux qui les portent; si une lance de fantassin est plantée pour résister au mouvement, elle se brisera. Même les armes magiques comportant des parties en bois seront repoussées. La durée du sort est de 4 rounds par niveau du druide et les vagues de force continueront à agir pendant cette durée. Les objets se déplacent à la vitesse de 4\" par round. La largeur de la zone d’effet est de 12\" et sa longueur évolue avec le niveau du druide, 2\" par niveau; donc, un druide de niveau 14 affectera une zone de 12\" de large sur 28\" de long et le sort durera 56 rounds. Le druide a besoin, pour lancer son sort, de gui et pour que les effets soient au maximum possible, il faut du gui majeur. Après avoir lancé ce sort, la zone d’effet se maintient en place et le druide peut faire autre chose ou s’en aller sans que l’efficacité du sort n’en soit affectée pour autant. de long/niveau",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Répulsion du bois",
-        "id": "MtgHg2ggpRB851uE",
-        "img": "systems/add2e/assets/icones/sorts/druide-repulsion-du-bois.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-repulsion-du-bois.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 9,
       "nom": "Soin ultime",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort est le même que le sort de niveau 5 de clerc, soin ultime (voir p.50), mais le druide doit utiliser du gui de n’importe quelle sorte comme composante matérielle.",
-      "composants_materiels_objets": [
-        {
-          "nom": "gui",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Soin ultime",
-        "id": "2HXdutkNuMd7wEme",
-        "img": "systems/add2e/assets/icones/sorts/druide-soin-ultime.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-soin-ultime.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 10,
       "nom": "Transit végétal",
-      "ecole": null,
       "niveau": 6,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "grâce à ce sort, le druide est capable d’entrer dans n’importe quelle grande plante et de parcourir n’importe quelle distance, jusqu’à une autre plante de la même espèce, en 1 round. La plante de départ doit être vivante. Le druide n’est pas obligé de connaître l’endroit où se trouve la plante d’arrivée, mais cette dernière doit également être vivante. Si le druide n’est pas certain de l’endroit où se trouve la plante de destination, il peut se contenter d’indiquer la direction et la distance et le pouvoir du sort le transportera le plus près possible de l’endroit désiré. Il y a 20 % de risques, –1 % par niveau du druide, que le voyage l’emmène jusque dans une plante de famille voisine, éloignée de 1,6 à 160 km de l’endroit d’arrivée voulu. Si une plante de destination particulière (donc connue) est désirée, mais que la plante est morte, le sort échoue et le druide doit sortir de la plante de départ dans les 24 heures. Une blessure infligée à une plante portant un druide peut affecter le druide lui-même (voir p.60 porte végétale).",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Transit végétal",
-        "id": "9Y55amDwSzGZYPiM",
-        "img": "systems/add2e/assets/icones/sorts/druide-transit-vegetal.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-transit-vegetal.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     }
   ]
 }

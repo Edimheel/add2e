@@ -6,328 +6,103 @@
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_complete_description_normalisee",
+  "status": "reference_liste_noms_complete_regles_a_completer",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-1.json",
+  "rules": {
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Amitié animale",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le druide est capable de convaincre tout animal qui a au moins une intelligence «animale» (mais pas plus d’une semi-intelligence) qu’il est disposé à être son ami. Si l’animal rate son jet de protection contre les sorts dès que le druide commence son incantation, il attend tranquillement que celui-ci ait fini. Ensuite, il suivra le druide; il est capable d’apprendre 3 «ordres» par point d’intelligence qu’il possède (ces ordres sont ceux que l’on peut apprendre à un chien ou à un autre animal familier du même type, c'est-à-dire qu’ils ne doivent pas être compliqués). L’apprentissage d’un tel ordre doit être achevé en une semaine, l’ensemble des ordres devant être appris en moins de 3 mois après avoir trouvé l’animal. Pendant la période d’apprentissage, l’animal ne blessera pas le druide, mais s’il est laissé seul pendant plus de 3 jours, il reviendra à la vie sauvage et se comportera en conséquence. Le druide peut lancer ce sort pour attirer jusqu’à 2 dés de vie maximum par niveau d’expérience qu’il possède. Cela veut donc dire que le druide ne peut attirer plus de 2 fois son niveau en dés de vie d’animaux. Seuls les animaux d’alignement neutre peuvent être attirés, amadoués et entraînés. Ce sort ne fonctionne que si le druide désire vraiment devenir l’ami de l’animal. Si ses motifs sont autres, l’animal le sent toujours. Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.",
-      "composants_materiels_objets": [
-        {
-          "nom": "gui et un peu de nourriture appréciée par l’animal",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et un peu de nourriture appréciée par l’animal »."
-        }
-      ],
-      "foundry": {
-        "nom": "Amitié animale",
-        "id": "ilgf9I5cZPQitFJy",
-        "img": "systems/add2e/assets/icones/sorts/druide-amitie-animale.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-amitie-animale.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 2,
       "nom": "Aura féérique",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand le druide lance ce sort, il surligne la silhouette d’un objet ou d’une créature avec une lueur pâle et brillante. L’entourage complet dépend du nombre de mètres linéaires, 3,60 mètres par niveau (environ un homme de 1,80 m ou 2 kobolds de 90 cm). Si le druide est assez puissant, plusieurs objets ou créatures peuvent être surlignés, mais le druide ne peut passer à une autre cible que lorsqu’il a complètement surligné la précédente. Les créatures silhouettées (y compris celles qui sont invisibles) sont visibles à 8\" dans l’obscurité et à 4\" si l’observateur est proche d’une source lumineuse brillante. Les créatures surlignées sont plus facile à atteindre, ainsi leurs adversaires obtiennent un bonus de +2 sur leurs probabilités de toucher. Une aura féérique peut être bleue, verte ou violette selon le mot employé par le druide en lançant ce sort. Une aura féérique n’est pas dangereuse pour la créature ainsi entourée.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Aura féérique",
-        "id": "FPCcOTwEZM4FB4AG",
-        "img": "systems/add2e/assets/icones/sorts/druide-aura-feerique.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-aura-feerique.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 3,
       "nom": "Détection de la magie",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc détection de la magie (voir p.43), sauf que le druide peut détecter si la magie est très faible, faible, moyenne, forte ou très forte.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Détection de la magie",
-        "id": "7rYWVSj9qG6J4CgE",
-        "img": "systems/add2e/assets/icones/sorts/druide-detection-de-la-magie.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-detection-de-la-magie.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 4,
       "nom": "Détection des pièges sylvestres",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "en lançant ce sort, le druide est capable de détecter les collets ou les fosses dans la zone d’effet indiquée et donc de les éviter. Sous terre, seules les fosses seront détectées, pas les autres formes de pièges. En extérieur, le sort détecte toutes les sortes de pièges: les collets, les pièges à projectiles, les fosses, etc. Le sort dure 4 rounds par niveau du druide, c.-à-d. 4 round au 1er niveau, 8 rounds au 2e niveau, 12 rounds au 3e niveau, etc. ENCHEVÊTREMENT (Altération) Niveau: 1 Composantes: V, S, M Portée: 8\" Temps d'incantation: 3 segments Durée: 1 tour Jet de protection: 1/2 Zone d'effet: 4\" de diamètre",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Détection des pièges sylvestres",
-        "id": "gb1VJgkDBmpxHRqW",
-        "img": "systems/add2e/assets/icones/sorts/druide-detection-des-pieges-sylvestres.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-detection-des-pieges-sylvestres.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 5,
       "nom": "Enchevêtrement",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le druide provoque une croissance importante et ultra-rapide des plantes dans la zone d’effet, afin d'enchevêtrer les créatures qui s’y trouvent. L’herbe, les mauvaises herbes, les buissons et même les arbres se développent, s’entremêlent et s’enroulent autour des créatures, les immobilisant ainsi pour la durée du sort. Si une créature réussit son jet de protection, elle est ralentie à 50 % pendant la durée du sort.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Enchevêtrement",
-        "id": "gchPPB6o9UcwOWO4",
-        "img": "systems/add2e/assets/icones/sorts/druide-enchevetrement.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-enchevetrement.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 6,
       "nom": "Invisibilité aux animaux",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, la créature touchée devient totalement indétectable aux yeux des animaux normaux ayant une intelligence inférieure à 6. Les animaux normaux incluent les variétés géantes, mais excluent ceux possédant des habilités ou pouvoirs magiques. La créature affectée par ce sort est capable de marcher parmi les animaux ou de passer entre eux comme s’il n’existait pas. Par exemple, il peut se tenir à côté de lions affamés ou d’un tyrannosaure rex sans qu’il soit remarqué. Par contre, un palefroi de la nuit, un molosse satanique ou un loup des glaces remarquera certainement la créature. La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.",
-      "composants_materiels_objets": [
-        {
-          "nom": "houx avec lequel le druide doit se frotter",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du houx avec lequel le druide doit se frotter »."
-        }
-      ],
-      "foundry": {
-        "nom": "Invisibilité aux animaux",
-        "id": "wGAk7UDQiD8culJ2",
-        "img": "systems/add2e/assets/icones/sorts/druide-invisibilite-aux-animaux.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-invisibilite-aux-animaux.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 7,
       "nom": "Langage animal",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de clerc langage animal (voir p.45).",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Langage animal",
-        "id": "jtVmvY0cNNKzc8sw",
-        "img": "systems/add2e/assets/icones/sorts/druide-langage-animal.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-langage-animal.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 8,
       "nom": "Localisation des animaux",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le druide peut déterminer la direction et la distance où se trouvent les animaux recherchés présents dans la zone d’effet; le druide peut rechercher n’importe quel animal, mais il doit se concentrer sur le type d’animal qu’il recherche. Il fait face à une direction, pense à l’animal concerné et sait ainsi si cet animal se trouve dans la zone d’effet. Le druide ne peut examiner qu’une seule direction par round, c.-à-d. seulement 2\" de large. Le sort dure 1 round par niveau du druide et la portée est de 2\" de long par niveau d’expérience du druide.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Localisation des animaux",
-        "id": "AzUlTx8pPfOqZS2Q",
-        "img": "systems/add2e/assets/icones/sorts/druide-localisation-des-animaux.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-localisation-des-animaux.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 9,
       "nom": "Passage sans trace",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le destinataire peut marcher sur n’importe quel type de terrain (boue, neige, poussière, etc.) en ne laissant ni trace, ni odeur. Ainsi, le pistage d’une créature sous l’effet de ce sort est impossible. Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère. Note: la zone sur laquelle le destinataire du sort marche irradie une aura de magie, pendant 6 à 36 tours (6d6) après le passage de cette créature.",
-      "composants_materiels_objets": [
-        {
-          "nom": "feuille de gui",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Brûlée ; ses cendres sont éparpillées."
-        },
-        {
-          "nom": "aiguille de pin ou d’un autre conifère",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel."
-        }
-      ],
-      "foundry": {
-        "nom": "Passage sans trace",
-        "id": "ny1kTEpQBJdwExzN",
-        "img": "systems/add2e/assets/icones/sorts/druide-passage-sans-trace.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-passage-sans-trace.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 10,
       "nom": "Prévision du temps",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le druide est sûr à 100 % du temps qu’il fera (ciel, température, précipitations) dans une zone de 23 km² centrée sur le druide. Pour chaque niveau du druide, le temps peut être prédit 2 heures à l’avance, donc 4 heures à l’avance pour un druide niveau 2, etc. Ce sort ne peut pas être utilisé sous l’eau.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Prévision du temps",
-        "id": "evIx4b26WpJLeXyT",
-        "img": "systems/add2e/assets/icones/sorts/druide-prevision-du-temps.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-prevision-du-temps.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 11,
       "nom": "Purification de l'eau",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, de l’eau sale, contaminée, polluée est rendue claire, pure et potable. Le druide peut ainsi purifier 27 dm3 par niveau. L’inverse du sort, corruption de l’eau, fonctionne de la même manière, mais avec les effets inverses. De l’eau bénite/maudite peut être polluée.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Purification de l'eau",
-        "id": "qWQgy9OIassdDWDQ",
-        "img": "systems/add2e/assets/icones/sorts/druide-purification-de-l-eau.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-purification-de-l-eau.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 12,
       "nom": "Shillelagh",
-      "ecole": null,
       "niveau": 1,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort permet au druide de transformer sa massue en chêne en une arme magique +1 au toucher, infligeant de 2 à 8 points de dégâts (2d4) sur les ennemis de taille humaine maximum et de 2 à 5 (2d4+1) sur les opposants de plus grande taille. Le druide doit bien sûr savoir manier la massue. Les composantes matérielles de ce sort sont une massue en chêne, du gui et une feuille de trèfle.",
-      "composants_materiels_objets": [
-        {
-          "nom": "massue en chêne",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "gui",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "feuille de trèfle",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Shillelagh",
-        "id": "XbRgfyOQelhZ1LvY",
-        "img": "systems/add2e/assets/icones/sorts/druide-shillelagh.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-shillelagh.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     }
   ]
 }

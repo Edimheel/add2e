@@ -6,763 +6,187 @@
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_complete_description_normalisee",
+  "status": "reference_liste_noms_complete_regles_a_completer",
   "expectedCount": 24,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-5.json",
+  "rules": {
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Chien fidèle de Mordenkainen",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "en lançant ce sort, le magicien invoque un chien de garde fantomatique que lui seul peut voir. Il peut alors lui ordonner de garder une porte, un passage, une pièce ou tout autre lieu similaire. Le chien aboiera immédiatement avec force si une créature plus grosse qu’un chat s’approche de l’endroit qu’il garde. Il peut détecter les créatures invisibles, astrales, éthérées, hors de phase, à deux dimensions ou non-visibles; c’est un excellent gardien! De plus, si la créature (ou les créatures) intruse tourne le dos au chien, ce dernier portera une attaque brutale comme s’il possédait 10 dés de vie et infligera 3 à 18 (3d6) points de dégâts. Le chien peut attaquer n’importe quelle créature, même celles qui ne peuvent être touchées que par des armes magiques +3 ou plus. Le chien ne peut pas être attaqué mais on peut le dissiper. Le magicien ne doit jamais se trouver à plus de 3\" de l’endroit que garde le chien ou le sort est annulé. Les composantes matérielles sont un petit sifflet en argent, un morceau d’os et un fil.",
-      "composants_materiels_objets": [
-        {
-          "nom": "sifflet en argent",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Formulation source du Manuel : « petit sifflet en argent »."
-        },
-        {
-          "nom": "morceau d’os",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "fil",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Chien fidèle de Mordenkainen",
-        "id": "So9k2n77e",
-        "img": "systems/add2e/assets/icones/sorts/chien-fidele-de-mordenkainen.webp",
-        "onUse": "systems/add2e/scripts/sorts/chien-fidele-de-mordenkainen.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 2,
       "nom": "Coffre secret de Léomund",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "pour pouvoir lancer ce sort, le magicien doit posséder un coffre de grande valeur et d’une facture admirable, construit par un maître artisan. S’il est fait de bois, le coffre sera en ébène, bois de rose, bois de santal, teck ou un bois d’une autre essence rare. Tous les angles et toutes les ferrures devront être en platine. Si le coffre est en ivoire, les parties métalliques seront en or; s’il est en bronze, cuivre ou argent, les ferrures seront faites d’électrum ou d’argent. La valeur de ce coffre sera au minimum de 5.000 pièces d’or. Une fois le grand coffre construit, le magicien devra se procurer une miniature de ce coffre, faite avec les mêmes matériaux et la même précision, de façon à ce qu’elle semble être une copie parfaite. Un magicien ne peut avoir qu’une seule paire de ces coffres en même temps et même un souhait majeur ne pourra changer cette obligation. Le magicien prononce l’incantation en touchant le coffre et en tenant la miniature; cela provoque la disparition du grand, qui se place alors sur le plan éthéré. Le coffre peut contenir 27 dm³ de matériel par niveau du lanceur de sort, quelque soit la taille apparente du matériel en question. Il y a 75 % de chances de faire rater le sort si de la matière vivante est mise dans le coffre. C’est pourquoi, la plupart du temps, il n’est utilisé que pour mettre en sécurité des objets de valeur (livres de sorts, objets magiques, gemmes, etc.). Tant que le magicien possède la réplique, il peut faire revenir l’original depuis le plan éthéré jusqu’à l’endroit où il se trouve. Si le petit coffre est perdu ou détruit, il n’y a aucun moyen, même avec un souhait majeur, de faire revenir le grand coffre. Pendant que le coffre se trouve sur le plan éthéré, il y a 1 % de chances cumulatif par semaine qu’une créature le trouve. Si cela arrive, il y a 10 % de chances qu'il soit ignoré, 10 % que quelque chose soit ajouté à son contenu, 30 % de chances que son contenu soit échangé avec quelque chose d'autre, 30 % de chances qu'un objet soit volé et 20 % de chances que le contenu entier soit volé. De plus, quand le coffre revient sur le plan matériel primaire, un passage éthéré s’ouvre et le reste pendant 5 heures, ce passage diminuant peu à peu. Tant que cette ouverture existe entre les deux plans, il y a 5 % de chance qu’un monstre éthéré y passe, avec une réduction de la probabilité de 1 % cumulative pour chaque heure suivante, jusqu’à ce que le passage se referme. Aucune créature sur le plan matériel primaire ne peut localiser le coffre, même avec une gemme de vision, le sort de vision réelle, etc. Si le grand coffre n’est pas rappelé au bout de 60 jours, il y a 5 % de chance cumulatifs par jour qu’il soit définitivement perdu: 5 % au 61e jour, 10 % au 62e jour, etc.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Coffre secret de Léomund",
-        "id": "YmY1ZfpSrQmJqRIX",
-        "img": "systems/add2e/assets/icones/sorts/magicien-coffre-secret-de-leomund.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-coffre-secret-de-leomund.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 3,
       "nom": "Cône de froid",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien crée une zone de froid en forme de cône qui part de ses mains: le cône fait ½\" de long par niveau du lanceur de sort, avec un diamètre de ½\" à sa base pour 2\" à son extrémité. Il absorbe la chaleur et inflige 1d4+1 points de dégât par niveau du magicien. Un magicien de niveau 10 infligera donc 10d4+10 points de dégâts. La composante matérielle est un cône de verre ou de cristal de très petite taille.",
-      "composants_materiels_objets": [
-        {
-          "nom": "cône de verre",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à un petit cône de cristal.",
-          "notes": "Formulation source du Manuel : « petit cône de verre »."
-        },
-        {
-          "nom": "cône de cristal",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à un petit cône de verre.",
-          "notes": "Formulation source du Manuel : « petit cône de cristal »."
-        }
-      ],
-      "foundry": {
-        "nom": "Cône de froid",
-        "id": "daKCJF4Luaija46f",
-        "img": "systems/add2e/assets/icones/sorts/magicien-cone-de-froid.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-cone-de-froid.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 4,
       "nom": "Contact d'autres plans",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "grâce à ce sort, le magicien envoie son esprit sur un autre plan d’existence afin de recevoir des conseils et des informations de la part des puissances qui s’y trouvent. Comme ces puissances sont localisées au hasard et qu’elles n’apprécient pas de tels contacts, les réponses apportées seront toujours brèves («oui», «non», «peut-être», «jamais», «aucun rapport», etc.). Le magicien peut contacter un plan élémentaire ou un plan plus éloigné. Pour chaque tranche de 2 niveaux atteinte, il peut poser une question. Contacter des esprits très éloignés du plan du magicien augmente les risques qu’il a de devenir fou, voire de mourir; mais les chances que l’esprit contacté connaisse, d’une part la réponse, et d’autre part fournisse cette réponse correcte, sont augmentées: Plan Risque de folie* Possibilité de connaitre la réponse Probabilité de véracité de la réponse** Élémentaire 20 % 90 %*** 75 % Éloignement 1 5 % 60 % 65 % Éloignement 2 10 % 65 % 67 % Éloignement 3 15 % 70 % 70 % Éloignement 4 20 % 75 % 73 % Éloignement 5 25 % 80 % 75 % Éloignement 6 30 % 85 % 78 % Éloignement 7 35 % 90 % 81 % Éloignement 8 40 % 95 % 85 % Éloignement 9 ou + 50 % 98 % 90 % * Pour chaque point d’intelligence au-dessus de 15, la possibilité de folie est réduite de 5 % ** Si la réponse est inconnue et que le tirage de véracité indique une réponse vraie, la puissance dira «je ne sais pas»; si la réponse est inconnue et que le tirage de véracité indique une réponse mensongère, la puissance donnera une réponse fausse. *** Considérez que la connaissance aux questions s’applique au plan élémentaire approprié. La folie peut intervenir dès la première question. Elle dure une semaine pour chaque unité d’éloignement du plan contacté, 10 semaines au maximum. Il y a 1 % de chance par plan d’éloignement que le magicien meure avant de recouvrer la raison, à moins qu’il ne soit sujet à un sort de désenvoutement.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Contact d'autres plans",
-        "id": "k0JnUphmxVtqdDkd",
-        "img": "systems/add2e/assets/icones/sorts/magicien-contact-d-autres-plans.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-contact-d-autres-plans.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 5,
       "nom": "Croissance animale",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus et le fait que la composante matérielle soit une pincée de poudre d’os, ce sort est le même que le sort de niveau 5 de druide croissance animale (voir p.61).",
-      "composants_materiels_objets": [
-        {
-          "nom": "pincée de poudre d’os",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Croissance animale",
-        "id": "f2k3BWjZABrQKWZW",
-        "img": "systems/add2e/assets/icones/sorts/magicien-croissance-animale.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-croissance-animale.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 6,
       "nom": "Débilité mentale",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus ce sort est le même que le sort de niveau 6 de druide débilité mentale (voir p.62). La composante matérielle est une poignée de petites sphères d’argile, de cristal, de verre ou minérales.",
-      "composants_materiels_objets": [
-        {
-          "nom": "poignée de petites sphères d’argile, de cristal, de verre ou minérales",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une poignée de petites sphères d’argile, de cristal, de verre ou minérales »."
-        }
-      ],
-      "foundry": {
-        "nom": "Débilité mentale",
-        "id": "WK5FYRTJv5l03gmy",
-        "img": "systems/add2e/assets/icones/sorts/magicien-debilite-mentale.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-debilite-mentale.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 7,
       "nom": "Distorsion des distances",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort ne peut être lancé que si le magicien a auparavant conjuré un élémentaire de terre. Ce dernier ne réagira pas hostilement quand le jeteur de sort lui annoncera qu’il compte lancer une distorsion des distances. Le magicien place l’élémentaire de terre dans la zone d’effet; ce dernier peut distordre les distances de deux manières. Soit il réduit les distances de 50 %, soit il les agrandit de 100 %. Ainsi, un couloir de 3 m x 30 m semblera ne faire que 1.50 m x 15 m ou alors 6 m x 60 m. Quand le sort touche à sa fin, l’élémentaire retourne sur son plan. Il est impossible pour les créatures passant dans la zone touchée par ce sort de s’apercevoir de quelque chose, bien que la zone en question irradie une faible aura de magie. Un sort de vision réelle révélera la présence d’un élémentaire de terre dans la zone d’effet. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est un peu d’argile grasse.",
-      "composants_materiels_objets": [
-        {
-          "nom": "peu d’argile grasse",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un peu d’argile grasse »."
-        }
-      ],
-      "foundry": {
-        "nom": "Distorsion des distances",
-        "id": "TyxGTNAe1knBWFwn",
-        "img": "systems/add2e/assets/icones/sorts/magicien-distorsion-des-distances.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-distorsion-des-distances.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 8,
       "nom": "Eau aérée",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort transforme l’eau et les liquides à base d’eau en une substance respirable. Si le magicien désire entrer dans un lieu sousmarin, il s’avance dans l’eau, lance le sort et s’enfonce dans une sphère remplie de bulles, dans laquelle lui et les personnes qui l’accompagnent peuvent se déplacer et respirer comme s’ils étaient à l’air libre. Le globe se déplace avec le magicien. Les créatures aquatiques fuiront cette sphère d’eau aérée, bien que celles qui sont intelligentes puissent y entrer si elles ont d’autres moyens de locomotion que la nage; aucune créature respirant sous l’eau ne pourra respirer dans cette sphère (ou hémisphère). Le magicien n’a besoin de prononcer qu’un seul mot pour que le sort soit effectif et la composante matérielle est une petite poignée de sels alcalins ou de bromure.",
-      "composants_materiels_objets": [
-        {
-          "nom": "poignée de sels alcalins ou de bromure",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une petite poignée de sels alcalins ou de bromure »."
-        }
-      ],
-      "foundry": {
-        "nom": "Eau aérée",
-        "id": "2o6VDQqrx5bx6rLv",
-        "img": "systems/add2e/assets/icones/sorts/magicien-eau-aeree.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-eau-aeree.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 9,
       "nom": "Extension II",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort est le même que le sort de niveau 4 extension I, excepté qu’il augmente la durée des sorts de niveau 1 à 4 de 50 %.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Extension II",
-        "id": "j8RBv6DtA7saCnGy",
-        "img": "systems/add2e/assets/icones/sorts/magicien-extension-ii.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-extension-ii.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 10,
       "nom": "Invocation d'élémental",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "il y a en fait 4 sorts en un dans ce sort de conjuration. Le magicien peut invoquer un élémental de l’air, de l’eau, de terre ou du feu, à condition qu’il possède les composantes matérielles appropriées. Pour invoquer l’élémental du feu, une grande source de feu doit se trouver dans la portée du sort. Pour celui de l’eau, il faut une grande quantité de ce liquide dans la portée. Les élémentaux conjurés sont très puissants — cf. règles AVANCÉES de DONJONS & DRAGONS, MANUEL DES MONSTRES — ils ont généralement 16 dés de vie (16d8). Il est possible d’invoquer plusieurs élémentaux différents à la suite si le magicien a mémorisé plusieurs fois le sort. Le type d’élémental invoqué devra être choisi avant la mémorisation du sort. L’élémental conjuré doit être contrôlé par le magicien, c.-à-d. que le lanceur de sort doit se concentrer sur les faits et gestes de l’élémental ou bien celui-ci se retournera contre le magicien pour l’attaquer. Cependant, si l’élémental est déjà engagé dans un combat, il ne cessera pas de combattre pour aller l’attaquer; mais sinon, il évitera ses adversaires pour rechercher le contact avec son invocateur. Si le magicien est blessé ou physiquement immobilisé, sa concentration est rompue. Il existe tout de même une probabilité de 5 % que l’élémental se retourne malgré tout contre son invocateur, même ci celui-ci se concentre: ce jet se fait à la fin du deuxième round et à chaque round suivant. Un magicien peut contrôler un élémental jusqu’à 3\" de distance par niveau. L’élémental reste jusqu’à l’expiration du sort ou jusqu’à ce que sa forme matérielle ait subi assez de dégâts pour qu’il soit détruit. Un élémental de l’eau sera détruit s’il s’éloigne à plus de 6\" d’une étendue d’eau. Les composantes de ce sort, mis à par la quantité d’éléments à portée de main, sont: Élémental de l’air: encens à faire brûler Élémental de l’eau: eau et sable Élémental du feu: souffre et phosphore Élémental de terre: argile",
-      "composants_materiels_objets": [
-        {
-          "nom": "encens à faire brûler",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Invocation d’un élémental de l’air.",
-          "notes": null
-        },
-        {
-          "nom": "eau",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Invocation d’un élémental de l’eau.",
-          "notes": null
-        },
-        {
-          "nom": "sable",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Invocation d’un élémental de l’eau.",
-          "notes": null
-        },
-        {
-          "nom": "soufre",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Invocation d’un élémental du feu.",
-          "notes": null
-        },
-        {
-          "nom": "phosphore",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Invocation d’un élémental du feu.",
-          "notes": null
-        },
-        {
-          "nom": "argile",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Invocation d’un élémental de terre.",
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Invocation d’élémental",
-        "id": "naBatu3eatZHd1ZQ",
-        "img": "systems/add2e/assets/icones/sorts/magicien-invocation-d-elemental.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-d-elemental.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 11,
       "nom": "Invocation de Monstre III",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort permet d’invoquer de 1 à 4 monstres de niveau 3, arrivant en 1 à 4 rounds. Voir le sort invocation de monstre I pour plus de détails.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Invocation de Monstre III",
-        "id": "PBUGHsDhjfmhPM0p",
-        "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-iii.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-iii.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 12,
       "nom": "Lithomorphose",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien peut donner une nouvelle forme à un volume de roche. Il peut également façonner une porte dans la roche, au cas où il aurait besoin de s’évader d’un endroit, à condition que le volume de pierre en question puisse être contenu dans la zone d’effet du sort. Bien que des coffres en pierre, des portes secrètes, etc., puissent être façonnés, la finesse des détails n’est pas grande. La composante matérielle est de l’argile grasse que le magicien doit façonner afin qu'elle ait vaguement la forme qu’il désire donner à la pierre, puis toucher celle-ci avec cette argile sculptée pendant l’incantation.",
-      "composants_materiels_objets": [
-        {
-          "nom": "argile grasse façonnée",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Façonnée puis utilisée pour toucher la pierre."
-        }
-      ],
-      "foundry": {
-        "nom": "Lithomorphose",
-        "id": "Smft9cj75",
-        "img": "systems/add2e/assets/icones/sorts/lithomorphose.webp",
-        "onUse": "systems/add2e/scripts/sorts/lithomorphose.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 13,
       "nom": "Main d'interposition de Bigby",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "la main d’interposition de Bigby est une grande main magique qui apparait et se place d’elle-même entre le magicien et l’ennemi qu’il désigne. Cette main reste entre les deux, sans s’occuper de ce que fait le magicien ou de comment s’y prend l’adversaire pour essayer de la contourner. Le magicien décide de la taille de la main; elle peut aller de celle d'un humain jusqu'à celle d'un titan. Pour la détruire, il faut lui infliger avec des armes magiques autant de points de dégâts que le magicien possède de points de vie (sa CA est la même que celle du magicien). Toute créature pesant moins de 1.000 kg et essayant de pousser la main sera ralentie à 50 %. La composante matérielle est un gant.",
-      "composants_materiels_objets": [
-        {
-          "nom": "gant",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Formulation source du Manuel : « un gant »."
-        }
-      ],
-      "foundry": {
-        "nom": "Main d’interposition de Bigby",
-        "id": "Kmy6PUAQMmaBW2Dn",
-        "img": "systems/add2e/assets/icones/sorts/magicien-main-d-interposition-de-bigby.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-main-d-interposition-de-bigby.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 14,
       "nom": "Métempsycose",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "une métempsycose est un sort inhabituel. Il permet au magicien de prendre l’ascendant sur l’esprit de la victime et ainsi de contrôler son corps. Si le corps de la victime est humain ou humanoïde, le magicien peut même utiliser ses propres sorts. Le possesseur peut utiliser les connaissances rudimentaires du possédé, mais pas ses connaissances profondes. Par exemple, il ne pourra pas parler la langue du possédé s’il ne la connait pas, ni utiliser les sorts de ce dernier. Le magicien transfère sa force vitale dans un réceptacle spécial (une grosse gemme ou un cristal) et à partir de ce réceptacle magique, la force vitale peut sentir et attaquer toute créature se trouvant dans la portée du sort; mais le type de créature ne peut pas être deviné. Ce réceptacle doit se trouver dans la portée du sort par rapport au corps du magicien au moment du lancement du sort. La possession est réussie si la victime rate son jet de protection. Une possession ratée fait que la force vitale du magicien reste dans le réceptacle qu’il a choisi. Chaque tentative de possession demande 1 round et ne peut se faire que si la victime est dans la portée du sort par rapport au réceptacle. Si le corps du magicien est détruit, la force vitale dans le réceptacle n’est pas affectée. Par contre, si le réceptacle est détruit, la force vitale l’est aussi. Le retour vers le corps réel demande 1 round, et ne peut être effectué que si le réceptacle se trouve à portée de sort du corps. Le jet de protection contre une métempsycose est modifié en comparant l’intelligence et la sagesse combinées du magicien et de la victime (on ne compare que l’intelligence pour des créatures non humaines et non humanoïdes.): Différence (magicien — victime) Ajustement du jet de protection Fréquence des jets de protection –9 et moins +4 Tous les rounds de –8 à –6 +3 Tous les rounds de –5 à –3 +2 Tous les rounds de –2 à 0 +1 Tous les rounds de 1 à 4 0 Tous les rounds de 5 à 8 –1 Tous les tours de 9 à 12 –2 Tous les jours 13 et plus –3 Toutes les semaines Une différence négative signifie que le magicien a un score plus faible que sa victime, ce qui fait que cette dernière obtient un bonus sur son jet de protection. La composante matérielle est le réceptacle lui-même. Une créature possédée a le droit à un nouveau jet de protection à la fréquence indiquée dans le tableau ci-dessus pour voir si elle peut supplanter l’esprit du possesseur. Si la créature possédée reprend le contrôle de son esprit, le magicien est piégé jusqu’à ce qu’il puisse à son tour reprendre l’ascendant sur l’esprit de sa victime pour soit le contrôler à nouveau, soit pour s’échapper.",
-      "composants_materiels_objets": [
-        {
-          "nom": "réceptacle",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Métempsycose",
-        "id": "ttJqTVO09PEhayZ1",
-        "img": "systems/add2e/assets/icones/sorts/magicien-metempsycose.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-metempsycose.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 15,
       "nom": "Mur de fer",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien crée un mur de fer vertical. Ce mur est généralement utilisé pour cacher une entrée ou colmater une brèche, car il s’insère de lui-même dans la matière environnante, si sa zone d’effet le permet. Ce mur de fer a une épaisseur de 6 mm par niveau du magicien et sa surface est de 1,35 m² par niveau. Ainsi, un magicien de niveau 12 pourra créer un mur de 7 cm d’épaisseur environ et de 16 m² environ. Si le magicien se concentre dans ce but, il pourra doubler la surface du mur en diminuant de moitié son épaisseur. Si le mur est créé dans un endroit où il n’est pas maintenu, il tombera en écrasant les créatures qui peuvent se trouver dessous: le mur a 50 % de chance de tomber d’un côté ou de l’autre; il faudra au moins 30 points de force et 200 kg de masse pour modifier cette probabilité, et encore, de seulement 1 % par tranche de 0,5 kg au-dessus de 150 ou par point de force au-dessus de 30. Le mur est permanent, à moins qu’il ne soit sujet à une dissipation de la magie ou alors à des altérations normales (rouille, perforation, etc.). La composante matérielle est un petit morceau de plaque de fer.",
-      "composants_materiels_objets": [
-        {
-          "nom": "morceau de plaque de fer",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Objet durable ou focus utilisé sans destruction indiquée. Formulation source du Manuel : « un petit morceau de plaque de fer »."
-        }
-      ],
-      "foundry": {
-        "nom": "Mur de fer",
-        "id": "sd1VA2m7L1HNvPxt",
-        "img": "systems/add2e/assets/icones/sorts/magicien-mur-de-fer.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-mur-de-fer.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 16,
       "nom": "Mur de force",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "un mur de force est une barrière invisible que le magicien crée à l’endroit où il le désire, dans la portée du sort. Ce mur immobile est totalement insensible aux autres sorts (même à une dissipation de la magie) à l’exception du sort de désintégration qui le détruit immédiatement. Une baguette d’annulation abattra le mur de force mais sera totalement consommée au cours de l’opération. Une sphère d’annihilation abattra aussi le mur de force mais le vortex créé lors de l’opération aspirera tous les petits objets (ceux qui pèsent moins de 100 po et à moins de 1\" de la sphère). De la même façon, un mur de force n’est pas affecté par les coups, les projectiles, le froid, la chaleur, l’électricité et les autres phénomènes similaires. Les attaques par souffle ne passeront pas au travers. Le magicien peut donner à cette barrière une forme sphérique ou hémisphérique dont la surface sera de 1,80 m² par niveau. La composante matérielle est une pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10.000 po.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10 »."
-        }
-      ],
-      "foundry": {
-        "nom": "Mur de force",
-        "id": "AefoyJiwmSnT9qEM",
-        "img": "systems/add2e/assets/icones/sorts/magicien-mur-de-force.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-mur-de-force.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 17,
       "nom": "Mur de roc",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort crée un mur de granit qui s’unit aux formations rocheuses si l’endroit le permet. Il est généralement employé pour obstruer des passages et des brèches afin d’empêcher des ennemis de passer. Le mur de roc fait 7,5 cm d’épaisseur par niveau du magicien; sa surface est de 1,80 m² par niveau; un magicien de niveau 12 pourra créer un mur de 90 cm d’épaisseur et de 21,6 m² de surface (soit par exemple 3,60 m de large sur 6 m de haut pour complètement obstruer un passage de 3 m sur 4,80 m). Le mur ne sera pas forcément vertical. Il n’a pas non plus besoin de fondations fermes, tant qu’il y a des rochers autour auxquels il peut se joindre (voir mur de fer). Il peut servir de pont au-dessus d’un précipice. Si le mur est utilisé pour former un pont, ce dernier doit être arqué et étayé: cela requiert 50 % du volume total du mur. Ainsi, un magicien de niveau 20 peut normalement créer un mur de 36 m² de surface et de 1,50 m d’épaisseur; pour l’utiliser sous forme de pont, seulement 18 m² doivent être pris en compte, permettant de faire un pont de 1,5 m de large et de 12 m de long (en supposant que le précipice ne mesure pas plus de 11,40 m de large dans ce cas précis). Les ponts sans supports s’effondreront automatiquement sous leur propre poids s’ils dépassent les 6 mètres. Le mur est permanent, à moins d’une dissipation de la magie, d’une désintégration ou d’altérations normales (casser, creuser, etc.). La composante matérielle est un petit bloc de granit.",
-      "composants_materiels_objets": [
-        {
-          "nom": "bloc de granit",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit bloc de granit »."
-        }
-      ],
-      "foundry": {
-        "nom": "Mur de roc",
-        "id": "isr5twi7UEGprtel",
-        "img": "systems/add2e/assets/icones/sorts/magicien-mur-de-roc.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-mur-de-roc.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 18,
       "nom": "Nécro-animation",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc nécro-animation (voir p.47).",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Nécro-animation",
-        "id": "E5Jf7Dh2lk8V5H45",
-        "img": "systems/add2e/assets/icones/sorts/magicien-necro-animation.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-necro-animation.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 19,
       "nom": "Nuage létal",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort crée un nuage de vapeurs mouvantes d’un vertjaune affreux, si toxique qu’il tue automatiquement toute créature avec moins de 4+1 dés de vie. Celles de 4+1 à 5+1 dés de vie doivent lancer un jet de protection à –4 contre le poison et celles de 5+2 à 6 dés de vie lancent un jet de protection normal contre le poison. Si ces jets de protection sont ratés, les créatures affectées sont tuées. Toutes créatures restant plus d’un round dans le nuage (celles ayant réussi leur jet de protection et celles avec 6+1 dés de vie ou plus) subiront 1-10 points de dégâts chaque round à partir du second. Le nuage bouge en s’éloignant du magicien à la vitesse de 1\" par round, en roulant sur la surface du sol. Le vent peut changer sa course, mais ne le fera pas revenir vers le magicien. Un vent fort le dissipera en 4 rounds maximum et un vent plus fort empêchera le magicien de créer le nuage. Une végétation très épaisse dissipera le nuage en 2 rounds, c'est-à-dire que le nuage n’aura pu avancer que de 2\". Comme ces vapeurs sont plus lourdes que l’air, elles suivent la configuration du sol; elles peuvent même s’enfoncer dans les dépressions et les trous; ce sort est très pratique pour se débarrasser d’un nid de fourmis géantes par exemple. Le lanceur du sort peut, s’il le désire, faire en sorte que ce nuage l’entoure.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Nuage létal",
-        "id": "m9giICqkP6PLgPIN",
-        "img": "systems/add2e/assets/icones/sorts/magicien-nuage-letal.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-nuage-letal.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 20,
       "nom": "Paralysie des monstres",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort immobilise 1 à 4 créatures de n’importe quel type se trouvant dans la portée du sort et dans le champ de vision du magicien. Si celui-ci décide de paralyser 3 ou 4 monstres, leur jet de protection sera normal. Si 2 créatures sont visées, leur jet de protection subira un malus de –1. Si un seul monstre est visé, son jet de protection sera à –3. Si le jet de protection est réussi, le sort agit comme un sort de ralentissement. La composante matérielle est une petite barre de métal, une pour chaque monstre visé. Cette barre peut être de la taille d’un clou.",
-      "composants_materiels_objets": [
-        {
-          "nom": "barre de métal, une pour chaque monstre visé",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Objet durable ou focus utilisé sans destruction indiquée. Formulation source du Manuel : « une petite barre de métal, une pour chaque monstre visé »."
-        }
-      ],
-      "foundry": {
-        "nom": "Paralysie des monstres",
-        "id": "C4NFQjWH7tilr2KL",
-        "img": "systems/add2e/assets/icones/sorts/magicien-paralysie-des-monstres.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-paralysie-des-monstres.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 21,
       "nom": "Passe-muraille",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "le sort de passe-muraille permet au magicien d’ouvrir un passage à travers les murs de bois, de plâtre ou de pierre; lui et ses compagnons peuvent donc passer à travers. L’ouverture est de 1,50 m de large, 2,40 m de haut et 3 m de profondeur. Plusieurs sorts de ce type lancés à la suite permettent de former un passage continu. Ainsi, le magicien peut traverser des murs très épais. La composante matérielle est une pincée de graines de sésame.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pincée de graines de sésame",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une pincée de graines de sésame »."
-        }
-      ],
-      "foundry": {
-        "nom": "Passe-muraille",
-        "id": "319ECVaG7zViAnWl",
-        "img": "systems/add2e/assets/icones/sorts/magicien-passe-muraille.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-passe-muraille.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 22,
       "nom": "Télékinésie",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien peut déplacer des objets par la seule force de sa volonté, en se concentrant mentalement sur les déplacements. Les mouvements sont horizontaux ou verticaux; la vitesse de déplacement est de 2\" le 1er round, 4\" le 2e round, 8\" le 3e, 16\" le 4e, etc., chaque round suivant doublant la vitesse du round précédent jusqu’à une vitesse maximale de 1024\" par round (des objets lourds lancés à cette vitesse peuvent être des armes mortelles!). Le sort de télékinésie peut être utilisé pour déplacer des adversaires dont le poids ne dépasse pas la limite autorisée. Mais les victimes peuvent contrer ce pouvoir en utilisant par exemple un sort d’agrandissement (rendant leur poids supérieur à la limite permise). Les différentes applications des sorts Main... de Bigby peuvent aussi servir à contrer ce sort, comme beaucoup d’autres pouvoirs magiques.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Télékinésie",
-        "id": "bRRHc2GEzYv8h3pQ",
-        "img": "systems/add2e/assets/icones/sorts/magicien-telekinesie.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-telekinesie.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 23,
       "nom": "Téléportation",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien se transporte instantanément avec un certain poids supplémentaire, sur lui ou touché par lui, à un endroit bien connu. La distance n’est pas un facteur limitatif, mais une téléportation à travers les plans n’est pas possible. Le magicien peut téléporter un poids maximum de 2.500 po plus 1.500 po par niveau au-dessus du 10e. Ainsi, un magicien de 13e niveau pourra téléporter un poids de 7.000 po (350 kg). Si l’endroit d’arrivée lui est très familier (c'est-à-dire si le magicien en a une image mentale très claire, quant à la proximité et la configuration des lieux), il a très peu de chance de ne pas arriver à l’endroit désiré. Les lieux moins connus (ceux vus par magie ou à distance) augmentent la probabilité d’erreur. Des lieux étrangers présentent un danger considérable: on peut le voir page suivante. Probabilité de téléportation La destination est Trop haute Réussie Trop basse Très familière 01-02 03-99 00 Examinée attentivement 01-04 05-98 99-00 Un peu connue 01-08 09-96 97-00 Vue une seule fois 01-16 17-92 93-00 Jamais vue 01-32 33-84 85-00 Une téléportation trop haute signifie que le magicien arrive 1\" trop haut pour chaque 1 % en dessous du minimum requis, donc seulement 2\" d’erreur maximum quand l’endroit est très familier et un maximum de 32\" trop haut quand l’endroit n’a jamais été vu. Tout résultat indiquant une arrivée trop basse signifie la mort immédiate si l’endroit d’arrivée est solide. Il est impossible de se téléporter à un endroit sans surface: il faut obligatoirement un sol (bois, pierre, sol naturel, etc.).",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Téléportation",
-        "id": "fz3mzpALqk4DBvS8",
-        "img": "systems/add2e/assets/icones/sorts/magicien-teleportation.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-teleportation.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 24,
       "nom": "Transmutation de pierre en boue",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, et le fait que les composantes matérielles soient de l’eau et de l’argile (eau et sable pour l’inverse), ce sort est le même que le sort de niveau 5 de druide transmutation de pierre en boue (voir p.62).",
-      "composants_materiels_objets": [
-        {
-          "nom": "eau",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Sort normal ou inversé.",
-          "notes": null
-        },
-        {
-          "nom": "argile",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Sort normal.",
-          "notes": null
-        },
-        {
-          "nom": "sable",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Sort inversé.",
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Transmutation de pierre en boue",
-        "id": "Sd3li1719",
-        "img": "systems/add2e/assets/icones/sorts/transmutation-de-pierre-en-boue.webp",
-        "onUse": "systems/add2e/scripts/sorts/transmutation-de-pierre-en-boue.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     }
   ]
 }

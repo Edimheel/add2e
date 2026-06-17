@@ -6,257 +6,89 @@
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_complete_description_normalisee",
+  "status": "reference_liste_noms_complete_regles_a_completer",
   "expectedCount": 10,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-5.json",
+  "rules": {
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Bâtons à serpents",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus et le fait que le druide doive utiliser du gui comme composante matérielle, ce sort est le même que le sort de niveau 4 de clerc bâtons à serpents (voir p.48).",
-      "composants_materiels_objets": [
-        {
-          "nom": "gui",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Bâtons à serpents",
-        "id": "tLb7xw1oUqTWIBSP",
-        "img": "systems/add2e/assets/icones/sorts/druide-batons-a-serpents.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-batons-a-serpents.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 2,
       "nom": "Bouclier anti-plantes",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort crée une barrière invisible qui maintient à l’écart les créatures et projectiles de matière végétale vivante. Ainsi, le druide (et les autres personnes à l’intérieur de l’hémisphère) est protégé des attaques des plantes et des créatures végétales comme les tertres errants ou les sylvaniens. Le sort dure pendant un tour par niveau d’expérience du druide.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Bouclier anti-plantes",
-        "id": "nBIJOOTA44bGxVyL",
-        "img": "systems/add2e/assets/icones/sorts/druide-bouclier-anti-plantes.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-bouclier-anti-plantes.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 3,
       "nom": "Communion avec la nature",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort permet au druide de ne faire qu’un avec la nature environnante; il obtient alors le pouvoir de connaitre l’histoire de cette zone. Pour chaque niveau d’expérience, le druide peut connaître un fait à propos du sol, de la végétation, des minéraux, des cours d’eau, des gens habitant dans la zone, des animaux, etc. tout cela devant lui, à gauche ou à droite. Le sort n’est effectif qu’en extérieur et il agit sur un rayon de 800 m pour chaque niveau du druide. Niveau: 5 Composantes: V, S, M Portée: 8\" Temps d'incantation: 7 segments Durée: spéciale Jet de protection: aucun Zone d'effet: spéciale CONTRÔLE DES VENTS (Altération) Niveau: 5 Composantes: V, S, M Portée: 0 Temps d'incantation: 7 segments Durée: 1 tour/niveau Jet de protection: aucun Zone d'effet: hémisphère de 4\" de rayon par niveau",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Communion avec la nature",
-        "id": "2mQgGKskOfdYgHLB",
-        "img": "systems/add2e/assets/icones/sorts/druide-communion-avec-la-nature.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-communion-avec-la-nature.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 4,
       "nom": "Contrôle des vents",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le druide peut changer la force du vent dans la zone d’effet. Pour chaque niveau d’expérience, il peut augmenter ou baisser la vitesse du vent de 5 km/h. Les vents supérieurs à 48 km/h gênent les petites créatures volantes (celle de la taille d’un aigle et moins) et limitent sérieusement le jet de projectiles. Les vents supérieurs à 72 km/h repoussent les créatures volantes de taille humaine. Ceux supérieurs à 96 km/h déroutent toutes les créatures volantes de leur vol, déracinent les petits arbres, renversent les constructions en bois, arrachent les toits, etc. Les vents supérieurs à 120 km/h ont la force d’un ouragan et dévastent tout, sauf les constructions en pierre les plus résistantes. Un vent supérieur à 48 km/h rend la navigation difficile. Un vent supérieur à 72 km/h provoque des dégâts mineurs aux petits navires; supérieur à 96 km/h il met en danger tous les navires; supérieur à 120 km/h, il fait sombrer tous les bateaux. Il y a un «œil» de 4\" de rayon autour du druide dans lequel le vent est calme. Un druide de niveau supérieur peut utiliser ce sort pour contrer les effets du même sort lancé par un druide de niveau inférieur (voir contrôle du climat p.52). Le sort garde son pouvoir pendant un tour par niveau du druide. Une fois que le sort est lancé, le vent augmente sa vitesse de 5 km/h par round, jusqu’à ce que la vitesse maximale soit atteinte. Quand la durée du sort est achevée, le vent faiblit à la même vitesse. Si le sort est utilisé en intérieur, l’œil se rétrécira selon les dimensions du local dans lequel souffle le vent: si la zone d’effet est de 48\" et que le local ne permet qu’un rayon de 46\", l’œil aura 2\" de rayon et tout espace de 44\" ou moins n’autorisera pas la présence de l’œil, exposant le lanceur du sort aux effets du vent. Ce sort ne peut pas être utilisé sous l’eau.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Contrôle des vents",
-        "id": "EtVots6HKBlcVdlr",
-        "img": "systems/add2e/assets/icones/sorts/druide-controle-des-vents.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-controle-des-vents.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 5,
       "nom": "Croissance animale",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le druide peut doubler la taille de 8 animaux maximum, dans une zone de 2\" x 2\". Il a aussi pour effet de doubler le nombre de leurs dés de vie (ce qui améliore leur potentiel d’attaque) et de doubler les dégâts infligés dans un combat. Le sort dure 2 rounds par niveau du druide. Ce sort est particulièrement efficace et utile quand il est lancé après le sort charme-personnes ou mammifères ou le sort langage animal. L’inverse du sort réduit la taille par 2, ainsi que les dés de vie, les dégâts, etc.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Croissance animale",
-        "id": "S0gfyorie",
-        "img": "systems/add2e/assets/icones/sorts/croissance-animale.webp",
-        "onUse": "systems/add2e/scripts/sorts/croissance-animale.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 6,
       "nom": "Fléau d’insectes",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus et le fait que la composante matérielle soit du gui ou son substitut, le houx ou les feuilles de chêne, ce sort est le même que le sort de niveau 5 de clerc fléau d’insectes (voir p.50).",
-      "composants_materiels_objets": [
-        {
-          "nom": "gui",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Composant principal ou alternative au houx et aux feuilles de chêne.",
-          "notes": null
-        },
-        {
-          "nom": "houx",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Substitut au gui.",
-          "notes": null
-        },
-        {
-          "nom": "feuille de chêne",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Substitut au gui.",
-          "notes": "Formulation source du Manuel : « feuilles de chêne »."
-        }
-      ],
-      "foundry": {
-        "nom": "Fléau d’insectes",
-        "id": "Sl13yrvj2",
-        "img": "systems/add2e/assets/icones/sorts/fleau-dinsectes.webp",
-        "onUse": "systems/add2e/scripts/sorts/fleau-dinsectes.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 7,
       "nom": "Invocation animale II",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort a la même durée et les mêmes effets que le sort de niveau 4, invocation animale I, sauf que le druide peut invoquer jusqu’à 6 animaux de 8 dés de vie maximum chacun ou 12 animaux de 4 dés de vie maximum chacun.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Invocation animale II",
-        "id": "ev1iqqbluPZsooao",
-        "img": "systems/add2e/assets/icones/sorts/druide-invocation-animale-ii.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-ii.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 8,
       "nom": "Mur de feu",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort crée un rideau de feu magique de couleur chatoyante, vert-jaune ou ambre pour les druides. Ce mur de feu inflige de 4 à 16 (4d4) points de dégâts plus 1 point de vie par niveau du druide, à toute créature passant à travers. Les créatures à moins de 1\" du mur subissent de 2 à 8 points de dégâts, celles à moins de 2\", 1 à 4 points. Les créatures très sensibles au feu subissent des dégâts additionnels et les morts-vivants subissent toujours le double des dégâts. Seule la face du mur opposée au druide provoque des dommages. Ce mur opaque dure tant que le druide se concentre pour le maintenir ou alors 1 round par niveau si le druide ne se concentre pas. Le mur créé fait 2\" de côté par niveau du druide ou alors forme un anneau d’un rayon de ½\" maximum par niveau du druide et dans les deux cas fait une hauteur de 2\". Le mur est immobile, mais l’anneau se déplace avec le druide. Si le druide se déplace, il lui impossible de maintenir sa concentration sur le mur de feu. Ce sort ne peut pas être utilisé sous l’eau.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Mur de feu",
-        "id": "ibRsKWkteFkyQdDO",
-        "img": "systems/add2e/assets/icones/sorts/druide-mur-de-feu.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-mur-de-feu.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 9,
       "nom": "Passe-plantes",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le druide peut entrer dans un arbre et se transporter à l’intérieur d’un autre arbre du même type qui se trouve environ dans la direction qu’il a choisie et à la distance suivante: Type d’arbre Distance de la zone d’effet Chêne 60\" Frêne 54\" If 48\" Orme 42\" Tilleul 36\" Caduc 30\" Conifère 24\" Autre 18\" L’arbre de départ et celui d’arrivée doivent être du même type, vivants et d’une circonférence au moins égale au druide. Si le druide entre dans un frêne et désire aller au nord aussi loin que possible (54\") mais que le seul frêne à la distance appropriée est au sud, le druide passera dans le frêne qui est au sud. Un passage dure un segment (6 secondes). Le druide peut, s’il le veut, rester dans l’arbre de réception, pendant un round par niveau au maximum. Autrement, il peut aussi en sortir immédiatement. S’il n’y a pas d’arbre désiré à la distance voulue, le druide reste simplement dans l’arbre de départ et en sort au bout d’un nombre de rounds donné par son niveau (ou moins s’il le veut) (voir p.60 le sort porte végétale pour les effets d’une agression sur un tel arbre). Ce sort ne peut pas être utilisé sous l’eau.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Passe-plantes",
-        "id": "x5iMO3BUv9Ze8igE",
-        "img": "systems/add2e/assets/icones/sorts/druide-passe-plantes.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-passe-plantes.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 10,
       "nom": "Transmutation de pierre en boue",
-      "ecole": null,
       "niveau": 5,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort transforme la pierre naturelle, de n’importe quel type, en un volume égal de boue. La profondeur de la boue ne doit jamais excéder la moitié de sa longueur et/ou de sa largeur. S’il est lancé sur un rocher par exemple, le rocher se transforme et boue et s’étale. Les créatures incapables de léviter, de voler ou de sortir de la boue s’y enfonceront (3 m par round) et étoufferont, sauf les créatures légères qui peuvent normalement évoluer sur une telle matière. La boue persiste à moins que le sort de dissipation de la magie ne soit lancé dessus ou que l’inverse du sort, transmutation de boue en pierre ne soit lancé et transforme la boue en pierre, mais sans lui redonner sa forme initiale. L'évaporation transformera la boue en poussière et il faudra de 1 à 6 jours pour l'évaporation de 27 m3 de boue. Le temps exact dépend de l'exposition au soleil, du vent et du drainage de l'humidité. L'inverse du sort, transmutation de boue en pierre, transforme la boue en pierre tendre (du grès ou un minéral similaire), ceci de façon permanente, à moins d'un autre changement magique.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Transmutation de pierre en boue",
-        "id": "UxlwIIKcYa8bf6AK",
-        "img": "systems/add2e/assets/icones/sorts/druide-transmutation-de-pierre-en-boue.webp",
-        "onUse": "systems/add2e/scripts/sorts/druide-transmutation-de-pierre-en-boue.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     }
   ]
 }

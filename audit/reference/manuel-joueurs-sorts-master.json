@@ -580,7 +580,7 @@
     },
     "illusionniste-niveau-6": {
       "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-6.json",
-      "status": "reference_liste_noms_complete_regles_a_completer"
+      "status": "detailed_reference_preserved"
     },
     "illusionniste-niveau-7": {
       "referenceFile": "audit/reference/manuel-joueurs-illusionniste-niveau-7.json",
@@ -623,5 +623,5 @@
       "status": "reference_liste_noms_complete_regles_a_completer"
     }
   },
-  "generatedAt": "2026-06-09T10:48:51.031Z"
+  "generatedAt": "2026-06-17T05:58:58.887Z"
 }

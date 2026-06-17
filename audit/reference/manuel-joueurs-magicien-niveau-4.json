@@ -6,763 +6,187 @@
     "niveau": 4,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_a_verifier_manuellement",
+  "status": "reference_liste_noms_complete_regles_a_completer",
   "expectedCount": 24,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-4.json",
+  "rules": {
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Allométamorphose",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort est semblable au sort charme-personnes (voir p.56) mais il affecte tout type de créature vivante (voir plus loin pour leur nombre). Avec ce sort, le magicien rend toute créature amicale envers lui et il sera considéré comme un allié et un compagnon qu’il faut protéger et bien traiter. Si la communication est possible, la créature charmée suivra loyalement des requêtes, des instructions ou des ordres raisonnables (voir sort de suggestion). Les créatures affectées peuvent échapper à l’influence du magicien en fonction de leurs niveaux et/ou dés de vie. Niveau ou dés de vie du monstre Pourcentage/semaine d’échapper au charme 1er ou jusqu’à 2 5 % 2e ou jusqu’à 3+2 10 % 3e ou jusqu’à 4+4 15 % 4e ou jusqu’à 6 25 % 5e ou jusqu’à 7+2 35 % 6e ou jusqu’à 8+4 45 % 7e ou jusqu’à 10 60 % 8e ou jusqu’à 12 75 % 9e ou plus de 12 90 % Un acte ouvertement hostile du magicien envers la créature charmée annulera automatiquement le sort ou, à la limite, autorisera un nouveau jet de protection pour la créature. Tout comme pour le sort de charme-personnes (voir charme-personnes ou mammifères p.56) si des dommages sont infligés au monstre pendant le round où est incanté le sort, le jet de protection se fait à +1 par point de dégâts subi. Ce sort affecte de 2 à 8 créatures de niveau 1, 1 à 4 créatures de niveau 2, 1 à 2 créatures de niveau 3 ou 1 créature de niveau 4 ou plus. Ce sort ne confère pas soudainement de moyens de communication au magicien ou à ses associés. Si le lanceur du sort est incapable de communiquer ses instructions à la créature charmée, alors le monstre s’abstiendra simplement de faire du mal au magicien et il s’intéressera plutôt aux autres personnes ou créatures présentes dans le coin, en étant hostile ou non.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Allométamorphose",
-        "id": "OwC37LQnhgfxfBPC",
-        "img": "systems/add2e/assets/icones/sorts/magicien-allometamorphose.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-allometamorphose.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 2,
       "nom": "Arme enchantée",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort transforme une arme normale en une arme magique. Cette arme est équivalente à une arme +1, mais n’a en fait aucun bonus. Les arcs, carreaux, dagues, épées, flèches, haches, lances de fantassin, marteaux, masses d’arme, etc. peuvent être enchantés. Le sort peut affecter 2 petites armes (carreaux, dagues, flèches, etc.) ou une grande (arcs, haches, marteaux, masses d’arme, etc.). Une attaque réussie avec un projectile enchanté par ce sort en annule les effets: dans tous les autres cas, l’enchantement dure jusqu’à l’expiration du sort (par exemple, 40 rounds pour un magicien de niveau 8). Les composantes matérielles de ce sort sont du carbone et du citron réduits en poudre.",
-      "composants_materiels_objets": [
-        {
-          "nom": "carbone et du citron réduits en poudre",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « du carbone et du citron réduits en poudre »."
-        }
-      ],
-      "foundry": {
-        "nom": "Arme enchantée",
-        "id": "i9oPB799yhmXRNTj",
-        "img": "systems/add2e/assets/icones/sorts/magicien-arme-enchantee.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-arme-enchantee.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 3,
       "nom": "Autométamorphose",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "par le biais de ce sort, le magicien est capable de se transformer en n’importe quelle créature, de la taille d’un oiseau-mouche à celle d’un hippopotame, et de posséder ses moyens de locomotion. Le sort ne permet pas au magicien de posséder les autres habilités de la créature dont il prend la forme (attaques, magie, etc.). Il ne court pas non plus le risque d’opérer un changement de personnalité. Aucune résistance au traumatisme ne devra être vérifiée. Ainsi, un magicien peut se transformer en hibou: il peut voler, mais sa vision reste normale. Une métamorphose en pudding noir permet la locomotion sous les portes, sur les murs ou au plafond mais il ne possède pas les capacités offensives ou défensives du pudding noir. Naturellement, la force de la créature dont il a pris la forme doit être suffisante pour permettre des mouvements normaux. Le magicien peut se transformer autant de fois qu’il le désire; chaque transformation demande 5 segments. Les dégâts infligés à la forme métamorphosée sont comptés comme s’ils avaient été subis par le magicien, mais quand il retrouve son apparence, il récupère de 1 à 12 (1d12) points de vie.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Autométamorphose",
-        "id": "PXmZOAl9DCJAeUeJ",
-        "img": "systems/add2e/assets/icones/sorts/magicien-autometamorphose.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-autometamorphose.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 4,
       "nom": "Bouclier de feu",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "en lançant ce sort, le magicien semble s’immoler par le feu, alors qu’en fait les flammes sont fines et le feu prend la forme de flammèches, créant une lumière égale à la moitié de l’éclairage d’une torche normale (4,50 m de rayon d’une lumière pâle); ces flammes sont bleues ou vertes dans le premier cas (A), bleues ou violettes dans le second cas (B). Toute créature frappant le magicien avec une arme naturelle ou une arme de mêlée lui infligera des dégâts normaux mais subira elle-même le double de ces dégâts. Les autres pouvoirs du sort dépendent de la variation choisie par le magicien: A) Les flammes sont chaudes et toute attaque basée sur le froid autorise un jet de protection à +2, avec la moitié des dégâts si le jet de protection est raté et aucun s’il est réussi. Les attaques basées sur le feu infligent des dégâts normaux, mais si le magicien rate son jet de protection (s’il y en a un) il subit le double des dégâts. Cette version du sort ne peut normalement pas être utilisée sous l’eau, mais elle peut être incantée et fonctionner à l’intérieur des limites d’un sort d’eau aérée. La composante matérielle pour cette version du sort est un peu de phosphore. B) Les flammes sont froides et toute attaque basée sur le feu autorise un jet de protection à +2, avec la moitié des dégâts si le jet de protection est raté et aucun s’il est réussi. Les attaques basées sur le froid infligent des dégâts normaux, mais si le magicien rate son jet de protection (s’il y en a un) il subit le double des dégâts. La composante matérielle pour cette version du sort est une luciole ou un vert luisant vivant ou 4 queues de ces créatures mortes.",
-      "composants_materiels_objets": [
-        {
-          "nom": "luciole vivante",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative au vert luisant vivant ou aux quatre queues.",
-          "notes": null
-        },
-        {
-          "nom": "vert luisant vivant",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à la luciole vivante ou aux quatre queues.",
-          "notes": null
-        },
-        {
-          "nom": "queue de lucioles ou de verts luisants morts",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative aux créatures vivantes. Quantité : 4.",
-          "notes": "Formulation source du Manuel : « queues de lucioles ou de verts luisants morts »."
-        }
-      ],
-      "foundry": {
-        "nom": "Bouclier de feu",
-        "id": "EjNM7yMhVXwwaOc4",
-        "img": "systems/add2e/assets/icones/sorts/magicien-bouclier-de-feu.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-bouclier-de-feu.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 5,
       "nom": "Charme-monstres",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, ce sort est identique au sort de niveau 7 de druide confusion (voir p.64). Cependant, il affecte une base de 2 à 16 créatures. La composante matérielle est un jeu de 3 coquilles de noisettes.",
-      "composants_materiels_objets": [
-        {
-          "nom": "jeu de 3 coquilles de noisettes",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un jeu de 3 coquilles de noisettes »."
-        }
-      ],
-      "foundry": {
-        "nom": "Charme-monstres",
-        "id": "Hq0MiaQGHC04aCs8",
-        "img": "systems/add2e/assets/icones/sorts/magicien-charme-monstres.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-charme-monstres.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 6,
       "nom": "Confusion",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc désenvoûtement (voir p.46).",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Confusion",
-        "id": "qc2S7OiREu8cVCKQ",
-        "img": "systems/add2e/assets/icones/sorts/magicien-confusion.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-confusion.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 7,
       "nom": "Désenvoûtement",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc désenvoûtement (voir p.46).",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Désenvoûtement",
-        "id": "Sq750xrgb",
-        "img": "systems/add2e/assets/icones/sorts/desenvoutement.webp",
-        "onUse": "systems/add2e/scripts/sorts/desenvoutement.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 8,
       "nom": "Effroi",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien envoie un rayon invisible qui plonge les créatures qui se trouvent dans la zone d’effet dans un état de panique et les fait fuir loin de lui. Il est possible que les créatures affectées laissent tomber tout ce qu’elles tiennent; les chances de base sont de 60 % au premier niveau (ou avec 1 dé de vie) et la probabilité baisse de 5 % pour chaque niveau (ou dé de vie) en plus; un 10e niveau n’aura donc que 15 % de chance de laisser tomber ce qu’il tenait et un niveau 13 n’a aucune chance que cela lui arrive. Les créatures affectées fuient au maximum de leur vitesse de déplacement, pendant un nombre de rounds égal au niveau du magicien. La panique prend effet le round suivant le lancement du sort, mais l’abandon des objets tenus est immédiat. Les créatures qui réussissent leur jet de protection ne sont pas affectées par le sort. La composante matérielle est soit un cœur de poule soit une plume blanche.",
-      "composants_materiels_objets": [
-        {
-          "nom": "cœur de poule",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à une plume blanche.",
-          "notes": null
-        },
-        {
-          "nom": "plume blanche",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative au cœur de poule.",
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Effroi",
-        "id": "VTqrTRciI6HhhBw0",
-        "img": "systems/add2e/assets/icones/sorts/magicien-effroi.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-effroi.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 9,
       "nom": "Embroussaillement",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de druide embroussaillement (voir p.58).",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Embroussaillement",
-        "id": "WZuRPMokWkRk8S0N",
-        "img": "systems/add2e/assets/icones/sorts/magicien-embroussaillement.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-embroussaillement.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 10,
       "nom": "Excavation",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort permet au magicien de creuser 3,375 m³ de terre, sable ou boue par round. Le trou est un cube de 1,50 m d’arête. La matière dégagée se répartit uniformément autour du trou. Si le magicien continue à creuser plus profond que 1,50 m, il y a une chance pour que la fosse s’effondre: 15 % cumulatif par 1,50 m supplémentaire dans la terre, 35 % dans du sable et 55 % dans de la boue. Toute créature se tenant au bord du trou (à moins de 30 cm) doit faire un test de dextérité (d20 inférieur ou égal à dextérité = test réussi) pour éviter de tomber dedans. Toute créature se déplaçant rapidement en direction du trou doit réussir un jet de protection contre les sorts pour éviter d’y tomber. Toute créature se trouvant au centre de l’endroit où la fosse sera creusée y tombera. Ce sort inflige 5-20 points de dégât s’il est lancé sur un golem d’argile. Les composantes matérielles de ce sort sont une pelle miniature et un petit baquet que le magicien doit tenir pendant l’excavation.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pelle miniature",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "baquet",
-          "quantite": 1,
-          "consommation": "non_consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Formulation source du Manuel : « petit baquet »."
-        }
-      ],
-      "foundry": {
-        "nom": "Excavation",
-        "id": "4gmO2NbHZxkLXarh",
-        "img": "systems/add2e/assets/icones/sorts/magicien-excavation.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-excavation.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 11,
       "nom": "Extension I",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "en lançant ce sort, le magicien peut prolonger la durée d’un sort, précédemment incanté, de niveau 1, 2 ou 3 de 50 %. Ainsi, un sort de lévitation durera 1½ tours/niveau, une paralysie durera 3 rounds/niveau, etc. Naturellement ce sort n’est effectif que sur ceux ayant une durée mesurable. Le sort d’extension I doit être lancé après le sort à étendre, soit par un autre magicien dans le même round, soit par le lanceur de sort initial ou un autre dans le round suivant. Si un round s'écoule entre les deux, l’extension est perdue.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Extension I",
-        "id": "ol1qo1S9byPbktdo",
-        "img": "systems/add2e/assets/icones/sorts/magicien-extension-i.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-extension-i.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 12,
       "nom": "Feu charmeur",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien transforme un feu normal tel qu’un brasero, flambeau, feu de joie, en un feu de création magique; autour de ce feu, à 1,50 mètre de distance, apparait un voile de flammèches multicolores. Toute créature regardant le feu ou le cercle de flammes dansantes doit lancer un jet de protection contre les sorts; si ce jet de protection est raté, la créature est charmée et reste immobile, le regard fixé sur les flammes. Toutes les créatures ainsi charmées sont alors sujettes à un sort de suggestion, de 12 mots maximum, dont le jet de protection s'effectue avec un malus de –3. Un feu charmeur est annulé par une attaque physique sur la créature charmée ou si un objet est placé entre la créature et le feu, obstruant ainsi la vue, ou si le sort arrive à son terme. Le voile de flammes n’est pas un feu magique et passer au travers causera des dégâts, égaux à ceux qu’on peut subir si on passe au travers de la source de feu. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est un morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu.",
-      "composants_materiels_objets": [
-        {
-          "nom": "morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « un morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu »."
-        }
-      ],
-      "foundry": {
-        "nom": "Feu charmeur",
-        "id": "ej2pDpTcbBp59ioV",
-        "img": "systems/add2e/assets/icones/sorts/magicien-feu-charmeur.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-feu-charmeur.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 13,
       "nom": "Globe mineur d'invulnérabilité",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort crée une sphère magique autour du magicien qui empêche les sorts de niveau 1, 2 et 3 de rentrer à l’intérieur. Même la zone d’effet de tels sorts ne pénètre pas dans la sphère. En revanche, le magicien peut lancer des sorts vers l’extérieur de la sphère sans qu’ils soient affectés par le globe. Les sorts de 4e niveau ou plus ne sont pas arrêtés par le globe. Les sorts de niveau 3 des objets magiques — boules de feu ou foudre, par exemple – ne pénètrent pas non plus dans le globe. Ce globe peut être détruit par une dissipation de la magie. Lorsqu’il se forme, le globe dégage un faible chatoiement. La composante matérielle est une perle de verre ou de cristal.",
-      "composants_materiels_objets": [
-        {
-          "nom": "perle de verre",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à une perle de cristal.",
-          "notes": null
-        },
-        {
-          "nom": "perle de cristal",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à une perle de verre.",
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Globe mineur d’invulnérabilité",
-        "id": "OQFWHUXg5wCpvWiU",
-        "img": "systems/add2e/assets/icones/sorts/magicien-globe-mineur-d-invulnerabilite.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-globe-mineur-d-invulnerabilite.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 14,
       "nom": "Invocation de monstre II",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort est semblable au sort de niveau 3 de magicien invocation de monstre I (voir p.74). La différence tient dans le fait que ce sont de 1 à 6 (1d6) monstres de niveau 2 qui sont invoqués. La composante matérielle est la même; il y a également 1 à 4 rounds de délai.",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Invocation de monstre II",
-        "id": "xPNrvuMVoTHmz9GY",
-        "img": "systems/add2e/assets/icones/sorts/magicien-invocation-de-monstre-ii.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-ii.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 15,
       "nom": "Maladresse",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "grâce à ce sort le magicien rend la créature affectée maladroite et gauche. Les créatures qui courent trébucheront et tomberont, celles qui prennent un objet le laisseront tomber, celles qui utilisent des armes feront de même. Se relever ou récupérer un objet prendra tout le round suivant. Les objets fragiles peuvent être endommagés dans leur chute. Si la victime réussit son jet de protection, le sort aura seulement le même effet que le sort de ralentissement (voir p.75). La composante matérielle est un petit morceau de lait solidifié (crème épaisse ou beurre).",
-      "composants_materiels_objets": [
-        {
-          "nom": "morceau de lait solidifié (crème épaisse ou beurre)",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Formulation source du Manuel : « petit morceau de lait solidifié (crème épaisse ou beurre) »."
-        }
-      ],
-      "foundry": {
-        "nom": "Maladresse",
-        "id": "od5HnEJxmcuxoc7b",
-        "img": "systems/add2e/assets/icones/sorts/magicien-maladresse.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-maladresse.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 16,
       "nom": "Moyen mnémonique de Rary",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien peut mémoriser ou garder en mémoire 3 niveaux de sort additionnels; à savoir, 3 sorts de niveau 1 ou 1 sort de niveau 2 et 1 sort de niveau 1 ou 1 sort de niveau 3. Le magicien peut choisir de mémoriser immédiatement des sorts additionnels ou choisir de garder en mémoire un sort déjà lancé par le biais de ce sort. Quand le sort est utilisé pour mémoriser des sorts supplémentaires, le magicien doit alors apprendre ces sorts et prévoir les composantes requises. Les composantes matérielles de ce sort sont un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante. Toutes les composantes disparaissent quand le sort est lancé.",
-      "composants_materiels_objets": [
-        {
-          "nom": "morceau de ficelle",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Toutes les composantes disparaissent quand le sort est lancé."
-        },
-        {
-          "nom": "plaque d’ivoire",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": 100,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Toutes les composantes disparaissent quand le sort est lancé."
-        },
-        {
-          "nom": "encre composée de sécrétion de calmar et de sang de dragon noir",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à l’encre composée avec du suc digestif de limace géante.",
-          "notes": "Toutes les composantes disparaissent quand le sort est lancé."
-        },
-        {
-          "nom": "encre composée de sécrétion de calmar et de suc digestif de limace géante",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative à l’encre composée avec du sang de dragon noir.",
-          "notes": "Toutes les composantes disparaissent quand le sort est lancé."
-        }
-      ],
-      "foundry": {
-        "nom": "Moyen mnémonique de Rary",
-        "id": "wtQdhwfXLq5KI8dx",
-        "img": "systems/add2e/assets/icones/sorts/magicien-moyen-mnemonique-de-rary.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-moyen-mnemonique-de-rary.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 17,
       "nom": "Mur de feu",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "ce sort diffère du sort de niveau 5 de druide mur de feu (voir p.61) par ce qui est indiqué ci-dessus et par ce qui suit: les flammes sont soit violettes, soit bleu-rouge; les dégâts de base sont de 2 à 12 points (2d6) plus 1 point de dégât par niveau; le rayon du mur de feu en forme d’anneau est de 1\" + ¼\"/niveau; la composante matérielle est du phosphore. Ce sort ne peut pas être utilisé sous l’eau.",
-      "composants_materiels_objets": [
-        {
-          "nom": "phosphore",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du phosphore »."
-        }
-      ],
-      "foundry": {
-        "nom": "Mur de feu",
-        "id": "Sl22x1gv4",
-        "img": "systems/add2e/assets/icones/sorts/mur-de-feu.webp",
-        "onUse": "systems/add2e/scripts/sorts/mur-de-feu.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 18,
       "nom": "Mur de glace",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, une paroi de glace solide et flexible apparait. La fonction principale de ce mur est défensive, il arrête les poursuivants. Le mur fait 2,5 cm d’épaisseur pour chaque niveau du magicien; il couvre une surface de 1\" carré par niveau, donc un magicien de niveau 10 pourra créer un mur de 10\" de long sur 1\" de haut, ou de 5\" de long sur 2\" de haut et ainsi de suite. Toute créature essayant de défoncer le mur subira 2 points de dégât par tranche de 2,5 cm d’épaisseur de ce mur; les créatures utilisant le feu subiront 3 points de dégât par tranche de 2,5 cm et les créatures utilisant le froid n’en subiront que 1 par tranche de 2,5 cm. Si ce mur est créé horizontalement, pour tomber sur des ennemis, il a le même effet qu’une tempête de glace (voir p.79) sur la zone où il tombe. Des feux magiques, comme les boules de feu ou un souffle brûlant de dragon, feront fondre un mur de glace en un round mais ils créeront un grand nuage d’épaisse vapeur qui durera 1 tour; des feux normaux ou des petits feux magiques ne pourront pas accélérer la fonte de la glace. Un mur de glace peut être créé sous l’eau mais il remonte immédiatement et flotte comme une banquise. La composante matérielle est un petit morceau de quartz ou une pierre cristalline de même type.",
-      "composants_materiels_objets": [
-        {
-          "nom": "morceau de quartz ou une pierre cristalline de même type",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « un petit morceau de quartz ou une pierre cristalline de même type »."
-        }
-      ],
-      "foundry": {
-        "nom": "Mur de glace",
-        "id": "Oe6kWMmtqXjUdluK",
-        "img": "systems/add2e/assets/icones/sorts/magicien-mur-de-glace.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-mur-de-glace.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 19,
       "nom": "Œil magique",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien crée un organe sensoriel invisible qui lui donne des informations visuelles. Cet œil magique se déplace à la vitesse de 3\" par round en visualisant une zone devant lui comme un humain le ferait ou à la vitesse de 1\" par round en examinant les plafonds, les murs et le sol devant lui. L’œil possède l’infravision sur 3 m; dans un lieu brillamment éclairé, il «voit» jusqu’à 18 m. L’œil se déplace dans n’importe quelle direction, tant que dure le sort. La composante matérielle est un morceau de fourrure de chauve-souris.",
-      "composants_materiels_objets": [
-        {
-          "nom": "morceau de fourrure de chauve-souris",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un morceau de fourrure de chauve-souris »."
-        }
-      ],
-      "foundry": {
-        "nom": "Œil magique",
-        "id": "NENvm4CbdMhFClxo",
-        "img": "systems/add2e/assets/icones/sorts/magicien-il-magique.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-il-magique.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 20,
       "nom": "Phytomorphose",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "lorsque ce sort est lancé sur des créatures consentantes et de taille humaine ou moins, le magicien peut donner l’apparence d’arbres à 10 d’entre elles maximum par niveau d’expérience qu’il possède. Les arbres sont des arbres normaux de n'importe quelle sorte. De plus, on peut passer à côté des créatures transformées, on peut même les toucher, sans découvrir quoi que ce soit. Cependant, si des coups sont portés à ces faux arbres, leur vraie nature sera révélée car il y aura une perte de sang et des dégâts auront été subis. Les créatures transformées doivent se trouver dans la zone d'effet. Les créatures non-consentantes ne seront pas affectées par le sort. Le sort dure tant que le magicien ne l'arrête pas de lui-même ou qu'une dissipation de la magie n'est pas lancée. La composante matérielle est une poignée de morceaux d'écorce.",
-      "composants_materiels_objets": [
-        {
-          "nom": "poignée de morceaux d'écorce",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une poignée de morceaux d'écorce »."
-        }
-      ],
-      "foundry": {
-        "nom": "Phytomorphose",
-        "id": "Sjja6qk18",
-        "img": "systems/add2e/assets/icones/sorts/phytomorphose.webp",
-        "onUse": "systems/add2e/scripts/sorts/phytomorphose.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 21,
       "nom": "Piège à feu",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "un piège à feu peut affecter tout objet qu’on peut fermer (livre, boîte, bouteille, coffre, malle, cercueil, porte, tiroir, etc.). Mais dès que ce sort est lancé sur l’objet, le magicien ne peut en lancer un autre dessus, tel qu’un sort de fermeture ou un verrou magique, sauf pour ce qui suit: si on tente de placer un piège à feu et une fermeture, seul le 1er sera effectif, l’autre sera annulé (si les 2 sont lancés en même temps, ils s’annulent tous les 2); si un piège à feu est lancé après un verrou magique, le 1er est annulé (si les deux sont lancés en même temps, ils s’annulent tous les 2); si un verrou magique est lancé après un piège à feu, il y a 50 % de chance que les deux soient annulés. Un sort d’ouverture n’a aucun pouvoir sur un piège à feu: dès que quelqu’un touche l'objet, le piège se déclenche. Le magicien peut utiliser l’objet piégé sans déclencher le sort. Quand le piège fonctionne, il se produit une explosion de 1,50 m de rayon et toutes les créatures dans cette zone d’effet subissent 1d4 points de dégâts plus 1 par niveau du magicien, la moitié seulement si elles réussissent leur jet de protection contre les sorts. L’objet piégé n’est PAS endommagé par l’explosion. Il y a seulement 50 % de chances de détecter un piège à feu et un échec à la tentative de désamorçage fait immédiatement exploser le piège. Le sort peut être annulé/dissipé par une dissipation de la magie. Ce sort ne peut pas être utilisé sous l’eau. Pour lancer ce sort, le magicien doit surligner le système de fermeture avec du souffre ou du salpêtre.",
-      "composants_materiels_objets": [
-        {
-          "nom": "soufre",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative au salpêtre.",
-          "notes": null
-        },
-        {
-          "nom": "salpêtre",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Alternative au soufre.",
-          "notes": null
-        }
-      ],
-      "foundry": {
-        "nom": "Piège à feu",
-        "id": "p9jlQvfec03qUS4e",
-        "img": "systems/add2e/assets/icones/sorts/magicien-piege-a-feu.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-piege-a-feu.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 22,
       "nom": "Porte dimensionnelle",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "avec ce sort, le magicien se déplace instantanément de 3\" maximum par niveau qu’il a atteint. Cette forme spéciale de téléportation est sûre, il n’y a pas d’erreur possible et le magicien arrive toujours exactement à l’endroit désiré, soit en visualisant simplement l’endroit, soit en énonçant la distance et la direction (Exemple: 30\" vers le bas en ligne droite; direction nord-ouest, vers le haut à 45°, à 42\"). S’il arrive à un endroit déjà occupé par un corps solide, il reste sur le plan astral jusqu’à ce qu’il soit localisé par quelque créature charitable qui consente à lancer sur lui une dissipation de la magie, car le magicien y demeure étourdi et ne peut lancer aucun sort lui-même. Si le magicien arrive à un endroit sans aucun support, il tombera et subira les dégâts en conséquence, à moins qu’il n’ait un moyen magique de l’éviter. Le magicien peut transporter avec lui un maximum de 5.000 po (250 kg) de matière non vivante, la moitié s’il s’agit de matière vivante. Le fait de lancer ce sort requiert ensuite un temps de récupération d’une durée de 7 segments. TEMPÊTE DE GLACE (Évocation)",
-      "composants_materiels_objets": [],
-      "foundry": {
-        "nom": "Porte dimensionnelle",
-        "id": "9xooSY6MIFWhmC0h",
-        "img": "systems/add2e/assets/icones/sorts/magicien-porte-dimensionnelle.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-porte-dimensionnelle.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 23,
       "nom": "Tempête de glace",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "quand ce sort est lancé, le magicien crée soit une averse de grêlons dans une zone de 4\" de diamètre, infligeant de 3 à 30 points de dégâts (3d10), soit une chute de neige fondue sur une zone de 8\" de diamètre, qui aveugle les créatures pendant la durée du sort et qui gèle le sol ralentissant ainsi lesdites créatures à 50 % et leur donnant 50 % de chances de tomber si elles essayent de bouger. Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau. Ce sort annule les effets du sort métal brûlant (voir p.57) mais sa première application (l’averse de grêlons) infligera tout de même les dégâts. Lancé sous l’eau, les grêlons seront plus faibles en puissance, n’infligeant que 1d10 points de dommages avant de remonter à la surface; la chute de neige n’a quant à elle aucun effet sous l’eau.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pincée de poussière",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": null
-        },
-        {
-          "nom": "goutte d’eau",
-          "quantite": 1,
-          "consommation": "consomme",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": null,
-          "notes": "Formulation source du Manuel : « quelques gouttes d’eau »."
-        }
-      ],
-      "foundry": {
-        "nom": "Tempête de glace",
-        "id": "zPQP5olmpPjaRgmf",
-        "img": "systems/add2e/assets/icones/sorts/magicien-tempete-de-glace.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-tempete-de-glace.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
     {
       "ordre": 24,
       "nom": "Terrain hallucinatoire",
-      "ecole": null,
       "niveau": 4,
-      "portee": null,
-      "duree": null,
-      "zone_effet": null,
-      "composantes": null,
-      "temps_incantation": null,
-      "jet_sauvegarde": null,
-      "description": "grâce à ce sort, le magicien crée une illusion qui cache le véritable terrain dans la zone d’effet. Ainsi, il peut faire apparaître un champ ou une route comme étant une colline, une crevasse, un marais ou tout autre obstacle infranchissable. De même peut-il faire passer un marais pour une prairie herbeuse, un précipice pour une pente douce, un petit ravin creusé dans le roc pour une route large et uniforme. L’illusion persiste jusqu’à ce que quelqu’un lance une dissipation de la magie ou qu’une créature intelligente s’en aperçoive. Chaque niveau d’expérience du magicien lui permet d’affecter une zone plus grande; au 10e niveau, un magicien pourra créer un terrain hallucinatoire de 10\" sur 10\"; 12\" sur 12\" au niveau 12, etc. Les composantes matérielles sont une pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe.",
-      "composants_materiels_objets": [
-        {
-          "nom": "pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe",
-          "quantite": 1,
-          "consommation": "optionnel",
-          "cout_po": null,
-          "source": "Manuel des joueurs",
-          "condition": "Composant requis selon l’alternative ou la variante choisie.",
-          "notes": "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe »."
-        }
-      ],
-      "foundry": {
-        "nom": "Terrain hallucinatoire",
-        "id": "afrGD9EO4FsC15qj",
-        "img": "systems/add2e/assets/icones/sorts/magicien-terrain-hallucinatoire.webp",
-        "onUse": "systems/add2e/scripts/sorts/magicien-terrain-hallucinatoire.js"
-      },
-      "status": "reference_complete_description_normalisee"
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
     }
   ]
 }
