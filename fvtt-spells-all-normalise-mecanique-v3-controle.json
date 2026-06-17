@@ -1,12 +1,12 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-clerc-druide-n7-effectprofile-v1",
+  "version": "2026-06-17-normalize-spell-materials-v3-druid-material-cleanup-v1",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
   "spells": 411,
   "changedSpells": 207,
   "changedEffectProfiles": 142,
-  "emptyMaterialSpells": 205,
+  "emptyMaterialSpells": 207,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -31,9 +31,7 @@
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Normalisation marchand appliquée : petite fiole d’eau, fiole est le contenant réutilisable, son contenu est, petite fiole de poussière, fiole d’eau, son contenu est, fiole de poussière, son contenu est"
+        "consomme"
       ]
     },
     {
@@ -55,9 +53,8 @@
       ],
       "notes": [
         "1",
-        "Manuel des joueurs",
-        "consomme",
-        "Normalisation marchand appliquée : symbole sacré du clerc, non consomme, pincée de poussière, Ingrédient matériel"
+        "non consomme",
+        "consomme"
       ]
     },
     {
@@ -75,8 +72,7 @@
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -94,13 +90,11 @@
       ],
       "after": [
         "gui",
-        "nourriture appréciée par l’animal",
-        "Ingrédient matériel"
+        "nourriture appréciée par l’animal"
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -129,16 +123,10 @@
       ],
       "after": [
         "morceau d’alun trempé dans du vinaigre",
-        "Composant requis selon l’alternative",
-        "variante choisie",
-        "variante explicitement indiquée par le Manuel"
+        "Composant requis selon l’"
       ],
       "notes": [
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative",
-        "Alternative"
+        "1"
       ]
     },
     {
@@ -161,13 +149,7 @@
         "pincée de poussière"
       ],
       "notes": [
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Requise pour la création d’eau",
-        "Alternative à une pincée de poussière",
-        "Requise pour la destruction d’eau",
-        "Alternative à une goutte d’eau"
+        "1"
       ]
     },
     {
@@ -185,13 +167,11 @@
       ],
       "after": [
         "gui",
-        "petite branche d’arbre",
-        "Ingrédient matériel"
+        "petite branche d’arbre"
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -214,8 +194,7 @@
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -255,19 +234,12 @@
       ],
       "notes": [
         "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative : utiliser ce composant",
-        "Alternative aux os de dragon",
-        "Alternative au jeu de baguettes serties de gemmes",
-        "Alternative aux objets divinatoires",
         "cette méthode requiert aussi une perle écrasée d’au moins 100 po",
         "placées dans le récipient ayant servi pour l’infusion",
         "100",
         "Requise uniquement si la méthode des feuilles d’infusion encore humides est utilisée",
         "Requise uniquement avec la méthode des feuilles d’infusion",
-        "ajoutée à la boisson avant consommation",
-        "Normalisation marchand appliquée : jeu d’objets divinatoires, jeu d’objets divinatoires, jeu d’objets divinatoires, feuilles d’infusion encore humides, aux objets similaires, aux feuilles d’infusion, jeu d’objets divinatoires, jeu d’objets divinatoires, jeu d’objets divinatoires, jeu d’objets divinatoires, feuilles d’infusion encore humides, aux os de dragon, aux feuilles d’infusion, feuilles d’infusion encore humides, perle écrasée d’au moins 100 po"
+        "ajoutée à la boisson avant consommation"
       ]
     },
     {
@@ -282,15 +254,12 @@
         "morceau de soie que le magicien doit passer sur l’objet affecté",
         "Formulation source du Manuel : « un petit morceau de soie que le magicien doit passer sur l’objet affecté »."
       ],
-      "after": [
-        "non consomme"
-      ],
+      "after": [],
       "notes": [
         "soie que le magicien doit passer sur l’objet affecté",
         "1",
-        "Manuel des joueurs",
-        "soie que le magicien doit passer sur l’objet affecté",
-        "Formulation source du Manuel : « un petit morceau de soie que le magicien doit passer sur l’objet affecté »"
+        "non consomme",
+        "soie que le magicien doit passer sur l’objet affecté"
       ]
     },
     {
@@ -323,9 +292,7 @@
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Normalisation marchand appliquée : petit morceau d’écorce, Ingrédient matériel, écailles de serpent, morceau d’écorce, Ingrédient matériel"
+        "consomme"
       ]
     },
     {
@@ -343,8 +310,7 @@
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -367,9 +333,6 @@
       ],
       "notes": [
         "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Sort normal",
         "Liquide",
         "Sort inversé : malédiction"
       ]
@@ -388,13 +351,11 @@
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit morceau de rayon de miel »."
       ],
       "after": [
-        "rayon de miel",
-        "Ingrédient matériel"
+        "rayon de miel"
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -415,19 +376,12 @@
       ],
       "after": [
         "luciole vivante",
-        "aux quatre queues",
         "vert luisant vivant",
         "queue de lucioles",
         "de verts luisants morts"
       ],
       "notes": [
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative au vert luisant vivant",
-        "Alternative à la luciole vivante",
-        "Alternative aux créatures vivantes. Quantité : 4",
-        "Formulation source du Manuel : « queues de lucioles"
+        "1"
       ]
     },
     {
@@ -446,13 +400,11 @@
       "after": [
         "petite boule composée de fiente de chauve souris",
         "de souffre",
-        "Ingrédient matériel",
         "boule composée de fiente de chauve souris"
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -473,11 +425,7 @@
         "cire"
       ],
       "notes": [
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative à la cire",
-        "Alternative au morceau de laine"
+        "1"
       ]
     },
     {
@@ -516,8 +464,7 @@
         "brasero de charbons ardents dans lequel le magicien doit brûler du soufre",
         "coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon",
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -551,8 +498,7 @@
       "notes": [
         "1",
         "consomme",
-        "Manuel des joueurs",
-        "Normalisation marchand appliquée : pincée de poussière d’un cimetière, Ingrédient matériel, symbole sacré du clerc, non consomme"
+        "non consomme"
       ]
     },
     {
@@ -570,13 +516,11 @@
       ],
       "after": [
         "feuille morte de chêne",
-        "gui",
-        "Ingrédient matériel"
+        "gui"
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -595,13 +539,12 @@
       ],
       "after": [
         "petite baguette fourchue métallique",
-        "non consomme",
         "baguette fourchue métallique"
       ],
       "notes": [
         "sorte de diapason",
         "1",
-        "Manuel des joueurs",
+        "non consomme",
         "type de métal",
         "taille déterminent le plan d’arrivée",
         "type de métal",
@@ -623,14 +566,11 @@
       ],
       "after": [
         "disque de bronze",
-        "non consomme",
         "tige de fer"
       ],
       "notes": [
         "1",
-        "Manuel des joueurs",
-        "Formulation source du Manuel : « petit disque de bronze »",
-        "Formulation source du Manuel : « petite tige de fer »"
+        "non consomme"
       ]
     },
     {
@@ -647,13 +587,11 @@
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un jeu de 3 coquilles de noisettes »."
       ],
       "after": [
-        "jeu de 3 coquilles de noisettes",
-        "Ingrédient matériel"
+        "jeu de 3 coquilles de noisettes"
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -676,16 +614,10 @@
         "goutte d’eau",
         "feuille",
         "brindille",
-        "Composant requis selon l’alternative",
-        "variante choisie",
-        "variante explicitement indiquée par le Manuel"
+        "Composant requis selon l’"
       ],
       "notes": [
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative",
-        "Alternative"
+        "1"
       ]
     },
     {
@@ -704,13 +636,12 @@
       "after": [
         "encens",
         "Brûlé",
-        "bout de corne taillé en forme de croissant",
-        "non consomme"
+        "bout de corne taillé en forme de croissant"
       ],
       "notes": [
         "1",
         "consomme",
-        "Manuel des joueurs"
+        "non consomme"
       ]
     },
     {
@@ -734,7 +665,6 @@
         "petite perle de cristal qui se brisera à la fin du sort",
         "1",
         "consomme",
-        "Manuel des joueurs",
         "perle de cristal qui se brisera à la fin du sort"
       ]
     },
@@ -755,16 +685,14 @@
       ],
       "after": [
         "petit sifflet en argent",
-        "non consomme",
         "morceau d’os",
         "fil",
         "sifflet en argent"
       ],
       "notes": [
         "1",
-        "Manuel des joueurs",
-        "consomme",
-        "Formulation source du Manuel : « petit sifflet en argent »"
+        "non consomme",
+        "consomme"
       ]
     },
     {
@@ -790,12 +718,7 @@
         "plume"
       ],
       "notes": [
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative à un peu de duvet",
-        "Alternative à une petite plume",
-        "Formulation source du Manuel : « petite plume »"
+        "1"
       ]
     },
     {
@@ -820,7 +743,6 @@
         "qui disparaît quand le sort est lancé",
         "1",
         "consomme",
-        "Manuel des joueurs",
         "corne d’argent d’une valeur minimale de 100 po"
       ]
     },
@@ -840,18 +762,12 @@
       ],
       "after": [
         "humanoïde",
-        "Composant requis selon l’alternative",
-        "variante choisie",
-        "variante explicitement indiquée par le Manuel"
+        "Composant requis selon l’"
       ],
       "notes": [
         "pincée de poudre faite à partir de la glande pinéale d’un humain",
         "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative",
-        "pincée de poudre faite à partir de la glande pinéale d’un humain",
-        "Alternative"
+        "pincée de poudre faite à partir de la glande pinéale d’un humain"
       ]
     },
     {
@@ -868,13 +784,11 @@
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un morceau de chair de l’original »."
       ],
       "after": [
-        "chair de l’original",
-        "Ingrédient matériel"
+        "chair de l’original"
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -898,9 +812,8 @@
       ],
       "notes": [
         "1",
-        "Manuel des joueurs",
-        "consomme",
-        "Normalisation marchand appliquée : symbole sacré du clerc, non consomme, eau bénite, Ingrédient matériel, encens"
+        "non consomme",
+        "consomme"
       ]
     },
     {
@@ -918,13 +831,11 @@
       ],
       "after": [
         "pincée de suie",
-        "grains de sel",
-        "Ingrédient matériel"
+        "grains de sel"
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     },
     {
@@ -951,13 +862,7 @@
         "cône de cristal"
       ],
       "notes": [
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative à un petit cône de cristal",
-        "Alternative à un petit cône de verre",
-        "Formulation source du Manuel : « petit cône de verre »",
-        "Formulation source du Manuel : « petit cône de cristal »"
+        "1"
       ]
     },
     {
@@ -978,9 +883,7 @@
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Normalisation marchand appliquée : encens à brûler, mélange de terre, de bois, eau"
+        "consomme"
       ]
     },
     {
@@ -1004,11 +907,7 @@
       ],
       "notes": [
         "1",
-        "Manuel des joueurs",
-        "optionnel",
-        "Alternative à un objet similaire",
-        "Alternative au chapelet de prière",
-        "Normalisation marchand appliquée : symbole sacré du clerc, non consomme, chapelet de prière, chapelet de prière"
+        "non consomme"
       ]
     },
     {
@@ -1026,13 +925,11 @@
       ],
       "after": [
         "poudre de blé",
-        "parchemin torsadé en forme de boucle",
-        "Ingrédient matériel"
+        "parchemin torsadé en forme de boucle"
       ],
       "notes": [
         "1",
-        "consomme",
-        "Manuel des joueurs"
+        "consomme"
       ]
     }
   ],
@@ -1049,7 +946,7 @@
         "source": "canonical-system",
         "effects": []
       },
-      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : petite fiole d’eau, fiole est le contenant réutilisable, son contenu est, petite fiole de poussière, fiole d’eau, son contenu est, fiole de poussière, son contenu est"
+      "note": "1\nconsomme"
     },
     "Abaissement des Eaux": {
       "classe": "Clerc",
@@ -1063,28 +960,28 @@
         "source": "manual-normalized-clerc-n4",
         "effects": [
           {
-            "id": "abaisse_niveau_eau",
-            "label": "Abaissement des eaux",
-            "kind": "area_control",
+            "id": "abaissement_des_eaux",
+            "label": "Abaissement des Eaux",
+            "kind": "elemental_or_weather_control",
             "automation": "mj_aid",
             "tags": [
               "effet:abaissement_des_eaux",
-              "controle:eau",
-              "inverse:haussement_des_eaux"
+              "classe:clerc",
+              "element_ou_climat",
+              "niveau:4"
             ],
-            "notes": "Abaisse ou élève le niveau d’une masse d’eau."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\nconsomme\nNormalisation marchand appliquée : symbole sacré du clerc, non consomme, pincée de poussière, Ingrédient matériel"
+      "note": "1\nnon consomme\nconsomme"
     },
     "Amitié animale": {
       "classe": "Druide",
       "niveau": 1,
       "composants_materiels": [
         "gui",
-        "nourriture appréciée par l’animal",
-        "Ingrédient matériel"
+        "nourriture appréciée par l’animal"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -1101,11 +998,11 @@
               "communication_ou_controle",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Animation de la roche": {
       "classe": "Druide",
@@ -1118,15 +1015,15 @@
           {
             "id": "animation_de_la_roche",
             "label": "Animation de la roche",
-            "kind": "elemental_or_weather_control",
-            "automation": "mj_aid",
+            "kind": "summon_or_actor_effect",
+            "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:animation_de_la_roche",
               "classe:druide",
-              "element_ou_climat",
+              "invocation_ou_creation",
               "niveau:7"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1143,15 +1040,17 @@
         "source": "manual-normalized-clerc-n6",
         "effects": [
           {
-            "id": "objets_animes",
+            "id": "animation_des_objets",
             "label": "Animation des objets",
-            "kind": "animate_objects",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:animation_des_objets",
-              "animation:objets"
+              "classe:clerc",
+              "invocation_ou_creation",
+              "niveau:6"
             ],
-            "notes": "Anime des objets qui se déplacent et attaquent selon les ordres du clerc."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1168,14 +1067,14 @@
           {
             "id": "aquagenese",
             "label": "Aquagenèse",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:aquagenese",
               "classe:druide",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1186,8 +1085,7 @@
       "niveau": 3,
       "composants_materiels": [
         "gui",
-        "petite branche d’arbre",
-        "Ingrédient matériel"
+        "petite branche d’arbre"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -1204,11 +1102,11 @@
               "plante_ou_nature",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Augure": {
       "classe": "Clerc",
@@ -1223,20 +1121,21 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "presage_benefique_malefique",
+            "id": "augure",
             "label": "Augure",
-            "kind": "divination",
+            "kind": "detection_or_divination",
             "automation": "mj_aid",
             "tags": [
               "effet:augure",
-              "chance:70_plus_1_pct_par_niveau",
-              "fenetre:3_tours"
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:2"
             ],
-            "notes": "Indique si une action dans le futur immédiat sera bénéfique ou maléfique."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\nAlternative au jeu de baguettes serties de gemmes\nAlternative aux objets divinatoires\ncette méthode requiert aussi une perle écrasée d’au moins 100 po\nplacées dans le récipient ayant servi pour l’infusion\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée\nRequise uniquement avec la méthode des feuilles d’infusion\najoutée à la boisson avant consommation\nNormalisation marchand appliquée : jeu d’objets divinatoires, jeu d’objets divinatoires, jeu d’objets divinatoires, feuilles d’infusion encore humides, aux objets similaires, aux feuilles d’infusion, jeu d’objets divinatoires, jeu d’objets divinatoires, jeu d’objets divinatoires, jeu d’objets divinatoires, feuilles d’infusion encore humides, aux os de dragon, aux feuilles d’infusion, feuilles d’infusion encore humides, perle écrasée d’au moins 100 po"
+      "note": "1\ncette méthode requiert aussi une perle écrasée d’au moins 100 po\nplacées dans le récipient ayant servi pour l’infusion\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée\nRequise uniquement avec la méthode des feuilles d’infusion\najoutée à la boisson avant consommation"
     },
     "Aura féérique": {
       "classe": "Druide",
@@ -1249,14 +1148,14 @@
           {
             "id": "aura_feerique",
             "label": "Aura féérique",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:aura_feerique",
               "classe:druide",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1273,16 +1172,17 @@
         "source": "manual-normalized-clerc-n6",
         "effects": [
           {
-            "id": "mur_lames_tournoyantes",
-            "label": "Barrière de lames",
-            "kind": "area_damage",
+            "id": "barriere_de_lames",
+            "label": "Barrière de Lames",
+            "kind": "damage_or_area_control",
             "automation": "damage_or_mj_aid",
             "tags": [
               "effet:barriere_de_lames",
-              "zone:mur",
-              "degats:lames"
+              "classe:clerc",
+              "degats_ou_zone",
+              "niveau:6"
             ],
-            "notes": "Crée une barrière de lames tournoyantes infligeant des dégâts."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1301,18 +1201,19 @@
           {
             "id": "batons_a_serpents",
             "label": "Bâtons à serpents",
-            "kind": "druidic_effect",
+            "kind": "plant_or_nature_control",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:batons_a_serpents",
               "classe:druide",
+              "plante_ou_nature",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Bouclier anti-animal": {
       "classe": "Druide",
@@ -1333,7 +1234,7 @@
               "protection",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1358,7 +1259,7 @@
               "protection",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1373,30 +1274,16 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "bonus_allies_cantique",
-            "label": "Cantique — alliés",
-            "kind": "active_bonus",
+            "id": "cantique",
+            "label": "Cantique",
+            "kind": "clerc_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:cantique",
-              "bonus:toucher:1",
-              "bonus:degats:1",
-              "bonus:jp:1"
+              "classe:clerc",
+              "niveau:2"
             ],
-            "notes": "Les alliés gagnent +1 aux attaques, dégâts et jets de protection."
-          },
-          {
-            "id": "malus_ennemis_cantique",
-            "label": "Cantique — ennemis",
-            "kind": "active_malus",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:cantique",
-              "malus:toucher:1",
-              "malus:degats:1",
-              "malus:jp:1"
-            ],
-            "notes": "Les ennemis subissent -1 aux attaques, dégâts et jets de protection."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1407,8 +1294,7 @@
       "niveau": 2,
       "composants_materiels": [
         "feuille morte de chêne",
-        "gui",
-        "Ingrédient matériel"
+        "gui"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -1417,25 +1303,24 @@
           {
             "id": "catalepsie",
             "label": "Catalepsie",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:catalepsie",
               "classe:druide",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Changement de Plan": {
       "classe": "Clerc",
       "niveau": 5,
       "composants_materiels": [
         "petite baguette fourchue métallique",
-        "non consomme",
         "baguette fourchue métallique"
       ],
       "effectProfile": {
@@ -1443,19 +1328,20 @@
         "source": "manual-normalized-clerc-n5",
         "effects": [
           {
-            "id": "voyage_planaire",
-            "label": "Changement de plan",
-            "kind": "planar_travel",
-            "automation": "mj_aid",
+            "id": "changement_de_plan",
+            "label": "Changement de Plan",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:changement_de_plan",
-              "deplacement:plan"
+              "classe:clerc",
+              "niveau:5"
             ],
-            "notes": "Transporte la cible vers un autre plan selon la baguette fourchue utilisée."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "sorte de diapason\n1\nManuel des joueurs\ntype de métal\ntaille déterminent le plan d’arrivée"
+      "note": "sorte de diapason\n1\nnon consomme\ntype de métal\ntaille déterminent le plan d’arrivée"
     },
     "Chariot de Sustarre": {
       "classe": "Druide",
@@ -1468,14 +1354,14 @@
           {
             "id": "chariot_de_sustarre",
             "label": "Chariot de Sustarre",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:chariot_de_sustarre",
               "classe:druide",
               "niveau:7"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1500,7 +1386,7 @@
               "communication_ou_controle",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1515,15 +1401,17 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "charme_ophidiens",
-            "label": "Charme-serpents",
-            "kind": "control",
+            "id": "charme_serpents",
+            "label": "Charme-Serpents",
+            "kind": "communication_or_control",
             "automation": "mj_aid",
             "tags": [
               "effet:charme_serpents",
-              "controle:serpents"
+              "classe:clerc",
+              "communication_ou_controle",
+              "niveau:2"
             ],
-            "notes": "Calme ou charme des serpents dont le total de points de vie n’excède pas ceux du clerc."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1542,19 +1430,21 @@
         "source": "manual-normalized-clerc-n5",
         "effects": [
           {
-            "id": "questions_divines",
+            "id": "communion",
             "label": "Communion",
-            "kind": "divination",
+            "kind": "detection_or_divination",
             "automation": "mj_aid",
             "tags": [
               "effet:communion",
-              "divination:questions_oui_non"
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:5"
             ],
-            "notes": "Permet de poser des questions à une puissance divine."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\nconsomme\nNormalisation marchand appliquée : symbole sacré du clerc, non consomme, eau bénite, Ingrédient matériel, encens"
+      "note": "1\nnon consomme\nconsomme"
     },
     "Communion avec la nature": {
       "classe": "Druide",
@@ -1575,7 +1465,7 @@
               "detection_ou_divination",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1600,7 +1490,7 @@
               "controle",
               "niveau:7"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1617,14 +1507,14 @@
           {
             "id": "contre_poison",
             "label": "Contre-poison",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:contre_poison",
               "classe:druide",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1641,14 +1531,14 @@
           {
             "id": "controle_de_la_temperature_sur_3_m",
             "label": "Contrôle de la température sur 3 m",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:controle_de_la_temperature_sur_3_m",
               "classe:druide",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1673,7 +1563,7 @@
               "element_ou_climat",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1691,7 +1581,7 @@
         "source": "canonical-system",
         "effects": []
       },
-      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : encens à brûler, mélange de terre, de bois, eau"
+      "note": "1\nconsomme"
     },
     "Contrôle du Climat": {
       "classe": "Clerc",
@@ -1705,19 +1595,21 @@
         "source": "manual-normalized-clerc-n7",
         "effects": [
           {
-            "id": "controle_meteo",
-            "label": "Contrôle du climat",
-            "kind": "weather_control",
+            "id": "controle_du_climat",
+            "label": "Contrôle du Climat",
+            "kind": "elemental_or_weather_control",
             "automation": "mj_aid",
             "tags": [
               "effet:controle_du_climat",
-              "controle:meteo"
+              "classe:clerc",
+              "element_ou_climat",
+              "niveau:7"
             ],
-            "notes": "Modifie les conditions météorologiques dans une zone étendue."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\noptionnel\nAlternative à un objet similaire\nAlternative au chapelet de prière\nNormalisation marchand appliquée : symbole sacré du clerc, non consomme, chapelet de prière, chapelet de prière"
+      "note": "1\nnon consomme"
     },
     "Croc-en-jambe": {
       "classe": "Druide",
@@ -1738,7 +1630,7 @@
               "controle",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1755,15 +1647,15 @@
           {
             "id": "croissance_animale",
             "label": "Croissance animale",
-            "kind": "summon_or_animal_effect",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:croissance_animale",
               "classe:druide",
-              "invocation_ou_animaux",
+              "invocation_ou_creation",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1788,20 +1680,33 @@
               "controle",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
       "note": ""
     },
     "Désenvoûtement": {
-      "classe": "Magicien",
-      "niveau": 4,
+      "classe": "Clerc",
+      "niveau": 3,
       "composants_materiels": [],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "canonical-system",
-        "effects": []
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "desenvoutement",
+            "label": "Désenvoûtement",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:desenvoutement",
+              "classe:clerc",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
       },
       "note": ""
     },
@@ -1824,7 +1729,7 @@
               "detection_ou_divination",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1839,18 +1744,17 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "detection_charme",
-            "label": "Détection des charmes",
-            "kind": "detection",
+            "id": "detection_des_charmes",
+            "label": "Détection des Charmes",
+            "kind": "detection_or_divination",
             "automation": "mj_aid",
             "tags": [
               "effet:detection_des_charmes",
-              "detection:charme",
-              "limite:10_creatures",
-              "duree:1_tour"
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:2"
             ],
-            "notes": "Détermine si une personne ou un monstre est sous l’influence d’un charme.",
-            "targetOverride": "une_creature_a_la_fois_jusqua_10"
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1867,19 +1771,21 @@
         "source": "manual-normalized-clerc-n4",
         "effects": [
           {
-            "id": "detection_mensonge",
-            "label": "Détection des mensonges",
-            "kind": "detection",
+            "id": "detection_des_mensonges",
+            "label": "Détection des Mensonges",
+            "kind": "detection_or_divination",
             "automation": "mj_aid",
             "tags": [
               "effet:detection_des_mensonges",
-              "detection:mensonge"
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:4"
             ],
-            "notes": "Permet de percevoir les mensonges délibérés."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nSort inversé : dissimulation des mensonges\nNormalisation marchand appliquée : poussière de laiton"
+      "note": "1\nconsomme\nSort inversé : dissimulation des mensonges"
     },
     "Détection des Pièges": {
       "classe": "Clerc",
@@ -1890,16 +1796,17 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "detection_pieges",
-            "label": "Détection des pièges",
-            "kind": "detection",
+            "id": "detection_des_pieges",
+            "label": "Détection des Pièges",
+            "kind": "detection_or_divination",
             "automation": "mj_aid",
             "tags": [
               "effet:detection_des_pieges",
-              "detection:piege",
-              "directionnel"
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:2"
             ],
-            "notes": "Révèle les pièges mécaniques ou magiques dans la direction regardée."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1924,7 +1831,7 @@
               "detection_ou_divination",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1941,14 +1848,14 @@
           {
             "id": "dissipation_de_la_magie",
             "label": "Dissipation de la magie",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:dissipation_de_la_magie",
               "classe:druide",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1963,15 +1870,16 @@
         "source": "manual-normalized-clerc-n3",
         "effects": [
           {
-            "id": "dissipation_magie_zone",
-            "label": "Dissipation de la magie",
-            "kind": "dispell_magic",
-            "automation": "mj_aid",
+            "id": "dissipation_de_la_magie",
+            "label": "Dissipation de la Magie",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:dissipation_de_la_magie",
-              "chance:50_pct"
+              "classe:clerc",
+              "niveau:3"
             ],
-            "notes": "Annule ou neutralise des effets magiques dans la zone."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -1982,7 +1890,6 @@
       "niveau": 5,
       "composants_materiels": [
         "symbole sacré du clerc",
-        "non consomme",
         "eau bénite",
         "eau maudite"
       ],
@@ -1991,20 +1898,20 @@
         "source": "manual-normalized-clerc-n5",
         "effects": [
           {
-            "id": "renvoi_mal_invoque",
-            "label": "Dissipation du mal",
-            "kind": "banishment_protection",
+            "id": "dissipation_du_mal",
+            "label": "Dissipation du Mal",
+            "kind": "clerc_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:dissipation_du_mal",
-              "protection:mal",
-              "renvoi:creature_invoquee"
+              "classe:clerc",
+              "niveau:5"
             ],
-            "notes": "Protège contre le mal et peut renvoyer une créature mauvaise invoquée."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\noptionnel\nRequise pour dissipation du mal\nalternative à l’eau maudite\nRequise pour dissipation du bien\nalternative à l’eau bénite"
+      "note": "1\nnon consomme"
     },
     "Distorsion du bois": {
       "classe": "Druide",
@@ -2025,7 +1932,7 @@
               "plante_ou_nature",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2043,19 +1950,21 @@
         "source": "manual-normalized-clerc-n4",
         "effects": [
           {
-            "id": "conseil_divin",
+            "id": "divination",
             "label": "Divination",
-            "kind": "divination",
+            "kind": "detection_or_divination",
             "automation": "mj_aid",
             "tags": [
               "effet:divination",
-              "divination:conseil"
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:4"
             ],
-            "notes": "Donne au clerc un conseil divin à propos d’un objectif ou d’un événement."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\noptionnel\nDons requis si une divination puissante est tentée\nNormalisation marchand appliquée : petite créature, Sacrifiée, encens, Ingrédient matériel, symbole sacré du clerc, non consomme, pierres précieuses, objets magiques, Dons éventuellement requis si une divination puissante est tentée, créature, Sacrifiée"
+      "note": "1\nconsomme\nnon consomme\nDons requis si une divination puissante est tentée"
     },
     "Doigt de mort": {
       "classe": "Druide",
@@ -2068,14 +1977,14 @@
           {
             "id": "doigt_de_mort",
             "label": "Doigt de mort",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:doigt_de_mort",
               "classe:druide",
               "niveau:7"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2092,14 +2001,14 @@
           {
             "id": "embrasement",
             "label": "Embrasement",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:embrasement",
               "classe:druide",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2116,14 +2025,14 @@
           {
             "id": "embroussaillement",
             "label": "Embroussaillement",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:embroussaillement",
               "classe:druide",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2140,14 +2049,14 @@
           {
             "id": "enchevetrement",
             "label": "Enchevêtrement",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:enchevetrement",
               "classe:druide",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2166,20 +2075,21 @@
         "source": "manual-normalized-clerc-n4",
         "effects": [
           {
-            "id": "expulsion_presence",
+            "id": "exorcisme",
             "label": "Exorcisme",
-            "kind": "banishment",
-            "automation": "mj_aid",
+            "kind": "control",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:exorcisme",
-              "expulse:possession",
-              "expulse:influence_extraplanaire"
+              "classe:clerc",
+              "controle",
+              "niveau:4"
             ],
-            "notes": "Force une présence ou influence étrangère à quitter une créature, un objet ou un lieu."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\noptionnel\nClerc non mauvais\nLiquide\nClerc mauvais\nNormalisation marchand appliquée : symbole sacré du clerc, non consomme, eau bénite, eau maudite"
+      "note": "1\nnon consomme\nClerc non mauvais\nLiquide\nClerc mauvais"
     },
     "Expiation": {
       "classe": "Clerc",
@@ -2194,20 +2104,20 @@
         "source": "manual-normalized-clerc-n5",
         "effects": [
           {
-            "id": "leve_faute_religieuse",
+            "id": "expiation",
             "label": "Expiation",
-            "kind": "atonement",
-            "automation": "mj_aid",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:expiation",
-              "retire:faute",
-              "restaure:etat_religieux"
+              "classe:clerc",
+              "niveau:5"
             ],
-            "notes": "Restaure l’état spirituel ou religieux d’une créature."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\noptionnel\nAlternative au livre de prière\nAlternative au chapelet\nconsomme\nNormalisation marchand appliquée : symbole sacré du clerc, non consomme, chapelet, livre de prière, encens, Encens à brûler"
+      "note": "1\nnon consomme\nconsomme"
     },
     "Flamme": {
       "classe": "Druide",
@@ -2220,14 +2130,14 @@
           {
             "id": "flamme",
             "label": "Flamme",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:flamme",
               "classe:druide",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2250,19 +2160,19 @@
           {
             "id": "fleau_d_insectes",
             "label": "Fléau d’insectes",
-            "kind": "summon_or_animal_effect",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:fleau_d_insectes",
               "classe:druide",
-              "invocation_ou_animaux",
+              "invocation_ou_creation",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\noptionnel\nManuel des joueurs\nFormulation source du Manuel : « feuilles de chêne »"
+      "note": "1"
     },
     "Fléau d’Insectes": {
       "classe": "Clerc",
@@ -2275,20 +2185,21 @@
         "source": "manual-normalized-clerc-n5",
         "effects": [
           {
-            "id": "nuee_insectes",
-            "label": "Fléau d’insectes",
-            "kind": "area_control",
-            "automation": "active_effect_or_mj_aid",
+            "id": "fleau_d_insectes",
+            "label": "Fléau d’Insectes",
+            "kind": "summon_or_actor_effect",
+            "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:fleau_d_insectes",
-              "zone:nuee",
-              "gene:concentration"
+              "classe:clerc",
+              "invocation_ou_creation",
+              "niveau:5"
             ],
-            "notes": "Appelle une nuée d’insectes gênant les créatures, la vision et la concentration."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : grains de sucre, Ingrédient matériel, amandes, matière grasse, grain de sucre, Ingrédient matériel"
+      "note": "1\nconsomme"
     },
     "Forêt hallucinatoire": {
       "classe": "Druide",
@@ -2301,14 +2212,14 @@
           {
             "id": "foret_hallucinatoire",
             "label": "Forêt hallucinatoire",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:foret_hallucinatoire",
               "classe:druide",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2325,20 +2236,20 @@
         "source": "manual-normalized-clerc-n3",
         "effects": [
           {
-            "id": "glyphe_zone_gardee",
-            "label": "Glyphe de garde",
-            "kind": "ward_glyph",
+            "id": "glyphe_de_garde",
+            "label": "Glyphe de Garde",
+            "kind": "clerc_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:glyphe_de_garde",
-              "zone:gardee",
-              "declencheur:intrusion"
+              "classe:clerc",
+              "niveau:3"
             ],
-            "notes": "Trace une inscription magique protégeant une zone ou un objet."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nLa\npoudre d’un diamant d’au moins 2 000 po\n2000\nRequise si la zone à protéger excède 4\n5 m²\nNormalisation marchand appliquée : encens"
+      "note": "1\nconsomme\nLa\npoudre d’un diamant d’au moins 2 000 po\n2000\nRequise si la zone à protéger excède 4\n5 m²"
     },
     "Graines de feu": {
       "classe": "Druide",
@@ -2366,11 +2277,11 @@
               "degats_ou_zone",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\noptionnel\nManuel des joueurs\nFormulation source du Manuel : « baies de houx »"
+      "note": "1"
     },
     "Guérison": {
       "classe": "Clerc",
@@ -2381,17 +2292,17 @@
         "source": "manual-normalized-clerc-n6",
         "effects": [
           {
-            "id": "guerison_complete",
+            "id": "guerison",
             "label": "Guérison",
-            "kind": "healing",
+            "kind": "healing_or_restoration",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:guerison",
-              "soin:complet",
-              "retire:maladie",
-              "inverse:blessure"
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:6"
             ],
-            "notes": "Guérit presque totalement la cible et retire plusieurs affections."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2406,15 +2317,17 @@
         "source": "manual-normalized-clerc-n3",
         "effects": [
           {
-            "id": "soin_cecite",
-            "label": "Guérison de la cécité",
-            "kind": "condition_removal",
+            "id": "guerison_de_la_cecite",
+            "label": "Guérison de la Cécité",
+            "kind": "healing_or_restoration",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:guerison_de_la_cecite",
-              "retire:aveugle"
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:3"
             ],
-            "notes": "Rend la vue et guérit la plupart des formes de cécité."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2439,7 +2352,7 @@
               "soin_ou_restauration",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2454,15 +2367,17 @@
         "source": "manual-normalized-clerc-n3",
         "effects": [
           {
-            "id": "soin_maladie",
-            "label": "Guérison des maladies",
-            "kind": "condition_removal",
+            "id": "guerison_des_maladies",
+            "label": "Guérison des Maladies",
+            "kind": "healing_or_restoration",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:guerison_des_maladies",
-              "retire:maladie"
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:3"
             ],
-            "notes": "Guérit la plupart des maladies."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2472,8 +2387,7 @@
       "classe": "Druide",
       "niveau": 1,
       "composants_materiels": [
-        "houx avec lequel le druide doit se frotter",
-        "Ingrédient matériel"
+        "houx avec lequel le druide doit se frotter"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -2490,11 +2404,11 @@
               "protection",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Invocation animale I": {
       "classe": "Druide",
@@ -2507,15 +2421,15 @@
           {
             "id": "invocation_animale_i",
             "label": "Invocation animale I",
-            "kind": "summon_or_animal_effect",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:invocation_animale_i",
               "classe:druide",
-              "invocation_ou_animaux",
+              "invocation_ou_creation",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2532,15 +2446,15 @@
           {
             "id": "invocation_animale_ii",
             "label": "Invocation animale II",
-            "kind": "summon_or_animal_effect",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:invocation_animale_ii",
               "classe:druide",
-              "invocation_ou_animaux",
+              "invocation_ou_creation",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2557,15 +2471,15 @@
           {
             "id": "invocation_animale_iii",
             "label": "Invocation animale III",
-            "kind": "summon_or_animal_effect",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:invocation_animale_iii",
               "classe:druide",
-              "invocation_ou_animaux",
+              "invocation_ou_creation",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2587,19 +2501,19 @@
           {
             "id": "invocation_d_insectes",
             "label": "Invocation d'insectes",
-            "kind": "summon_or_animal_effect",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:invocation_d_insectes",
               "classe:druide",
-              "invocation_ou_animaux",
+              "invocation_ou_creation",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\noptionnel\nAlternative à l’argile humide\nAlternative à la boue"
+      "note": "1\nconsomme"
     },
     "Invocation d'un élémental de terre": {
       "classe": "Druide",
@@ -2612,15 +2526,15 @@
           {
             "id": "invocation_d_un_elemental_de_terre",
             "label": "Invocation d'un élémental de terre",
-            "kind": "summon_or_animal_effect",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:invocation_d_un_elemental_de_terre",
               "classe:druide",
-              "invocation_ou_animaux",
+              "invocation_ou_creation",
               "niveau:7"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2645,7 +2559,7 @@
               "degats_ou_zone",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2670,7 +2584,7 @@
               "degats_ou_zone",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2694,8 +2608,7 @@
       "niveau": 4,
       "composants_materiels": [
         "pomme de pin",
-        "8 baies de houx",
-        "Ingrédient matériel"
+        "8 baies de houx"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -2704,19 +2617,19 @@
           {
             "id": "invocation_des_creatures_sylvestres",
             "label": "Invocation des créatures sylvestres",
-            "kind": "summon_or_animal_effect",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:invocation_des_creatures_sylvestres",
               "classe:druide",
-              "invocation_ou_animaux",
+              "invocation_ou_creation",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Invocation du temps": {
       "classe": "Druide",
@@ -2729,15 +2642,15 @@
           {
             "id": "invocation_du_temps",
             "label": "Invocation du temps",
-            "kind": "summon_or_animal_effect",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:invocation_du_temps",
               "classe:druide",
-              "invocation_ou_animaux",
+              "invocation_ou_creation",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2762,7 +2675,7 @@
               "communication_ou_controle",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2777,15 +2690,17 @@
         "source": "manual-normalized-clerc-n6",
         "effects": [
           {
-            "id": "communication_monstres",
-            "label": "Langage des monstres",
-            "kind": "communication",
+            "id": "langage_des_monstres",
+            "label": "Langage des Monstres",
+            "kind": "communication_or_control",
             "automation": "mj_aid",
             "tags": [
               "effet:langage_des_monstres",
-              "communication:monstres"
+              "classe:clerc",
+              "communication_ou_controle",
+              "niveau:6"
             ],
-            "notes": "Permet de communiquer avec des monstres selon leur nature."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2795,8 +2710,7 @@
       "classe": "Druide",
       "niveau": 4,
       "composants_materiels": [
-        "typiquement druidique (à savoir du gui)",
-        "Ingrédient matériel"
+        "gui"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -2813,11 +2727,11 @@
               "communication_ou_controle",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "ce sort est le même que le sort de niveau 4 de clerc langage des plantes\n1\nconsomme\nManuel des joueurs"
+      "note": "ce sort est le même que le sort de niveau 4 de clerc langage des plantes\n1\nconsomme"
     },
     "Langage des Plantes": {
       "classe": "Clerc",
@@ -2832,19 +2746,21 @@
         "source": "manual-normalized-clerc-n4",
         "effects": [
           {
-            "id": "communication_plantes",
-            "label": "Langage des plantes",
-            "kind": "communication",
+            "id": "langage_des_plantes",
+            "label": "Langage des Plantes",
+            "kind": "communication_or_control",
             "automation": "mj_aid",
             "tags": [
               "effet:langage_des_plantes",
-              "communication:plantes"
+              "classe:clerc",
+              "communication_ou_controle",
+              "niveau:4"
             ],
-            "notes": "Permet de communiquer avec les plantes et d’obtenir des réactions simples."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : goutte d’eau, Ingrédient matériel, pincée de bouse, flamme"
+      "note": "1\nconsomme"
     },
     "Langue": {
       "classe": "Clerc",
@@ -2855,16 +2771,16 @@
         "source": "manual-normalized-clerc-n4",
         "effects": [
           {
-            "id": "comprehension_langues",
+            "id": "langue",
             "label": "Langue",
-            "kind": "communication",
+            "kind": "clerc_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:langue",
-              "communication:langues",
-              "inverse:brouillage"
+              "classe:clerc",
+              "niveau:4"
             ],
-            "notes": "Permet de comprendre et parler une langue inconnue."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -2882,19 +2798,21 @@
         "source": "manual-normalized-clerc-n6",
         "effects": [
           {
-            "id": "divination_pierre",
+            "id": "lithomancie",
             "label": "Lithomancie",
-            "kind": "divination",
+            "kind": "detection_or_divination",
             "automation": "mj_aid",
             "tags": [
               "effet:lithomancie",
-              "divination:pierre"
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:6"
             ],
-            "notes": "Permet d’obtenir des informations divinatoires par la pierre ou la terre."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : goutte de mercure, argile"
+      "note": "1\nconsomme"
     },
     "Lithomorphose": {
       "classe": "Druide",
@@ -2909,18 +2827,18 @@
           {
             "id": "lithomorphose",
             "label": "Lithomorphose",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:lithomorphose",
               "classe:druide",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Localisation d'objets": {
       "classe": "Clerc",
@@ -2933,19 +2851,21 @@
         "source": "manual-normalized-clerc-n3",
         "effects": [
           {
-            "id": "localisation_objet",
-            "label": "Localisation d’objets",
-            "kind": "detection",
+            "id": "localisation_d_objets",
+            "label": "Localisation d'objets",
+            "kind": "detection_or_divination",
             "automation": "mj_aid",
             "tags": [
               "effet:localisation_d_objets",
-              "detection:objet"
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:3"
             ],
-            "notes": "Indique la direction d’un objet connu ou familier."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\nNormalisation marchand appliquée : pierre aimantée, non consomme"
+      "note": "1\nnon consomme"
     },
     "Localisation d’objets": {
       "classe": "Magicien",
@@ -2979,7 +2899,7 @@
               "detection_ou_divination",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3004,20 +2924,33 @@
               "detection_ou_divination",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
       "note": ""
     },
     "Lumière éternelle": {
-      "classe": "Illusionniste",
+      "classe": "Clerc",
       "niveau": 3,
       "composants_materiels": [],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "canonical-system",
-        "effects": []
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "lumiere_eternelle",
+            "label": "Lumière éternelle",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:lumiere_eternelle",
+              "classe:clerc",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
       },
       "note": ""
     },
@@ -3030,16 +2963,16 @@
         "source": "manual-normalized-clerc-n3",
         "effects": [
           {
-            "id": "creation_nourriture_eau",
+            "id": "manne",
             "label": "Manne",
-            "kind": "creation",
-            "automation": "mj_aid",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:manne",
-              "creation:nourriture",
-              "creation:eau"
+              "classe:clerc",
+              "niveau:3"
             ],
-            "notes": "Crée nourriture et eau nourrissantes."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3057,20 +2990,21 @@
         "source": "manual-normalized-clerc-n7",
         "effects": [
           {
-            "id": "forme_nuageuse_voyage",
+            "id": "marche_des_vents",
             "label": "Marche des vents",
-            "kind": "travel_transformation",
-            "automation": "active_effect_or_mj_aid",
+            "kind": "elemental_or_weather_control",
+            "automation": "mj_aid",
             "tags": [
               "effet:marche_des_vents",
-              "forme:vapeur",
-              "deplacement:aerien"
+              "classe:clerc",
+              "element_ou_climat",
+              "niveau:7"
             ],
-            "notes": "Transforme le clerc et les bénéficiaires en forme nuageuse pour voyager par les airs."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\noptionnel\nClerc non mauvais\nLiquide\nClerc mauvais\nNormalisation marchand appliquée : feu, eau bénite, eau maudite"
+      "note": "1\nconsomme\nClerc non mauvais\nLiquide\nClerc mauvais"
     },
     "Marteau Spirituel": {
       "classe": "Clerc",
@@ -3083,21 +3017,21 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "arme_force_marteau",
-            "label": "Marteau spirituel",
-            "kind": "summoned_weapon",
-            "automation": "attack_or_mj_aid",
+            "id": "marteau_spirituel",
+            "label": "Marteau Spirituel",
+            "kind": "elemental_or_weather_control",
+            "automation": "mj_aid",
             "tags": [
               "effet:marteau_spirituel",
-              "arme:force",
-              "degats:1d6_pm",
-              "degats:1d4_g"
+              "classe:clerc",
+              "element_ou_climat",
+              "niveau:2"
             ],
-            "notes": "Crée un champ de force en forme de marteau."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nclerc le lance sur son ennemi en récitant une prière à son dieu\nmarteau disparaît quand le sort est lancé\nNormalisation marchand appliquée : marteau de guerre normal"
+      "note": "1\nconsomme\nclerc le lance sur son ennemi en récitant une prière à son dieu\nmarteau disparaît quand le sort est lancé"
     },
     "Métal brûlant": {
       "classe": "Druide",
@@ -3118,7 +3052,7 @@
               "degats_ou_zone",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3143,7 +3077,7 @@
               "degats_ou_zone",
               "niveau:7"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3168,7 +3102,7 @@
               "degats_ou_zone",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3193,7 +3127,7 @@
               "degats_ou_zone",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3212,20 +3146,21 @@
         "source": "manual-normalized-clerc-n3",
         "effects": [
           {
-            "id": "anime_squelettes_zombies",
-            "label": "Nécro-animation",
-            "kind": "summon_undead",
+            "id": "necro_animation",
+            "label": "Nécro animation",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:necro_animation",
-              "creation:squelette",
-              "creation:zombie"
+              "classe:clerc",
+              "invocation_ou_creation",
+              "niveau:3"
             ],
-            "notes": "Anime des squelettes ou zombies obéissant au clerc."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\noptionnel\nAlternative à une écharde d’os\nAlternative à une pincée d’os en poudre\nNormalisation marchand appliquée : goutte de sang, Ingrédient matériel, morceau de chair humaine, pincée d’os en poudre, os en poudre"
+      "note": "1\nconsomme"
     },
     "Nécro-animation": {
       "classe": "Magicien",
@@ -3254,19 +3189,20 @@
         "source": "manual-normalized-clerc-n3",
         "effects": [
           {
-            "id": "parler_aux_morts",
+            "id": "necromancie",
             "label": "Nécromancie",
-            "kind": "communication_dead",
-            "automation": "mj_aid",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:necromancie",
-              "communication:mort"
+              "classe:clerc",
+              "niveau:3"
             ],
-            "notes": "Permet de poser des questions à une créature morte."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\nconsomme\nNormalisation marchand appliquée : symbole sacré du clerc, non consomme, encens, Brûlé au dessus du corps, restes, partie concernés"
+      "note": "1\nnon consomme\nconsomme"
     },
     "Obscurcissement": {
       "classe": "Druide",
@@ -3279,14 +3215,14 @@
           {
             "id": "obscurcissement",
             "label": "Obscurcissement",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:obscurcissement",
               "classe:druide",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3299,27 +3235,28 @@
         "jeu d’objets divinatoires en os",
         "en ivoire",
         "sous forme de bâtonnets",
-        "de runes gravées",
-        "non consomme"
+        "de runes gravées"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-clerc-n6",
         "effects": [
           {
-            "id": "orientation_divine",
+            "id": "orientation",
             "label": "Orientation",
-            "kind": "divination",
+            "kind": "detection_or_divination",
             "automation": "mj_aid",
             "tags": [
               "effet:orientation",
-              "divination:direction"
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:6"
             ],
-            "notes": "Indique une direction ou un chemin conseillé vers un objectif défini."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs"
+      "note": "1\nnon consomme"
     },
     "Paralysie": {
       "classe": "Clerc",
@@ -3332,24 +3269,21 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "immobilisation_humanoides",
+            "id": "paralysie",
             "label": "Paralysie",
             "kind": "control",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:paralysie",
-              "etat:paralyse",
-              "jp:annule"
+              "classe:clerc",
+              "controle",
+              "niveau:2"
             ],
-            "notes": "Immobilise 1 à 3 humains ou humanoïdes.",
-            "savingThrow": {
-              "type": "sorts",
-              "condition": "annule"
-            }
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nFormulation source du Manuel : « petite tige de métal droite\nNormalisation marchand appliquée : petite tige de métal droite, rigide, tige de métal droite, rigide, rigide »"
+      "note": "1\nconsomme"
     },
     "Paralysie animale": {
       "classe": "Druide",
@@ -3370,7 +3304,7 @@
               "controle",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3395,7 +3329,7 @@
               "controle",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3410,27 +3344,16 @@
         "source": "manual-normalized-clerc-n7",
         "effects": [
           {
-            "id": "parole_sacree",
-            "label": "Parole sacrée",
-            "kind": "holy_word",
-            "automation": "mj_aid",
+            "id": "parole_sacree_maudite",
+            "label": "Parole sacrée/maudite",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
-              "effet:parole_sacree",
-              "etat:selon_dv"
+              "effet:parole_sacree_maudite",
+              "classe:clerc",
+              "niveau:7"
             ],
-            "notes": "Une parole divine affecte les créatures opposées à l’alignement du clerc."
-          },
-          {
-            "id": "parole_maudite",
-            "label": "Parole maudite",
-            "kind": "unholy_word",
-            "automation": "mj_aid",
-            "tags": [
-              "effet:parole_maudite",
-              "inverse",
-              "etat:selon_dv"
-            ],
-            "notes": "Inverse : parole maudite affectant les créatures opposées."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3445,9 +3368,7 @@
         "ses cendres sont éparpillées",
         "aiguille de pin",
         "autre conifère",
-        "Composant requis selon l’alternative",
-        "variante choisie",
-        "variante explicitement indiquée par le Manuel"
+        "Composant requis selon l’"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -3456,18 +3377,18 @@
           {
             "id": "passage_sans_trace",
             "label": "Passage sans trace",
-            "kind": "druidic_effect",
+            "kind": "druide_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:passage_sans_trace",
               "classe:druide",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\noptionnel\nAlternative"
+      "note": "1\nconsomme"
     },
     "Passe-plantes": {
       "classe": "Druide",
@@ -3488,7 +3409,7 @@
               "plante_ou_nature",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3516,11 +3437,11 @@
               "protection",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Perception des Alignements": {
       "classe": "Clerc",
@@ -3531,15 +3452,17 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "lecture_alignement",
-            "label": "Perception des alignements",
-            "kind": "detection",
+            "id": "perception_des_alignements",
+            "label": "Perception des Alignements",
+            "kind": "communication_or_control",
             "automation": "mj_aid",
             "tags": [
               "effet:perception_des_alignements",
-              "detection:alignement"
+              "classe:clerc",
+              "communication_ou_controle",
+              "niveau:2"
             ],
-            "notes": "Permet de connaître l’alignement exact d’une personne ou créature."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3567,11 +3490,11 @@
               "controle",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nFormulation source du Manuel : « baies de houx »"
+      "note": "1\nconsomme"
     },
     "Piège sylvestre": {
       "classe": "Druide",
@@ -3596,11 +3519,11 @@
               "controle",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Pilier de Feu": {
       "classe": "Clerc",
@@ -3613,20 +3536,21 @@
         "source": "manual-normalized-clerc-n5",
         "effects": [
           {
-            "id": "colonne_feu_divin",
-            "label": "Pilier de feu",
-            "kind": "damage_area",
+            "id": "pilier_de_feu",
+            "label": "Pilier de Feu",
+            "kind": "damage_or_area_control",
             "automation": "damage_or_mj_aid",
             "tags": [
               "effet:pilier_de_feu",
-              "degats:feu_divin",
-              "jp:moitie"
+              "classe:clerc",
+              "degats_ou_zone",
+              "niveau:5"
             ],
-            "notes": "Fait descendre une colonne de feu divin infligeant des dégâts."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : pincée de souffre, Ingrédient matériel"
+      "note": "1\nconsomme"
     },
     "Porte végétale": {
       "classe": "Druide",
@@ -3647,7 +3571,7 @@
               "plante_ou_nature",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3672,7 +3596,7 @@
               "detection_ou_divination",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3690,34 +3614,20 @@
         "source": "manual-normalized-clerc-n3",
         "effects": [
           {
-            "id": "bonus_allies_priere",
-            "label": "Prière — alliés",
-            "kind": "active_bonus",
+            "id": "priere",
+            "label": "Prière",
+            "kind": "clerc_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:priere",
-              "bonus:toucher:1",
-              "bonus:degats:1",
-              "bonus:jp:1"
+              "classe:clerc",
+              "niveau:3"
             ],
-            "notes": "Les alliés gagnent +1 aux attaques, dégâts et jets de protection."
-          },
-          {
-            "id": "malus_ennemis_priere",
-            "label": "Prière — ennemis",
-            "kind": "active_malus",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:priere",
-              "malus:toucher:1",
-              "malus:degats:1",
-              "malus:jp:1"
-            ],
-            "notes": "Les ennemis subissent -1 aux attaques, dégâts et jets de protection."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\noptionnel\nManuel des joueurs\nAlternative au chapelet de prière\nAlternative au symbole religieux en argent\nNormalisation marchand appliquée : symbole religieux en argent, à un objet similaire, chapelet de prière, à un objet similaire, chapelet de prière, au chapelet de prière"
+      "note": "1"
     },
     "Protection contre la foudre": {
       "classe": "Druide",
@@ -3738,7 +3648,7 @@
               "protection",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3763,7 +3673,7 @@
               "protection",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3780,16 +3690,17 @@
         "source": "manual-normalized-clerc-n4",
         "effects": [
           {
-            "id": "aura_protection_mal_3m",
+            "id": "protection_contre_le_mal_sur_3_m",
             "label": "Protection contre le mal sur 3 m",
             "kind": "protection",
             "automation": "active_effect_or_mj_aid",
             "tags": [
-              "effet:protection_contre_le_mal_3m",
-              "aura:3m",
-              "bloque:creatures_invoquees"
+              "effet:protection_contre_le_mal_sur_3_m",
+              "classe:clerc",
+              "protection",
+              "niveau:4"
             ],
-            "notes": "Étend autour du clerc une protection contre le mal et les créatures invoquées."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3814,7 +3725,7 @@
               "element_ou_climat",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3839,7 +3750,7 @@
               "degats_ou_zone",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3856,19 +3767,21 @@
         "source": "manual-normalized-clerc-n5",
         "effects": [
           {
-            "id": "mission_sacree",
-            "label": "Quête religieuse",
-            "kind": "geas",
-            "automation": "mj_aid",
+            "id": "quete_religieuse",
+            "label": "Quête Religieuse",
+            "kind": "control",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:quete_religieuse",
-              "contrainte:mission"
+              "classe:clerc",
+              "controle",
+              "niveau:5"
             ],
-            "notes": "Impose une quête ou mission religieuse à la cible."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\nNormalisation marchand appliquée : symbole sacré du clerc, non consomme"
+      "note": "1\nnon consomme"
     },
     "Rappel": {
       "classe": "Clerc",
@@ -3881,15 +3794,17 @@
         "source": "manual-normalized-clerc-n6",
         "effects": [
           {
-            "id": "rappel_sort",
+            "id": "rappel",
             "label": "Rappel",
-            "kind": "spell_recall",
-            "automation": "mj_aid",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:rappel",
-              "recupere:sort_lance"
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:6"
             ],
-            "notes": "Permet de rappeler à la mémoire un sort déjà lancé."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3906,15 +3821,17 @@
         "source": "manual-normalized-clerc-n5",
         "effects": [
           {
-            "id": "retour_vie_recent",
-            "label": "Rappel à la vie",
-            "kind": "revival",
-            "automation": "mj_aid",
+            "id": "rappel_a_la_vie",
+            "label": "Rappel à la Vie",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:rappel_a_la_vie",
-              "ressuscite:mort_recent"
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:5"
             ],
-            "notes": "Ramène à la vie une créature morte depuis peu."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3932,20 +3849,21 @@
         "source": "manual-normalized-clerc-n7",
         "effects": [
           {
-            "id": "regeneration_membre",
+            "id": "regeneration",
             "label": "Régénération",
-            "kind": "regeneration",
+            "kind": "healing_or_restoration",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:regeneration",
-              "restaure:membre",
-              "soin:progressif"
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:7"
             ],
-            "notes": "Régénère membres ou blessures graves dans le temps."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\noptionnel\nRequise pour régénération\nalternative à l’eau maudite\nRequise pour flétrissement\nalternative à l’eau bénite\nNormalisation marchand appliquée : objet de prière, non consomme, eau bénite, eau maudite"
+      "note": "1\nnon consomme"
     },
     "Réincarnation": {
       "classe": "Druide",
@@ -3966,7 +3884,7 @@
               "soin_ou_restauration",
               "niveau:7"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -3998,11 +3916,11 @@
               "controle",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Répulsion du bois": {
       "classe": "Druide",
@@ -4023,7 +3941,7 @@
               "controle",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4040,20 +3958,21 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "resistance_feu",
+            "id": "resistance_au_feu",
             "label": "Résistance au feu",
-            "kind": "resistance",
+            "kind": "protection",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:resistance_au_feu",
-              "resistance:feu",
-              "bonus:jp:feu:3"
+              "classe:clerc",
+              "protection",
+              "niveau:2"
             ],
-            "notes": "Protège contre chaleur et feu."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : goutte de mercure"
+      "note": "1\nconsomme"
     },
     "Respiration aquatique": {
       "classe": "Druide",
@@ -4074,7 +3993,7 @@
               "element_ou_climat",
               "niveau:3"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4091,16 +4010,17 @@
         "source": "manual-normalized-clerc-n7",
         "effects": [
           {
-            "id": "restauration_niveau",
+            "id": "restauration",
             "label": "Restauration",
-            "kind": "restoration",
-            "automation": "mj_aid",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:restauration",
-              "retire:drain_energie",
-              "restaure:niveau"
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:7"
             ],
-            "notes": "Restaure un niveau ou une énergie perdue."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4118,19 +4038,21 @@
         "source": "manual-normalized-clerc-n7",
         "effects": [
           {
-            "id": "resurrection_complete",
+            "id": "resurrection",
             "label": "Résurrection",
-            "kind": "revival",
-            "automation": "mj_aid",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:resurrection",
-              "ressuscite:mort"
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:7"
             ],
-            "notes": "Ramène une créature morte à la vie."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\noptionnel\nRequise pour résurrection\nalternative à l’eau maudite\nRequise pour anéantissement\nalternative à l’eau bénite\nNormalisation marchand appliquée : symbole sacré du clerc, non consomme, eau bénite, eau maudite"
+      "note": "1\nnon consomme"
     },
     "Retardement du Poison": {
       "classe": "Clerc",
@@ -4144,20 +4066,20 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "ralentissement_poison",
-            "label": "Retardement du poison",
-            "kind": "poison_delay",
+            "id": "retardement_du_poison",
+            "label": "Retardement du Poison",
+            "kind": "clerc_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:retardement_du_poison",
-              "poison:ralenti",
-              "minimum:1_pv"
+              "classe:clerc",
+              "niveau:2"
             ],
-            "notes": "Ralentit fortement le poison."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nfalse\ntrue\nManuel des joueurs\nconsomme\nNormalisation marchand appliquée : symbole sacré du clerc, gousse d’ail, gousse d’ail, non consomme, symbole sacré du clerc, Écrasée, répandue sur les pieds nus de la victime"
+      "note": "1\nfalse\ntrue\nnon consomme\nconsomme"
     },
     "Séparation des eaux": {
       "classe": "Magicien",
@@ -4171,7 +4093,7 @@
         "source": "canonical-system",
         "effects": []
       },
-      "note": "1\noptionnel\nManuel des joueurs\nAlternative à deux feuilles de cristal\nAlternative à deux feuilles de verre\nNormalisation marchand appliquée : deux feuilles de verre, Objet utilisé sans destruction indiquée, deux feuilles de cristal"
+      "note": "1"
     },
     "Séparation des Eaux": {
       "classe": "Clerc",
@@ -4185,20 +4107,21 @@
         "source": "manual-normalized-clerc-n6",
         "effects": [
           {
-            "id": "separe_les_eaux",
-            "label": "Séparation des eaux",
-            "kind": "area_control",
+            "id": "separation_des_eaux",
+            "label": "Séparation des Eaux",
+            "kind": "elemental_or_weather_control",
             "automation": "mj_aid",
             "tags": [
               "effet:separation_des_eaux",
-              "controle:eau",
-              "cree:passage"
+              "classe:clerc",
+              "element_ou_climat",
+              "niveau:6"
             ],
-            "notes": "Sépare une masse d’eau pour créer un passage ou un tunnel."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\nNormalisation marchand appliquée : symbole sacré du clerc, non consomme"
+      "note": "1\nnon consomme"
     },
     "Serviteur Aérien": {
       "classe": "Clerc",
@@ -4212,14 +4135,16 @@
         "effects": [
           {
             "id": "serviteur_aerien",
-            "label": "Serviteur aérien",
-            "kind": "summon_control",
+            "label": "Serviteur Aérien",
+            "kind": "summon_or_actor_effect",
             "automation": "actor_creation_or_mj_aid",
             "tags": [
               "effet:serviteur_aerien",
-              "invocation:serviteur_aerien"
+              "classe:clerc",
+              "invocation_ou_creation",
+              "niveau:6"
             ],
-            "notes": "Invoque un serviteur aérien chargé d’une mission."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4243,7 +4168,6 @@
       "niveau": 1,
       "composants_materiels": [
         "massue en chêne",
-        "non consomme",
         "gui",
         "feuille de trèfle"
       ],
@@ -4262,11 +4186,11 @@
               "plante_ou_nature",
               "niveau:1"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nManuel des joueurs\nconsomme"
+      "note": "1\nnon consomme\nconsomme"
     },
     "Silence sur 5 mètres": {
       "classe": "Clerc",
@@ -4277,16 +4201,16 @@
         "source": "manual-normalized-clerc-n2",
         "effects": [
           {
-            "id": "zone_silence",
+            "id": "silence_sur_5_metres",
             "label": "Silence sur 5 mètres",
-            "kind": "area_silence",
+            "kind": "clerc_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
-              "effet:silence",
-              "bloque:bruit",
-              "bloque:composante_verbale"
+              "effet:silence_sur_5_metres",
+              "classe:clerc",
+              "niveau:2"
             ],
-            "notes": "Crée une zone de silence empêchant bruit et composantes verbales."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4313,11 +4237,11 @@
               "soin_ou_restauration",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Soins majeurs": {
       "classe": "Druide",
@@ -4340,11 +4264,11 @@
               "soin_ou_restauration",
               "niveau:4"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs"
+      "note": "1\nconsomme"
     },
     "Soins Majeurs": {
       "classe": "Clerc",
@@ -4355,16 +4279,17 @@
         "source": "manual-normalized-clerc-n4",
         "effects": [
           {
-            "id": "soin_majeur",
-            "label": "Soins majeurs",
-            "kind": "healing",
+            "id": "soins_majeurs",
+            "label": "Soins Majeurs",
+            "kind": "healing_or_restoration",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:soins_majeurs",
-              "soin:important",
-              "inverse:blessure_majeure"
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:4"
             ],
-            "notes": "Soigne une blessure importante ; l’inverse inflige une blessure majeure."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4389,7 +4314,7 @@
               "soin_ou_restauration",
               "niveau:2"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4419,16 +4344,16 @@
         "source": "manual-normalized-clerc-n7",
         "effects": [
           {
-            "id": "projection_astrale",
-            "label": "Sort astral",
-            "kind": "astral_projection",
-            "automation": "mj_aid",
+            "id": "sort_astral",
+            "label": "Sort Astral",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:sort_astral",
-              "voyage:astral",
-              "cordon_argente"
+              "classe:clerc",
+              "niveau:7"
             ],
-            "notes": "Projette le clerc et les bénéficiaires sur le plan astral."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4446,7 +4371,7 @@
         "source": "canonical-system",
         "effects": []
       },
-      "note": "1\nconsomme\n5000\nManuel des joueurs\nNormalisation marchand appliquée : diamant réduit en poudre, Réduit en poudre, opale noire réduite en poudre, Réduite en poudre"
+      "note": "1\nconsomme\n5000"
     },
     "Tempête de feu": {
       "classe": "Druide",
@@ -4467,7 +4392,7 @@
               "degats_ou_zone",
               "niveau:7"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4492,7 +4417,7 @@
               "plante_ou_nature",
               "niveau:6"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4517,7 +4442,7 @@
               "element_ou_climat",
               "niveau:5"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4542,7 +4467,7 @@
               "degats_ou_zone",
               "niveau:7"
             ],
-            "notes": "Profil mécanique druidique normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
@@ -4561,20 +4486,21 @@
         "source": "manual-normalized-clerc-n7",
         "effects": [
           {
-            "id": "seisme_localise",
-            "label": "Tremblement de terre",
-            "kind": "area_damage_control",
+            "id": "tremblement_de_terre",
+            "label": "Tremblement de Terre",
+            "kind": "damage_or_area_control",
             "automation": "damage_or_mj_aid",
             "tags": [
               "effet:tremblement_de_terre",
-              "zone:seisme",
-              "terrain:effondrement"
+              "classe:clerc",
+              "degats_ou_zone",
+              "niveau:7"
             ],
-            "notes": "Provoque un séisme localisé affectant terrain, constructions, végétation et créatures."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       },
-      "note": "1\nconsomme\nManuel des joueurs\nNormalisation marchand appliquée : pincée de poussière, Ingrédient matériel, petit caillou, motte de terre, caillou, Ingrédient matériel"
+      "note": "1\nconsomme"
     },
     "Vision réelle": {
       "classe": "Illusionniste",
@@ -4636,26 +4562,7 @@
       "Retardement du Poison",
       "Silence sur 5 mètres"
     ],
-    "missing": [],
-    "expectedAliases": [
-      "augure",
-      "cantique",
-      "charme_serpents",
-      "detection_de_charme",
-      "detection_de_pieges",
-      "detection_des_alignements",
-      "detection_des_charmes",
-      "detection_des_pieges",
-      "langage_animal",
-      "marteau_spirituel",
-      "paralysie",
-      "perception_de_l_alignement",
-      "perception_des_alignements",
-      "resistance_au_feu",
-      "retardement_du_poison",
-      "silence_sur_5_m",
-      "silence_sur_5_metres"
-    ]
+    "missing": []
   },
   "clercLevel3EffectProfiles": {
     "applied": [
@@ -4672,27 +4579,7 @@
       "Nécromancie",
       "Prière"
     ],
-    "missing": [],
-    "expectedAliases": [
-      "animation_des_morts",
-      "catalepsie",
-      "desenvoutement",
-      "dissipation_de_la_magie",
-      "dissipation_magie",
-      "envoutement",
-      "glyphe_de_garde",
-      "guerison_cecite",
-      "guerison_de_la_cecite",
-      "guerison_des_maladie",
-      "guerison_des_maladies",
-      "localisation_d_objet",
-      "localisation_d_objets",
-      "lumiere_eternelle",
-      "manne",
-      "necro_animation",
-      "necromancie",
-      "priere"
-    ]
+    "missing": []
   },
   "clercLevel4EffectProfiles": {
     "applied": [
@@ -4707,25 +4594,7 @@
       "Protection contre le mal sur 3 m",
       "Soins Majeurs"
     ],
-    "missing": [],
-    "expectedAliases": [
-      "abaissement_des_eaux",
-      "batons_a_serpent",
-      "batons_a_serpents",
-      "contre_poison",
-      "detection_des_mensonges",
-      "detection_mensonges",
-      "divination",
-      "exorcisme",
-      "langage_des_plantes",
-      "langue",
-      "protection_contre_le_mal_3_m",
-      "protection_contre_le_mal_sur_3_m",
-      "protection_contre_le_mal_sur_3m",
-      "soin_majeur",
-      "soins_majeur",
-      "soins_majeurs"
-    ]
+    "missing": []
   },
   "clercLevel5EffectProfiles": {
     "applied": [
@@ -4740,23 +4609,7 @@
       "Soin ultime",
       "Vision réelle"
     ],
-    "missing": [],
-    "expectedAliases": [
-      "changement_de_plan",
-      "communion",
-      "dissipation_du_mal",
-      "expiation",
-      "fleau_d_insecte",
-      "fleau_d_insectes",
-      "pilier_de_feu",
-      "quete_religieuse",
-      "rappel_a_la_vie",
-      "rappel_a_vie",
-      "rappel_vie",
-      "soin_ultime",
-      "soins_ultimes",
-      "vision_reelle"
-    ]
+    "missing": []
   },
   "clercLevel6EffectProfiles": {
     "applied": [
@@ -4771,21 +4624,7 @@
       "Séparation des Eaux",
       "Serviteur Aérien"
     ],
-    "missing": [],
-    "expectedAliases": [
-      "animation_des_objets",
-      "barriere_de_lames",
-      "guerison",
-      "invocation_animaux",
-      "invocation_des_animaux",
-      "langage_des_monstres",
-      "langage_monstres",
-      "lithomancie",
-      "orientation",
-      "rappel",
-      "separation_des_eaux",
-      "serviteur_aerien"
-    ]
+    "missing": []
   },
   "clercLevel7EffectProfiles": {
     "applied": [
@@ -4800,23 +4639,7 @@
       "Symbole",
       "Tremblement de Terre"
     ],
-    "missing": [],
-    "expectedAliases": [
-      "controle_climat",
-      "controle_du_climat",
-      "marche_des_vents",
-      "parole_maudite",
-      "parole_sacree",
-      "parole_sacree_maudite",
-      "parole_sacree_ou_maudite",
-      "regeneration",
-      "restauration",
-      "resurrection",
-      "seuil",
-      "sort_astral",
-      "symbole",
-      "tremblement_de_terre"
-    ]
+    "missing": []
   },
   "druideLevel1EffectProfiles": {
     "applied": [
