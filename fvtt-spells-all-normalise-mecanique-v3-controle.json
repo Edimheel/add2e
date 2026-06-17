@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-clerc-n3-effectprofile-v1",
+  "version": "2026-06-17-normalize-spell-materials-v3-clerc-n3-effectprofile-v3",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
@@ -1649,7 +1649,7 @@
     "Nécro animation": {
       "composants_materiels": [
         "goutte de sang",
-        "chair humaine",
+        "morceau de chair humaine",
         "os en poudre"
       ],
       "effectProfile": {
@@ -1678,7 +1678,7 @@
     "Nécro-animation": {
       "composants_materiels": [
         "goutte de sang",
-        "chair humaine",
+        "morceau de chair humaine",
         "os en poudre"
       ],
       "effectProfile": {
