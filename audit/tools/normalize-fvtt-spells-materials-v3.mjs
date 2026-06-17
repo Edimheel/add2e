@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4";
+const VERSION = "2026-06-17-normalize-spell-materials-v3-merchant-safe-v4b";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -100,6 +100,19 @@ function normalizeLabel(value) {
   return out;
 }
 
+function hasNoisePrefix(clean, normalized) {
+  const lower = clean.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  for (const prefix of STARTS_NOISE) {
+    const rawPrefix = String(prefix).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (rawPrefix.endsWith(" ")) {
+      if (lower.startsWith(rawPrefix)) return true;
+      continue;
+    }
+    if (normalized.startsWith(norm(prefix))) return true;
+  }
+  return false;
+}
+
 function isNoise(value) {
   const raw = text(value);
   const clean = normalizeLabel(raw);
@@ -107,7 +120,7 @@ function isNoise(value) {
   if (!n) return true;
   if (EXACT_NOISE.has(n) || EXACT_NOISE.has(clean.toLowerCase())) return true;
   if (/^\d+(?:[,.]\d+)?\s*(m2|m|m²|case|cases|po|pa|pp|pc)?$/i.test(clean)) return true;
-  if (STARTS_NOISE.some(prefix => n.startsWith(norm(prefix)))) return true;
+  if (hasNoisePrefix(clean, n)) return true;
   if (CONTAINS_NOISE.some(part => n.includes(norm(part)))) return true;
   return false;
 }
@@ -182,7 +195,7 @@ function splitAlternatives(value) {
 
 function splitAndList(value) {
   const raw = text(value);
-  const m = raw.match(/^de\s+(.+?)\s+et\s+de\s+(.+)$/i) || raw.match(/^(.+?)\s+et\s+(.+)$/i);
+  const m = raw.match(/^de\s+(.+?)\s+et\s+de\s+(.+)$/i) || raw.match(/^(.+?)\s+et\s+de\s+(.+)$/i) || raw.match(/^(.+?)\s+et\s+(.+)$/i);
   return m ? [normalizeLabel(m[1]), normalizeLabel(m[2])].filter(Boolean) : [];
 }
 
