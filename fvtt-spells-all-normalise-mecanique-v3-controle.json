@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-strict",
+  "version": "2026-06-17-normalize-spell-materials-v3-strict-fragments-v2",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
@@ -229,16 +229,9 @@
       "after": [
         "jeu de baguettes serties de gemmes",
         "os de dragon",
-        "objets divinatoires similaires ou des feuilles d’infusion encore humides",
-        "aux objets similaires et aux feuilles d’infusion",
         "objets divinatoires similaires",
-        "os de dragon ou des feuilles d’infusion encore humides",
-        "aux os de dragon et aux feuilles d’infusion",
-        "feuille d’infusion encore humides",
-        "cette méthode requiert aussi une perle écrasée d’au moins 100 po",
-        "placées dans le récipient ayant servi pour l’infusion",
-        "perle écrasée d’au moins 100 po",
-        "ajoutée à la boisson avant consommation"
+        "feuilles d’infusion encore humides",
+        "perle écrasée d’au moins 100 po"
       ],
       "notes": [
         "1",
@@ -246,12 +239,17 @@
         "Manuel des joueurs",
         "Alternative : utiliser ce composant",
         "Alternative aux os de dragon",
+        "aux objets similaires et aux feuilles d’infusion.",
         "Alternative au jeu de baguettes serties de gemmes",
+        "aux os de dragon et aux feuilles d’infusion.",
         "Alternative aux objets divinatoires",
+        "cette méthode requiert aussi une perle écrasée d’au moins 100 po.",
         "Formulation source du Manuel : « feuilles d’infusion encore humides ».",
+        "placées dans le récipient ayant servi pour l’infusion. Formulation source du Manuel : « feuilles d’infusion encore humides ».",
         "100",
         "Requise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.",
-        "Requise uniquement avec la méthode des feuilles d’infusion"
+        "Requise uniquement avec la méthode des feuilles d’infusion",
+        "ajoutée à la boisson avant consommation."
       ]
     },
     {
@@ -330,7 +328,6 @@
       ],
       "after": [
         "eau bénite",
-        "Liquide",
         "eau maudite"
       ],
       "notes": [
@@ -339,6 +336,7 @@
         "Manuel des joueurs",
         "Sort normal.",
         "consommé.",
+        "Liquide consommé.",
         "Sort inversé : malédiction."
       ]
     },
@@ -381,7 +379,8 @@
       "after": [
         "luciole vivante",
         "vert luisant vivant",
-        "queue de lucioles ou de verts luisants morts"
+        "queue de lucioles",
+        "de verts luisants morts"
       ],
       "notes": [
         "1",
@@ -606,7 +605,8 @@
       ],
       "after": [
         "pincée d’humus",
-        "goutte d’eau et une feuille ou une brindille"
+        "goutte d’eau et une feuille",
+        "brindille"
       ],
       "notes": [
         "1",
@@ -653,9 +653,10 @@
         "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite »."
       ],
       "after": [
-        "petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
+        "petite perle de cristal qui se brisera à la fin du sort",
+        "si la chaumière est détruite",
         "Consommation explicitement indiquée dans la description",
-        "perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite"
+        "perle de cristal qui se brisera à la fin du sort"
       ],
       "notes": [
         "1",
@@ -734,11 +735,12 @@
       ],
       "after": [
         "petite corne d’argent d’une valeur minimale de 100 po",
-        "qui disparaît quand le sort est lancé",
+        "qui",
         "Consommation explicitement indiquée dans la description",
         "corne d’argent d’une valeur minimale de 100 po"
       ],
       "notes": [
+        "disparaît quand le sort est lancé",
         "1",
         "consomme",
         "Manuel des joueurs",
@@ -758,7 +760,8 @@
         "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde »."
       ],
       "after": [
-        "pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde"
+        "pincée de poudre faite à partir de la glande pinéale d’un humain",
+        "humanoïde"
       ],
       "notes": [
         "1",
@@ -1009,26 +1012,26 @@
       "composants_materiels": [
         "jeu de baguettes serties de gemmes",
         "os de dragon",
-        "objets divinatoires similaires ou des feuilles d’infusion encore humides",
-        "aux objets similaires et aux feuilles d’infusion",
         "objets divinatoires similaires",
-        "os de dragon ou des feuilles d’infusion encore humides",
-        "aux os de dragon et aux feuilles d’infusion",
-        "feuille d’infusion encore humides",
-        "cette méthode requiert aussi une perle écrasée d’au moins 100 po",
-        "placées dans le récipient ayant servi pour l’infusion",
-        "perle écrasée d’au moins 100 po",
-        "ajoutée à la boisson avant consommation"
+        "feuilles d’infusion encore humides",
+        "perle écrasée d’au moins 100 po"
       ],
-      "note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\nAlternative au jeu de baguettes serties de gemmes\nAlternative aux objets divinatoires\nFormulation source du Manuel : « feuilles d’infusion encore humides ».\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.\nRequise uniquement avec la méthode des feuilles d’infusion"
+      "note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\naux objets similaires et aux feuilles d’infusion.\nAlternative au jeu de baguettes serties de gemmes\naux os de dragon et aux feuilles d’infusion.\nAlternative aux objets divinatoires\ncette méthode requiert aussi une perle écrasée d’au moins 100 po.\nFormulation source du Manuel : « feuilles d’infusion encore humides ».\nplacées dans le récipient ayant servi pour l’infusion. Formulation source du Manuel : « feuilles d’infusion encore humides ».\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.\nRequise uniquement avec la méthode des feuilles d’infusion\najoutée à la boisson avant consommation."
     },
     "Bénédiction": {
       "composants_materiels": [
         "eau bénite",
-        "Liquide",
         "eau maudite"
       ],
-      "note": "1\noptionnel\nManuel des joueurs\nSort normal.\nconsommé.\nSort inversé : malédiction."
+      "note": "1\noptionnel\nManuel des joueurs\nSort normal.\nconsommé.\nLiquide consommé.\nSort inversé : malédiction."
+    },
+    "Marteau Spirituel": {
+      "composants_materiels": [
+        "marteau de guerre normal",
+        "Le",
+        "marteau"
+      ],
+      "note": "1\nconsomme\nManuel des joueurs\nclerc le lance sur son ennemi en récitant une prière à son dieu\ndisparaît quand le sort est lancé."
     },
     "Paralysie": {
       "composants_materiels": [

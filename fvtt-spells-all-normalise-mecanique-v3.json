@@ -3505,21 +3505,14 @@
         "composants_materiels": [
           "jeu de baguettes serties de gemmes",
           "os de dragon",
-          "objets divinatoires similaires ou des feuilles d’infusion encore humides",
-          "aux objets similaires et aux feuilles d’infusion",
           "objets divinatoires similaires",
-          "os de dragon ou des feuilles d’infusion encore humides",
-          "aux os de dragon et aux feuilles d’infusion",
-          "feuille d’infusion encore humides",
-          "cette méthode requiert aussi une perle écrasée d’au moins 100 po",
-          "placées dans le récipient ayant servi pour l’infusion",
-          "perle écrasée d’au moins 100 po",
-          "ajoutée à la boisson avant consommation"
+          "feuilles d’infusion encore humides",
+          "perle écrasée d’au moins 100 po"
         ],
         "composants_materiels_source": "Composants alternatifs selon la methode choisie: baguettes serties de gemmes, os de dragon, objets similaires ou feuilles d'infusion humides; si la methode de l'infusion est utilisee, une perle ecrasee d'au moins 100 po est ajoutee a la boisson avant consommation.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\nAlternative au jeu de baguettes serties de gemmes\nAlternative aux objets divinatoires\nFormulation source du Manuel : « feuilles d’infusion encore humides ».\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.\nRequise uniquement avec la méthode des feuilles d’infusion",
+        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nAlternative : utiliser ce composant\nAlternative aux os de dragon\naux objets similaires et aux feuilles d’infusion.\nAlternative au jeu de baguettes serties de gemmes\naux os de dragon et aux feuilles d’infusion.\nAlternative aux objets divinatoires\ncette méthode requiert aussi une perle écrasée d’au moins 100 po.\nFormulation source du Manuel : « feuilles d’infusion encore humides ».\nplacées dans le récipient ayant servi pour l’infusion. Formulation source du Manuel : « feuilles d’infusion encore humides ».\n100\nRequise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.\nRequise uniquement avec la méthode des feuilles d’infusion\najoutée à la boisson avant consommation.",
         "composants_materiels_a_renseigner": false,
         "description": "Le clerc qui lance ce sort tente de deviner si l’acte que lui et ses amis vont entreprendre dans le futur immédiat (3 tours maximum) sera bénéfique ou maléfique pour le groupe. Les chances de base de bien deviner sont de 70 % + 1 % pour chaque niveau du clerc lançant le sort, c.-à-d. 71 % au niveau 1, 72 % au niveau 2, etc. Le MD déterminera tout ajustement dû à certaines conditions particulières, s’il y a lieu. Par exemple, considérons un groupe désirant détruire un sceau mystérieux fermant une porte. L’augure est déterminé pour savoir si la destruction du sceau sera bénéfique ou maléfique pour le groupe. La composante matérielle de ce sort est un jeu de baguettes serties de gemmes, des os de dragon ou des objets similaires ou alors des feuilles d’infusion encore humides et placées dans le récipient qui a servi pour cette infusion. Si cette méthode est utilisée, une perle écrasée d’au moins 100 po doit être ajoutée à la boisson avant qu’elle ne soit consommée.",
         "onUse": "systems/add2e/scripts/sorts/augure.js",
@@ -4809,13 +4802,12 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "eau bénite",
-          "Liquide",
           "eau maudite"
         ],
         "composants_materiels_source": "l’eau bénite, ou maudite pour l’inverse",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nSort normal.\nconsommé.\nSort inversé : malédiction.",
+        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nSort normal.\nconsommé.\nLiquide consommé.\nSort inversé : malédiction.",
         "composants_materiels_a_renseigner": false,
         "description": "en lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs «probabilités de toucher» de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6\"), il affectera alors les créatures se trouvant dans une zone de 5\" x 5\". L’inverse du sort, malédiction, peut être lancé sur des ennemis; ceux-ci voient donc baisser leur moral et leur «probabilité de toucher» de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.",
         "onUse": "systems/add2e/scripts/sorts/benediction.js",
@@ -5754,7 +5746,8 @@
         "composants_materiels": [
           "luciole vivante",
           "vert luisant vivant",
-          "queue de lucioles ou de verts luisants morts"
+          "queue de lucioles",
+          "de verts luisants morts"
         ],
         "composants_materiels_source": "phosphore pour la version chaude, phosphore ou luciole/ver luisant pour la version froide selon arbitrage MD",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -8617,7 +8610,8 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "pincée d’humus",
-          "goutte d’eau et une feuille ou une brindille"
+          "goutte d’eau et une feuille",
+          "brindille"
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -9262,9 +9256,10 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
+          "petite perle de cristal qui se brisera à la fin du sort",
+          "si la chaumière est détruite",
           "Consommation explicitement indiquée dans la description",
-          "perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite"
+          "perle de cristal qui se brisera à la fin du sort"
         ],
         "composants_materiels_source": "petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -9611,14 +9606,14 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petite corne d’argent d’une valeur minimale de 100 po",
-          "qui disparaît quand le sort est lancé",
+          "qui",
           "Consommation explicitement indiquée dans la description",
           "corne d’argent d’une valeur minimale de 100 po"
         ],
         "composants_materiels_source": "La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nFormulation source du Manuel : « une petite corne d’argent d’une valeur minimale de 100 po",
+        "composants_materiels_note": "disparaît quand le sort est lancé\n1\nconsomme\nManuel des joueurs\nFormulation source du Manuel : « une petite corne d’argent d’une valeur minimale de 100 po",
         "composants_materiels_a_renseigner": false,
         "description": "le sort de clairaudience permet au magicien de se concentrer sur un endroit et d’entendre dans son esprit tous les sons de cet endroit, dans une zone d’effet de 6\" de rayon, centrée sur l’endroit qu’il examine. La distance n’est pas un problème, mais l’endroit doit être connu, c'est-à-dire un endroit familier au lanceur de sort ou évident (tel que derrière une porte, à un angle de couloir, dans le taillis d’un bois, etc.). Seuls les sons normalement audibles par le magicien peuvent être entendus. Une paroi de métal ou une protection magique empêche l’écoute. Ce sort ne fonctionne que sur le plan d’existence sur lequel se trouve le lanceur du sort au moment où il le lance. La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "onUse": "systems/add2e/scripts/sorts/magicien-clairaudience.js",
@@ -9744,7 +9739,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde"
+          "pincée de poudre faite à partir de la glande pinéale d’un humain",
+          "humanoïde"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.",
         "composants_materiels_reference": "",
@@ -13257,7 +13253,8 @@
         "composants_materiels": [
           "poignée de petites sphères d’argile",
           "de cristal",
-          "de verre ou minérales"
+          "de verre",
+          "minérales"
         ],
         "composants_materiels_source": "poignée de petites sphères d’argile, de cristal, de verre ou minérales",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -18174,8 +18171,9 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite poignée de sels alcalins ou de bromure",
-          "poignée de sels alcalins ou de bromure"
+          "petite poignée de sels alcalins",
+          "de bromure",
+          "poignée de sels alcalins"
         ],
         "composants_materiels_source": "petite poignée de sels alcalins ou de bromure",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -20318,14 +20316,13 @@
           "symbole sacré du clerc",
           "eau bénite",
           "Clerc non mauvais",
-          "Liquide",
           "eau maudite",
           "Clerc mauvais"
         ],
         "composants_materiels_source": "Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais).",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon_consomme\nManuel des joueurs\noptionnel\nconsommé.",
+        "composants_materiels_note": "1\nnon_consomme\nManuel des joueurs\noptionnel\nconsommé.\nLiquide consommé.",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort annule toute possession d’un objet ou d’une créature par une forme extérieure ou surnaturelle. Cela inclut le contrôle d’une créature par une force contenue dans un objet, la possession par le sort métempsycose, la possession démoniaque, les envoûtements et même les charmes; ce sort est en fait basé sur le même principe que le sort dissipation de la magie. Si un objet envoûté subit un exorcisme, la force vitale de la créature concernée retourne complètement dans son enveloppe matérielle (voir Manuel des Monstres, Démon). Une fois commencé, l’exorcisme ne doit pas être interrompu, sinon ses effets sont annulés. La chance de base de succès est déterminée par le jet d’un d100, donnant donc une base entre 1 % et 100 %. La chance de base est diminuée de 1 % par niveau de la force à exorciser et augmentée de 1 % par niveau du clerc exorcisant, le résultat donnant la chance d’exorciser Le MD peut ajuster cette chance d’exorciser selon des cas particulier, s’il y a lieu. À chaque tour de l’exorcisme, un d100 est lancé et si le résultat est inférieur ou égal à la chance d’exorciser, le sort est réussi. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et de l’eau bénite (maudite pour les clercs mauvais). Une relique ou un objet sacré puissant peut augmenter la chance de réussite de 1 à 50 %, selon la puissance de l’objet.",
         "onUse": "systems/add2e/scripts/sorts/exorcisme.js",
@@ -21479,7 +21476,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "gui",
-          "Composant principal ou alternative au houx et aux feuilles de chêne",
+          "Composant principal",
           "houx",
           "Substitut au gui",
           "feuille de chêne"
@@ -21487,7 +21484,7 @@
         "composants_materiels_source": "excepté ci-dessus et le fait que la composante maté- rielle soit du gui ou son substitut, le houx ou les feuilles de chêne, ce sort est le même que le sort de niveau 5 de clerc fléau d’insectes (voir p.50).",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nFormulation source du Manuel : « feuilles de chêne ».",
+        "composants_materiels_note": "1\noptionnel\nManuel des joueurs\nalternative au houx et aux feuilles de chêne\nFormulation source du Manuel : « feuilles de chêne ».",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus et le fait que la composante matérielle soit du gui ou son substitut, le houx ou les feuilles de chêne, ce sort est le même que le sort de niveau 5 de clerc fléau d’insectes (voir p.50).",
         "onUse": "systems/add2e/scripts/sorts/fleau-dinsectes.js",
@@ -21945,7 +21942,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cheveux ou un peu d’excrément d’un animal particulièrement fort — singe",
+          "cheveux",
+          "peu d’excrément d’un animal particulièrement fort — singe",
           "ours",
           "bœuf",
           "etc"
@@ -22690,7 +22688,8 @@
         "composants_materiels": [
           "fourrure",
           "baguette de verre",
-          "de cristal ou d’ambre"
+          "de cristal",
+          "ambre"
         ],
         "composants_materiels_source": "un morceau de fourrure et une baguette de verre, d’ambre ou de cristal",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -22954,7 +22953,8 @@
         "composants_materiels": [
           "mélange de terre",
           "argile",
-          "terreau ou sable",
+          "terreau",
+          "sable",
           "petit sac",
           "lame en fer",
           "sac"
@@ -24774,7 +24774,8 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petite réplique (poupée) du magicien",
-          "Objet durable ou focus utilisé sans destruction indiquée",
+          "Objet durable",
+          "focus utilisé sans destruction indiquée",
           "réplique (poupée) du magicien"
         ],
         "composants_materiels_source": "La composante matérielle est une petite réplique (poupée) du magicien.",
@@ -31952,7 +31953,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cristal clair ou prisme minéral",
+          "cristal clair",
+          "prisme minéral",
           "Cette composante ne disparaît pas avec l’utilisation"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un cristal clair ou un prisme minéral ; cette composante ne disparaît pas avec l’utilisation.",
@@ -34753,7 +34755,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "lait solidifié (crème épaisse ou beurre)"
+          "lait solidifié (crème épaisse",
+          "beurre)"
         ],
         "composants_materiels_source": "La composante matérielle est un petit morceau de lait solidifié (crème épaisse ou beurre).",
         "composants_materiels_reference": "",
@@ -35121,14 +35124,13 @@
           "feu",
           "eau bénite",
           "Clerc non mauvais",
-          "Liquide",
           "eau maudite",
           "Clerc mauvais"
         ],
         "composants_materiels_source": "feu et de l’eau bénite/maudite",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\noptionnel",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\noptionnel\nLiquide consommé.",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort donne la possibilité au clerc, et parfois à une ou deux autres personnes, de transformer son corps en vapeurs nuageuses. Un vent magique souffle alors et transporte le clerc là où il le désire, à une vitesse entre 6\"/tour et 60\"/tour. Le sort dure autant de temps que le clerc le désire jusqu’à un maximum de 6 tours par niveau. Pour chaque tranche de 8 niveaux que le clerc a atteints, avec un maximum de 24 niveaux, il peut transformer une autre personne et la transporter. Les personnes transformées ne sont pas invisibles mais apparaissent comme brumeuses et presque transparentes. Si elles sont habillées de blanc, il y a 80 % de chance d’être confondues avec des petits nuages, de la brume ou de la vapeur. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles pour ce sort sont du feu et de l’eau bénite/maudite.",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js",
@@ -35356,13 +35358,13 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "marteau de guerre normal",
-          "clerc le lance sur son ennemi en récitant une prière à son dieu",
-          "marteau disparaît quand le sort est lancé"
+          "Le",
+          "marteau"
         ],
         "composants_materiels_source": "marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nclerc le lance sur son ennemi en récitant une prière à son dieu\ndisparaît quand le sort est lancé.",
         "composants_materiels_a_renseigner": false,
         "description": "En invoquant son dieu, le clerc lançant ce sort crée un champ de force qui a vaguement la forme et la taille d’un marteau. Aussi longtemps que le clerc se concentre (et dans les limites de la durée du sort), cette force frappe n’importe quel ennemi se trouvant dans la portée du sort. Le marteau spirituel est capable de frapper des créatures qui ne sont normalement touchées que par des armes magiques : le marteau est alors considéré comme une arme magique avec un bonus de +1 par tranche de 3 niveaux du clerc ; cependant, le marteau spirituel n’a ni bonus au toucher, ni bonus aux dommages. Ses dégâts sont les suivants : 1 à 6 contre les créatures de taille humaine ou moins (P-M), 1 à 4 contre les créatures de plus grande taille (G). De plus le marteau frappe exactement au même niveau que le clerc, comme si le clerc tenait lui-même le marteau. Dès que le clerc cesse sa concentration, le marteau disparaît. Si le clerc est derrière un ennemi, le champ de force frappe avec les bonus applicables et avec les malus pour l’ennemi (bouclier et dextérité non pris en compte pour la classe d’armure). La composante matérielle de ce sort est un marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu. Le marteau disparaît quand le sort est lancé.",
         "onUse": "systems/add2e/scripts/sorts/marteau-spirituel.js",
@@ -37054,7 +37056,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "ficelle",
-          "Toutes les composantes disparaissent quand le sort est lancé",
+          "Toutes les composantes disparaissent",
           "plaque d’ivoire",
           "encre composée de sécrétion de calmar et de sang de dragon noir",
           "encre composée de sécrétion de calmar et de suc digestif de limace géante"
@@ -37062,7 +37064,7 @@
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\n100\noptionnel\nAlternative à l’encre composée avec du suc digestif de limace géante.\nAlternative à l’encre composée avec du sang de dragon noir.",
+        "composants_materiels_note": "1\nconsomme\nManuel des joueurs\nquand le sort est lancé.\n100\noptionnel\nAlternative à l’encre composée avec du suc digestif de limace géante.\nAlternative à l’encre composée avec du sang de dragon noir.",
         "composants_materiels_a_renseigner": false,
         "description": "avec ce sort, le magicien peut mémoriser ou garder en mémoire 3 niveaux de sort additionnels; à savoir, 3 sorts de niveau 1 ou 1 sort de niveau 2 et 1 sort de niveau 1 ou 1 sort de niveau 3. Le magicien peut choisir de mémoriser immédiatement des sorts additionnels ou choisir de garder en mémoire un sort déjà lancé par le biais de ce sort. Quand le sort est utilisé pour mémoriser des sorts supplémentaires, le magicien doit alors apprendre ces sorts et prévoir les composantes requises. Les composantes matérielles de ce sort sont un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante. Toutes les composantes disparaissent quand le sort est lancé.",
         "onUse": "systems/add2e/scripts/sorts/magicien-moyen-mnemonique-de-rary.js",
@@ -37452,7 +37454,8 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "plaque de fer",
-          "Objet durable ou focus utilisé sans destruction indiquée"
+          "Objet durable",
+          "focus utilisé sans destruction indiquée"
         ],
         "composants_materiels_source": "La composante matérielle est un petit morceau de plaque de fer.",
         "composants_materiels_reference": "",
@@ -37805,7 +37808,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10"
+          "pincée de poudre de diamant (issue d’une",
+          "pierres) pour une valeur minimale de 10"
         ],
         "composants_materiels_source": "La composante matérielle est une pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10.",
         "composants_materiels_reference": "",
@@ -37936,7 +37940,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "quartz ou une pierre cristalline de même type"
+          "quartz",
+          "pierre cristalline de même type"
         ],
         "composants_materiels_source": "La composante matérielle est un petit morceau de quartz ou une pierre cristalline de même type.",
         "composants_materiels_reference": "",
@@ -38330,9 +38335,9 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "de l’encens et des morceaux d’ivoire",
-          "placés en forme de rectangle",
           "mais le magicien doit en plus sacrifier quelque chose (une potion",
-          "parchemin ou objet magique",
+          "parchemin",
+          "objet magique",
           "créature",
           "etc",
           "Consommation explicitement indiquée dans la description"
@@ -38340,7 +38345,7 @@
         "composants_materiels_source": "Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle ; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme\nManuel des joueurs",
+        "composants_materiels_note": "placés en forme de rectangle\n1\nconsomme\nManuel des joueurs",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort est utilisé pour obtenir des informations sur une personne, un endroit ou un objet, lequel ou laquelle doit être connu. Si la personne ou l’objet est auprès du magicien, ou si ce dernier se trouve à l’endroit concerné, la probabilité de résultat est importante et le temps d’incantation n’est que de 1 à 4 tours. Si le magicien ne connait que des informations détaillées, le temps d’incantation est de 1 à 10 jours. Et si les seules sources d’information sont des rumeurs, le temps d’incantation est de 2 à 12 semaines. Pendant le temps d’incantation, le magicien ne peut rien entreprendre d’autre que les actions de tous les jours: manger, dormir, etc. À la fin du temps d’incantation, la divination révélera si des informations légendaires sont disponibles. Elle révélera souvent l’endroit où ces informations pourront être trouvées: par un nom de lieu, sous forme de vers, d’énigme. Parfois, lorsque la personne, l'endroit ou l'objet est proche du magicien, une certaine information le concernant sera révélée, mais ce sera toujours sous une forme énigmatique (vers, devinette, anagramme, message chiffré, etc.). Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.). Naturellement, une mythomancie ne donnera des informations que si la personne, le lieu ou l’objet est légendaire ou très connu.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mythomancie.js",
@@ -38970,7 +38975,8 @@
           "symbole sacré du clerc",
           "encens",
           "Brûlé au dessus du corps",
-          "restes ou de la partie concernés"
+          "restes",
+          "partie concernés"
         ],
         "composants_materiels_source": "a besoin de son symbole sacré | il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés",
         "composants_materiels_reference": "",
@@ -40387,8 +40393,10 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "jeu d’objets divinatoires en os ou en ivoire",
-          "sous forme de bâtonnets ou de runes gravées"
+          "jeu d’objets divinatoires en os",
+          "en ivoire",
+          "sous forme de bâtonnets",
+          "de runes gravées"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un jeu d’objets divinatoires de ceux appréciés par le clerc : en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées.",
         "composants_materiels_reference": "",
@@ -41236,7 +41244,8 @@
         "composants_materiels": [
           "petite barre de métal",
           "pour chaque monstre visé",
-          "Objet durable ou focus utilisé sans destruction indiquée",
+          "Objet durable",
+          "focus utilisé sans destruction indiquée",
           "barre de métal"
         ],
         "composants_materiels_source": "petite barre de métal, une pour chaque monstre visé",
@@ -41861,7 +41870,8 @@
           "feuille de gui",
           "Brûlée",
           "ses cendres sont éparpillées",
-          "aiguille de pin ou d’un autre conifère"
+          "aiguille de pin",
+          "autre conifère"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont une feuille de gui (qui doit être brûlée et dont les cendres seront éparpillées) et une aiguille de pin ou d’un autre conifère.",
         "composants_materiels_reference": "",
@@ -42906,7 +42916,8 @@
           "morceau d’os de mort vivant (squelette",
           "zombie",
           "goule",
-          "ghast ou momie)"
+          "ghast",
+          "momie)"
         ],
         "composants_materiels_source": "La composante matérielle est un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie).",
         "composants_materiels_reference": "",
@@ -44244,7 +44255,8 @@
           "gant en cuir et un petit objet fait de 4 anneaux reliés entre eux",
           "formant une ligne légèrement courbe",
           "tout attaché par une barrette en forme de «I»",
-          "Objet durable ou focus utilisé sans destruction indiquée"
+          "Objet durable",
+          "focus utilisé sans destruction indiquée"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de « I ».",
         "composants_materiels_reference": "",
@@ -49471,7 +49483,8 @@
         "composants_materiels": [
           "gui et l’un des éléments suivants: plusieurs soucis écrasés",
           "poireau écrasé",
-          "7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre",
+          "7 feuilles de navet écrasées",
+          "résine d’arbre à camphre",
           "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "Les composantes matérielles sont du gui et l’un des éléments suivants : plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.",
@@ -50465,8 +50478,9 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit roseau ou un brin de paille",
-          "roseau ou un brin de paille"
+          "petit roseau",
+          "brin de paille",
+          "roseau"
         ],
         "composants_materiels_source": "La composante matérielle est un petit roseau ou un brin de paille.",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -57624,7 +57638,8 @@
         "composants_materiels": [
           "pierre",
           "brindille et un morceau de plante verte",
-          "feuille ou brin d’herbe"
+          "feuille",
+          "brin d’herbe"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe.",
         "composants_materiels_reference": "",
@@ -58021,7 +58036,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "potion d’héroïsme ou de super héroïsme",
+          "potion d’héroïsme",
+          "de super héroïsme",
           "Bue pendant l’incantation"
         ],
         "composants_materiels_source": "potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort",
@@ -60480,6 +60496,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-strict",
-  "normalizedAt": "2026-06-17T08:47:52.976Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-strict-fragments-v2",
+  "normalizedAt": "2026-06-17T11:03:25.885Z"
 }
