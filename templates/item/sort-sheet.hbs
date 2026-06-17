@@ -68,7 +68,7 @@
 
     <div class="content hidden" data-tab="effets">
       <fieldset><legend>Profil d'effets structuré</legend>
-        <label><span>system.effectProfile</span><textarea class="add2e-tech-json" readonly rows="14">{{effectProfileJson}}</textarea></label>
+        <label><span>system.effectProfile</span><textarea class="add2e-tech-json" readonly rows="14">{{json system.effectProfile}}</textarea></label>
         <div class="note">Ce bloc décrit les effets du sort. Il reste distinct des ActiveEffects Foundry ci-dessous.</div>
       </fieldset>
 
@@ -90,7 +90,7 @@
       </fieldset>
 
       <fieldset><legend>Tous les champs system</legend>
-        <textarea class="add2e-tech-json" readonly rows="18">{{technicalSystemJson}}</textarea>
+        <textarea class="add2e-tech-json" readonly rows="18">{{json system}}</textarea>
         <div class="note">Vue technique complète. Les champs principaux sont édités dans les autres onglets ; ce bloc sert au contrôle rapide de la structure JSON.</div>
       </fieldset>
     </div>
