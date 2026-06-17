@@ -1,39 +1,38 @@
 // ============================================================
 // ADD2E — Synchronisation automatique des sorts
 // Source stricte : compendium add2e.sorts
-// Version : 2026-06-16-spell-sync-class-specific-canonical-v1
+// Version : 2026-06-17-spell-sync-canonical-compendium-truth-v2
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-06-16-spell-sync-class-specific-canonical-v1";
+const ADD2E_SPELL_SYNC_VERSION = "2026-06-17-spell-sync-canonical-compendium-truth-v2";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
-const ADD2E_SPELL_SYNC_LEGACY_SYSTEM_KEYS = Object.freeze([
-  "école",
-  "portée",
-  "durée",
-  "onuse",
-  "on_use",
-  "description_reelle",
-  "description_source",
-  "description_texte",
-  "description_html",
-  "composants",
-  "source_composants",
-  "composants_materiels_objets",
-  "components",
-  "componentes",
-  "school",
-  "range",
-  "duration",
-  "castingTime",
-  "casting_time",
-  "area",
-  "areaOfEffect",
-  "level",
-  "lvl",
-  "spellLevel",
-  "niveau_sort",
-  "niveauSort"
+const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
+  "nom",
+  "type",
+  "classe",
+  "spellLists",
+  "niveau",
+  "ecole",
+  "portee",
+  "duree",
+  "zone_effet",
+  "cible",
+  "temps_incantation",
+  "jet_sauvegarde",
+  "composantes",
+  "composants_materiels",
+  "composants_materiels_source",
+  "composants_materiels_reference",
+  "composants_materiels_verification_recommandee",
+  "composants_materiels_note",
+  "composants_materiels_a_renseigner",
+  "description",
+  "onUse",
+  "onUseCode",
+  "tags",
+  "effectTags",
+  "effectProfile"
 ]);
 
 const ADD2E_SPELL_SYNC_PREUPDATE_LEVELS = globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS instanceof Map ? globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS : new Map();
@@ -166,8 +165,21 @@ function add2eSpellSyncFirstText(...values) {
 function add2eSpellSyncMaterialComponents(...values) {
   const result = [];
   for (const value of values) {
-    const arr = add2eSpellSyncArray(value).map(add2eSpellSyncTextValue).flatMap(v => String(v ?? "").split(/[,;|\n]+/)).map(v => v.trim()).filter(Boolean);
-    for (const entry of arr) if (!result.some(v => add2eSpellSyncNormalize(v) === add2eSpellSyncNormalize(entry))) result.push(entry);
+    if (value === undefined || value === null || value === "") continue;
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        if (typeof entry === "string") {
+          const trimmed = entry.trim();
+          if (trimmed && !result.some(v => add2eSpellSyncNormalize(v) === add2eSpellSyncNormalize(trimmed))) result.push(trimmed);
+        }
+      }
+      continue;
+    }
+    if (typeof value === "string") {
+      for (const entry of value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean)) {
+        if (!result.some(v => add2eSpellSyncNormalize(v) === add2eSpellSyncNormalize(entry))) result.push(entry);
+      }
+    }
   }
   return result;
 }
@@ -181,49 +193,38 @@ function add2eSpellSyncOnUsePath(...values) {
   return path;
 }
 
-function add2eSpellSyncSanitizeData(data) {
-  const clean = add2eSpellSyncCleanPlaceholders(data);
-  const system = clean.system ?? {};
-  clean.system = system;
+function add2eSpellSyncValidateCanonicalData(data) {
+  const system = data?.system ?? {};
+  const missing = ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS.filter(key => !Object.prototype.hasOwnProperty.call(system, key));
+  if (missing.length) console.warn("[ADD2E][SPELL_SYNC][CANONICAL_FIELDS_MISSING]", { name: data?.name, missing });
+  return { valid: true, missing };
+}
 
-  const ecole = add2eSpellSyncFirstText(system.ecole, system["école"], system.school);
-  if (ecole) system.ecole = ecole;
+function add2eSpellSyncPrepareCompendiumData(data) {
+  const clean = add2eSpellSyncCleanPlaceholders(add2eSpellSyncClone(data));
+  clean.system ??= {};
+  clean.type = "sort";
+  clean.name ||= clean.system.nom || "Sort";
+  clean.img ||= "icons/svg/book.svg";
+  clean.flags ??= {};
+  clean.flags.add2e ??= {};
 
-  const portee = add2eSpellSyncFirstText(system.portee, system["portée"], system.range);
-  if (portee) system.portee = portee;
+  if (!Array.isArray(clean.system.composants_materiels)) clean.system.composants_materiels = [];
+  if (!Array.isArray(clean.system.spellLists)) clean.system.spellLists = add2eSpellSyncArray(clean.system.spellLists);
+  if (!Array.isArray(clean.system.tags)) clean.system.tags = add2eSpellSyncArray(clean.system.tags);
+  if (!Array.isArray(clean.system.effectTags)) clean.system.effectTags = add2eSpellSyncArray(clean.system.effectTags);
+  if (!clean.system.effectProfile || typeof clean.system.effectProfile !== "object") clean.system.effectProfile = { version: "2026-06-16-add2e-spell-effects-v1", source: "canonical-system", effects: [] };
 
-  const duree = add2eSpellSyncFirstText(system.duree, system["durée"], system.duration);
-  if (duree) system.duree = duree;
+  const level = add2eSpellSyncNumber(clean.system.niveau, NaN);
+  if (Number.isFinite(level) && level > 0) clean.system.niveau = level;
+  clean.system.type = "sort";
 
-  const zoneEffet = add2eSpellSyncFirstText(system.zone_effet, system.zoneEffet, system.area, system.areaOfEffect);
-  if (zoneEffet) system.zone_effet = zoneEffet;
-
-  const tempsIncantation = add2eSpellSyncFirstText(system.temps_incantation, system.tempsIncantation, system.castingTime, system.casting_time);
-  if (tempsIncantation) system.temps_incantation = tempsIncantation;
-
-  const componentTypes = add2eSpellSyncFirstText(system.composantes, system.composants, system.components, system.componentes, system.type);
-  if (componentTypes) system.composantes = componentTypes;
-
-  const materiels = add2eSpellSyncMaterialComponents(system.composants_materiels, system.composants_materiels_objets, system.materialComponents, system.material_components);
-  if (materiels.length) system.composants_materiels = materiels;
-  else if (!Array.isArray(system.composants_materiels)) system.composants_materiels = [];
-
-  const materielSource = add2eSpellSyncFirstText(system.composants_materiels_source, system.source_composants);
-  if (materielSource) system.composants_materiels_source = materielSource;
-
-  const description = add2eSpellSyncFirstText(system.description, system.description_reelle, system.description_texte, system.description_html);
-  if (description) system.description = description;
-
-  const onUse = add2eSpellSyncOnUsePath(system.onUse, system.onuse, system.on_use);
-  if (onUse) system.onUse = onUse;
-
-  const niveau = add2eSpellSyncNumber(system.niveau ?? system.niveau_sort ?? system.niveauSort ?? system.spellLevel ?? system.level ?? system.lvl, NaN);
-  if (Number.isFinite(niveau) && niveau > 0) system.niveau = niveau;
-
-  system.type = "sort";
-
-  for (const key of ADD2E_SPELL_SYNC_LEGACY_SYSTEM_KEYS) delete system[key];
+  add2eSpellSyncValidateCanonicalData(clean);
   return clean;
+}
+
+function add2eSpellSyncSanitizeData(data) {
+  return add2eSpellSyncPrepareCompendiumData(data);
 }
 
 function add2eSpellSyncClassItems(actor) {
@@ -357,7 +358,6 @@ function add2eSpellSyncActorSpellsKnownByCompendiumButNotOwned(actor, cache, cla
   for (const item of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
     const key = add2eSpellSyncStableKey(item.name, item.system ?? {});
     if (!key || !compendiumKeys.has(key)) continue;
-    if (add2eSpellSyncIsCompendiumOwnedActorSpell(item)) continue;
     const lists = add2eSpellSyncSpellLists(item.system ?? {});
     if (wanted.size && lists.length && !lists.some(l => wanted.has(l))) continue;
     result.push(item);
@@ -516,13 +516,12 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
   const byKey = new Map();
   const duplicateKeys = [];
   const skipped = [];
-  let nonSortDocuments = 0, sanitizedDocuments = 0;
+  let nonSortDocuments = 0, validationWarnings = 0;
   for (const doc of docs) {
     if (!doc || doc.type !== "sort") { nonSortDocuments += 1; continue; }
-    const rawData = doc.toObject();
-    const hadPlaceholders = JSON.stringify(rawData).match(/a[_\s-]*comple/i) !== null;
-    const data = add2eSpellSyncSanitizeData(rawData);
-    if (hadPlaceholders) sanitizedDocuments += 1;
+    const data = add2eSpellSyncPrepareCompendiumData(doc.toObject());
+    const validation = add2eSpellSyncValidateCanonicalData(data);
+    if (validation.missing?.length) validationWarnings += 1;
     const system = data.system ?? {};
     const level = add2eSpellSyncSpellLevel(system);
     const lists = add2eSpellSyncSpellLists(system);
@@ -546,9 +545,9 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
     entries.push(entry);
   }
   entries.sort((a, b) => a.level - b.level || String(a.name).localeCompare(String(b.name), "fr") || a.stableKey.localeCompare(b.stableKey, "fr"));
-  const cache = { cacheKey, builtAt: Date.now(), entries, count: entries.length, docsCount: docs.length, nonSortDocuments, duplicateCount: duplicateKeys.length, duplicateKeys, skippedCount: skipped.length, skipped, sanitizedDocuments, byStableKey: byKey };
+  const cache = { cacheKey, builtAt: Date.now(), entries, count: entries.length, docsCount: docs.length, nonSortDocuments, duplicateCount: duplicateKeys.length, duplicateKeys, skippedCount: skipped.length, skipped, sanitizedDocuments: 0, validationWarnings, byStableKey: byKey };
   globalThis.ADD2E_SPELL_SYNC_CACHE = cache;
-  console.info("[ADD2E][SPELL_SYNC][CACHE_READY]", { version: ADD2E_SPELL_SYNC_VERSION, entries: entries.length, docs: docs.length, duplicateCount: duplicateKeys.length, skipped: skipped.length, sanitizedDocuments });
+  console.info("[ADD2E][SPELL_SYNC][CACHE_READY]", { version: ADD2E_SPELL_SYNC_VERSION, entries: entries.length, docs: docs.length, duplicateCount: duplicateKeys.length, skipped: skipped.length, validationWarnings });
   return cache;
 }
 async function add2eWarmSpellSyncCache() { return add2eBuildSpellSyncCache({ force: false }); }
@@ -574,6 +573,17 @@ async function add2ePruneActorSpellsForClassLevel(actor, classItem, actorLevel, 
   return { handled: true, deleted: existingIds.length, maxSpellLevel, actorLevel: level };
 }
 
+function add2eSpellSyncActorSpellKeyMap(actor) {
+  const map = new Map();
+  for (const item of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
+    const key = add2eSpellSyncStableKey(item.name, item.system ?? {});
+    if (!key) continue;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(item);
+  }
+  return map;
+}
+
 async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
   if (!actor || !classItem || classItem.type !== "classe") return { handled: false, imported: 0, deleted: 0 };
   const mode = options.mode === "missing" ? "missing" : "replace";
@@ -584,41 +594,57 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
   const minSpellLevel = Math.max(1, Number(options.minSpellLevel ?? 1) || 1);
   const waitDialog = options.showWait !== false ? add2eSpellSyncOpenWaitMessage({ actor, classItem, mode, minSpellLevel, maxSpellLevel }) : null;
   try {
-    const cache = await add2eBuildSpellSyncCache({ force: !!options.forceCacheRefresh });
+    const cache = await add2eBuildSpellSyncCache({ force: !!options.forceCacheRefresh || mode === "replace" });
     if (!cache.entries.length) { ui.notifications.error("Aucun sort trouvé dans add2e.sorts."); return { handled: true, imported: 0, deleted: 0, maxSpellLevel, error: "empty-cache" }; }
 
-    const existingSpellIds = actor.items.filter(i => String(i.type || "").toLowerCase() === "sort").map(i => i.id).filter(id => actor.items.has(id));
-    let deleted = 0;
-    const memoryByKey = new Map();
-    if (mode === "replace" && existingSpellIds.length) {
-      await actor.deleteEmbeddedDocuments("Item", existingSpellIds, { add2eInternal: true, add2eSpellSync: true });
-      deleted += existingSpellIds.length;
-    } else if (mode === "missing") {
-      const toReplace = add2eSpellSyncActorSpellsKnownByCompendiumButNotOwned(actor, cache, classLists);
-      for (const item of toReplace) memoryByKey.set(add2eSpellSyncStableKey(item.name, item.system ?? {}), add2eSpellSyncMemorizationSnapshot(item));
-      const ids = toReplace.map(i => i.id).filter(id => actor.items.has(id));
-      if (ids.length) {
-        await actor.deleteEmbeddedDocuments("Item", ids, { add2eInternal: true, add2eSpellSync: true, add2eCompendiumTruth: true });
-        deleted += ids.length;
-      }
-    }
-
-    if (maxSpellLevel < 1 || minSpellLevel > maxSpellLevel) { await add2eSpellSyncSetLastMax(actor, maxSpellLevel); return { handled: true, imported: 0, deleted, maxSpellLevel, mode }; }
+    if (maxSpellLevel < 1 || minSpellLevel > maxSpellLevel) { await add2eSpellSyncSetLastMax(actor, maxSpellLevel); return { handled: true, imported: 0, deleted: 0, maxSpellLevel, mode }; }
 
     const classListSet = new Set(classLists.map(add2eSpellSyncNormalize));
-    const existingKeys = mode === "missing" ? add2eSpellSyncExistingKeys(actor, cache, { sourceTruth: true }) : new Set();
+    const selectedEntries = [];
     const selectedKeys = new Set();
-    const createData = [];
-    const rejectedSpells = [];
     for (const entry of cache.entries) {
       const spellLevel = entry.level;
       if (spellLevel < minSpellLevel) continue;
       if (!add2eSpellSyncCanUseSpellLevel(actor, classLists, spellLevel, maxSpellLevel, { importMode: true })) continue;
       if (!entry.lists.some(list => classListSet.has(list))) continue;
-      if (existingKeys.has(entry.stableKey)) continue;
       if (selectedKeys.has(entry.stableKey)) continue;
       selectedKeys.add(entry.stableKey);
-      const data = add2eSpellSyncSanitizeData(add2eSpellSyncClone(entry.data));
+      selectedEntries.push(entry);
+    }
+
+    const memoryByKey = new Map();
+    const idsToDelete = [];
+    const actorSpellMap = add2eSpellSyncActorSpellKeyMap(actor);
+
+    if (mode === "replace") {
+      for (const item of actor.items.filter(i => String(i.type || "").toLowerCase() === "sort")) {
+        if (add2eSpellSyncMatchesClassLists(item.system ?? {}, classLists) || add2eSpellSyncIsCompendiumOwnedActorSpell(item)) {
+          const key = add2eSpellSyncStableKey(item.name, item.system ?? {});
+          if (key) memoryByKey.set(key, add2eSpellSyncMemorizationSnapshot(item));
+          idsToDelete.push(item.id);
+        }
+      }
+    } else {
+      for (const entry of selectedEntries) {
+        const matches = actorSpellMap.get(entry.stableKey) ?? [];
+        for (const item of matches) {
+          memoryByKey.set(entry.stableKey, add2eSpellSyncMemorizationSnapshot(item));
+          idsToDelete.push(item.id);
+        }
+      }
+    }
+
+    const existingIds = [...new Set(idsToDelete)].filter(id => actor.items.has(id));
+    let deleted = 0;
+    if (existingIds.length) {
+      await actor.deleteEmbeddedDocuments("Item", existingIds, { add2eInternal: true, add2eSpellSync: true, add2eCompendiumTruth: true });
+      deleted = existingIds.length;
+    }
+
+    const createData = [];
+    const rejectedSpells = [];
+    for (const entry of selectedEntries) {
+      const data = add2eSpellSyncPrepareCompendiumData(add2eSpellSyncClone(entry.data));
       delete data._id;
       data.folder = null;
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClass", classItem.name);
@@ -633,6 +659,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
       }
       createData.push(data);
     }
+
     if (createData.length) await actor.createEmbeddedDocuments("Item", createData, { add2eInternal: true, add2eSpellSync: true });
     await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
     const summary = { actor: actor.name, classe: classItem.name, actorLevel, classLists, maxSpellLevel, minSpellLevel, deleted, imported: createData.length, mode, cacheEntries: cache.entries.length, cacheDocs: cache.docsCount, rejectedSpells };
@@ -687,7 +714,7 @@ async function add2eSyncNewSpellLevelsAfterActorLevelChange(actor, newLevel = nu
       }
       const previousKnownMax = Math.max(add2eSpellSyncGetLastMax(actor), add2eSpellSyncMaxExistingLevel(actor, classLists));
       const minSpellLevel = maxSpellLevel > previousKnownMax ? previousKnownMax + 1 : 1;
-      const result = await add2eSyncActorSpellsFromClass(actor, classItem, { mode: "missing", actorLevel: level, minSpellLevel, showWait: maxSpellLevel > previousKnownMax, forceCacheRefresh: false, preserveMemorization: !levelDecreased });
+      const result = await add2eSyncActorSpellsFromClass(actor, classItem, { mode: "missing", actorLevel: level, minSpellLevel, showWait: maxSpellLevel > previousKnownMax, forceCacheRefresh: true, preserveMemorization: !levelDecreased });
       imported += result?.imported ?? 0;
       deleted += result?.deleted ?? 0;
     }
@@ -716,7 +743,7 @@ async function add2eResyncSelectedActorSpells(options = {}) {
     imported += result?.imported ?? 0;
     deleted += result?.deleted ?? 0;
   }
-  ui.notifications.info(imported > 0 ? `Sorts manquants importés : ${imported}.` : "Aucun sort manquant importé depuis le compendium.");
+  ui.notifications.info(imported > 0 ? `Sorts synchronisés depuis le compendium : ${imported}.` : "Aucun sort synchronisé depuis le compendium.");
   if (imported || deleted) add2eRerenderActorSheet?.(actor, false);
   return { handled: true, imported, deleted };
 }
@@ -743,7 +770,7 @@ for (const [name, fn] of Object.entries({
   add2eSpellSyncExistingKeys, add2eSpellSyncMaxExistingLevel, add2eSpellSyncGetLastMax, add2eSpellSyncSetLastMax, add2eSpellSyncOpenWaitMessage,
   add2eSpellSyncCloseWaitMessage, add2eSpellSyncMatchesClassLists, add2eBuildSpellSyncCache, add2eWarmSpellSyncCache, add2eReloadSpellSyncCache,
   add2eInvalidateSpellSyncCache, add2ePruneActorSpellsForClassLevel, add2eSyncActorSpellsFromClass, add2eSyncNewSpellLevelsAfterActorLevelChange,
-  add2eResyncSelectedActorSpells, add2eResetActorSpellMemorization
+  add2eResyncSelectedActorSpells, add2eResetActorSpellMemorization, add2eSpellSyncSanitizeData, add2eSpellSyncPrepareCompendiumData
 })) {
   try { globalThis[name] = fn; } catch (_e) {}
 }
