@@ -1,9 +1,9 @@
 // ============================================================
 // ADD2E — Garde anti-doublons pour la synchronisation des sorts
-// Version : 2026-06-14-spell-sync-dedupe-v4-compendium-truth
+// Version : 2026-06-17-spell-sync-dedupe-v5-materials-cleanup
 // ============================================================
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-06-14-spell-sync-dedupe-v4-compendium-truth";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-06-17-spell-sync-dedupe-v5-materials-cleanup";
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
 
 const ADD2E_SPELL_SYNC_DEDUPE_RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set
@@ -21,6 +21,13 @@ function add2eSpellDedupeNormalize(value) {
     .replace(/[\s\-]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_+|_+$/g, "");
+}
+
+function add2eSpellDedupeClone(value) {
+  if (value === undefined || value === null) return value;
+  try { return foundry.utils.deepClone(value); } catch (_e) {}
+  try { return foundry.utils.duplicate(value); } catch (_e) {}
+  return JSON.parse(JSON.stringify(value));
 }
 
 function add2eSpellDedupeLevel(system = {}) {
@@ -63,6 +70,137 @@ function add2eSpellDedupeCompareKeep(a, b) {
 
 function add2eSpellDedupeRunKey(actor) {
   return String(actor?.uuid || actor?.id || actor?.name || "unknown-actor");
+}
+
+function add2eSpellDedupeText(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function add2eSpellDedupeSlug(value) {
+  return add2eSpellDedupeText(value)
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eSpellDedupeCleanMaterialLabel(value) {
+  return add2eSpellDedupeText(value)
+    .replace(/[_-]+/g, " ")
+    .replace(/^d['’]\s*/i, "")
+    .replace(/^(un|une)?\s*peu\s+de\s+/i, "")
+    .replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "")
+    .replace(/^(quelques|plusieurs)\s+/i, "")
+    .replace(/^petit morceau de\s+/i, "")
+    .replace(/^morceau de\s+/i, "")
+    .replace(/\s+/g, " ")
+    .replace(/[.!?;:]+$/g, "")
+    .replace(/^symbole sacre$/i, "symbole sacré")
+    .replace(/^gousse ail$/i, "gousse d’ail")
+    .replace(/^poudre argent$/i, "poudre d’argent")
+    .replace(/^eau benite$/i, "eau bénite")
+    .replace(/^eau maudite$/i, "eau maudite")
+    .trim();
+}
+
+function add2eSpellDedupeIsNoiseMaterial(value) {
+  const text = add2eSpellDedupeCleanMaterialLabel(value);
+  if (!text) return true;
+  if (/^-?\d+(?:[.,]\d+)?$/.test(text)) return true;
+  const n = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  if ([
+    "true", "false", "oui", "non", "consomme", "non consomme", "nonconsomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs",
+    "source", "aucun", "null", "undefined", "a completer", "liquide", "liquide consomme"
+  ].includes(n)) return true;
+  return /^(requi[st]e?s?|necessaire|alternative|variante|composant requis|ingredient materiel|formulation source|source du manuel|sort normal|sort inverse|liquide consomme|selon la regle|regle d arbitrage|la fiole est|son contenu est|disparait quand|disparait quand)\b/.test(n)
+    || /\b(manuel des joueurs|formulation source|regle d arbitrage add2e)\b/.test(n);
+}
+
+function add2eSpellDedupeSplitMaterialNameAndNote(value) {
+  const raw = add2eSpellDedupeText(value);
+  const match = raw.match(/\b(?:optionnel|alternative\s*:|ingr[eé]dient\s+mat[eé]riel|consomm[eé]|consomme|non[_\s-]*consomm[eé]|formulation\s+source|manuel\s+(?:du|des)\s+joueurs?|source\s*:|r[eé]f[eé]rence\s*:|r[eè]gle\s+d['’]arbitrage|selon\s+la\s+r[eè]gle|requi[st]e?s?\s+pour|sort\s+normal|sort\s+invers[eé]).*$/i);
+  if (!match) return { name: raw, note: "" };
+  const idx = match.index ?? raw.length;
+  return {
+    name: raw.slice(0, idx).replace(/[,;:\s]+$/g, "").trim(),
+    note: raw.slice(idx).replace(/^[,;:\s]+/g, "").trim()
+  };
+}
+
+function add2eSpellDedupeAddMaterialName(list, value) {
+  const label = add2eSpellDedupeCleanMaterialLabel(value);
+  if (!label || add2eSpellDedupeIsNoiseMaterial(label)) return;
+  const key = add2eSpellDedupeSlug(label);
+  if (!key || list.some(v => add2eSpellDedupeSlug(v) === key)) return;
+  list.push(label);
+}
+
+function add2eSpellDedupeCollectMaterialNames(value, list = []) {
+  if (value === undefined || value === null || value === "") return list;
+
+  if (Array.isArray(value)) {
+    for (const entry of value) add2eSpellDedupeCollectMaterialNames(entry, list);
+    return list;
+  }
+
+  if (typeof value === "object") {
+    const alternatives = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or;
+    if (Array.isArray(alternatives) && alternatives.length) {
+      const alt = [];
+      for (const entry of alternatives) add2eSpellDedupeCollectMaterialNames(entry, alt);
+      if (alt.length) add2eSpellDedupeAddMaterialName(list, alt.join(" ou "));
+      return list;
+    }
+
+    const direct = value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
+    if (direct !== undefined && direct !== null && String(direct).trim()) {
+      add2eSpellDedupeCollectMaterialNames(direct, list);
+      return list;
+    }
+
+    for (const [key, entry] of Object.entries(value)) {
+      if (["quantite", "quantity", "qty", "nombre", "count", "consomme", "consume", "consumption", "consommation", "source", "reference", "note", "notes", "description", "condition", "conditions"].includes(String(key))) continue;
+      add2eSpellDedupeCollectMaterialNames(entry, list);
+    }
+    return list;
+  }
+
+  const { name } = add2eSpellDedupeSplitMaterialNameAndNote(value);
+  if (add2eSpellDedupeIsNoiseMaterial(name)) return list;
+
+  for (const part of String(name).split(/[,;|\n]+/g).map(add2eSpellDedupeCleanMaterialLabel).filter(Boolean)) {
+    add2eSpellDedupeAddMaterialName(list, part);
+  }
+  return list;
+}
+
+function add2eSpellDedupeCleanSpellMaterialComponents(system = {}) {
+  const source = system.composants_materiels ?? system.composants_materiels_objets ?? system.materialComponents ?? system.material_components ?? [];
+  const names = add2eSpellDedupeCollectMaterialNames(source, []);
+  return names.length ? names : [];
+}
+
+async function add2eNormalizeActorSpellMaterials(actor, reason = "sync-material-cleanup") {
+  if (!game.user?.isGM || !actor || actor.type !== "personnage") return { updated: 0 };
+  const updates = [];
+
+  for (const item of actor.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
+    const system = item.system ?? {};
+    const clean = add2eSpellDedupeCleanSpellMaterialComponents(system);
+    const current = Array.isArray(system.composants_materiels)
+      ? system.composants_materiels.map(v => String(v ?? ""))
+      : (system.composants_materiels === undefined || system.composants_materiels === null ? [] : [String(system.composants_materiels)]);
+
+    if (JSON.stringify(current) === JSON.stringify(clean)) continue;
+    updates.push({ _id: item.id, "system.composants_materiels": clean });
+  }
+
+  if (updates.length) {
+    await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eSpellSync: true, reason, render: false });
+    add2eRerenderActorSheet?.(actor, false);
+  }
+  return { updated: updates.length };
 }
 
 async function add2eSafeDeleteDuplicateActorSpellIds(actor, ids, reason = "manual") {
@@ -137,11 +275,21 @@ function add2eInstallSpellSyncDedupeWrapper() {
   if (typeof original !== "function") return false;
   if (original._add2eDedupeWrapped === true) return true;
   const wrapped = async function add2eSyncActorSpellsFromClassDedupe(actor, classItem, options = {}) {
-    const result = await original(actor, classItem, options);
+    const syncOptions = {
+      ...options,
+      forceCacheRefresh: options.forceCacheRefresh ?? options.mode === "replace"
+    };
+    const result = await original(actor, classItem, syncOptions);
     try {
       const cleanup = await add2eRemoveDuplicateActorSpells(actor, `sync-${options?.mode || "replace"}`);
       if (cleanup.deleted > 0) result.deleted = (Number(result.deleted) || 0) + cleanup.deleted;
     } catch (_err) {}
+    try {
+      const materialCleanup = await add2eNormalizeActorSpellMaterials(actor, `sync-${options?.mode || "replace"}`);
+      if (materialCleanup.updated > 0) result.materialsCleaned = materialCleanup.updated;
+    } catch (err) {
+      console.warn("[ADD2E][SPELL_SYNC][MATERIAL_CLEANUP_ERROR]", err);
+    }
     return result;
   };
   wrapped._add2eDedupeWrapped = true;
@@ -162,8 +310,11 @@ Hooks.on("createItem", async (item, _options, userId) => {
   if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage") return;
   if (String(item.type || "").toLowerCase() !== "sort") return;
   setTimeout(() => add2eRemoveDuplicateActorSpells(actor, "createItem-sort"), 80);
+  setTimeout(() => add2eNormalizeActorSpellMaterials(actor, "createItem-sort"), 120);
 });
 
 globalThis.add2eRemoveDuplicateActorSpells = add2eRemoveDuplicateActorSpells;
 globalThis.add2eSafeDeleteDuplicateActorSpellIds = add2eSafeDeleteDuplicateActorSpellIds;
 globalThis.add2eRemoveDuplicateSpellsEverywhere = add2eRemoveDuplicateSpellsEverywhere;
+globalThis.add2eNormalizeActorSpellMaterials = add2eNormalizeActorSpellMaterials;
+globalThis.add2eSpellDedupeCleanSpellMaterialComponents = add2eSpellDedupeCleanSpellMaterialComponents;
