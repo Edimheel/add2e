@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-01-vital-status-split-sync-v25-token-isolated-monsters";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-11-vital-status-sync-no-console-logs";
 
 const LOCKS = new Set();
 const ADD2E_STATUS_IDS = {
@@ -173,19 +173,6 @@ export function add2eVitalRegisterStatusEffects() {
     if (index >= 0) CONFIG.statusEffects[index] = mergeStatus(CONFIG.statusEffects[index], definition);
     else CONFIG.statusEffects.push(foundry.utils?.deepClone ? foundry.utils.deepClone(definition) : { ...definition });
   }
-
-  console.log("[ADD2E][VITAL_STATUS][REGISTER_STATUS]", {
-    version: globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION,
-    core: globalThis.ADD2E_VITAL_STATUS_CORE_VERSION,
-    sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
-    cleanup: false,
-    statusIds: ADD2E_STATUS_IDS,
-    monsterMode: "foundry-toggle-status-effect-token-isolated",
-    characterMode: "foundry-toggle-status-effect",
-    defeatedStatus: CONFIG.specialStatusEffects.DEFEATED,
-    dead: statusDebug("dead"),
-    unconscious: statusDebug("unconscious")
-  });
 }
 
 function tokenActorFor(token) {
@@ -241,45 +228,16 @@ async function syncMonsterTokenStatus(token, actor, status) {
   const tokenActor = tokenActorFor(token);
   if (!tokenActor?.toggleStatusEffect || !doc?.id) return { changed: false, action: "no-toggle-status-effect", before: tokenDiagnostic(token, actor, "before-no-toggle") };
 
-  const before = tokenDiagnostic(token, actor, "before-toggle-status");
   const active = status === "dead";
-
   if (!active) {
     const hasDead = hasRealDeadEffect(tokenActor);
-    console.log("[ADD2E][VITAL_STATUS][MONSTER_STATUS_TOGGLE_SKIP_OFF]", {
-      token: doc.name,
-      tokenId: doc.id,
-      actorLink: doc.actorLink,
-      tokenActor: tokenActor.name,
-      tokenActorId: tokenActor.id,
-      tokenActorIsToken: tokenActor.isToken,
-      hasDead,
-      before
-    });
     return { changed: false, action: "skip-toggle-dead-off", hasDead };
   }
 
-  const result = await safeToggleActorStatus(tokenActor, "dead", true, { overlay: true, label: "monster_status" });
-  const after = tokenDiagnostic(token, actor, "after-toggle-status");
-  console.log("[ADD2E][VITAL_STATUS][MONSTER_STATUS_TOGGLE]", {
-    token: doc.name,
-    tokenId: doc.id,
-    actorLink: doc.actorLink,
-    tokenActor: tokenActor.name,
-    tokenActorId: tokenActor.id,
-    tokenActorIsToken: tokenActor.isToken,
-    status,
-    active,
-    result,
-    before,
-    after
-  });
-
-  return result;
+  return safeToggleActorStatus(tokenActor, "dead", true, { overlay: true, label: "monster_status" });
 }
 
 async function syncCharacterStatus(actor, status) {
-  const before = effectSummary(actor);
   const results = [];
 
   if (status === "dead") {
@@ -293,8 +251,6 @@ async function syncCharacterStatus(actor, status) {
     results.push(await safeToggleActorStatus(actor, "unconscious", false, { label: "character_status" }));
   }
 
-  const after = effectSummary(actor);
-  console.log("[ADD2E][VITAL_STATUS][CHARACTER_STATUS_SYNC]", { actor: actor?.name, actorId: actor?.id, status, before, after, results });
   return { changed: results.some(r => r?.changed), action: "character-status-toggle", results };
 }
 
@@ -361,18 +317,6 @@ async function syncCombatants(actor, inactive, status) {
       "flags.add2e.inactiveReason": inactive ? wantedStatus : null,
       "flags.add2e.vitalStatus": wantedStatus
     }, { add2eVitalStatusSync: true });
-    console.log("[ADD2E][VITAL_STATUS][COMBATANT_SYNC]", {
-      actor: actor?.name,
-      actorId: actor?.id,
-      actorUuid: actor?.uuid ?? null,
-      actorIsToken: actor?.isToken ?? null,
-      actorTokenId: actorTokenDocumentId(actor),
-      combatant: combatant.id,
-      tokenId: combatant.tokenId,
-      inactive,
-      defeated,
-      vitalStatus: wantedStatus
-    });
     changed += 1;
   }
   return changed;
@@ -422,24 +366,7 @@ export async function add2eSyncActorVitalStatus(actor, { reason = "sync" } = {})
     const status = add2eVitalDesiredStatus(actor);
     const isMonster = add2eVitalIsMonster(actor);
     const preserveInactive = !isMonster && status === null && shouldPreserveManualInactive(actor);
-    const state = await syncTokensAndCombat(actor, status, preserveInactive);
-    console.log("[ADD2E][VITAL_STATUS][SYNC]", {
-      reason,
-      actor: actor.name,
-      actorId: actor.id,
-      actorUuid: actor.uuid ?? null,
-      actorIsToken: actor.isToken ?? null,
-      actorTokenId: actorTokenDocumentId(actor),
-      type: actor.type,
-      isMonster,
-      hp: add2eVitalReadHP(actor),
-      status,
-      preserveInactive,
-      cleanup: false,
-      tokenActorEffect: isMonster,
-      tokenOverlay: false,
-      state
-    });
+    await syncTokensAndCombat(actor, status, preserveInactive);
     return true;
   } catch (err) {
     console.error("[ADD2E][VITAL_STATUS][ERROR]", { actor: actor?.name, reason, err });

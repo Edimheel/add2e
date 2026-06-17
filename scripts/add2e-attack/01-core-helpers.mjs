@@ -33,6 +33,84 @@ const MONSTER_THACO_TABLE = [
   { min: 16,   max: 999,   thaco: 5 }
 ];
 
+const ADD2E_SORT_FIELD_ALIASES = Object.freeze({
+  ecole: ["ecole", "école", "school"],
+  portee: ["portee", "portée", "range"],
+  duree: ["duree", "durée", "duration"],
+  cible: ["cible", "target", "targets"],
+  zone_effet: ["zone_effet", "zoneEffet", "area", "areaOfEffect"],
+  temps_incantation: ["temps_incantation", "tempsIncantation", "castingTime", "casting_time"],
+  composantes: ["composantes", "components", "componentes", "composants"],
+  composants_materiels: ["composants_materiels", "composantsMateriels", "materialComponents", "material_components", "components.material", "components.materials"],
+  description: ["description", "description_reelle", "description_texte", "description_html"],
+  onUse: ["onUse", "onuse", "on_use"]
+});
+
+function add2eIsFilledSpellValue(value) {
+  if (value === undefined || value === null) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value).length > 0;
+  return true;
+}
+
+function add2eGetSystemLike(source) {
+  return source?.system ?? source ?? {};
+}
+
+function add2eGetProperty(source, path) {
+  if (!source || !path) return undefined;
+  try {
+    if (foundry?.utils?.getProperty) return foundry.utils.getProperty(source, path);
+  } catch (_err) {}
+  const parts = String(path).split(".");
+  let cur = source;
+  for (const part of parts) {
+    if (cur === undefined || cur === null) return undefined;
+    cur = cur[part];
+  }
+  return cur;
+}
+
+function add2eExtractScriptPath(raw) {
+  if (!raw) return "";
+  let value = raw;
+  if (Array.isArray(value)) value = value.find(v => typeof v === "string" && v.includes(".js")) ?? value[0] ?? "";
+  value = String(value ?? "").trim();
+  if (value.includes(",")) {
+    value = value.split(",").map(s => s.trim()).find(s => s.endsWith(".js")) ?? value.split(",")[0].trim();
+  }
+  return value;
+}
+
+export function add2eGetSortField(source, canonicalField, fallback = "") {
+  const sys = add2eGetSystemLike(source);
+  const aliases = ADD2E_SORT_FIELD_ALIASES[canonicalField] ?? [canonicalField];
+  for (const alias of aliases) {
+    const value = add2eGetProperty(sys, alias);
+    if (add2eIsFilledSpellValue(value)) return value;
+  }
+  return fallback;
+}
+
+export function add2eGetSortOnUsePath(source) {
+  const sys = add2eGetSystemLike(source);
+  for (const alias of ADD2E_SORT_FIELD_ALIASES.onUse) {
+    const value = add2eExtractScriptPath(add2eGetProperty(sys, alias));
+    if (value) return value;
+  }
+  return "";
+}
+
+export function add2eGetSortMaterialComponents(source) {
+  const value = add2eGetSortField(source, "composants_materiels", []);
+  return value === "" ? [] : value;
+}
+
+export function add2eGetSortComponentsText(source) {
+  return String(add2eGetSortField(source, "composantes", "") ?? "");
+}
+
 export function getMonsterThaco(hdString) {
   const match = String(hdString).match(/^(\d+)/);
   const hd = match ? parseFloat(match[1]) : 1;
@@ -95,3 +173,7 @@ export function plageToRollFormula(plage) {
 globalThis.getMonsterThaco = getMonsterThaco;
 globalThis.formatSortChamp = formatSortChamp;
 globalThis.plageToRollFormula = plageToRollFormula;
+globalThis.add2eGetSortField = add2eGetSortField;
+globalThis.add2eGetSortOnUsePath = add2eGetSortOnUsePath;
+globalThis.add2eGetSortMaterialComponents = add2eGetSortMaterialComponents;
+globalThis.add2eGetSortComponentsText = add2eGetSortComponentsText;

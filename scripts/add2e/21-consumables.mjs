@@ -1,12 +1,17 @@
-// ADD2E — Consommables : composants de sorts, projectiles et carquois
-// Phase 2/3/4 dev-composant : réglages, carquois, drop de munitions, attaque projectile et restitution.
+// ADD2E — Consommables hérités : compatibilité API, projectiles et délégation composants.
+// Version : 2026-06-14-legacy-consumables-delegate-components-v2
+//
+// Les composants de sort sont désormais toujours délégués au moteur central
+// scripts/add2e/22e-consumables-core.mjs pour éviter deux mécaniques concurrentes.
+// La mécanique des projectiles reste déléguée au cœur vendeur/projection.
 
-const ADD2E_CONSUMABLES_VERSION = "2026-05-29-dev-composant-phase4-projectiles-v6-personnages-only";
+import {
+  add2eReserveSpellComponents as add2eCoreReserveSpellComponents,
+  add2eRefundSpellComponents as add2eCoreRefundSpellComponents
+} from "./22e-consumables-core.mjs";
+
+const ADD2E_CONSUMABLES_VERSION = "2026-06-14-legacy-consumables-delegate-components-v2";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
-
-const ADD2E_PROJECTILE_GM_OPERATION_TYPE = "ADD2E_GM_OPERATION";
-const ADD2E_PROJECTILE_GM_CONSUME_OPERATION = "consumeProjectile";
-const ADD2E_PROJECTILE_RESTORE_SOCKET = "ADD2E_PROJECTILE_RESTORE_POPUP";
 
 function add2eConsumablesLog(...args) {
   if (globalThis.ADD2E_DEBUG_CONSUMABLES) console.log("[ADD2E][CONSUMABLES]", ...args);
@@ -14,9 +19,20 @@ function add2eConsumablesLog(...args) {
 
 function add2eAsArray(value) {
   if (Array.isArray(value)) return value.filter(v => v !== null && v !== undefined && String(v).trim() !== "");
-  if (value === null || value === undefined) return [];
-  if (typeof value === "string") return value.split(/[,;|]/g).map(v => v.trim()).filter(Boolean);
+  if (value === null || value === undefined || value === "") return [];
+  if (typeof value === "string") return value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean);
   return [value];
+}
+
+function add2eFieldArray(value) {
+  if (value === null || value === undefined || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(add2eFieldArray).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value", "material", "materials", "components"]) {
+      if (value[key] !== undefined) return add2eFieldArray(value[key]);
+    }
+  }
+  return add2eAsArray(value);
 }
 
 function add2eSlugify(value) {
@@ -33,9 +49,12 @@ function add2eTagsOf(item) {
   const sys = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
   return [
-    ...add2eAsArray(sys.tags),
-    ...add2eAsArray(sys.effectTags),
-    ...add2eAsArray(flags.tags)
+    ...add2eFieldArray(sys.tags),
+    ...add2eFieldArray(sys.effectTags),
+    ...add2eFieldArray(sys.effecttags),
+    ...add2eFieldArray(flags.tags),
+    ...add2eFieldArray(flags.effectTags),
+    ...add2eFieldArray(flags.effecttags)
   ].map(t => String(t).trim()).filter(Boolean);
 }
 
@@ -50,11 +69,6 @@ function add2eNumber(value, fallback = 0) {
 
 function add2eQuantity(item) {
   return add2eNumber(item?.system?.quantite ?? item?.system?.quantity ?? 0, 0);
-}
-
-function add2eDroppedQuantity(itemData) {
-  const qty = add2eNumber(itemData?.system?.quantite ?? itemData?.system?.quantity ?? 1, 1);
-  return Math.max(1, qty);
 }
 
 function add2eUpdatePath(path, value) {
@@ -73,14 +87,8 @@ function add2eEscapeHtml(value) {
 }
 
 function add2eActorDocumentType(actor) {
-  const candidates = [
-    actor?.type,
-    actor?._source?.type,
-    actor?.baseActor?.type,
-    actor?.document?.type,
-    actor?.parent?.actor?.type
-  ].filter(v => v !== null && v !== undefined && String(v).trim() !== "");
-
+  const candidates = [actor?.type, actor?._source?.type, actor?.baseActor?.type, actor?.document?.type, actor?.parent?.actor?.type]
+    .filter(v => v !== null && v !== undefined && String(v).trim() !== "");
   for (const value of candidates) {
     const type = add2eSlugify(value);
     if (type) return type;
@@ -119,14 +127,6 @@ async function add2eConsumablesAlert({ title = "Action impossible", message = "A
   return add2eDialogPopup({ title, content, modal: true });
 }
 
-function add2eChangeSetsEquippedTrue(changes) {
-  if (!changes) return false;
-  if (changes.system?.equipee === true || changes.system?.equipped === true) return true;
-  if (foundry?.utils?.hasProperty?.(changes, "system.equipee")) return foundry.utils.getProperty(changes, "system.equipee") === true;
-  if (foundry?.utils?.hasProperty?.(changes, "system.equipped")) return foundry.utils.getProperty(changes, "system.equipped") === true;
-  return false;
-}
-
 export function add2eConsumablesSettings() {
   return {
     gestionComposantsSorts: add2eSettingBool("gestionComposantsSorts"),
@@ -137,17 +137,36 @@ export function add2eConsumablesSettings() {
 export function add2eIsAmmunition(item) {
   if (!item) return false;
   const sys = item.system ?? {};
+  const name = add2eSlugify(item?.name);
   if (String(sys.categorie ?? "").toLowerCase() === "munition") return true;
   if (String(sys.type ?? "").toLowerCase() === "munition") return true;
-  return add2eHasTag(item, tag => String(tag).toLowerCase() === "munition" || String(tag).toLowerCase() === "trait:munition");
+  if (add2eHasTag(item, tag => {
+    const t = String(tag).toLowerCase();
+    return t === "munition" || t === "trait:munition" || t === "categorie:munition" || t.startsWith("munition:") || t.startsWith("projectile:");
+  })) return true;
+  return /\b(fleche|fleches|fleche_de|flèche|flèches|carreau|carreaux|trait|traits|bille|billes|pierre_de_fronde|pierres_de_fronde)\b/.test(name);
 }
 
 export function add2eIsSpellComponent(item) {
   if (!item) return false;
   const sys = item.system ?? {};
-  if (String(sys.categorie ?? "").toLowerCase() === "composant_sort") return true;
-  if (String(sys.sousType ?? sys.sous_type ?? "").toLowerCase() === "composant") return true;
-  return add2eHasTag(item, tag => String(tag).toLowerCase() === "composant_sort" || String(tag).toLowerCase().startsWith("composant:"));
+  const fields = [
+    item.name,
+    sys.nom,
+    sys.categorie,
+    sys.category,
+    sys.sousType,
+    sys.sous_type,
+    sys.type,
+    sys.subtype,
+    sys.slug,
+    sys.composantSlug,
+    sys.componentSlug,
+    ...add2eTagsOf(item)
+  ].map(add2eSlugify).filter(Boolean);
+  if (fields.some(v => v === "composant" || v === "component" || v === "composant_sort" || v === "composants_sort" || v === "composant_de_sort" || v === "spell_component" || v === "material_component")) return true;
+  if (fields.some(v => v.startsWith("composant_") || v.startsWith("composant:") || v.startsWith("component_") || v.startsWith("spell_component_"))) return true;
+  return false;
 }
 
 function add2eWeaponFamily(arme) {
@@ -161,10 +180,8 @@ export function add2eGetWeaponRequiredAmmoType(arme) {
   const sys = arme?.system ?? {};
   const explicit = sys.munition_requise ?? sys.munitionRequise ?? sys.ammoType ?? sys.ammunitionType;
   if (explicit) return add2eSlugify(explicit);
-
   const tag = add2eTagsOf(arme).find(t => /^munition_requise:/i.test(String(t)) || /^ammo:/i.test(String(t)));
   if (tag) return add2eSlugify(String(tag).split(":").slice(1).join(":"));
-
   const haystack = [arme?.name, sys.nom, sys.type_arme, sys.categorie, sys.sousType, sys.sous_type, ...add2eWeaponFamily(arme), ...add2eTagsOf(arme)].join(" ").toLowerCase();
   if (/sarbacane/.test(haystack)) return "aiguille";
   if (/fronde/.test(haystack)) return "bille";
@@ -179,13 +196,6 @@ function add2eAmmoType(item) {
   return add2eSlugify(sys.munitionType ?? sys.munition_type ?? sys.sousType ?? sys.sous_type ?? sys.categorie ?? item?.name ?? "");
 }
 
-function add2eSameAmmunitionIdentity(a, b) {
-  return add2eIsAmmunition(a)
-    && add2eIsAmmunition(b)
-    && String(a?.type ?? "") === String(b?.type ?? "")
-    && add2eSlugify(a?.name) === add2eSlugify(b?.name);
-}
-
 function add2eAmmoCompatibleWithRequired(item, required, arme = null) {
   if (!required) return false;
   const requiredSlug = add2eSlugify(required);
@@ -195,17 +205,13 @@ function add2eAmmoCompatibleWithRequired(item, required, arme = null) {
   if (requiredSlug === "fleche" && ammoType.startsWith("fleche")) return true;
   if (requiredSlug === "bille" && ammoType.startsWith("bille")) return true;
   if (requiredSlug === "aiguille" && ammoType.includes("aiguille")) return true;
-
   const sys = item?.system ?? {};
   const compat = add2eAsArray(sys.compatibleArmes ?? sys.compatible_armes ?? sys.compatibleMunition ?? sys.compatible_munition).map(add2eSlugify);
   if (compat.includes(requiredSlug)) return true;
-
   const tags = add2eTagsOf(item).map(t => String(t).toLowerCase());
   if (tags.includes(`munition:${requiredSlug}`) || tags.includes(`compatible_munition:${requiredSlug}`) || tags.includes(`compatible:${requiredSlug}`)) return true;
-
   const weaponFamilies = add2eWeaponFamily(arme);
-  if (weaponFamilies.some(f => tags.includes(`compatible:${f}`) || tags.includes(`compatible_arme:${f}`))) return true;
-  return false;
+  return weaponFamilies.some(f => tags.includes(`compatible:${f}`) || tags.includes(`compatible_arme:${f}`));
 }
 
 export function add2eGetCompatibleProjectiles(actor, arme) {
@@ -225,7 +231,6 @@ export async function add2eEquipProjectile(actor, projectile) {
     await add2eConsumablesAlert({ title: "Munition invalide", message: `${projectile.name} n'est pas une munition.`, icon: "fa-bullseye" });
     return false;
   }
-
   const ammoType = add2eAmmoType(projectile);
   const updates = [];
   for (const item of actor.items ?? []) {
@@ -234,230 +239,115 @@ export async function add2eEquipProjectile(actor, projectile) {
     const expected = item.id === projectile.id;
     if (item.system?.equipee !== expected) updates.push({ _id: item.id, "system.equipee": expected });
   }
-
   if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eReason: "equip-projectile" });
   ui.notifications?.info?.(`${projectile.name} équipé dans le carquois.`);
   return true;
 }
 
 export async function add2eReserveProjectile(actor, arme) {
-  if (!add2eSettingBool("gestionProjectiles")) return null;
-  if (!add2eActorUsesProjectileInventory(actor)) return null;
-
-  const required = add2eGetWeaponRequiredAmmoType(arme);
-  if (!required) return null;
-
-  const projectile = add2eGetEquippedProjectileForWeapon(actor, arme);
-  if (!projectile) return { blocked: true, message: `Aucun projectile équipé pour ${arme?.name ?? "cette arme"}.`, actor, arme, required };
-
-  const quantity = add2eQuantity(projectile);
-  if (quantity <= 0) return { blocked: true, message: `${projectile.name} : il n'en reste plus dans le carquois.`, actor, arme, projectile, required };
-
-  return { blocked: false, actor, arme, projectile, required, quantity: 1, before: quantity };
+  const vendorApi = globalThis.ADD2E_VENDOR_PROJECTILES ?? game?.add2e?.vendorProjectiles;
+  if (vendorApi?.spendProjectileForAttack) return vendorApi.spendProjectileForAttack({ actor, arme });
+  return { ok: true, required: false, spent: 0, delegated: false };
 }
 
-export async function add2eConsumeProjectileReservation(reservation) {
-  if (!reservation || reservation.blocked || !reservation.projectile) return false;
-  const projectile = reservation.projectile;
-  const quantity = Math.max(1, add2eNumber(reservation.quantity, 1));
-  const before = add2eQuantity(projectile);
-  const after = Math.max(0, before - quantity);
-  await projectile.update(add2eUpdatePath("system.quantite", after), { add2eReason: "consume-projectile" });
-  await add2eRegisterProjectileSpentInCombat(reservation.actor, projectile, quantity);
-  return true;
-}
-
-export async function add2eRefundProjectileReservation(reservation) {
-  if (!reservation || reservation.blocked || !reservation.projectile) return false;
-  const projectile = reservation.projectile;
-  const quantity = Math.max(1, add2eNumber(reservation.quantity, 1));
-  const current = add2eQuantity(projectile);
-  await projectile.update(add2eUpdatePath("system.quantite", current + quantity), { add2eReason: "refund-projectile" });
-  return true;
-}
-
-function add2eProjectileRegistryKey(actor, projectile) {
-  return `${actor?.id ?? "actor"}.${projectile?.id ?? "item"}`;
-}
-
-export async function add2eRegisterProjectileSpentInCombat(actor, projectile, quantity = 1) {
-  if (!game.combat || !actor || !projectile) return false;
-  if (!add2eActorUsesProjectileInventory(actor)) return false;
-
-  const combat = game.combat;
-  const registry = foundry.utils.deepClone(combat.getFlag("add2e", "projectilesDepenses") ?? {});
-  const key = add2eProjectileRegistryKey(actor, projectile);
-  const rate = projectile.system?.recuperable === false ? 0 : add2eNumber(projectile.system?.taux_recuperation, 0.6);
-
-  const row = registry[key] ?? {
-    actorId: actor.id,
-    actorName: actor.name,
-    itemId: projectile.id,
-    itemName: projectile.name,
-    ammunitionType: add2eAmmoType(projectile),
-    spent: 0,
-    restoreRate: rate,
-    recoverable: projectile.system?.recuperable !== false
-  };
-
-  row.spent = add2eNumber(row.spent, 0) + Math.max(1, add2eNumber(quantity, 1));
-  row.restoreRate = rate;
-  row.recoverable = projectile.system?.recuperable !== false;
-  registry[key] = row;
-  await combat.setFlag("add2e", "projectilesDepenses", registry);
-  return true;
-}
-
-function add2eBuildRestoreRows(combat) {
-  const registry = combat?.getFlag?.("add2e", "projectilesDepenses") ?? {};
-  return Object.values(registry).map(row => {
-    const spent = add2eNumber(row.spent, 0);
-    const rate = row.recoverable === false ? 0 : add2eNumber(row.restoreRate, 0.6);
-    return { ...row, spent, restoreRate: rate, restored: Math.round(spent * rate) };
-  }).filter(row => row.spent > 0);
-}
-
-async function add2eShowRestoreProjectilesPopup(rows) {
-  const lines = rows.map(row => `
-    <tr>
-      <td>${add2eEscapeHtml(row.actorName)}</td>
-      <td>${add2eEscapeHtml(row.itemName)}</td>
-      <td style="text-align:center;">${row.spent}</td>
-      <td style="text-align:center;"><b>${row.restored}</b></td>
-    </tr>`).join("");
-
-  const content = `
-    <div class="add2e-dialog add2e-projectile-restore-dialog">
-      <h3>Récupération des projectiles</h3>
-      <p>À la fin du combat, les tireurs récupèrent <b>60 %</b> des projectiles dépensés.</p>
-      <table class="a2e-table" style="width:100%;">
-        <thead>
-          <tr>
-            <th>Tireur</th>
-            <th>Projectile</th>
-            <th style="text-align:center;">Dépensés</th>
-            <th style="text-align:center;">Récupérés</th>
-          </tr>
-        </thead>
-        <tbody>${lines}</tbody>
-      </table>
-    </div>`;
-
-  return add2eDialogPopup({ title: "ADD2E — Récupération des projectiles", content, modal: false });
-}
-
-function add2eSendRestorePopupToOwners(rows) {
-  const byUser = {};
-  for (const row of rows) {
-    const actor = game.actors?.get(row.actorId);
-    if (!actor) continue;
-    for (const user of game.users ?? []) {
-      if (user.isGM || !user.active) continue;
-      if (!actor.testUserPermission?.(user, "OWNER")) continue;
-      byUser[user.id] ??= [];
-      byUser[user.id].push(row);
-    }
-  }
-
-  for (const [userId, userRows] of Object.entries(byUser)) {
-    game.socket?.emit?.("system.add2e", { type: ADD2E_PROJECTILE_RESTORE_SOCKET, userId, rows: userRows });
-  }
-}
+export async function add2eConsumeProjectileReservation(_reservation) { return false; }
+export async function add2eRefundProjectileReservation(_reservation) { return false; }
+export async function add2eRegisterProjectileSpentInCombat(_actor, _projectile, _quantity = 1) { return false; }
 
 export async function add2eRestoreProjectilesAtCombatEnd(combat) {
-  if (!add2eSettingBool("gestionProjectiles")) return false;
-  if (!combat?.getFlag || !combat?.setFlag) return false;
-  if (combat.getFlag("add2e", "projectilesRestitues")) return false;
+  const vendorApi = globalThis.ADD2E_VENDOR_PROJECTILES ?? game?.add2e?.vendorProjectiles;
+  if (vendorApi?.recoverProjectilesForCombat) return vendorApi.recoverProjectilesForCombat(combat);
+  return false;
+}
 
-  const rows = add2eBuildRestoreRows(combat);
-  if (!rows.length) return false;
+function add2eCleanComponentName(value) {
+  return String(value ?? "").trim()
+    .replace(/[()\[\]{}]/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/[.!?;:]+$/g, "")
+    .replace(/^d['’]\s*/i, "")
+    .replace(/^(un|une)?\s*peu\s+de\s+/i, "")
+    .replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "")
+    .replace(/^(quelques|plusieurs)\s+/i, "")
+    .replace(/^petit morceau de\s+/i, "")
+    .replace(/^morceau de\s+/i, "")
+    .trim();
+}
 
-  for (const row of rows) {
-    if (row.restored <= 0) continue;
-    const actor = game.actors?.get(row.actorId);
-    const item = actor?.items?.get(row.itemId);
-    if (!item) continue;
-    if (!add2eActorUsesProjectileInventory(actor)) continue;
-    const current = add2eQuantity(item);
-    await item.update(add2eUpdatePath("system.quantite", current + row.restored), { add2eReason: "restore-projectiles-combat-end" });
-  }
-
-  await combat.setFlag("add2e", "projectilesRestitues", true);
-  await combat.setFlag("add2e", "projectilesDepenses", {});
-  add2eSendRestorePopupToOwners(rows);
-  await add2eShowRestoreProjectilesPopup(rows);
-  return true;
+function add2eComponentEntry(raw, quantity = 1, consume = true) {
+  const nom = add2eCleanComponentName(raw);
+  if (!nom) return null;
+  const text = add2eSlugify(nom).replace(/[^a-z]/g, "");
+  if (["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text)) return null;
+  return { slug: add2eSlugify(nom), nom, quantite: Math.max(1, Number(quantity) || 1), consomme: consume !== false };
 }
 
 export function add2eResolveSpellMaterialComponents(sort) {
   const sys = sort?.system ?? {};
-  const list = sys.composants_materiels ?? sys.composantsMateriels ?? sys.materialComponents ?? [];
-  const components = add2eAsArray(list).map(entry => {
-    if (typeof entry === "string") return { slug: add2eSlugify(entry), nom: entry, quantite: 1, consomme: true };
-    const name = entry?.nom ?? entry?.name ?? entry?.label ?? entry?.slug ?? "Composant matériel";
-    return {
-      slug: add2eSlugify(entry?.slug ?? name),
-      nom: String(name),
-      quantite: Math.max(1, add2eNumber(entry?.quantite ?? entry?.quantity ?? 1, 1)),
-      consomme: entry?.consomme !== false && entry?.consume !== false
-    };
-  }).filter(c => c.slug && c.consomme !== false);
-
+  const flags = sort?.flags?.add2e ?? {};
+  const fields = [
+    sys.composants_materiels,
+    sys.composantsMateriels,
+    sys.composants_requis,
+    sys.composantsMateriel,
+    sys.composant_materiel,
+    sys.composantMateriel,
+    sys.materiel,
+    sys.matériel,
+    sys.material,
+    sys.materialComponent,
+    sys.materialComponents,
+    sys.material_components,
+    sys.requiredComponents,
+    sys.componentsRequired,
+    sys.components?.material,
+    sys.components?.materials,
+    sys.composants_materiels_objets,
+    flags.composants_requis,
+    flags.composants,
+    flags.components,
+    flags.requiredComponents
+  ];
+  const components = [];
+  const add = entry => {
+    if (entry === null || entry === undefined || entry === "") return;
+    if (Array.isArray(entry)) { for (const row of entry) add(row); return; }
+    if (typeof entry === "string") {
+      for (const part of add2eAsArray(entry)) {
+        const alternatives = String(part).replace(/[()\[\]{}]/g, " ").split(/\bou\b/gi).map(v => v.trim()).filter(Boolean);
+        if (alternatives.length > 1) {
+          const clean = alternatives.map(v => add2eComponentEntry(v)).filter(Boolean);
+          if (clean.length > 1) components.push({ slug: clean.map(v => v.slug).join("__or__"), nom: clean.map(v => v.nom).join(" ou "), quantite: 1, consomme: true, alternatives: clean });
+          else if (clean[0]) components.push(clean[0]);
+        } else {
+          const c = add2eComponentEntry(part);
+          if (c) components.push(c);
+        }
+      }
+      return;
+    }
+    if (typeof entry === "object") {
+      const alternatives = entry.alternatives ?? entry.options ?? entry.choix ?? entry.auChoix ?? entry.or;
+      if (Array.isArray(alternatives) && alternatives.length) { add(alternatives); return; }
+      const name = entry.nom ?? entry.name ?? entry.label ?? entry.item ?? entry.itemName ?? entry.component ?? entry.composant ?? entry.slug;
+      const c = add2eComponentEntry(name, entry.quantite ?? entry.quantity ?? entry.qty ?? entry.nombre ?? entry.count ?? 1, entry.consomme ?? entry.consume ?? true);
+      if (c) components.push(c);
+    }
+  };
+  for (const field of fields) add(field);
+  const unique = [];
+  for (const c of components.filter(c => c.slug && c.consomme !== false)) if (!unique.some(u => u.slug === c.slug)) unique.push(c);
   const compText = String(sys.composantes ?? sys.components ?? "").toUpperCase();
-  if (!components.length && /\bM\b/.test(compText)) return [{ slug: "__manual__", nom: "Composant matériel non détaillé", quantite: 0, consomme: false, manual: true }];
-  return components;
-}
-
-function add2eFindSpellComponentItem(actor, component) {
-  if (!actor || !component || component.manual) return null;
-  const slug = add2eSlugify(component.slug ?? component.nom);
-  return Array.from(actor.items ?? []).find(item => {
-    if (!add2eIsSpellComponent(item)) return false;
-    const itemSlug = add2eSlugify(item.system?.slug ?? item.system?.composantSlug ?? item.name);
-    if (itemSlug === slug) return true;
-    return add2eTagsOf(item).some(tag => add2eSlugify(String(tag).replace(/^composant:/i, "")) === slug);
-  }) ?? null;
+  if (!unique.length && /\bM\b/.test(compText)) return [{ slug: "__manual__", nom: "Composant matériel non détaillé", quantite: 0, consomme: false, manual: true }];
+  return unique;
 }
 
 export async function add2eReserveSpellComponents(actor, sort) {
-  if (!add2eSettingBool("gestionComposantsSorts")) return null;
-  const components = add2eResolveSpellMaterialComponents(sort);
-  const detailed = components.filter(c => !c.manual && c.consomme !== false && c.quantite > 0);
-  if (!detailed.length) return { blocked: false, actor, sort, components, reservations: [], manualOnly: components.some(c => c.manual) };
-
-  const reservations = [];
-  const missing = [];
-  for (const component of detailed) {
-    const item = add2eFindSpellComponentItem(actor, component);
-    const available = add2eQuantity(item);
-    if (!item || available < component.quantite) {
-      missing.push(`${component.nom} x${component.quantite}`);
-      continue;
-    }
-    reservations.push({ component, item, quantity: component.quantite, before: available });
-  }
-
-  if (missing.length) {
-    const message = `Composant(s) manquant(s) : ${missing.join(", ")}.`;
-    await add2eConsumablesAlert({ title: "Composant manquant", message, icon: "fa-pouch" });
-    return { blocked: true, actor, sort, components, reservations: [], message };
-  }
-
-  for (const reservation of reservations) {
-    await reservation.item.update(add2eUpdatePath("system.quantite", reservation.before - reservation.quantity), { add2eReason: "consume-spell-component" });
-  }
-  return { blocked: false, actor, sort, components, reservations };
+  return add2eCoreReserveSpellComponents(actor, sort);
 }
 
 export async function add2eRefundSpellComponents(reservation) {
-  if (!reservation?.reservations?.length) return false;
-  for (const row of reservation.reservations) {
-    const item = row.item;
-    if (!item) continue;
-    const current = add2eQuantity(item);
-    await item.update(add2eUpdatePath("system.quantite", current + row.quantity), { add2eReason: "refund-spell-component" });
-  }
-  return true;
+  return add2eCoreRefundSpellComponents(reservation);
 }
 
 async function add2eConsumablesResolveDropItemData(raw) {
@@ -479,251 +369,47 @@ async function add2eConsumablesResolveDropItemData(raw) {
   return itemData;
 }
 
-async function add2eTryMergeDroppedAmmunition(sheet, event) {
-  if (!sheet?.actor) return false;
+function add2eSameAmmunitionIdentity(a, b) {
+  return add2eIsAmmunition(a) && add2eIsAmmunition(b) && String(a?.type ?? "") === String(b?.type ?? "") && add2eSlugify(a?.name) === add2eSlugify(b?.name);
+}
 
+function add2eDroppedQuantity(itemData) {
+  const qty = add2eNumber(itemData?.system?.quantite ?? itemData?.system?.quantity ?? 1, 1);
+  return Math.max(1, qty);
+}
+
+export async function add2eTryMergeDroppedAmmunition(sheet, event) {
+  if (!sheet?.actor) return false;
   let raw;
   try { raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}"); }
   catch (_err) { return false; }
-
   if (raw?.type !== "Item") return false;
   const itemData = await add2eConsumablesResolveDropItemData(raw);
   if (!itemData || !add2eIsAmmunition(itemData)) return false;
-
   const existing = Array.from(sheet.actor.items ?? []).find(item => add2eSameAmmunitionIdentity(item, itemData)) ?? null;
   if (!existing) return false;
-
   const current = add2eQuantity(existing);
   const added = add2eDroppedQuantity(itemData);
   await existing.update({ "system.quantite": current + added }, { add2eReason: "merge-ammunition-drop" });
-  ui.notifications?.info?.(`${existing.name} : quantité ${current} → ${current + added}.`);
-  sheet.render?.(false);
+  ui.notifications?.info?.(`${existing.name} : +${added} ajouté(s) au carquois.`);
   return true;
 }
 
 function add2eWrapActorSheetDropForAmmunition() {
+  if (globalThis.__ADD2E_CONSUMABLES_DROP_WRAP_V1) return;
   const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eAmmunitionDropMergeV1) return;
-  if (typeof proto._onDrop !== "function") return;
-
-  proto.__add2eAmmunitionDropMergeV1 = true;
-  const originalOnDrop = proto._onDrop;
-  proto._onDrop = async function add2eAmmunitionDropMerge(event) {
-    const merged = await add2eTryMergeDroppedAmmunition(this, event);
-    if (merged) {
-      event?.preventDefault?.();
-      event?.stopPropagation?.();
-      return true;
-    }
-    return originalOnDrop.call(this, event);
+  if (!proto || typeof proto._onDrop !== "function") return;
+  globalThis.__ADD2E_CONSUMABLES_DROP_WRAP_V1 = true;
+  const original = proto._onDrop;
+  proto._onDrop = async function add2eConsumablesDropWrapper(event, ...args) {
+    if (await add2eTryMergeDroppedAmmunition(this, event)) return false;
+    return original.call(this, event, ...args);
   };
-}
-
-function add2eProjectileHitBonus(projectile) {
-  const s = projectile?.system ?? {};
-  return add2eNumber(s.bonus_hit ?? s.bonus_toucher ?? s.bonusToucher ?? s.attackBonus ?? 0, 0);
-}
-
-function add2eProjectileDamageBonus(projectile) {
-  const s = projectile?.system ?? {};
-  return add2eNumber(s.bonus_dom ?? s.bonus_degats ?? s.bonusDégâts ?? s.damageBonus ?? 0, 0);
-}
-
-function add2ePatchWeaponBonusDuringProjectileAttack(arme, projectile) {
-  const hitBonus = add2eProjectileHitBonus(projectile);
-  const damageBonus = add2eProjectileDamageBonus(projectile);
-  const engine = globalThis.Add2eEffectsEngine;
-  const restoreFns = [];
-
-  if (engine && typeof engine.getMagicWeaponBonus === "function") {
-    const original = engine.getMagicWeaponBonus;
-    engine.getMagicWeaponBonus = function add2eProjectileMagicWeaponBonus(item, kind, ...rest) {
-      const base = add2eNumber(original.call(this, item, kind, ...rest), 0);
-      const same = item === arme || item?.id === arme?.id || item?.uuid === arme?.uuid;
-      if (!same) return base;
-      const k = String(kind ?? "").toLowerCase();
-      if (k.includes("hit") || k.includes("touch")) return base + hitBonus;
-      if (k.includes("damage") || k.includes("dom") || k.includes("deg")) return base + damageBonus;
-      return base;
-    };
-    restoreFns.push(() => { engine.getMagicWeaponBonus = original; });
-  } else {
-    const oldHit = arme?.system?.bonus_hit;
-    const oldDom = arme?.system?.bonus_dom;
-    try {
-      arme.system.bonus_hit = add2eNumber(oldHit, 0) + hitBonus;
-      arme.system.bonus_dom = add2eNumber(oldDom, 0) + damageBonus;
-      restoreFns.push(() => { arme.system.bonus_hit = oldHit; arme.system.bonus_dom = oldDom; });
-    } catch (err) {
-      console.warn("[ADD2E][PROJECTILES][PATCH_BONUS]", err);
-    }
-  }
-
-  return () => {
-    for (const fn of restoreFns.reverse()) {
-      try { fn(); } catch (err) { console.warn("[ADD2E][PROJECTILES][RESTORE_BONUS]", err); }
-    }
-  };
-}
-
-async function add2eNotifyProjectileUsed(_actor, _arme, _reservation) {
-  return;
-}
-
-function add2eResolveAttackActorAndWeapon(args = {}) {
-  let actor = args.actor ?? args.token?.actor ?? args.token?.document?.actor ?? null;
-  let arme = args.arme ?? args.weapon ?? args.item ?? null;
-
-  if (!actor && args.actorId) actor = game.actors?.get?.(args.actorId) ?? null;
-  if (!actor && args.tokenId) actor = canvas?.tokens?.get?.(args.tokenId)?.actor ?? null;
-  if (!actor && args.tokenDocumentId) actor = canvas?.scene?.tokens?.get?.(args.tokenDocumentId)?.actor ?? null;
-
-  if (!arme && args.itemId && actor) arme = actor.items?.get?.(args.itemId) ?? null;
-  if (!actor && arme?.parent?.documentName === "Actor") actor = arme.parent;
-  if (!actor && arme?.actor) actor = arme.actor;
-
-  return { actor, arme };
-}
-
-function add2eProjectileDialogTitle(reservation) {
-  if (!reservation?.projectile) return "Projectile non équipé";
-  return "Carquois vide";
 }
 
 function add2eWrapAttackRollForProjectiles() {
-  if (globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED) return;
-  if (typeof globalThis.add2eAttackRoll !== "function") return;
-  globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED = ADD2E_CONSUMABLES_VERSION;
-
-  const originalAttackRoll = globalThis.add2eAttackRoll;
-  globalThis.add2eAttackRoll = async function add2eAttackRollWithProjectiles(args = {}) {
-    const { actor, arme } = add2eResolveAttackActorAndWeapon(args);
-    if (!add2eActorUsesProjectileInventory(actor)) return await originalAttackRoll.call(this, args);
-
-    const reservation = await add2eReserveProjectile(actor, arme);
-    if (reservation?.blocked) {
-      await add2eConsumablesAlert({
-        title: add2eProjectileDialogTitle(reservation),
-        message: reservation.message || "Projectile indisponible.",
-        icon: "fa-bullseye"
-      });
-      return false;
-    }
-    if (!reservation?.projectile) return await originalAttackRoll.call(this, args);
-
-    const restoreBonus = add2ePatchWeaponBonusDuringProjectileAttack(arme, reservation.projectile);
-    let result = false;
-    try { result = await originalAttackRoll.call(this, args); }
-    finally { restoreBonus?.(); }
-
-    if (result === true) {
-      await add2eConsumeProjectileReservation(reservation);
-      await add2eNotifyProjectileUsed(actor, arme, reservation);
-    }
-    return result;
-  };
-}
-
-function add2eConsumablesIsResponsibleGM() {
-  if (!game.user?.isGM) return false;
-  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
-  return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
-}
-
-function add2eConsumablesRequestSet() {
-  const set = globalThis.__ADD2E_CONSUMABLES_PROJECTILE_REQUESTS ?? new Set();
-  globalThis.__ADD2E_CONSUMABLES_PROJECTILE_REQUESTS = set;
-  return set;
-}
-
-async function add2eGmConsumeProjectileFromSocket(payload = {}) {
-  if (!add2eConsumablesIsResponsibleGM()) return false;
-
-  const requestId = payload.requestId ?? null;
-  const seen = add2eConsumablesRequestSet();
-  if (requestId && seen.has(requestId)) return true;
-
-  let actor = null;
-  if (payload.actorUuid) {
-    try { actor = await fromUuid(payload.actorUuid); }
-    catch (err) { console.warn("[ADD2E][CONSUMABLES][GM_PROJECTILE][UUID]", err); }
-  }
-  if (!actor && payload.actorId) actor = game.actors?.get(payload.actorId) ?? null;
-  if (!actor || !add2eActorUsesProjectileInventory(actor)) return false;
-
-  const projectile = actor.items?.get(payload.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === payload.itemName && add2eIsAmmunition(i));
-  if (!projectile) return false;
-
-  const q = Math.max(1, Math.floor(add2eNumber(payload.quantity, 1)));
-  const before = add2eQuantity(projectile);
-  const after = Math.max(0, before - q);
-  await projectile.update(add2eUpdatePath("system.quantite", after), { add2eReason: "gm-relay-consume-projectile" });
-  await add2eRegisterProjectileSpentInCombat(actor, projectile, q);
-
-  if (requestId) seen.add(requestId);
-  console.log("[ADD2E][CONSUMABLES][GM_PROJECTILE][CONSUME]", { actor: actor.name, projectile: projectile.name, before, after, quantity: q, requestId });
-  return true;
-}
-
-function add2eRegisterConsumableHooks() {
-  if (globalThis.__ADD2E_CONSUMABLES_HOOKS_REGISTERED) return;
-  globalThis.__ADD2E_CONSUMABLES_HOOKS_REGISTERED = true;
-
-  Hooks.on("combatStart", async combat => {
-    if (!add2eSettingBool("gestionProjectiles")) return;
-    try {
-      await combat.setFlag("add2e", "projectilesDepenses", {});
-      await combat.unsetFlag?.("add2e", "projectilesRestitues");
-    } catch (err) { console.warn("[ADD2E][CONSUMABLES][COMBAT_START]", err); }
-  });
-
-  Hooks.on("updateCombat", async (combat, changes) => {
-    if (!add2eSettingBool("gestionProjectiles")) return;
-    try {
-      if (changes?.active === false || changes?.round === null || changes?.turn === null) {
-        await add2eRestoreProjectilesAtCombatEnd(combat);
-        return;
-      }
-      if (changes?.round !== 1) return;
-      if (combat.getFlag("add2e", "projectilesDepenses")) return;
-      await combat.setFlag("add2e", "projectilesDepenses", {});
-    } catch (err) { console.warn("[ADD2E][CONSUMABLES][COMBAT_UPDATE]", err); }
-  });
-
-  Hooks.on("deleteCombat", async combat => {
-    if (!add2eSettingBool("gestionProjectiles")) return;
-    try { await add2eRestoreProjectilesAtCombatEnd(combat); }
-    catch (err) { console.warn("[ADD2E][CONSUMABLES][COMBAT_END_RESTORE]", err); }
-  });
-
-  Hooks.on("updateItem", async (item, changes, _options, userId) => {
-    if (globalThis.__ADD2E_CONSUMABLES_EQUIP_GUARD) return;
-    if (userId !== game.user?.id) return;
-    if (!add2eIsAmmunition(item)) return;
-    if (!add2eChangeSetsEquippedTrue(changes)) return;
-    const actor = item.parent;
-    if (!add2eActorUsesProjectileInventory(actor)) return;
-    if (!actor?.items || !actor?.updateEmbeddedDocuments) return;
-    try {
-      globalThis.__ADD2E_CONSUMABLES_EQUIP_GUARD = true;
-      await add2eEquipProjectile(actor, item);
-    } catch (err) {
-      console.warn("[ADD2E][CONSUMABLES][EQUIP_PROJECTILE_HOOK]", err);
-    } finally {
-      globalThis.__ADD2E_CONSUMABLES_EQUIP_GUARD = false;
-    }
-  });
-
-  game.socket?.on?.("system.add2e", data => {
-    if (!data || typeof data !== "object") return;
-    if (data.type === ADD2E_PROJECTILE_RESTORE_SOCKET) {
-      if (data.userId === game.user?.id) add2eShowRestoreProjectilesPopup(data.rows ?? []);
-      return;
-    }
-    if (data.type !== ADD2E_PROJECTILE_GM_OPERATION_TYPE) return;
-    if (data.operation !== ADD2E_PROJECTILE_GM_CONSUME_OPERATION) return;
-    add2eGmConsumeProjectileFromSocket(data.payload ?? {}).catch(err => console.warn("[ADD2E][CONSUMABLES][GM_PROJECTILE][SOCKET]", err));
-  });
+  globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED = "disabled-in-21-consumables-use-22a-vendor-core";
+  return false;
 }
 
 const api = {
@@ -749,7 +435,7 @@ const api = {
   add2eActorDocumentType
 };
 
-globalThis.ADD2E_CONSUMABLES = api;
+globalThis.ADD2E_CONSUMABLES = { ...(globalThis.ADD2E_CONSUMABLES ?? {}), ...api };
 globalThis.add2eGetCompatibleProjectiles = add2eGetCompatibleProjectiles;
 globalThis.add2eGetEquippedProjectileForWeapon = add2eGetEquippedProjectileForWeapon;
 globalThis.add2eEquipProjectile = add2eEquipProjectile;
@@ -761,12 +447,11 @@ globalThis.add2eTryMergeDroppedAmmunition = add2eTryMergeDroppedAmmunition;
 globalThis.add2eActorUsesProjectileInventory = add2eActorUsesProjectileInventory;
 globalThis.add2eActorDocumentType = add2eActorDocumentType;
 
-Hooks.once("init", () => add2eRegisterConsumableHooks());
 Hooks.once("ready", () => {
   add2eWrapActorSheetDropForAmmunition();
-  add2eWrapAttackRollForProjectiles();
   game.add2e = game.add2e ?? {};
-  game.add2e.consumables = api;
+  game.add2e.consumables = { ...(game.add2e.consumables ?? {}), ...api };
   game.add2e.consumablesVersion = ADD2E_CONSUMABLES_VERSION;
+  globalThis.ADD2E_CONSUMABLES = { ...(globalThis.ADD2E_CONSUMABLES ?? {}), ...game.add2e.consumables };
   add2eConsumablesLog("ready", ADD2E_CONSUMABLES_VERSION, add2eConsumablesSettings());
 });

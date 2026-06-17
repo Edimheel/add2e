@@ -1,151 +1,8 @@
 [
   {
-    "name": "Humain",
-    "type": "race",
-    "img": "icons/creatures/mammals/humanoid-male-human.webp",
-    "system": {
-      "bonus_caracteristiques": {
-        "force": 0,
-        "dexterite": 0,
-        "constitution": 0,
-        "intelligence": 0,
-        "sagesse": 0,
-        "charisme": 0
-      },
-      "vitesse": 36,
-      "capacites": [
-        "Aucune modification",
-        "Langues : commun",
-        "Classes : Toutes (Illimité)"
-      ],
-      "classLimits": {},
-      "description": "Les humains sont la race la plus adaptable et la plus commune."
-    },
-    "effects": []
-  },
-  {
-    "name": "Nain",
-    "type": "race",
-    "img": "icons/creatures/humanoids/dwarf-warrior.webp",
-    "system": {
-      "bonus_caracteristiques": {
-        "force": 0,
-        "dexterite": 0,
-        "constitution": 1,
-        "intelligence": 0,
-        "sagesse": 0,
-        "charisme": -1
-      },
-      "vitesse": 24,
-      "capacites": [
-        "Infravision (18m)",
-        "Bonus sauvegarde sort/baguettes (+1 par 3.5 CON)",
-        "Résistance aux poisons et magie",
-        "Langues : nain, gnome, gobelin, kobold, orque, commun",
-        "Classes : guerrier (9), voleur (9), assassin (9)"
-      ],
-      "classLimits": {
-        "guerrier": 9,
-        "voleur": 9,
-        "assassin": 9
-      },
-      "description": "Robustes et obstinés, les nains sont de fiers guerriers et artisans."
-    },
-    "effects": []
-  },
-  {
-    "name": "Elfe",
-    "type": "race",
-    "img": "icons/creatures/humanoids/elf-ranger.webp",
-    "system": {
-      "bonus_caracteristiques": {
-        "force": 0,
-        "dexterite": 1,
-        "constitution": -1,
-        "intelligence": 0,
-        "sagesse": 0,
-        "charisme": 0
-      },
-      "vitesse": 36,
-      "capacites": [
-        "Infravision (18m)",
-        "+1 toucher (épées/arcs)",
-        "90% résistance charme/sommeil",
-        "Détection portes secrètes (1 sur 1d6 passif)",
-        "Langues : elfe, commun, gnome, petite-gens, gobelin, orque, gnoll",
-        "Classes : guerrier (Illimité), magicien (Illimité), voleur (Illimité)"
-      ],
-      "classLimits": {
-        "guerrier": null,
-        "magicien": null,
-        "voleur": null
-      },
-      "description": "Nobles et gracieux, les elfes sont maîtres de la magie et de l'épée."
-    },
-    "effects": []
-  },
-  {
-    "name": "Gnome",
-    "type": "race",
-    "img": "icons/creatures/humanoids/gnome-mage.webp",
-    "system": {
-      "bonus_caracteristiques": {
-        "force": 0,
-        "dexterite": 0,
-        "constitution": 0,
-        "intelligence": 0,
-        "sagesse": 0,
-        "charisme": 0
-      },
-      "vitesse": 24,
-      "capacites": [
-        "Infravision (18m)",
-        "Détection des pièges et constructions",
-        "Langues : gnome, commun",
-        "Classes : guerrier (5), voleur (Illimité)"
-      ],
-      "classLimits": {
-        "guerrier": 5,
-        "voleur": null
-      },
-      "description": "Petits cousins des nains, amateurs de joyaux et d'illusions."
-    },
-    "effects": []
-  },
-  {
-    "name": "Petite-gens",
-    "type": "race",
-    "img": "icons/creatures/humanoids/halfling-rogue.webp",
-    "system": {
-      "bonus_caracteristiques": {
-        "force": -1,
-        "dexterite": 1,
-        "constitution": 0,
-        "intelligence": 0,
-        "sagesse": 0,
-        "charisme": 0
-      },
-      "vitesse": 24,
-      "capacites": [
-        "Infravision (18m)",
-        "+1 surprise",
-        "Bonus aux jets de sauvegarde (selon CON)",
-        "+1 toucher (fronde/jet)",
-        "Langues : commun, petite-gens, gnome, elfe",
-        "Classes : guerrier (6), voleur (Illimité)"
-      ],
-      "classLimits": {
-        "guerrier": 6,
-        "voleur": null
-      },
-      "description": "Paisibles et furtifs, ils sont d'excellents voleurs malgré eux."
-    },
-    "effects": []
-  },
-  {
     "name": "Demi-elfe",
     "type": "race",
-    "img": "icons/creatures/humanoids/halfelf.webp",
+    "img": "systems/add2e/assets/icones/races/Demi-elfe.webp",
     "system": {
       "bonus_caracteristiques": {
         "force": 0,
@@ -156,24 +13,101 @@
         "charisme": 0
       },
       "vitesse": 36,
-      "capacites": [
-        "Infravision (18m)",
-        "30% résistance charme/sommeil",
-        "Langues : commun, elfe, gnome, petite-gens, gobelin, orque, gnoll",
-        "Classes : clerc (5), druide (Illimité), guerrier (8), ranger (8), magicien (8), voleur (Illimité), assassin (11)"
-      ],
-      "classLimits": {
-        "clerc": 5,
-        "druide": null,
-        "guerrier": 8,
-        "ranger": 8,
-        "magicien": 8,
-        "voleur": null,
-        "assassin": 11
+      "capacites": {
+        "0": "Infravision 18 m",
+        "1": "Résistance au sommeil et aux charmes (30%)",
+        "2": "Détection portes secrètes/dérobées accrue",
+        "3": "Multiclassage autorisé selon les règles de campagne",
+        "4": "Langues supplémentaires selon intelligence"
       },
-      "description": "Héritiers des deux mondes, polyvalents et sociables."
+      "description": "",
+      "langues": [
+        "elfe",
+        "commun",
+        "gnome",
+        "petite-gens",
+        "gobelin",
+        "hobgobelin",
+        "orque",
+        "gnoll"
+      ],
+      "movement": "",
+      "taille": "",
+      "âge_debut": "",
+      "espérance_vie": "",
+      "description_longue": "",
+      "note_md": "",
+      "label": "Demi-elfe",
+      "tags": [
+        "race:demi_elfe"
+      ],
+      "effectTags": [
+        "infravision:18",
+        "resistance:charme:30",
+        "resistance:sommeil:30",
+        "detection:portes_secretes:1"
+      ],
+      "slug": "demi_elfe",
+      "vitesse_deplacement": 36,
+      "identityTags": [
+        "race:demi_elfe"
+      ],
+      "classFeatures": [],
+      "progression": [],
+      "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
     },
-    "effects": []
+    "effects": [
+      {
+        "name": "Vision et perception demi-elfiques",
+        "img": "icons/svg/eye.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "infravision:18",
+              "detection:portes_secretes:1"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "",
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Résistance aux charmes et sommeil",
+        "img": "icons/svg/aura.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "resistance:charme:30",
+              "resistance:sommeil:30"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "Le Demi-elfe a 30% de résistance contre les sorts de charme et de sommeil.",
+        "statuses": [],
+        "sort": 0
+      }
+    ]
   },
   {
     "name": "Demi-orque",
@@ -189,106 +123,818 @@
         "charisme": -2
       },
       "vitesse": 36,
-      "capacites": [
-        "Infravision 18 m",
-        "Peut passer pour humain",
-        "Haï des elfes et nains",
-        "Classes : clerc (4), guerrier (10), voleur (8), assassin (Illimité)",
-        "Multiclassage autorisé"
-      ],
-      "classLimits": {
-        "clerc": 4,
-        "guerrier": 10,
-        "voleur": 8,
-        "assassin": null
+      "capacites": {
+        "0": "Infravision 18 m",
+        "1": "Peut passer pour humain selon les circonstances de campagne",
+        "2": "Souvent mal accepté par les elfes et les nains",
+        "3": "Multiclassage autorisé selon les règles de campagne"
       },
-      "description": "Puissant mais maléfique."
+      "description": "",
+      "langues": [
+        "commun",
+        "orque"
+      ],
+      "movement": "",
+      "taille": "",
+      "âge_debut": "",
+      "espérance_vie": "",
+      "description_longue": "",
+      "note_md": "",
+      "label": "Demi-orque",
+      "tags": [
+        "race:demi_orque"
+      ],
+      "effectTags": [
+        "infravision:18"
+      ],
+      "slug": "demi_orque",
+      "vitesse_deplacement": 36,
+      "identityTags": [
+        "race:demi_orque"
+      ],
+      "classFeatures": [],
+      "progression": [],
+      "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+    },
+    "effects": [
+      {
+        "name": "Infravision demi-orque",
+        "img": "icons/svg/eye.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "infravision:18"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "Peut voir dans l'obscurité jusqu'à 18 m via l'infravision.",
+        "statuses": [],
+        "sort": 0
+      }
+    ]
+  },
+  {
+    "name": "Elfe",
+    "type": "race",
+    "img": "systems/add2e/assets/icones/races/Elfe.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": 0,
+        "dexterite": 1,
+        "constitution": -1,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": 0
+      },
+      "vitesse": 36,
+      "capacites": {
+        "0": "Infravision 18 m",
+        "1": "Résistance au sommeil et charmes (90%)",
+        "2": "Bonus +1 à l'attaque avec arcs et épées courtes/longues",
+        "3": "Détection portes secrètes/dérobées accrue",
+        "4": "Langues supplémentaires selon intelligence",
+        "NEW": ""
+      },
+      "description": "",
+      "langues": "elfe,commun,gnome,petite-gens,gobelin,hobgobelin,orque,gnoll",
+      "movement": "",
+      "taille": "",
+      "âge_debut": "",
+      "espérance_vie": "",
+      "description_longue": "",
+      "note_md": "",
+      "label": "Elfe",
+      "tags": [
+        "race:elfe"
+      ],
+      "effectTags": [
+        "infravision:18",
+        "resistance:charme:90",
+        "resistance:sommeil:90",
+        "bonus_touche:arc:1",
+        "bonus_touche:epee_courte:1",
+        "bonus_touche:epee_longue:1",
+        "detection:portes_secretes:1"
+      ],
+      "slug": "elfe",
+      "vitesse_deplacement": 36,
+      "identityTags": [
+        "race:elfe"
+      ],
+      "classFeatures": [],
+      "progression": [],
+      "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+    },
+    "effects": [
+      {
+        "name": "Vision et perception elfiques",
+        "img": "icons/svg/eye.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "infravision:18",
+              "detection:portes_secretes:1"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "",
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Résistance aux charmes et sommeil",
+        "img": "icons/svg/aura.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "resistance:charme:90",
+              "resistance:sommeil:90"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "",
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Bonus à l'attaque arcs et épées",
+        "img": "icons/svg/aura.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "bonus_touche:arc:1",
+              "bonus_touche:epee_courte:1",
+              "bonus_touche:epee_longue:1"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "",
+        "statuses": [],
+        "sort": 0
+      }
+    ]
+  },
+  {
+    "name": "Gnome",
+    "type": "race",
+    "img": "systems/add2e/assets/icones/races/Gnome.webp",
+    "system": {
+      "bonus_caracteristiques": {},
+      "vitesse": 18,
+      "capacites": {
+        "0": "Infravision 18 m",
+        "1": "Résistance à la magie (bonus selon constitution)",
+        "2": "Bonus attaque contre kobolds et gobelins",
+        "3": "Malus pour gnolls, goblours, ogres, trolls, ogres mages, géants, titans (pour les toucher)",
+        "4": "Détection minière exceptionnelle",
+        "5": "Langues supplémentaires limitées à 2",
+        "NEW": ""
+      },
+      "description": "",
+      "langues": "",
+      "movement": "",
+      "taille": "",
+      "âge_debut": "",
+      "espérance_vie": "",
+      "description_longue": "",
+      "note_md": "",
+      "label": "Gnome",
+      "tags": [
+        "race:gnome"
+      ],
+      "effectTags": [
+        "infravision:18",
+        "bonus_save_vs:magie:const",
+        "bonus_save_vs:baguette:const",
+        "bonus_save_vs:poison:const",
+        "bonus_touche_vs:kobold:1",
+        "bonus_touche_vs:gobelin:1",
+        "bonus_ca_vs:gnoll:-4",
+        "bonus_ca_vs:goblour:-4",
+        "bonus_ca_vs:ogre:-4",
+        "bonus_ca_vs:troll:-4",
+        "bonus_ca_vs:ogre_mage:-4",
+        "bonus_ca_vs:geant:-4",
+        "bonus_ca_vs:titan:-4"
+      ],
+      "slug": "gnome",
+      "vitesse_deplacement": 18,
+      "identityTags": [
+        "race:gnome"
+      ],
+      "classFeatures": [],
+      "progression": [],
+      "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+    },
+    "effects": [
+      {
+        "name": "Infravision gnome",
+        "img": "icons/svg/eye.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "infravision:18"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "Infravision 18 m.",
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Bonus sauvegarde magie et poison (constitution)",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "bonus_save_vs:magie:const",
+              "bonus_save_vs:baguette:const",
+              "bonus_save_vs:poison:const"
+            ]
+          }
+        },
+        "img": "icons/svg/shield.svg",
+        "type": "base",
+        "system": {},
+        "changes": [],
+        "disabled": false,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "description": "",
+        "origin": null,
+        "transfer": false,
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Bonus attaque contre kobolds et gobelins",
+        "description": "+1 au toucher contre kobolds et gobelins.",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "bonus_touche_vs:kobold:1",
+              "bonus_touche_vs:gobelin:1"
+            ]
+          }
+        },
+        "img": "icons/svg/aura.svg",
+        "type": "base",
+        "system": {},
+        "changes": [],
+        "disabled": false,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "origin": null,
+        "transfer": false,
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Malus pour être touché par certains adversaires",
+        "description": "-4 au toucher pour les gnolls, goblours, ogres, trolls, ogres mages, géants et titans qui attaquent le gnome.",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "bonus_ca_vs:gnoll:-4",
+              "bonus_ca_vs:goblour:-4",
+              "bonus_ca_vs:ogre:-4",
+              "bonus_ca_vs:troll:-4",
+              "bonus_ca_vs:ogre_mage:-4",
+              "bonus_ca_vs:geant:-4",
+              "bonus_ca_vs:titan:-4"
+            ]
+          }
+        },
+        "img": "icons/svg/shield.svg",
+        "type": "base",
+        "system": {},
+        "changes": [],
+        "disabled": false,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "origin": null,
+        "transfer": false,
+        "statuses": [],
+        "sort": 0
+      }
+    ]
+  },
+  {
+    "name": "Humain",
+    "type": "race",
+    "img": "systems/add2e/assets/icones/races/Humain.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": 0,
+        "dexterite": 0,
+        "constitution": 0,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": 0
+      },
+      "vitesse": 36,
+      "capacites": {
+        "0": "Aucune limite de niveau ou de classe.",
+        "1": "Pas d'infravision.",
+        "2": "Pas de multiclassage.",
+        "3": "Pas de multiclassage racial selon les règles de base",
+        "NEW": ""
+      },
+      "description": "",
+      "langues": "",
+      "movement": "",
+      "taille": "",
+      "âge_debut": "",
+      "espérance_vie": "",
+      "description_longue": "",
+      "note_md": "",
+      "label": "Humain",
+      "tags": [
+        "race:humain"
+      ],
+      "effectTags": [],
+      "slug": "humain",
+      "vitesse_deplacement": 36,
+      "identityTags": [
+        "race:humain"
+      ],
+      "classFeatures": [],
+      "progression": [],
+      "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
     },
     "effects": []
   },
- {
-  "name": "Kender",
-  "type": "race",
-  "img": "icons/creatures/mammals/humanoid-halfling-green.webp",
-  "system": {
-    "bonus_caracteristiques": {
-      "force": -1,
-      "dexterite": 1,
-      "constitution": 0,
-      "intelligence": 0,
-      "sagesse": 0,
-      "charisme": 0
-    },
-    "vitesse": 24,
-    "capacites": [
-      "Intrépidité (Immunisé peur)",
-      "Insulte (Provoque la rage)",
-      "Langues : commun, kenderspeak, patois",
-      "Classes : clerc (4), guerrier (10), voleur (8), assassin (Illimité)"
-    ],
-    "classLimits": {
-      "guerrier": 6,
-      "ranger": 6,
-      "clerc": 12,
-      "voleur": 20,
-      "magicien": 0,
-      "paladin": 0
-    },
-    "thief_adjustments": {
-      "pick_pockets": 5,
-      "open_locks": 5,
-      "find_remove_traps": 5,
-      "move_silently": 10,
-      "hide_in_shadows": 10,
-      "detect_noise": 5,
-      "climb_walls": 5,
-      "read_languages": -5
-    },
-    "onUse": "scripts/kender.js",
-    "description": "Petits, curieux et intrépides, les Kenders parcourent Krynn poussés par une envie irrépressible d'explorer."
-  },
-"effects": [
   {
-    "name": "Immunité à la peur (Kender)",
-    "icon": "icons/svg/target.svg",
-    "disabled": false,
-    "transfer": true,
-    "duration": { "startTime": null },
-    "changes": [],
-    "flags": {
-      "add2e": {
-        "tags": [ "immunite:peur" ]
+    "name": "Kender",
+    "type": "race",
+    "img": "icons/creatures/mammals/humanoid-halfling-green.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": -1,
+        "dexterite": 1,
+        "constitution": 0,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": 0
+      },
+      "vitesse": 24,
+      "capacites": {
+        "0": "Intrépidité : immunité à la peur",
+        "1": "Insulte : peut provoquer ou distraire une cible selon le script racial",
+        "2": "Résistance au poison selon les règles de campagne",
+        "3": "Langues : commun, kenderspeak, patois",
+        "4": "Curiosité et absence de peur typiques des Kenders",
+        "NEW": ""
+      },
+      "thief_adjustments": {
+        "pick_pockets": 5,
+        "open_locks": 5,
+        "find_remove_traps": 5,
+        "move_silently": 10,
+        "hide_in_shadows": 10,
+        "detect_noise": 5,
+        "climb_walls": 5,
+        "read_languages": -5
+      },
+      "onUse": "scripts/kender.js",
+      "description": "Petits, curieux et intrépides, les Kenders parcourent Krynn poussés par une envie irrépressible d'explorer.",
+      "langues": "commun,kenderspeak,patois",
+      "movement": "",
+      "taille": "",
+      "âge_debut": "",
+      "espérance_vie": "",
+      "description_longue": "",
+      "note_md": "",
+      "label": "Kender",
+      "tags": [
+        "race:kender"
+      ],
+      "effectTags": [
+        "immunite:peur",
+        "bonus_save_vs:peur:4",
+        "resistance:poison:1"
+      ],
+      "slug": "kender",
+      "vitesse_deplacement": 24,
+      "identityTags": [
+        "race:kender"
+      ],
+      "classFeatures": [],
+      "progression": [],
+      "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues, ajustements raciaux et effets raciaux. Il ne porte aucune restriction de classe."
+    },
+    "effects": [
+      {
+        "name": "Immunité à la peur",
+        "img": "icons/magic/control/fear-fright-white.webp",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "immunite:peur"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "",
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Bonus JS vs peur",
+        "img": "icons/magic/defensive/shield-barrier-glowing-triangle-purple.webp",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "bonus_save_vs:peur:4"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "",
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Résistance au poison",
+        "img": "icons/magic/nature/root-vine-entangle-poison-green.webp",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "resistance:poison:1"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "",
+        "statuses": [],
+        "sort": 0
       }
-    }
+    ]
   },
   {
-    "name": "Bonus JS vs peur (Kender)",
-    "icon": "icons/svg/target.svg",
-    "disabled": false,
-    "transfer": true,
-    "duration": { "startTime": null },
-    "changes": [],
-    "flags": {
-      "add2e": {
-        "tags": [ "bonus_save_vs:peur:4" ]
+    "name": "Nain",
+    "type": "race",
+    "img": "systems/add2e/assets/icones/races/nain.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": 0,
+        "dexterite": 0,
+        "constitution": 1,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": -1
+      },
+      "vitesse": 18,
+      "capacites": {
+        "0": "Infravision 18 m",
+        "1": "Bonus aux sauvegardes contre le poison et la magie selon la constitution",
+        "2": "Bonus +1 à l'attaque contre les gobelinoïdes",
+        "3": "Difficulté accrue à être touché par les géants",
+        "4": "Multiclassage possible selon les règles de campagne",
+        "NEW": ""
+      },
+      "description": "",
+      "langues": "nain,gnome,gobelin,kobold,orque,commun",
+      "movement": "",
+      "taille": "",
+      "âge_debut": "",
+      "espérance_vie": "",
+      "description_longue": "",
+      "note_md": "",
+      "label": "Nain",
+      "tags": [
+        "race:nain"
+      ],
+      "effectTags": [
+        "infravision:18",
+        "bonus_save_vs:magie:const",
+        "bonus_save_vs:poison:const",
+        "bonus_touche_vs:goblinoide:1",
+        "bonus_ca_vs:geant:4"
+      ],
+      "slug": "nain",
+      "vitesse_deplacement": 18,
+      "identityTags": [
+        "race:nain"
+      ],
+      "classFeatures": [],
+      "progression": [],
+      "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+    },
+    "effects": [
+      {
+        "name": "Infravision naine",
+        "img": "icons/svg/eye.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "infravision:18"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "Infravision 18 m.",
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Bonus sauvegarde magie et poison (constitution)",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "bonus_save_vs:magie:const",
+              "bonus_save_vs:poison:const"
+            ]
+          }
+        },
+        "img": "icons/svg/shield.svg",
+        "type": "base",
+        "system": {},
+        "changes": [],
+        "disabled": false,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "description": "",
+        "origin": null,
+        "transfer": false,
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Bonus attaque contre gobelinoïdes",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "bonus_touche_vs:goblinoide:1"
+            ]
+          }
+        },
+        "img": "icons/svg/aura.svg",
+        "type": "base",
+        "system": {},
+        "changes": [],
+        "disabled": false,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "description": "",
+        "origin": null,
+        "transfer": false,
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Difficulté à être touché par les géants",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "bonus_ca_vs:geant:4"
+            ]
+          }
+        },
+        "img": "icons/svg/shield.svg",
+        "type": "base",
+        "system": {},
+        "changes": [],
+        "disabled": false,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "description": "",
+        "origin": null,
+        "transfer": false,
+        "statuses": [],
+        "sort": 0
       }
-    }
+    ]
   },
   {
-    "name": "Résistance au poison (Kender)",
-    "icon": "icons/svg/target.svg",
-    "disabled": false,
-    "transfer": true,
-    "duration": { "startTime": null },
-    "changes": [],
-    "flags": {
-      "add2e": {
-        "tags": [ "resistance:poison:1" ]
+    "name": "Petite-gens",
+    "type": "race",
+    "img": "systems/add2e/assets/icones/races/petite_gens.webp",
+    "system": {
+      "bonus_caracteristiques": {
+        "force": -1,
+        "dexterite": 1,
+        "constitution": 0,
+        "intelligence": 0,
+        "sagesse": 0,
+        "charisme": 0
+      },
+      "vitesse": 18,
+      "capacites": {
+        "0": "Infravision 9 m selon l’ascendance",
+        "1": "Détection des pentes avec concentration",
+        "2": "Sens de l’orientation avec concentration",
+        "3": "Très discrets : forte chance de surprendre",
+        "4": "Bonus de sauvegarde contre magie, baguettes et poison selon constitution",
+        "5": "Langues supplémentaires selon intelligence",
+        "NEW": ""
+      },
+      "description": "",
+      "langues": "commun,petite-gens,gnome,elfe",
+      "movement": "",
+      "taille": "",
+      "âge_debut": "",
+      "espérance_vie": "",
+      "description_longue": "",
+      "note_md": "",
+      "label": "Petite-gens",
+      "tags": [
+        "race:petite_gens",
+        "race:petite_gen"
+      ],
+      "effectTags": [
+        "infravision:9",
+        "detection:pente:3_sur_4",
+        "detection:direction:1_sur_2",
+        "surprise:discretion:4_sur_6",
+        "bonus_save_vs:magie:const",
+        "bonus_save_vs:baguette:const",
+        "bonus_save_vs:poison:const"
+      ],
+      "slug": "petite_gens",
+      "vitesse_deplacement": 18,
+      "identityTags": [
+        "race:petite_gens",
+        "race:petite_gen"
+      ],
+      "classFeatures": [],
+      "progression": [],
+      "systemNotes": "Race tag-only : l’objet race fournit identité, bonus, langues et effets raciaux. Il ne porte aucune restriction de classe."
+    },
+    "effects": [
+      {
+        "name": "Vision et sens des Petite-gens",
+        "img": "icons/svg/eye.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "infravision:9",
+              "detection:pente:3_sur_4",
+              "detection:direction:1_sur_2"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "Infravision selon l’ascendance et sens naturels des pentes et de la direction avec concentration.",
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Discrétion des Petite-gens",
+        "img": "icons/svg/stealth.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "surprise:discretion:4_sur_6"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "Les Petite-gens sont naturellement discrets et surprennent plus facilement leurs adversaires.",
+        "statuses": [],
+        "sort": 0
+      },
+      {
+        "name": "Bonus sauvegarde magie et poison (constitution)",
+        "img": "icons/svg/shield.svg",
+        "flags": {
+          "add2e": {
+            "tags": [
+              "bonus_save_vs:magie:const",
+              "bonus_save_vs:baguette:const",
+              "bonus_save_vs:poison:const"
+            ]
+          }
+        },
+        "disabled": false,
+        "transfer": false,
+        "changes": [],
+        "origin": null,
+        "duration": {
+          "startTime": null,
+          "combat": null
+        },
+        "type": "base",
+        "system": {},
+        "description": "Bonus racial aux jets de sauvegarde contre la magie, les baguettes et le poison selon la constitution.",
+        "statuses": [],
+        "sort": 0
       }
-    }
+    ]
   }
-]
-
-}
-
 ]

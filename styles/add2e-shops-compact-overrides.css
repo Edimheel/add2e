@@ -1,0 +1,132 @@
+/* ADD2E — Boutiques compactes : overrides UI
+   Version : 2026-06-14-shop-ui-v3-compact-overrides */
+
+.application.add2e-merchant-app,
+.application.add2e-armorer-app {
+  font-size: 0.88rem !important;
+}
+
+.application.add2e-merchant-app section > h2,
+.application.add2e-armorer-app section > h2 {
+  display: none !important;
+}
+
+.application.add2e-merchant-app section > p,
+.application.add2e-armorer-app section > p {
+  padding: 7px 14px !important;
+  font-size: 0.9rem !important;
+  line-height: 1.1 !important;
+}
+
+.application.add2e-merchant-app section > p select,
+.application.add2e-armorer-app section > p select {
+  height: 25px !important;
+  min-height: 25px !important;
+  max-height: 25px !important;
+}
+
+.application.add2e-merchant-app section > div,
+.application.add2e-armorer-app section > div {
+  padding: 6px 10px !important;
+  gap: 5px !important;
+}
+
+.application.add2e-merchant-app section > div button,
+.application.add2e-armorer-app section > div button {
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 2px 8px !important;
+  font-size: 0.82rem !important;
+}
+
+.application.add2e-merchant-app .search,
+.application.add2e-armorer-app .search {
+  height: 25px !important;
+  min-height: 25px !important;
+  margin: 6px 10px !important;
+  width: calc(100% - 20px) !important;
+  font-size: 0.86rem !important;
+}
+
+.application.add2e-merchant-app table,
+.application.add2e-armorer-app table {
+  width: calc(100% - 20px) !important;
+  margin: 0 10px 8px 10px !important;
+  font-size: 0.86rem !important;
+}
+
+.application.add2e-merchant-app th,
+.application.add2e-armorer-app th {
+  padding: 4px 6px !important;
+  font-size: 0.68rem !important;
+}
+
+.application.add2e-merchant-app tbody tr,
+.application.add2e-armorer-app tbody tr,
+.application.add2e-merchant-app td,
+.application.add2e-armorer-app td {
+  height: 31px !important;
+  max-height: 31px !important;
+}
+
+.application.add2e-merchant-app td,
+.application.add2e-armorer-app td {
+  padding: 2px 6px !important;
+  line-height: 1.05 !important;
+}
+
+.application.add2e-merchant-app input.q,
+.application.add2e-merchant-app input.s,
+.application.add2e-armorer-app input.q,
+.application.add2e-armorer-app input.s {
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 23px !important;
+  min-height: 23px !important;
+  font-size: 0.84rem !important;
+}
+
+.application.add2e-merchant-app tbody button,
+.application.add2e-armorer-app tbody button {
+  width: 27px !important;
+  min-width: 27px !important;
+  max-width: 27px !important;
+  height: 25px !important;
+  min-height: 25px !important;
+  border-radius: 7px !important;
+}
+
+.application.add2e-merchant-app tbody button::before,
+.application.add2e-armorer-app tbody button::before {
+  font-size: 13px !important;
+}
+
+.application.add2e-merchant-app th:nth-child(1),
+.application.add2e-merchant-app td:nth-child(1) { width: 30% !important; }
+.application.add2e-merchant-app th:nth-child(2),
+.application.add2e-merchant-app td:nth-child(2) { width: 11% !important; }
+.application.add2e-merchant-app th:nth-child(3),
+.application.add2e-merchant-app td:nth-child(3) { width: 24% !important; }
+.application.add2e-merchant-app th:nth-child(4),
+.application.add2e-merchant-app td:nth-child(4) { width: 7% !important; white-space: nowrap !important; }
+.application.add2e-merchant-app th:nth-child(5),
+.application.add2e-merchant-app td:nth-child(5) { width: 6% !important; text-align: center !important; }
+.application.add2e-merchant-app th:nth-child(6),
+.application.add2e-merchant-app td:nth-child(6) { width: 6% !important; text-align: center !important; }
+.application.add2e-merchant-app th:nth-child(7),
+.application.add2e-merchant-app td:nth-child(7) { width: 5% !important; text-align: center !important; }
+.application.add2e-merchant-app th:nth-child(8),
+.application.add2e-merchant-app td:nth-child(8) { width: 11% !important; text-align: center !important; }
+
+.application.add2e-armorer-app th:nth-child(1),
+.application.add2e-armorer-app td:nth-child(1) { width: 38% !important; }
+.application.add2e-armorer-app th:nth-child(2),
+.application.add2e-armorer-app td:nth-child(2) { width: 16% !important; }
+.application.add2e-armorer-app th:nth-child(3),
+.application.add2e-armorer-app td:nth-child(3) { width: 12% !important; white-space: nowrap !important; }
+.application.add2e-armorer-app th:nth-child(4),
+.application.add2e-armorer-app td:nth-child(4) { width: 9% !important; text-align: center !important; }
+.application.add2e-armorer-app th:nth-child(5),
+.application.add2e-armorer-app td:nth-child(5) { width: 9% !important; text-align: center !important; }
+.application.add2e-armorer-app th:nth-child(6),
+.application.add2e-armorer-app td:nth-child(6) { width: 16% !important; text-align: center !important; }

@@ -7,6 +7,7 @@ import "./13b-actor-sheet-object-magic-postprocess.mjs";
 import "./13c-actor-sheet-caracs-pv-tabs-render.mjs";
 import "./13d-actor-sheet-listeners.mjs";
 import "./13e-actor-sheet-drop.mjs";
+import "./13e-actor-sheet-drop-compendium-resolver.mjs";
 import "./13f-actor-sheet-registration.mjs";
 
 const ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION = "2026-05-20-bracers-fixed-ca-sheet-v6-defensive-items-only";
@@ -52,7 +53,7 @@ if(globalThis.Add2eActorSheet?.prototype&&!globalThis.Add2eActorSheet.prototype.
   };
 }
 
-const ADD2E_ACTOR_ITEM_OPEN_VERSION = "2026-05-20-click-item-names-v1";
+const ADD2E_ACTOR_ITEM_OPEN_VERSION = "2026-06-11-click-item-names-v2-dom-compatible";
 globalThis.ADD2E_ACTOR_ITEM_OPEN_VERSION = ADD2E_ACTOR_ITEM_OPEN_VERSION;
 
 async function add2eItemDescriptionHTML(item) {
@@ -64,37 +65,57 @@ async function add2eItemDescriptionHTML(item) {
   catch (_e) { return raw; }
 }
 
-if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV1) {
-  globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV1 = true;
+function add2eLegacyRoot(html) {
+  if (html?.jquery) return html[0];
+  if (html instanceof HTMLElement) return html;
+  if (html?.[0] instanceof HTMLElement) return html[0];
+  return null;
+}
+
+if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV2) {
+  globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV2 = true;
   const originalActivateListeners = globalThis.Add2eActorSheet.prototype.activateListeners;
   globalThis.Add2eActorSheet.prototype.activateListeners = function add2eOpenItemNamesActivateListeners(html) {
     originalActivateListeners.call(this, html);
     const sheet = this;
-
-    html.find("tr.item[data-item-id] > td:first-child b, tr.item[data-item-id] > td:nth-child(2) b, .a2e-summary-weapon-name")
-      .css({ cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "2px" })
-      .attr("title", "Cliquer pour ouvrir la fiche. Maj+clic pour afficher la description.");
-
-    html.off("click.add2eOpenItemName").on("click.add2eOpenItemName", "tr.item[data-item-id] > td:first-child b, tr.item[data-item-id] > td:nth-child(2) b, .a2e-summary-weapon-name", async function(ev) {
+    const root = add2eLegacyRoot(html);
+    if (!root?.querySelectorAll) return;
+    const selector = "tr.item[data-item-id] > td:first-child b, tr.item[data-item-id] > td:nth-child(2) b, .a2e-summary-weapon-name";
+    for (const el of root.querySelectorAll(selector)) {
+      el.style.cursor = "pointer";
+      el.style.textDecoration = "underline";
+      el.style.textUnderlineOffset = "2px";
+      el.title = "Cliquer pour ouvrir la fiche. Maj+clic pour afficher la description.";
+    }
+    if (root.dataset.add2eOpenItemNamesV2 === "1") return;
+    root.dataset.add2eOpenItemNamesV2 = "1";
+    root.addEventListener("click", async ev => {
+      const target = ev.target?.closest?.(selector);
+      if (!target || !root.contains(target)) return;
       ev.preventDefault();
       ev.stopPropagation();
-      const row = $(ev.currentTarget).closest(".item[data-item-id]");
-      const itemId = row.data("item-id") || row.attr("data-item-id") || row.data("itemId") || row.attr("data-itemId");
+      const row = target.closest(".item[data-item-id]");
+      const itemId = row?.dataset?.itemId;
       const item = sheet.actor?.items?.get(String(itemId));
       if (!item) return ui.notifications.warn("Objet introuvable sur l'acteur.");
       if (ev.shiftKey) {
         const description = await add2eItemDescriptionHTML(item);
-        return new Dialog({
-          title: item.name,
-          content: `<div class="add2e-item-description-dialog" style="max-height:520px;overflow:auto;line-height:1.35;">${description}</div>`,
-          buttons: { open: { label: "Ouvrir la fiche", callback: () => item.sheet.render(true) }, close: { label: "Fermer" } },
-          default: "close"
-        }, { width: 620, resizable: true }).render(true);
+        const DialogV2 = foundry?.applications?.api?.DialogV2;
+        if (DialogV2?.wait) {
+          return DialogV2.wait({
+            window: { title: item.name },
+            content: `<div class="add2e-item-description-dialog" style="max-height:520px;overflow:auto;line-height:1.35;">${description}</div>`,
+            buttons: [
+              { action: "open", label: "Ouvrir la fiche", callback: () => { item.sheet.render(true); return true; } },
+              { action: "close", label: "Fermer", default: true, callback: () => true }
+            ],
+            modal: true,
+            rejectClose: false
+          });
+        }
+        return item.sheet.render(true);
       }
       return item.sheet.render(true);
-    });
+    }, true);
   };
 }
-
-console.log("[ADD2E][BRACELETS_DEFENSE][FIX]",ADD2E_SHEET_MAGIC_DEFENSE_FIX_VERSION);
-console.log("[ADD2E][ACTOR_ITEM_OPEN]", ADD2E_ACTOR_ITEM_OPEN_VERSION);

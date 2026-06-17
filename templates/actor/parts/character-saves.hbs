@@ -19,11 +19,7 @@
               {{#if (eq idx 4)}}Sortilèges{{/if}}
             </div>
             <div class="a2e-save-square-value">
-              {{#if ../progressionCourante}}
-                {{lookup ../progressionCourante.savingThrows idx}}
-              {{else}}
-                —
-              {{/if}}
+              {{add2eBestSave ../actor idx ../progressionCourante}}
             </div>
           </div>
         {{/each}}

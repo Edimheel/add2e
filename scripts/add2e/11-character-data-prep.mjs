@@ -1,6 +1,62 @@
 // =======================
 //  HOOK UNIQUE updateActor
 // =======================
+
+const ADD2E_MULTICLASS_HP_SYNC_VERSION = "2026-06-13-multiclass-hp-current-gain-v1";
+globalThis.ADD2E_MULTICLASS_HP_SYNC_VERSION = ADD2E_MULTICLASS_HP_SYNC_VERSION;
+const ADD2E_MULTICLASS_HP_SYNC_LOCK = new Set();
+
+function add2eIsMulticlassCharacter(actor) {
+  if (!actor || actor.type !== "personnage") return false;
+  if (actor.system?.multiclasse?.enabled === true) return true;
+  return (actor.items?.filter?.(i => String(i.type || "").toLowerCase() === "classe")?.length ?? 0) > 1;
+}
+
+function add2eMulticlassHpRelevant(changes = {}) {
+  if (!changes?.system) return false;
+  return foundry.utils.hasProperty(changes, "system.niveaux_par_classe")
+    || foundry.utils.hasProperty(changes, "system.xp_par_classe")
+    || foundry.utils.hasProperty(changes, "system.classes")
+    || foundry.utils.hasProperty(changes, "system.details_classes")
+    || foundry.utils.hasProperty(changes, "system.multiclasse")
+    || foundry.utils.hasProperty(changes, "system.classe");
+}
+
+async function add2eSyncMulticlassHp(actor, { force = false, syncCurrent = false, reason = "multiclass-hp-sync" } = {}) {
+  if (!game.user?.isGM) return false;
+  if (!add2eIsMulticlassCharacter(actor)) return false;
+  if (ADD2E_MULTICLASS_HP_SYNC_LOCK.has(actor.id)) return false;
+
+  ADD2E_MULTICLASS_HP_SYNC_LOCK.add(actor.id);
+  try {
+    const oldMax = Number(actor.system?.points_de_coup ?? 0);
+    const oldCurrent = Number(actor.system?.pdv ?? 0);
+
+    if (typeof actor.sheet?.autoSetPointsDeCoup === "function") {
+      await actor.sheet.autoSetPointsDeCoup({ syncCurrent: false, force, reason });
+    }
+
+    const max = Number(actor.system?.points_de_coup ?? 0);
+    const current = Number(actor.system?.pdv ?? 0);
+    if (!Number.isFinite(max) || max <= 0 || !Number.isFinite(current)) return true;
+
+    const hpGain = Number.isFinite(oldMax) && oldMax > 0 ? Math.max(0, max - oldMax) : 0;
+    const update = {};
+
+    if (syncCurrent) update["system.pdv"] = max;
+    else if (hpGain > 0 && Number.isFinite(oldCurrent)) update["system.pdv"] = Math.min(max, Math.max(current, oldCurrent + hpGain));
+    else if (current > max) update["system.pdv"] = max;
+
+    if (Object.keys(update).length) await actor.update(update, { add2eInternal: true, add2eReason: reason });
+    return true;
+  } catch (err) {
+    console.warn("[ADD2E][MULTICLASSE][PV][SYNC_ERROR]", { actor: actor?.name, reason, err });
+    return false;
+  } finally {
+    ADD2E_MULTICLASS_HP_SYNC_LOCK.delete(actor.id);
+  }
+}
+
 Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   if (options?._fromSync) return;
 
@@ -46,6 +102,10 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
     }
   }
 
+  if (add2eMulticlassHpRelevant(changes)) {
+    await add2eSyncMulticlassHp(actor, { force: false, syncCurrent: false, reason: "multiclass-field-change" });
+  }
+
   // =====================================================
   // 1) Auto-save & recalcul des bonus caracs
   // =====================================================
@@ -89,7 +149,7 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   // =====================================================
   try {
     if (game.user.isGM && game.user.id === game.users.activeGM?.id) {
-      const HP_PATHS = ["system.points_de_coup", "system.pdv"];
+      const HP_PATHS = ["system.pdv"];
       let hpPathChanged = null;
 
       for (const path of HP_PATHS) {
@@ -229,6 +289,15 @@ Hooks.once("ready", () => {
   })();
 });
 
+Hooks.once("ready", () => {
+  window.setTimeout(() => {
+    if (!game.user?.isGM) return;
+    for (const actor of game.actors?.contents ?? []) {
+      add2eSyncMulticlassHp(actor, { force: false, syncCurrent: false, reason: "ready-multiclass-hp-clamp" });
+    }
+  }, 750);
+});
+
 // Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
 try { globalThis.FORCE_TABLE = FORCE_TABLE; } catch (_e) {}
 try { globalThis.INTELLIGENCE_TABLE = INTELLIGENCE_TABLE; } catch (_e) {}
@@ -240,3 +309,4 @@ try { globalThis.consommerSortMemorise = consommerSortMemorise; } catch (_e) {}
 try { globalThis.majImageToken = majImageToken; } catch (_e) {}
 try { globalThis.plageToRollFormula = plageToRollFormula; } catch (_e) {}
 try { globalThis.rollHitDice = rollHitDice; } catch (_e) {}
+try { globalThis.add2eSyncMulticlassHp = add2eSyncMulticlassHp; } catch (_e) {}

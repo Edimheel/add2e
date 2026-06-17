@@ -8,7 +8,7 @@
       <h1><input name="name" type="text" value="{{item.name}}" placeholder="Nom du sort" style="font-size:1.3rem;font-weight:900;"/></h1>
       <div class="grid-3">
         <label><span>Classe</span><input type="text" name="system.classe" value="{{system.classe}}"/></label>
-        <label><span>École</span><input type="text" name="system.école" value="{{system.école}}"/></label>
+        <label><span>École</span><input type="text" name="system.ecole" value="{{system.ecole}}"/></label>
         <label><span>Niveau</span><input type="number" name="system.niveau" value="{{system.niveau}}"/></label>
       </div>
       <div class="grid-4">
@@ -31,20 +31,14 @@
     <div class="content active" data-tab="resume">
       <fieldset><legend>Informations principales</legend>
         <div class="grid-3">
-          <label><span>Portée</span><input type="text" name="system.portée.valeur" value="{{system.portée.valeur}}" placeholder="0, 30, toucher"/></label>
-          <label><span>Unité portée</span><input type="text" name="system.portée.unite" value="{{system.portée.unite}}" placeholder="m, cases, toucher"/></label>
-          <label><span>Temps incantation</span><input type="text" name="system.temps_incantation.valeur" value="{{system.temps_incantation.valeur}}"/></label>
-        </div>
-        <div class="grid-3" style="margin-top:8px;">
-          <label><span>Unité incantation</span><input type="text" name="system.temps_incantation.unite" value="{{system.temps_incantation.unite}}"/></label>
-          <label><span>Durée</span><input type="text" name="system.durée.valeur" value="{{system.durée.valeur}}"/></label>
-          <label><span>Unité durée</span><input type="text" name="system.durée.unite" value="{{system.durée.unite}}"/></label>
+          <label><span>Portée</span><input type="text" name="system.portee" value="{{system.portee}}" placeholder="0, 30, toucher"/></label>
+          <label><span>Durée</span><input type="text" name="system.duree" value="{{system.duree}}"/></label>
+          <label><span>Temps incantation</span><input type="text" name="system.temps_incantation" value="{{system.temps_incantation}}"/></label>
         </div>
       </fieldset>
       <fieldset><legend>Zone d'effet</legend>
-        <div class="grid-3">
-          <label><span>Valeur</span><input type="text" name="system.zone_effet.valeur" value="{{system.zone_effet.valeur}}"/></label>
-          <label><span>Unité</span><input type="text" name="system.zone_effet.unite" value="{{system.zone_effet.unite}}"/></label>
+        <div class="grid-2">
+          <label><span>Zone d'effet</span><input type="text" name="system.zone_effet" value="{{system.zone_effet}}"/></label>
           <label><span>Nombre</span><input type="text" name="system.number" value="{{system.number}}"/></label>
         </div>
       </fieldset>
@@ -63,7 +57,7 @@
           <label><span>Vérification recommandée</span><input type="text" name="system.composants_materiels_verification_recommandee" value="{{system.composants_materiels_verification_recommandee}}" placeholder="oui / non / note"/></label>
         </div>
         <label style="margin-top:8px;display:block;"><span>Note composant matériel</span><textarea class="add2e-components-textarea" name="system.composants_materiels_note" rows="4" placeholder="Notes de vérification, ambiguïtés OCR, source alternative, précision de consommation, etc.">{{system.composants_materiels_note}}</textarea></label>
-        <div class="note">Ce bloc permet de corriger manuellement les sorts avec composante M. Pour un sort sans composante matérielle, laisser la liste vide et décocher “Matériel à renseigner”.</div>
+        <div class="note">Ce bloc écrit uniquement les champs canoniques. Les anciens alias restent lus par compatibilité mais ne doivent plus être édités ici.</div>
       </fieldset>
     </div>
 
@@ -78,17 +72,14 @@
     </div>
     <div class="content hidden" data-tab="automation">
       <fieldset><legend>Script On Use</legend>
-        <label><span>system.onuse</span><input type="text" name="system.onuse" value="{{system.onuse}}" placeholder="scripts/sorts/soins_mineurs.js"/></label>
-        <div class="note">Champ principal lu par l'automatisation actuelle.</div>
-        <label style="margin-top:8px;"><span>system.onUse</span><input type="text" name="system.onUse" value="{{system.onUse}}" placeholder="scripts/sorts/soins_mineurs.js"/></label>
-        <label style="margin-top:8px;"><span>system.on_use</span><input type="text" name="system.on_use" value="{{system.on_use}}" placeholder="systems/add2e/scripts/sorts/soins_mineurs.js"/></label>
+        <label><span>system.onUse</span><input type="text" name="system.onUse" value="{{system.onUse}}" placeholder="systems/add2e/scripts/sorts/soins-mineurs.js"/></label>
+        <div class="note">Champ canonique. Les anciens alias <code>system.onuse</code> et <code>system.on_use</code> restent lus par compatibilité mais ne doivent plus être écrits.</div>
         <label style="margin-top:8px;"><span>system.onUseCode</span><textarea name="system.onUseCode" rows="8" placeholder="// Code JavaScript direct optionnel">{{system.onUseCode}}</textarea></label>
       </fieldset>
     </div>
     <div class="content hidden" data-tab="description">
       <fieldset><legend>Description</legend><textarea name="system.description" rows="12">{{system.description}}</textarea></fieldset>
-      <fieldset><legend>Description réelle / Manuel</legend><textarea name="system.description_reelle" rows="12" placeholder="Description exacte ou normalisée issue du Manuel du joueur">{{system.description_reelle}}</textarea></fieldset>
-      <fieldset><legend>Description source</legend><input type="text" name="system.description_source" value="{{system.description_source}}" placeholder="Manuel des joueurs AD&D 2e"/></fieldset>
+      <div class="note">La description canonique est <code>system.description</code>. Les anciens champs de description issus d'audit ne sont plus édités depuis la feuille.</div>
     </div>
     <div class="content hidden" data-tab="effets">
       {{#if item.effects.contents.length}}

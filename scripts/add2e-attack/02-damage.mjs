@@ -45,6 +45,12 @@ function add2eDamageIsCold(type, details) {
   return ["froid", "cold", "degat:froid", "degats:froid", "degat_froid", "degats_froid"].includes(t) || d.includes("froid") || d.includes("cold");
 }
 
+function add2eDamageIsFire(type, details) {
+  const t = add2eDamageNormTag(type);
+  const d = add2eDamageNormTag(details);
+  return ["feu", "fire", "degat:feu", "degats:feu", "degat_feu", "degats_feu"].includes(t) || d.includes("feu") || d.includes("fire");
+}
+
 function add2eDamageReadPositiveNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) && n > 0 ? n : null;
@@ -139,6 +145,9 @@ async function add2eDamageResolveColdResistance(actor, amount, type, details) {
   return { amount: reduced, applied: true, original: amount, save, bonus };
 }
 
+function add2eDamageFireSaveBonus(tags) { let bonus = 0; for (const tag of tags) { const match = tag.match(/^bonus_(?:js|save)_vs:feu:(-?\d+)$/); if (match) bonus = Math.max(bonus, Number(match[1]) || 0); } return bonus || 3; }
+async function add2eDamageResolveFireResistance(actor, amount, type, details) { if (!actor || amount <= 0 || !add2eDamageIsFire(type, details)) return { amount, applied: false }; const tags = add2eDamageActiveTags(actor); if (!(tags.has("resistance:feu") || tags.has("etat:resistance_feu") || tags.has("sort:resistance_au_feu"))) return { amount, applied: false }; const bonus = add2eDamageFireSaveBonus(tags), save = await add2eDamageRollSave(actor, bonus); return { amount: save.canRoll && save.success ? Math.max(1, Math.floor(amount / 4)) : Math.max(1, Math.floor(amount / 2)), applied: true, original: amount, save, bonus }; }
+async function add2eDamageFireChat(actor, info) { if (!info?.applied) return; const result = info.save?.canRoll && info.save.success ? "réussite, dégâts au quart" : "échec ou JP indisponible, dégâts de moitié"; await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: "<div class=\"add2e-chat-card\"><b>RÉSISTANCE AU FEU</b><p>" + result + ".</p><p><b>" + info.original + " → " + info.amount + "</b></p></div>" }); }
 async function add2eDamageColdChat(actor, info) {
   if (!info?.applied) return;
   const saveLine = info.save?.canRoll
@@ -195,7 +204,8 @@ export async function add2eApplyDamage({ cible, montant, type = "", details = ""
 
   const actor = cible.actor || cible;
   const cold = await add2eDamageResolveColdResistance(actor, baseDmg, type, details);
-  const dmg = cold.amount;
+  const fire = await add2eDamageResolveFireResistance(actor, cold.amount, type, details);
+  const dmg = fire.amount;
 
   const maxHP = Number(actor.system?.points_de_coup) || 0;
   let currentHP = actor.system?.pdv;
@@ -208,6 +218,7 @@ export async function add2eApplyDamage({ cible, montant, type = "", details = ""
   const newHP = currentHP - dmg;
   await actor.update({ "system.pdv": newHP });
   await add2eDamageColdChat(actor, cold);
+  await add2eDamageFireChat(actor, fire);
 
   if (typeof globalThis.add2eSyncActorVitalStatus === "function") {
     await globalThis.add2eSyncActorVitalStatus(actor, { reason: "damage" });

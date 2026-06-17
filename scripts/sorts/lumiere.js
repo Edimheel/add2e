@@ -1,25 +1,18 @@
 /**
  * ADD2E — Sort LUMIÈRE
- * Foundry V13/V14
+ * Clerc niveau 1
+ * Version : 2026-06-06-lumiere-time-engine-v1
  *
- * - DialogV2 natif uniquement
- * - Mode créature : lumière sur token + ActiveEffect
- * - Mode sol : Warpgate crosshairs + AmbientLight
- * - Côté joueur : utilise le relais MJ générique ADD2E_GM_OPERATION
- *
- * Corrections :
- * - effet actif créé sur le lanceur en mode sol
- * - suppression/restauration de la lumière quand l’effet actif est supprimé
- * - sauvegarde automatique si la cible est un autre acteur
- * - sauvegarde monstre lue depuis la fiche monstre : calculatedSaves.sorts
- * - aucun fallback 14
- * - suppression du double affichage du d20
- * - aucun socket spécifique à Lumière
+ * - DialogV2 natif uniquement.
+ * - Mode créature : lumière sur token + ActiveEffect sur la cible.
+ * - Mode sol : Warpgate crosshairs + AmbientLight + ActiveEffect sur le lanceur.
+ * - Côté joueur : utilise le relais MJ générique ADD2E_GM_OPERATION.
+ * - Nettoyage : la suppression ou l'expiration de l'ActiveEffect restaure/supprime la lumière.
  */
 
-console.log("%c[ADD2E][LUMIERE] V13/V14-DIALOGV2-GM-RELAY", "color:#e67e22;font-weight:bold;");
+console.log("%c[ADD2E][LUMIERE] 2026-06-06-lumiere-time-engine-v1", "color:#e67e22;font-weight:bold;");
 
-const ADD2E_LUMIERE_VERSION = "2026-04-29-gm-relay";
+const ADD2E_LUMIERE_VERSION = "2026-06-06-lumiere-time-engine-v1";
 
 // =========================================================
 // FONCTIONS GLOBALES — réassignées à chaque exécution
@@ -51,36 +44,20 @@ globalThis.ADD2E_LUMIERE_FIND_AMBIENT = function (payload) {
     ) || null;
   }
 
-  if (
-    !lightDoc &&
-    Number.isFinite(Number(payload.x)) &&
-    Number.isFinite(Number(payload.y))
-  ) {
+  if (!lightDoc && Number.isFinite(Number(payload.x)) && Number.isFinite(Number(payload.y))) {
     const px = Number(payload.x);
     const py = Number(payload.y);
 
     lightDoc = scene.lights?.find(l => {
       const lx = Number(l.x);
       const ly = Number(l.y);
-
-      const samePos =
-        Number.isFinite(lx) &&
-        Number.isFinite(ly) &&
-        Math.abs(lx - px) < 4 &&
-        Math.abs(ly - py) < 4;
-
-      const sameSpell =
-        !payload.spellName ||
-        l.flags?.add2e?.spellName === payload.spellName ||
-        l.getFlag?.("add2e", "spellName") === payload.spellName;
-
-      const sameActor =
-        !payload.actorId ||
+      const samePos = Number.isFinite(lx) && Number.isFinite(ly) && Math.abs(lx - px) < 4 && Math.abs(ly - py) < 4;
+      const sameSpell = !payload.spellName || l.flags?.add2e?.spellName === payload.spellName || l.getFlag?.("add2e", "spellName") === payload.spellName;
+      const sameActor = !payload.actorId ||
         l.flags?.add2e?.actorId === payload.actorId ||
         l.flags?.add2e?.actorUuid === payload.actorUuid ||
         l.getFlag?.("add2e", "actorId") === payload.actorId ||
         l.getFlag?.("add2e", "actorUuid") === payload.actorUuid;
-
       return samePos && sameSpell && sameActor;
     }) || null;
   }
@@ -190,7 +167,6 @@ globalThis.ADD2E_LUMIERE_RESTORE_TOKEN_LIGHT = async function (payload) {
         tokenName: tokenDoc.name,
         restoreData
       });
-
       await tokenDoc.update(restoreData);
       return;
     }
@@ -214,10 +190,7 @@ if (globalThis.ADD2E_LUMIERE_HOOKS_VERSION !== ADD2E_LUMIERE_VERSION) {
   globalThis.ADD2E_LUMIERE_HOOKS_VERSION = ADD2E_LUMIERE_VERSION;
 
   const cleanupEffect = async effect => {
-    const payload =
-      effect?.flags?.add2e?.lightPayload ??
-      effect?.getFlag?.("add2e", "lightPayload");
-
+    const payload = effect?.flags?.add2e?.lightPayload ?? effect?.getFlag?.("add2e", "lightPayload");
     if (!payload) return;
 
     if (payload.type === "ambient") {
@@ -227,7 +200,6 @@ if (globalThis.ADD2E_LUMIERE_HOOKS_VERSION !== ADD2E_LUMIERE_VERSION) {
 
     if (payload.type === "token") {
       await globalThis.ADD2E_LUMIERE_RESTORE_TOKEN_LIGHT(payload);
-      return;
     }
   };
 
@@ -236,9 +208,7 @@ if (globalThis.ADD2E_LUMIERE_HOOKS_VERSION !== ADD2E_LUMIERE_VERSION) {
   });
 
   Hooks.on("updateActiveEffect", async (effect, changes) => {
-    if (changes?.disabled === true) {
-      await cleanupEffect(effect);
-    }
+    if (changes?.disabled === true) await cleanupEffect(effect);
   });
 }
 
@@ -254,10 +224,130 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  let sourceItem =
-    (typeof item !== "undefined" && item)
-      ? item
-      : ((typeof sort !== "undefined" && sort) ? sort : this);
+  const esc = value => String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  function chatStyleData() {
+    return CONST.CHAT_MESSAGE_STYLES
+      ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
+      : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+  }
+
+  function timeApi() {
+    return game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  }
+
+  function durationRounds(level) {
+    const time = timeApi();
+    return time?.toRounds?.("min10_level*10", "round", { level }) ?? Math.max(10, level * 10);
+  }
+
+  function durationData(rounds) {
+    const time = timeApi();
+    return time?.durationData?.(rounds) ?? {
+      rounds,
+      startRound: game.combat?.round ?? null,
+      startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null,
+      combat: game.combat?.id ?? null
+    };
+  }
+
+  function timeFlags({ sourceItem, caster, targetActor = null, mode, rounds, lightPayload }) {
+    const isGround = mode === "ground";
+    const tags = isGround
+      ? ["sort:lumiere", "lumiere:zone", "ambient_light", "duree:round"]
+      : ["sort:lumiere", "lumiere:token", "illumination", "duree:round"];
+    const time = timeApi();
+    const endMessage = isGround
+      ? "La zone de lumière de {actor} s’éteint."
+      : "La lumière de {actor} s’éteint.";
+
+    return time?.flags?.({
+      source: "lumiere.js",
+      rounds,
+      unit: "round",
+      endMessage,
+      extra: {
+        spellName: "Lumière",
+        spellKey: "lumiere",
+        mode,
+        sourceItemUuid: sourceItem?.uuid ?? null,
+        casterId: caster?.id ?? null,
+        casterUuid: caster?.uuid ?? null,
+        targetId: targetActor?.id ?? null,
+        targetUuid: targetActor?.uuid ?? null,
+        lightPayload,
+        tags
+      }
+    }) ?? {
+      timeEngine: { managed: true, unit: "round", totalRounds: rounds },
+      roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage },
+      endMessage,
+      spellName: "Lumière",
+      spellKey: "lumiere",
+      mode,
+      sourceItemUuid: sourceItem?.uuid ?? null,
+      casterId: caster?.id ?? null,
+      casterUuid: caster?.uuid ?? null,
+      targetId: targetActor?.id ?? null,
+      targetUuid: targetActor?.uuid ?? null,
+      lightPayload,
+      tags
+    };
+  }
+
+  function effectData({ sourceItem, caster, targetActor = null, mode, rounds, lightPayload }) {
+    const isGround = mode === "ground";
+    const tags = isGround
+      ? ["sort:lumiere", "lumiere:zone", "ambient_light", "duree:round"]
+      : ["sort:lumiere", "lumiere:token", "illumination", "duree:round"];
+
+    return {
+      name: isGround ? "Lumière (Zone)" : "Lumière",
+      img: sourceItem.img || (isGround ? "icons/svg/sun.svg" : "icons/svg/light.svg"),
+      origin: sourceItem.uuid ?? null,
+      disabled: false,
+      transfer: false,
+      duration: durationData(rounds),
+      description: isGround ? "Maintient une zone de lumière magique." : "Émet de la lumière magique.",
+      flags: {
+        add2e: {
+          ...timeFlags({ sourceItem, caster, targetActor, mode, rounds, lightPayload }),
+          lightPayload,
+          tags
+        }
+      },
+      changes: []
+    };
+  }
+
+  async function createActiveEffect(actorDoc, data) {
+    if (!actorDoc) return false;
+
+    if (game.user.isGM || actorDoc.isOwner) {
+      await actorDoc.createEmbeddedDocuments("ActiveEffect", [data]);
+      return true;
+    }
+
+    if (!game.socket) {
+      ui.notifications.error("Lumière : socket indisponible, impossible de demander l’effet au MJ.");
+      return false;
+    }
+
+    globalThis.ADD2E_LUMIERE_EMIT_GM_OPERATION("createActiveEffect", {
+      actorUuid: actorDoc.uuid,
+      actorId: actorDoc.id,
+      effectData: data
+    });
+    return true;
+  }
+
+  let sourceItem = (typeof item !== "undefined" && item) ? item : ((typeof sort !== "undefined" && sort) ? sort : this);
 
   if ((!sourceItem || !sourceItem.system) && typeof args !== "undefined" && args?.[0]?.item) {
     sourceItem = args[0].item;
@@ -268,9 +358,7 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  const casterTokenObj =
-    canvas.tokens.controlled[0]
-    ?? ((typeof token !== "undefined" && token) ? token : null);
+  const casterTokenObj = canvas.tokens.controlled[0] ?? ((typeof token !== "undefined" && token) ? token : null);
 
   if (!casterTokenObj) {
     ui.notifications.warn("Sélectionne le token du lanceur avant d’utiliser Lumière.");
@@ -298,7 +386,7 @@ const __add2eOnUseResult = await (async () => {
   });
 
   const niveau = Number(caster.system?.niveau) || 1;
-  const dureeRounds = Math.max(10, niveau * 10);
+  const dureeRounds = durationRounds(niveau);
   const rayon = 6;
 
   const lightColor = "#fffec4";
@@ -307,13 +395,6 @@ const __add2eOnUseResult = await (async () => {
     speed: 2,
     intensity: 2,
     reverse: false
-  };
-
-  const durationData = {
-    rounds: dureeRounds,
-    startRound: game.combat?.round ?? null,
-    startTurn: game.combat?.turn ?? null,
-    startTime: game.time.worldTime
   };
 
   const content = `
@@ -330,17 +411,14 @@ const __add2eOnUseResult = await (async () => {
         <div><b>Durée :</b> ${dureeRounds} rounds</div>
         <div><b>Rayon faible :</b> ${rayon} m</div>
         <div><b>Rayon vif :</b> ${rayon / 2} m</div>
-        <div style="margin-top:4px;">
-          Si la cible est un autre acteur que le lanceur, un jet de sauvegarde contre les sortilèges est lancé automatiquement.
-        </div>
+        <div style="margin-top:4px;">Si la cible est un autre acteur que le lanceur, un jet de sauvegarde contre les sortilèges est lancé automatiquement.</div>
       </div>
-    </form>
-  `;
+    </form>`;
 
   const dialogResult = await DialogV2.wait({
-    window: {
-      title: "Lancement : Lumière"
-    },
+    window: { title: "Lancement : Lumière" },
+    add2eTheme: "cleric",
+    add2eImg: sourceItem.img || "icons/svg/light.svg",
     content,
     buttons: [
       {
@@ -348,18 +426,9 @@ const __add2eOnUseResult = await (async () => {
         label: "Lancer",
         icon: "fa-solid fa-sun",
         default: true,
-        callback: (event, button) => {
-          return {
-            mode: String(button.form.elements.mode?.value || "creature")
-          };
-        }
+        callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "creature") })
       },
-      {
-        action: "cancel",
-        label: "Annuler",
-        icon: "fa-solid fa-xmark",
-        callback: () => null
-      }
+      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
     ],
     rejectClose: false
   });
@@ -367,9 +436,6 @@ const __add2eOnUseResult = await (async () => {
   if (!dialogResult) return false;
 
   const mode = dialogResult.mode;
-
-  console.log("[ADD2E][LUMIERE] mode:", mode);
-
   let statusHtml = "";
   let cibleTxt = mode === "creature" ? "Cible" : "Sol";
 
@@ -404,32 +470,9 @@ const __add2eOnUseResult = await (async () => {
 
     cibleTxt = targetTokenDoc.name;
 
-    const sameToken =
-      String(targetTokenDoc.id) === String(casterTokenDoc.id) &&
-      String(sceneId) === String(casterTokenDoc.parent?.id || canvas.scene?.id || "");
-
-    const sameActor =
-      !!targetActorDoc.uuid &&
-      !!caster.uuid &&
-      String(targetActorDoc.uuid) === String(caster.uuid);
-
+    const sameToken = String(targetTokenDoc.id) === String(casterTokenDoc.id) && String(sceneId) === String(casterTokenDoc.parent?.id || canvas.scene?.id || "");
+    const sameActor = !!targetActorDoc.uuid && !!caster.uuid && String(targetActorDoc.uuid) === String(caster.uuid);
     const needsSave = !(sameToken || sameActor);
-
-    console.log("[ADD2E][LUMIERE] creature | target:", {
-      tokenId: targetTokenDoc.id,
-      tokenName: targetTokenDoc.name,
-      sceneId,
-      targetActorId: targetActorDoc.id,
-      targetActorUuid: targetActorDoc.uuid,
-      casterActorId: caster.id,
-      casterActorUuid: caster.uuid,
-      targetType: targetActorDoc.type,
-      sameToken,
-      sameActor,
-      needsSave,
-      isOwner: targetTokenDoc.isOwner,
-      userIsGM: game.user.isGM
-    });
 
     let saveVal = NaN;
 
@@ -438,45 +481,20 @@ const __add2eOnUseResult = await (async () => {
         try {
           const monsterSheetData = await targetActorDoc.sheet.getData();
           saveVal = Number(monsterSheetData?.calculatedSaves?.sorts);
-
-          console.log("[ADD2E][LUMIERE] sauvegarde monstre depuis fiche :", {
-            target: targetActorDoc.name,
-            savingThrowsKey: targetActorDoc.system?.savingThrows,
-            calculatedSaves: foundry.utils.duplicate(monsterSheetData?.calculatedSaves ?? null),
-            saveVal
-          });
         } catch (e) {
           console.error("[ADD2E][LUMIERE] impossible de lire calculatedSaves depuis la fiche monstre :", e);
         }
 
         if (!Number.isFinite(saveVal) || saveVal <= 0) {
-          ui.notifications.error(
-            `Impossible de lire la sauvegarde contre les sortilèges de ${targetActorDoc.name} depuis la fiche monstre.`
-          );
+          ui.notifications.error(`Impossible de lire la sauvegarde contre les sortilèges de ${targetActorDoc.name} depuis la fiche monstre.`);
           return false;
         }
       } else {
         saveVal = Number(targetActorDoc.system?.sauvegarde_sortileges);
-
         if (!Number.isFinite(saveVal) || saveVal <= 0) {
-          ui.notifications.error(
-            `Impossible de lire la sauvegarde contre les sortilèges de ${targetActorDoc.name}.`
-          );
-
-          console.error("[ADD2E][LUMIERE] sauvegarde personnage introuvable :", {
-            target: targetActorDoc.name,
-            type: targetActorDoc.type,
-            sauvegarde_sortileges: targetActorDoc.system?.sauvegarde_sortileges,
-            system: foundry.utils.duplicate(targetActorDoc.system)
-          });
-
+          ui.notifications.error(`Impossible de lire la sauvegarde contre les sortilèges de ${targetActorDoc.name}.`);
           return false;
         }
-
-        console.log("[ADD2E][LUMIERE] sauvegarde personnage utilisée :", {
-          target: targetActorDoc.name,
-          saveVal
-        });
       }
     }
 
@@ -487,19 +505,14 @@ const __add2eOnUseResult = await (async () => {
       try {
         roll = new Roll("1d20");
         await roll.evaluate();
-
-        // Ne pas appeler game.dice3d.showForRoll :
-        // roll.toMessage déclenche déjà Dice So Nice si activé.
         saved = roll.total >= saveVal;
-
         await roll.toMessage({
           speaker: ChatMessage.getSpeaker({ actor: targetActorDoc }),
           flavor: `
             <b>Jet de sauvegarde contre Lumière</b><br>
             Cible : ${targetActorDoc.name}<br>
             Sauvegarde sortilèges : ${saveVal}<br>
-            Résultat : ${roll.total} — ${saved ? "Réussite" : "Échec"}
-          `
+            Résultat : ${roll.total} — ${saved ? "Réussite" : "Échec"}`
         });
       } catch (e) {
         console.error("[ADD2E][LUMIERE] creature | Roll failed:", e);
@@ -508,32 +521,23 @@ const __add2eOnUseResult = await (async () => {
       }
     }
 
-    console.log("[ADD2E][LUMIERE] creature | saved:", saved, "roll:", roll?.total, "vs", saveVal);
-
     if (saved) {
       statusHtml = `
-        <div style="margin:5px 0 8px 0; padding:6px; border-radius:6px; text-align:center;
-                    background:#eafaf1; border:1px solid #ccebd9; color:#27ae60;">
+        <div style="margin:5px 0 8px 0; padding:6px; border-radius:6px; text-align:center;background:#eafaf1; border:1px solid #ccebd9; color:#27ae60;">
           <div style="font-weight:bold; font-size:1.1em;">🛡️ RÉSISTE</div>
           <div style="font-size:0.85em;">Sauvegarde réussie (${roll.total} vs ${saveVal})</div>
-        </div>
-      `;
+        </div>`;
     } else {
       statusHtml = `
-        <div style="margin:5px 0 8px 0; padding:6px; border-radius:6px; text-align:center;
-                    background:#f4efff; border:1px solid #e0d4fc; color:#8e44ad;">
+        <div style="margin:5px 0 8px 0; padding:6px; border-radius:6px; text-align:center;background:#f4efff; border:1px solid #e0d4fc; color:#8e44ad;">
           <div style="font-weight:bold; font-size:1.1em;">✨ ILLUMINÉ</div>
-          <div style="font-size:0.85em;">
-            ${needsSave ? `Échec sauvegarde (${roll.total} vs ${saveVal})` : "Sort appliqué au lanceur ou à son propre token"}
-          </div>
-        </div>
-      `;
+          <div style="font-size:0.85em;">${needsSave ? `Échec sauvegarde (${roll.total} vs ${saveVal})` : "Sort appliqué au lanceur ou à son propre token"}</div>
+        </div>`;
 
       const lightPayload = {
         type: "token",
         sceneId,
         tokenId: targetTokenDoc.id,
-
         originalDim: targetTokenDoc.light?.dim ?? 0,
         originalBright: targetTokenDoc.light?.bright ?? 0,
         originalColor: targetTokenDoc.light?.color ?? null,
@@ -558,50 +562,26 @@ const __add2eOnUseResult = await (async () => {
 
       try {
         if (game.user.isGM || targetTokenDoc.isOwner) {
-          console.log("[ADD2E][LUMIERE] creature | update token local:", targetTokenDoc.id, newLight);
           await targetTokenDoc.update(newLight);
         } else {
-          globalThis.ADD2E_LUMIERE_EMIT_GM_OPERATION("updateToken", {
-            sceneId,
-            tokenId: targetTokenDoc.id,
-            updateData: newLight
-          });
+          globalThis.ADD2E_LUMIERE_EMIT_GM_OPERATION("updateToken", { sceneId, tokenId: targetTokenDoc.id, updateData: newLight });
         }
       } catch (e) {
         console.error("[ADD2E][LUMIERE] creature | token update failed:", e);
         ui.notifications.error("Impossible de mettre à jour la lumière du token.");
+        return false;
       }
 
-      const effectData = {
-        name: "Lumière",
-        img: sourceItem.img || "icons/svg/light.svg",
-        origin: sourceItem.uuid,
-        disabled: false,
-        transfer: false,
-        duration: durationData,
-        description: "Émet de la lumière magique.",
-        flags: {
-          add2e: {
-            lightPayload
-          }
-        }
-      };
+      const ok = await createActiveEffect(targetActorDoc, effectData({
+        sourceItem,
+        caster,
+        targetActor: targetActorDoc,
+        mode: "creature",
+        rounds: dureeRounds,
+        lightPayload
+      }));
 
-      try {
-        if (game.user.isGM || targetActorDoc.isOwner) {
-          console.log("[ADD2E][LUMIERE] creature | create ActiveEffect local:", targetActorDoc.uuid, effectData);
-          await targetActorDoc.createEmbeddedDocuments("ActiveEffect", [effectData]);
-        } else {
-          globalThis.ADD2E_LUMIERE_EMIT_GM_OPERATION("createActiveEffect", {
-            actorUuid: targetActorDoc.uuid,
-            actorId: targetActorDoc.id,
-            effectData
-          });
-        }
-      } catch (e) {
-        console.error("[ADD2E][LUMIERE] creature | ActiveEffect create failed:", e);
-        ui.notifications.error("Impossible de créer l’effet Lumière.");
-      }
+      if (!ok) return false;
     }
   }
 
@@ -609,16 +589,7 @@ const __add2eOnUseResult = await (async () => {
   // MODE SOL
   // =======================================================
   if (mode === "ground") {
-    console.log("[ADD2E][LUMIERE] ground start | socket:", !!game.socket, "canvas.ready:", !!canvas?.ready);
-
-    if (!canvas?.ready) {
-      ui.notifications.warn("La scène n’est pas prête.");
-      return false;
-    }
-
-    const wgActive = game.modules.get("warpgate")?.active && typeof warpgate?.crosshairs?.show === "function";
-
-    console.log("[ADD2E][LUMIERE] warpgate active:", wgActive, "module:", game.modules.get("warpgate"));
+    const wgActive = game.modules.get("warpgate")?.active && globalThis.warpgate?.crosshairs?.show;
 
     if (!wgActive) {
       ui.notifications.warn("Warpgate est requis pour le placement au sol de Lumière.");
@@ -637,36 +608,22 @@ const __add2eOnUseResult = await (async () => {
         drawOutline: true,
         rememberControlled: false
       };
-
-      const callbacks = {
-        show: () => {},
-        move: () => {},
-        cancel: () => {}
-      };
-
-      console.log("[ADD2E][LUMIERE] crosshairs.show:", { config, callbacks });
-      cross = await warpgate.crosshairs.show(config, callbacks);
-      console.log("[ADD2E][LUMIERE] crosshairs result:", cross);
+      cross = await warpgate.crosshairs.show(config, { show: () => {}, move: () => {}, cancel: () => {} });
     } catch (e) {
       console.error("[ADD2E][LUMIERE] crosshairs.show failed:", e);
       ui.notifications.error("Le placement Warpgate a échoué.");
       return false;
     }
 
-    if (!cross || cross.cancelled) {
-      console.log("[ADD2E][LUMIERE] placement annulé.");
-      return false;
-    }
+    if (!cross || cross.cancelled) return false;
 
     const sceneId = canvas.scene?.id;
-
     if (!sceneId) {
       ui.notifications.error("Aucune scène active.");
       return false;
     }
 
     cibleTxt = "Sol";
-
     const requestId = foundry.utils.randomID();
 
     const ambientAdd2eFlags = {
@@ -694,9 +651,7 @@ const __add2eOnUseResult = await (async () => {
         attenuation: 0.5,
         animation: lightAnim
       },
-      flags: {
-        add2e: ambientAdd2eFlags
-      }
+      flags: { add2e: ambientAdd2eFlags }
     };
 
     let lightId = null;
@@ -704,15 +659,11 @@ const __add2eOnUseResult = await (async () => {
     if (game.user.isGM) {
       try {
         const lightDoc = await globalThis.ADD2E_LUMIERE_CREATE_AMBIENT_LOCAL(canvas.scene, ambientData);
-
         if (!lightDoc) {
           ui.notifications.error("La lumière au sol n’a pas pu être créée.");
           return false;
         }
-
         lightId = lightDoc.id;
-
-        console.log("[ADD2E][LUMIERE] ambient light created locally:", lightId);
       } catch (e) {
         console.error("[ADD2E][LUMIERE] ground local creation failed:", e);
         ui.notifications.error("Impossible de créer la lumière au sol.");
@@ -734,9 +685,7 @@ const __add2eOnUseResult = await (async () => {
         alpha: 0.5,
         angle: 360,
         animation: lightAnim,
-        flags: {
-          add2e: ambientAdd2eFlags
-        }
+        flags: { add2e: ambientAdd2eFlags }
       });
 
       const lightDoc = await globalThis.ADD2E_LUMIERE_WAIT_FOR_AMBIENT({
@@ -751,75 +700,55 @@ const __add2eOnUseResult = await (async () => {
       });
 
       lightId = lightDoc?.id ?? null;
-
-      console.log("[ADD2E][LUMIERE] lightId after socket wait:", {
-        lightId,
-        found: !!lightDoc
-      });
     }
 
-    const groundEffectData = {
-      name: "Lumière (Zone)",
-      img: sourceItem.img || "icons/svg/sun.svg",
-      origin: sourceItem.uuid,
-      disabled: false,
-      transfer: false,
-      duration: durationData,
-      description: "Maintient une zone de lumière magique.",
-      flags: {
-        add2e: {
-          lightPayload: {
-            type: "ambient",
-            actorId: caster.id,
-            actorUuid: caster.uuid,
-            spellName: sourceItem.name,
-            sceneId,
-            lightId,
-            requestId,
-            x: cross.x,
-            y: cross.y
-          }
-        }
-      }
+    const lightPayload = {
+      type: "ambient",
+      actorId: caster.id,
+      actorUuid: caster.uuid,
+      spellName: sourceItem.name,
+      sceneId,
+      lightId,
+      requestId,
+      x: cross.x,
+      y: cross.y
     };
 
-    try {
-      if (game.user.isGM || caster.isOwner) {
-        console.log("[ADD2E][LUMIERE] ground | create AE on caster:", caster.uuid, groundEffectData);
-        await caster.createEmbeddedDocuments("ActiveEffect", [groundEffectData]);
-      } else {
-        globalThis.ADD2E_LUMIERE_EMIT_GM_OPERATION("createActiveEffect", {
-          actorUuid: caster.uuid,
-          actorId: caster.id,
-          effectData: groundEffectData
-        });
-      }
-    } catch (e) {
-      console.error("[ADD2E][LUMIERE] ground | AE caster failed:", e);
+    const ok = await createActiveEffect(caster, effectData({
+      sourceItem,
+      caster,
+      targetActor: caster,
+      mode: "ground",
+      rounds: dureeRounds,
+      lightPayload
+    }));
+
+    if (!ok) {
       ui.notifications.error("La lumière est posée, mais l’effet actif n’a pas pu être créé sur le lanceur.");
+      return false;
     }
 
     statusHtml = `
-      <div style="margin:5px 0 8px 0; padding:6px; border-radius:6px; text-align:center;
-                  background:#fff9c4; border:1px solid #f9e79f; color:#d4ac0d;">
+      <div style="margin:5px 0 8px 0; padding:6px; border-radius:6px; text-align:center;background:#fff9c4; border:1px solid #f9e79f; color:#d4ac0d;">
         <div style="font-weight:bold; font-size:1.1em;">✨ LUMIÈRE AU SOL</div>
-        <div style="font-size:0.85em;">Zone de lumière maintenue par le lanceur</div>
-      </div>
-    `;
+        <div style="font-size:0.85em;">Zone de lumière maintenue par le lanceur pendant ${dureeRounds} rounds.</div>
+      </div>`;
   }
 
-  if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(casterTokenObj ?? casterToken ?? caster, "divine");
+  if (globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX) {
+    await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX(casterTokenObj ?? caster, "divine");
+  }
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
     content: `
       <div class="add2e-spell-card">
-        <b>${sourceItem.name}</b><br>
-        <em>${cibleTxt}</em>
+        <b>${esc(sourceItem.name)}</b><br>
+        <em>${esc(cibleTxt)}</em>
         ${statusHtml}
-      </div>
-    `,
-      ...(CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })});
+      </div>`,
+    ...chatStyleData()
+  });
 
   console.log("[ADD2E][lumiere.js][ONUSE_RESULT]", true);
   return true;
@@ -830,7 +759,7 @@ if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
     script: "lumiere.js",
     result: __add2eOnUseResult
   });
-  ui.notifications?.error?.(`${sourceItem?.name ?? item?.name ?? sort?.name ?? "Sort"} : le script onUse n'a pas retourné true/false.`);
+  ui.notifications?.error?.(`${typeof sourceItem !== "undefined" ? sourceItem?.name : item?.name ?? sort?.name ?? "Sort"} : le script onUse n'a pas retourné true/false.`);
   return false;
 }
 

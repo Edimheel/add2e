@@ -1,33 +1,69 @@
       <section class='a2e-tab-content tab tab-capacites {{#if (eq activeTab "capacites")}}active{{/if}}' data-group="primary" data-tab="capacites">
+        {{#if thiefSkillRows.length}}
+          <div class="a2e-panel a2e-thief-skills-panel">
+            <h2>Compétences de voleur</h2>
+            <div class="a2e-panel-body">
+              <table class="a2e-table">
+                <thead>
+                  <tr>
+                    <th>Compétence</th>
+                    <th style="width:90px;text-align:center;">%</th>
+                    <th style="width:100px;text-align:center;">Jet</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each thiefSkillRows as |row|}}
+                    <tr>
+                      <td><b>{{row.label}}</b></td>
+                      <td style="text-align:center;font-weight:900;">{{row.value}}%</td>
+                      <td style="text-align:center;">
+                        <button type="button"
+                                class="a2e-btn blue add2e-thief-skill-roll"
+                                data-skill-key="{{row.key}}"
+                                title="Tester {{row.label}}">
+                          <i class="fas fa-dice-d100"></i>&nbsp;Jet
+                        </button>
+                      </td>
+                    </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {{/if}}
+
         <div class="a2e-grid-2">
           <div class="a2e-panel">
             <h2>Capacités activables</h2>
             <div class="a2e-panel-body">
-              {{#if actor.system.details_classe.classFeatures.length}}
-                {{#each actor.system.details_classe.classFeatures as |feature idx|}}
-                  {{#if feature.activable}}
-                    <div class="a2e-panel" style="box-shadow:none;">
-                      <h3>
-                        {{feature.name}}
-                        {{#if (gt feature.minLevel ../actor.system.niveau)}}
-                          <span class="a2e-muted" style="float:right;">Niveau {{feature.minLevel}}</span>
-                        {{else}}
-                          <span style="float:right;">{{feature.uses.label}}</span>
-                        {{/if}}
-                      </h3>
-                      <div class="a2e-panel-body a2e-small">
-                        {{{feature.description}}}
-                        <div class="a2e-actions" style="justify-content:flex-start;margin-top:8px;">
-                          <button type="button"
-                                  class="a2e-btn blue add2e-feature-use"
-                                  data-feature-index="{{idx}}"
-                                  data-on-use="{{feature.on_use}}">
-                            <i class="fas fa-bolt"></i>&nbsp;Utiliser
-                          </button>
-                        </div>
+              {{#if activeClassFeatures.length}}
+                {{#each activeClassFeatures as |feature|}}
+                  <div class="a2e-panel" style="box-shadow:none;">
+                    <h3>
+                      {{feature.name}}
+                      {{#if feature._add2eClassName}}
+                        <small class="a2e-muted"> — {{feature._add2eClassName}}</small>
+                      {{/if}}
+                      {{#if (gt feature.minLevel feature._add2eClassLevel)}}
+                        <span class="a2e-muted" style="float:right;">Niveau {{feature.minLevel}}</span>
+                      {{else}}
+                        <span style="float:right;">{{#if feature.uses.label}}{{feature.uses.label}}{{else}}Actif{{/if}}</span>
+                      {{/if}}
+                    </h3>
+                    <div class="a2e-panel-body a2e-small">
+                      {{{feature.description}}}
+                      <div class="a2e-actions" style="justify-content:flex-start;margin-top:8px;">
+                        <button type="button"
+                                class="a2e-btn blue add2e-feature-use"
+                                data-feature-index="{{feature.__featureIndex}}"
+                                data-feature-name="{{feature.name}}"
+                                data-feature-key="{{feature.key}}"
+                                data-on-use="{{feature.on_use}}">
+                          <i class="fas fa-bolt"></i>&nbsp;Utiliser
+                        </button>
                       </div>
                     </div>
-                  {{/if}}
+                  </div>
                 {{/each}}
               {{else}}
                 <p class="a2e-muted">Aucune capacité de classe renseignée.</p>
@@ -38,23 +74,24 @@
           <div class="a2e-panel">
             <h2>Capacités passives</h2>
             <div class="a2e-panel-body">
-              {{#if actor.system.details_classe.classFeatures.length}}
-                {{#each actor.system.details_classe.classFeatures as |feature|}}
-                  {{#unless feature.activable}}
-                    <div class="a2e-panel" style="box-shadow:none;">
-                      <h3>
-                        {{feature.name}}
-                        {{#if (gt feature.minLevel ../actor.system.niveau)}}
-                          <span class="a2e-muted" style="float:right;">Niveau {{feature.minLevel}}</span>
-                        {{else}}
-                          <span style="float:right;">Actif</span>
-                        {{/if}}
-                      </h3>
-                      <div class="a2e-panel-body a2e-small">
-                        {{{feature.description}}}
-                      </div>
+              {{#if passiveClassFeatures.length}}
+                {{#each passiveClassFeatures as |feature|}}
+                  <div class="a2e-panel" style="box-shadow:none;">
+                    <h3>
+                      {{feature.name}}
+                      {{#if feature._add2eClassName}}
+                        <small class="a2e-muted"> — {{feature._add2eClassName}}</small>
+                      {{/if}}
+                      {{#if (gt feature.minLevel feature._add2eClassLevel)}}
+                        <span class="a2e-muted" style="float:right;">Niveau {{feature.minLevel}}</span>
+                      {{else}}
+                        <span style="float:right;">Actif</span>
+                      {{/if}}
+                    </h3>
+                    <div class="a2e-panel-body a2e-small">
+                      {{{feature.description}}}
                     </div>
-                  {{/unless}}
+                  </div>
                 {{/each}}
               {{else}}
                 <p class="a2e-muted">Aucune capacité passive.</p>

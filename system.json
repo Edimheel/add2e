@@ -1,11 +1,11 @@
 {
   "id": "add2e",
   "title": "AD&D 2e (Descartes)",
-  "version": "0.1.15",
+  "version": "0.1.20",
   "socket": true,
   "compatibility": {
     "minimum": "13",
-    "verified": "13"
+    "verified": "15"
   },
   "authors": [
     {

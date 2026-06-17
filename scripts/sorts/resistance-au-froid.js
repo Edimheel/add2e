@@ -1,5 +1,5 @@
 // ADD2E — onUse Clerc niveau 1 : Résistance au Froid
-// Version : 2026-05-23-clerc-n1-resistance-au-froid-v2
+// Version : 2026-06-02-clerc-n1-resistance-froid-time-engine-v1
 // Retour attendu par le moteur ADD2E : true = sort consommé, false = sort non consommé.
 
 const ADD2E_SORT_CONFIG = {
@@ -8,7 +8,8 @@ const ADD2E_SORT_CONFIG = {
   level: 1,
   classe: "Clerc",
   description: "Ce sort protège la créature touchée contre les effets du froid naturel ou magique. La durée est d’un tour par niveau du clerc.",
-  effect_rounds: "10*level",
+  effect_rounds: "level",
+  effect_unit: "tour",
   effectTags: [
     "classe:clerc",
     "liste:clerc",
@@ -38,12 +39,60 @@ function add2eCasterLevel(actor) {
   return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
 }
 
-function add2eRoundCount(expr, level) {
+function add2eRoundCount(expr, unit, level) {
+  const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  if (time?.toRounds) return time.toRounds(expr, unit, { level });
   if (typeof expr === "number") return expr;
   if (!expr) return 0;
   const s = String(expr);
+  if (s === "level" && unit === "tour") return 10 * level;
   if (s === "10*level") return 10 * level;
   return Number(s) || 0;
+}
+
+function add2eDurationData(rounds) {
+  const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  return time?.durationData?.(rounds) ?? {
+    rounds: rounds || undefined,
+    startRound: game.combat?.round ?? null,
+    startTurn: game.combat?.turn ?? null,
+    startTime: game.time?.worldTime ?? null,
+    combat: game.combat?.id ?? null
+  };
+}
+
+function add2eTimeFlags({ rounds, level, caster, targetActor }) {
+  const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  return time?.flags?.({
+    source: "resistance-au-froid.js",
+    rounds,
+    unit: "round",
+    endMessage: "La résistance au froid de {actor} prend fin.",
+    extra: {
+      spellKey: ADD2E_SORT_CONFIG.slug,
+      spellName: ADD2E_SORT_CONFIG.name,
+      spellList: "cleric",
+      level,
+      casterId: caster?.id ?? null,
+      casterUuid: caster?.uuid ?? null,
+      targetId: targetActor?.id ?? null,
+      targetUuid: targetActor?.uuid ?? null,
+      tags: ADD2E_SORT_CONFIG.effectTags
+    }
+  }) ?? {
+    timeEngine: { managed: true, unit: "round", totalRounds: rounds },
+    roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage: "La résistance au froid de {actor} prend fin." },
+    endMessage: "La résistance au froid de {actor} prend fin.",
+    spellKey: ADD2E_SORT_CONFIG.slug,
+    spellName: ADD2E_SORT_CONFIG.name,
+    spellList: "cleric",
+    level,
+    casterId: caster?.id ?? null,
+    casterUuid: caster?.uuid ?? null,
+    targetId: targetActor?.id ?? null,
+    targetUuid: targetActor?.uuid ?? null,
+    tags: ADD2E_SORT_CONFIG.effectTags
+  };
 }
 
 function add2eGetCasterToken() {
@@ -110,7 +159,7 @@ async function add2eChat(title, html, speakerToken = null, options = {}) {
   });
 }
 
-async function add2eApplyTaggedEffect(targetActor, { name, img, tags, rounds = 0, description = "" }) {
+async function add2eApplyTaggedEffect(targetActor, { name, img, tags, rounds = 0, description = "", level = 1, caster = null }) {
   if (!targetActor) return false;
 
   const data = {
@@ -121,14 +170,14 @@ async function add2eApplyTaggedEffect(targetActor, { name, img, tags, rounds = 0
     type: "base",
     system: {},
     changes: [],
-    duration: {
-      rounds: rounds || undefined,
-      startRound: game.combat?.round ?? null,
-      startTime: game.time?.worldTime ?? null,
-      combat: game.combat?.id ?? null
-    },
+    duration: add2eDurationData(rounds),
     description,
-    flags: { add2e: { tags: tags ?? [] } }
+    flags: {
+      add2e: {
+        ...add2eTimeFlags({ rounds, level, caster, targetActor }),
+        tags: tags ?? []
+      }
+    }
   };
 
   try {
@@ -152,7 +201,7 @@ if (!targets.length) {
 }
 
 const level = add2eCasterLevel(actor);
-const rounds = add2eRoundCount(ADD2E_SORT_CONFIG.effect_rounds, level);
+const rounds = add2eRoundCount(ADD2E_SORT_CONFIG.effect_rounds, ADD2E_SORT_CONFIG.effect_unit, level);
 
 for (const t of targets) {
   await add2eApplyTaggedEffect(t.actor, {
@@ -160,6 +209,8 @@ for (const t of targets) {
     img: item?.img,
     tags: ADD2E_SORT_CONFIG.effectTags,
     rounds,
+    level,
+    caster: actor,
     description: `${ADD2E_SORT_CONFIG.name} lancé par ${actor?.name ?? "un clerc"}.`
   });
 }

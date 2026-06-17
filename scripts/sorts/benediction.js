@@ -1,22 +1,16 @@
 /**
  * ADD2E — Sort BÉNÉDICTION / MALÉDICTION
  * Clerc niveau 1 — Conjuration/Appel
+ * Version : 2026-06-15-benediction-malediction-expiration-label-v1
  *
  * Effet : +1 au moral et +1 aux jets d'attaque des alliés dans la zone.
  * Inverse : Malédiction, -1 au moral et -1 aux jets d'attaque.
- * Durée : 6 rounds.
- * Portée : 18 m.
- * Zone : 5 × 5.
- * Jet de sauvegarde : aucun.
- *
- * Compatible MJ + joueur via relais MJ générique ADD2E_GM_OPERATION.
- * return false = le sort ne doit pas être consommé.
- * return true  = le sort est réellement lancé.
+ * Composant : Bénédiction consomme Eau bénite ; Malédiction consomme Eau maudite.
  */
 
 const __add2eOnUseResult = await (async () => {
-
-  console.log("%c[ADD2E][BENEDICTION] SCRIPT CUSTOM", "color:#b88924;font-weight:bold;");
+  const VERSION = "2026-06-15-benediction-malediction-expiration-label-v1";
+  console.log(`%c[ADD2E][BENEDICTION] ${VERSION}`, "color:#b88924;font-weight:bold;");
 
   const ADD2E_CLERIC_CHAT = {
     main: "#b88924",
@@ -26,8 +20,7 @@ const __add2eOnUseResult = await (async () => {
     border: "#e2bc63",
     borderDark: "#8a611d",
     success: "#2f8f46",
-    fail: "#b33a2e",
-    muted: "#6b5a35"
+    fail: "#b33a2e"
   };
 
   function add2eEscapeHtml(value) {
@@ -39,14 +32,28 @@ const __add2eOnUseResult = await (async () => {
       .replace(/'/g, "&#039;");
   }
 
+  function add2eNormalize(value) {
+    return String(value ?? "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[’']/g, "_")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function add2eQuantity(item) {
+    return Math.max(0, Math.floor(Number(item?.system?.quantite ?? item?.system?.quantity ?? 0) || 0));
+  }
+
   function add2eSpellImg(src, fallback = "icons/magic/holy/prayer-hands-glowing-yellow.webp") {
     return add2eEscapeHtml(src || fallback);
   }
 
-  function add2eClercCard({ caster, sourceItem, modeLabel, targetsLabel, resultHtml }) {
+  function add2eClercCard({ caster, sourceItem, modeLabel, targetsLabel, resultHtml, componentName }) {
     const casterName = add2eEscapeHtml(caster?.name ?? "Lanceur");
     const spellName = add2eEscapeHtml(sourceItem?.name ?? "Bénédiction");
-
     return `
       <div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,${ADD2E_CLERIC_CHAT.pale2} 0%,${ADD2E_CLERIC_CHAT.pale} 100%);border:1.5px solid ${ADD2E_CLERIC_CHAT.border};overflow:hidden;padding:0;font-family:var(--font-primary);">
         <div style="background:linear-gradient(90deg,${ADD2E_CLERIC_CHAT.dark} 0%,${ADD2E_CLERIC_CHAT.main} 100%);padding:8px 12px;color:white;display:flex;align-items:center;gap:10px;border-bottom:2px solid ${ADD2E_CLERIC_CHAT.borderDark};">
@@ -58,7 +65,7 @@ const __add2eOnUseResult = await (async () => {
           <img src="${add2eSpellImg(sourceItem?.img)}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
         </div>
         <div style="padding:10px;">
-          <div style="margin-bottom:6px;font-size:0.95em;color:${ADD2E_CLERIC_CHAT.dark};"><b>Mode :</b> ${add2eEscapeHtml(modeLabel)}<br><b>Cible(s) :</b> ${targetsLabel}</div>
+          <div style="margin-bottom:6px;font-size:0.95em;color:${ADD2E_CLERIC_CHAT.dark};"><b>Mode :</b> ${add2eEscapeHtml(modeLabel)}<br><b>Composant consommé :</b> ${add2eEscapeHtml(componentName)}<br><b>Cible(s) :</b> ${targetsLabel}</div>
           ${resultHtml}
           <details style="margin-top:8px;background:white;border:1px solid ${ADD2E_CLERIC_CHAT.border};border-radius:6px;">
             <summary style="cursor:pointer;color:${ADD2E_CLERIC_CHAT.dark};font-weight:600;padding:6px;">Règle appliquée</summary>
@@ -75,9 +82,7 @@ const __add2eOnUseResult = await (async () => {
 
   function add2eEmitGmOperation(operation, payload) {
     if (!game.socket) return false;
-    const message = { type: "ADD2E_GM_OPERATION", operation, payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() } };
-    console.log("[ADD2E][BENEDICTION][GM-RELAY] emit :", message);
-    game.socket.emit("system.add2e", message);
+    game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation, payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() } });
     return true;
   }
 
@@ -95,11 +100,8 @@ const __add2eOnUseResult = await (async () => {
       return true;
     }
     const emitted = add2eEmitGmOperation("createActiveEffect", { actorUuid: targetActor.uuid, actorId: targetActor.id, effectData });
-    if (!emitted) {
-      ui.notifications.error("Bénédiction : impossible de contacter le MJ pour créer l'effet actif.");
-      return false;
-    }
-    return true;
+    if (!emitted) ui.notifications.error("Bénédiction : impossible de contacter le MJ pour créer l'effet actif.");
+    return emitted;
   }
 
   function add2eDistanceMeters(tokenA, tokenB) {
@@ -115,6 +117,84 @@ const __add2eOnUseResult = await (async () => {
       console.warn("[ADD2E][BENEDICTION] mesure distance impossible", e);
       return 0;
     }
+  }
+
+  function add2eDurationData(rounds) {
+    const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+    return time?.durationData?.(rounds) ?? {
+      rounds,
+      startRound: game.combat?.round ?? null,
+      startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null,
+      combat: game.combat?.id ?? null
+    };
+  }
+
+  function add2eTimeFlags({ sourceItem, caster, effectName, isCurse, durationRounds }) {
+    const tags = isCurse
+      ? ["etat:malediction", "malus_attaque:1", "malus_moral:1", "bonus_attaque:-1", "bonus_moral:-1"]
+      : ["etat:benediction", "bonus_attaque:1", "bonus_moral:1"];
+    const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+    return time?.flags?.({
+      source: "benediction.js",
+      rounds: durationRounds,
+      unit: "round",
+      endMessage: isCurse ? "La malédiction de {actor} prend fin." : "La bénédiction de {actor} prend fin.",
+      extra: {
+        spellName: effectName,
+        spellKey: isCurse ? "malediction" : "benediction",
+        sourceItemUuid: sourceItem?.uuid ?? null,
+        casterId: caster?.id ?? null,
+        casterUuid: caster?.uuid ?? null,
+        tags
+      }
+    }) ?? {
+      timeEngine: { managed: true, unit: "round", totalRounds: durationRounds },
+      roundEngine: { managed: true, unit: "round", totalRounds: durationRounds, endMessage: isCurse ? "La malédiction de {actor} prend fin." : "La bénédiction de {actor} prend fin." },
+      endMessage: isCurse ? "La malédiction de {actor} prend fin." : "La bénédiction de {actor} prend fin.",
+      spellName: effectName,
+      spellKey: isCurse ? "malediction" : "benediction",
+      sourceItemUuid: sourceItem?.uuid ?? null,
+      casterId: caster?.id ?? null,
+      casterUuid: caster?.uuid ?? null,
+      tags
+    };
+  }
+
+  async function add2eManualConsumeSelectedComponent(caster, componentName) {
+    const wanted = add2eNormalize(componentName);
+    const exactShared = "eau_benite_ou_maudite";
+    const legacyShared = "eau_benite_maudite";
+
+    const item = Array.from(caster?.items ?? []).find(i => {
+      if (String(i?.type ?? "").toLowerCase() !== "objet") return false;
+      const keys = [i.name, i.system?.nom, i.system?.slug, i.system?.composantSlug, i.system?.componentSlug]
+        .map(add2eNormalize)
+        .filter(Boolean);
+      return keys.some(k => k === wanted || k === exactShared || k === legacyShared);
+    }) ?? null;
+
+    const before = add2eQuantity(item);
+    if (!item || before < 1) {
+      const msg = `${caster?.name ?? "Le lanceur"} n'a pas le composant requis : ${componentName} (1).`;
+      ui.notifications.warn(msg);
+      return { ok: false, blocked: true, consumed: [], message: msg };
+    }
+
+    const after = Math.max(0, before - 1);
+    await item.update({ "system.quantite": after }, { add2eReason: "benediction-selected-component-exact" });
+    console.log("[ADD2E][BENEDICTION][COMPONENT_EXACT_CONSUMED]", { componentName, item: item.name, before, after });
+    return {
+      ok: true,
+      blocked: false,
+      actorId: caster?.id,
+      sortName: componentName,
+      consumed: [{ itemId: item.id, itemName: item.name, before, after, quantity: 1, requirement: { name: componentName, key: wanted, quantity: 1 } }]
+    };
+  }
+
+  async function add2eReserveSelectedComponent(caster, _sourceItem, componentName, _modeLabel) {
+    return add2eManualConsumeSelectedComponent(caster, componentName);
   }
 
   let sourceItem = null;
@@ -140,43 +220,47 @@ const __add2eOnUseResult = await (async () => {
   if (outOfRange.length) { ui.notifications.warn(`Bénédiction : cible hors de portée (${outOfRange.map(t => t.name).join(", ")}).`); return false; }
 
   const DialogV2 = foundry.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) { ui.notifications.error("Bénédiction : DialogV2 est requis."); return false; }
+
   const targetNamesHtml = targets.map(t => `<li>${add2eEscapeHtml(t.name)}</li>`).join("");
-  let mode = null;
+  const dialogResult = await DialogV2.wait({
+    window: { title: "Lancement : Bénédiction" },
+    add2eTheme: "cleric",
+    add2eImg: sourceItem.img || "icons/magic/holy/prayer-hands-glowing-yellow.webp",
+    content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label style="font-weight:bold;">Effet :</label><select name="mode" style="width:100%;"><option value="benediction">Bénédiction (+1 attaque, +1 moral)</option><option value="malediction">Malédiction (-1 attaque, -1 moral)</option></select></div><div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;"><div><b>Durée :</b> 6 rounds</div><div><b>Portée :</b> 18 m</div><div><b>Cibles :</b></div><ul style="margin:4px 0 0 16px;padding:0;">${targetNamesHtml}</ul></div></form>`,
+    buttons: [
+      { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "benediction") }) },
+      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
+    ],
+    rejectClose: false
+  });
+  if (!dialogResult) return false;
 
-  if (DialogV2) {
-    const dialogResult = await DialogV2.wait({
-      window: { title: "Lancement : Bénédiction" },
-      add2eTheme: "cleric",
-      add2eImg: sourceItem.img || "icons/magic/holy/prayer-hands-glowing-yellow.webp",
-      content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label style="font-weight:bold;">Effet :</label><select name="mode" style="width:100%;"><option value="benediction">Bénédiction (+1 attaque, +1 moral)</option><option value="malediction">Malédiction (-1 attaque, -1 moral)</option></select></div><div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;"><div><b>Durée :</b> 6 rounds</div><div><b>Portée :</b> 18 m</div><div><b>Cibles :</b></div><ul style="margin:4px 0 0 16px;padding:0;">${targetNamesHtml}</ul></div></form>`,
-      buttons: [
-        { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "benediction") }) },
-        { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-      ],
-      rejectClose: false
-    });
-    if (!dialogResult) return false;
-    mode = dialogResult.mode;
-  } else {
-    const result = await new Promise(resolve => {
-      new Dialog({
-        title: "Lancement : Bénédiction",
-        content: `<form><div class="form-group"><label>Effet :</label><select name="mode"><option value="benediction">Bénédiction (+1 attaque, +1 moral)</option><option value="malediction">Malédiction (-1 attaque, -1 moral)</option></select></div></form>`,
-        buttons: { cast: { label: "Lancer", callback: html => resolve({ mode: String(html.find('[name="mode"]').val() || "benediction") }) }, cancel: { label: "Annuler", callback: () => resolve(null) } },
-        close: () => resolve(null),
-        default: "cast"
-      }).render(true);
-    });
-    if (!result) return false;
-    mode = result.mode;
-  }
-
+  const mode = dialogResult.mode;
   const isCurse = mode === "malediction";
   const bonusValue = isCurse ? -1 : 1;
   const modeLabel = isCurse ? "Malédiction" : "Bénédiction";
-  const effectName = isCurse ? "Malédiction" : "Bénédiction";
+  const componentName = isCurse ? "Eau maudite" : "Eau bénite";
+  const effectName = modeLabel;
   const icon = sourceItem.img || (isCurse ? "icons/magic/control/debuff-energy-hold-pink.webp" : "icons/magic/holy/prayer-hands-glowing-yellow.webp");
-  const durationData = { rounds: 6, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time.worldTime };
+  const durationRounds = 6;
+  const tags = isCurse
+    ? ["etat:malediction", "malus_attaque:1", "malus_moral:1", "bonus_attaque:-1", "bonus_moral:-1"]
+    : ["etat:benediction", "bonus_attaque:1", "bonus_moral:1"];
+
+  const componentReservation = await add2eReserveSelectedComponent(caster, sourceItem, componentName, modeLabel);
+  if (componentReservation?.blocked) return false;
+
+  async function refundSelectedComponent(reason = "") {
+    if (!componentReservation?.consumed?.length) return false;
+    const actorDoc = game.actors?.get(componentReservation.actorId) ?? caster;
+    const entry = componentReservation.consumed[0];
+    const item = actorDoc?.items?.get(entry.itemId);
+    if (!item) return false;
+    await item.update({ "system.quantite": entry.before }, { add2eReason: `benediction-selected-component-refund:${reason}` });
+    console.log("[ADD2E][BENEDICTION][COMPONENT_REFUND]", { reason, componentName, item: item.name, before: entry.after, after: entry.before });
+    return true;
+  }
 
   function add2eAEAddChange(key, value, priority = 20) {
     if (CONST.ACTIVE_EFFECT_CHANGE_TYPES) return { key, type: "add", phase: "final", value: String(value), priority };
@@ -189,9 +273,14 @@ const __add2eOnUseResult = await (async () => {
     origin: sourceItem.uuid,
     disabled: false,
     transfer: false,
-    duration: durationData,
+    duration: add2eDurationData(durationRounds),
     description: isCurse ? "Malus de -1 au moral et aux jets d'attaque." : "Bonus de +1 au moral et aux jets d'attaque.",
-    flags: { add2e: { spellName: sourceItem.name, casterId: caster.id, casterUuid: caster.uuid, tags: isCurse ? ["etat:malediction", "malus_attaque:1", "malus_moral:1", "bonus_attaque:-1", "bonus_moral:-1"] : ["etat:benediction", "bonus_attaque:1", "bonus_moral:1"] } },
+    flags: {
+      add2e: {
+        ...add2eTimeFlags({ sourceItem, caster, effectName, isCurse, durationRounds }),
+        tags
+      }
+    },
     changes: [add2eAEAddChange("system.bonus_attaque", bonusValue), add2eAEAddChange("system.bonus_moral", bonusValue)]
   };
 
@@ -203,7 +292,11 @@ const __add2eOnUseResult = await (async () => {
     else failed.push(targetToken);
   }
 
-  if (!applied.length) { ui.notifications.error("Bénédiction : aucun effet n'a pu être appliqué."); return false; }
+  if (!applied.length) {
+    await refundSelectedComponent("aucun effet applique");
+    ui.notifications.error("Bénédiction : aucun effet n'a pu être appliqué.");
+    return false;
+  }
 
   const appliedHtml = applied.map(t => `<li>${add2eEscapeHtml(t.name)}</li>`).join("");
   const failedHtml = failed.length ? `<div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.fail};">Non appliqué : ${failed.map(t => add2eEscapeHtml(t.name)).join(", ")}</div>` : "";
@@ -222,7 +315,7 @@ const __add2eOnUseResult = await (async () => {
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
-    content: add2eClercCard({ caster, sourceItem, modeLabel, targetsLabel: applied.map(t => add2eEscapeHtml(t.name)).join(", "), resultHtml }),
+    content: add2eClercCard({ caster, sourceItem, modeLabel, targetsLabel: applied.map(t => add2eEscapeHtml(t.name)).join(", "), resultHtml, componentName }),
     ...(CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })
   });
 
@@ -231,8 +324,8 @@ const __add2eOnUseResult = await (async () => {
 })();
 
 if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
-  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", { script: "benediction.js", result: __add2eOnUseResult });
-  ui.notifications?.error?.(`${sourceItem?.name ?? item?.name ?? sort?.name ?? "Sort"} : le script onUse n'a pas retourné true/false.`);
+  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true/false.", { script: "benediction.js", result: __add2eOnUseResult });
+  ui.notifications?.error?.("Bénédiction : le script onUse n'a pas retourné true/false.");
   return false;
 }
 

@@ -33,6 +33,7 @@ export function add2eEnhanceCharacterSheetUi(sheet, html) {
   injectEffectsTab(sheet, sheetRoot);
   injectCapacitesTab(sheet, sheetRoot);
   injectCharacterUiStyles(sheetRoot);
+  add2eApplySpellJsonColumns(sheet, sheetRoot);
 
   sheet._add2eActivateTab?.(sheet._add2eActiveTab || sheet._add2eReadStoredTab?.() || "resume", sheetRoot);
 }
@@ -90,6 +91,117 @@ function add2eEscapeHtml(value) {
   const div = document.createElement("div");
   div.textContent = String(value ?? "");
   return div.innerHTML;
+}
+
+function add2eSpellColumnsIsPlaceholder(value) {
+  return typeof value === "string" && /a[_\s-]*comple/i.test(value);
+}
+
+function add2eSpellColumnsFirstCleanText(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null) continue;
+    if (add2eSpellColumnsIsPlaceholder(value)) continue;
+    const text = String(value).trim();
+    if (text) return text;
+  }
+  return "";
+}
+
+function add2eSpellColumnsMaterialText(value) {
+  if (value === null || value === undefined || value === "") return "";
+  if (Array.isArray(value)) {
+    return value
+      .map(entry => {
+        if (entry === null || entry === undefined || entry === "") return "";
+        if (typeof entry === "string") return entry;
+        if (typeof entry === "object") return entry.nom ?? entry.name ?? entry.label ?? entry.id ?? JSON.stringify(entry);
+        return String(entry);
+      })
+      .filter(Boolean)
+      .join(", ");
+  }
+  if (typeof value === "object") return Object.values(value).filter(Boolean).join(", ");
+  return String(value);
+}
+
+function add2eSpellColumnsGetSort(actor, row) {
+  const id = row?.dataset?.sortId || row?.querySelector?.("[data-sort-id]")?.dataset?.sortId || "";
+  if (!id || !actor?.items) return null;
+  return actor.items.get?.(id) ?? actor.items.find?.(item => item.id === id || item._id === id) ?? null;
+}
+
+function add2eSpellColumnsEnsureHeaders(table) {
+  const headerRow = table?.querySelector?.("thead tr");
+  if (!headerRow) return false;
+  const headers = Array.from(headerRow.querySelectorAll("th"));
+  const hasEcole = headers.some(th => th.textContent.trim() === "École");
+  const hasType = headers.some(th => th.textContent.trim() === "Type");
+  const actions = headers.find(th => th.textContent.trim() === "Actions");
+  if (!hasEcole || !actions) return false;
+  if (!hasType) actions.insertAdjacentHTML("beforebegin", "<th>Type</th><th>Composants</th>");
+  return true;
+}
+
+function add2eSpellColumnsApplyToTable(actor, table) {
+  if (!add2eSpellColumnsEnsureHeaders(table)) return;
+  const headerTexts = Array.from(table.querySelectorAll("thead tr th")).map(th => th.textContent.trim());
+  const ecoleIndex = headerTexts.indexOf("École");
+  const typeIndex = headerTexts.indexOf("Type");
+  const componentsIndex = headerTexts.indexOf("Composants");
+
+  for (const row of table.querySelectorAll("tbody tr.sort-row")) {
+    const sort = add2eSpellColumnsGetSort(actor, row);
+    const system = sort?.system ?? {};
+    const ecole = add2eSpellColumnsFirstCleanText(system["école"], system.ecole, system.school);
+    const type = add2eSpellColumnsFirstCleanText(system.type, system.composantes, system.composants, system.components);
+    const components = add2eSpellColumnsMaterialText(system.composants_materiels);
+    const cells = Array.from(row.children);
+    const actionsCell = cells[cells.length - 1];
+    if (!actionsCell) continue;
+
+    if (ecole && ecoleIndex >= 0 && cells[ecoleIndex]) cells[ecoleIndex].textContent = ecole;
+
+    if (row.dataset.add2eSpellJsonColumns === "1") continue;
+
+    if (typeIndex >= 0 && componentsIndex >= 0 && cells[typeIndex] && cells[componentsIndex] && typeIndex < cells.length - 1) {
+      cells[typeIndex].textContent = type;
+      cells[componentsIndex].textContent = components;
+    } else {
+      actionsCell.insertAdjacentHTML(
+        "beforebegin",
+        `<td>${add2eEscapeHtml(type)}</td><td>${add2eEscapeHtml(components)}</td>`
+      );
+    }
+    row.dataset.add2eSpellJsonColumns = "1";
+
+    const descRow = row.nextElementSibling;
+    const descCell = descRow?.classList?.contains("sort-description")
+      ? descRow.querySelector("td.sort-description-fullcell")
+      : null;
+    if (descCell) {
+      const current = Number(descCell.getAttribute("colspan") || 0) || 0;
+      if (current > 0) descCell.setAttribute("colspan", String(current + 2));
+      const content = descCell.querySelector(".sort-description-content");
+      if (content && !content.querySelector(".add2e-spell-json-extra")) {
+        content.insertAdjacentHTML(
+          "beforeend",
+          `<div class="add2e-spell-json-extra"><b>Type :</b> ${add2eEscapeHtml(type)}</div>` +
+          `<div class="add2e-spell-json-extra"><b>Composants matériels :</b> ${add2eEscapeHtml(components)}</div>`
+        );
+      }
+    }
+  }
+}
+
+function add2eApplySpellJsonColumns(sheet, sheetRoot) {
+  const actor = sheet?.actor ?? sheet?.document;
+  if (!actor || !sheetRoot) return;
+  const sortTab = sheetRoot.querySelector?.(".tab-sorts, [data-tab='sorts']");
+  if (!sortTab) return;
+
+  for (const table of sortTab.querySelectorAll("table.sort-table")) {
+    add2eSpellColumnsApplyToTable(actor, table);
+  }
 }
 
 function add2eIsCombatDocument(doc) {
