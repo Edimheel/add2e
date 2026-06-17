@@ -29,16 +29,69 @@ const WATCHED_NAMES = new Set([
 ]);
 
 const SPELL_MATERIAL_OVERRIDES = new Map(Object.entries({
-  orientation: ["jeu d’objets divinatoires"], changement_de_plan: ["petite baguette fourchue métallique"], glyphe_de_garde: ["encens"], vision_reelle: ["safran", "graisse", "huile"], divination: ["encens", "symbole sacré du clerc"], marteau_spirituel: ["marteau de guerre normal"], augure: ["jeu d’objets divinatoires", "feuilles d’infusion encore humides", "perle écrasée d’au moins 100 po"], paralysie: ["petite tige de métal droite et rigide"], resistance_au_feu: ["goutte de mercure"], retardement_du_poison: ["symbole sacré du clerc", "gousse d’ail"], catalepsie: ["pincée de poussière de cimetière", "symbole sacré du clerc"], localisation_d_objets: ["pierre aimantée"], necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"], batons_a_serpents: ["écorce", "écailles de serpent"], necromancie: ["symbole sacré du clerc", "encens"], priere: ["symbole religieux en argent", "chapelet de prière"]
+  orientation: ["jeu d’objets divinatoires"],
+  changement_de_plan: ["petite baguette fourchue métallique"],
+  glyphe_de_garde: ["encens"],
+  vision_reelle: ["safran", "graisse", "huile"],
+  divination: ["encens", "symbole sacré du clerc"],
+  marteau_spirituel: ["marteau de guerre normal"],
+  augure: ["jeu d’objets divinatoires", "feuilles d’infusion encore humides", "perle écrasée d’au moins 100 po"],
+  paralysie: ["petite tige de métal droite et rigide"],
+  resistance_au_feu: ["goutte de mercure"],
+  retardement_du_poison: ["symbole sacré du clerc", "gousse d’ail"],
+  catalepsie: ["pincée de poussière de cimetière", "symbole sacré du clerc"],
+  localisation_d_objets: ["pierre aimantée"],
+  necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"],
+  batons_a_serpents: ["écorce", "écailles de serpent"],
+  necromancie: ["symbole sacré du clerc", "encens"],
+  priere: ["symbole religieux en argent", "chapelet de prière"]
 }));
 
 const CANONICAL_MATERIALS = new Map(Object.entries({
-  symbole_sacre: "symbole sacré du clerc", symbole_sacre_du_clerc: "symbole sacré du clerc", objet_divinatoire_similaire: "jeu d’objets divinatoires", objets_divinatoires_similaires: "jeu d’objets divinatoires", jeu_d_objets_divinatoires: "jeu d’objets divinatoires", jeu_objets_divinatoires: "jeu d’objets divinatoires", jeu_de_baguettes_serties_de_gemmes: "jeu d’objets divinatoires", os_de_dragon: "jeu d’objets divinatoires",
-  feuille_d_infusion_encore_humide: "feuilles d’infusion encore humides", feuille_d_infusion_encore_humides: "feuilles d’infusion encore humides", feuilles_d_infusion_encore_humide: "feuilles d’infusion encore humides", feuilles_d_infusion_encore_humides: "feuilles d’infusion encore humides",
-  objet_similaire_au_chapelet_de_priere: "chapelet de prière", objet_similaire_au_chapelet_de_prière: "chapelet de prière", objet_similaire_ayant_la_meme_utilisation: "chapelet de prière", objet_similaire_ayant_la_même_utilisation: "chapelet de prière", livre_de_priere: "livre de prière", livre_de_prière: "livre de prière",
-  gousse_ail: "gousse d’ail", gousse_d_ail: "gousse d’ail", poudre_argent: "poudre d’argent", poudre_d_argent: "poudre d’argent", eau_benite: "eau bénite", eau_bénite: "eau bénite", eau_maudite: "eau maudite",
-  pierre_aimantee: "pierre aimantée", pierre_aimantée: "pierre aimantée", pincee_de_poussiere_de_cimetiere: "pincée de poussière de cimetière", pincée_de_poussiere_de_cimetiere: "pincée de poussière de cimetière", pincee_de_poussière_de_cimetière: "pincée de poussière de cimetière",
-  goutte_de_sang: "goutte de sang", morceau_de_chair_humaine: "morceau de chair humaine", os_en_poudre: "os en poudre", echarde_d_os: "os en poudre", écharde_d_os: "os en poudre", ecorce: "écorce", écorce: "écorce", ecaille_de_serpent: "écailles de serpent", ecaille_de_serpents: "écailles de serpent", ecailles_de_serpent: "écailles de serpent", écailles_de_serpent: "écailles de serpent", symbole_religieux_en_argent: "symbole religieux en argent", chapelet_de_priere: "chapelet de prière", chapelet_de_prière: "chapelet de prière"
+  symbole_sacre: "symbole sacré du clerc",
+  symbole_sacre_du_clerc: "symbole sacré du clerc",
+  objet_divinatoire_similaire: "jeu d’objets divinatoires",
+  objets_divinatoires_similaires: "jeu d’objets divinatoires",
+  jeu_d_objets_divinatoires: "jeu d’objets divinatoires",
+  jeu_objets_divinatoires: "jeu d’objets divinatoires",
+  jeu_de_baguettes_serties_de_gemmes: "jeu d’objets divinatoires",
+  os_de_dragon: "jeu d’objets divinatoires",
+  feuille_d_infusion_encore_humide: "feuilles d’infusion encore humides",
+  feuille_d_infusion_encore_humides: "feuilles d’infusion encore humides",
+  feuilles_d_infusion_encore_humide: "feuilles d’infusion encore humides",
+  feuilles_d_infusion_encore_humides: "feuilles d’infusion encore humides",
+  objet_similaire_au_chapelet_de_priere: "chapelet de prière",
+  objet_similaire_au_chapelet_de_prière: "chapelet de prière",
+  objet_similaire_ayant_la_meme_utilisation: "chapelet de prière",
+  objet_similaire_ayant_la_même_utilisation: "chapelet de prière",
+  livre_de_priere: "livre de prière",
+  livre_de_prière: "livre de prière",
+  gousse_ail: "gousse d’ail",
+  gousse_d_ail: "gousse d’ail",
+  poudre_argent: "poudre d’argent",
+  poudre_d_argent: "poudre d’argent",
+  eau_benite: "eau bénite",
+  eau_bénite: "eau bénite",
+  eau_maudite: "eau maudite",
+  pierre_aimantee: "pierre aimantée",
+  pierre_aimantée: "pierre aimantée",
+  pincee_de_poussiere_de_cimetiere: "pincée de poussière de cimetière",
+  pincée_de_poussiere_de_cimetiere: "pincée de poussière de cimetière",
+  pincee_de_poussière_de_cimetière: "pincée de poussière de cimetière",
+  goutte_de_sang: "goutte de sang",
+  morceau_de_chair_humaine: "morceau de chair humaine",
+  os_en_poudre: "os en poudre",
+  echarde_d_os: "os en poudre",
+  écharde_d_os: "os en poudre",
+  ecorce: "écorce",
+  écorce: "écorce",
+  ecaille_de_serpent: "écailles de serpent",
+  ecaille_de_serpents: "écailles de serpent",
+  ecailles_de_serpent: "écailles de serpent",
+  écailles_de_serpent: "écailles de serpent",
+  symbole_religieux_en_argent: "symbole religieux en argent",
+  chapelet_de_priere: "chapelet de prière",
+  chapelet_de_prière: "chapelet de prière"
 }));
 
 const CLERIC_LEVEL_2_EFFECT_PROFILES = new Map(Object.entries({
@@ -101,7 +154,6 @@ CLERIC_LEVEL_3_EFFECT_PROFILES.set("batons_serpents", CLERIC_LEVEL_3_EFFECT_PROF
 const EXACT_NOISE = new Set(["", "true", "false", "oui", "non", "consomme", "non consomme", "non_consomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs", "source", "aucun", "null", "undefined", "a completer", "à compléter", "liquide", "liquide consomme", "consommation", "clerc", "clerc non mauvais", "clerc mauvais", "creature", "créature", "petite creature", "petite créature", "createur", "créateur", "dons", "don", "dons requis", "don requis", "dons eventuellement requis", "dons éventuellement requis", "le", "la", "les", "en ivoire", "en os", "de runes gravees", "de runes gravées", "runes gravees", "runes gravées", "sous forme de batonnets", "sous forme de bâtonnets"]);
 const STARTS_NOISE = ["requise", "requis", "necessaire", "nécessaire", "alternative", "variante", "composant requis", "ingredient materiel", "ingrédient matériel", "formulation source", "source du manuel", "sort normal", "sort inverse", "sort inversé", "selon la regle", "selon la règle", "regle d arbitrage", "règle d’arbitrage", "la fiole", "son contenu", "disparait", "disparaît", "aux ", "au ", "a la ", "à la ", "a l'", "à l'", "a l’", "à l’", "en ", "sous forme", "de runes", "description indique", "cette methode", "cette méthode", "ce procede", "ce procédé", "place", "placée", "placées", "ajoute", "ajoutée", "ajoutées", "pour lancer le sort", "clerc le lance", "le lance", "lance en meme temps", "lance en même temps", "lance une priere", "lance une prière", "dons requis", "dons eventuellement requis", "dons éventuellement requis", "si ", "type de metal", "type de métal", "taille determine", "taille détermine", "taille determinent", "taille déterminent", "plan d arrivee", "plan d’arrivée", "sorte de diapason", "non mauvais", "mauvais"];
 const CONTAINS_NOISE = ["manuel des joueurs", "formulation source", "regle d arbitrage add2e", "règle d’arbitrage add2e", "ayant servi", "avant consommation", "quand le sort est lance", "quand le sort est lancé", "est tentee", "est tentée", "est tente", "est tenté", "divination puissante", "dons requis", "dons eventuellement requis", "dons éventuellement requis", "determine le plan", "détermine le plan", "determine l arrivee", "détermine l’arrivée", "disparait", "disparaît", "quand le sort", "lance en meme temps", "lancé en même temps", "clerc non mauvais", "clerc mauvais", "description indique", "saupoudree", "saupoudrée", "pour lancer le sort"];
-
 function clone(value) { return value === undefined ? undefined : JSON.parse(JSON.stringify(value)); }
 function text(value) { return String(value ?? "").replace(/\s+/g, " ").trim(); }
 function norm(value) { return text(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim(); }
