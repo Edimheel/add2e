@@ -1847,8 +1847,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gui",
-          "nourriture appréciée par l’animal"
+          "gui"
         ],
         "composants_materiels_source": "Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.",
         "composants_materiels_reference": "",
@@ -8199,8 +8198,7 @@
         "composants_materiels": [
           "gui",
           "bois",
-          "baies de houx",
-          "source de feu"
+          "houx"
         ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
@@ -24309,7 +24307,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "glands de chêne",
-          "baies de houx"
+          "houx"
         ],
         "composants_materiels_source": "les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.",
         "composants_materiels_reference": "",
@@ -30589,7 +30587,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "pomme de pin",
-          "8 baies de houx"
+          "houx"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pomme de pin et 8 baies de houx.",
         "composants_materiels_reference": "",
@@ -44776,7 +44774,7 @@
         "jet_sauvegarde": "1/2",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "baies de houx",
+          "houx",
           "charbon"
         ],
         "composants_materiels_source": "ce sort est le même que le sort de niveau 4 de ma- gicien piège à feu (voir p.79) excepté ci-dessus, et en ce qui concerne les composantes matérielles : des baies de houx et un morceau de charbon avec lequel le druide doit surligner la fermeture.",
@@ -51084,11 +51082,9 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "gui",
-          "l’un des éléments suivants: plusieurs soucis écrasés",
           "poireau écrasé",
-          "7 feuilles de navet écrasées",
-          "résine d’arbre à camphre",
-          "Consommation explicitement indiquée dans la description"
+          "feuilles de navet écrasées",
+          "résine d’arbre à camphre"
         ],
         "composants_materiels_source": "Les composantes matérielles sont du gui et l’un des éléments suivants : plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.",
         "composants_materiels_reference": "",
