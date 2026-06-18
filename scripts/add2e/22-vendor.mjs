@@ -49,7 +49,7 @@ import {
   registerSockets as registerConsumablesSockets
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-18-shop-orchestration-spell-components-setting-v1";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-18-shop-orchestration-spell-components-disable-setting-v1";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
@@ -198,12 +198,12 @@ Hooks.once("init", () => {
   });
 
   game.settings.register("add2e", SPELL_COMPONENTS_SETTING, {
-    name: "ADD2E — Gestion des composants de sorts",
-    hint: "Si désactivé, les sorts ne vérifient plus et ne consomment plus les composants matériels.",
+    name: "ADD2E — Désactiver les composants de sorts",
+    hint: "Si coché, les sorts ne vérifient plus et ne consomment plus les composants matériels.",
     scope: "world",
     config: true,
     type: Boolean,
-    default: true
+    default: false
   });
 
   registerVendorDirectoryButton();
