@@ -1,12 +1,12 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-druid-material-audit-v2",
+  "version": "2026-06-17-normalize-spell-materials-v3-druid-n7-materials-v1",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
   "spells": 411,
-  "changedSpells": 207,
+  "changedSpells": 217,
   "changedEffectProfiles": 142,
-  "emptyMaterialSpells": 208,
+  "emptyMaterialSpells": 198,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -96,6 +96,16 @@
         "1",
         "consomme"
       ]
+    },
+    {
+      "name": "Animation de la roche",
+      "classe": "Druide",
+      "niveau": 7,
+      "before": [],
+      "after": [
+        "gui"
+      ],
+      "notes": []
     },
     {
       "name": "Animation des objets",
@@ -573,6 +583,19 @@
       ]
     },
     {
+      "name": "Chariot de Sustarre",
+      "classe": "Druide",
+      "niveau": 7,
+      "before": [],
+      "after": [
+        "gui",
+        "bois",
+        "baies de houx",
+        "source de feu"
+      ],
+      "notes": []
+    },
+    {
       "name": "Charme-monstres",
       "classe": "Magicien",
       "niveau": 4,
@@ -863,71 +886,14 @@
       ]
     },
     {
-      "name": "Contrôle du climat",
-      "classe": "Magicien",
-      "niveau": 6,
-      "before": [
-        "encens à brûler",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "mélange de terre",
-        "de bois et d’eau"
-      ],
-      "after": [
-        "encens",
-        "chapelet de prière"
-      ],
-      "notes": [
-        "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Contrôle du Climat",
-      "classe": "Clerc",
+      "name": "Confusion",
+      "classe": "Druide",
       "niveau": 7,
-      "before": [
-        "symbole sacré du clerc",
-        "1",
-        "non_consomme",
-        "Manuel des joueurs",
-        "chapelet de prière",
-        "optionnel",
-        "Alternative à un objet similaire.",
-        "objet similaire au chapelet de prière",
-        "Alternative au chapelet de prière."
-      ],
+      "before": [],
       "after": [
-        "encens",
-        "chapelet de prière"
+        "gui"
       ],
-      "notes": [
-        "1",
-        "non consomme"
-      ]
-    },
-    {
-      "name": "Corde enchantée",
-      "classe": "Magicien",
-      "niveau": 2,
-      "before": [
-        "de la poudre de blé et un parchemin torsadé en forme de boucle",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "poudre de blé et un parchemin torsadé en forme de boucle",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « de la poudre de blé et un parchemin torsadé en forme de boucle »."
-      ],
-      "after": [
-        "poudre de blé",
-        "parchemin torsadé en forme de boucle"
-      ],
-      "notes": [
-        "1",
-        "consomme"
-      ]
+      "notes": []
     }
   ],
   "watched": {
@@ -1004,7 +970,9 @@
     "Animation de la roche": {
       "classe": "Druide",
       "niveau": 7,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "gui"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-druide-n7",
@@ -1343,7 +1311,12 @@
     "Chariot de Sustarre": {
       "classe": "Druide",
       "niveau": 7,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "gui",
+        "bois",
+        "baies de houx",
+        "source de feu"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-druide-n7",
@@ -1469,27 +1442,13 @@
       "note": ""
     },
     "Confusion": {
-      "classe": "Druide",
-      "niveau": 7,
+      "classe": "Magicien",
+      "niveau": 4,
       "composants_materiels": [],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-druide-n7",
-        "effects": [
-          {
-            "id": "confusion",
-            "label": "Confusion",
-            "kind": "control",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:confusion",
-              "classe:druide",
-              "controle",
-              "niveau:7"
-            ],
-            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-          }
-        ]
+        "source": "canonical-system",
+        "effects": []
       },
       "note": ""
     },
@@ -1966,7 +1925,9 @@
     "Doigt de mort": {
       "classe": "Druide",
       "niveau": 7,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "gui"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-druide-n7",
@@ -2145,9 +2106,7 @@
       "niveau": 5,
       "composants_materiels": [
         "gui",
-        "Composant principal ou",
         "houx",
-        "Substitut au gui",
         "feuille de chêne"
       ],
       "effectProfile": {
@@ -2169,7 +2128,7 @@
           }
         ]
       },
-      "note": "1"
+      "note": "1\nComposant principal ou\nSubstitut au gui"
     },
     "Fléau d’Insectes": {
       "classe": "Clerc",
@@ -2253,11 +2212,7 @@
       "niveau": 6,
       "composants_materiels": [
         "glands de chêne",
-        "Application utilisant des glands de chêne",
-        "combinable avec les baies de houx",
-        "baie de houx",
-        "Application utilisant des baies de houx",
-        "combinable avec les glands de chêne"
+        "baies de houx"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -2278,7 +2233,7 @@
           }
         ]
       },
-      "note": "1"
+      "note": "1\nApplication utilisant des glands de chêne\ncombinable avec les baies de houx\nApplication utilisant des baies de houx\ncombinable avec les glands de chêne"
     },
     "Guérison": {
       "classe": "Clerc",
@@ -2515,7 +2470,9 @@
     "Invocation d'un élémental de terre": {
       "classe": "Druide",
       "niveau": 7,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "gui"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-druide-n7",
@@ -3058,7 +3015,9 @@
     "Mort rampante": {
       "classe": "Druide",
       "niveau": 7,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "gui"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-druide-n7",
@@ -3465,7 +3424,7 @@
       "classe": "Druide",
       "niveau": 2,
       "composants_materiels": [
-        "baie de houx",
+        "baies de houx",
         "charbon"
       ],
       "effectProfile": {
@@ -3859,29 +3818,19 @@
       "note": "1\nnon consomme"
     },
     "Réincarnation": {
-      "classe": "Druide",
-      "niveau": 7,
-      "composants_materiels": [],
+      "classe": "Magicien",
+      "niveau": 6,
+      "composants_materiels": [
+        "petit tambour",
+        "goutte de sang",
+        "tambour"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-druide-n7",
-        "effects": [
-          {
-            "id": "reincarnation",
-            "label": "Réincarnation",
-            "kind": "healing_or_restoration",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:reincarnation",
-              "classe:druide",
-              "soin_ou_restauration",
-              "niveau:7"
-            ],
-            "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-          }
-        ]
+        "source": "canonical-system",
+        "effects": []
       },
-      "note": ""
+      "note": "1\nnon consomme\nconsomme"
     },
     "Répulsion des insectes": {
       "classe": "Druide",
@@ -4369,7 +4318,9 @@
     "Tempête de feu": {
       "classe": "Druide",
       "niveau": 7,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "gui"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-druide-n7",
@@ -4444,7 +4395,10 @@
     "Transmutation du métal en bois": {
       "classe": "Druide",
       "niveau": 7,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "gui",
+        "gui majeur"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-druide-n7",
@@ -4524,7 +4478,9 @@
     {
       "name": "Animation de la roche",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui"
+      ]
     },
     {
       "name": "Aquagenèse",
@@ -4572,7 +4528,12 @@
     {
       "name": "Chariot de Sustarre",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui",
+        "bois",
+        "baies de houx",
+        "source de feu"
+      ]
     },
     {
       "name": "Charme-personnes ou mammifères",
@@ -4587,7 +4548,9 @@
     {
       "name": "Confusion",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui"
+      ]
     },
     {
       "name": "Contre-poison",
@@ -4607,7 +4570,9 @@
     {
       "name": "Contrôle du climat",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui majeur"
+      ]
     },
     {
       "name": "Croc-en-jambe",
@@ -4647,7 +4612,9 @@
     {
       "name": "Doigt de mort",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui"
+      ]
     },
     {
       "name": "Embrasement",
@@ -4674,9 +4641,7 @@
       "niveau": 5,
       "composants": [
         "gui",
-        "Composant principal ou",
         "houx",
-        "Substitut au gui",
         "feuille de chêne"
       ]
     },
@@ -4690,11 +4655,7 @@
       "niveau": 6,
       "composants": [
         "glands de chêne",
-        "Application utilisant des glands de chêne",
-        "combinable avec les baies de houx",
-        "baie de houx",
-        "Application utilisant des baies de houx",
-        "combinable avec les glands de chêne"
+        "baies de houx"
       ]
     },
     {
@@ -4737,7 +4698,9 @@
     {
       "name": "Invocation d'un élémental de terre",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui"
+      ]
     },
     {
       "name": "Invocation d'un élémental du feu",
@@ -4799,7 +4762,9 @@
     {
       "name": "Mort rampante",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui"
+      ]
     },
     {
       "name": "Mur d'épines",
@@ -4851,7 +4816,7 @@
       "name": "Piège à feu",
       "niveau": 2,
       "composants": [
-        "baie de houx",
+        "baies de houx",
         "charbon"
       ]
     },
@@ -4897,7 +4862,9 @@
     {
       "name": "Réincarnation",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui"
+      ]
     },
     {
       "name": "Répulsion des insectes",
@@ -4952,7 +4919,9 @@
     {
       "name": "Tempête de feu",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui"
+      ]
     },
     {
       "name": "Transit végétal",
@@ -4967,10 +4936,326 @@
     {
       "name": "Transmutation du métal en bois",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "gui",
+        "gui majeur"
+      ]
     }
   ],
-  "druideMaterialWarnings": [],
+  "druideMaterialWarnings": [
+    {
+      "name": "Bouclier anti-animal",
+      "niveau": 6,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Bouclier anti-plantes",
+      "niveau": 5,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Communion avec la nature",
+      "niveau": 5,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Contrôle de la température sur 3 m",
+      "niveau": 4,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Contrôle des vents",
+      "niveau": 5,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Croc-en-jambe",
+      "niveau": 2,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Croissance animale",
+      "niveau": 5,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Détection de la magie",
+      "niveau": 1,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Détection des pièges sylvestres",
+      "niveau": 1,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Dissipation de la magie",
+      "niveau": 4,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Distorsion du bois",
+      "niveau": 2,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Embrasement",
+      "niveau": 4,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Embroussaillement",
+      "niveau": 3,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Enchevêtrement",
+      "niveau": 1,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Flamme",
+      "niveau": 2,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Forêt hallucinatoire",
+      "niveau": 4,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Guérison des maladies",
+      "niveau": 3,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Invocation animale I",
+      "niveau": 4,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Invocation animale II",
+      "niveau": 5,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Invocation animale III",
+      "niveau": 6,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Invocation d'un élémental du feu",
+      "niveau": 6,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Invocation de la foudre",
+      "niveau": 3,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Invocation du temps",
+      "niveau": 6,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Localisation des animaux",
+      "niveau": 1,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Localisation des plantes",
+      "niveau": 2,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Métal brûlant",
+      "niveau": 2,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Mur d'épines",
+      "niveau": 6,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Mur de feu",
+      "niveau": 5,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Paralysie animale",
+      "niveau": 3,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Paralysie végétale",
+      "niveau": 4,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Passe-plantes",
+      "niveau": 5,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Porte végétale",
+      "niveau": 4,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Prévision du temps",
+      "niveau": 1,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Protection contre la foudre",
+      "niveau": 4,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Protection contre le feu",
+      "niveau": 3,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Pyrotechnie",
+      "niveau": 3,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Répulsion du bois",
+      "niveau": 6,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Soins mineurs",
+      "niveau": 2,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    },
+    {
+      "name": "Transmutation de pierre en boue",
+      "niveau": 5,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": []
+    }
+  ],
   "sameSystemFieldsForAllSpells": true,
   "canonicalFields": [
     "nom",

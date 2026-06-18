@@ -1993,7 +1993,9 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui"
+        ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -8194,7 +8196,12 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui",
+          "bois",
+          "baies de houx",
+          "source de feu"
+        ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -11054,7 +11061,9 @@
         "temps_incantation": "9 segments",
         "jet_sauvegarde": "spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui"
+        ],
         "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -12029,7 +12038,9 @@
         "temps_incantation": "1 tour",
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui majeur"
+        ],
         "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -18351,7 +18362,9 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Annule",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui"
+        ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -22139,15 +22152,13 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "gui",
-          "Composant principal ou",
           "houx",
-          "Substitut au gui",
           "feuille de chêne"
         ],
         "composants_materiels_source": "excepté ci-dessus et le fait que la composante maté- rielle soit du gui ou son substitut, le houx ou les feuilles de chêne, ce sort est le même que le sort de niveau 5 de clerc fléau d’insectes (voir p.50).",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1",
+        "composants_materiels_note": "1\nComposant principal ou\nSubstitut au gui",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus et le fait que la composante matérielle soit du gui ou son substitut, le houx ou les feuilles de chêne, ce sort est le même que le sort de niveau 5 de clerc fléau d’insectes (voir p.50).",
         "onUse": "systems/add2e/scripts/sorts/fleau-dinsectes.js",
@@ -24298,16 +24309,12 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "glands de chêne",
-          "Application utilisant des glands de chêne",
-          "combinable avec les baies de houx",
-          "baie de houx",
-          "Application utilisant des baies de houx",
-          "combinable avec les glands de chêne"
+          "baies de houx"
         ],
         "composants_materiels_source": "les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1",
+        "composants_materiels_note": "1\nApplication utilisant des glands de chêne\ncombinable avec les baies de houx\nApplication utilisant des baies de houx\ncombinable avec les glands de chêne",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort crée des projectiles spéciaux ou des foyers incendiaires qui brûlent en dégageant énormément de chaleur. Le druide peut lancer ces graines jusqu’à 4\" (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer où frappe la graine) ou les placer à un endroit puis les enflammer avec un mot de commande. Les glands servent de projectiles, alors que les baies de houx sont utilisées comme foyers incendiaires. Le sort crée jusqu’à 4 glands-graines de feu ou 8 baies de houx-graines de feu. Les glands s’enflamment en frappant la cible, causant 2 à 16 (2d8) points de dégât et enflammant les matières inflammables, dans un diamètre de 1\" autour du point d’impact. Les baies de houx sont trop légères pour en faire des projectiles; elles peuvent être placées ou lancées jusqu’à 1,80 m et elles s’enflamment à la prononciation d’un mot de commande. Les baies causent de 1 à 8 points de dégâts à toute créature se trouvant au maximum à ½\" du foyer et les matières inflammables prennent feu. La portée du mot de commande pour les baies est de 4\". Toutes les graines de feu perdent leur pouvoir après une période de 1 tour par niveau du druide; c'est-à-dire qu’un druide de niveau 13 peut utiliser des graines de feu qui resteront efficaces pendant 13 tours maximum. Les cibles des glands doivent être touchées par eux. Si le jet de protection est réussi, les créatures se trouvant dans la zone d’effet ne subissent que la moitié des dégâts, mais les créatures directement touchées subissent les dégâts sans jet de protection. Ce sort ne peut pas être utilisé sous l’eau. À noter que les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.",
         "onUse": "systems/add2e/scripts/sorts/druide-graines-de-feu.js",
@@ -28876,7 +28883,9 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui"
+        ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -37556,7 +37565,9 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui"
+        ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -44765,7 +44776,7 @@
         "jet_sauvegarde": "1/2",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "baie de houx",
+          "baies de houx",
           "charbon"
         ],
         "composants_materiels_source": "ce sort est le même que le sort de niveau 4 de ma- gicien piège à feu (voir p.79) excepté ci-dessus, et en ce qui concerne les composantes matérielles : des baies de houx et un morceau de charbon avec lequel le druide doit surligner la fermeture.",
@@ -50563,7 +50574,9 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui"
+        ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -58747,7 +58760,9 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "1/2",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui"
+        ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -60561,7 +60576,10 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "gui",
+          "gui majeur"
+        ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -62447,6 +62465,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-druid-material-audit-v2",
-  "normalizedAt": "2026-06-17T21:16:44.018Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-druid-n7-materials-v1",
+  "normalizedAt": "2026-06-18T05:17:05.641Z"
 }
