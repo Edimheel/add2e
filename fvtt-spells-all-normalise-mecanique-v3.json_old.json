@@ -1319,9 +1319,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "cocon de chenille"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "cocon de chenille",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
@@ -1737,13 +1735,7 @@
         "temps_incantation": "1 segment",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "craie",
-          "farine blanche",
-          "noir de fumée",
-          "suie",
-          "vermillon"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "craie ou farine blanche, noir de fumée ou suie, vermillon",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
@@ -5370,9 +5362,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "rayon de miel"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "petit morceau de rayon de miel",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
@@ -6397,10 +6387,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "comme Boule de feu : boule de soufre",
-          "fiente de chauve souris"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "comme Boule de feu : boule de soufre et fiente de chauve-souris",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
@@ -6649,10 +6636,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
-        "composants_materiels": [
-          "composante matérielle est un morceau de laine",
-          "cire"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "La composante matérielle est un morceau de laine ou un peu de cire.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -10270,7 +10254,7 @@
         "composants_materiels_source": "La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description\ncorne d’argent d’une valeur minimale de 100 po\ncomposante matérielle est une petite corne d’argent d’une valeur minimale de 100 po",
+        "composants_materiels_note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description\ncorne d’argent d’une valeur minimale de 100 po",
         "composants_materiels_a_renseigner": false,
         "description": "le sort de clairaudience permet au magicien de se concentrer sur un endroit et d’entendre dans son esprit tous les sons de cet endroit, dans une zone d’effet de 6\" de rayon, centrée sur l’endroit qu’il examine. La distance n’est pas un problème, mais l’endroit doit être connu, c'est-à-dire un endroit familier au lanceur de sort ou évident (tel que derrière une porte, à un angle de couloir, dans le taillis d’un bois, etc.). Seuls les sons normalement audibles par le magicien peuvent être entendus. Une paroi de métal ou une protection magique empêche l’écoute. Ce sort ne fonctionne que sur le plan d’existence sur lequel se trouve le lanceur du sort au moment où il le lance. La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "onUse": "systems/add2e/scripts/sorts/magicien-clairaudience.js",
@@ -11614,9 +11598,7 @@
         "temps_incantation": "4 segments",
         "jet_sauvegarde": "spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "Matérielle non précisée explicitement dans le"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
@@ -11706,9 +11688,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "jeu de 3 coquilles de noisettes"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "jeu de 3 coquilles de noisettes",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
@@ -12977,9 +12957,7 @@
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "Matérielle non précisée explicitement dans le"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
@@ -15036,10 +15014,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "composantes matérielles sont une pincée de talc",
-          "poudre d’argent qu’il faut répandre"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de talc et un peu de poudre d’argent qu’il faut répandre.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -19782,7 +19757,7 @@
         "composants_materiels_source": "La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "encre fabriquée à base de plomb par un alchimiste\n1\nconsomme\n100\ncomposante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste",
+        "composants_materiels_note": "encre fabriquée à base de plomb par un alchimiste\n1\nconsomme\n100",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js",
@@ -20428,10 +20403,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
-        "composants_materiels": [
-          "gui",
-          "petite branche d’arbre"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "gui et une petite branche d’arbre",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
@@ -23735,7 +23707,7 @@
         "composants_materiels_source": "La composante matérielle est un morceau de toison de mouton.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "composante matérielle est un morceau de toison de mouton",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien force fantasmagorique (voir p.74).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-force-fantasmagorique.js",
@@ -26480,9 +26452,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "petite réplique (poupée) du magicien"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "petite réplique (poupée) du magicien",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
@@ -28586,7 +28556,7 @@
         "composants_materiels_source": "Les composantes matérielles sont un cil mis dans de la gomme arabique.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "composantes matérielles sont un cil mis dans de la gomme arabique",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien invisibilité (voir p.71).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-invisibilite.js",
@@ -29131,9 +29101,7 @@
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "Matérielle non précisée explicitement dans le"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -30390,13 +30358,11 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "brassière en cuivre"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "brassière en cuivre et morceaux d’encens dans un brasier de charbon de bois",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "morceaux d’encens dans un brasier de charbon de bois",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "un familier peut être très avantageux pour un magicien, car il lui apporte ses points de vie et ses pouvoirs sensoriels; il peut lui parler et lui servir d’éclaireur, d’espion et de garde. Cependant, le magicien n’a aucun moyen de choisir le type de familier qu’il aura et le pouvoir de conjuration est tel qu’une seule tentative par an peut être faite. À chaque fois que le magicien tente de trouver un familier, il doit faire du feu dans un brasero en cuivre avec du charbon. Quand le feu a bien pris, il doit rajouter pour au moins 100 po d’encens, d’herbes (basilic, sarriette et herbe à chat) et de graisse. Quand tout ceci est en train de brûler, le magicien commence son incantation et doit la poursuivre jusqu’à ce qu’un familier arrive ou jusqu’à ce que la durée du temps d’incantation expire. Le Maître de Donjon déterminera secrètement tous les résultats. Le magicien n’a absolument aucun contrôle sur le type de familier qui apparaîtra. Ceci est déterminé sur la table suivante: 1d20 Familier Pouvoirs sensoriels 1-4 Chat noir Excellente vision nocturne et ouïe supérieure 5-6 Corbeau Vision excellente 7-8 Faucon Vision de loin exceptionnelle 9-10 Hibou/Chat huant Vision nocturne égale à la vision diurne humaine et ouïe supérieure 11-12 Crapaud Angle de vision très large 13-14 Belette Ouïe supérieure et odorat exceptionnel 15 Spécial Voir la deuxième table 16-20* Aucun familier dans la portée du sort * Ôter 1 au tirage du dé par tranche de 3 niveaux du magicien et si le résultat est inférieur ou égal à 15, relancer un d16: si un 16 est obtenu, le résultat est considéré comme définitif: pas de familier dans la portée du sort. Si un 15 est obtenu au tirage, utiliser la table suivante pour un familier spécial Alignement du magicien Familier spécial Chaotique mauvais ou chaotique neutre Quasit Chaotique bon, neutre ou neutre bon Pseudo-dragon Loyal neutre ou loyal bon Lutin Loyal mauvais ou neutre mauvais Diablotin Les familiers normaux ont de 2 à 4 points de vie et une classe d’armure de 7 (due à la taille, la vitesse, etc.). Chaque familier est plus intelligent que la normale et totalement fidèle au magicien qui l’a invoqué. Le nombre de points de vie du familier est ajouté à ceux du magicien s’il se trouve à 12\" ou moins de son maître, mais si le familier se fait tuer, le magicien perd de façon permanente le double des points de vie de ce dernier. Si un familier spécial est tiré, les détails des pouvoirs qu’il confère sont donnés dans le MANUEL DES MONSTRES des Règles AVANCÉES DE DONJONS & DRAGONS, sauf en ce qui concerne le lutin. Ce dernier devient l’ami et le compagnon du magicien; le magicien obtient 18 en dextérité (celle du lutin) et l’avantage de ne jamais être surpris; il obtient également un bonus de +2 sur tous les jets de protection. À noter que les familiers spéciaux sont autorisés à jeter un jet de protection contre les sorts quand ils sont invoqués, et si ce jet est réussi, ils ignoreront le sort et AUCUN familier ne sera possible pour le magicien pendant une année. Un familier combattra pour la vie du magicien seulement dans les cas de vie ou de mort; les diablotins et les quasits refuseront à 90 % de le faire s’ils risquent leur propre vie. Ce sort ne peut pas être utilisé sous l’eau.",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-d-un-familier.js",
@@ -30680,13 +30646,11 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "même"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "même ; il y a également 1 à 4 rounds de délai",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "il y a également 1 à 4 rounds de délai",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort est semblable au sort de niveau 3 de magicien invocation de monstre I (voir p.74). La différence tient dans le fait que ce sont de 1 à 6 (1d6) monstres de niveau 2 qui sont invoqués. La composante matérielle est la même; il y a également 1 à 4 rounds de délai.",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-ii.js",
@@ -31254,14 +31218,11 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "diamant",
-          "répandu sur les destinataires du sort"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort invoque 1 ou 2 monstres de niveau 6 apparaissant dans un délai de 1 à 3 rounds. Voir invocation de monstre I pour plus de détails.",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-de-monstre-vi.js",
@@ -31543,10 +31504,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "composantes matérielles de sort sont un petit sac",
-          "petite bougie (pas nécessairement allumée)"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "Les composantes matérielles de sort sont un petit sac et une petite bougie (pas nécessairement allumée).",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -34218,10 +34176,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
-        "composants_materiels": [
-          "petite statuette d’argile représentant une ziggourat",
-          "qui se brise quand l’incantation est prononcée"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
@@ -35261,10 +35216,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "fourchette d’argent",
-          "baguette fourchue selon version du sort"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "fourchette d’argent ou baguette fourchue selon version du sort",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
@@ -43951,9 +43903,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V",
-        "composants_materiels": [
-          "symbole sacré du clerc"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
@@ -46294,7 +46244,7 @@
         "composants_materiels_source": "La composante matérielle est une poignée de morceaux d'écorce.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "composante matérielle est une poignée de morceaux d'écorce",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien phytomorphose (voir p.78).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-phytomorphose.js",
@@ -50116,14 +50066,11 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "gant en cuir",
-          "formant une ligne légèrement courbe"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de « I »",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "petit objet fait de 4 anneaux reliés entre eux\ntout attaché par une barrette en forme de « I »",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "avec ce sort puissant, la créature affectée est complètement protégée de tous les objets et/ou sorts qui détectent, influencent ou lisent les pensées et/ou les émotions. Cette protection inclut: augure, charme, confusion, débilité mentale, divination, effroi, toutes les formes d’empathies, emprisonnement de l’âme, ESP, injonction, possession, suggestion, suggestion de masse, suzeraineté, télépathie, tueur fantasmagorique et autres à la discrétion du MD. Cette protection s’étend aussi à la prévention de détection/ information par des boules de cristal ou autres objets d’espionnage, clairaudience, clairvoyance, communion, contact d’autres plans et même aux détections ou attaques faites par souhait (souhait mineur, souhait majeur, altération de la réalité). Bien sûr, les pouvoirs divins puissants sont capables de pénétrer une telle protection. Ce sort protège aussi des pouvoirs psi de détection et/ ou d’influence: domination (ou domination de masse), hypnose, invisibilité (ce pouvoir psi est en rapport avec l’esprit), prémonition, plus les pouvoirs aux effets identiques à ceux des sorts déjà listés plus haut.",
         "onUse": "systems/add2e/scripts/sorts/magicien-protection-d-esprit.js",
@@ -50759,9 +50706,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
-        "composants_materiels": [
-          "gui"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -59785,14 +59730,11 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "émeraude",
-          "de rubis"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "La composante matérielle de la stase temporelle est une poudre composée de diamant, d’émeraude, de rubis et de saphir : une pierre de chaque type étant nécessaire.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "composante matérielle de la stase temporelle est une poudre composée de diamant\nde saphir : une pierre de chaque type étant nécessaire",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "en lançant ce sort, le magicien place la créature affectée dans un état d’animation suspendue. Cette stase temporelle signifie que la victime ne vieillit plus. Ses fonctions corporelles s’arrêtent virtuellement. Cette situation persiste à moins qu’une dissipation de la magie ne soit lancée ou que l’inverse du sort, rétablissement temporel, annule les effets de celui-ci. L’inverse ne demande qu’une composante verbale, un seul mot. La composante matérielle de la stase temporelle est une poudre composée de diamant, d’émeraude, de rubis et de saphir: une pierre de chaque type étant nécessaire. Il existe certains sorts d’illusionniste qui ne comportent pas de composante verbale (V). De plus, la composante matérielle est souvent moins importante que pour les autres classes, la seule exception étant le sort vision qui demande un matériel important.",
         "onUse": "systems/add2e/scripts/sorts/magicien-stase-temporelle.js",
@@ -60183,11 +60125,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Annule",
         "composantes": "V, M",
-        "composants_materiels": [
-          "langue de serpent et",
-          "soit un peu de miel",
-          "soit une goutte d’huile douce"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "langue de serpent et, soit un peu de miel, soit une goutte d’huile douce",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
@@ -61922,9 +61860,7 @@
         "temps_incantation": "5 rounds",
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "Matérielle non précisée explicitement dans le"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -64047,9 +63983,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
-        "composants_materiels": [
-          "parchemin mis en cône"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "petit parchemin mis en cône",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
@@ -64710,9 +64644,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
-        "composants_materiels": [
-          "symbole sacré du clerc"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
@@ -65098,6 +65030,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-source-to-materials-v1",
-  "normalizedAt": "2026-06-18T09:45:57.413Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-preserve-clerc-druide-materials-v1",
+  "normalizedAt": "2026-06-18T07:34:20.769Z"
 }

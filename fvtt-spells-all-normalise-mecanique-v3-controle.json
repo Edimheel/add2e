@@ -1,10 +1,10 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-preserve-clerc-druide-materials-v1",
+  "version": "2026-06-17-normalize-spell-materials-v3-source-to-materials-v1",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
   "spells": 411,
-  "changedSpells": 126,
+  "changedSpells": 152,
   "changedEffectProfiles": 334,
   "preservedManualMaterials": 154,
   "preservedManualMaterialKeys": [
@@ -779,7 +779,7 @@
       "niveau": 5
     }
   ],
-  "emptyMaterialSpells": 208,
+  "emptyMaterialSpells": 182,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -828,6 +828,30 @@
         "1",
         "consomme"
       ]
+    },
+    {
+      "name": "Allométamorphose",
+      "classe": "Magicien",
+      "niveau": 4,
+      "before": [],
+      "after": [
+        "cocon de chenille"
+      ],
+      "notes": []
+    },
+    {
+      "name": "Amitié",
+      "classe": "Magicien",
+      "niveau": 1,
+      "before": [],
+      "after": [
+        "craie",
+        "farine blanche",
+        "noir de fumée",
+        "suie",
+        "vermillon"
+      ],
+      "notes": []
     },
     {
       "name": "Antipathie/sympathie",
@@ -893,6 +917,16 @@
         "1",
         "non consomme"
       ]
+    },
+    {
+      "name": "Bouche magique",
+      "classe": "Illusionniste",
+      "niveau": 2,
+      "before": [],
+      "after": [
+        "rayon de miel"
+      ],
+      "notes": []
     },
     {
       "name": "Bouche magique",
@@ -965,6 +999,17 @@
       ]
     },
     {
+      "name": "Boule de feu à retardement",
+      "classe": "Magicien",
+      "niveau": 7,
+      "before": [],
+      "after": [
+        "comme Boule de feu : boule de soufre",
+        "fiente de chauve souris"
+      ],
+      "notes": []
+    },
+    {
       "name": "Bruitage",
       "classe": "Magicien",
       "niveau": 2,
@@ -984,6 +1029,17 @@
       "notes": [
         "1"
       ]
+    },
+    {
+      "name": "Bruitage",
+      "classe": "Illusionniste",
+      "niveau": 1,
+      "before": [],
+      "after": [
+        "composante matérielle est un morceau de laine",
+        "cire"
+      ],
+      "notes": []
     },
     {
       "name": "Cacodémon",
@@ -1216,7 +1272,9 @@
         "consomme",
         "Consommation explicitement indiquée dans la description",
         "corne d’argent d’une valeur minimale de 100 po",
-        "Consommation explicitement indiquée dans la description"
+        "Consommation explicitement indiquée dans la description",
+        "composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po",
+        "qui disparaît quand le sort est lancé"
       ]
     },
     {
@@ -1313,6 +1371,26 @@
       ]
     },
     {
+      "name": "Confusion",
+      "classe": "Illusionniste",
+      "niveau": 4,
+      "before": [],
+      "after": [
+        "Matérielle non précisée explicitement dans le"
+      ],
+      "notes": []
+    },
+    {
+      "name": "Confusion",
+      "classe": "Magicien",
+      "niveau": 4,
+      "before": [],
+      "after": [
+        "jeu de 3 coquilles de noisettes"
+      ],
+      "notes": []
+    },
+    {
       "name": "Contrôle du climat",
       "classe": "Magicien",
       "niveau": 6,
@@ -1334,6 +1412,16 @@
         "1",
         "consomme"
       ]
+    },
+    {
+      "name": "Corde enchantée",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "before": [],
+      "after": [
+        "Matérielle non précisée explicitement dans le"
+      ],
+      "notes": []
     },
     {
       "name": "Corde enchantée",
@@ -1463,6 +1551,17 @@
       ]
     },
     {
+      "name": "Détection de l’invisibilité",
+      "classe": "Illusionniste",
+      "niveau": 1,
+      "before": [],
+      "after": [
+        "composantes matérielles sont une pincée de talc",
+        "poudre d’argent qu’il faut répandre"
+      ],
+      "notes": []
+    },
+    {
       "name": "Détection des illusions",
       "classe": "Illusionniste",
       "niveau": 1,
@@ -1501,201 +1600,6 @@
       ],
       "after": [
         "goutte de mercure"
-      ],
-      "notes": [
-        "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Distorsion des distances",
-      "classe": "Magicien",
-      "niveau": 5,
-      "before": [
-        "un peu d’argile grasse",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "peu d’argile grasse",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un peu d’argile grasse »."
-      ],
-      "after": [
-        "peu d’argile grasse"
-      ],
-      "notes": [
-        "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Duo-dimension",
-      "classe": "Magicien",
-      "niveau": 7,
-      "before": [
-        "figurine en ivoire représentant le magicien",
-        "1",
-        "consomme",
-        "5000",
-        "Manuel des joueurs",
-        "Disparaît pour toujours.",
-        "parchemin"
-      ],
-      "after": [
-        "figurine en ivoire représentant le magicien",
-        "Disparaît pour toujours",
-        "parchemin"
-      ],
-      "notes": [
-        "1",
-        "consomme",
-        "5000"
-      ]
-    },
-    {
-      "name": "E.S.P.",
-      "classe": "Magicien",
-      "niveau": 2,
-      "before": [
-        "une pièce de cuivre",
-        "1",
-        "non_consomme",
-        "Manuel des joueurs",
-        "pièce de cuivre",
-        "Formulation source du Manuel : « une pièce de cuivre »."
-      ],
-      "after": [
-        "pièce de cuivre"
-      ],
-      "notes": [
-        "1",
-        "non consomme"
-      ]
-    },
-    {
-      "name": "Eau aérée",
-      "classe": "Magicien",
-      "niveau": 5,
-      "before": [
-        "une petite poignée de sels alcalins ou de bromure",
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Composant requis selon l’alternative ou la variante choisie.",
-        "Alternative ou variante explicitement indiquée par le Manuel.",
-        "poignée de sels alcalins ou de bromure",
-        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une petite poignée de sels alcalins ou de bromure »."
-      ],
-      "after": [
-        "petite poignée de sels alcalins",
-        "de bromure",
-        "poignée de sels alcalins"
-      ],
-      "notes": [
-        "1"
-      ]
-    },
-    {
-      "name": "Écriture",
-      "classe": "Magicien",
-      "niveau": 1,
-      "before": [
-        "encre fine faite de substances rares",
-        "1",
-        "consomme",
-        "200",
-        "Manuel des joueurs"
-      ],
-      "after": [
-        "encre fine faite de substances rares"
-      ],
-      "notes": [
-        "1",
-        "consomme",
-        "200"
-      ]
-    },
-    {
-      "name": "Écriture illusoire",
-      "classe": "Illusionniste",
-      "niveau": 3,
-      "before": [
-        "encre fabriquée à base de plomb par un alchimiste",
-        "1",
-        "consomme",
-        "100",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
-      ],
-      "after": [],
-      "notes": [
-        "encre fabriquée à base de plomb par un alchimiste",
-        "1",
-        "consomme",
-        "100"
-      ]
-    },
-    {
-      "name": "Effroi",
-      "classe": "Magicien",
-      "niveau": 4,
-      "before": [
-        "cœur de poule",
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative à une plume blanche.",
-        "plume blanche",
-        "Alternative au cœur de poule."
-      ],
-      "after": [
-        "cœur de poule",
-        "plume blanche"
-      ],
-      "notes": [
-        "1"
-      ]
-    },
-    {
-      "name": "Épée de Mordenkainen",
-      "classe": "Magicien",
-      "niveau": 7,
-      "before": [
-        "épée miniature en platine avec poignée et pommeau en cuivre et zinc",
-        "1",
-        "consomme",
-        "500",
-        "Manuel des joueurs",
-        "Disparaît quand le sort est lancé."
-      ],
-      "after": [
-        "épée miniature en platine avec poignée",
-        "pommeau en cuivre",
-        "zinc"
-      ],
-      "notes": [
-        "1",
-        "consomme",
-        "500",
-        "Disparaît quand le sort est lancé"
-      ]
-    },
-    {
-      "name": "Escalade d’araignée",
-      "classe": "Magicien",
-      "niveau": 1,
-      "before": [
-        "goutte de bitume",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Avalée pendant l’incantation.",
-        "araignée vivante"
-      ],
-      "after": [
-        "goutte de bitume",
-        "Avalée pendant l’incantation",
-        "araignée vivante"
       ],
       "notes": [
         "1",
@@ -1793,7 +1697,9 @@
     "Allométamorphose": {
       "classe": "Magicien",
       "niveau": 4,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "cocon de chenille"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n4",
@@ -1843,7 +1749,13 @@
     "Amitié": {
       "classe": "Magicien",
       "niveau": 1,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "craie",
+        "farine blanche",
+        "noir de fumée",
+        "suie",
+        "vermillon"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n1",
@@ -2397,7 +2309,10 @@
     "Boule de feu à retardement": {
       "classe": "Magicien",
       "niveau": 7,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "comme Boule de feu : boule de soufre",
+        "fiente de chauve souris"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n7",
@@ -2904,7 +2819,7 @@
           }
         ]
       },
-      "note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description\ncorne d’argent d’une valeur minimale de 100 po"
+      "note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description\ncorne d’argent d’une valeur minimale de 100 po\ncomposante matérielle est une petite corne d’argent d’une valeur minimale de 100 po"
     },
     "Clairvoyance": {
       "classe": "Magicien",
@@ -3097,7 +3012,9 @@
     "Confusion": {
       "classe": "Magicien",
       "niveau": 4,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "jeu de 3 coquilles de noisettes"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n4",
@@ -5257,7 +5174,9 @@
     "Invisibilité sur 3 m": {
       "classe": "Magicien",
       "niveau": 3,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "Matérielle non précisée explicitement dans le"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n3",
@@ -5475,7 +5394,9 @@
     "Invocation d’un familier": {
       "classe": "Magicien",
       "niveau": 1,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "brassière en cuivre"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n1",
@@ -5495,7 +5416,7 @@
           }
         ]
       },
-      "note": ""
+      "note": "morceaux d’encens dans un brasier de charbon de bois"
     },
     "Invocation de la foudre": {
       "classe": "Druide",
@@ -5525,7 +5446,9 @@
     "Invocation de monstre II": {
       "classe": "Magicien",
       "niveau": 4,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "même"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n4",
@@ -5545,7 +5468,7 @@
           }
         ]
       },
-      "note": ""
+      "note": "il y a également 1 à 4 rounds de délai"
     },
     "Invocation de Monstre III": {
       "classe": "Magicien",
@@ -5625,7 +5548,10 @@
     "Invocation de monstre VI": {
       "classe": "Magicien",
       "niveau": 8,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "diamant",
+        "répandu sur les destinataires du sort"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n8",
@@ -5645,7 +5571,7 @@
           }
         ]
       },
-      "note": ""
+      "note": "chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille"
     },
     "Invocation de Monstre VII": {
       "classe": "Magicien",
@@ -5675,7 +5601,10 @@
     "Invocation de monstres I": {
       "classe": "Magicien",
       "niveau": 3,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "composantes matérielles de sort sont un petit sac",
+        "petite bougie (pas nécessairement allumée)"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n3",
@@ -5944,7 +5873,10 @@
     "Langues": {
       "classe": "Magicien",
       "niveau": 3,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "petite statuette d’argile représentant une ziggourat",
+        "qui se brise quand l’incantation est prononcée"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n3",
@@ -6105,7 +6037,10 @@
     "Localisation d’objets": {
       "classe": "Magicien",
       "niveau": 2,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "fourchette d’argent",
+        "baguette fourchue selon version du sort"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n2",
@@ -8030,7 +7965,10 @@
     "Protection d’esprit": {
       "classe": "Magicien",
       "niveau": 8,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "gant en cuir",
+        "formant une ligne légèrement courbe"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n8",
@@ -8050,7 +7988,7 @@
           }
         ]
       },
-      "note": ""
+      "note": "petit objet fait de 4 anneaux reliés entre eux\ntout attaché par une barrette en forme de « I »"
     },
     "Punition spirituelle": {
       "classe": "Magicien",
@@ -8104,7 +8042,9 @@
     "Pyrotechnie": {
       "classe": "Magicien",
       "niveau": 2,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "gui"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n2",
@@ -9193,7 +9133,10 @@
     "Stase temporelle": {
       "classe": "Magicien",
       "niveau": 9,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "émeraude",
+        "de rubis"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n9",
@@ -9212,7 +9155,7 @@
           }
         ]
       },
-      "note": ""
+      "note": "composante matérielle de la stase temporelle est une poudre composée de diamant\nde saphir : une pierre de chaque type étant nécessaire"
     },
     "Statue": {
       "classe": "Magicien",
@@ -9715,7 +9658,9 @@
     "Ventriloquie": {
       "classe": "Illusionniste",
       "niveau": 2,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "parchemin mis en cône"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "canonical-system",
@@ -9781,7 +9726,9 @@
     "Vision réelle": {
       "classe": "Illusionniste",
       "niveau": 6,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "symbole sacré du clerc"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "canonical-system",
@@ -10703,7 +10650,9 @@
     {
       "name": "Allométamorphose",
       "niveau": 4,
-      "composants": []
+      "composants": [
+        "cocon de chenille"
+      ]
     },
     {
       "name": "Altération des feux normaux",
@@ -10713,7 +10662,13 @@
     {
       "name": "Amitié",
       "niveau": 1,
-      "composants": []
+      "composants": [
+        "craie",
+        "farine blanche",
+        "noir de fumée",
+        "suie",
+        "vermillon"
+      ]
     },
     {
       "name": "Antipathie/sympathie",
@@ -10781,7 +10736,10 @@
     {
       "name": "Boule de feu à retardement",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        "comme Boule de feu : boule de soufre",
+        "fiente de chauve souris"
+      ]
     },
     {
       "name": "Bruitage",
@@ -10923,7 +10881,9 @@
     {
       "name": "Confusion",
       "niveau": 4,
-      "composants": []
+      "composants": [
+        "jeu de 3 coquilles de noisettes"
+      ]
     },
     {
       "name": "Contact d'autres plans",
@@ -11073,7 +11033,10 @@
     {
       "name": "Embroussaillement",
       "niveau": 4,
-      "composants": []
+      "composants": [
+        "gui",
+        "petite branche d’arbre"
+      ]
     },
     {
       "name": "Emprisonnement",
@@ -11305,7 +11268,9 @@
     {
       "name": "Invisibilité sur 3 m",
       "niveau": 3,
-      "composants": []
+      "composants": [
+        "Matérielle non précisée explicitement dans le"
+      ]
     },
     {
       "name": "Invocation d’élémental",
@@ -11326,12 +11291,16 @@
     {
       "name": "Invocation d’un familier",
       "niveau": 1,
-      "composants": []
+      "composants": [
+        "brassière en cuivre"
+      ]
     },
     {
       "name": "Invocation de monstre II",
       "niveau": 4,
-      "composants": []
+      "composants": [
+        "même"
+      ]
     },
     {
       "name": "Invocation de Monstre III",
@@ -11351,7 +11320,10 @@
     {
       "name": "Invocation de monstre VI",
       "niveau": 8,
-      "composants": []
+      "composants": [
+        "diamant",
+        "répandu sur les destinataires du sort"
+      ]
     },
     {
       "name": "Invocation de Monstre VII",
@@ -11361,7 +11333,10 @@
     {
       "name": "Invocation de monstres I",
       "niveau": 3,
-      "composants": []
+      "composants": [
+        "composantes matérielles de sort sont un petit sac",
+        "petite bougie (pas nécessairement allumée)"
+      ]
     },
     {
       "name": "Invocation instantanée de Drawmij",
@@ -11376,7 +11351,10 @@
     {
       "name": "Langues",
       "niveau": 3,
-      "composants": []
+      "composants": [
+        "petite statuette d’argile représentant une ziggourat",
+        "qui se brise quand l’incantation est prononcée"
+      ]
     },
     {
       "name": "Lecture de la magie",
@@ -11406,7 +11384,10 @@
     {
       "name": "Localisation d’objets",
       "niveau": 2,
-      "composants": []
+      "composants": [
+        "fourchette d’argent",
+        "baguette fourchue selon version du sort"
+      ]
     },
     {
       "name": "Lumière éternelle",
@@ -11611,7 +11592,9 @@
     {
       "name": "Paralysie",
       "niveau": 3,
-      "composants": []
+      "composants": [
+        "symbole sacré du clerc"
+      ]
     },
     {
       "name": "Paralysie des monstres",
@@ -11737,7 +11720,10 @@
     {
       "name": "Protection d’esprit",
       "niveau": 8,
-      "composants": []
+      "composants": [
+        "gant en cuir",
+        "formant une ligne légèrement courbe"
+      ]
     },
     {
       "name": "Punition spirituelle",
@@ -11747,7 +11733,9 @@
     {
       "name": "Pyrotechnie",
       "niveau": 2,
-      "composants": []
+      "composants": [
+        "gui"
+      ]
     },
     {
       "name": "Quête magique",
@@ -11906,7 +11894,10 @@
     {
       "name": "Stase temporelle",
       "niveau": 9,
-      "composants": []
+      "composants": [
+        "émeraude",
+        "de rubis"
+      ]
     },
     {
       "name": "Statue",
@@ -12060,33 +12051,6 @@
   ],
   "magicienMaterialWarnings": [
     {
-      "name": "Allométamorphose",
-      "niveau": 4,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Amitié",
-      "niveau": 1,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Boule de feu à retardement",
-      "niveau": 7,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
       "name": "Clairaudience",
       "niveau": 3,
       "components": [
@@ -12098,15 +12062,6 @@
     {
       "name": "Coffre secret de Léomund",
       "niveau": 5,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Confusion",
-      "niveau": 4,
       "components": [
         "M sans composant"
       ],
@@ -12159,33 +12114,6 @@
       "classe": "magicien"
     },
     {
-      "name": "Invisibilité sur 3 m",
-      "niveau": 3,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Invocation d’un familier",
-      "niveau": 1,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Invocation de monstre II",
-      "niveau": 4,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
       "name": "Invocation de Monstre III",
       "niveau": 5,
       "components": [
@@ -12213,15 +12141,6 @@
       "classe": "magicien"
     },
     {
-      "name": "Invocation de monstre VI",
-      "niveau": 8,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
       "name": "Invocation de Monstre VII",
       "niveau": 9,
       "components": [
@@ -12231,35 +12150,8 @@
       "classe": "magicien"
     },
     {
-      "name": "Invocation de monstres I",
-      "niveau": 3,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
       "name": "Invocation instantanée de Drawmij",
       "niveau": 7,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Langues",
-      "niveau": 3,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Localisation d’objets",
-      "niveau": 2,
       "components": [
         "M sans composant"
       ],
@@ -12339,26 +12231,8 @@
       "classe": "magicien"
     },
     {
-      "name": "Protection d’esprit",
-      "niveau": 8,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
       "name": "Punition spirituelle",
       "niveau": 6,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Stase temporelle",
-      "niveau": 9,
       "components": [
         "M sans composant"
       ],
