@@ -1165,7 +1165,7 @@
         "jet_sauvegarde": "Annule si non consentant",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poudre de fer"
+          "poudre de fer"
         ],
         "composants_materiels_source": "La composante de ce sort est une pincée de poudre de fer.",
         "composants_materiels_reference": "",
@@ -3415,14 +3415,13 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "carbone",
-          "citron réduits en poudre",
-          "Consommation explicitement indiquée dans la description"
+          "carbone en poudre",
+          "citron en poudre"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont du carbone et du citron réduits en poudre.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme",
+        "composants_materiels_note": "1\nconsomme\nConsommation explicitement indiquée dans la description",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort transforme une arme normale en une arme magique. Cette arme est équivalente à une arme +1, mais n’a en fait aucun bonus. Les arcs, carreaux, dagues, épées, flèches, haches, lances de fantassin, marteaux, masses d’arme, etc. peuvent être enchantés. Le sort peut affecter 2 petites armes (carreaux, dagues, flèches, etc.) ou une grande (arcs, haches, marteaux, masses d’arme, etc.). Une attaque réussie avec un projectile enchanté par ce sort en annule les effets: dans tous les autres cas, l’enchantement dure jusqu’à l’expiration du sort (par exemple, 40 rounds pour un magicien de niveau 8). Les composantes matérielles de ce sort sont du carbone et du citron réduits en poudre.",
         "onUse": "systems/add2e/scripts/sorts/magicien-arme-enchantee.js",
@@ -4239,11 +4238,13 @@
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "soie"
+        ],
         "composants_materiels_source": "La composante matérielle de ce sort est un petit morceau de soie que le magicien doit passer sur l’objet affecté.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "soie que le magicien doit passer sur l’objet affecté\n1\nnon consomme",
+        "composants_materiels_note": "1\nnon consomme",
         "composants_materiels_a_renseigner": false,
         "description": "avec ce sort, tout objet d’un poids maximum de 50 po (2.5 kg) par niveau du magicien peut être entouré d’une aura magique qui fera croire à toute personne faisant une détection de la magie que cet objet est magique. Cependant, si la personne qui effectue la détection tient l’objet, elle a le droit à un jet de protection contre les sorts. Si ce jet est réussi la personne découvre la supercherie. Autrement, l’aura est simplement magique, mais aucun test ne pourra révéler le type de magie. La composante matérielle de ce sort est un petit morceau de soie que le magicien doit passer sur l’objet affecté.",
         "onUse": "systems/add2e/scripts/sorts/magicien-aura-magique-de-nystul.js",
@@ -6915,13 +6916,12 @@
           "cristaux d’acide mercuro nitrique",
           "racine de mandragore",
           "de l’alcool",
-          "sous formes de runes entourées d’un pentacle",
-          "Consommation explicitement indiquée dans la description"
+          "sous formes de runes entourées d’un pentacle"
         ],
         "composants_materiels_source": "Les composantes matérielles sont cinq chandelles noires allumées, un brasero de charbons ardents dans lequel le magicien doit brûler du soufre, des fourrures de chauves-souris, du saindoux, de la suie, des cristaux d’acide mercuro-nitrique, une racine de mandragore, de l’alcool, un parchemin sur lequel est inscrit le nom du démon, sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "brasero de charbons ardents dans lequel le magicien doit brûler du soufre\nparchemin sur lequel est inscrit le nom du démon\ncoupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon\n1\nconsomme",
+        "composants_materiels_note": "brasero de charbons ardents dans lequel le magicien doit brûler du soufre\nparchemin sur lequel est inscrit le nom du démon\ncoupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon\n1\nconsomme\nConsommation explicitement indiquée dans la description",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort, dangereux, invoque un puissant démon de type IV, V ou VI, selon le nom du démon que connait le magicien. Le pouvoir du sort n’est pas suffisant pour invoquer des démons plus puissants et ceux de moindre envergure ne peuvent pas être conjurés, ne possédant pas de nom connu. Dans tous les cas, le magicien doit connaitre le nom du démon qu’il conjure. Ce dernier sera dans de mauvaises dispositions et en colère. Le lanceur de sort doit se placer dans un cercle de protection (ou dans un triangle thaumaturgique avec une protection contre le mal); le démon, quant à lui, doit être confiné dans un pentagramme (pentacle cerclé) si le magicien ne veut pas être tué ou emmené par le démon conjuré. Le démon appelé peut être traité des façons suivantes: A) Le magicien peut forcer le démon à accomplir une série d’actions en le menaçant de souffrir d’un sort tel que punition spirituelle (voir p.85), lui accordant la liberté après l’accomplissement total de sa tâche et en le forçant à s’engager sur l’honneur. Ceci peut être excessivement dangereux, car la moindre faille dans un tel accord sera exploitée par la créature pour inverser le résultat désiré ou tout simplement pour tuer et dévorer le conjurateur. De plus, le démon considérera à jamais le magicien comme son ennemi juré, après avoir été contraint de la sorte. Le magicien a intérêt à être puissant et efficace. B) En lui promettant du sang humain frais et au moins un sacrifice humain, le magicien peut se mettre d’accord avec le démon pour que ce dernier lui rende un service. Encore une fois, il est préférable que le conjurateur ait de bonnes protections et soit puissant pour se défendre, au cas où le démon jugerait l’offre insuffisante (ou que la mort lente du conjurateur serait plus amusante) et décide de refuser les termes du marché. Bien que le démon doive rester fidèle à sa parole donnée, du fait que son nom soit connu, il se contentera de respecter à la lettre les mots de l’accord sans être tenu d’en respecter l’esprit. Seuls les magiciens profondément mauvais sont susceptibles de tenter de parvenir à une telle forme d’accord, et le démon conjuré devrait être plus favorablement disposé à l’égard d’un tel personnage, spécialement s’il est aussi chaotique. C) Le démon conjuré peut être sujet au sort emprisonnement de l’âme. Dans ce cas, le magicien ne lui parlera pas. Il ne lui demandera pas de service, bien que le cacodémon puisse lui-même essayer d’obtenir un accord, avant son emprisonnement. Un tel emprisonnement n’est risqué que si les précautions nécessaires n’ont pas été prises, car un échec signifie seulement que le démon s’échappe pour retourner sur son plan. Une fois emprisonné, le démon le reste jusqu’à ce que le possesseur de l’objet de confinement le brise et le libère, lui demandant alors de lui rendre un service. Si l’individu (ou les individus) qui libère le démon oublie de lui demander un service alors que le démon lui demande ce qu’on attend de lui, plus rien n’empêche le démon de tuer son (ou ses) libérateur(s) immédiatement. Mais si un service est demandé, le démon doit s’en acquitter du mieux qu’il pourra, avant de retourner ensuite dans les abysses. La durée du service d’un démon doit être limitée, à moins que le démon luimême accepte de servir pendant une période plus longue. Toute suite d’actions ou service requérant une durée inhabituelle ou alors simplement impossible à accomplir, donne au démon 50 % de chances de se libérer de ses obligations et d’assouvir sa vengeance envers le lanceur du sort, si ce dernier n’est pas protégé de façon continue, puisqu’un démon peut rester sur le plan où à lieu la conjuration pendant 666 jours. Le démon appelé sera extrêmement puissant: 8 points de vie par dé de vie. Le temps d’incantation est de 1 heure par type de démon appelé (4 heures pour un démon de type IV, 5 pour un type V, 6 pour un type VI). Si cette incantation est interrompue, le sort est annulé. En cas d’interruption après l’appel du cacodémon, il y a 10 % de chances cumulatives par round d’interruption contigu que le démon échappe à la puissance du sort et attaque le magicien. Chaque démon a le droit à un jet de protection spécial: si un score supérieur au niveau du magicien est obtenu avec 3d6 (2d10 pour les démons de type VI), le sort échoue. Si cela arrive, cela signifie souvent que le démon invoqué est déjà mort ou emprisonné ou alors que le nom prononcé n’était pas correct. Le conjurateur devra se procurer un autre nom pour appeler un autre cacodémon. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée. Les composantes matérielles sont cinq chandelles noires allumées, un brasero de charbons ardents dans lequel le magicien doit brûler du soufre, des fourrures de chauves-souris, du saindoux, de la suie, des cristaux d’acide mercuro-nitrique, une racine de mandragore, de l’alcool, un parchemin sur lequel est inscrit le nom du démon, sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon.",
         "onUse": "systems/add2e/scripts/sorts/magicien-cacodemon.js",
@@ -9866,13 +9866,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "si la chaumière est détruite",
-          "Consommation explicitement indiquée dans la description"
+          "si la chaumière est détruite"
         ],
         "composants_materiels_source": "petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "petite perle de cristal qui se brisera à la fin du sort\n1\nconsomme\nperle de cristal qui se brisera à la fin du sort",
+        "composants_materiels_note": "petite perle de cristal qui se brisera à la fin du sort\n1\nconsomme\nConsommation explicitement indiquée dans la description\nperle de cristal qui se brisera à la fin du sort",
         "composants_materiels_a_renseigner": false,
         "description": "quand le magicien lance ce sort, il crée une sphère de force opaque autour de lui, la moitié de cette sphère se trouvant en dessous du sol et l’autre au-dessus de la surface où se trouve le lanceur du sort. Le champ de force fait que la température intérieure se maintient à 21°C quand la température extérieure va de –18°C à 41°C. Un froid en dessous de –18°C abaisse la température intérieure de 1°C par baisse de 2°C à l’extérieur; une chaleur supérieure à 41°C augmente la température interne selon le même ratio. La chaumière peut résister à un vent de 80 km/h mais un vent plus fort détruira le champ de force. Le magicien peut éclairer sur commande l’intérieur de l’hémisphère dans laquelle il se trouve; il peut l’éteindre de la même manière. Si cette demi-sphère est opaque pour ceux qui sont à l’extérieur, elle est en revanche transparente pour ceux qui sont à l’intérieur. En aucun cas la chaumière de Léomund ne protège des projectiles, des armes et des sorts, etc. Elle peut contenir jusqu’à 6 autres créatures de taille humaine, en plus du magicien, qui peuvent y entrer et en sortir librement, mais si ce dernier sort de la chaumière, elle disparaît. La composante matérielle est une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite.",
         "onUse": "systems/add2e/scripts/sorts/magicien-chaumiere-de-leomund.js",
@@ -10251,13 +10250,11 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "Consommation explicitement indiquée dans la description"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\ncorne d’argent d’une valeur minimale de 100 po",
+        "composants_materiels_note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description\ncorne d’argent d’une valeur minimale de 100 po",
         "composants_materiels_a_renseigner": false,
         "description": "le sort de clairaudience permet au magicien de se concentrer sur un endroit et d’entendre dans son esprit tous les sons de cet endroit, dans une zone d’effet de 6\" de rayon, centrée sur l’endroit qu’il examine. La distance n’est pas un problème, mais l’endroit doit être connu, c'est-à-dire un endroit familier au lanceur de sort ou évident (tel que derrière une porte, à un angle de couloir, dans le taillis d’un bois, etc.). Seuls les sons normalement audibles par le magicien peuvent être entendus. Une paroi de métal ou une protection magique empêche l’écoute. Ce sort ne fonctionne que sur le plan d’existence sur lequel se trouve le lanceur du sort au moment où il le lance. La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "onUse": "systems/add2e/scripts/sorts/magicien-clairaudience.js",
@@ -22768,12 +22765,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Consommation explicitement indiquée dans la description"
+          "soie multicolore extrêmement fine"
         ],
         "composants_materiels_source": "morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu\n1\nconsomme",
+        "composants_materiels_note": "1\nconsomme\nConsommation explicitement indiquée dans la description",
         "composants_materiels_a_renseigner": false,
         "description": "avec ce sort, le magicien transforme un feu normal tel qu’un brasero, flambeau, feu de joie, en un feu de création magique; autour de ce feu, à 1,50 mètre de distance, apparait un voile de flammèches multicolores. Toute créature regardant le feu ou le cercle de flammes dansantes doit lancer un jet de protection contre les sorts; si ce jet de protection est raté, la créature est charmée et reste immobile, le regard fixé sur les flammes. Toutes les créatures ainsi charmées sont alors sujettes à un sort de suggestion, de 12 mots maximum, dont le jet de protection s'effectue avec un malus de –3. Un feu charmeur est annulé par une attaque physique sur la créature charmée ou si un objet est placé entre la créature et le feu, obstruant ainsi la vue, ou si le sort arrive à son terme. Le voile de flammes n’est pas un feu magique et passer au travers causera des dégâts, égaux à ceux qu’on peut subir si on passe au travers de la source de feu. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est un morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu.",
         "onUse": "systems/add2e/scripts/sorts/magicien-feu-charmeur.js",
@@ -27764,13 +27761,12 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "petite statuette d’argile représentant une ziggourat",
-          "qui se brise quand l’incantation est prononcée",
-          "Consommation explicitement indiquée dans la description"
+          "qui se brise quand l’incantation est prononcée"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme",
+        "composants_materiels_note": "1\nconsomme\nConsommation explicitement indiquée dans la description",
         "composants_materiels_a_renseigner": false,
         "description": "avec ce sort, le magicien permet au destinataire de voir dans le spectre infrarouge. Ainsi les différences de chaleur peuvent être vues jusqu’à une distance de 6\". De fortes sources de radiations infrarouges (lanterne, torche, feu, etc.) ont tendance à aveugler ou à créer des «ombres» comme la lumière peut le faire vis-à-vis d’une vision normale. L’infravision est ainsi affectée et ne fonctionne pas aussi efficacement en présence de telles sources de chaleur. Les créatures invisibles ne sont pas détectables avec l’infravision, car l’invisibilité affecte aussi les infrarouges, comme les ultraviolets et le spectre de lumière normale. La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate. grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8: 1 = devant à droite; 2 = à droite; 3 = derrière à droite; 4 = derrière; 5 = derrière à gauche; 6 = à gauche; 7 = devant à gauche; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c'est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C'est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.",
         "onUse": "systems/add2e/scripts/sorts/magicien-infravision.js",
@@ -34865,7 +34861,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "argile grasse façonnée",
-          "Façonnée puis utilisée pour toucher la pierre"
+          "Façonnée puis"
         ],
         "composants_materiels_source": "La composante matérielle est de l’argile grasse que le magicien doit façonner afin qu'elle ait vaguement la forme qu’il désire donner à la pierre, puis toucher celle-ci avec cette argile sculptée pendant l’incantation.",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -38384,8 +38380,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite pièce de cuivre finement ciselée",
-          "pièce de cuivre finement ciselée"
+          "fil de cuivre"
         ],
         "composants_materiels_source": "petite pièce de cuivre, finement ciselée",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -41178,13 +41173,12 @@
           "parchemin",
           "objet magique",
           "créature",
-          "etc",
-          "Consommation explicitement indiquée dans la description"
+          "etc"
         ],
         "composants_materiels_source": "Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle ; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "mais le magicien doit en plus sacrifier quelque chose (une potion\n1\nconsomme",
+        "composants_materiels_note": "mais le magicien doit en plus sacrifier quelque chose (une potion\n1\nconsomme\nConsommation explicitement indiquée dans la description",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort est utilisé pour obtenir des informations sur une personne, un endroit ou un objet, lequel ou laquelle doit être connu. Si la personne ou l’objet est auprès du magicien, ou si ce dernier se trouve à l’endroit concerné, la probabilité de résultat est importante et le temps d’incantation n’est que de 1 à 4 tours. Si le magicien ne connait que des informations détaillées, le temps d’incantation est de 1 à 10 jours. Et si les seules sources d’information sont des rumeurs, le temps d’incantation est de 2 à 12 semaines. Pendant le temps d’incantation, le magicien ne peut rien entreprendre d’autre que les actions de tous les jours: manger, dormir, etc. À la fin du temps d’incantation, la divination révélera si des informations légendaires sont disponibles. Elle révélera souvent l’endroit où ces informations pourront être trouvées: par un nom de lieu, sous forme de vers, d’énigme. Parfois, lorsque la personne, l'endroit ou l'objet est proche du magicien, une certaine information le concernant sera révélée, mais ce sera toujours sous une forme énigmatique (vers, devinette, anagramme, message chiffré, etc.). Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.). Naturellement, une mythomancie ne donnera des informations que si la personne, le lieu ou l’objet est légendaire ou très connu.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mythomancie.js",
@@ -48268,12 +48262,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Consommation explicitement indiquée dans la description"
+          "pincée de poudre de cuivre"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "pincée de poudre de cuivre qui doit être soufflée de la paume de la main\navant de pointer le doigt vers l’objectif visé\n1\nconsomme",
+        "composants_materiels_note": "avant de pointer le doigt vers l’objectif visé\n1\nconsomme\nConsommation explicitement indiquée dans la description",
         "composants_materiels_a_renseigner": false,
         "description": "en prononçant les syllabes de ce sort, le magicien crée une force invisible qui frappe l’objectif qu’il montre du doigt. La force de la poussée n’est pas grande, 1 pied-livre par niveau du magicien (1 pied-livre étant la force nécessaire qu’il faut exercer pour déplacer un objet de 0,5 kg de 0,30 m), mais elle peut faire bouger de petits objets sur 0,30 m maximum dans la direction opposée au magicien, faire tomber un objet ou faire perdre l’équilibre à une créature. Exemple pour ce dernier cas: la force peut faire perdre l’équilibre à une créature qui attaque: si la créature rate son jet de protection, elle ne pourra pas frapper ce round ci. Bien sûr la masse de la créature qui attaque ne doit pas dépasser 50 fois la force de poussée, c'est-à-dire qu’un magicien de niveau 1 ne pourra pas affecter une créature pesant plus de 25 kg (50 x 0,5 kg). Une poussée employée sur un objet tenu par une créature fait que la force en pied-livre (1/niveau) sera soustraite de la probabilité de toucher de l’adversaire si ce dernier a raté son jet de protection. La composante matérielle de ce sort est une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé.",
         "onUse": "systems/add2e/scripts/sorts/magicien-poussee.js",
@@ -55766,12 +55760,12 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Consommation explicitement indiquée dans la description"
+          "patte arrière de sauterelle — une pour chaque saut —"
         ],
         "composants_materiels_source": "patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué\n1\nconsomme",
+        "composants_materiels_note": "1\nconsomme\nConsommation explicitement indiquée dans la description",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce sort est lancé, le destinataire du sort obtient le pouvoir de sauter jusqu’à 9 mètres en avant, 3 mètres en arrière ou 3 mètres en hauteur. Les sauts horizontaux, en avant et en arrière se font sur un arc faible, à peu près les 2/10 de la distance parcourue. Le sort n’assure aucune protection au moment de la réception du saut. Pour chaque tranche de 3 niveaux après le premier, le magicien obtient un saut supplémentaire, donc 2 sauts à partir du niveau 4, 3 au 7e, 4 au 10e, etc. Tous les sauts doivent être effectués dans une période de 1 tour après le lancement du sort. Passé ce délai, le sort n’est plus actif. La composante matérielle est une patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué.",
         "onUse": "systems/add2e/scripts/sorts/magicien-saut.js",
@@ -63884,7 +63878,6 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, M",
         "composants_materiels": [
-          "petit parchemin mis en cône",
           "parchemin mis en cône"
         ],
         "composants_materiels_source": "La composante matérielle est un petit parchemin mis en cône.",
@@ -64268,13 +64261,12 @@
           "huile",
           "cordelette à nœuds",
           "sang d’ombre des roches",
-          "petite baguette d’argent",
-          "Consommation explicitement indiquée dans la description"
+          "petite baguette d’argent"
         ],
         "composants_materiels_source": "Les composantes matérielles sont de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme",
+        "composants_materiels_note": "1\nconsomme\nConsommation explicitement indiquée dans la description",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort particulier et puissant est généralement utilisé par les magiciens pour défendre leur place forte. Les effets suivants se produisent: 1) Tous les couloirs deviennent brumeux: la visibilité est réduite à 3 m. 2) Toutes les portes sont magiquement verrouillées (verrou magique) 3) Une porte par niveau du magicien est masquée par une illusion: elle semble alors faire partie du mur 4) Les escaliers sont remplis de toiles d’araignées, du sol au plafond 5) Quand se présente un choix de direction, un sort mineur de type confusion fait que les intrus ont 50 % de chance de croire qu’ils prennent la direction opposée 6) Toute la zone dégage une aura magique 7) Le magicien peut placer un des pouvoirs magiques suivants: A. Lumières dansantes dans 4 couloirs, ou B. Bouche magique dans 2 endroits, ou C. Nuage puant dans 2 endroits, ou D. Rafale de vent dans un couloir ou une salle, ou E. Suggestion dans un endroit. Les effets 3 et 7 ne fonctionnent que si le magicien a une connaissance parfaite des lieux situés dans la zone d’effet. Une dissipation de la magie peut annuler une fonction, au hasard, en dissipant l’effet. Un désenvoûtement est inefficace. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent.",
         "onUse": "systems/add2e/scripts/sorts/magicien-vigiles-et-sentinelles.js",
@@ -65038,6 +65030,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-magicien-n9-effectprofile-v1",
-  "normalizedAt": "2026-06-18T05:48:14.028Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-preserve-clerc-druide-materials-v1",
+  "normalizedAt": "2026-06-18T06:38:28.202Z"
 }

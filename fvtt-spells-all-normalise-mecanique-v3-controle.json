@@ -1,11 +1,784 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-magicien-n9-effectprofile-v1",
+  "version": "2026-06-17-normalize-spell-materials-v3-preserve-clerc-druide-materials-v1",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
   "spells": 411,
-  "changedSpells": 207,
+  "changedSpells": 126,
   "changedEffectProfiles": 334,
+  "preservedManualMaterials": 154,
+  "preservedManualMaterialKeys": [
+    {
+      "name": "Abaissement des Eaux",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Amitié animale",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Animation de la roche",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Animation des objets",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Apaisement",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Aquagenèse",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Aquagenèse",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Arbre",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Augure",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Aura féérique",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Barrière de Lames",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Bâtons à serpents",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Bâtons à serpents",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Bénédiction",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Bouclier anti-animal",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Bouclier anti-plantes",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Cantique",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Catalepsie",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Catalepsie",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Changement de Plan",
+      "classe": "Clerc",
+      "niveau": 5
+    },
+    {
+      "name": "Chariot de Sustarre",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Charme-personnes ou mammifères",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Charme-Serpents",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Communion",
+      "classe": "Clerc",
+      "niveau": 5
+    },
+    {
+      "name": "Communion avec la nature",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Confusion",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Contre-poison",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Contre-poison",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Contrôle de la température sur 3 m",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Contrôle des vents",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Contrôle du climat",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Contrôle du Climat",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Croc-en-jambe",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Croissance animale",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Débilité mentale",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Désenvoûtement",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Détection de la magie",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Détection de la magie",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Détection des Charmes",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Détection des Mensonges",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Détection des Pièges",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Détection des pièges sylvestres",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Détection du mal",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Dissipation de la magie",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Dissipation de la Magie",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Dissipation du Mal",
+      "classe": "Clerc",
+      "niveau": 5
+    },
+    {
+      "name": "Distorsion du bois",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Divination",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Doigt de mort",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Embrasement",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Embroussaillement",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Enchevêtrement",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Exorcisme",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Expiation",
+      "classe": "Clerc",
+      "niveau": 5
+    },
+    {
+      "name": "Flamme",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Fléau d’insectes",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Fléau d’Insectes",
+      "classe": "Clerc",
+      "niveau": 5
+    },
+    {
+      "name": "Forêt hallucinatoire",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Glyphe de Garde",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Graines de feu",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Guérison",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Guérison de la Cécité",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Guérison des maladies",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Guérison des Maladies",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Injonction",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Invisibilité aux animaux",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Invocation animale I",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Invocation animale II",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Invocation animale III",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Invocation d'insectes",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Invocation d'un élémental de terre",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Invocation d'un élémental du feu",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Invocation de la foudre",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Invocation des animaux",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Invocation des créatures sylvestres",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Invocation du temps",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Langage animal",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Langage animal",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Langage des Monstres",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Langage des plantes",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Langage des Plantes",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Langue",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Lithomancie",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Lithomorphose",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Localisation d'objets",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Localisation des animaux",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Localisation des plantes",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Lumière",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Lumière éternelle",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Manne",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Marche des vents",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Marteau Spirituel",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Métal brûlant",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Mort rampante",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Mur d'épines",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Mur de feu",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Nécro animation",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Nécromancie",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Obscurcissement",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Orientation",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Paralysie",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Paralysie animale",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Paralysie végétale",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Parole sacrée/maudite",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Passage sans trace",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Passe-plantes",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Peau d'écorce",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Perception des Alignements",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Piège à feu",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Piège sylvestre",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Pilier de Feu",
+      "classe": "Clerc",
+      "niveau": 5
+    },
+    {
+      "name": "Porte végétale",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Prévision du temps",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Prière",
+      "classe": "Clerc",
+      "niveau": 3
+    },
+    {
+      "name": "Protection contre la foudre",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Protection contre le feu",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Protection contre le Mal",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Protection contre le mal sur 3 m",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Purification de l'eau",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Purification de l'eau et des aliments",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Pyrotechnie",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Quête Religieuse",
+      "classe": "Clerc",
+      "niveau": 5
+    },
+    {
+      "name": "Rappel",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Rappel à la Vie",
+      "classe": "Clerc",
+      "niveau": 5
+    },
+    {
+      "name": "Régénération",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Réincarnation",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Répulsion des insectes",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Répulsion du bois",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Résistance au feu",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Résistance au Froid",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Respiration aquatique",
+      "classe": "Druide",
+      "niveau": 3
+    },
+    {
+      "name": "Restauration",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Résurrection",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Retardement du Poison",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Sanctuaire",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Séparation des Eaux",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Serviteur Aérien",
+      "classe": "Clerc",
+      "niveau": 6
+    },
+    {
+      "name": "Seuil",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Shillelagh",
+      "classe": "Druide",
+      "niveau": 1
+    },
+    {
+      "name": "Silence sur 5 mètres",
+      "classe": "Clerc",
+      "niveau": 2
+    },
+    {
+      "name": "Soin ultime",
+      "classe": "Clerc",
+      "niveau": 5
+    },
+    {
+      "name": "Soin ultime",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Soins majeurs",
+      "classe": "Druide",
+      "niveau": 4
+    },
+    {
+      "name": "Soins Majeurs",
+      "classe": "Clerc",
+      "niveau": 4
+    },
+    {
+      "name": "Soins mineurs",
+      "classe": "Clerc",
+      "niveau": 1
+    },
+    {
+      "name": "Soins mineurs",
+      "classe": "Druide",
+      "niveau": 2
+    },
+    {
+      "name": "Sort Astral",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Symbole",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Tempête de feu",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Transit végétal",
+      "classe": "Druide",
+      "niveau": 6
+    },
+    {
+      "name": "Transmutation de pierre en boue",
+      "classe": "Druide",
+      "niveau": 5
+    },
+    {
+      "name": "Transmutation du métal en bois",
+      "classe": "Druide",
+      "niveau": 7
+    },
+    {
+      "name": "Tremblement de Terre",
+      "classe": "Clerc",
+      "niveau": 7
+    },
+    {
+      "name": "Vision réelle",
+      "classe": "Clerc",
+      "niveau": 5
+    }
+  ],
   "emptyMaterialSpells": 208,
   "examples": [
     {
@@ -39,29 +812,6 @@
       ]
     },
     {
-      "name": "Abaissement des Eaux",
-      "classe": "Clerc",
-      "niveau": 4,
-      "before": [
-        "symbole sacré du clerc",
-        "1",
-        "non_consomme",
-        "Manuel des joueurs",
-        "pincée de poussière",
-        "consomme",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
-      ],
-      "after": [
-        "goutte d’eau",
-        "pincée de poussière"
-      ],
-      "notes": [
-        "1",
-        "non consomme",
-        "consomme"
-      ]
-    },
-    {
       "name": "Agrandissement",
       "classe": "Magicien",
       "niveau": 1,
@@ -72,54 +822,12 @@
         "Manuel des joueurs"
       ],
       "after": [
-        "pincée de poudre de fer"
+        "poudre de fer"
       ],
       "notes": [
         "1",
         "consomme"
       ]
-    },
-    {
-      "name": "Amitié animale",
-      "classe": "Druide",
-      "niveau": 1,
-      "before": [
-        "du gui et un peu de nourriture appréciée par l’animal",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "gui et un peu de nourriture appréciée par l’animal",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et un peu de nourriture appréciée par l’animal »."
-      ],
-      "after": [
-        "gui",
-        "nourriture appréciée par l’animal"
-      ],
-      "notes": [
-        "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Animation de la roche",
-      "classe": "Druide",
-      "niveau": 7,
-      "before": [],
-      "after": [
-        "gui"
-      ],
-      "notes": []
-    },
-    {
-      "name": "Animation des objets",
-      "classe": "Clerc",
-      "niveau": 6,
-      "before": [],
-      "after": [
-        "symbole sacré du clerc"
-      ],
-      "notes": []
     },
     {
       "name": "Antipathie/sympathie",
@@ -143,51 +851,6 @@
       ]
     },
     {
-      "name": "Aquagenèse",
-      "classe": "Clerc",
-      "niveau": 1,
-      "before": [
-        "goutte d’eau",
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Requise pour la création d’eau.",
-        "Alternative à une pincée de poussière.",
-        "pincée de poussière",
-        "Requise pour la destruction d’eau.",
-        "Alternative à une goutte d’eau."
-      ],
-      "after": [
-        "goutte d’eau",
-        "pincée de poussière"
-      ],
-      "notes": [
-        "1"
-      ]
-    },
-    {
-      "name": "Arbre",
-      "classe": "Druide",
-      "niveau": 3,
-      "before": [
-        "du gui et une petite branche d’arbre",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "gui et une petite branche d’arbre",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « du gui et une petite branche d’arbre »."
-      ],
-      "after": [
-        "gui",
-        "petite branche d’arbre"
-      ],
-      "notes": [
-        "1",
-        "consomme"
-      ]
-    },
-    {
       "name": "Arme enchantée",
       "classe": "Magicien",
       "niveau": 4,
@@ -201,58 +864,14 @@
         "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « du carbone et du citron réduits en poudre »."
       ],
       "after": [
-        "carbone",
-        "citron réduits en poudre",
+        "carbone en poudre",
+        "citron en poudre"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "Consommation explicitement indiquée dans la description",
         "Consommation explicitement indiquée dans la description"
-      ],
-      "notes": [
-        "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Augure",
-      "classe": "Clerc",
-      "niveau": 2,
-      "before": [
-        "jeu de baguettes serties de gemmes",
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative : utiliser ce composant",
-        "des os de dragon",
-        "des objets divinatoires similaires ou des feuilles d’infusion encore humides.",
-        "Alternative aux os de dragon",
-        "aux objets similaires et aux feuilles d’infusion.",
-        "os de dragon",
-        "un jeu de baguettes serties de gemmes",
-        "Alternative au jeu de baguettes serties de gemmes",
-        "objets divinatoires similaires",
-        "des os de dragon ou des feuilles d’infusion encore humides.",
-        "aux os de dragon et aux feuilles d’infusion.",
-        "feuille d’infusion encore humides",
-        "Alternative aux objets divinatoires",
-        "cette méthode requiert aussi une perle écrasée d’au moins 100 po.",
-        "placées dans le récipient ayant servi pour l’infusion. Formulation source du Manuel : « feuilles d’infusion encore humides ».",
-        "perle écrasée d’au moins 100 po",
-        "100",
-        "Requise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.",
-        "Requise uniquement avec la méthode des feuilles d’infusion",
-        "ajoutée à la boisson avant consommation."
-      ],
-      "after": [
-        "jeu d’objets divinatoires",
-        "feuilles d’infusion encore humides",
-        "perle écrasée d’au moins 100 po"
-      ],
-      "notes": [
-        "1",
-        "cette méthode requiert aussi une perle écrasée d’au moins 100 po",
-        "placées dans le récipient ayant servi pour l’infusion",
-        "100",
-        "Requise uniquement si la méthode des feuilles d’infusion encore humides est utilisée",
-        "Requise uniquement avec la méthode des feuilles d’infusion",
-        "ajoutée à la boisson avant consommation"
       ]
     },
     {
@@ -267,87 +886,12 @@
         "morceau de soie que le magicien doit passer sur l’objet affecté",
         "Formulation source du Manuel : « un petit morceau de soie que le magicien doit passer sur l’objet affecté »."
       ],
-      "after": [],
-      "notes": [
-        "soie que le magicien doit passer sur l’objet affecté",
-        "1",
-        "non consomme",
-        "soie que le magicien doit passer sur l’objet affecté"
-      ]
-    },
-    {
-      "name": "Barrière de Lames",
-      "classe": "Clerc",
-      "niveau": 6,
-      "before": [],
       "after": [
-        "lame miniature"
-      ],
-      "notes": []
-    },
-    {
-      "name": "Bâtons à serpents",
-      "classe": "Clerc",
-      "niveau": 4,
-      "before": [
-        "petit morceau d’écorce",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "écailles de serpent",
-        "morceau d’écorce",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
-      ],
-      "after": [
-        "écorce",
-        "écailles de serpent"
+        "soie"
       ],
       "notes": [
         "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Bâtons à serpents",
-      "classe": "Druide",
-      "niveau": 5,
-      "before": [
-        "gui",
-        "1",
-        "consomme",
-        "Manuel des joueurs"
-      ],
-      "after": [
-        "gui"
-      ],
-      "notes": [
-        "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Bénédiction",
-      "classe": "Clerc",
-      "niveau": 1,
-      "before": [
-        "eau bénite",
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Sort normal.",
-        "Liquide consommé.",
-        "eau maudite",
-        "Sort inversé : malédiction."
-      ],
-      "after": [
-        "eau bénite",
-        "eau maudite"
-      ],
-      "notes": [
-        "1",
-        "Liquide",
-        "Sort inversé : malédiction"
+        "non consomme"
       ]
     },
     {
@@ -469,88 +1013,15 @@
         "cristaux d’acide mercuro nitrique",
         "racine de mandragore",
         "de l’alcool",
-        "sous formes de runes entourées d’un pentacle",
-        "Consommation explicitement indiquée dans la description"
+        "sous formes de runes entourées d’un pentacle"
       ],
       "notes": [
         "brasero de charbons ardents dans lequel le magicien doit brûler du soufre",
         "parchemin sur lequel est inscrit le nom du démon",
         "coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon",
         "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Catalepsie",
-      "classe": "Clerc",
-      "niveau": 3,
-      "before": [
-        "pincée de poussière d’un cimetière",
-        "1",
         "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "symbole sacré du clerc",
-        "non_consomme"
-      ],
-      "after": [
-        "pincée de poussière de cimetière",
-        "symbole sacré du clerc"
-      ],
-      "notes": [
-        "1",
-        "consomme",
-        "non consomme"
-      ]
-    },
-    {
-      "name": "Catalepsie",
-      "classe": "Druide",
-      "niveau": 2,
-      "before": [
-        "une feuille morte de chêne et du gui",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "feuille morte de chêne et du gui",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une feuille morte de chêne et du gui »."
-      ],
-      "after": [
-        "feuille morte de chêne",
-        "gui"
-      ],
-      "notes": [
-        "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Changement de Plan",
-      "classe": "Clerc",
-      "niveau": 5,
-      "before": [
-        "petite baguette fourchue métallique",
-        "sorte de diapason",
-        "1",
-        "non_consomme",
-        "Manuel des joueurs",
-        "Le type de métal et la taille déterminent le plan d’arrivée.",
-        "baguette fourchue métallique",
-        "Le type de métal et la taille déterminent le plan d’arrivée. Formulation source du Manuel : « petite baguette fourchue métallique"
-      ],
-      "after": [
-        "petite baguette fourchue métallique",
-        "baguette fourchue métallique"
-      ],
-      "notes": [
-        "sorte de diapason",
-        "1",
-        "non consomme",
-        "type de métal",
-        "taille déterminent le plan d’arrivée",
-        "type de métal",
-        "taille déterminent le plan d’arrivée"
+        "Consommation explicitement indiquée dans la description"
       ]
     },
     {
@@ -574,19 +1045,6 @@
         "1",
         "non consomme"
       ]
-    },
-    {
-      "name": "Chariot de Sustarre",
-      "classe": "Druide",
-      "niveau": 7,
-      "before": [],
-      "after": [
-        "gui",
-        "bois",
-        "baies de houx",
-        "source de feu"
-      ],
-      "notes": []
     },
     {
       "name": "Charme-monstres",
@@ -672,14 +1130,15 @@
         "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite »."
       ],
       "after": [
-        "si la chaumière est détruite",
-        "Consommation explicitement indiquée dans la description"
+        "si la chaumière est détruite"
       ],
       "notes": [
         "petite perle de cristal qui se brisera à la fin du sort",
         "1",
         "consomme",
-        "perle de cristal qui se brisera à la fin du sort"
+        "Consommation explicitement indiquée dans la description",
+        "perle de cristal qui se brisera à la fin du sort",
+        "Consommation explicitement indiquée dans la description"
       ]
     },
     {
@@ -749,15 +1208,15 @@
         "corne d’argent d’une valeur minimale de 100 po",
         "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une petite corne d’argent d’une valeur minimale de 100 po"
       ],
-      "after": [
-        "Consommation explicitement indiquée dans la description"
-      ],
+      "after": [],
       "notes": [
         "petite corne d’argent d’une valeur minimale de 100 po",
         "qui disparaît quand le sort est lancé",
         "1",
         "consomme",
-        "corne d’argent d’une valeur minimale de 100 po"
+        "Consommation explicitement indiquée dans la description",
+        "corne d’argent d’une valeur minimale de 100 po",
+        "Consommation explicitement indiquée dans la description"
       ]
     },
     {
@@ -801,31 +1260,6 @@
       ],
       "notes": [
         "1",
-        "consomme"
-      ]
-    },
-    {
-      "name": "Communion",
-      "classe": "Clerc",
-      "niveau": 5,
-      "before": [
-        "symbole sacré du clerc",
-        "1",
-        "non_consomme",
-        "Manuel des joueurs",
-        "eau bénite",
-        "consomme",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "encens"
-      ],
-      "after": [
-        "symbole sacré du clerc",
-        "encens",
-        "eau bénite"
-      ],
-      "notes": [
-        "1",
-        "non consomme",
         "consomme"
       ]
     },
@@ -879,24 +1313,394 @@
       ]
     },
     {
-      "name": "Confusion",
-      "classe": "Druide",
-      "niveau": 7,
-      "before": [],
-      "after": [
-        "gui"
+      "name": "Contrôle du climat",
+      "classe": "Magicien",
+      "niveau": 6,
+      "before": [
+        "encens à brûler",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "mélange de terre",
+        "de bois et d’eau"
       ],
-      "notes": []
+      "after": [
+        "encens à brûler",
+        "mélange de terre",
+        "de bois",
+        "eau"
+      ],
+      "notes": [
+        "1",
+        "consomme"
+      ]
     },
     {
-      "name": "Contrôle du climat",
-      "classe": "Druide",
-      "niveau": 7,
-      "before": [],
-      "after": [
-        "gui majeur"
+      "name": "Corde enchantée",
+      "classe": "Magicien",
+      "niveau": 2,
+      "before": [
+        "de la poudre de blé et un parchemin torsadé en forme de boucle",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "poudre de blé et un parchemin torsadé en forme de boucle",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « de la poudre de blé et un parchemin torsadé en forme de boucle »."
       ],
-      "notes": []
+      "after": [
+        "poudre de blé",
+        "parchemin torsadé en forme de boucle"
+      ],
+      "notes": [
+        "1",
+        "consomme"
+      ]
+    },
+    {
+      "name": "Création mineure",
+      "classe": "Illusionniste",
+      "niveau": 4,
+      "before": [
+        "tout petit morceau de la même matière que l’objet à créer",
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ],
+      "after": [],
+      "notes": [
+        "tout petit morceau de la même matière que l’objet à créer",
+        "1",
+        "consomme"
+      ]
+    },
+    {
+      "name": "Cristairain",
+      "classe": "Magicien",
+      "niveau": 8,
+      "before": [
+        "un petit morceau de verre et un petit morceau d’acier",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "morceau de verre et un petit morceau d’acier",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un petit morceau de verre et un petit morceau d’acier »."
+      ],
+      "after": [
+        "verre",
+        "petit morceau d’acier"
+      ],
+      "notes": [
+        "1",
+        "consomme"
+      ]
+    },
+    {
+      "name": "Croissance animale",
+      "classe": "Magicien",
+      "niveau": 5,
+      "before": [
+        "pincée de poudre d’os",
+        "1",
+        "consomme",
+        "Manuel des joueurs"
+      ],
+      "after": [
+        "pincée de poudre d’os"
+      ],
+      "notes": [
+        "1",
+        "consomme"
+      ]
+    },
+    {
+      "name": "Débilité mentale",
+      "classe": "Magicien",
+      "niveau": 5,
+      "before": [
+        "une poignée de petites sphères d’argile",
+        "de cristal",
+        "de verre ou minérales",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Composant requis selon l’alternative ou la variante choisie.",
+        "Alternative ou variante explicitement indiquée par le Manuel.",
+        "poignée de petites sphères d’argile",
+        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une poignée de petites sphères d’argile"
+      ],
+      "after": [
+        "poignée de petites sphères d’argile",
+        "de cristal",
+        "de verre",
+        "minérales"
+      ],
+      "notes": [
+        "1"
+      ]
+    },
+    {
+      "name": "Désintégration",
+      "classe": "Magicien",
+      "niveau": 6,
+      "before": [
+        "pierre aimantée",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "pincée de poussière",
+        "consomme"
+      ],
+      "after": [
+        "pierre aimantée",
+        "pincée de poussière"
+      ],
+      "notes": [
+        "1",
+        "non consomme",
+        "consomme"
+      ]
+    },
+    {
+      "name": "Détection des illusions",
+      "classe": "Illusionniste",
+      "niveau": 1,
+      "before": [
+        "morceau de cristal teinté en jaune",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative au verre ou au mica teinté en jaune.",
+        "morceau de verre teinté en jaune",
+        "Alternative au cristal ou au mica teinté en jaune.",
+        "morceau de mica teinté en jaune",
+        "Alternative au cristal ou au verre teinté en jaune."
+      ],
+      "after": [
+        "cristal teinté en jaune",
+        "verre teinté en jaune",
+        "mica teinté en jaune"
+      ],
+      "notes": [
+        "1"
+      ]
+    },
+    {
+      "name": "Disque flottant de Tenser",
+      "classe": "Magicien",
+      "niveau": 1,
+      "before": [
+        "une goutte de mercure",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "goutte de mercure",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une goutte de mercure »."
+      ],
+      "after": [
+        "goutte de mercure"
+      ],
+      "notes": [
+        "1",
+        "consomme"
+      ]
+    },
+    {
+      "name": "Distorsion des distances",
+      "classe": "Magicien",
+      "niveau": 5,
+      "before": [
+        "un peu d’argile grasse",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "peu d’argile grasse",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un peu d’argile grasse »."
+      ],
+      "after": [
+        "peu d’argile grasse"
+      ],
+      "notes": [
+        "1",
+        "consomme"
+      ]
+    },
+    {
+      "name": "Duo-dimension",
+      "classe": "Magicien",
+      "niveau": 7,
+      "before": [
+        "figurine en ivoire représentant le magicien",
+        "1",
+        "consomme",
+        "5000",
+        "Manuel des joueurs",
+        "Disparaît pour toujours.",
+        "parchemin"
+      ],
+      "after": [
+        "figurine en ivoire représentant le magicien",
+        "Disparaît pour toujours",
+        "parchemin"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "5000"
+      ]
+    },
+    {
+      "name": "E.S.P.",
+      "classe": "Magicien",
+      "niveau": 2,
+      "before": [
+        "une pièce de cuivre",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "pièce de cuivre",
+        "Formulation source du Manuel : « une pièce de cuivre »."
+      ],
+      "after": [
+        "pièce de cuivre"
+      ],
+      "notes": [
+        "1",
+        "non consomme"
+      ]
+    },
+    {
+      "name": "Eau aérée",
+      "classe": "Magicien",
+      "niveau": 5,
+      "before": [
+        "une petite poignée de sels alcalins ou de bromure",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Composant requis selon l’alternative ou la variante choisie.",
+        "Alternative ou variante explicitement indiquée par le Manuel.",
+        "poignée de sels alcalins ou de bromure",
+        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une petite poignée de sels alcalins ou de bromure »."
+      ],
+      "after": [
+        "petite poignée de sels alcalins",
+        "de bromure",
+        "poignée de sels alcalins"
+      ],
+      "notes": [
+        "1"
+      ]
+    },
+    {
+      "name": "Écriture",
+      "classe": "Magicien",
+      "niveau": 1,
+      "before": [
+        "encre fine faite de substances rares",
+        "1",
+        "consomme",
+        "200",
+        "Manuel des joueurs"
+      ],
+      "after": [
+        "encre fine faite de substances rares"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "200"
+      ]
+    },
+    {
+      "name": "Écriture illusoire",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "before": [
+        "encre fabriquée à base de plomb par un alchimiste",
+        "1",
+        "consomme",
+        "100",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+      ],
+      "after": [],
+      "notes": [
+        "encre fabriquée à base de plomb par un alchimiste",
+        "1",
+        "consomme",
+        "100"
+      ]
+    },
+    {
+      "name": "Effroi",
+      "classe": "Magicien",
+      "niveau": 4,
+      "before": [
+        "cœur de poule",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative à une plume blanche.",
+        "plume blanche",
+        "Alternative au cœur de poule."
+      ],
+      "after": [
+        "cœur de poule",
+        "plume blanche"
+      ],
+      "notes": [
+        "1"
+      ]
+    },
+    {
+      "name": "Épée de Mordenkainen",
+      "classe": "Magicien",
+      "niveau": 7,
+      "before": [
+        "épée miniature en platine avec poignée et pommeau en cuivre et zinc",
+        "1",
+        "consomme",
+        "500",
+        "Manuel des joueurs",
+        "Disparaît quand le sort est lancé."
+      ],
+      "after": [
+        "épée miniature en platine avec poignée",
+        "pommeau en cuivre",
+        "zinc"
+      ],
+      "notes": [
+        "1",
+        "consomme",
+        "500",
+        "Disparaît quand le sort est lancé"
+      ]
+    },
+    {
+      "name": "Escalade d’araignée",
+      "classe": "Magicien",
+      "niveau": 1,
+      "before": [
+        "goutte de bitume",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Avalée pendant l’incantation.",
+        "araignée vivante"
+      ],
+      "after": [
+        "goutte de bitume",
+        "Avalée pendant l’incantation",
+        "araignée vivante"
+      ],
+      "notes": [
+        "1",
+        "consomme"
+      ]
     }
   ],
   "watched": {
@@ -964,7 +1768,7 @@
       "classe": "Magicien",
       "niveau": 1,
       "composants_materiels": [
-        "pincée de poudre de fer"
+        "poudre de fer"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -1225,9 +2029,8 @@
       "classe": "Magicien",
       "niveau": 4,
       "composants_materiels": [
-        "carbone",
-        "citron réduits en poudre",
-        "Consommation explicitement indiquée dans la description"
+        "carbone en poudre",
+        "citron en poudre"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -1247,7 +2050,7 @@
           }
         ]
       },
-      "note": "1\nconsomme"
+      "note": "1\nconsomme\nConsommation explicitement indiquée dans la description"
     },
     "Arrêt du temps": {
       "classe": "Magicien",
@@ -1329,7 +2132,9 @@
     "Aura magique de Nystul": {
       "classe": "Magicien",
       "niveau": 1,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "soie"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n1",
@@ -1348,7 +2153,7 @@
           }
         ]
       },
-      "note": "soie que le magicien doit passer sur l’objet affecté\n1\nnon consomme"
+      "note": "1\nnon consomme"
     },
     "Autométamorphose": {
       "classe": "Magicien",
@@ -1676,8 +2481,7 @@
         "cristaux d’acide mercuro nitrique",
         "racine de mandragore",
         "de l’alcool",
-        "sous formes de runes entourées d’un pentacle",
-        "Consommation explicitement indiquée dans la description"
+        "sous formes de runes entourées d’un pentacle"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -1698,7 +2502,7 @@
           }
         ]
       },
-      "note": "brasero de charbons ardents dans lequel le magicien doit brûler du soufre\nparchemin sur lequel est inscrit le nom du démon\ncoupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon\n1\nconsomme"
+      "note": "brasero de charbons ardents dans lequel le magicien doit brûler du soufre\nparchemin sur lequel est inscrit le nom du démon\ncoupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon\n1\nconsomme\nConsommation explicitement indiquée dans la description"
     },
     "Cantique": {
       "classe": "Clerc",
@@ -1997,8 +2801,7 @@
       "classe": "Magicien",
       "niveau": 3,
       "composants_materiels": [
-        "si la chaumière est détruite",
-        "Consommation explicitement indiquée dans la description"
+        "si la chaumière est détruite"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -2018,7 +2821,7 @@
           }
         ]
       },
-      "note": "petite perle de cristal qui se brisera à la fin du sort\n1\nconsomme\nperle de cristal qui se brisera à la fin du sort"
+      "note": "petite perle de cristal qui se brisera à la fin du sort\n1\nconsomme\nConsommation explicitement indiquée dans la description\nperle de cristal qui se brisera à la fin du sort"
     },
     "Chien fidèle de Mordenkainen": {
       "classe": "Magicien",
@@ -2081,9 +2884,7 @@
     "Clairaudience": {
       "classe": "Magicien",
       "niveau": 3,
-      "composants_materiels": [
-        "Consommation explicitement indiquée dans la description"
-      ],
+      "composants_materiels": [],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n3",
@@ -2103,7 +2904,7 @@
           }
         ]
       },
-      "note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\ncorne d’argent d’une valeur minimale de 100 po"
+      "note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description\ncorne d’argent d’une valeur minimale de 100 po"
     },
     "Clairvoyance": {
       "classe": "Magicien",
@@ -3617,7 +4418,7 @@
       "classe": "Magicien",
       "niveau": 4,
       "composants_materiels": [
-        "Consommation explicitement indiquée dans la description"
+        "soie multicolore extrêmement fine"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -3638,7 +4439,7 @@
           }
         ]
       },
-      "note": "soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu\n1\nconsomme"
+      "note": "1\nconsomme\nConsommation explicitement indiquée dans la description"
     },
     "Flamme": {
       "classe": "Druide",
@@ -4301,8 +5102,7 @@
       "niveau": 3,
       "composants_materiels": [
         "petite statuette d’argile représentant une ziggourat",
-        "qui se brise quand l’incantation est prononcée",
-        "Consommation explicitement indiquée dans la description"
+        "qui se brise quand l’incantation est prononcée"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -4322,7 +5122,7 @@
           }
         ]
       },
-      "note": "1\nconsomme"
+      "note": "1\nconsomme\nConsommation explicitement indiquée dans la description"
     },
     "Intermittence": {
       "classe": "Magicien",
@@ -5642,8 +6442,7 @@
       "classe": "Magicien",
       "niveau": 1,
       "composants_materiels": [
-        "petite pièce de cuivre finement ciselée",
-        "pièce de cuivre finement ciselée"
+        "fil de cuivre"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -6016,8 +6815,7 @@
         "parchemin",
         "objet magique",
         "créature",
-        "etc",
-        "Consommation explicitement indiquée dans la description"
+        "etc"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -6037,7 +6835,7 @@
           }
         ]
       },
-      "note": "mais le magicien doit en plus sacrifier quelque chose (une potion\n1\nconsomme"
+      "note": "mais le magicien doit en plus sacrifier quelque chose (une potion\n1\nconsomme\nConsommation explicitement indiquée dans la description"
     },
     "Nécro animation": {
       "classe": "Clerc",
@@ -6998,7 +7796,7 @@
       "classe": "Magicien",
       "niveau": 1,
       "composants_materiels": [
-        "Consommation explicitement indiquée dans la description"
+        "pincée de poudre de cuivre"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -7018,7 +7816,7 @@
           }
         ]
       },
-      "note": "pincée de poudre de cuivre qui doit être soufflée de la paume de la main\navant de pointer le doigt vers l’objectif visé\n1\nconsomme"
+      "note": "avant de pointer le doigt vers l’objectif visé\n1\nconsomme\nConsommation explicitement indiquée dans la description"
     },
     "Prévision du temps": {
       "classe": "Druide",
@@ -7878,7 +8676,7 @@
       "classe": "Magicien",
       "niveau": 1,
       "composants_materiels": [
-        "Consommation explicitement indiquée dans la description"
+        "patte arrière de sauterelle — une pour chaque saut —"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -7898,7 +8696,7 @@
           }
         ]
       },
-      "note": "patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué\n1\nconsomme"
+      "note": "1\nconsomme\nConsommation explicitement indiquée dans la description"
     },
     "Séparation des eaux": {
       "classe": "Magicien",
@@ -8915,32 +9713,15 @@
       "note": "1\nconsomme"
     },
     "Ventriloquie": {
-      "classe": "Magicien",
-      "niveau": 1,
-      "composants_materiels": [
-        "petit parchemin mis en cône",
-        "parchemin mis en cône"
-      ],
+      "classe": "Illusionniste",
+      "niveau": 2,
+      "composants_materiels": [],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-magicien-n1",
-        "effects": [
-          {
-            "id": "ventriloquie",
-            "label": "Ventriloquie",
-            "kind": "movement_transformation_or_element",
-            "automation": "mj_aid",
-            "tags": [
-              "effet:ventriloquie",
-              "classe:magicien",
-              "deplacement_transformation_ou_element",
-              "niveau:1"
-            ],
-            "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-          }
-        ]
+        "source": "canonical-system",
+        "effects": []
       },
-      "note": "1\nnon consomme"
+      "note": ""
     },
     "Verrou magique": {
       "classe": "Magicien",
@@ -8975,8 +9756,7 @@
         "huile",
         "cordelette à nœuds",
         "sang d’ombre des roches",
-        "petite baguette d’argent",
-        "Consommation explicitement indiquée dans la description"
+        "petite baguette d’argent"
       ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -8996,7 +9776,7 @@
           }
         ]
       },
-      "note": "1\nconsomme"
+      "note": "1\nconsomme\nConsommation explicitement indiquée dans la description"
     },
     "Vision réelle": {
       "classe": "Illusionniste",
@@ -9037,7 +9817,24 @@
       "note": "1\nconsomme"
     }
   },
-  "suspiciousMaterialComponents": [],
+  "suspiciousMaterialComponents": [
+    {
+      "name": "Répulsion des insectes",
+      "classe": "Druide",
+      "niveau": 4,
+      "components": [
+        "Consommation explicitement indiquée dans la description"
+      ],
+      "allComponents": [
+        "gui",
+        "l’un des éléments suivants: plusieurs soucis écrasés",
+        "poireau écrasé",
+        "7 feuilles de navet écrasées",
+        "résine d’arbre à camphre",
+        "Consommation explicitement indiquée dans la description"
+      ]
+    }
+  ],
   "druideMaterialAudit": [
     {
       "name": "Amitié animale",
@@ -9840,6 +10637,22 @@
       "classe": "druide"
     },
     {
+      "name": "Répulsion des insectes",
+      "niveau": 4,
+      "components": [
+        "Consommation explicitement indiquée dans la description"
+      ],
+      "allComponents": [
+        "gui",
+        "l’un des éléments suivants: plusieurs soucis écrasés",
+        "poireau écrasé",
+        "7 feuilles de navet écrasées",
+        "résine d’arbre à camphre",
+        "Consommation explicitement indiquée dans la description"
+      ],
+      "classe": "druide"
+    },
+    {
       "name": "Répulsion du bois",
       "niveau": 6,
       "components": [
@@ -9884,7 +10697,7 @@
       "name": "Agrandissement",
       "niveau": 1,
       "composants": [
-        "pincée de poudre de fer"
+        "poudre de fer"
       ]
     },
     {
@@ -9913,9 +10726,8 @@
       "name": "Arme enchantée",
       "niveau": 4,
       "composants": [
-        "carbone",
-        "citron réduits en poudre",
-        "Consommation explicitement indiquée dans la description"
+        "carbone en poudre",
+        "citron en poudre"
       ]
     },
     {
@@ -9926,7 +10738,9 @@
     {
       "name": "Aura magique de Nystul",
       "niveau": 1,
-      "composants": []
+      "composants": [
+        "soie"
+      ]
     },
     {
       "name": "Autométamorphose",
@@ -9993,8 +10807,7 @@
         "cristaux d’acide mercuro nitrique",
         "racine de mandragore",
         "de l’alcool",
-        "sous formes de runes entourées d’un pentacle",
-        "Consommation explicitement indiquée dans la description"
+        "sous formes de runes entourées d’un pentacle"
       ]
     },
     {
@@ -10042,8 +10855,7 @@
       "name": "Chaumière de Léomund",
       "niveau": 3,
       "composants": [
-        "si la chaumière est détruite",
-        "Consommation explicitement indiquée dans la description"
+        "si la chaumière est détruite"
       ]
     },
     {
@@ -10069,9 +10881,7 @@
     {
       "name": "Clairaudience",
       "niveau": 3,
-      "composants": [
-        "Consommation explicitement indiquée dans la description"
-      ]
+      "composants": []
     },
     {
       "name": "Clairvoyance",
@@ -10331,7 +11141,7 @@
       "name": "Feu charmeur",
       "niveau": 4,
       "composants": [
-        "Consommation explicitement indiquée dans la description"
+        "soie multicolore extrêmement fine"
       ]
     },
     {
@@ -10464,8 +11274,7 @@
       "niveau": 3,
       "composants": [
         "petite statuette d’argile représentant une ziggourat",
-        "qui se brise quand l’incantation est prononcée",
-        "Consommation explicitement indiquée dans la description"
+        "qui se brise quand l’incantation est prononcée"
       ]
     },
     {
@@ -10591,7 +11400,7 @@
       "niveau": 5,
       "composants": [
         "argile grasse façonnée",
-        "Façonnée puis utilisée pour toucher la pierre"
+        "Façonnée puis"
       ]
     },
     {
@@ -10651,8 +11460,7 @@
       "name": "Message",
       "niveau": 1,
       "composants": [
-        "petite pièce de cuivre finement ciselée",
-        "pièce de cuivre finement ciselée"
+        "fil de cuivre"
       ]
     },
     {
@@ -10738,8 +11546,7 @@
         "parchemin",
         "objet magique",
         "créature",
-        "etc",
-        "Consommation explicitement indiquée dans la description"
+        "etc"
       ]
     },
     {
@@ -10899,7 +11706,7 @@
       "name": "Poussée",
       "niveau": 1,
       "composants": [
-        "Consommation explicitement indiquée dans la description"
+        "pincée de poudre de cuivre"
       ]
     },
     {
@@ -11022,7 +11829,7 @@
       "name": "Saut",
       "niveau": 1,
       "composants": [
-        "Consommation explicitement indiquée dans la description"
+        "patte arrière de sauterelle — une pour chaque saut —"
       ]
     },
     {
@@ -11223,7 +12030,6 @@
       "name": "Ventriloquie",
       "niveau": 1,
       "composants": [
-        "petit parchemin mis en cône",
         "parchemin mis en cône"
       ]
     },
@@ -11241,8 +12047,7 @@
         "huile",
         "cordelette à nœuds",
         "sang d’ombre des roches",
-        "petite baguette d’argent",
-        "Consommation explicitement indiquée dans la description"
+        "petite baguette d’argent"
       ]
     },
     {
@@ -11273,8 +12078,8 @@
       "classe": "magicien"
     },
     {
-      "name": "Aura magique de Nystul",
-      "niveau": 1,
+      "name": "Boule de feu à retardement",
+      "niveau": 7,
       "components": [
         "M sans composant"
       ],
@@ -11282,8 +12087,8 @@
       "classe": "magicien"
     },
     {
-      "name": "Boule de feu à retardement",
-      "niveau": 7,
+      "name": "Clairaudience",
+      "niveau": 3,
       "components": [
         "M sans composant"
       ],
