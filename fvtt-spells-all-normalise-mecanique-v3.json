@@ -6251,9 +6251,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite boule composée de fiente de chauve souris",
-          "de souffre",
-          "boule composée de fiente de chauve souris"
+          "fiente de chauve souris",
+          "souffre"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une petite boule composée de fiente de chauve-souris et de souffre.",
         "composants_materiels_reference": "",
@@ -9882,7 +9881,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "si la chaumière est détruite"
+          "petite perle de cristal"
         ],
         "composants_materiels_source": "petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -10026,10 +10025,9 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit sifflet en argent",
+          "sifflet en argent",
           "morceau d’os",
-          "fil",
-          "sifflet en argent"
+          "fil"
         ],
         "composants_materiels_source": "Les composantes matérielles sont un petit sifflet en argent, un morceau d’os et un fil.",
         "composants_materiels_reference": "",
@@ -10412,7 +10410,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "humanoïde"
+          "poudre de glande pinéale d’humain"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.",
         "composants_materiels_reference": "",
@@ -11377,8 +11375,6 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit cône de verre",
-          "petit cône de cristal",
           "cône de verre",
           "cône de cristal"
         ],
@@ -14261,10 +14257,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poignée de petites sphères d’argile",
-          "de cristal",
-          "de verre",
-          "minérales"
+          "petites sphères d’argile",
+          "cristal"
         ],
         "composants_materiels_source": "poignée de petites sphères d’argile, de cristal, de verre ou minérales",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -15039,7 +15033,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "e pincée de talc",
+          "pincée de talc",
           "poudre d’argent qu’il faut répandre"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de talc et un peu de poudre d’argent qu’il faut répandre.",
@@ -18517,7 +18511,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "peu d’argile grasse"
+          "argile grasse"
         ],
         "composants_materiels_source": "peu d’argile grasse",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -19490,9 +19484,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite poignée de sels alcalins",
-          "de bromure",
-          "poignée de sels alcalins"
+          "sels alcalins",
+          "bromure"
         ],
         "composants_materiels_source": "petite poignée de sels alcalins ou de bromure",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -21381,8 +21374,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "épée miniature en platine avec poignée",
-          "pommeau en cuivre",
+          "épée miniature en platine",
           "zinc"
         ],
         "composants_materiels_source": "",
@@ -24668,8 +24660,7 @@
           "terreau",
           "sable",
           "petit sac",
-          "lame en fer",
-          "sac"
+          "lame en fer"
         ],
         "composants_materiels_source": "Les composantes matérielles sont un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer.",
         "composants_materiels_reference": "",
@@ -27794,8 +27785,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite statuette d’argile représentant une ziggourat",
-          "qui se brise quand l’incantation est prononcée"
+          "poudre de carotte séchée"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate.",
         "composants_materiels_reference": "",
@@ -28481,7 +28471,7 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cil mis dans de la gomme arabique"
+          "cil"
         ],
         "composants_materiels_source": "Les composantes matérielles sont un cil mis dans de la gomme arabique.",
         "composants_materiels_reference": "",
@@ -30687,7 +30677,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "même"
+          "petit sac",
+          "bougie"
         ],
         "composants_materiels_source": "même ; il y a également 1 à 4 rounds de délai",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -30831,7 +30822,10 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "petit sac",
+          "bougie"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -30974,7 +30968,10 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "petit sac",
+          "bougie"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -31117,7 +31114,10 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "petit sac",
+          "bougie"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -31261,8 +31261,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "diamant",
-          "répandu sur les destinataires du sort"
+          "diamant"
         ],
         "composants_materiels_source": "diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -31406,7 +31405,9 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+           "diamant"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -31550,8 +31551,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "composantes matérielles de sort sont un petit sac",
-          "petite bougie (pas nécessairement allumée)"
+          "petit sac",
+          "bougie"
         ],
         "composants_materiels_source": "Les composantes matérielles de sort sont un petit sac et une petite bougie (pas nécessairement allumée).",
         "composants_materiels_reference": "",
@@ -34373,8 +34374,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "cristal clair",
-          "prisme minéral",
-          "Cette composante ne disparaît pas avec l’utilisation"
+          "prisme minéral"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un cristal clair ou un prisme minéral ; cette composante ne disparaît pas avec l’utilisation.",
         "composants_materiels_reference": "",
@@ -37392,8 +37392,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "lait solidifié (crème épaisse",
-          "beurre)"
+          "lait solidifié"
         ],
         "composants_materiels_source": "La composante matérielle est un petit morceau de lait solidifié (crème épaisse ou beurre).",
         "composants_materiels_reference": "",
@@ -39837,9 +39836,7 @@
         "composants_materiels": [
           "ficelle",
           "plaque d’ivoire",
-          "encre composée de sécrétion de calmar",
-          "de sang de dragon noir",
-          "de suc digestif de limace géante"
+          "encre e sang de dragon noir"
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante.",
         "composants_materiels_reference": "",
@@ -40656,8 +40653,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poudre de diamant (issue d’une",
-          "pierres) pour une valeur minimale de 10"
+          "pincée de poudre de diamant"
         ],
         "composants_materiels_source": "La composante matérielle est une pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10.",
         "composants_materiels_reference": "",
@@ -40801,8 +40797,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "quartz",
-          "pierre cristalline de même type"
+          "quartz"
         ],
         "composants_materiels_source": "La composante matérielle est un petit morceau de quartz ou une pierre cristalline de même type.",
         "composants_materiels_reference": "",
@@ -45459,7 +45454,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "gui",
-          "poignée d’écorce de chêne"
+          "écorce de chêne"
         ],
         "composants_materiels_source": "poignée d’écorce de chêne",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -46297,7 +46292,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
         "composants_materiels": [
-          "e poignée de morceaux d'écorce"
+          "morceaux d'écorce"
         ],
         "composants_materiels_source": "La composante matérielle est une poignée de morceaux d'écorce.",
         "composants_materiels_reference": "",
@@ -55823,7 +55818,7 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "patte arrière de sauterelle — une pour chaque saut —"
+          "patte arrière de sauterelle"
         ],
         "composants_materiels_source": "patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -63007,8 +63002,7 @@
           "pincée de terre",
           "goutte de sang",
           "chaux",
-          "de l’eau",
-          "terre sont nécessaires pour l’inverse"
+          "eau"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de terre et une goutte de sang ; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.",
         "composants_materiels_reference": "",
